@@ -3358,6 +3358,512 @@ def _compose_cinematic_ad_concept(payload: CinematicAdConceptRequest) -> dict[st
     return CinematicAdConceptResult.model_validate(result).model_dump()
 
 
+# Creative Motion Guide is intentionally separate from Image Motion Planner.
+# The frozen Bot ``motion|`` conversation only offers category/topic choices,
+# rotating text suggestions and seven editorial styles before returning a
+# prompt guide.  It has no source-image requirement, Video Plan save, render,
+# provider, job, payment or delivery behavior.  Keep that boundary explicit
+# instead of making Image Studio metadata a surprising prerequisite.
+CREATIVE_MOTION_GUIDE_LANGUAGES = frozenset({"vi", "en", "zh"})
+CREATIVE_MOTION_GUIDE_TOPIC_KINDS = frozenset({
+    "product", "affiliate", "ai_tool", "place", "fashion", "food", "education", "story",
+})
+CREATIVE_MOTION_GUIDE_STYLES = frozenset({"cinematic", "tiktok", "tutorial", "ads", "fpv", "reveal", "ugc"})
+CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET = 24
+
+CREATIVE_MOTION_GUIDE_TOPIC_LABELS: dict[str, dict[str, str]] = {
+    "product": {"vi": "video sản phẩm / quảng cáo bán hàng", "en": "product / sales ad video", "zh": "产品/广告视频"},
+    "affiliate": {"vi": "video affiliate / TikTok Shop", "en": "affiliate / TikTok Shop video", "zh": "affiliate / TikTok Shop 视频"},
+    "ai_tool": {"vi": "video giới thiệu AI tool / phần mềm", "en": "AI tool / software introduction video", "zh": "AI 工具/软件介绍视频"},
+    "place": {"vi": "video bất động sản / địa điểm / không gian", "en": "real-estate / place / space video", "zh": "地产/地点/空间视频"},
+    "fashion": {"vi": "video thời trang / lifestyle", "en": "fashion / lifestyle video", "zh": "时尚 / lifestyle 视频"},
+    "food": {"vi": "video món ăn / quán / đồ uống", "en": "food / restaurant / drink video", "zh": "美食/餐厅/饮品视频"},
+    "education": {"vi": "video giáo dục / hướng dẫn", "en": "education / tutorial video", "zh": "教育/教程视频"},
+    "story": {"vi": "video kể chuyện cinematic", "en": "cinematic story video", "zh": "电影感故事视频"},
+    "custom": {"vi": "chủ đề tự nhập", "en": "custom topic", "zh": "自定义主题"},
+}
+
+CREATIVE_MOTION_GUIDE_STYLE_LABELS: dict[str, dict[str, str]] = {
+    "cinematic": {"vi": "cinematic", "en": "cinematic", "zh": "电影感"},
+    "tiktok": {"vi": "TikTok/Reels nhanh", "en": "fast TikTok/Reels", "zh": "快节奏 TikTok/Reels"},
+    "tutorial": {"vi": "tutorial hướng dẫn", "en": "tutorial", "zh": "教程"},
+    "ads": {"vi": "quảng cáo bán hàng", "en": "sales ad", "zh": "销售广告"},
+    "fpv": {"vi": "FPV/drone motion", "en": "FPV/drone motion", "zh": "FPV/drone motion"},
+    "reveal": {"vi": "3D/product reveal", "en": "3D/product reveal", "zh": "3D/product reveal"},
+    "ugc": {"vi": "UGC đời thường", "en": "everyday UGC", "zh": "日常 UGC"},
+}
+
+CREATIVE_MOTION_GUIDE_ANGLES: dict[str, tuple[str, ...]] = {
+    "vi": (
+        "hook bằng vấn đề dễ nhận ra", "before/after có thể kiểm tra", "demo một thao tác rõ ràng",
+        "POV đời thường gần gũi", "reveal chi tiết chủ thể", "câu chuyện thay đổi nhỏ",
+        "ba điểm lợi ích ngắn", "walk-through theo nhịp", "khung kết có CTA tiết chế",
+    ),
+    "en": (
+        "a recognizable problem hook", "a reviewable before/after", "one clear action demo",
+        "a relatable everyday POV", "a subject-detail reveal", "a small-change story",
+        "three concise benefits", "a paced walk-through", "a restrained CTA final frame",
+    ),
+    "zh": (
+        "一个容易理解的问题开场", "一个可审查的前后对比", "一个清晰的操作演示",
+        "一个贴近日常的 POV", "一个主体细节揭示", "一个微小改变的故事",
+        "三个简洁利益点", "一个有节奏的 walkthrough", "一个克制的 CTA 结尾画面",
+    ),
+}
+
+CREATIVE_MOTION_GUIDE_MOTIONS: dict[str, tuple[str, ...]] = {
+    "vi": (
+        "slow push-in vào chủ thể", "orbit nhẹ quanh chủ thể", "match cut before/after",
+        "pan trái sang phải", "handheld tự nhiên có kiểm soát", "dolly-in cinematic",
+        "cutaway demo tính năng", "parallax từ ảnh tĩnh", "transition theo nhịp âm thanh", "top-down reveal",
+    ),
+    "en": (
+        "slow push-in", "gentle subject orbit", "before/after match cut", "left-to-right pan",
+        "controlled natural handheld", "cinematic dolly-in", "feature-demo cutaway", "still-image parallax",
+        "music-synced transition", "top-down reveal",
+    ),
+    "zh": (
+        "缓慢推近主体", "围绕主体轻微环绕", "前后对比匹配剪辑", "从左到右平移",
+        "受控自然手持", "电影感推轨", "功能演示切镜", "静帧视差", "音乐同步转场", "俯拍揭示",
+    ),
+}
+
+CREATIVE_MOTION_GUIDE_AUDIO: dict[str, tuple[str, ...]] = {
+    "vi": (
+        "nhạc điện ảnh tiết chế", "nhạc công nghệ tương lai", "nhịp TikTok nhanh nhưng rõ",
+        "nhạc lifestyle nhẹ", "không gian premium", "voice nam trầm tin cậy",
+        "voice nữ trẻ trung", "voice hướng dẫn chuyên nghiệp", "SFX click/woosh nhẹ", "nhạc corporate sạch",
+    ),
+    "en": (
+        "restrained cinematic music", "future technology ambience", "fast but clear TikTok rhythm",
+        "soft lifestyle music", "premium ambience", "deep trusted male voice direction",
+        "young energetic female voice direction", "professional tutorial voice direction", "subtle click/woosh SFX", "clean corporate music",
+    ),
+    "zh": (
+        "克制的电影感音乐", "未来科技氛围", "快速但清晰的 TikTok 节奏", "轻柔 lifestyle 音乐",
+        "高级氛围", "可信的低沉男声方向", "年轻有活力的女声方向", "专业教程旁白方向", "轻微 click/woosh SFX", "干净的企业音乐",
+    ),
+}
+
+
+def _creative_motion_code(value: Any, *, label: str, allowed: frozenset[str] | set[str]) -> str:
+    normalized = _cinematic_ad_line(value, label=label, minimum=1, maximum=64).lower()
+    if normalized not in allowed:
+        raise ValueError(f"{label} không hợp lệ")
+    return normalized
+
+
+def _creative_motion_output(value: Any, *, label: str, minimum: int = 2, maximum: int = 2_400) -> str:
+    return _cinematic_ad_output_line(value, label=label, minimum=minimum, maximum=maximum)
+
+
+def _creative_motion_label(catalog: dict[str, dict[str, str]], key: str, language: str) -> str:
+    # Every public key is validated before this lookup.  Keep the fallback
+    # generic nevertheless: topic and style catalogs have different key sets,
+    # so an internal misuse must not turn a malformed response into a 500.
+    values = catalog.get(key) or next(iter(catalog.values()))
+    return values.get(language) or values["en"]
+
+
+def _creative_motion_boundary() -> dict[str, bool | str]:
+    """Exact no-execution receipt for Bot-derived motion guidance."""
+
+    return {
+        "execution": "web_native_deterministic_creative_motion_guide_only",
+        "input_persisted": False,
+        "telegram_state_changed": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "source_media_inspected": False,
+        "media_uploads": False,
+        "provider_called": False,
+        "image_created": False,
+        "video_created": False,
+        "audio_created": False,
+        "preview_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+
+
+def _creative_motion_guard(marker: str) -> dict[str, Any] | None:
+    if not marker:
+        return None
+    if marker == "claim":
+        message = "Chủ đề có tuyên bố cần nguồn hoặc kiểm chứng. Hãy viết lại theo hướng có thể review trước khi lập motion guide."
+        error_code = "WEB_CREATIVE_MOTION_CLAIM_GUARD"
+    else:
+        message = "Chủ đề cần được viết lại theo hướng nguyên bản và không mô phỏng người thật, người nổi tiếng hoặc phong cách cụ thể."
+        error_code = "WEB_CREATIVE_MOTION_ORIGINALITY_GUARD"
+    return envelope(False, message, data=_creative_motion_boundary(), status_name="guarded", error_code=error_code)
+
+
+class CreativeMotionSuggestionRequest(BaseModel):
+    """A bounded, stateless replacement for Bot ``motion|topic``/``refresh``."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, strict=True)
+
+    topic_kind: StrictStr
+    language: StrictStr
+    suggestion_set: StrictInt = Field(ge=1, le=CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET)
+
+    @field_validator("topic_kind")
+    @classmethod
+    def validate_topic_kind(cls, value: StrictStr) -> str:
+        return _creative_motion_code(value, label="Nhóm Creative Motion", allowed=CREATIVE_MOTION_GUIDE_TOPIC_KINDS)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _creative_motion_code(value, label="Ngôn ngữ Creative Motion", allowed=CREATIVE_MOTION_GUIDE_LANGUAGES)
+
+
+class CreativeMotionGuideRequest(BaseModel):
+    """Original choice inputs only; the server recomputes selected suggestion."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, strict=True)
+
+    topic_kind: StrictStr
+    custom_topic: StrictStr = ""
+    language: StrictStr
+    suggestion_set: StrictInt = Field(ge=0, le=CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET)
+    selected_suggestion: StrictInt = Field(ge=0, le=3)
+    style: StrictStr
+
+    @field_validator("topic_kind")
+    @classmethod
+    def validate_topic_kind(cls, value: StrictStr) -> str:
+        return _creative_motion_code(value, label="Nhóm Creative Motion", allowed=set(CREATIVE_MOTION_GUIDE_TOPIC_KINDS) | {"custom"})
+
+    @field_validator("custom_topic")
+    @classmethod
+    def validate_custom_topic(cls, value: StrictStr) -> str:
+        return _cinematic_ad_line(value, label="Chủ đề tự nhập", minimum=0, maximum=500, allow_empty=True)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _creative_motion_code(value, label="Ngôn ngữ Creative Motion", allowed=CREATIVE_MOTION_GUIDE_LANGUAGES)
+
+    @field_validator("style")
+    @classmethod
+    def validate_style(cls, value: StrictStr) -> str:
+        return _creative_motion_code(value, label="Phong cách Creative Motion", allowed=CREATIVE_MOTION_GUIDE_STYLES)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.topic_kind == "custom":
+            if len(self.custom_topic) < 2:
+                raise ValueError("Chủ đề tự nhập cần từ 2 đến 500 ký tự hợp lệ")
+            if self.suggestion_set != 0 or self.selected_suggestion != 0:
+                raise ValueError("Chủ đề tự nhập không nhận bộ hoặc lựa chọn gợi ý")
+        elif self.custom_topic:
+            raise ValueError("Nhóm có sẵn không nhận chủ đề tự nhập")
+        elif not (1 <= self.suggestion_set <= CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET and 1 <= self.selected_suggestion <= 3):
+            raise ValueError("Nhóm có sẵn cần một bộ gợi ý và lựa chọn từ 1 đến 3")
+
+
+class CreativeMotionChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    label: str
+
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Mã Creative Motion", minimum=1, maximum=64)
+
+    @field_validator("label")
+    @classmethod
+    def validate_label(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Nhãn Creative Motion", maximum=240)
+
+
+class CreativeMotionSuggestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    index: StrictInt = Field(ge=1, le=3)
+    title: str
+    video_prompt: str
+    motion: str
+    audio_direction: str
+
+    @field_validator("title", "video_prompt", "motion", "audio_direction")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Gợi ý Creative Motion")
+
+
+class CreativeMotionSuggestionResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    topic_kind: str
+    topic_label: str
+    language: str
+    suggestion_set: StrictInt = Field(ge=1, le=CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET)
+    suggestions: list[CreativeMotionSuggestion] = Field(min_length=3, max_length=3)
+
+    @field_validator("topic_kind")
+    @classmethod
+    def validate_topic_kind(cls, value: str) -> str:
+        if value not in CREATIVE_MOTION_GUIDE_TOPIC_KINDS:
+            raise ValueError("Nhóm gợi ý Creative Motion không hợp lệ")
+        return value
+
+    @field_validator("topic_label")
+    @classmethod
+    def validate_label(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Nhãn nhóm Creative Motion", maximum=240)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        if value not in CREATIVE_MOTION_GUIDE_LANGUAGES:
+            raise ValueError("Ngôn ngữ gợi ý Creative Motion không hợp lệ")
+        return value
+
+    def model_post_init(self, __context: Any) -> None:
+        if [item.index for item in self.suggestions] != [1, 2, 3]:
+            raise ValueError("Creative Motion cần đúng ba gợi ý theo thứ tự")
+
+
+class CreativeMotionTimelineStep(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    index: StrictInt = Field(ge=1, le=4)
+    start_seconds: StrictInt = Field(ge=0, le=30)
+    end_seconds: StrictInt = Field(ge=1, le=30)
+    direction: str
+
+    @field_validator("direction")
+    @classmethod
+    def validate_direction(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Timeline Creative Motion")
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.end_seconds <= self.start_seconds:
+            raise ValueError("Timeline Creative Motion cần có mốc kết thúc lớn hơn mốc bắt đầu")
+
+
+class CreativeMotionGuideResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    topic_kind: str
+    topic: str
+    language: str
+    style: CreativeMotionChoice
+    suggestion_set: StrictInt = Field(ge=0, le=CREATIVE_MOTION_GUIDE_MAX_SUGGESTION_SET)
+    selected_suggestion: CreativeMotionSuggestion | None = None
+    idea_15_seconds: str
+    idea_30_seconds: str
+    timeline: list[CreativeMotionTimelineStep] = Field(min_length=4, max_length=4)
+    camera_motions: list[str] = Field(min_length=6, max_length=10)
+    image_prompt: str
+    video_motion_prompt: str
+    overlay_lines: list[str] = Field(min_length=4, max_length=4)
+    voiceover: str
+    cta: str
+    cautions: list[str] = Field(min_length=2, max_length=4)
+    review_before_use: list[str] = Field(min_length=2, max_length=4)
+
+    @field_validator("title", "topic", "idea_15_seconds", "idea_30_seconds", "image_prompt", "video_motion_prompt", "voiceover", "cta")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        return _creative_motion_output(value, label="Kết quả Creative Motion")
+
+    @field_validator("topic_kind")
+    @classmethod
+    def validate_topic_kind(cls, value: str) -> str:
+        if value not in set(CREATIVE_MOTION_GUIDE_TOPIC_KINDS) | {"custom"}:
+            raise ValueError("Nhóm kết quả Creative Motion không hợp lệ")
+        return value
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        if value not in CREATIVE_MOTION_GUIDE_LANGUAGES:
+            raise ValueError("Ngôn ngữ kết quả Creative Motion không hợp lệ")
+        return value
+
+    @field_validator("camera_motions", "overlay_lines", "cautions", "review_before_use")
+    @classmethod
+    def validate_list(cls, value: list[str]) -> list[str]:
+        return [_creative_motion_output(item, label="Danh sách Creative Motion", maximum=1_200) for item in value]
+
+    def model_post_init(self, __context: Any) -> None:
+        if [item.index for item in self.timeline] != [1, 2, 3, 4]:
+            raise ValueError("Creative Motion cần đúng bốn mốc timeline theo thứ tự")
+        if self.topic_kind == "custom":
+            if self.suggestion_set != 0 or self.selected_suggestion is not None:
+                raise ValueError("Chủ đề tự nhập không có lựa chọn gợi ý")
+        elif not (self.suggestion_set >= 1 and self.selected_suggestion is not None):
+            raise ValueError("Nhóm có sẵn cần một gợi ý được chọn")
+
+
+def _creative_motion_suggestions(payload: CreativeMotionSuggestionRequest) -> dict[str, Any]:
+    """Return the three deterministic cards for one bounded category/set."""
+
+    language = payload.language
+    base_index = (payload.suggestion_set - 1) * 3
+    anchor = _creative_motion_label(CREATIVE_MOTION_GUIDE_TOPIC_LABELS, payload.topic_kind, language)
+    angles = CREATIVE_MOTION_GUIDE_ANGLES[language]
+    motions = CREATIVE_MOTION_GUIDE_MOTIONS[language]
+    audio = CREATIVE_MOTION_GUIDE_AUDIO[language]
+    suggestions: list[dict[str, Any]] = []
+    for offset in range(3):
+        index = base_index + offset
+        angle = angles[index % len(angles)]
+        motion = motions[index % len(motions)]
+        sound = audio[index % len(audio)]
+        if language == "vi":
+            title = f"{anchor} · {angle}"
+            prompt = f"Video ngắn về {anchor}; {angle}; hook rõ, chủ thể ổn định, bố cục sạch, không watermark, không thêm chữ thừa."
+        elif language == "zh":
+            title = f"{anchor} · {angle}"
+            prompt = f"围绕{anchor}的短视频；{angle}；开场清晰、主体稳定、构图干净、不含水印或多余文字。"
+        else:
+            title = f"{anchor} · {angle}"
+            prompt = f"Short video about {anchor}; {angle}; clear hook, stable subject, clean composition, no watermark and no extra text."
+        suggestions.append({"index": offset + 1, "title": title, "video_prompt": prompt, "motion": motion, "audio_direction": sound})
+    return CreativeMotionSuggestionResult.model_validate(
+        {
+            "topic_kind": payload.topic_kind,
+            "topic_label": anchor,
+            "language": language,
+            "suggestion_set": payload.suggestion_set,
+            "suggestions": suggestions,
+        }
+    ).model_dump()
+
+
+def _creative_motion_timeline(language: str) -> list[dict[str, Any]]:
+    if language == "vi":
+        directions = (
+            "0–3s: mở bằng hook rõ và slow push-in có chủ đích.",
+            "3–6s: reveal vấn đề hoặc chi tiết cần chú ý bằng cut có động cơ.",
+            "6–12s: orbit hoặc dolly quanh chủ thể; giữ nhận diện và ánh sáng ổn định.",
+            "12–15s: kết bằng CTA frame sạch, chừa vùng đặt text để editor review.",
+        )
+    elif language == "zh":
+        directions = (
+            "0–3 秒：以清晰 hook 和有目的的缓慢推进开场。",
+            "3–6 秒：通过有动机的剪辑揭示问题或关键细节。",
+            "6–12 秒：围绕主体环绕或推轨；保持主体和光线稳定。",
+            "12–15 秒：以干净 CTA 画面结束，为编辑审核预留文字空间。",
+        )
+    else:
+        directions = (
+            "0–3s: open with a clear hook and deliberate slow push-in.",
+            "3–6s: reveal the problem or key detail through a motivated cut.",
+            "6–12s: orbit or dolly around the subject; keep identity and lighting stable.",
+            "12–15s: finish on a clean CTA frame with space for editorial review.",
+        )
+    return [
+        {"index": 1, "start_seconds": 0, "end_seconds": 3, "direction": directions[0]},
+        {"index": 2, "start_seconds": 3, "end_seconds": 6, "direction": directions[1]},
+        {"index": 3, "start_seconds": 6, "end_seconds": 12, "direction": directions[2]},
+        {"index": 4, "start_seconds": 12, "end_seconds": 15, "direction": directions[3]},
+    ]
+
+
+def _compose_creative_motion_guide(payload: CreativeMotionGuideRequest) -> dict[str, Any]:
+    """Recompute the selected card and turn it into a truthful text guide."""
+
+    selected: dict[str, Any] | None = None
+    if payload.topic_kind == "custom":
+        topic = payload.custom_topic
+    else:
+        choices = _creative_motion_suggestions(
+            CreativeMotionSuggestionRequest(
+                topic_kind=payload.topic_kind,
+                language=payload.language,
+                suggestion_set=payload.suggestion_set,
+            )
+        )["suggestions"]
+        selected = choices[payload.selected_suggestion - 1]
+        topic = str(selected["title"])
+    style_label = _creative_motion_label(CREATIVE_MOTION_GUIDE_STYLE_LABELS, payload.style, payload.language)
+    if payload.language == "vi":
+        title = f"Creative Motion Guide: {_excerpt(topic, 180)}"
+        idea_15 = "15 giây: Hook mạnh → demo/chuyển cảnh nhanh → lợi ích chính có thể review → CTA nhẹ."
+        idea_30 = "30 giây: Hook → vấn đề → ba cảnh chứng minh → before/after có kiểm chứng → CTA nhẹ."
+        camera = ["slow push-in", "orbit", "pan trái/phải", "whip transition", "FPV chase", "top-down reveal", "handheld tự nhiên", "dolly in/out"]
+        overlay = ["0–3s: Đừng bỏ qua bước này", "3–8s: Vấn đề thật là…", "8–12s: Cách xử lý nhanh", "12–15s: Lưu lại / Xem chi tiết"]
+        voiceover = f"Nếu bạn đang làm nội dung về {topic}, hãy mở bằng hook rõ rồi cho người xem thấy chuyển động hoặc demo thật trước CTA."
+        cta = "Lưu guide này để biên tập ở workflow được duyệt riêng; không có video hoặc nội dung đã xuất được tạo ở đây."
+        cautions = [
+            "Đây là direction text để review, không tạo ảnh, video, audio, preview, output hoặc job.",
+            "Không có Bot/Telegram state, provider, wallet, Xu, PayOS, asset, publish hoặc delivery nào được tạo.",
+        ]
+        review = [
+            "Kiểm tra mọi claim, số liệu, giá, so sánh và CTA trước khi đưa ra ngoài.",
+            "Chỉ dùng thương hiệu, hình ảnh, người, địa điểm và tư liệu mà bạn có quyền sử dụng.",
+        ]
+    elif payload.language == "zh":
+        title = f"Creative Motion Guide：{_excerpt(topic, 180)}"
+        idea_15 = "15 秒：强 hook → 快速演示/转场 → 可审查的核心利益点 → 柔和 CTA。"
+        idea_30 = "30 秒：hook → 问题 → 三个证明镜头 → 可审核的前后对比 → 柔和 CTA。"
+        camera = ["缓慢推进", "环绕", "左右平移", "whip transition", "FPV chase", "俯拍揭示", "自然手持", "dolly in/out"]
+        overlay = ["0–3 秒：不要忽略这一步", "3–8 秒：真正的问题是…", "8–12 秒：快速处理方法", "12–15 秒：保存 / 查看详情"]
+        voiceover = f"如果你正在制作关于{topic}的内容，请先用清晰 hook 开场，再在 CTA 前展示真实的动作或演示。"
+        cta = "将此 guide 保存到获准的编辑流程中；这里不会创建视频或导出内容。"
+        cautions = [
+            "这是供审核的文字方向，不会创建图片、视频、音频、预览、输出或任务。",
+            "不会创建 Bot/Telegram 状态、provider、钱包、Xu、PayOS、asset、发布或交付。",
+        ]
+        review = [
+            "在外部使用前审核每一项声明、数字、价格、比较和 CTA。",
+            "仅使用你拥有合法权利的品牌、图像、人物、地点和资料。",
+        ]
+    else:
+        title = f"Creative Motion Guide: {_excerpt(topic, 180)}"
+        idea_15 = "15 seconds: strong hook → quick demo/transition → reviewable key benefit → soft CTA."
+        idea_30 = "30 seconds: hook → problem → three proof shots → reviewable before/after → soft CTA."
+        camera = ["slow push-in", "orbit", "left/right pan", "whip transition", "FPV chase", "top-down reveal", "natural handheld", "dolly in/out"]
+        overlay = ["0–3s: Do not miss this step", "3–8s: The real problem is…", "8–12s: A quick way through", "12–15s: Save / See details"]
+        voiceover = f"If you are making content about {topic}, start with a clear hook and show real movement or a demo before the CTA."
+        cta = "Keep this guide for a separately approved editorial workflow; no video or exported content is created here."
+        cautions = [
+            "This is text direction for review; it creates no image, video, audio, preview, output or job.",
+            "No Bot/Telegram state, provider, wallet, Xu, PayOS, asset, publish action or delivery is created.",
+        ]
+        review = [
+            "Review every claim, number, price, comparison and CTA before external use.",
+            "Use only brands, images, people, locations and reference material you have rights to use.",
+        ]
+    image_prompt = f"Clean vertical 9:16 keyframe for {topic}, clear stable subject, commercial lighting suitable for {style_label}, no watermark, no extra readable text."
+    video_prompt = f"Animate the image into a short {style_label} video about {topic}. Use smooth camera movement, stable subject, natural motion, clean lighting, 9:16, no watermark and no extra readable text. Timeline: 0–3s push-in, 3–6s reveal, 6–12s orbit/dolly, 12–15s clean CTA frame."
+    result = {
+        "title": title,
+        "topic_kind": payload.topic_kind,
+        "topic": topic,
+        "language": payload.language,
+        "style": {"id": payload.style, "label": style_label},
+        "suggestion_set": payload.suggestion_set,
+        "selected_suggestion": selected,
+        "idea_15_seconds": idea_15,
+        "idea_30_seconds": idea_30,
+        "timeline": _creative_motion_timeline(payload.language),
+        "camera_motions": camera,
+        "image_prompt": image_prompt,
+        "video_motion_prompt": video_prompt,
+        "overlay_lines": overlay,
+        "voiceover": voiceover,
+        "cta": cta,
+        "cautions": cautions,
+        "review_before_use": review,
+    }
+    return CreativeMotionGuideResult.model_validate(result).model_dump()
+
+
 def _cinematic_ad_scene_type(*, ordinal: int, total: int) -> str:
     """Give the fixed three-beat concept editable authoring roles only."""
 
@@ -6182,6 +6688,57 @@ async def compose_cinematic_ad_concept(
         True,
         "Đã tạo concept quảng cáo dạng văn bản để bạn biên tập. Không có ảnh, video, audio, preview, output, job, thanh toán hoặc publish nào được tạo.",
         data={"composer": composer, **_cinematic_ad_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/creative-motion-guide/suggestions")
+async def suggest_creative_motion_guide(
+    payload: CreativeMotionSuggestionRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return exactly three refreshed text suggestions for one topic group.
+
+    This is the Web-native equivalent of the Bot's finite ``motion|topic``
+    and ``motion|refresh`` callbacks.  The set is bounded and recomputed on
+    every request; no Telegram pending state, browser draft, database record,
+    asset, provider, media/job, billing or audit side effect is created.
+    """
+
+    _require_enabled()
+    del account
+    suggestions = _creative_motion_suggestions(payload)
+    return envelope(
+        True,
+        "Đã chuẩn bị đúng ba gợi ý Creative Motion để so sánh. Đây chỉ là direction text; chưa có media, provider, job, thanh toán hoặc output nào được tạo.",
+        data={"suggestions": suggestions, **_creative_motion_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/creative-motion-guide")
+async def compose_creative_motion_guide(
+    payload: CreativeMotionGuideRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Compose a verified text guide from original bounded Web choices.
+
+    The browser sends only compact category/custom-topic, set, choice, style
+    and language fields.  For catalog topics the server rebuilds suggestions
+    before selecting a card, so a rendered title, prompt or result cannot be
+    smuggled back in as an execution or persistence request.
+    """
+
+    _require_enabled()
+    del account
+    guarded = _creative_motion_guard(_cinematic_ad_marker(payload.custom_topic))
+    if guarded:
+        return guarded
+    guide = _compose_creative_motion_guide(payload)
+    return envelope(
+        True,
+        "Đã tạo Creative Motion Guide dạng văn bản để review. Không có Telegram/Bot state, ảnh, video, audio, preview, output, job, Xu, PayOS, asset, publish hoặc delivery nào được tạo.",
+        data={"guide": guide, **_creative_motion_boundary()},
         status_name="draft",
     )
 

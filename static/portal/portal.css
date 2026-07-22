@@ -3087,6 +3087,95 @@ a { color: inherit; text-decoration: none; }
   .portal-cinematic-concept-script { grid-template-columns: 36px minmax(0, 1fr); padding: 10px; }
 }
 
+/* Creative Motion Guide is deliberately a calm review workspace. Cards are
+   explicit choices, not previews, and every result remains visually textual
+   so a customer never mistakes a guide for a rendered video or a provider
+   completion. */
+.portal-creative-motion-guide { display: grid; gap: 20px; min-width: 0; color: var(--portal-text); }
+.portal-creative-motion-guide :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 3px; }
+.portal-creative-motion-guide :is(.portal-button, input:not([type="checkbox"]), select) { min-height: var(--portal-control-height); }
+.portal-creative-motion-guide-intro { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(300px, .84fr); gap: 20px; align-items: center; padding: clamp(24px, 3vw, 36px); border: 1px solid var(--portal-border); border-radius: var(--portal-radius-lg); background: radial-gradient(circle at 88% 12%, rgba(81, 213, 188, .13), transparent 18rem), var(--portal-surface-strong); box-shadow: var(--portal-shadow); }
+.portal-creative-motion-guide-intro h2 { max-width: 800px; margin: 8px 0 10px; color: var(--portal-text); font-size: clamp(28px, 3vw, 42px); letter-spacing: -.045em; }
+.portal-creative-motion-guide-intro p { max-width: 760px; margin: 0; color: var(--portal-muted-strong); font-size: 15px; line-height: 1.65; }
+.portal-creative-motion-guide-intro ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.portal-creative-motion-guide-intro li { display: grid; gap: 7px; min-width: 0; min-height: 104px; padding: 13px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: rgba(7, 15, 23, .26); color: var(--portal-muted); font-size: 12px; font-weight: 700; line-height: 1.35; }
+.portal-creative-motion-guide-intro li span { display: inline-grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--portal-border); border-radius: 8px; color: var(--portal-muted-strong); font-variant-numeric: tabular-nums; }
+.portal-creative-motion-guide-intro li[data-active="true"] { border-color: var(--portal-border-strong); background: rgba(28, 153, 136, .12); color: var(--portal-text); }
+.portal-creative-motion-guide-intro li[data-active="true"] span { border-color: rgba(108, 237, 214, .58); background: rgba(81, 213, 188, .14); color: var(--portal-accent); }
+.portal-creative-motion-guide-layout { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(288px, .84fr); gap: 20px; align-items: start; }
+.portal-creative-motion-guide-form, .portal-creative-motion-guide-boundary, .portal-creative-motion-guide-result { background: var(--portal-surface); }
+.portal-creative-motion-guide-form .portal-form { display: grid; gap: 16px; }
+.portal-creative-motion-guide-form textarea { min-height: 116px; resize: vertical; }
+.portal-creative-motion-guide-boundary { display: grid; gap: 16px; }
+.portal-creative-motion-guide-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.portal-creative-motion-guide-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 10px 11px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-creative-motion-guide-guard-list strong { overflow: hidden; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.portal-creative-motion-guide-guard-list em { flex: 0 0 auto; padding: 4px 7px; border: 1px solid var(--portal-border); border-radius: 999px; background: var(--portal-surface-soft); color: var(--portal-muted); font-size: 12px; font-style: normal; font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
+.portal-creative-motion-guide-suggestions { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-strong); }
+.portal-creative-motion-guide-suggestions.is-stale { border-color: rgba(255, 211, 122, .42); background: rgba(107, 74, 25, .11); }
+.portal-creative-motion-guide-suggestions-stale { margin: 0; padding: 10px 11px; border: 1px solid rgba(255, 211, 122, .28); border-radius: var(--portal-radius-sm); background: rgba(107, 74, 25, .14); color: var(--portal-warning) !important; font-weight: 650; }
+.portal-creative-motion-guide-suggestions h3, .portal-creative-motion-guide-style h3 { margin: 4px 0 0; color: var(--portal-text); font-size: 17px; letter-spacing: -.025em; }
+.portal-creative-motion-guide-suggestions p, .portal-creative-motion-guide-style p { margin: 7px 0 0; color: var(--portal-muted); font-size: 14px; line-height: 1.58; }
+.portal-creative-motion-guide-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.portal-creative-motion-guide-card { display: grid; align-content: start; gap: 10px; min-width: 0; min-height: 192px; padding: 15px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); color: var(--portal-muted-strong); text-align: left; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, opacity .18s ease; }
+.portal-creative-motion-guide-card:not(:disabled):hover { border-color: rgba(117, 234, 214, .48); background: rgba(24, 71, 70, .27); box-shadow: 0 8px 20px rgba(0, 0, 0, .14); }
+.portal-creative-motion-guide-card[aria-pressed="true"] { border-color: var(--portal-border-strong); background: rgba(24, 125, 113, .18); box-shadow: inset 0 0 0 1px rgba(81, 213, 188, .13); }
+.portal-creative-motion-guide-card:disabled { opacity: .55; }
+.portal-creative-motion-guide-card-index { display: inline-grid; width: 30px; height: 27px; place-items: center; border: 1px solid var(--portal-border-strong); border-radius: 8px; background: var(--portal-surface-soft); color: var(--portal-accent); font-size: 12px; font-weight: 850; letter-spacing: .05em; font-variant-numeric: tabular-nums; }
+.portal-creative-motion-guide-card strong { color: var(--portal-text); font-size: 15px; line-height: 1.35; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-card > span:not(.portal-creative-motion-guide-card-index) { display: grid; gap: 3px; min-width: 0; color: var(--portal-muted); font-size: 12px; line-height: 1.48; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-card > span b { color: var(--portal-muted-strong); font-size: 12px; letter-spacing: .035em; text-transform: uppercase; }
+.portal-creative-motion-guide-empty { display: grid; gap: 6px; min-height: 132px; align-content: center; padding: 18px; border: 1px dashed var(--portal-border-strong); border-radius: var(--portal-radius-sm); background: rgba(24, 125, 113, .07); }
+.portal-creative-motion-guide-empty strong { color: var(--portal-text); font-size: 14px; }
+.portal-creative-motion-guide-empty p { margin: 0; color: var(--portal-muted); font-size: 14px; line-height: 1.55; }
+.portal-creative-motion-guide-style { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, .45fr); gap: 16px; align-items: end; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-bg); }
+.portal-creative-motion-guide-style .portal-field { margin: 0; }
+.portal-creative-motion-guide-result { display: grid; gap: 16px; }
+.portal-creative-motion-guide-result[data-stale] { border-color: var(--portal-warning); }
+.portal-creative-motion-guide-stale-note { margin: 0; color: var(--portal-warning); font-size: 14px; font-weight: 650; line-height: 1.55; }
+.portal-creative-motion-guide-selected { display: grid; grid-template-columns: minmax(180px, .38fr) minmax(0, .62fr); gap: 14px; align-items: start; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-strong); }
+.portal-creative-motion-guide-selected h3 { margin: 4px 0 0; color: var(--portal-text); font-size: 18px; letter-spacing: -.025em; }
+.portal-creative-motion-guide-selected p { margin: 8px 0 0; color: var(--portal-muted); font-size: 14px; line-height: 1.58; }
+.portal-creative-motion-guide-selected dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-creative-motion-guide-selected dl > div { min-width: 0; padding: 11px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-creative-motion-guide-selected dt { color: var(--portal-muted); font-size: 12px; font-weight: 750; letter-spacing: .045em; text-transform: uppercase; }
+.portal-creative-motion-guide-selected dd { margin: 6px 0 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.56; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-ideas, .portal-creative-motion-guide-editorial, .portal-creative-motion-guide-prompts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.portal-creative-motion-guide-ideas article, .portal-creative-motion-guide-editorial article, .portal-creative-motion-guide-prompts article { min-width: 0; padding: 14px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-creative-motion-guide-ideas p, .portal-creative-motion-guide-editorial p { margin: 8px 0 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.58; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-timeline { display: grid; grid-template-columns: minmax(190px, .34fr) minmax(0, .66fr); gap: 14px; align-items: start; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-strong); }
+.portal-creative-motion-guide-timeline h3 { margin: 4px 0 0; color: var(--portal-text); font-size: 17px; letter-spacing: -.025em; }
+.portal-creative-motion-guide-timeline p { margin: 7px 0 0; color: var(--portal-muted); font-size: 14px; line-height: 1.58; }
+.portal-creative-motion-guide-timeline ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.portal-creative-motion-guide-timeline li { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 10px; align-items: start; padding: 11px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-creative-motion-guide-timeline li strong { color: var(--portal-accent); font-size: 12px; font-variant-numeric: tabular-nums; }
+.portal-creative-motion-guide-timeline li span { color: var(--portal-muted-strong); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-prompts pre { max-height: 250px; margin: 8px 0 0; overflow: auto; color: var(--portal-muted-strong); font: 13px/1.62 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.portal-creative-motion-guide-editorial { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.portal-creative-motion-guide-editorial ul, .portal-creative-motion-guide-editorial ol, .portal-creative-motion-guide-review ul { display: grid; gap: 7px; margin: 8px 0 0; padding-left: 19px; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.55; }
+.portal-creative-motion-guide-review { display: grid; gap: 9px; padding: 14px; border: 1px solid rgba(255, 211, 122, .27); border-radius: var(--portal-radius); background: rgba(107, 74, 25, .16); }
+.portal-creative-motion-guide-review strong { color: var(--portal-warning); font-size: 14px; }
+
+@media (max-width: 980px) {
+  .portal-creative-motion-guide-intro, .portal-creative-motion-guide-layout, .portal-creative-motion-guide-selected, .portal-creative-motion-guide-timeline { grid-template-columns: 1fr; }
+  .portal-creative-motion-guide-editorial { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .portal-creative-motion-guide-intro { padding: 22px; border-radius: 18px; }
+  .portal-creative-motion-guide :is(.portal-button, input:not([type="checkbox"]), select) { min-height: 44px; }
+  .portal-creative-motion-guide-intro ol, .portal-creative-motion-guide-guard-list, .portal-creative-motion-guide-cards, .portal-creative-motion-guide-style, .portal-creative-motion-guide-selected dl, .portal-creative-motion-guide-ideas, .portal-creative-motion-guide-prompts { grid-template-columns: 1fr; }
+  .portal-creative-motion-guide-intro li { min-height: auto; grid-template-columns: 28px minmax(0, 1fr); align-items: center; }
+}
+@media (max-width: 440px) {
+  .portal-creative-motion-guide-suggestions, .portal-creative-motion-guide-style, .portal-creative-motion-guide-selected, .portal-creative-motion-guide-timeline { padding: 13px; }
+  .portal-creative-motion-guide-editorial { grid-template-columns: 1fr; }
+  .portal-creative-motion-guide-card { min-height: 0; padding: 13px; }
+  .portal-creative-motion-guide-timeline li { grid-template-columns: 58px minmax(0, 1fr); padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-creative-motion-guide-card { transition: none; }
+}
+
 /* Storyboard Prompt Pack Composer is a text-only planning surface. It uses a
    calm editorial hierarchy so a customer can compare concepts and prompts
    without mistaking a direction for generated media or a finished delivery. */

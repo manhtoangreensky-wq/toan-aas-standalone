@@ -26673,107 +26673,628 @@
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "review_style",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88834
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|back_style",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "review_suggestions",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88697
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|back_suggestions",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "review_suggestions",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88832
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|back_suggestions",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "select_suggestion",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88671
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|choice|1",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "select_suggestion",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88672
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|choice|2",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "select_suggestion",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88673
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|choice|3",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "refresh_suggestions",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88674
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|refresh",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88678
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|start",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88691
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|ads",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88688
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|cinematic",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88692
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|fpv",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88693
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|reveal",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88689
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|tiktok",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88690
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|tutorial",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_style_and_compose_text_guide",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88694
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|style|ugc",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88502
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|affiliate",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88503
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|ai_tool",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "enter_custom_topic",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88509
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|custom",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "enter_custom_topic",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
       "evidence": {
         "file": "bot.py",
         "line": 88675
       },
-      "fallback_family": "motion",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
       "source": "motion|topic|custom",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88507
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|education",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88505
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|fashion",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88506
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|food",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88504
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|place",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88501
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|product",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
+    },
+    {
+      "classification": "customer",
+      "creative_motion_guide_action": "choose_category",
+      "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+      "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+      "creative_motion_guide_route": "/video-studio/motion-guide",
+      "evidence": {
+        "file": "bot.py",
+        "line": 88508
+      },
+      "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+      "source": "motion|topic|story",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+        "FINITE_BOT_MOTION_INTENT_ONLY",
+        "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+        "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+        "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+        "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state through category, three suggestion, refresh, style and back keyboards. The standalone Web maps only that finite product intent to a fresh signed deterministic text-guide form. It receives no raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state.",
+      "source_kind": "callback_data",
+      "status": "COPIED_GUARDED",
+      "target": "/video-studio/motion-guide"
     },
     {
       "classification": "customer",
@@ -61671,27 +62192,6 @@
       ]
     },
     {
-      "authority": "Web-native planning",
-      "candidate_boundary": "/video-studio/image-motion-planner",
-      "count": 8,
-      "family": "motion",
-      "next_contract": "Map finite motion suggestions to the owner-scoped Image Motion planner; source inspection/rendering remains a separate capability.",
-      "priority": "P1",
-      "sample_sources": [
-        "motion|back_style",
-        "motion|back_suggestions",
-        "motion|choice|1",
-        "motion|choice|2",
-        "motion|choice|3",
-        "motion|refresh",
-        "motion|start",
-        "motion|topic|custom"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Server-authorized Admin ERP",
       "candidate_boundary": "/admin",
       "count": 3,
@@ -61846,7 +62346,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 493,
+      "count": 485,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -61887,11 +62387,6 @@
         {
           "count": 10,
           "family": "tr_target",
-          "priority": "P1"
-        },
-        {
-          "count": 8,
-          "family": "motion",
           "priority": "P1"
         },
         {
@@ -62108,12 +62603,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 87.1,
+  "mapping_coverage_percent": 87.37,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2056,
+    "COPIED_GUARDED": 2081,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 756,
-    "NEEDS_FEATURE_DISPOSITION": 493,
+    "NEEDS_FEATURE_DISPOSITION": 485,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -62121,7 +62616,7 @@
     "excluded_unreferenced_handler_package_records": 57,
     "note": "Coverage is calculated only from concrete source actions reachable from the observed bot.py entrypoint. CallbackQueryHandler registrations are transport metadata, and unreferenced handlers-package records remain evidence only. This changes the denominator; it does not add a Web feature or runtime-parity claim.",
     "numeric_tuple_non_action_rule": "Bare N:N aspect-ratio tuple values are configuration data, not callback actions; numeric-leading structured callbacks remain inventoried.",
-    "product_action_denominator": 3823
+    "product_action_denominator": 3840
   },
   "notes": [
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
@@ -62135,25 +62630,25 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 87.1,
+  "safe_disposition_coverage_percent": 87.37,
   "schema_version": "1.7",
   "source_counts": {
-    "callback_data": 2824,
+    "callback_data": 2841,
     "callback_handler_dispatchers": 54,
     "callback_handlers": 54,
     "callback_templates": 283,
     "commands": 773,
     "conversations": 0,
-    "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3330,
+    "observed_runtime_product_action_mappings": 3840,
+    "resolved_static_source_count": 3355,
     "telegram_transport_handler_records": 54,
-    "total_audited_source_records": 3934,
-    "total_mappings": 3823,
+    "total_audited_source_records": 3951,
+    "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 62,
-    "unresolved_source_count": 493
+    "unresolved_source_count": 485
   },
-  "static_web_surface_coverage_percent": 53.78,
+  "static_web_surface_coverage_percent": 54.19,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

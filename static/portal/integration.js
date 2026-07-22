@@ -351,6 +351,19 @@
   let cinematicConceptSessionEpoch = 0;
   let cinematicConceptComposeRequestEpoch = 0;
   let cinematicConceptSaveRequestEpoch = 0;
+  // Creative Motion Guide is a finite, text-only Web-native flow.  It has
+  // two transient responses (suggestions and the selected guide), each
+  // fenced against a later category/style edit, route change or account
+  // bootstrap.  There is deliberately no pending Telegram conversation or
+  // durable receipt to replay.
+  let creativeMotionGuideSessionEpoch = 0;
+  let creativeMotionGuideSuggestionsRequestEpoch = 0;
+  let creativeMotionGuideComposeRequestEpoch = 0;
+  // Only one finite Motion Guide request may be active in a signed tab. The
+  // DOM lock is paired with these epochs so an alternate button, a stale
+  // callback or a programmatic event cannot make the next-set flow ambiguous.
+  let creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
+  let creativeMotionGuideComposePendingRequestEpoch = 0;
   // Script-to-Screen has the same transient ownership rule: an older
   // compose/save response must never overwrite a newer brief, episode,
   // account, route or signed bootstrap.
@@ -5274,6 +5287,9 @@
   function isNativeCinematicConceptPath(path) {
     return String(path || "").split("?")[0] === "/video-studio/cinematic-concept";
   }
+  function isNativeCreativeMotionGuidePath(path) {
+    return String(path || "").split("?")[0] === "/video-studio/motion-guide";
+  }
   function isNativeImageMotionPlannerPath(path) {
     return String(path || "").split("?")[0] === "/video-studio/image-motion-planner";
   }
@@ -5285,7 +5301,7 @@
   }
   function isNativeVideoStudioPath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/video-studio" || normalized === "/video-studio/new" || isNativeVideoPromptPlannerPath(normalized) || isNativeVideoIdeaPlannerPath(normalized) || isNativeLongFormRoadmapPath(normalized) || isNativeSelfShotScenePlannerPath(normalized) || isNativeScriptToScreenPlannerPath(normalized) || isNativeCinematicConceptPath(normalized) || isNativeImageMotionPlannerPath(normalized) || isNativeReferenceFormatPlannerPath(normalized) || isNativeStoryboardComposerPath(normalized) || Boolean(videoPlanIdFromPath(normalized));
+    return normalized === "/video-studio" || normalized === "/video-studio/new" || isNativeVideoPromptPlannerPath(normalized) || isNativeVideoIdeaPlannerPath(normalized) || isNativeLongFormRoadmapPath(normalized) || isNativeSelfShotScenePlannerPath(normalized) || isNativeScriptToScreenPlannerPath(normalized) || isNativeCinematicConceptPath(normalized) || isNativeCreativeMotionGuidePath(normalized) || isNativeImageMotionPlannerPath(normalized) || isNativeReferenceFormatPlannerPath(normalized) || isNativeStoryboardComposerPath(normalized) || Boolean(videoPlanIdFromPath(normalized));
   }
   function videoStudioSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
@@ -6658,6 +6674,220 @@
       plan: { id: String(plan.id), revision: 1, state: "draft" },
       scene_count: 3
     };
+  }
+
+  // Creative Motion Guide is deliberately a different contract from Image
+  // Motion Planner: it converts the Bot's finite `motion|` copy flow into a
+  // signed, stateless text direction surface.  It neither needs an Image
+  // Studio reference nor creates a Video Plan, media, a job or a durable
+  // browser record.
+  const CREATIVE_MOTION_GUIDE_TOPIC_KINDS = new Set(["product", "affiliate", "ai_tool", "place", "fashion", "food", "education", "story"]);
+  const CREATIVE_MOTION_GUIDE_TOPIC_KINDS_WITH_CUSTOM = new Set([...CREATIVE_MOTION_GUIDE_TOPIC_KINDS, "custom"]);
+  const CREATIVE_MOTION_GUIDE_STYLES = new Set(["cinematic", "tiktok", "tutorial", "ads", "fpv", "reveal", "ugc"]);
+  const CREATIVE_MOTION_GUIDE_LANGUAGES = new Set(["vi", "en", "zh"]);
+  const CREATIVE_MOTION_GUIDE_FALSE_BOUNDARY_FIELDS = Object.freeze([
+    "input_persisted", "telegram_state_changed", "bot_called", "bridge_called", "source_media_inspected", "media_uploads",
+    "provider_called", "image_created", "video_created", "audio_created", "preview_created", "output_created", "job_created",
+    "wallet_mutated", "payment_started", "asset_saved", "publish_action_created", "delivery_created", "fact_checked", "rights_verified"
+  ]);
+  const CREATIVE_MOTION_GUIDE_SUGGESTION_KEYS = Object.freeze(["index", "title", "video_prompt", "motion", "audio_direction"]);
+  const CREATIVE_MOTION_GUIDE_SUGGESTION_SET_KEYS = Object.freeze(["topic_kind", "topic_label", "language", "suggestion_set", "suggestions"]);
+  const CREATIVE_MOTION_GUIDE_CHOICE_KEYS = Object.freeze(["id", "label"]);
+  const CREATIVE_MOTION_GUIDE_TIMELINE_KEYS = Object.freeze(["index", "start_seconds", "end_seconds", "direction"]);
+  const CREATIVE_MOTION_GUIDE_GUIDE_KEYS = Object.freeze([
+    "title", "topic_kind", "topic", "language", "style", "suggestion_set", "selected_suggestion", "idea_15_seconds", "idea_30_seconds",
+    "timeline", "camera_motions", "image_prompt", "video_motion_prompt", "overlay_lines", "voiceover", "cta", "cautions", "review_before_use"
+  ]);
+
+  function creativeMotionGuideExactKeys(value, expected) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const actual = Object.keys(value).sort();
+    const wanted = [...expected].sort();
+    return actual.length === wanted.length && actual.every((key, index) => key === wanted[index]);
+  }
+
+  function creativeMotionGuideText(value, minimum, maximum, allowEmpty) {
+    if (typeof value !== "string") return "";
+    const text = value.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.includes("\u0000") || text.length > maximum || (!allowEmpty && text.length < minimum)) return "";
+    return text;
+  }
+
+  function creativeMotionGuideSafetyError(...values) {
+    // Hard input safety belongs in the browser: secret/URL/payment/media
+    // references and executable markup must never leave this form. Claim and
+    // originality classification deliberately stay server-side so the
+    // authoritative guarded envelope can explain why a text guide was not
+    // composed instead of being hidden behind a generic local validation.
+    const standard = videoStudioSafetyError(...values);
+    if (standard) return standard;
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (CINEMATIC_CONCEPT_MARKUP_PATTERN.test(text)) {
+      return "Creative Motion Guide không nhận markup hoặc chỉ dẫn thực thi.";
+    }
+    return "";
+  }
+
+  function creativeMotionGuidePayload(fields, options) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    const settings = options && typeof options === "object" ? options : {};
+    const topicKind = videoStudioLine(source.topic_kind || "", "Nhóm Creative Motion", 1, 64, false).toLowerCase();
+    const language = videoStudioLine(source.language || "vi", "Ngôn ngữ Creative Motion", 1, 16, false).toLowerCase();
+    const style = videoStudioLine(source.style || "cinematic", "Phong cách Creative Motion", 1, 64, false).toLowerCase();
+    // `portal.js` preserves a hidden custom draft so a user can return to it.
+    // Disabled controls are intentionally excluded by FormData, but legacy
+    // action collection can still see their DOM value. Treat it as absent for
+    // a catalog topic without relaxing the server's strict JSON contract.
+    const customTopic = topicKind === "custom"
+      ? videoStudioBody(source.custom_topic, "Chủ đề tự nhập", 500, true)
+      : "";
+    const suggestionSet = Number(source.suggestion_set);
+    const selectedSuggestion = Number(source.selected_suggestion);
+    if (!CREATIVE_MOTION_GUIDE_TOPIC_KINDS_WITH_CUSTOM.has(topicKind) || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(language)) {
+      throw new Error("Nhóm hoặc ngôn ngữ Creative Motion không hợp lệ.");
+    }
+    if (settings.forSuggestions === true) {
+      if (!CREATIVE_MOTION_GUIDE_TOPIC_KINDS.has(topicKind) || customTopic || !Number.isInteger(suggestionSet) || suggestionSet < 1 || suggestionSet > 24) {
+        throw new Error("Chỉ nhóm có sẵn mới có thể yêu cầu một bộ ba gợi ý hợp lệ.");
+      }
+      const safety = creativeMotionGuideSafetyError(topicKind, language);
+      if (safety) throw new Error(safety);
+      return { topic_kind: topicKind, language, suggestion_set: suggestionSet };
+    }
+    if (!CREATIVE_MOTION_GUIDE_STYLES.has(style)) throw new Error("Phong cách Creative Motion không hợp lệ.");
+    if (topicKind === "custom") {
+      if (customTopic.length < 2 || suggestionSet !== 0 || selectedSuggestion !== 0) {
+        throw new Error("Chủ đề tự nhập cần từ 2 đến 500 ký tự và không dùng card gợi ý.");
+      }
+    } else if (customTopic || !Number.isInteger(suggestionSet) || suggestionSet < 1 || suggestionSet > 24
+      || !Number.isInteger(selectedSuggestion) || selectedSuggestion < 1 || selectedSuggestion > 3) {
+      throw new Error("Hãy chọn đúng một card trong bộ gợi ý hiện tại trước khi tạo Motion Guide.");
+    }
+    const safety = creativeMotionGuideSafetyError(topicKind, customTopic, language, style);
+    if (safety) throw new Error(safety);
+    return { topic_kind: topicKind, custom_topic: customTopic, language, suggestion_set: suggestionSet, selected_suggestion: selectedSuggestion, style };
+  }
+
+  function creativeMotionGuideChoiceIsSafe(value, allowed) {
+    return Boolean(creativeMotionGuideExactKeys(value, CREATIVE_MOTION_GUIDE_CHOICE_KEYS)
+      && allowed.has(String(value.id || "")) && creativeMotionGuideText(value.label, 2, 240, false));
+  }
+
+  function creativeMotionGuideSuggestionIsSafe(value, expectedIndex) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const values = [item.title, item.video_prompt, item.motion, item.audio_direction];
+    return Boolean(creativeMotionGuideExactKeys(item, CREATIVE_MOTION_GUIDE_SUGGESTION_KEYS)
+      && Number(item.index) === expectedIndex && values.every((entry) => creativeMotionGuideText(entry, 2, 2400, false))
+      && !creativeMotionGuideSafetyError(...values));
+  }
+
+  function creativeMotionGuideBoundaryIsSafe(data, contentKey) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const expected = ["execution", ...(contentKey ? [String(contentKey)] : []), ...CREATIVE_MOTION_GUIDE_FALSE_BOUNDARY_FIELDS];
+    return Boolean(creativeMotionGuideExactKeys(source, expected)
+      && source.execution === "web_native_deterministic_creative_motion_guide_only"
+      && CREATIVE_MOTION_GUIDE_FALSE_BOUNDARY_FIELDS.every((field) => source[field] === false));
+  }
+
+  function creativeMotionGuideSuggestionsIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!creativeMotionGuideBoundaryIsSafe(data, "suggestions")) return false;
+    const set = data.suggestions && typeof data.suggestions === "object" && !Array.isArray(data.suggestions) ? data.suggestions : {};
+    const list = Array.isArray(set.suggestions) ? set.suggestions : [];
+    return Boolean(creativeMotionGuideExactKeys(set, CREATIVE_MOTION_GUIDE_SUGGESTION_SET_KEYS)
+      && CREATIVE_MOTION_GUIDE_TOPIC_KINDS.has(String(set.topic_kind || ""))
+      && creativeMotionGuideText(set.topic_label, 2, 240, false)
+      && CREATIVE_MOTION_GUIDE_LANGUAGES.has(String(set.language || ""))
+      && Number.isInteger(Number(set.suggestion_set)) && Number(set.suggestion_set) >= 1 && Number(set.suggestion_set) <= 24
+      && list.length === 3 && list.every((item, index) => creativeMotionGuideSuggestionIsSafe(item, index + 1)));
+  }
+
+  function creativeMotionGuideSameSuggestion(left, right) {
+    return Boolean(left && right && CREATIVE_MOTION_GUIDE_SUGGESTION_KEYS.every((key) => left[key] === right[key]));
+  }
+
+  function creativeMotionGuideSuggestionsMatchPayload(value, payload) {
+    const data = value && typeof value === "object" ? value : {};
+    const set = data.suggestions && typeof data.suggestions === "object" ? data.suggestions : {};
+    return Boolean(creativeMotionGuideSuggestionsIsSafe(data) && payload && typeof payload === "object"
+      && set.topic_kind === payload.topic_kind && set.language === payload.language && Number(set.suggestion_set) === Number(payload.suggestion_set));
+  }
+
+  function creativeMotionGuideTimelineIsSafe(value, expectedIndex) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const start = Number(item.start_seconds);
+    const end = Number(item.end_seconds);
+    return Boolean(creativeMotionGuideExactKeys(item, CREATIVE_MOTION_GUIDE_TIMELINE_KEYS)
+      && Number(item.index) === expectedIndex && Number.isInteger(start) && Number.isInteger(end)
+      && start >= 0 && end > start && end <= 30 && creativeMotionGuideText(item.direction, 2, 2400, false)
+      && !creativeMotionGuideSafetyError(item.direction));
+  }
+
+  function creativeMotionGuideStringListIsSafe(value, minimum, maximum) {
+    return Array.isArray(value) && value.length >= minimum && value.length <= maximum
+      && value.every((item) => creativeMotionGuideText(item, 2, 1200, false) && !creativeMotionGuideSafetyError(item));
+  }
+
+  function creativeMotionGuideResultIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!creativeMotionGuideBoundaryIsSafe(data, "guide")) return false;
+    const guide = data.guide && typeof data.guide === "object" && !Array.isArray(data.guide) ? data.guide : {};
+    const selected = guide.selected_suggestion;
+    const timeline = Array.isArray(guide.timeline) ? guide.timeline : [];
+    const textValues = [guide.title, guide.topic, guide.idea_15_seconds, guide.idea_30_seconds, guide.image_prompt, guide.video_motion_prompt, guide.voiceover, guide.cta];
+    if (!creativeMotionGuideExactKeys(guide, CREATIVE_MOTION_GUIDE_GUIDE_KEYS)
+      || !textValues.every((entry) => creativeMotionGuideText(entry, 2, 2400, false))
+      || !CREATIVE_MOTION_GUIDE_TOPIC_KINDS_WITH_CUSTOM.has(String(guide.topic_kind || ""))
+      || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(String(guide.language || ""))
+      || !creativeMotionGuideChoiceIsSafe(guide.style, CREATIVE_MOTION_GUIDE_STYLES)
+      || !Number.isInteger(Number(guide.suggestion_set)) || Number(guide.suggestion_set) < 0 || Number(guide.suggestion_set) > 24
+      || timeline.length !== 4 || !timeline.every((item, index) => creativeMotionGuideTimelineIsSafe(item, index + 1))
+      || !creativeMotionGuideStringListIsSafe(guide.camera_motions, 6, 10)
+      || !creativeMotionGuideStringListIsSafe(guide.overlay_lines, 4, 4)
+      || !creativeMotionGuideStringListIsSafe(guide.cautions, 2, 4)
+      || !creativeMotionGuideStringListIsSafe(guide.review_before_use, 2, 4)
+      || creativeMotionGuideSafetyError(...textValues)) return false;
+    if (guide.topic_kind === "custom") return Number(guide.suggestion_set) === 0 && selected === null;
+    return Number(guide.suggestion_set) >= 1 && creativeMotionGuideSuggestionIsSafe(selected, Number(selected && selected.index));
+  }
+
+  function creativeMotionGuideResultMatchesPayload(value, payload, suggestionsValue) {
+    if (!creativeMotionGuideResultIsSafe(value) || !payload || typeof payload !== "object") return false;
+    const guide = value.guide;
+    if (guide.topic_kind !== payload.topic_kind || guide.language !== payload.language || guide.style.id !== payload.style
+      || Number(guide.suggestion_set) !== Number(payload.suggestion_set)) return false;
+    if (payload.topic_kind === "custom") {
+      return guide.topic === payload.custom_topic && guide.selected_suggestion === null && payload.selected_suggestion === 0;
+    }
+    if (!creativeMotionGuideSuggestionsMatchPayload(suggestionsValue, payload)) return false;
+    const suggestions = suggestionsValue.suggestions.suggestions;
+    const selected = suggestions[payload.selected_suggestion - 1];
+    return Boolean(selected && guide.topic === selected.title && creativeMotionGuideSameSuggestion(selected, guide.selected_suggestion));
+  }
+
+  function creativeMotionGuideCurrentFormFields(form) {
+    if (!(form instanceof HTMLFormElement)) return {};
+    const fields = {};
+    // The finite flow deliberately locks controls while a request is in
+    // flight. FormData excludes disabled controls, which would make a valid
+    // response look stale merely because the UI correctly prevented editing.
+    // Read only the bounded native inputs instead; `creativeMotionGuidePayload`
+    // still omits a hidden custom topic for catalog categories.
+    form.querySelectorAll("input, textarea, select").forEach((control) => {
+      if (!control.name || Object.prototype.hasOwnProperty.call(fields, control.name)) return;
+      fields[control.name] = control.type === "checkbox" ? control.checked : control.value;
+    });
+    return fields;
+  }
+
+  function creativeMotionGuideFormMatchesPayload(form, payload) {
+    try {
+      const current = creativeMotionGuidePayload(creativeMotionGuideCurrentFormFields(form));
+      const keys = ["topic_kind", "custom_topic", "language", "suggestion_set", "selected_suggestion", "style"];
+      return keys.every((key) => current[key] === payload[key]);
+    } catch (_) {
+      return false;
+    }
   }
 
   // Image Motion Planner is the Web-native planning counterpart of the Bot's
@@ -10101,6 +10331,11 @@
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
+    ++creativeMotionGuideSessionEpoch;
+    ++creativeMotionGuideSuggestionsRequestEpoch;
+    ++creativeMotionGuideComposeRequestEpoch;
+    creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
+    creativeMotionGuideComposePendingRequestEpoch = 0;
     ++scriptToScreenPlannerSessionEpoch;
     ++scriptToScreenPlannerComposeRequestEpoch;
     ++scriptToScreenPlannerSaveRequestEpoch;
@@ -10341,6 +10576,11 @@
     // but only derives a transient creative plan from text. It does not expose
     // a renderer, media source, Bot bridge, asset, job or payment authority.
     const cinematicConceptEnabled = videoStudioEnabled;
+    // Creative Motion Guide is a finite, stateless text-only conversion of
+    // the Bot's `motion|` flow. It shares only the signed Video Studio gate;
+    // this never enables Image Studio, pending Telegram state, media, jobs,
+    // provider calls, wallets, PayOS, assets, publishing or delivery.
+    const creativeMotionGuideEnabled = videoStudioEnabled;
     // Storyboard Composer uses the same narrow Video Studio maintenance gate,
     // but returns only a transient deterministic prompt pack. It does not
     // unlock a renderer, source upload, Bot bridge, asset, job or payment.
@@ -10789,6 +11029,8 @@
       "self-shot-scene-planner-save-plan": Boolean(account && me.csrf_token && selfShotScenePlannerEnabled),
       "cinematic-concept-compose": Boolean(account && me.csrf_token && cinematicConceptEnabled),
       "cinematic-concept-save-plan": Boolean(account && me.csrf_token && cinematicConceptEnabled),
+      "creative-motion-guide-suggest": Boolean(account && me.csrf_token && creativeMotionGuideEnabled),
+      "creative-motion-guide-compose": Boolean(account && me.csrf_token && creativeMotionGuideEnabled),
       "image-motion-planner-view": Boolean(account && imageMotionPlannerEnabled),
       "image-motion-planner-compose": Boolean(account && me.csrf_token && imageMotionPlannerEnabled),
       "image-motion-planner-save-plan": Boolean(account && me.csrf_token && imageMotionPlannerEnabled),
@@ -11079,6 +11321,11 @@
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
+    ++creativeMotionGuideSessionEpoch;
+    ++creativeMotionGuideSuggestionsRequestEpoch;
+    ++creativeMotionGuideComposeRequestEpoch;
+    creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
+    creativeMotionGuideComposePendingRequestEpoch = 0;
     ++scriptToScreenPlannerSessionEpoch;
     ++scriptToScreenPlannerComposeRequestEpoch;
     ++scriptToScreenPlannerSaveRequestEpoch;
@@ -11276,6 +11523,7 @@
       selfShotScenePlannerEnabled,
       scriptToScreenPlannerEnabled,
       cinematicConceptEnabled,
+      creativeMotionGuideEnabled,
       imageMotionPlannerEnabled,
       referenceFormatPlannerEnabled,
       storyboardComposerEnabled,
@@ -11512,6 +11760,12 @@
       // restored from browser persistence, Bot state or Video Studio reads.
       cinematicConceptSaveSource: {},
       cinematicConceptSaveReceipt: {},
+      // Motion Guide has no durable handoff at all: clear the category,
+      // suggestion cards and guide output on every signed bootstrap so they
+      // cannot cross accounts, routes or a failed session refresh.
+      creativeMotionGuideDraft: {},
+      creativeMotionGuideSuggestions: {},
+      creativeMotionGuideResult: {},
       // Image Motion Planner retains only current-account selector metadata,
       // bounded choices and a content-free save receipt in this active tab.
       // Never carry a prior account's Image Studio reference or plan text
@@ -11858,6 +12112,7 @@
         "/video-studio/self-shot-planner": account && selfShotScenePlannerEnabled ? "ready" : "guarded",
         "/video-studio/script-to-screen-planner": account && scriptToScreenPlannerEnabled ? "ready" : "guarded",
         "/video-studio/cinematic-concept": account && cinematicConceptEnabled ? "ready" : "guarded",
+        "/video-studio/motion-guide": account && creativeMotionGuideEnabled ? "ready" : "guarded",
         "/video-studio/image-motion-planner": account && imageMotionPlannerEnabled ? "processing" : "guarded",
         "/video-studio/reference-format-planner": account && referenceFormatPlannerEnabled ? "processing" : "guarded",
         "/video-studio/storyboard-composer": account && storyboardComposerEnabled ? "ready" : "guarded",
@@ -11918,7 +12173,7 @@
     else if (account && ["/campaigns", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     else if (account && isNativeContentHandoffPath(currentPath)) await hydrateCampaignPlans();
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeCreativeMotionGuidePath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -12140,6 +12395,14 @@
       if (!(account && cinematicConceptEnabled)) merge({
         cinematicConceptResult: {}, cinematicConceptSaveSource: {}, cinematicConceptSaveReceipt: {},
         pageStates: { ...(base().pageStates || {}), "/video-studio/cinematic-concept": "guarded" }
+      });
+    } else if (isNativeCreativeMotionGuidePath(currentPath)) {
+      // This Bot-derived guide has no pending Telegram state or legacy media
+      // record to hydrate.  A guarded route clears only its signed-tab text
+      // choices and never falls through to Image Motion or Video Plan data.
+      if (!(account && creativeMotionGuideEnabled)) merge({
+        creativeMotionGuideDraft: {}, creativeMotionGuideSuggestions: {}, creativeMotionGuideResult: {},
+        pageStates: { ...(base().pageStates || {}), "/video-studio/motion-guide": "guarded" }
       });
     } else if (isNativeVideoPromptPlannerPath(currentPath)) {
       // The planner has no project/history hydration. It uses a signed,
@@ -14170,6 +14433,41 @@
       && currentPortalPath() === expectedPath
       && base().cinematicConceptEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function creativeMotionGuideRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+    const currentRequestEpoch = kind === "suggestions"
+      ? creativeMotionGuideSuggestionsRequestEpoch
+      : kind === "compose" ? creativeMotionGuideComposeRequestEpoch : -1;
+    const account = base().account && typeof base().account === "object" ? base().account : {};
+    return requestEpoch === currentRequestEpoch
+      && sessionEpoch === creativeMotionGuideSessionEpoch
+      && Boolean(expectedAccountId)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/video-studio/motion-guide"
+      && currentPortalPath() === expectedPath
+      && base().creativeMotionGuideEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function creativeMotionGuidePendingKind() {
+    if (creativeMotionGuideSuggestionsPendingRequestEpoch) return "suggestions";
+    if (creativeMotionGuideComposePendingRequestEpoch) return "compose";
+    return "";
+  }
+
+  function synchronizeCreativeMotionGuideBusyState(route) {
+    const expectedPath = "/video-studio/motion-guide";
+    if (route !== expectedPath || currentPortalPath() !== expectedPath) return;
+    const form = document.querySelector('form[data-creative-motion-guide-form]');
+    if (form) {
+      const pendingKind = creativeMotionGuidePendingKind();
+      if (pendingKind) form.dataset.creativeMotionGuideBusy = pendingKind;
+      else delete form.dataset.creativeMotionGuideBusy;
+    }
+    // Portal owns the exact per-step disabled state. This event only carries
+    // the transient in-flight lane, never a Bot/Telegram pending record.
+    window.dispatchEvent(new CustomEvent("toanaas:creative-motion-guide-sync"));
   }
 
   function scriptToScreenPlannerRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
@@ -24252,7 +24550,233 @@
         }
         return;
       }
-    if (action === "cinematic-concept-compose") {
+      if (["creative-motion-guide-suggest", "creative-motion-guide-refresh"].includes(action)) {
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        const expectedPath = "/video-studio/motion-guide";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath || capabilities["creative-motion-guide-suggest"] !== true) {
+          throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể tạo gợi ý Creative Motion.");
+        }
+        if (creativeMotionGuidePendingKind()) {
+          toast("Creative Motion Guide đang xử lý bước hiện tại. Vui lòng chờ trước khi tạo hoặc đổi bộ gợi ý.", "error");
+          return;
+        }
+        const topicKind = String(fields.topic_kind || "").trim().toLowerCase();
+        const language = String(fields.language || "").trim().toLowerCase();
+        const existing = base().creativeMotionGuideSuggestions;
+        const existingSet = existing && existing.suggestions && typeof existing.suggestions === "object" ? existing.suggestions : {};
+        const currentSet = Number(fields.suggestion_set);
+        const sameExistingTopic = creativeMotionGuideSuggestionsIsSafe(existing)
+          && existingSet.topic_kind === topicKind && existingSet.language === language
+          && Number.isInteger(currentSet) && currentSet === Number(existingSet.suggestion_set);
+        if (action === "creative-motion-guide-refresh" && !sameExistingTopic) {
+          throw new Error("Hãy tạo đúng ba gợi ý cho nhóm và ngôn ngữ hiện tại trước khi đổi sang bộ tiếp theo.");
+        }
+        const nextSet = action === "creative-motion-guide-refresh"
+          ? (Number(existingSet.suggestion_set) >= 24 ? 1 : Number(existingSet.suggestion_set) + 1)
+          : 1;
+        const suggestionPayload = creativeMotionGuidePayload({ ...fields, suggestion_set: String(nextSet), selected_suggestion: "0" }, { forSuggestions: true });
+        const style = videoStudioLine(fields.style || "cinematic", "Phong cách Creative Motion", 1, 64, false).toLowerCase();
+        if (!CREATIVE_MOTION_GUIDE_STYLES.has(style)) throw new Error("Phong cách Creative Motion không hợp lệ.");
+        const draft = {
+          topic_kind: suggestionPayload.topic_kind,
+          custom_topic: "",
+          language: suggestionPayload.language,
+          suggestion_set: suggestionPayload.suggestion_set,
+          selected_suggestion: 0,
+          style
+        };
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = creativeMotionGuideSessionEpoch;
+        const requestEpoch = ++creativeMotionGuideSuggestionsRequestEpoch;
+        // A fresh suggestion set makes any old guide source stale, but the
+        // prior guide remains visibly marked for comparison instead of being
+        // silently erased. It also cancels an older compose reply.
+        ++creativeMotionGuideComposeRequestEpoch;
+        creativeMotionGuideSuggestionsPendingRequestEpoch = requestEpoch;
+        if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+          if (creativeMotionGuideSuggestionsPendingRequestEpoch === requestEpoch) creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
+          return;
+        }
+        merge({
+          creativeMotionGuideDraft: draft,
+          creativeMotionGuideSuggestions: {},
+          pageStates: { ...(base().pageStates || {}), [expectedPath]: "processing" }
+        });
+        synchronizeCreativeMotionGuideBusyState(route);
+        try {
+          const result = await api("/video-studio/tools/creative-motion-guide/suggestions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(suggestionPayload)
+          });
+          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status !== "draft" || !creativeMotionGuideSuggestionsIsSafe(data)
+            || !creativeMotionGuideSuggestionsMatchPayload(data, suggestionPayload)) {
+            throw new Error("Máy chủ chưa trả đúng ba gợi ý Creative Motion an toàn.");
+          }
+          const form = document.querySelector('form[data-creative-motion-guide-form]');
+          const currentFields = creativeMotionGuideCurrentFormFields(form);
+          let fieldsStillMatch = false;
+          try {
+            const currentSuggestionPayload = creativeMotionGuidePayload(
+              { ...currentFields, suggestion_set: String(suggestionPayload.suggestion_set), selected_suggestion: "0" },
+              { forSuggestions: true }
+            );
+            fieldsStillMatch = currentSuggestionPayload.topic_kind === suggestionPayload.topic_kind
+              && currentSuggestionPayload.language === suggestionPayload.language
+              && currentSuggestionPayload.suggestion_set === suggestionPayload.suggestion_set;
+          } catch (_) {
+            fieldsStillMatch = false;
+          }
+          if (!fieldsStillMatch || !creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+              merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
+            }
+            return;
+          }
+          merge({
+            creativeMotionGuideDraft: draft,
+            creativeMotionGuideSuggestions: data,
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
+          });
+          toast(result.message || "Đã tạo đúng ba gợi ý Creative Motion để so sánh.");
+        } catch (error) {
+          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          const disabled = error && Number(error.status) === 503;
+          merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: disabled ? "guarded" : "ready" } });
+          throw error;
+        } finally {
+          if (creativeMotionGuideSuggestionsPendingRequestEpoch === requestEpoch) creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
+          if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            synchronizeCreativeMotionGuideBusyState(route);
+          }
+        }
+        return;
+      }
+      if (action === "creative-motion-guide-select-suggestion") {
+        const expectedPath = "/video-studio/motion-guide";
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (route !== expectedPath || currentPortalPath() !== expectedPath || capabilities["creative-motion-guide-compose"] !== true) {
+          throw new Error("Chỉ signed Web session hiện tại mới có thể chọn gợi ý Creative Motion.");
+        }
+        if (creativeMotionGuidePendingKind()) {
+          toast("Creative Motion Guide đang xử lý bước hiện tại. Card chỉ có thể được chọn sau khi bộ gợi ý ổn định.", "error");
+          return;
+        }
+        const choice = Number(detail.creativeMotionGuideChoice || fields.__creativeMotionGuideChoice);
+        if (!Number.isInteger(choice) || choice < 1 || choice > 3) throw new Error("Lựa chọn gợi ý Creative Motion không hợp lệ.");
+        const payload = creativeMotionGuidePayload({ ...fields, selected_suggestion: String(choice) });
+        const suggestions = base().creativeMotionGuideSuggestions;
+        if (payload.topic_kind === "custom" || !creativeMotionGuideSuggestionsMatchPayload(suggestions, payload)) {
+          throw new Error("Bộ gợi ý đang hiển thị không còn khớp nhóm hoặc ngôn ngữ hiện tại. Hãy tạo lại ba gợi ý trước khi chọn.");
+        }
+        // A card click is explicit editing, not a navigation or reset. It
+        // invalidates a pending old guide, retains it as stale comparison and
+        // remounts only the same form with the selected card reflected.
+        ++creativeMotionGuideSuggestionsRequestEpoch;
+        ++creativeMotionGuideComposeRequestEpoch;
+        merge({ creativeMotionGuideDraft: payload });
+        toast(`Đã chọn gợi ý ${choice}. Tiếp tục chọn phong cách rồi tạo guide.`);
+        return;
+      }
+      if (action === "creative-motion-guide-focus-topic") {
+        const expectedPath = "/video-studio/motion-guide";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) {
+          throw new Error("Chỉ có thể chỉnh nhóm từ trang Creative Motion Guide đang mở.");
+        }
+        const field = document.querySelector("[data-creative-motion-guide-topic-kind]");
+        if (field && typeof field.focus === "function") field.focus({ preventScroll: false });
+        return;
+      }
+      if (action === "creative-motion-guide-compose") {
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        const expectedPath = "/video-studio/motion-guide";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath || capabilities["creative-motion-guide-compose"] !== true) {
+          throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể tạo Motion Guide.");
+        }
+        if (creativeMotionGuidePendingKind()) {
+          toast("Creative Motion Guide đang xử lý bước hiện tại. Không thể tạo guide chồng lên một yêu cầu đang chạy.", "error");
+          return;
+        }
+        const payload = creativeMotionGuidePayload(fields);
+        const suggestions = base().creativeMotionGuideSuggestions;
+        if (payload.topic_kind !== "custom" && !creativeMotionGuideSuggestionsMatchPayload(suggestions, payload)) {
+          throw new Error("Hãy tạo lại và chọn một card trong đúng bộ gợi ý hiện tại trước khi tạo Motion Guide.");
+        }
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = creativeMotionGuideSessionEpoch;
+        const requestEpoch = ++creativeMotionGuideComposeRequestEpoch;
+        creativeMotionGuideComposePendingRequestEpoch = requestEpoch;
+        if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+          if (creativeMotionGuideComposePendingRequestEpoch === requestEpoch) creativeMotionGuideComposePendingRequestEpoch = 0;
+          return;
+        }
+        // Preserve a prior result through this explicit recomposition. The
+        // renderer marks it stale until this exact response is accepted; an
+        // invalid submit or transport error can therefore never pretend the
+        // old guide belongs to the new form.
+        merge({
+          creativeMotionGuideDraft: payload,
+          pageStates: { ...(base().pageStates || {}), [expectedPath]: "processing" }
+        });
+        synchronizeCreativeMotionGuideBusyState(route);
+        try {
+          const result = await api("/video-studio/tools/creative-motion-guide", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status !== "draft" || !creativeMotionGuideResultMatchesPayload(data, payload, suggestions)) {
+            throw new Error("Máy chủ chưa trả Creative Motion Guide an toàn hoặc không khớp lựa chọn hiện tại.");
+          }
+          const form = document.querySelector('form[data-creative-motion-guide-form]');
+          if (!creativeMotionGuideFormMatchesPayload(form, payload)
+            || !creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+              merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
+            }
+            return;
+          }
+          merge({
+            creativeMotionGuideDraft: payload,
+            creativeMotionGuideResult: data,
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
+          });
+          toast(result.message || "Đã tạo Creative Motion Guide dạng văn bản để review.");
+        } catch (error) {
+          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          const guarded = error && error.payload && typeof error.payload === "object" ? error.payload : null;
+          if (guarded && guarded.status === "guarded") {
+            const guardedData = guarded.data && typeof guarded.data === "object" ? guarded.data : {};
+            const guardedCode = String(guarded.error_code || "");
+            if (!creativeMotionGuideBoundaryIsSafe(guardedData)
+              || !["WEB_CREATIVE_MOTION_CLAIM_GUARD", "WEB_CREATIVE_MOTION_ORIGINALITY_GUARD"].includes(guardedCode)) {
+              merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
+              throw new Error("Máy chủ chưa trả ranh giới Creative Motion Guide an toàn.");
+            }
+            // Keep an older result intact. Portal marks it stale against the
+            // current form instead of presenting it as a newly accepted guide.
+            merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" } });
+            toast(guarded.message || "Chủ đề cần được điều chỉnh trước khi tạo Motion Guide.", "error");
+            return;
+          }
+          const disabled = error && Number(error.status) === 503;
+          merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: disabled ? "guarded" : "ready" } });
+          throw error;
+        } finally {
+          if (creativeMotionGuideComposePendingRequestEpoch === requestEpoch) creativeMotionGuideComposePendingRequestEpoch = 0;
+          if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            synchronizeCreativeMotionGuideBusyState(route);
+          }
+        }
+        return;
+      }
+      if (action === "cinematic-concept-compose") {
         const payload = cinematicConceptPayload(fields);
         const expectedPath = "/video-studio/cinematic-concept";
         const account = base().account && typeof base().account === "object" ? base().account : {};
@@ -30773,6 +31297,18 @@
       setActionBusy("image-motion-planner-compose", "/video-studio/image-motion-planner", false);
     }
     reconcileImageMotionPlannerSaveControls("/video-studio/image-motion-planner");
+  });
+  window.addEventListener("toanaas:creative-motion-guide-draft-edited", () => {
+    // This event is emitted only after a visible topic/language/custom/style
+    // edit. It fences both in-flight text responses without clearing the
+    // user's DOM values, navigating, or restoring a prior Bot-like state.
+    if (currentPortalPath() !== "/video-studio/motion-guide") return;
+    // The visible form is locked while either finite request is active. Ignore
+    // synthetic edits during that lock instead of invalidating a response and
+    // leaving the page in a false `processing` state.
+    if (creativeMotionGuidePendingKind()) return;
+    ++creativeMotionGuideSuggestionsRequestEpoch;
+    ++creativeMotionGuideComposeRequestEpoch;
   });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;

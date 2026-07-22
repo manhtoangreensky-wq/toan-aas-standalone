@@ -9664,6 +9664,13 @@
     },
     {
       "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88697,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|back_suggestions"
+    },
+    {
+      "file": "bot.py",
       "line": 88832,
       "token": "motion|back_suggestions"
     },
@@ -9694,8 +9701,120 @@
     },
     {
       "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88691,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|ads"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88688,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|cinematic"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88692,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|fpv"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88693,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|reveal"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88689,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|tiktok"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88690,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|tutorial"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_style_keyboard",
+      "line": 88694,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|style|ugc"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88502,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|affiliate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88503,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|ai_tool"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88509,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|custom"
+    },
+    {
+      "file": "bot.py",
       "line": 88675,
       "token": "motion|topic|custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88507,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|education"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88505,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|fashion"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88506,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|food"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88504,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|place"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88501,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|product"
+    },
+    {
+      "file": "bot.py",
+      "helper": "creative_motion_topic_keyboard",
+      "line": 88508,
+      "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+      "token": "motion|topic|story"
     },
     {
       "file": "bot.py",
@@ -24388,7 +24507,7 @@
   "conversations": [],
   "counts": {
     "background_jobs": 194,
-    "callback_data": 2824,
+    "callback_data": 2841,
     "callback_handlers": 54,
     "callback_templates": 283,
     "commands": 773,
@@ -30215,5 +30334,5 @@
   "source_files_discovered": 176,
   "source_files_scanned": 172,
   "source_fingerprint_sha256": "f3d494338eb19d729916151048d3f5d3ee03f0f895c3bfe7089e1e2a967f1b25",
-  "source_root": "C:\\Users\\toann\\AppData\\Local\\Temp\\toan-aas-bot-baseline-aqv2p_jx"
+  "source_root": "C:\\Users\\toann\\AppData\\Local\\Temp\\toan-aas-bot-baseline-jw4ycexw"
 }

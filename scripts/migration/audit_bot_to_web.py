@@ -545,6 +545,75 @@ CINEMATIC_AD_CONCEPT_OWNER_PLAN_CONFIRMATION_CALLBACKS = frozenset(
     }
 )
 
+# Creative Motion Guide is a finite, prompt-only Bot conversation.  The
+# frozen handler stores a short-lived Telegram ``USER_PENDING`` record while
+# it moves through category, suggestion and style keyboards.  The standalone
+# Web intentionally implements the *product grammar* as a fresh, signed,
+# deterministic text guide at its own route; it never consumes that pending
+# record or any raw callback.  Keep this exact vocabulary explicit so a future
+# ``motion|...`` spelling cannot silently inherit the Web feature.
+CREATIVE_MOTION_GUIDE_ROUTE = "/video-studio/motion-guide"
+CREATIVE_MOTION_GUIDE_TOPIC_CALLBACKS = frozenset(
+    {
+        "motion|topic|product",
+        "motion|topic|affiliate",
+        "motion|topic|ai_tool",
+        "motion|topic|place",
+        "motion|topic|fashion",
+        "motion|topic|food",
+        "motion|topic|education",
+        "motion|topic|story",
+        "motion|topic|custom",
+    }
+)
+CREATIVE_MOTION_GUIDE_SUGGESTION_CALLBACKS = frozenset(
+    {
+        "motion|choice|1",
+        "motion|choice|2",
+        "motion|choice|3",
+        "motion|refresh",
+    }
+)
+CREATIVE_MOTION_GUIDE_STYLE_CALLBACKS = frozenset(
+    {
+        "motion|style|cinematic",
+        "motion|style|tiktok",
+        "motion|style|tutorial",
+        "motion|style|ads",
+        "motion|style|fpv",
+        "motion|style|reveal",
+        "motion|style|ugc",
+    }
+)
+CREATIVE_MOTION_GUIDE_NAVIGATION_CALLBACKS = frozenset(
+    {
+        "motion|start",
+        "motion|back_suggestions",
+        "motion|back_style",
+    }
+)
+CREATIVE_MOTION_GUIDE_CALLBACKS = frozenset(
+    {
+        *CREATIVE_MOTION_GUIDE_TOPIC_CALLBACKS,
+        *CREATIVE_MOTION_GUIDE_SUGGESTION_CALLBACKS,
+        *CREATIVE_MOTION_GUIDE_STYLE_CALLBACKS,
+        *CREATIVE_MOTION_GUIDE_NAVIGATION_CALLBACKS,
+    }
+)
+# The large Bot source cannot always be parsed as a full AST inside the
+# bounded, static audit. These four keyboard builders contain nested
+# ``ui_text(...)`` calls, which the generic two-value tuple regex correctly
+# refuses to interpret. This narrow scanner reads only quoted, callback-shaped
+# motion literals physically inside those functions; it does not import,
+# execute, evaluate an f-string, or derive a token absent from source.
+CREATIVE_MOTION_GUIDE_KEYBOARD_HELPER_RE = re.compile(
+    r"(?ms)^\s*def\s+(?P<helper>creative_motion_(?:topic|suggestions|style|result)_keyboard)\s*\([^\n]*\)"
+    r"(?P<body>.*?)(?=^\s*(?:async\s+)?def\s|\Z)"
+)
+CREATIVE_MOTION_GUIDE_CALLBACK_LITERAL_RE = re.compile(
+    r"(?P<quote>['\"])(?P<token>motion\|[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*)(?P=quote)"
+)
+
 # Frozen baseline b29d0d4: Task3D / ``vproduct`` has two useful text-first
 # intents, but every Bot guided choice is stored in ``get_video_session(uid)``
 # and later branches into prompt bundles, Telegram delivery, package/Xu,
@@ -2524,9 +2593,16 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "motion": {
         "priority": "P1",
-        "candidate_boundary": "/video-studio/image-motion-planner",
-        "authority": "Web-native planning",
-        "next_contract": "Map finite motion suggestions to the owner-scoped Image Motion planner; source inspection/rendering remains a separate capability.",
+        "candidate_boundary": "/video-studio/motion-guide",
+        "authority": "Web-native deterministic Creative Motion Guide text planning",
+        "next_contract": "Map only the finite Creative Motion Guide category/suggestion/style literals to the signed text-only Motion Guide. Bot Telegram pending state, media inspection/rendering, providers, jobs, wallet/Xu, PayOS, bridge, assets, publish and delivery remain separate capabilities.",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+            "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+            "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+            "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen Bot `motion|` handler stores category, suggestion offset, selected suggestion, topic and style in short-lived USER_PENDING state before returning a prompt-only guide. The Web feature starts from a new signed form and never receives that Telegram state or any media/runtime/financial authority.",
     },
     "tvflow": {
         "priority": "P1",
@@ -3951,6 +4027,47 @@ def _resolve_reviewed_quick_image_logo_position_callbacks(
                 _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
 
 
+def _resolve_reviewed_creative_motion_guide_callbacks(
+    *,
+    text: str,
+    root: Path,
+    path: Path,
+    callback_data: list[dict[str, Any]],
+    seen: dict[str, set[tuple[Any, ...]]],
+) -> None:
+    """Extract the finite Motion Guide keyboard vocabulary from static source.
+
+    The generic large-file tuple regex intentionally avoids nested expressions
+    such as ``(ui_text(...), "motion|topic|product")``.  The canonical Bot
+    uses exactly that harmless pattern in its four Creative Motion Guide
+    keyboard builders, so inspect only those function bodies and admit only
+    an explicit frozen allow-list.  This is static evidence extraction, not
+    symbolic execution: it never follows a callback value, reads Telegram
+    pending state, imports the Bot, or manufactures a missing literal.
+    """
+
+    relative_path = _relative(path, root)
+    for helper_match in CREATIVE_MOTION_GUIDE_KEYBOARD_HELPER_RE.finditer(text):
+        helper = str(helper_match.group("helper") or "")
+        body = str(helper_match.group("body") or "")
+        body_offset = helper_match.start("body")
+        for token_match in CREATIVE_MOTION_GUIDE_CALLBACK_LITERAL_RE.finditer(body):
+            token = str(token_match.group("token") or "").casefold()
+            if token not in CREATIVE_MOTION_GUIDE_CALLBACKS:
+                # A newly added or mistyped Bot literal must remain visible to
+                # the generic audit as source-review evidence rather than
+                # silently inheriting the fresh Web text-guide boundary.
+                continue
+            record = {
+                "token": token,
+                "resolution": "reviewed_creative_motion_guide_keyboard_literal",
+                "helper": helper,
+                "file": relative_path,
+                "line": _line_for_offset(text, body_offset + token_match.start()),
+            }
+            _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+
+
 def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
     commands: list[dict[str, Any]] = []
     callback_handlers: list[dict[str, Any]] = []
@@ -4106,6 +4223,13 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
             root=root,
             path=path,
             callback_templates=callback_templates,
+            callback_data=callback_data,
+            seen=seen,
+        )
+        _resolve_reviewed_creative_motion_guide_callbacks(
+            text=_read_source(path),
+            root=root,
+            path=path,
             callback_data=callback_data,
             seen=seen,
         )
@@ -5952,11 +6076,131 @@ def _map_storypack_callback(
     return _storypack_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _creative_motion_guide_action(token: str) -> str:
+    """Return the finite product intent represented by one reviewed literal."""
+
+    if token == "motion|start":
+        return "choose_category"
+    if token in CREATIVE_MOTION_GUIDE_TOPIC_CALLBACKS:
+        return "enter_custom_topic" if token.endswith("|custom") else "choose_category"
+    if token.startswith("motion|choice|"):
+        return "select_suggestion"
+    if token == "motion|refresh":
+        return "refresh_suggestions"
+    if token.startswith("motion|style|"):
+        return "choose_style_and_compose_text_guide"
+    if token == "motion|back_suggestions":
+        return "review_suggestions"
+    if token == "motion|back_style":
+        return "review_style"
+    raise ValueError(f"unreviewed creative motion guide token: {token}")
+
+
+def _creative_motion_guide_fresh_web_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Map one reviewed Bot Motion Guide intent to the Web-native text guide.
+
+    This is an intent/disposition mapping, not callback replay. The Web opens
+    or uses a fresh signed form with a category/custom topic, local suggestion
+    set and style. It never consumes the Bot's pending key, Telegram identity
+    or any media/runtime/financial state.
+    """
+
+    token = str(identifier or "").casefold()
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": CREATIVE_MOTION_GUIDE_ROUTE,
+        "classification": "customer",
+        "status": _mapping_status(
+            CREATIVE_MOTION_GUIDE_ROUTE,
+            existing_routes,
+            telegram_only=False,
+        ),
+        "resolution": "reviewed_creative_motion_guide_web_native_text_only",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CREATIVE_MOTION_GUIDE",
+            "FINITE_BOT_MOTION_INTENT_ONLY",
+            "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED",
+            "WEB_TRANSIENT_TEXT_GUIDE_ONLY",
+            "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION",
+            "NO_PROVIDER_OR_MEDIA_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot literal advances a short-lived per-Telegram-user Creative Motion Guide state "
+            "through category, three suggestion, refresh, style and back keyboards. The standalone Web maps "
+            "only that finite product intent to a fresh signed deterministic text-guide form. It receives no "
+            "raw callback, Telegram identity, USER_PENDING state, selected Bot suggestion, media reference, "
+            "provider call, job, Xu/wallet, PayOS/payment, bridge, asset, publish or delivery state."
+        ),
+        "creative_motion_guide_action": _creative_motion_guide_action(token),
+        "creative_motion_guide_authority": "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE",
+        "creative_motion_guide_execution_boundary": "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME",
+        "creative_motion_guide_route": CREATIVE_MOTION_GUIDE_ROUTE,
+        "evidence": evidence,
+    }
+
+
+def _creative_motion_guide_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for unknown Motion Guide callback spellings."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "CREATIVE_MOTION_GUIDE_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "creative_motion_guide_callback_requires_source_review",
+        "source_dispositions": (
+            "BOT_CREATIVE_MOTION_PENDING_OR_UNREVIEWED_CALLBACK",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "No broad `motion|` route override is permitted. The frozen Bot can use the callback to mutate "
+            "Telegram pending state or enter a future branch; an unreviewed spelling must not inherit a Web "
+            "text guide, source/media meaning, provider, job, wallet, payment, asset, publish or delivery action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_creative_motion_guide_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map exactly the reviewed Motion Guide literals before generic routing."""
+
+    raw_token = str(identifier or "")
+    token = raw_token.casefold()
+    if not token.startswith("motion|"):
+        return None
+    # Telegram callback payloads are case-sensitive. Only the frozen exact
+    # literals may inherit the Web-native text guide; a case variant remains
+    # visible but fail-closed for source review.
+    if raw_token in CREATIVE_MOTION_GUIDE_CALLBACKS:
+        return _creative_motion_guide_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    return _creative_motion_guide_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
+    creative_motion_guide_mapping = _map_creative_motion_guide_callback(identifier, source_kind, evidence, existing_routes)
+    if creative_motion_guide_mapping is not None:
+        return creative_motion_guide_mapping
     vproduct_mapping = _map_vproduct_callback(identifier, source_kind, evidence, existing_routes)
     if vproduct_mapping is not None:
         return vproduct_mapping
@@ -8463,6 +8707,32 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "opaque Bot state/identifier values never inherit a Web route or action",
         ],
     ]
+    creative_motion_guide_status_by_source = {
+        str(item.get("source") or ""): str(item.get("status") or "NOT_OBSERVED_IN_AUDITED_BASELINE")
+        for item in gap.get("callback_mappings", [])
+        if str(item.get("source") or "") in CREATIVE_MOTION_GUIDE_CALLBACKS
+        and str(item.get("target") or "") == CREATIVE_MOTION_GUIDE_ROUTE
+    }
+    creative_motion_guide_contract_rows = [
+        [
+            source,
+            CREATIVE_MOTION_GUIDE_ROUTE,
+            "reviewed_creative_motion_guide_web_native_text_only",
+            creative_motion_guide_status_by_source.get(source, "NOT_OBSERVED_IN_AUDITED_BASELINE"),
+            _creative_motion_guide_action(source),
+            "fresh signed deterministic text guide; no raw callback, Telegram pending state, media/runtime, provider/job, wallet/Xu, PayOS, bridge, asset, publish or delivery state",
+        ]
+        for source in sorted(CREATIVE_MOTION_GUIDE_CALLBACKS)
+    ] + [
+        [
+            "other motion|*",
+            "CREATIVE_MOTION_GUIDE_SOURCE_REVIEW_REQUIRED",
+            "creative_motion_guide_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "source review required",
+            "unreviewed callback cannot inherit a Web guide, Telegram state, media/provider/job/wallet/payment or delivery action",
+        ],
+    ]
 
     write(
         "README.md",
@@ -8515,6 +8785,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`IMAGE_PROMPT_COMPOSER_CONTRACT.md`](IMAGE_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless image-prompt drafting adapted from Bot templates without image/vision/provider/job/payment/asset/publish claims.\n"
         + "- [`VIDEO_PROMPT_PLANNER_CONTRACT.md`](VIDEO_PROMPT_PLANNER_CONTRACT.md) — signed, stateless deterministic video planning adapted from Bot prompt/shot rules without source-media/provider/preview/job/payment/asset/publish claims.\n"
         + "- [`CINEMATIC_AD_CONCEPT_CONTRACT.md`](CINEMATIC_AD_CONCEPT_CONTRACT.md) — signed, stateless Bot-derived cinematic ad concept, storyboard and prompt direction with no media/provider/job/payment/asset/publish claim.\n"
+        + "- [`CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md`](CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md) — all 23 finite Bot Motion Guide literals mapped to the independent signed text-only Web Motion Guide; Bot pending state and every media/provider/job/wallet/payment/delivery effect remain outside the route.\n"
         + "- [`SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md`](SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md) and [`VPRODUCT_CALLBACK_CONTRACT.md`](VPRODUCT_CALLBACK_CONTRACT.md) — signed Script-to-Screen planning grammar and finite Task3D callback dispositions; Bot session, prompt/export and runtime branches never become browser actions.\n"
         + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) and [`STORYPACK_CALLBACK_CONTRACT.md`](STORYPACK_CALLBACK_CONTRACT.md) — signed storyboard planning and finite Storypack callback dispositions; Bot pending/latest/save/prompt/runtime branches never become browser actions.\n"
         + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
@@ -8618,6 +8889,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "fallback is deliberately not copied: unknown or case-variant source values are rejected for review and leave "
         "the current Web draft untouched. Any future Web runtime must start from an independent owner-scoped contract "
         "and cannot replay a Bot callback or session value.\n",
+    )
+    write(
+        "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
+        "# Creative Motion Guide callback contract\n\n"
+        "The frozen Bot Creative Motion Guide is a 10-minute, per-Telegram-user `USER_PENDING` "
+        "conversation. Its 23 emitted `motion|...` literals choose a category or custom topic, choose/refresh "
+        "three suggestions, choose a style, or move between Bot keyboard steps. The standalone Web maps every "
+        "reviewed literal below to the independent signed `/video-studio/motion-guide` grammar: category/custom "
+        "topic → local suggestion set → style → deterministic text guide. It does **not** receive a raw callback, "
+        "Telegram identity, Bot pending state, selected Bot item, media reference, provider response, job, Xu/wallet "
+        "or PayOS/payment state.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback", "Web target/boundary", "Audit resolution", "Static status", "Web-native intent", "Required boundary"],
+            creative_motion_guide_contract_rows,
+        )
+        + "\n\nThe Web guide is transient text planning only. It does not inspect/upload source media, create an image, "
+        "video, audio, preview, output, job, asset, publish action or delivery. It does not call the Bot/Core "
+        "Bridge, provider, wallet/Xu ledger, PayOS/webhook or payment flow. A future `motion|...` spelling, "
+        "including a Bot-local cancel/state transition not emitted by the four reviewed keyboards, stays source-review "
+        "required rather than resetting a Web form or inheriting this route.\n",
     )
     write(
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
