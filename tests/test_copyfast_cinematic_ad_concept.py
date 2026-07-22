@@ -385,6 +385,7 @@ def test_cinematic_concept_covers_every_supported_public_choice(tmp_path, monkey
         ("family", "product_reveal", "vi", 1, 1, 5, "3"),
         ("before_after", "cinematic", "en", 2, 2, 10, "none"),
         ("custom", "bw_luxury", "vi", 3, 3, 15, "1"),
+        ("memory", "direct_sales", "zh", 1, 3, 15, "ai_prompt"),
     )
     with make_client(tmp_path, monkeypatch) as client:
         csrf = login(client, "cinematic-catalog@example.com")
@@ -405,13 +406,94 @@ def test_cinematic_concept_covers_every_supported_public_choice(tmp_path, monkey
             assert_concept_shape(data["composer"], source)
 
 
+def test_cinematic_concept_resolves_bot_default_message_server_side_and_recomputes_save(tmp_path, monkeypatch):
+    """The Bot's skip text is explicit input metadata, never browser composer text."""
+
+    compose_path = "/api/v1/video-studio/tools/cinematic-concept"
+    save_path = "/api/v1/video-studio/tools/cinematic-concept/save"
+    bot_default_zh = "清晰易懂地介绍产品/服务，建立信任，并用轻柔 CTA 引导行动。"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "cinematic-default-message@example.com")
+        headers = {"X-CSRF-Token": csrf}
+        source = concept_payload(
+            message="",
+            message_mode="bot_default",
+            language="zh",
+            music_choice="ai_prompt",
+        )
+        composed = client.post(compose_path, headers=headers, json=source)
+        assert composed.status_code == 200
+        composer = composed.json()["data"]["composer"]
+        assert_concept_shape(composer, {**source, "message": bot_default_zh})
+        assert "message_mode" not in composer
+        assert composer["message"] == bot_default_zh
+        assert composer["music_direction"]["id"] == "ai_prompt"
+        assert "编辑文本" in composer["music_direction"]["direction"]
+        assert "不创建音频" in composer["music_direction"]["ai_music_prompt"]
+
+        # A browser may request the canonical skip mode, but cannot replay the
+        # resolved sentence while claiming it came from the Bot-default path.
+        mixed = client.post(
+            compose_path,
+            headers=headers,
+            json=concept_payload(message=bot_default_zh, message_mode="bot_default", language="zh"),
+        )
+        assert mixed.status_code == 422
+
+        save_source = concept_save_payload(
+            message="",
+            message_mode="bot_default",
+            language="zh",
+            music_choice="ai_prompt",
+            idempotency_key="cinematic-concept-default-message-0001",
+        )
+        saved = client.post(save_path, headers=headers, json=save_source)
+        assert saved.status_code == 200
+        save_data = saved.json()["data"]
+        assert_plan_save_receipt(save_data)
+        assert bot_default_zh not in saved.text
+        detail = client.get(f"/api/v1/video-studio/plans/{save_data['plan']['id']}")
+        assert detail.status_code == 200
+        assert bot_default_zh in detail.json()["data"]["plan"]["brief"]
+
+
+def test_cinematic_concept_localizes_zh_and_style_changes_direction_without_vietnamese_english_mix(tmp_path, monkeypatch):
+    """Locale and style remain deterministic editorial text, not provider knobs."""
+
+    path = "/api/v1/video-studio/tools/cinematic-concept"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "cinematic-localized-style@example.com")
+        headers = {"X-CSRF-Token": csrf}
+        english = concept_payload(language="en", style="cinematic", music_choice="ai_prompt")
+        luxury = {**english, "style": "bw_luxury"}
+        chinese = {**english, "language": "zh", "style": "product_reveal"}
+
+        english_composer = client.post(path, headers=headers, json=english).json()["data"]["composer"]
+        luxury_composer = client.post(path, headers=headers, json=luxury).json()["data"]["composer"]
+        chinese_response = client.post(path, headers=headers, json=chinese)
+        assert chinese_response.status_code == 200
+        chinese_composer = chinese_response.json()["data"]["composer"]
+
+        assert "Hướng motion video" not in english_composer["video_prompts"][0]["prompt"]
+        assert english_composer["video_prompts"][0]["prompt"].startswith("Editorial 5s video motion direction")
+        assert "soft directional light" in english_composer["image_prompts"][0]["prompt"]
+        assert "sculpted monochrome light" in luxury_composer["image_prompts"][0]["prompt"]
+        assert english_composer["storyboard"][0]["camera"] != luxury_composer["storyboard"][0]["camera"]
+        assert english_composer["video_prompts"][0]["prompt"] != luxury_composer["video_prompts"][0]["prompt"]
+        assert chinese_composer["message_theme"]["label"] == "省时、轻松工作"
+        assert "产品揭示" in chinese_composer["video_prompts"][0]["prompt"]
+        assert "仅是文本计划" in chinese_composer["video_prompts"][0]["prompt"]
+
+
 @pytest.mark.parametrize(
     "overrides",
     (
         {"product": "x"},
         {"product": "x" * 501},
+        {"message": ""},
         {"message": "x"},
         {"message": "x" * 501},
+        {"message_mode": "telegram_skip"},
         {"message_theme": "live_trend"},
         {"style": "provider_model"},
         {"language": "fr"},

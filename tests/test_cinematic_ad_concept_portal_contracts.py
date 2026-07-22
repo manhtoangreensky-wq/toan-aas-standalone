@@ -17,6 +17,7 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 ROUTER = (ROOT / "copyfast_video_studio.py").read_text(encoding="utf-8")
 ENGINES = (ROOT / "copyfast_web_engine.py").read_text(encoding="utf-8")
 REGISTRY = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+MIGRATION_CONTRACT = (ROOT / "docs" / "migration" / "CINEMATIC_AD_CONCEPT_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def _portal_normalizer() -> str:
@@ -43,6 +44,18 @@ def _integration_save_action() -> str:
     return INTEGRATION[start:end]
 
 
+def _cinematic_concept_save_panel() -> str:
+    start = PORTAL.index("function renderCinematicConceptPlanSavePanel")
+    end = PORTAL.index("function renderCinematicConcept(page, context)", start)
+    return PORTAL[start:end]
+
+
+def _cinematic_concept_css() -> str:
+    start = CSS.index("/* Cinematic Concept Composer")
+    end = CSS.index("/* Storyboard Prompt Pack", start)
+    return CSS[start:end]
+
+
 def test_cinematic_concept_is_a_native_private_video_route_and_catalog_feature() -> None:
     assert 'customerPage("/video-studio/cinematic-concept", "Cinematic Ad Concept Composer"' in PORTAL
     assert 'layout: "cinematic-concept", type: "cinematic-concept"' in PORTAL
@@ -52,6 +65,32 @@ def test_cinematic_concept_is_a_native_private_video_route_and_catalog_feature()
     assert 'botCompanionPage("/video-studio/cinematic-concept"' not in PORTAL
     assert '"cinematic_ad_concept"' in ENGINES
     assert 'WebFeature("cinematic_ad_concept", "Cinematic Ad Concept Composer", "video", "/video-studio/cinematic-concept"' in REGISTRY
+
+
+def test_cinematic_concept_migration_copy_distinguishes_transient_compose_from_explicit_owner_plan_save() -> None:
+    """Catalog/engine/docs must not present a Bot callback as a durable save."""
+
+    for source in (REGISTRY, ENGINES):
+        assert "server-recomputed owner Web Video Plan Draft" in source or "server-recompute input gốc" in source
+        assert "save/lock/finalize" in source
+        assert "render" in source
+        assert "delivery" in source
+
+    for marker in (
+        "POST /api/v1/video-studio/tools/cinematic-concept/save",
+        '"destination": "video_plan"',
+        "server validates the strict bounded request",
+        "pending_bot_save_created",
+        "generation_started",
+        "Frozen Bot callback disposition",
+        "CINEMATIC_AD_RUNTIME_CONTRACT_REQUIRED",
+        "admin_video_smoke",
+        "message_mode: \"bot_default\"",
+        "music-direction prompt",
+        "The Bot and Web both support Vietnamese",
+        "Chinese",
+    ):
+        assert marker in MIGRATION_CONTRACT
 
 
 def test_cinematic_concept_normalizer_and_validator_require_the_exact_flat_boundary() -> None:
@@ -276,3 +315,108 @@ def test_cinematic_concept_is_responsive_and_never_pwa_cached() -> None:
     assert '"/" + "api/v1/video-studio"' in private_paths
     assert '"/api/v1/video-studio"' not in shell
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
+
+
+def test_cinematic_concept_frontend_prevents_duplicate_saves_and_drops_stale_responses() -> None:
+    panel = _cinematic_concept_save_panel()
+    save_action = _integration_save_action()
+    compose_action = _integration_action()
+
+    # Once the content-free receipt is valid, the renderer returns the receipt
+    # surface before it can render another primary save control.
+    assert panel.index("const receiptPlan") < panel.index("const saveControl")
+    assert 'if (receiptPlan && validVideoStudioPlanId(receiptPlan.id)) {' in panel
+    assert panel.index('if (receiptPlan && validVideoStudioPlanId(receiptPlan.id)) {') < panel.index("const saveControl")
+    assert "return `${savePanel}" not in panel
+
+    # The handler has the same defence in case a stale/replayed DOM event
+    # bypasses the visual control. It happens before an idempotency submission
+    # can be acquired with a fresh key.
+    assert "const savedReceipt = cinematicConceptPlanSaveReceipt(base().cinematicConceptSaveReceipt);" in save_action
+    assert "if (savedReceipt) {" in save_action
+    assert save_action.index("if (savedReceipt) {") < save_action.index("acquireSubmission(scope, JSON.stringify(payload))")
+
+    for token in (
+        "let cinematicConceptSessionEpoch = 0;",
+        "let cinematicConceptComposeRequestEpoch = 0;",
+        "let cinematicConceptSaveRequestEpoch = 0;",
+        "function cinematicConceptRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath)",
+        "String(account.id || \"\") === expectedAccountId",
+        "currentPortalPath() === expectedPath",
+        "sessionEpoch === cinematicConceptSessionEpoch",
+    ):
+        assert token in INTEGRATION
+    assert 'const requestEpoch = ++cinematicConceptComposeRequestEpoch;' in compose_action
+    assert 'cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)' in compose_action
+    assert 'const requestEpoch = ++cinematicConceptSaveRequestEpoch;' in save_action
+    assert 'cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)' in save_action
+
+
+def test_cinematic_concept_editing_visible_brief_invalidates_old_save_source() -> None:
+    save_action = _integration_save_action()
+
+    # The result panel's save control is explicitly paired to the visible
+    # compose form. Editing that form marks the old receipt/result stale and
+    # disables the control before an accidental click can save a previous
+    # brief.
+    assert 'id="cinematic-concept-form"' in PORTAL
+    assert 'data-portal-form-id="cinematic-concept-form"' in PORTAL
+    assert 'data-cinematic-concept-stale-note' in PORTAL
+    assert 'data-cinematic-concept-rendered-result' in PORTAL
+    assert 'data-cinematic-concept-saved-receipt' in PORTAL
+    assert "function cinematicConceptFormMatchesSavedSource(form)" in PORTAL
+    assert "function synchronizeCinematicConceptDraftFreshness(form)" in PORTAL
+    assert "control.disabled = disabled;" in PORTAL
+    assert "synchronizeCinematicConceptDraftFreshness(form);" in PORTAL
+
+    # The integration handler repeats the same invariant using live form
+    # fields, before it can create a retry/idempotency submission. This also
+    # protects against stale/replayed DOM events that bypass visual controls.
+    assert "function cinematicConceptPlanSaveSourceMatchesCurrentFields(source, fields)" in INTEGRATION
+    assert "cinematicConceptPlanSaveSourceMatchesCurrentFields(source, fields)" in save_action
+    assert save_action.index("cinematicConceptPlanSaveSourceMatchesCurrentFields(source, fields)") < save_action.index("acquireSubmission(scope, JSON.stringify(payload))")
+
+
+def test_cinematic_concept_default_message_preserves_only_raw_source_choices() -> None:
+    save_action = _integration_save_action()
+
+    # The browser accepts the supported UI choices, but a Bot-default message
+    # remains an empty raw source. The server resolves text; rendered text is
+    # never promoted back into a later write payload.
+    for source in (PORTAL, INTEGRATION):
+        assert '"zh"' in source
+        assert '"ai_prompt"' in source
+        assert '"message_mode"' in source
+    assert "const CINEMATIC_CONCEPT_MESSAGE_MODES = new Set([\"provided\", \"bot_default\"]);" in PORTAL
+    assert "const CINEMATIC_CONCEPT_MESSAGE_MODES = new Set([\"provided\", \"bot_default\"]);" in INTEGRATION
+    assert "message_mode: messageMode" in PORTAL
+    assert "message_mode: messageMode" in INTEGRATION
+    assert 'messageMode === "bot_default"' in PORTAL
+    assert 'messageMode === "bot_default"' in INTEGRATION
+    assert 'source.message === ""' in PORTAL
+    assert 'selection.message === ""' in INTEGRATION
+    assert "message_mode: retainedSource.message_mode" in PORTAL
+    assert "function synchronizeCinematicConceptMessageMode(form)" in PORTAL
+    assert "message.value = \"\";" in PORTAL
+    assert "message.disabled = disabled;" in PORTAL
+    assert "aria-live" in PORTAL
+    assert '["zh", "中文（简体）"]' in PORTAL
+    assert '["ai_prompt", "Prompt nhạc AI (chỉ text)"]' in PORTAL
+    assert "cinematicConceptPlanSaveSourceMatchesResult(saveSource, data)" in save_action or "cinematicConceptPlanSaveSourceMatchesResult(source, currentResult)" in save_action
+
+
+def test_cinematic_concept_component_uses_readable_slate_teal_tokens_and_mobile_controls() -> None:
+    css = _cinematic_concept_css()
+    for token in (
+        "var(--portal-bg)",
+        "var(--portal-surface)",
+        "var(--portal-surface-strong)",
+        "var(--portal-border)",
+        "var(--portal-accent)",
+        ":focus-visible",
+        "min-height: 44px",
+    ):
+        assert token in css
+    assert "linear-gradient" not in css
+    for too_small in ("font-size: 7px", "font-size: 8px", "font-size: 9px", "font-size: 10px", "font-size: 11px"):
+        assert too_small not in css

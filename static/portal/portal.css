@@ -2999,86 +2999,89 @@ a { color: inherit; text-decoration: none; }
 /* Cinematic Concept Composer keeps the high-information planning output calm
    and scannable. Everything in this surface is reviewable text; the UI never
    implies a media preview, a provider response or a finished advertisement. */
-.portal-cinematic-concept { display: grid; gap: 18px; min-width: 0; }
-.portal-cinematic-concept-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 19px; align-items: center; padding: clamp(22px, 3vw, 35px); border: 1px solid rgba(235, 181, 111, .25); border-radius: 22px; background: radial-gradient(circle at 89% 10%, rgba(239, 147, 75, .22), transparent 18rem), radial-gradient(circle at 10% 91%, rgba(130, 91, 225, .17), transparent 19rem), linear-gradient(145deg, rgba(55, 37, 59, .98), rgba(8, 17, 31, .99)); box-shadow: 0 19px 47px rgba(0, 0, 0, .18); }
-.portal-cinematic-concept-intro h2 { margin: 7px 0 9px; color: #fff3df; font-size: clamp(27px, 3vw, 41px); letter-spacing: -.049em; }
-.portal-cinematic-concept-intro p { max-width: 770px; margin: 0; color: #dec9b4; line-height: 1.72; }
-.portal-cinematic-concept-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
-.portal-cinematic-concept-intro dl > div { min-width: 0; min-height: 108px; padding: 15px; border: 1px solid rgba(255, 221, 176, .16); border-radius: 15px; background: rgba(48, 24, 45, .46); }
-.portal-cinematic-concept-intro dt { color: #ffd19b; font-size: 23px; font-weight: 850; letter-spacing: -.045em; }
-.portal-cinematic-concept-intro dd { margin: 7px 0 0; color: #d0b7ae; font-size: 10px; line-height: 1.46; }
-.portal-cinematic-concept-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
-.portal-cinematic-concept-form { background: linear-gradient(150deg, rgba(60, 38, 51, .97), rgba(7, 17, 31, .99)); }
-.portal-cinematic-concept-boundary, .portal-cinematic-concept-result { background: linear-gradient(150deg, rgba(44, 31, 62, .95), rgba(7, 17, 31, .99)); }
-.portal-cinematic-concept-boundary { display: grid; gap: 14px; }
+.portal-cinematic-concept { display: grid; gap: 20px; min-width: 0; color: var(--portal-text); }
+.portal-cinematic-concept .portal-section-kicker { font-size: 12px; letter-spacing: .06em; }
+.portal-cinematic-concept :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 2px; }
+.portal-cinematic-concept :is(.portal-button, input:not([type="checkbox"]), select) { min-height: var(--portal-control-height); }
+.portal-cinematic-concept-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 20px; align-items: center; padding: clamp(24px, 3vw, 36px); border: 1px solid var(--portal-border); border-radius: var(--portal-radius-lg); background: var(--portal-surface-strong); box-shadow: var(--portal-shadow); }
+.portal-cinematic-concept-intro h2 { margin: 8px 0 10px; color: var(--portal-text); font-size: clamp(28px, 3vw, 42px); letter-spacing: -.045em; }
+.portal-cinematic-concept-intro p { max-width: 770px; margin: 0; color: var(--portal-muted-strong); font-size: 15px; line-height: 1.65; }
+.portal-cinematic-concept-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.portal-cinematic-concept-intro dl > div { min-width: 0; min-height: 112px; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface); }
+.portal-cinematic-concept-intro dt { color: var(--portal-accent); font-size: 24px; font-weight: 850; letter-spacing: -.04em; }
+.portal-cinematic-concept-intro dd { margin: 8px 0 0; color: var(--portal-muted); font-size: 12px; line-height: 1.5; }
+.portal-cinematic-concept-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 20px; align-items: start; }
+.portal-cinematic-concept-form, .portal-cinematic-concept-boundary, .portal-cinematic-concept-result { background: var(--portal-surface); }
+.portal-cinematic-concept-boundary { display: grid; gap: 16px; }
 .portal-cinematic-concept-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.portal-cinematic-concept-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid rgba(239, 201, 157, .16); border-radius: 11px; background: rgba(34, 22, 49, .48); }
-.portal-cinematic-concept-guard-list strong { overflow: hidden; color: #f7e1c9; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.portal-cinematic-concept-guard-list em { flex: 0 0 auto; padding: 3px 6px; border: 1px solid rgba(255, 203, 157, .22); border-radius: 999px; background: rgba(229, 139, 98, .11); color: #ffd8b1; font-size: 8px; font-style: normal; font-weight: 760; letter-spacing: .045em; text-transform: uppercase; }
-.portal-cinematic-concept-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
-.portal-cinematic-concept-meta span { display: inline-flex; min-width: 0; max-width: 100%; padding: 6px 9px; border: 1px solid rgba(239, 195, 154, .18); border-radius: 999px; background: rgba(112, 66, 85, .2); color: #f0d9c5; font-size: 9px; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
-.portal-cinematic-concept-directions { display: grid; gap: 12px; margin-top: 15px; padding: 15px; border: 1px solid rgba(209, 184, 255, .17); border-radius: 17px; background: linear-gradient(145deg, rgba(29, 28, 63, .56), rgba(47, 28, 57, .49)); }
+.portal-cinematic-concept-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 12px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-guard-list strong { overflow: hidden; color: var(--portal-muted-strong); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.portal-cinematic-concept-guard-list em { flex: 0 0 auto; padding: 4px 7px; border: 1px solid var(--portal-border); border-radius: 999px; background: var(--portal-surface-soft); color: var(--portal-muted-strong); font-size: 12px; font-style: normal; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+.portal-cinematic-concept-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.portal-cinematic-concept-meta span { display: inline-flex; min-width: 0; max-width: 100%; padding: 7px 10px; border: 1px solid var(--portal-border); border-radius: 999px; background: var(--portal-surface-soft); color: var(--portal-muted-strong); font-size: 13px; font-weight: 650; line-height: 1.5; overflow-wrap: anywhere; }
+.portal-cinematic-concept-directions, .portal-cinematic-concept-storyboard, .portal-cinematic-concept-scripts, .portal-cinematic-concept-motion, .portal-cinematic-concept-prompts { display: grid; gap: 14px; margin-top: 16px; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-strong); }
 .portal-cinematic-concept-directions ol, .portal-cinematic-concept-storyboard ol { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.portal-cinematic-concept-directions li, .portal-cinematic-concept-storyboard li { display: grid; grid-template-columns: 31px minmax(0, 1fr); gap: 11px; min-width: 0; padding: 12px; border: 1px solid rgba(190, 174, 247, .14); border-radius: 14px; background: rgba(5, 15, 31, .37); }
-.portal-cinematic-concept-directions li[data-selected="true"] { border-color: rgba(255, 192, 117, .38); background: linear-gradient(145deg, rgba(66, 44, 42, .57), rgba(15, 20, 39, .67)); }
-.portal-cinematic-concept-index { display: inline-grid; width: 31px; height: 25px; place-items: center; border: 1px solid rgba(234, 198, 151, .25); border-radius: 8px; background: rgba(230, 145, 94, .11); color: #ffe0b6; font-size: 8px; font-weight: 820; letter-spacing: .06em; }
-.portal-cinematic-concept-direction-head, .portal-cinematic-concept-storyboard-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; min-width: 0; }
-.portal-cinematic-concept-direction-head strong, .portal-cinematic-concept-storyboard-head strong { color: #f8e9dd; font-size: 12px; letter-spacing: -.015em; }
-.portal-cinematic-concept-direction-head em, .portal-cinematic-concept-storyboard-head span, .portal-cinematic-concept-count { padding: 3px 7px; border: 1px solid rgba(232, 186, 121, .22); border-radius: 999px; background: rgba(213, 124, 77, .11); color: #ffd4a2; font-size: 8px; font-style: normal; font-weight: 770; letter-spacing: .04em; }
-.portal-cinematic-concept-directions dl, .portal-cinematic-concept-storyboard dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 10px 0 0; }
-.portal-cinematic-concept-directions dl > div, .portal-cinematic-concept-storyboard dl > div { min-width: 0; padding: 8px; border-radius: 9px; background: rgba(100, 73, 114, .1); }
-.portal-cinematic-concept-directions dt, .portal-cinematic-concept-storyboard dt, .portal-cinematic-concept-prompt dt { color: #c7b3e8; font-size: 8px; font-weight: 780; letter-spacing: .055em; text-transform: uppercase; }
-.portal-cinematic-concept-directions dd, .portal-cinematic-concept-storyboard dd, .portal-cinematic-concept-prompt dd { margin: 4px 0 0; color: #d6c9d8; font-size: 9px; line-height: 1.56; overflow-wrap: anywhere; }
-.portal-cinematic-concept-scripts { display: grid; grid-template-columns: minmax(155px, .3fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 15px; padding: 15px; border: 1px solid rgba(145, 199, 250, .16); border-radius: 16px; background: linear-gradient(145deg, rgba(18, 41, 70, .56), rgba(18, 23, 46, .55)); }
-.portal-cinematic-concept-scripts h3, .portal-cinematic-concept-motion h3, .portal-cinematic-concept-prompts h3 { margin: 4px 0 0; color: #e6f1ff; font-size: 15px; letter-spacing: -.03em; }
+.portal-cinematic-concept-directions li, .portal-cinematic-concept-storyboard li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-directions li[data-selected="true"] { border-color: var(--portal-border-strong); background: var(--portal-surface-soft); }
+.portal-cinematic-concept-index { display: inline-grid; width: 32px; height: 28px; place-items: center; border: 1px solid var(--portal-border-strong); border-radius: 8px; background: var(--portal-bg-deep); color: var(--portal-accent); font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+.portal-cinematic-concept-direction-head, .portal-cinematic-concept-storyboard-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.portal-cinematic-concept-direction-head strong, .portal-cinematic-concept-storyboard-head strong { color: var(--portal-text); font-size: 14px; letter-spacing: -.01em; }
+.portal-cinematic-concept-direction-head em, .portal-cinematic-concept-storyboard-head span, .portal-cinematic-concept-count { padding: 4px 8px; border: 1px solid var(--portal-border); border-radius: 999px; background: var(--portal-surface-soft); color: var(--portal-muted-strong); font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: .025em; }
+.portal-cinematic-concept-directions dl, .portal-cinematic-concept-storyboard dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; }
+.portal-cinematic-concept-directions dl > div, .portal-cinematic-concept-storyboard dl > div { min-width: 0; padding: 10px; border-radius: 8px; background: var(--portal-surface); }
+.portal-cinematic-concept-directions dt, .portal-cinematic-concept-storyboard dt, .portal-cinematic-concept-prompt dt { color: var(--portal-muted); font-size: 12px; font-weight: 750; letter-spacing: .045em; text-transform: uppercase; }
+.portal-cinematic-concept-directions dd, .portal-cinematic-concept-storyboard dd, .portal-cinematic-concept-prompt dd { margin: 5px 0 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.58; overflow-wrap: anywhere; }
+.portal-cinematic-concept-scripts { grid-template-columns: minmax(180px, .32fr) minmax(0, 1fr); align-items: start; }
+.portal-cinematic-concept-scripts h3, .portal-cinematic-concept-motion h3, .portal-cinematic-concept-prompts h3 { margin: 4px 0 0; color: var(--portal-text); font-size: 16px; letter-spacing: -.025em; }
 .portal-cinematic-concept-scripts > div:last-child { display: grid; gap: 8px; }
-.portal-cinematic-concept-script { display: grid; grid-template-columns: 37px minmax(0, 1fr); gap: 9px; padding: 10px; border: 1px solid rgba(155, 202, 250, .14); border-radius: 11px; background: rgba(5, 17, 33, .38); }
-.portal-cinematic-concept-script > span { display: inline-grid; height: 23px; place-items: center; border: 1px solid rgba(147, 209, 255, .2); border-radius: 7px; color: #c9ebff; font-size: 8px; font-weight: 800; }
-.portal-cinematic-concept-script pre { min-width: 0; max-height: 190px; margin: 0; overflow: auto; color: #c6d8e9; font: 10px/1.62 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-.portal-cinematic-concept-storyboard { display: grid; gap: 13px; margin-top: 15px; padding: 15px; border: 1px solid rgba(126, 216, 203, .18); border-radius: 17px; background: linear-gradient(145deg, rgba(11, 48, 55, .58), rgba(12, 22, 40, .6)); }
+.portal-cinematic-concept-script { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; padding: 12px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-script > span { display: inline-grid; min-height: 28px; place-items: center; border: 1px solid var(--portal-border-strong); border-radius: 7px; color: var(--portal-accent); font-size: 12px; font-weight: 800; }
+.portal-cinematic-concept-script pre { min-width: 0; max-height: 190px; margin: 0; overflow: auto; color: var(--portal-muted-strong); font: 13px/1.62 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .portal-cinematic-concept-storyboard dl > div:first-child { grid-column: 1 / -1; }
-.portal-cinematic-concept-motion { display: grid; grid-template-columns: minmax(180px, .37fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 15px; padding: 15px; border: 1px solid rgba(159, 183, 255, .17); border-radius: 16px; background: linear-gradient(145deg, rgba(29, 32, 65, .57), rgba(43, 28, 61, .49)); }
-.portal-cinematic-concept-motion p, .portal-cinematic-concept-prompts p { margin: 7px 0 0; color: #b9c3d5; font-size: 10px; line-height: 1.58; }
+.portal-cinematic-concept-motion { grid-template-columns: minmax(200px, .38fr) minmax(0, 1fr); align-items: start; }
+.portal-cinematic-concept-motion p, .portal-cinematic-concept-prompts p { margin: 8px 0 0; color: var(--portal-muted); font-size: 14px; line-height: 1.58; }
 .portal-cinematic-concept-motion > dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
-.portal-cinematic-concept-motion > dl > div { display: grid; gap: 7px; min-width: 0; padding: 12px; border: 1px solid rgba(177, 184, 255, .14); border-radius: 12px; background: rgba(7, 16, 38, .39); }
-.portal-cinematic-concept-motion dt { color: #e1ddff; font-size: 11px; font-weight: 790; }
-.portal-cinematic-concept-motion dd { margin: 0; color: #c1c7da; font-size: 9px; line-height: 1.56; overflow-wrap: anywhere; }
-.portal-cinematic-concept-prompts { display: grid; gap: 12px; margin-top: 15px; padding: 15px; border: 1px solid rgba(229, 178, 127, .16); border-radius: 16px; background: linear-gradient(145deg, rgba(57, 38, 41, .51), rgba(13, 20, 37, .63)); }
+.portal-cinematic-concept-motion > dl > div { display: grid; gap: 8px; min-width: 0; padding: 13px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-motion dt { color: var(--portal-text); font-size: 14px; font-weight: 750; }
+.portal-cinematic-concept-motion dd { margin: 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.58; overflow-wrap: anywhere; }
 .portal-cinematic-concept-prompt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.portal-cinematic-concept-shot-list { display: grid; grid-template-columns: minmax(168px, .34fr) minmax(0, 1fr); grid-column: 1 / -1; gap: 12px; align-items: start; padding: 12px; border: 1px solid rgba(185, 179, 255, .16); border-radius: 13px; background: rgba(18, 23, 53, .43); }
-.portal-cinematic-concept-shot-list h3 { margin: 4px 0 0; color: #e7e4ff; font-size: 13px; letter-spacing: -.02em; }
-.portal-cinematic-concept-shot-list p { margin: 6px 0 0; color: #bdc2d7; font-size: 9px; line-height: 1.55; }
-.portal-cinematic-concept-shot-list ol { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.portal-cinematic-concept-shot-list li { display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px; border: 1px solid rgba(180, 185, 253, .12); border-radius: 9px; background: rgba(5, 13, 31, .35); }
-.portal-cinematic-concept-shot-list li > span { display: inline-grid; width: 25px; height: 21px; place-items: center; border: 1px solid rgba(183, 187, 255, .19); border-radius: 7px; color: #d8d9ff; font-size: 7px; font-weight: 800; }
-.portal-cinematic-concept-shot-list li p { margin: 0; color: #ced3e8; font-size: 9px; line-height: 1.54; overflow-wrap: anywhere; }
-.portal-cinematic-concept-prompt { display: grid; gap: 9px; min-width: 0; padding: 12px; border: 1px solid rgba(236, 191, 151, .14); border-radius: 12px; background: rgba(9, 16, 32, .38); }
-.portal-cinematic-concept-prompt > div { display: grid; gap: 4px; }
-.portal-cinematic-concept-prompt strong { color: #f4e0cf; font-size: 11px; }
-.portal-cinematic-concept-prompt dl { display: grid; gap: 8px; margin: 0; }
-.portal-cinematic-concept-prompt dl > div { min-width: 0; padding-top: 8px; border-top: 1px solid rgba(232, 196, 168, .1); }
+.portal-cinematic-concept-shot-list { display: grid; grid-template-columns: minmax(180px, .34fr) minmax(0, 1fr); grid-column: 1 / -1; gap: 14px; align-items: start; padding: 14px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-shot-list h3 { margin: 4px 0 0; color: var(--portal-text); font-size: 15px; letter-spacing: -.015em; }
+.portal-cinematic-concept-shot-list p { margin: 7px 0 0; color: var(--portal-muted); font-size: 14px; line-height: 1.55; }
+.portal-cinematic-concept-shot-list ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.portal-cinematic-concept-shot-list li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; align-items: start; padding: 10px; border: 1px solid var(--portal-border); border-radius: 8px; background: var(--portal-surface); }
+.portal-cinematic-concept-shot-list li > span { display: inline-grid; width: 28px; min-height: 26px; place-items: center; border: 1px solid var(--portal-border-strong); border-radius: 7px; color: var(--portal-accent); font-size: 12px; font-weight: 800; }
+.portal-cinematic-concept-shot-list li p { margin: 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.portal-cinematic-concept-prompt { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-sm); background: var(--portal-bg); }
+.portal-cinematic-concept-prompt > div { display: grid; gap: 5px; }
+.portal-cinematic-concept-prompt strong { color: var(--portal-text); font-size: 14px; }
+.portal-cinematic-concept-prompt dl { display: grid; gap: 9px; margin: 0; }
+.portal-cinematic-concept-prompt dl > div { min-width: 0; padding-top: 9px; border-top: 1px solid var(--portal-border); }
 .portal-cinematic-concept-prompt dd { max-height: 170px; overflow: auto; }
-.portal-cinematic-concept-review { display: grid; gap: 9px; margin-top: 15px; padding: 14px; border: 1px solid rgba(255, 196, 112, .18); border-radius: 14px; background: rgba(63, 45, 27, .39); }
-.portal-cinematic-concept-review strong { color: #ffe6b4; font-size: 11px; }
-.portal-cinematic-concept-review p, .portal-cinematic-concept-review ul { margin: 0; color: #dec8a9; font-size: 10px; line-height: 1.58; }
-.portal-cinematic-concept-review ul { display: grid; gap: 6px; padding-left: 17px; }
-.portal-cinematic-concept-review > div { padding-top: 9px; border-top: 1px solid rgba(255, 197, 117, .13); }
+.portal-cinematic-concept-review { display: grid; gap: 10px; margin-top: 16px; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-soft); }
+.portal-cinematic-concept-review strong { color: var(--portal-warning); font-size: 14px; }
+.portal-cinematic-concept-review p, .portal-cinematic-concept-review ul { margin: 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.58; }
+.portal-cinematic-concept-review ul { display: grid; gap: 7px; padding-left: 20px; }
+.portal-cinematic-concept-review > div { padding-top: 10px; border-top: 1px solid var(--portal-border); }
 .portal-cinematic-concept-result .portal-form-footer { align-items: flex-start; }
+.portal-cinematic-concept-result[data-stale] { border-color: var(--portal-warning); }
+.portal-cinematic-concept-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
 
 @media (max-width: 980px) {
   .portal-cinematic-concept-intro, .portal-cinematic-concept-layout, .portal-cinematic-concept-scripts, .portal-cinematic-concept-motion { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
-  .portal-cinematic-concept-intro { padding: 20px; border-radius: 18px; }
+  .portal-cinematic-concept-intro { padding: 22px; border-radius: 18px; }
+  .portal-cinematic-concept :is(.portal-button, input:not([type="checkbox"]), select) { min-height: 44px; }
   .portal-cinematic-concept-intro dl, .portal-cinematic-concept-guard-list, .portal-cinematic-concept-directions dl, .portal-cinematic-concept-storyboard dl, .portal-cinematic-concept-motion > dl, .portal-cinematic-concept-prompt-grid, .portal-cinematic-concept-shot-list { grid-template-columns: 1fr; }
   .portal-cinematic-concept-storyboard dl > div:first-child { grid-column: auto; }
 }
 @media (max-width: 440px) {
-  .portal-cinematic-concept-directions, .portal-cinematic-concept-storyboard, .portal-cinematic-concept-scripts, .portal-cinematic-concept-motion, .portal-cinematic-concept-prompts { padding: 12px; }
-  .portal-cinematic-concept-directions li, .portal-cinematic-concept-storyboard li { grid-template-columns: 25px minmax(0, 1fr); gap: 8px; padding: 10px; }
-  .portal-cinematic-concept-index { width: 25px; height: 23px; font-size: 7px; }
+  .portal-cinematic-concept-directions, .portal-cinematic-concept-storyboard, .portal-cinematic-concept-scripts, .portal-cinematic-concept-motion, .portal-cinematic-concept-prompts { padding: 14px; }
+  .portal-cinematic-concept-directions li, .portal-cinematic-concept-storyboard li { grid-template-columns: 28px minmax(0, 1fr); gap: 9px; padding: 12px; }
+  .portal-cinematic-concept-index { width: 28px; height: 26px; font-size: 12px; }
   .portal-cinematic-concept-direction-head, .portal-cinematic-concept-storyboard-head { align-items: flex-start; flex-direction: column; }
-  .portal-cinematic-concept-script { grid-template-columns: 32px minmax(0, 1fr); padding: 9px; }
+  .portal-cinematic-concept-script { grid-template-columns: 36px minmax(0, 1fr); padding: 10px; }
 }
 
 /* Storyboard Prompt Pack Composer is a text-only planning surface. It uses a

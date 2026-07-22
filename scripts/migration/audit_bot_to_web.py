@@ -427,6 +427,124 @@ ARCHIVE_SOURCE_REVIEW_ACTIONS = frozenset(
 )
 ARCHIVE_TELEGRAM_ONLY_ACTIONS = frozenset({"archive|preview", "archive|save"})
 
+# Cinematic Ad Concept has a deliberately narrow Web-native boundary.  The
+# frozen Bot handler keeps a ten-minute per-Telegram-user pending/latest
+# concept and then branches into locks, package state, provider tiers,
+# wallet/confirmation, finalization and an admin smoke path.  A browser must
+# never receive or reconstruct any of that state from a callback.  Only the
+# finite planning vocabulary below may open a fresh signed Web composer; the
+# customer enters/reviews the Web brief again and may later make a separate,
+# CSRF-protected owner Video Plan save request.
+CINEMATIC_AD_CONCEPT_ROUTE = "/video-studio/cinematic-concept"
+CINEMATIC_AD_CONCEPT_PLANNER_ORDINALS = frozenset({"1", "2", "3"})
+CINEMATIC_AD_CONCEPT_FRESH_WEB_PLANNER_CALLBACKS = frozenset(
+    {
+        "adconcept|start",
+        "adconcept|new",
+        "adconcept|guided_start",
+        "adconcept|message|memory",
+        "adconcept|message|success",
+        "adconcept|message|confidence",
+        "adconcept|message|time_save",
+        "adconcept|message|luxury",
+        "adconcept|message|future",
+        "adconcept|message|family",
+        "adconcept|message|before_after",
+        "adconcept|message|custom",
+        "adconcept|message|skip",
+        "adconcept|concept_style_cinematic",
+        "adconcept|concept_style_luxury_bw",
+        "adconcept|concept_style_viral",
+        "adconcept|concept_style_direct_sales",
+        "adconcept|concept_style_ugc",
+        "adconcept|concept_style_fpv",
+        "adconcept|concept_style_product_reveal",
+        "adconcept|concept_style_skip",
+    }
+)
+CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACKS = frozenset(
+    {
+        "adconcept|cancel",
+        "adconcept|main",
+        "adconcept|back|product",
+        "adconcept|back|message",
+        "adconcept|continue",
+        "adconcept|lock",
+        "adconcept|back_locked",
+        "adconcept|use_motion_current",
+        "adconcept|motion_current",
+        "adconcept|save_motion_current",
+        "adconcept|image_prompt_current",
+        "adconcept|image_prompt_from_motion",
+        "adconcept|create_image_current",
+        "adconcept|save_image_prompt_current",
+        "adconcept|video_prompt_current",
+        "adconcept|video_prompt_from_motion",
+        "adconcept|save_video_prompt_current",
+        "adconcept|music_current",
+        "adconcept|music_suggest",
+        "adconcept|music_ai",
+        "adconcept|music_ai_save",
+        "adconcept|music_none",
+        "adconcept|music_save",
+        "adconcept|save_video_package",
+        "adconcept|finalize",
+        "adconcept|edit_current",
+    }
+)
+CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACK_TEMPLATES = frozenset(
+    {
+        "adconcept|back|{*}",
+        "adconcept|style|{*}",
+        "adconcept|concept_choice|{*}",
+        "adconcept|motion_choice|{*}",
+        "adconcept|image_prompt_choice|{*}",
+        "adconcept|video_prompt_choice|{*}",
+        "adconcept|music_choice|{*}",
+        "adconcept|save_image_prompt_current|{*}",
+        "adconcept|save_video_prompt_current|{*}",
+    }
+)
+CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACKS = frozenset(
+    {
+        "adconcept|image_ai",
+        "adconcept|image_menu",
+        "adconcept|video_menu",
+        "adconcept|music_menu",
+        "adconcept|video_current",
+        "adconcept|create_video_current",
+        "adconcept|finalization",
+        "adconcept|finalize_video_music",
+        "adconcept|finalize_video_no_music",
+        "adconcept|trend_current",
+        "adconcept|workflow_current",
+        "adconcept|music_library",
+    }
+)
+CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACK_TEMPLATES = frozenset(
+    {
+        "adconcept|image_ai|{*}",
+        "adconcept|image_ai_tier|{*}|{*}",
+        "adconcept|create_video_current|{*}",
+        "adconcept|video_current|{*}",
+        "adconcept|music_genre|{*}",
+    }
+)
+CINEMATIC_AD_CONCEPT_TELEGRAM_ONLY_CALLBACKS = frozenset({"adconcept|admin_video_smoke"})
+CINEMATIC_AD_CONCEPT_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({"adconcept|admin_video_smoke|{*}"})
+CINEMATIC_AD_CONCEPT_STALE_CALLBACKS = frozenset({"adconcept|image_prompts"})
+CINEMATIC_AD_CONCEPT_OWNER_PLAN_CONFIRMATION_CALLBACKS = frozenset(
+    {
+        "adconcept|save_motion_current",
+        "adconcept|save_image_prompt_current",
+        "adconcept|save_video_prompt_current",
+        "adconcept|music_ai_save",
+        "adconcept|music_save",
+        "adconcept|save_video_package",
+        "adconcept|finalize",
+    }
+)
+
 # Dynamic Bot callbacks are intentionally inventory-only by default: the
 # auditor must never evaluate their formatted values.  A small number of
 # namespaces have nevertheless been manually reviewed against real signed Web
@@ -444,7 +562,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("task|", "/workboard", "customer"),
     ("storyboard|", "/video-studio/storyboard-composer", "customer"),
     ("videodub|", "/dubbing", "customer"),
-    ("adconcept|", "/video-studio/cinematic-concept", "customer"),
     ("creative|", "/content-studio", "customer"),
     ("vproduct|", "/video/product", "customer"),
     ("videoaddon|", "/video/add-ons", "customer"),
@@ -4999,8 +5116,267 @@ def _map_known_broken_translation_menu_action(
     }
 
 
+def _cinematic_ad_concept_fresh_web_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Map a reviewed finite planning intent to a fresh signed Web composer.
+
+    This is intentionally a navigation boundary, not a continuation of the
+    Bot conversation.  The browser receives neither a Bot callback value nor
+    a current product/message/style/concept/prompt/music selection; composing
+    and the later explicit Web owner-plan save are separate user actions.
+    """
+
+    dispositions = [
+        "FRESH_SIGNED_WEB_CINEMATIC_AD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_PLANNER_INTENT_ONLY",
+        "BOT_CINEMATIC_AD_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CINEMATIC_AD_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ]
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": CINEMATIC_AD_CONCEPT_ROUTE,
+        "classification": "customer",
+        "status": _mapping_status(
+            CINEMATIC_AD_CONCEPT_ROUTE,
+            existing_routes,
+            telegram_only=False,
+            navigation_only=True,
+        ),
+        "resolution": "reviewed_cinematic_ad_fresh_web_planner_navigation",
+        "source_dispositions": tuple(dispositions),
+        "source_evidence": (
+            "The frozen Bot callback is a reviewed finite Cinematic Ad planning intent. The Web opens a "
+            "new signed composer only; it does not accept the Telegram callback, user ID, pending/latest "
+            "concept, lock, selected direction/prompt/music, provider tier, quote, confirmation, package, "
+            "wallet, job, media or delivery state. A customer must enter/review a Web brief and separately "
+            "confirm a server-recomputed owner Video Plan save."
+        ),
+        "cinematic_ad_concept_authority": "SIGNED_CUSTOMER_WEB_NATIVE_COMPOSER",
+        "cinematic_ad_concept_launch_mode": "FRESH_WEB_NAVIGATION",
+        "cinematic_ad_concept_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+        "evidence": evidence,
+    }
+
+
+def _cinematic_ad_concept_bot_state_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Bot-local conversation transitions out of a browser mapping."""
+
+    token = str(identifier or "").casefold()
+    is_owner_plan_like = (
+        token in CINEMATIC_AD_CONCEPT_OWNER_PLAN_CONFIRMATION_CALLBACKS
+        or token.startswith("adconcept|save_image_prompt_current|")
+        or token.startswith("adconcept|save_video_prompt_current|")
+    )
+    dispositions = [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_CINEMATIC_AD_PENDING_OR_LATEST_STATE",
+        "BOT_CINEMATIC_AD_SELECTION_LOCK_OR_PACKAGE_STATE_NOT_REPLAYED",
+    ]
+    if is_owner_plan_like:
+        dispositions.append("WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED")
+    dispositions.extend(("NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION", "NO_RUNTIME_CLAIM"))
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_CINEMATIC_AD_TRANSIENT_STATE_NOT_REPLAYED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_cinematic_ad_transient_state_requires_fresh_web_compose",
+        "source_dispositions": tuple(dispositions),
+        "source_evidence": (
+            "The frozen Bot callback clears, restores, edits, locks, saves or finalizes short-lived "
+            "Telegram-user Cinematic Ad state. The Web does not read or recreate that state. Its compose "
+            "receipt is transient; any durable Web Video Plan must be separately confirmed with the bounded "
+            "request and server recomputation, never by replaying a Bot callback."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _cinematic_ad_concept_runtime_guard_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Guard provider, wallet, finalization and music-library runtime paths."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "CINEMATIC_AD_RUNTIME_CONTRACT_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_cinematic_ad_runtime_provider_wallet_or_finalization_guard",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_CINEMATIC_AD_LATEST_STATE",
+            "BOT_PROVIDER_OR_MEDIA_LIBRARY_CONTEXT",
+            "CANONICAL_PROVIDER_JOB_WALLET_PAYMENT_OR_FINALIZATION_GUARD",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot callback can enter image tier/ShopAI confirmation, active-job/Xu checks, music "
+            "library context, Trend workflow or video finalization. A Web-native composer or owner-plan save "
+            "does not expose a provider, wallet, job, media, payment or finalization adapter for this source "
+            "transition."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _cinematic_ad_concept_admin_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Leave Bot-only provider smoke execution in its role-bound transport."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "admin",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_cinematic_ad_admin_video_smoke_telegram_only",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_CINEMATIC_AD_LATEST_STATE",
+            "BOT_PROVIDER_SMOKE_EXECUTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot action verifies an admin Telegram identity and runs a provider smoke path using "
+            "the Bot's current Cinematic Ad concept. It has no browser or generic Admin ERP equivalent."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _cinematic_ad_concept_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    *,
+    stale: bool = False,
+) -> dict[str, Any]:
+    """Fail closed for stale or future Cinematic Ad callback spellings."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": (
+            "CINEMATIC_AD_STALE_CALLBACK_REVIEW_REQUIRED"
+            if stale
+            else "CINEMATIC_AD_SOURCE_REVIEW_REQUIRED"
+        ),
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": (
+            "cinematic_ad_stale_or_unhandled_callback_requires_source_review"
+            if stale
+            else "cinematic_ad_callback_requires_source_review"
+        ),
+        "source_dispositions": (
+            "BOT_STALE_OR_UNREVIEWED_CINEMATIC_AD_CALLBACK",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "No broad `adconcept|` route override is permitted. The frozen Bot has a stale/unhandled callback "
+            "or a source spelling that was not part of the finite review, so it must not inherit a Web route, "
+            "provider, wallet, job, finalization or owner-plan save claim."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_cinematic_ad_concept_callback_template(
+    template: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Disposition opaque Cinematic Ad templates before generic namespaces."""
+
+    token = str(template or "").casefold()
+    if token in CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACK_TEMPLATES:
+        return _cinematic_ad_concept_bot_state_mapping(template, "callback_template", evidence)
+    if token in CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACK_TEMPLATES:
+        return _cinematic_ad_concept_runtime_guard_mapping(template, "callback_template", evidence)
+    if token in CINEMATIC_AD_CONCEPT_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return _cinematic_ad_concept_admin_telegram_only_mapping(template, "callback_template", evidence)
+    return _cinematic_ad_concept_source_review_mapping(template, "callback_template", evidence)
+
+
+def _map_cinematic_ad_concept_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map only exact reviewed Cinematic Ad literals and bounded templates.
+
+    This mapper intentionally runs before the dashboard/keyword/family routing
+    so an unreviewed `adconcept|` value can never become a generic video route.
+    """
+
+    token = str(identifier or "").casefold()
+    if not token.startswith("adconcept|"):
+        return None
+    if "{*}" in token:
+        return _map_cinematic_ad_concept_callback_template(identifier, evidence, existing_routes)
+    if token in CINEMATIC_AD_CONCEPT_FRESH_WEB_PLANNER_CALLBACKS:
+        return _cinematic_ad_concept_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    parts = token.split("|")
+    if (
+        len(parts) == 3
+        and parts[1] in {"concept_choice", "motion_choice", "image_prompt_choice", "video_prompt_choice", "music_choice"}
+        and parts[2] in CINEMATIC_AD_CONCEPT_PLANNER_ORDINALS
+    ):
+        return _cinematic_ad_concept_bot_state_mapping(identifier, source_kind, evidence)
+    if token in CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACKS:
+        return _cinematic_ad_concept_bot_state_mapping(identifier, source_kind, evidence)
+    if token.startswith("adconcept|back|") or token.startswith("adconcept|style|"):
+        return _cinematic_ad_concept_bot_state_mapping(identifier, source_kind, evidence)
+    if token.startswith("adconcept|save_image_prompt_current|") or token.startswith("adconcept|save_video_prompt_current|"):
+        return _cinematic_ad_concept_bot_state_mapping(identifier, source_kind, evidence)
+    if token in CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACKS:
+        return _cinematic_ad_concept_runtime_guard_mapping(identifier, source_kind, evidence)
+    if (
+        token.startswith("adconcept|image_ai|")
+        or token.startswith("adconcept|image_ai_tier|")
+        or token.startswith("adconcept|create_video_current|")
+        or token.startswith("adconcept|video_current|")
+        or token.startswith("adconcept|music_genre|")
+    ):
+        return _cinematic_ad_concept_runtime_guard_mapping(identifier, source_kind, evidence)
+    if token in CINEMATIC_AD_CONCEPT_TELEGRAM_ONLY_CALLBACKS or token.startswith("adconcept|admin_video_smoke|"):
+        return _cinematic_ad_concept_admin_telegram_only_mapping(identifier, source_kind, evidence)
+    return _cinematic_ad_concept_source_review_mapping(
+        identifier,
+        source_kind,
+        evidence,
+        stale=token in CINEMATIC_AD_CONCEPT_STALE_CALLBACKS,
+    )
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
+    cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
+    if cinematic_ad_concept_mapping is not None:
+        return cinematic_ad_concept_mapping
     translation_source_mapping = _map_translation_source_intake_callback(identifier, source_kind, evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -5686,11 +6062,6 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         # router below. Keep the safe dashboard target visible but actionable.
         target = "/dashboard"
         dashboard_fallback = True
-    elif token == "adconcept|message|memory":
-        # ``memory`` is one selectable *creative message theme* in the Bot's
-        # cinematic-ad wizard (alongside success, confidence and luxury), not
-        # a request to create or open a Memory Center note.
-        target = "/video-studio/cinematic-concept"
     elif token == "freehub|meta":
         # The main Free Hub Meta button starts the Bot's small, deterministic
         # three-prompt pack.  Keep it separate from the later wizard steps so
@@ -6155,6 +6526,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     """
 
     token = str(template or "").casefold()
+    cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(template, "callback_template", evidence, existing_routes)
+    if cinematic_ad_concept_mapping is not None:
+        return cinematic_ad_concept_mapping
     translation_source_mapping = _map_translation_source_intake_callback(template, "callback_template", evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -6531,10 +6905,10 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
             "resolution": "bot_admin_only_dynamic_flow",
             "evidence": evidence,
         }
-    if token.startswith("adconcept|admin_") or token.startswith("manual|approve") or token.startswith("manual|reject"):
-        # Provider smoke/video execution and manual-payment approval mutate
-        # canonical Bot/provider/wallet state. They stay out of the browser
-        # and cannot be represented by a navigation-only compatibility route.
+    if token.startswith("manual|approve") or token.startswith("manual|reject"):
+        # Manual-payment approval mutates canonical Bot/provider/wallet state.
+        # Cinematic Ad admin callbacks were already handled by their exact
+        # mapper above; they cannot inherit this generic admin disposition.
         return {
             "source_kind": "callback_template",
             "source": template,

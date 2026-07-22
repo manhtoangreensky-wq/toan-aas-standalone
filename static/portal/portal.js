@@ -3430,10 +3430,11 @@
   const CINEMATIC_CONCEPT_STYLES = new Set([
     "cinematic", "bw_luxury", "viral", "direct_sales", "ugc", "fpv", "product_reveal"
   ]);
-  const CINEMATIC_CONCEPT_LANGUAGES = new Set(["vi", "en"]);
+  const CINEMATIC_CONCEPT_LANGUAGES = new Set(["vi", "en", "zh"]);
+  const CINEMATIC_CONCEPT_MESSAGE_MODES = new Set(["provided", "bot_default"]);
   const CINEMATIC_CONCEPT_DURATIONS = new Set([5, 10, 15]);
   const CINEMATIC_CONCEPT_CHOICES = new Set([1, 2, 3]);
-  const CINEMATIC_CONCEPT_MUSIC_CHOICES = new Set(["1", "2", "3", "none"]);
+  const CINEMATIC_CONCEPT_MUSIC_CHOICES = new Set(["1", "2", "3", "ai_prompt", "none"]);
   const CINEMATIC_CONCEPT_RESULT_KEYS = Object.freeze([
     "composer", "execution", "input_persisted", "source_media_inspected", "provider_called",
     "image_created", "video_created", "audio_created", "preview_created", "output_created",
@@ -3452,7 +3453,7 @@
   const CINEMATIC_CONCEPT_MOTION_PLAN_KEYS = Object.freeze(["id", "title", "timeline", "camera", "transitions", "shot_direction"]);
   const CINEMATIC_CONCEPT_MUSIC_DIRECTION_KEYS = Object.freeze(["id", "label", "direction", "ai_music_prompt"]);
   const CINEMATIC_CONCEPT_PLAN_SAVE_SOURCE_KEYS = Object.freeze([
-    "product", "message", "message_theme", "style", "language", "idea_choice", "motion_choice", "video_duration_variant", "music_choice"
+    "product", "message", "message_mode", "message_theme", "style", "language", "idea_choice", "motion_choice", "video_duration_variant", "music_choice"
   ]);
   const CINEMATIC_CONCEPT_PLAN_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze([
     "browser_result_persisted", "pending_bot_save_created", "telegram_state_changed", "bot_called", "bridge_called",
@@ -3518,7 +3519,8 @@
     const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     if (!cinematicConceptHasExactKeys(source, CINEMATIC_CONCEPT_PLAN_SAVE_SOURCE_KEYS)) return {};
     const product = cinematicConceptText(source.product, 2, 500, false);
-    const message = cinematicConceptText(source.message, 2, 500, false);
+    const messageMode = typeof source.message_mode === "string" ? source.message_mode : "";
+    const message = cinematicConceptText(source.message, messageMode === "bot_default" ? 0 : 2, 500, messageMode === "bot_default");
     const messageTheme = typeof source.message_theme === "string" ? source.message_theme : "";
     const style = typeof source.style === "string" ? source.style : "";
     const language = typeof source.language === "string" ? source.language : "";
@@ -3526,14 +3528,16 @@
     const motionChoice = source.motion_choice;
     const duration = source.video_duration_variant;
     const musicChoice = typeof source.music_choice === "string" ? source.music_choice : "";
-    if (!product || !message || !CINEMATIC_CONCEPT_MESSAGE_THEMES.has(messageTheme)
+    if (!product || !CINEMATIC_CONCEPT_MESSAGE_MODES.has(messageMode)
+      || (messageMode === "provided" && !message) || (messageMode === "bot_default" && message)
+      || !CINEMATIC_CONCEPT_MESSAGE_THEMES.has(messageTheme)
       || !CINEMATIC_CONCEPT_STYLES.has(style) || !CINEMATIC_CONCEPT_LANGUAGES.has(language)
       || !Number.isInteger(ideaChoice) || !CINEMATIC_CONCEPT_CHOICES.has(ideaChoice)
       || !Number.isInteger(motionChoice) || !CINEMATIC_CONCEPT_CHOICES.has(motionChoice)
       || !CINEMATIC_CONCEPT_DURATIONS.has(duration) || !CINEMATIC_CONCEPT_MUSIC_CHOICES.has(musicChoice)
     ) return {};
     return {
-      product, message, message_theme: messageTheme, style, language,
+      product, message, message_mode: messageMode, message_theme: messageTheme, style, language,
       idea_choice: ideaChoice, motion_choice: motionChoice,
       video_duration_variant: duration, music_choice: musicChoice
     };
@@ -11586,11 +11590,20 @@
     ["cinematic", "Cinematic"], ["bw_luxury", "Đen trắng · luxury"], ["viral", "Viral / hook mạnh"],
     ["direct_sales", "Direct sales"], ["ugc", "UGC review"], ["fpv", "FPV movement"], ["product_reveal", "Product reveal"]
   ]);
-  const CINEMATIC_CONCEPT_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"]]);
-  const CINEMATIC_CONCEPT_IDEA_OPTIONS = Object.freeze([["1", "Direction 1"], ["2", "Direction 2"], ["3", "Direction 3"]]);
-  const CINEMATIC_CONCEPT_MOTION_OPTIONS = Object.freeze([["1", "Motion plan 1"], ["2", "Motion plan 2"], ["3", "Motion plan 3"]]);
+  const CINEMATIC_CONCEPT_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"], ["zh", "中文（简体）"]]);
+  const CINEMATIC_CONCEPT_MESSAGE_MODE_OPTIONS = Object.freeze([
+    ["provided", "Tự nhập thông điệp"], ["bot_default", "Dùng thông điệp mặc định an toàn"]
+  ]);
+  const CINEMATIC_CONCEPT_IDEA_OPTIONS = Object.freeze([
+    ["1", "Cảm xúc và đồng cảm"], ["2", "Lợi ích rõ ràng"], ["3", "Nhịp social dễ nhớ"]
+  ]);
+  const CINEMATIC_CONCEPT_MOTION_OPTIONS = Object.freeze([
+    ["1", "Push-in tạo cảm xúc"], ["2", "Orbit để hé lộ sản phẩm"], ["3", "Before/after nhịp nhanh"]
+  ]);
   const CINEMATIC_CONCEPT_DURATION_OPTIONS = Object.freeze([["5", "5 giây"], ["10", "10 giây"], ["15", "15 giây"]]);
-  const CINEMATIC_CONCEPT_MUSIC_OPTIONS = Object.freeze([["1", "Music direction 1"], ["2", "Music direction 2"], ["3", "Music direction 3"], ["none", "Không dùng music direction"]]);
+  const CINEMATIC_CONCEPT_MUSIC_OPTIONS = Object.freeze([
+    ["1", "Piano điện ảnh nhẹ"], ["2", "Ambient cao cấp"], ["3", "Electronic hiện đại"], ["ai_prompt", "Prompt nhạc AI (chỉ text)"], ["none", "Không dùng hướng âm nhạc"]
+  ]);
 
   function cinematicConceptOptionLabel(options, value, fallback) {
     const found = options.find(([key]) => key === String(value || ""));
@@ -11600,7 +11613,8 @@
   function cinematicConceptFields() {
     return [
       { name: "product", label: "Sản phẩm / dịch vụ", control: "textarea", placeholder: "Ví dụ: ứng dụng quản lý công việc cho chủ shop nhỏ", required: true, minLength: 2, maxLength: 500, wide: true, help: "Chỉ mô tả nội dung bạn có quyền sử dụng. Không nhập URL, source media, thông tin cá nhân nhạy cảm, token, OTP hoặc chứng từ thanh toán." },
-      { name: "message", label: "Thông điệp chính", control: "textarea", placeholder: "Ví dụ: tập trung vào việc quan trọng thay vì bị cuốn vào các công việc vụn vặt", required: true, minLength: 2, maxLength: 500, wide: true, help: "Đây là brief text để lập concept; không phải claim đã được fact-check hoặc quảng cáo đã được phê duyệt." },
+      { name: "message_mode", label: "Nguồn thông điệp", control: "select", required: true, options: CINEMATIC_CONCEPT_MESSAGE_MODE_OPTIONS, controlData: { "cinematic-concept-message-mode": "true" }, help: "Chọn tự nhập để dùng brief của bạn. Chọn mặc định an toàn để máy chủ tự đặt câu phù hợp ngôn ngữ; browser chỉ giữ mode và ô trống, không dùng câu đã render làm nguồn lưu." },
+      { name: "message", label: "Thông điệp chính", control: "textarea", placeholder: "Ví dụ: tập trung vào việc quan trọng thay vì bị cuốn vào các công việc vụn vặt", required: true, minLength: 2, maxLength: 500, wide: true, wrapperData: { "cinematic-concept-message-field": "true" }, help: "Nhập brief text khi chọn Tự nhập thông điệp. Đây không phải claim đã được fact-check hoặc quảng cáo đã được phê duyệt." },
       { name: "message_theme", label: "Chủ đề thông điệp", control: "select", required: true, options: CINEMATIC_CONCEPT_MESSAGE_THEME_OPTIONS },
       { name: "style", label: "Phong cách dựng concept", control: "select", required: true, options: CINEMATIC_CONCEPT_STYLE_OPTIONS, help: "Là direction mô tả để review, không gọi model, provider hoặc renderer." },
       { name: "language", label: "Ngôn ngữ plan", control: "select", required: true, options: CINEMATIC_CONCEPT_LANGUAGE_OPTIONS },
@@ -11747,7 +11761,7 @@
     const shotListMarkup = `<section class="portal-cinematic-concept-shot-list"><div><span class="portal-section-kicker">Shot list</span><h3>Danh sách shot để review</h3><p>Danh sách mô tả này không phải footage, render order hoặc lệnh tạo media.</p></div><ol>${shotList.map((item, index) => `<li><span>${safeText(String(index + 1).padStart(2, "0"))}</span><p>${safeText(String(item))}</p></li>`).join("")}</ol></section>`;
     const promptMarkup = shotListMarkup + imagePrompts.map((item) => `<article class="portal-cinematic-concept-prompt"><div><span class="portal-section-kicker">Image planning · ${safeText(String(item.index || ""))}</span><strong>${safeText(String(item.label || ""))}</strong></div><dl><div><dt>Prompt</dt><dd>${safeText(String(item.prompt || ""))}</dd></div><div><dt>Negative constraint</dt><dd>${safeText(String(item.negative_prompt || ""))}</dd></div></dl></article>`).join("");
     const videoPromptMarkup = videoPrompts.map((item) => `<article class="portal-cinematic-concept-prompt"><div><span class="portal-section-kicker">Video planning · ${safeText(String(item.duration_seconds || ""))}s</span><strong>Prompt variant</strong></div><dl><div><dt>Prompt</dt><dd>${safeText(String(item.prompt || ""))}</dd></div><div><dt>Negative constraint</dt><dd>${safeText(String(item.negative_prompt || ""))}</dd></div></dl></article>`).join("");
-    return `<section class="portal-card portal-card-pad portal-cinematic-concept-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic concept</span><h2 class="portal-card-title">${safeText(String(composer.title || "Cinematic Ad Concept"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.product || ""))} · ${safeText(String(messageTheme.label || ""))} · ${safeText(String(style.label || ""))} · ${safeText(String(composer.video_duration_variant || ""))} giây. Đây là concept text để review, không phải image, video, audio, preview, output hay xác nhận provider.</p></div>${badge("read_only")}</div><div class="portal-cinematic-concept-meta"><span>Thông điệp: ${safeText(String(composer.message || ""))}</span><span>Topic: ${safeText(String(composer.topic || ""))}</span><span>Ngôn ngữ: ${safeText(String(composer.language || "").toUpperCase())}</span><span>Motion ${safeText(String(composer.motion_choice || ""))}</span><span>${safeText(cinematicConceptOptionLabel(CINEMATIC_CONCEPT_MUSIC_OPTIONS, composer.music_choice, "Music direction"))}</span></div><section class="portal-cinematic-concept-directions"><div class="portal-card-header"><div><span class="portal-section-kicker">Creative directions</span><h3 class="portal-card-title">Ba cách kể câu chuyện</h3><p class="portal-card-subtitle">Chỉ direction text để so sánh; không có campaign, advertising approval hoặc publish action nào được tạo.</p></div></div><ol>${directions.map((direction) => `<li${Number(direction.index) === Number(selected.index) ? " data-selected=\"true\"" : ""}><span class="portal-cinematic-concept-index">${safeText(String(direction.index || "").padStart(2, "0"))}</span><div><div class="portal-cinematic-concept-direction-head"><strong>${safeText(String(direction.title || ""))}</strong>${Number(direction.index) === Number(selected.index) ? `<em>Đang phát triển</em>` : ""}</div><dl><div><dt>Premise</dt><dd>${safeText(String(direction.premise || ""))}</dd></div><div><dt>Brand story</dt><dd>${safeText(String(direction.brand_story || ""))}</dd></div><div><dt>Hook</dt><dd>${safeText(String(direction.hook || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(direction.cta || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><div class="portal-cinematic-concept-scripts"><div><span class="portal-section-kicker">Script variants</span><h3>Ba nhịp script để review</h3></div><div>${scriptMarkup}</div></div><section class="portal-cinematic-concept-storyboard"><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard planning</span><h3 class="portal-card-title">Ba đoạn hình dung</h3><p class="portal-card-subtitle">Storyboard là text planning; không có shot footage, render timeline, player hay media output.</p></div><span class="portal-cinematic-concept-count">${safeText(String(storyboard.length))} scenes</span></div><ol>${storyboard.map((shot) => `<li><span class="portal-cinematic-concept-index">${safeText(String(shot.index || "").padStart(2, "0"))}</span><div><div class="portal-cinematic-concept-storyboard-head"><strong>${safeText(String(shot.start_seconds || 0))}–${safeText(String(shot.end_seconds || 0))}s</strong><span>${safeText(String(shot.transition || ""))}</span></div><dl><div><dt>Setting</dt><dd>${safeText(String(shot.setting || ""))}</dd></div><div><dt>Subject</dt><dd>${safeText(String(shot.subject || ""))}</dd></div><div><dt>Action</dt><dd>${safeText(String(shot.action || ""))}</dd></div><div><dt>Emotion</dt><dd>${safeText(String(shot.emotion || ""))}</dd></div><div><dt>Camera</dt><dd>${safeText(String(shot.camera || ""))}</dd></div><div><dt>Voiceover direction</dt><dd>${safeText(String(shot.voiceover || ""))}</dd></div><div><dt>CTA space</dt><dd>${safeText(String(shot.cta_space || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-cinematic-concept-motion"><div><span class="portal-section-kicker">Motion & music direction</span><h3>Nhịp chuyển động và âm thanh mô tả</h3><p>Hai phần dưới đây chỉ là brief text. Không có audio/music generation, video render, preview hoặc asset được tạo.</p></div><dl><div><dt>${safeText(String(motionPlan.title || "Motion plan"))}</dt><dd>${safeText(String(motionPlan.timeline || ""))}</dd><dd>${safeText(String(motionPlan.camera || ""))}</dd><dd>${safeText(String(motionPlan.transitions || ""))}</dd><dd>${safeText(String(motionPlan.shot_direction || ""))}</dd></div><div><dt>${safeText(String(musicDirection.label || "Music direction"))}</dt><dd>${safeText(String(musicDirection.direction || ""))}</dd><dd>${safeText(String(musicDirection.ai_music_prompt || ""))}</dd></div></dl></section><div class="portal-cinematic-concept-prompts"><div><span class="portal-section-kicker">Prompt planning only</span><h3>Image & video direction để review</h3><p>Không có request tạo ảnh/video/audio; prompt không tự được gửi đến engine hoặc provider.</p></div><div class="portal-cinematic-concept-prompt-grid">${promptMarkup}${videoPromptMarkup}</div></div><section class="portal-cinematic-concept-review"><strong>Cảnh báo và rà soát trước khi dùng ở nơi khác</strong>${cinematicConceptListMarkup(composer.cautions, "Không có cảnh báo bổ sung từ template; bạn vẫn cần kiểm tra claim, quyền, thương hiệu và consent.")}<div>${cinematicConceptListMarkup(composer.review_before_use, "Luôn rà soát claim, quyền sử dụng, consent và brand safety trước khi đưa direction sang workflow khác.")}</div></section><div class="portal-form-footer"><span class="portal-form-note">Kết quả chỉ tồn tại trong state phiên đã xác thực; trang này không tự lưu, xuất, render, upload hoặc gửi direction đến engine/provider.</span><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-cinematic-concept-result" data-cinematic-concept-rendered-result><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic concept</span><h2 class="portal-card-title">${safeText(String(composer.title || "Cinematic Ad Concept"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.product || ""))} · ${safeText(String(messageTheme.label || ""))} · ${safeText(String(style.label || ""))} · ${safeText(String(composer.video_duration_variant || ""))} giây. Đây là concept text để review, không phải image, video, audio, preview, output hay xác nhận provider.</p></div>${badge("read_only")}</div><div class="portal-cinematic-concept-meta"><span>Thông điệp: ${safeText(String(composer.message || ""))}</span><span>Topic: ${safeText(String(composer.topic || ""))}</span><span>Ngôn ngữ: ${safeText(String(composer.language || "").toUpperCase())}</span><span>Motion ${safeText(String(composer.motion_choice || ""))}</span><span>${safeText(cinematicConceptOptionLabel(CINEMATIC_CONCEPT_MUSIC_OPTIONS, composer.music_choice, "Music direction"))}</span></div><section class="portal-cinematic-concept-directions"><div class="portal-card-header"><div><span class="portal-section-kicker">Creative directions</span><h3 class="portal-card-title">Ba cách kể câu chuyện</h3><p class="portal-card-subtitle">Chỉ direction text để so sánh; không có campaign, advertising approval hoặc publish action nào được tạo.</p></div></div><ol>${directions.map((direction) => `<li${Number(direction.index) === Number(selected.index) ? " data-selected=\"true\"" : ""}><span class="portal-cinematic-concept-index">${safeText(String(direction.index || "").padStart(2, "0"))}</span><div><div class="portal-cinematic-concept-direction-head"><strong>${safeText(String(direction.title || ""))}</strong>${Number(direction.index) === Number(selected.index) ? `<em>Đang phát triển</em>` : ""}</div><dl><div><dt>Premise</dt><dd>${safeText(String(direction.premise || ""))}</dd></div><div><dt>Brand story</dt><dd>${safeText(String(direction.brand_story || ""))}</dd></div><div><dt>Hook</dt><dd>${safeText(String(direction.hook || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(direction.cta || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><div class="portal-cinematic-concept-scripts"><div><span class="portal-section-kicker">Script variants</span><h3>Ba nhịp script để review</h3></div><div>${scriptMarkup}</div></div><section class="portal-cinematic-concept-storyboard"><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard planning</span><h3 class="portal-card-title">Ba đoạn hình dung</h3><p class="portal-card-subtitle">Storyboard là text planning; không có shot footage, render timeline, player hay media output.</p></div><span class="portal-cinematic-concept-count">${safeText(String(storyboard.length))} scenes</span></div><ol>${storyboard.map((shot) => `<li><span class="portal-cinematic-concept-index">${safeText(String(shot.index || "").padStart(2, "0"))}</span><div><div class="portal-cinematic-concept-storyboard-head"><strong>${safeText(String(shot.start_seconds || 0))}–${safeText(String(shot.end_seconds || 0))}s</strong><span>${safeText(String(shot.transition || ""))}</span></div><dl><div><dt>Setting</dt><dd>${safeText(String(shot.setting || ""))}</dd></div><div><dt>Subject</dt><dd>${safeText(String(shot.subject || ""))}</dd></div><div><dt>Action</dt><dd>${safeText(String(shot.action || ""))}</dd></div><div><dt>Emotion</dt><dd>${safeText(String(shot.emotion || ""))}</dd></div><div><dt>Camera</dt><dd>${safeText(String(shot.camera || ""))}</dd></div><div><dt>Voiceover direction</dt><dd>${safeText(String(shot.voiceover || ""))}</dd></div><div><dt>CTA space</dt><dd>${safeText(String(shot.cta_space || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-cinematic-concept-motion"><div><span class="portal-section-kicker">Motion & music direction</span><h3>Nhịp chuyển động và âm thanh mô tả</h3><p>Hai phần dưới đây chỉ là brief text. Không có audio/music generation, video render, preview hoặc asset được tạo.</p></div><dl><div><dt>${safeText(String(motionPlan.title || "Motion plan"))}</dt><dd>${safeText(String(motionPlan.timeline || ""))}</dd><dd>${safeText(String(motionPlan.camera || ""))}</dd><dd>${safeText(String(motionPlan.transitions || ""))}</dd><dd>${safeText(String(motionPlan.shot_direction || ""))}</dd></div><div><dt>${safeText(String(musicDirection.label || "Music direction"))}</dt><dd>${safeText(String(musicDirection.direction || ""))}</dd><dd>${safeText(String(musicDirection.ai_music_prompt || ""))}</dd></div></dl></section><div class="portal-cinematic-concept-prompts"><div><span class="portal-section-kicker">Prompt planning only</span><h3>Image & video direction để review</h3><p>Không có request tạo ảnh/video/audio; prompt không tự được gửi đến engine hoặc provider.</p></div><div class="portal-cinematic-concept-prompt-grid">${promptMarkup}${videoPromptMarkup}</div></div><section class="portal-cinematic-concept-review"><strong>Cảnh báo và rà soát trước khi dùng ở nơi khác</strong>${cinematicConceptListMarkup(composer.cautions, "Không có cảnh báo bổ sung từ template; bạn vẫn cần kiểm tra claim, quyền, thương hiệu và consent.")}<div>${cinematicConceptListMarkup(composer.review_before_use, "Luôn rà soát claim, quyền sử dụng, consent và brand safety trước khi đưa direction sang workflow khác.")}</div></section><div class="portal-form-footer"><span class="portal-form-note">Kết quả chỉ tồn tại trong state phiên đã xác thực; trang này không tự lưu, xuất, render, upload hoặc gửi direction đến engine/provider.</span><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a></div></section>`;
   }
 
   function cinematicConceptPlanSourceMatchesVisibleResult(rawSource, rawResult) {
@@ -11758,8 +11772,14 @@
     const composer = result.composer && typeof result.composer === "object" && !Array.isArray(result.composer) ? result.composer : {};
     const theme = composer.message_theme && typeof composer.message_theme === "object" && !Array.isArray(composer.message_theme) ? composer.message_theme : {};
     const style = composer.style && typeof composer.style === "object" && !Array.isArray(composer.style) ? composer.style : {};
-    return Boolean(source.product && composer.title
-      && source.product === composer.product && source.message === composer.message
+    // `bot_default` deliberately retains an empty browser message. The server
+    // resolves the localized default while composing/saving, so the resolved
+    // result must never be copied back into this raw source contract.
+    const messageMatches = source.message_mode === "bot_default"
+      ? source.message === "" && Boolean(cinematicConceptText(composer.message, 2, 500, false))
+      : source.message_mode === "provided" && source.message === composer.message;
+    return Boolean(source.product && composer.title && messageMatches
+      && source.product === composer.product
       && source.message_theme === theme.id && source.style === style.id
       && source.language === composer.language && source.idea_choice === composer.idea_choice
       && source.motion_choice === composer.motion_choice
@@ -11773,14 +11793,15 @@
     if (!composer) return "";
     const receipt = rawReceipt && typeof rawReceipt === "object" && !Array.isArray(rawReceipt) ? rawReceipt : {};
     const sourceMatches = cinematicConceptPlanSourceMatchesVisibleResult(rawSaveSource, result);
-    const saveControl = sourceMatches
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="cinematic-concept-save-plan" data-portal-route="/video-studio/cinematic-concept" data-portal-confirm="Lưu Cinematic Ad Concept hiện tại thành Video Plan Draft? Máy chủ sẽ tự tạo lại concept từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo media/job, không đổi ví Xu, PayOS, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>`
-      : "";
-    const savePanel = `<section class="portal-card portal-card-pad portal-cinematic-concept-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước lưu Web-native</span><h2 class="portal-card-title">Xác nhận lưu thành Video Plan Draft</h2><p class="portal-card-subtitle">Chỉ gửi lại lựa chọn brief gốc trong phiên này. Server tự tạo lại creative direction, storyboard và prompt direction trước khi tạo plan owner-only; browser không gửi concept/storyboard đã render hoặc state Telegram.</p></div>${badge(sourceMatches && canSaveToVideoPlan ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Lưu plan không phải render: không có Bot/bridge/provider, source media, image/video/audio, preview, output, job, ví Xu, PayOS, asset, publish, delivery, approval, lock hoặc generation.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${saveControl}</div></div></section>`;
     const receiptPlan = receipt.plan && typeof receipt.plan === "object" && !Array.isArray(receipt.plan) ? receipt.plan : null;
-    if (!receiptPlan || !validVideoStudioPlanId(receiptPlan.id)) return savePanel;
-    const planPath = `/video-studio/${encodeURIComponent(String(receiptPlan.id))}`;
-    return `${savePanel}<section class="portal-card portal-card-pad portal-cinematic-concept-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Video Production Studio riêng tư</span><h2 class="portal-card-title">Đã lưu Cinematic Ad Concept thành Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(receiptPlan.revision || 1))}. Receipt không giữ product, message, concept, storyboard hoặc prompt trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Plan là bản ghi owner-only có thể biên tập. Không có pending Telegram, Bot/provider call, media, preview, output, job, thanh toán, asset, publish, delivery, approval, lock hay generation.</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">Mở Video Plan</a></div></section>`;
+    if (receiptPlan && validVideoStudioPlanId(receiptPlan.id)) {
+      const planPath = `/video-studio/${encodeURIComponent(String(receiptPlan.id))}`;
+      return `<section class="portal-card portal-card-pad portal-cinematic-concept-result" data-cinematic-concept-saved-receipt aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Video Production Studio riêng tư</span><h2 class="portal-card-title">Đã lưu Cinematic Ad Concept thành Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(receiptPlan.revision || 1))}. Receipt không giữ product, message, concept, storyboard hoặc prompt trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Plan là bản ghi owner-only có thể biên tập. Không có pending Telegram, Bot/provider call, media, preview, output, job, thanh toán, asset, publish, delivery, approval, lock hay generation.</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">Mở Video Plan</a></div></section>`;
+    }
+    const saveControl = sourceMatches
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="cinematic-concept-save-plan" data-portal-route="/video-studio/cinematic-concept" data-portal-form-id="cinematic-concept-form" data-portal-confirm="Lưu Cinematic Ad Concept hiện tại thành Video Plan Draft? Máy chủ sẽ tự tạo lại concept từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo media/job, không đổi ví Xu, PayOS, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>`
+      : "";
+    return `<section class="portal-card portal-card-pad portal-cinematic-concept-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước lưu Web-native</span><h2 class="portal-card-title">Xác nhận lưu thành Video Plan Draft</h2><p class="portal-card-subtitle">Chỉ gửi lại lựa chọn brief gốc trong phiên này. Server tự tạo lại creative direction, storyboard và prompt direction trước khi tạo plan owner-only; browser không gửi concept/storyboard đã render hoặc state Telegram.</p></div>${badge(sourceMatches && canSaveToVideoPlan ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Lưu plan không phải render: không có Bot/bridge/provider, source media, image/video/audio, preview, output, job, ví Xu, PayOS, asset, publish, delivery, approval, lock hoặc generation.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${saveControl}</div></div></section>`;
   }
 
   function renderCinematicConcept(page, context) {
@@ -11790,13 +11811,31 @@
       && context.capabilities["cinematic-concept-save-plan"] === true
       && context.capabilities["video-plan-create"] === true
     );
-    const values = {
-      product: "", message: "", message_theme: "confidence", style: "cinematic", language: "vi",
+    const defaultValues = {
+      product: "", message: "", message_mode: "provided", message_theme: "confidence", style: "cinematic", language: "vi",
       idea_choice: "1", motion_choice: "1", video_duration_variant: "15", music_choice: "1"
     };
+    // Keep only the bounded source choices in the active signed-tab state so
+    // a successful composition does not erase the brief on re-render. This
+    // deliberately does not restore from browser storage, a Bot payload or a
+    // saved Video Plan receipt.
+    const retainedSource = normalizeCinematicConceptPlanSaveSource(context.cinematicConceptSaveSource);
+    const values = retainedSource.product ? {
+      ...defaultValues,
+      product: retainedSource.product,
+      message: retainedSource.message,
+      message_mode: retainedSource.message_mode,
+      message_theme: retainedSource.message_theme,
+      style: retainedSource.style,
+      language: retainedSource.language,
+      idea_choice: String(retainedSource.idea_choice),
+      motion_choice: String(retainedSource.motion_choice),
+      video_duration_variant: String(retainedSource.video_duration_variant),
+      music_choice: retainedSource.music_choice
+    } : defaultValues;
     return `<article class="portal-page portal-cinematic-concept">${renderHero(page, context)}
       <section class="portal-cinematic-concept-intro"><div><span class="portal-section-kicker">Web-native ad planning</span><h2>Biến một brief thành concept quảng cáo có cấu trúc — không hề tạo media.</h2><p>Composer chuyển grammar lập concept của Bot thành một màn hình Web dễ review: ba creative direction, script theo thời lượng, storyboard và motion/music brief. Mọi phần là text planning do bạn kiểm tra trước khi dùng ở workflow khác.</p></div><dl><div><dt>3</dt><dd>Creative directions</dd></div><div><dt>3</dt><dd>Storyboard scenes</dd></div><div><dt>0</dt><dd>Media / provider</dd></div></dl></section>
-      <div class="portal-cinematic-concept-layout"><section class="portal-card portal-card-pad portal-cinematic-concept-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Concept brief</span><h2 class="portal-card-title">Lập cinematic ad concept</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Composer chỉ tạo bản review tạm thời; Video Plan chỉ được tạo sau khi bạn xác nhận riêng.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="cinematic-concept-compose" data-portal-route="/video-studio/cinematic-concept" novalidate>${renderFields(cinematicConceptFields(), canCompose, context, values, "cinematic-concept")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo concept text để review; không gửi request tạo image, video, audio, preview, asset, job, payment hoặc publish.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo cinematic concept</button></div></form></section><aside class="portal-card portal-card-pad portal-cinematic-concept-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập concept, không chạy creative engine</h2><p class="portal-card-subtitle">Không có source media/upload, image/video/audio generation, provider/Bot, render, preview, output, job, Xu, PayOS, asset, publish hoặc delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-cinematic-concept-guard-list"><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Image / video / audio</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Render / preview</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
+      <div class="portal-cinematic-concept-layout"><section class="portal-card portal-card-pad portal-cinematic-concept-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Concept brief</span><h2 class="portal-card-title">Lập cinematic ad concept</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Composer chỉ tạo bản review tạm thời; Video Plan chỉ được tạo sau khi bạn xác nhận riêng.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form id="cinematic-concept-form" class="portal-form" data-portal-form data-portal-no-transient data-portal-action="cinematic-concept-compose" data-portal-route="/video-studio/cinematic-concept" novalidate>${renderFields(cinematicConceptFields(), canCompose, context, values, "cinematic-concept")}<div class="portal-form-footer"><span class="portal-form-note portal-cinematic-concept-stale-note" data-cinematic-concept-stale-note hidden role="status" aria-live="polite"></span><span class="portal-form-note">Nút này chỉ tạo concept text để review; không gửi request tạo image, video, audio, preview, asset, job, payment hoặc publish.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo cinematic concept</button></div></form></section><aside class="portal-card portal-card-pad portal-cinematic-concept-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập concept, không chạy creative engine</h2><p class="portal-card-subtitle">Không có source media/upload, image/video/audio generation, provider/Bot, render, preview, output, job, Xu, PayOS, asset, publish hoặc delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-cinematic-concept-guard-list"><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Image / video / audio</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Render / preview</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
       ${renderCinematicConceptResult(context.cinematicConceptResult)}
       ${renderCinematicConceptPlanSavePanel(context.cinematicConceptResult, context.cinematicConceptSaveSource, context.cinematicConceptSaveReceipt, canSaveToVideoPlan)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review concept trước, thực thi bằng contract riêng sau</h2><p class="portal-card-subtitle">Dùng plan như điểm bắt đầu để rà soát thông điệp, claim, quyền sử dụng, consent và brand safety. Khi cần lưu version history, hãy tạo Video Plan riêng; việc đó vẫn không render hoặc tạo media.</p></div></div>${renderNotes(page)}</section>
@@ -22629,6 +22668,77 @@
     }
   }
 
+  function synchronizeCinematicConceptMessageMode(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "cinematic-concept-compose") return;
+    const mode = form.querySelector('[name="message_mode"]');
+    const message = form.querySelector('[name="message"]');
+    const field = form.querySelector("[data-cinematic-concept-message-field]");
+    if (!mode || !message) return;
+    const useServerDefault = String(mode.value || "provided") === "bot_default";
+    const formDisabled = Boolean(mode.disabled);
+    const disabled = formDisabled || useServerDefault;
+    const providedPlaceholder = message.dataset.cinematicConceptProvidedPlaceholder || message.getAttribute("placeholder") || "";
+    const help = field && field.querySelector(".portal-field-help");
+    const providedHelp = help && (help.dataset.cinematicConceptProvidedHelp || help.textContent || "");
+    message.dataset.cinematicConceptProvidedPlaceholder = providedPlaceholder;
+    if (help) help.dataset.cinematicConceptProvidedHelp = providedHelp;
+    message.disabled = disabled;
+    message.required = !disabled;
+    message.setAttribute("aria-disabled", String(disabled));
+    message.setAttribute("aria-required", String(!disabled));
+    message.setAttribute("placeholder", useServerDefault ? "Máy chủ sẽ dùng thông điệp mặc định theo ngôn ngữ đã chọn" : providedPlaceholder);
+    if (useServerDefault) message.value = "";
+    if (field) {
+      field.classList.toggle("is-muted", useServerDefault);
+      const requiredMark = field.querySelector("[data-portal-required-mark]");
+      const requiredMessage = field.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = disabled;
+      if (requiredMessage) requiredMessage.hidden = disabled;
+    }
+    if (help) {
+      help.setAttribute("aria-live", "polite");
+      help.textContent = useServerDefault
+        ? "Máy chủ sẽ tự đặt thông điệp mặc định phù hợp ngôn ngữ. Browser giữ ô trống và chỉ gửi message_mode; câu đã render không được dùng lại để lưu plan."
+        : providedHelp;
+    }
+  }
+
+  function cinematicConceptFormMatchesSavedSource(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "cinematic-concept-compose") return false;
+    const current = normalizeCinematicConceptPlanSaveSource(collectFormFields(form));
+    const saved = normalizeCinematicConceptPlanSaveSource(getBootstrap().cinematicConceptSaveSource);
+    return Boolean(current.product && saved.product
+      && CINEMATIC_CONCEPT_PLAN_SAVE_SOURCE_KEYS.every((key) => current[key] === saved[key]));
+  }
+
+  function synchronizeCinematicConceptDraftFreshness(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "cinematic-concept-compose") return;
+    const hasConcept = Boolean(document.querySelector("[data-cinematic-concept-rendered-result], [data-cinematic-concept-saved-receipt]"));
+    if (!hasConcept) return;
+    const fresh = cinematicConceptFormMatchesSavedSource(form);
+    const note = form.querySelector("[data-cinematic-concept-stale-note]");
+    form.dataset.cinematicConceptDraftState = fresh ? "fresh" : "stale";
+    if (note) {
+      note.hidden = fresh;
+      note.textContent = fresh
+        ? ""
+        : "Brief đã thay đổi. Kết quả hoặc Video Plan đang hiển thị thuộc brief trước; hãy tạo lại Cinematic Concept trước khi lưu.";
+    }
+    document.querySelectorAll("[data-cinematic-concept-rendered-result], [data-cinematic-concept-saved-receipt]").forEach((surface) => {
+      surface.toggleAttribute("data-stale", !fresh);
+    });
+    document.querySelectorAll('[data-portal-action="cinematic-concept-save-plan"][data-portal-form-id="cinematic-concept-form"]').forEach((control) => {
+      if (!Object.prototype.hasOwnProperty.call(control.dataset, "cinematicConceptInitialDisabled")) {
+        control.dataset.cinematicConceptInitialDisabled = String(control.disabled);
+      }
+      const disabled = !fresh || control.dataset.cinematicConceptInitialDisabled === "true";
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !fresh) control.setAttribute("title", "Brief đã thay đổi; hãy tạo lại Cinematic Concept trước khi lưu.");
+      else control.removeAttribute("title");
+    });
+  }
+
   function synchronizeQuickImagePlannerForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
     const source = form.querySelector('[data-quick-image-planner-source]');
@@ -23687,6 +23797,9 @@
     document.addEventListener("input", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
+      if (form && form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
+        synchronizeCinematicConceptDraftFreshness(form);
+      }
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
@@ -23705,6 +23818,13 @@
         }
         if (form.getAttribute("data-portal-action") === "content-prompt-pack-compose" && event.target && event.target.name === "kind") {
           synchronizeContentPromptPackSuggestions(form);
+        }
+        if (form.getAttribute("data-portal-action") === "cinematic-concept-compose"
+          && event.target && event.target.name === "message_mode") {
+          synchronizeCinematicConceptMessageMode(form);
+        }
+        if (form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
+          synchronizeCinematicConceptDraftFreshness(form);
         }
         if (event.target && event.target.name === "preset") {
           synchronizeImageResizePreset(form);
@@ -23865,6 +23985,10 @@
     bindVideoPreviewPlayer(main);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-project-create"]').forEach((form) => synchronizeSubtitleLanguageSourceForm(form));
+    main.querySelectorAll('[data-portal-action="cinematic-concept-compose"]').forEach((form) => {
+      synchronizeCinematicConceptMessageMode(form);
+      synchronizeCinematicConceptDraftFreshness(form);
+    });
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
