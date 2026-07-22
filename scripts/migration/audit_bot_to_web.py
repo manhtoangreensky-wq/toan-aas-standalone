@@ -444,9 +444,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("task|", "/workboard", "customer"),
     ("storyboard|", "/video-studio/storyboard-composer", "customer"),
     ("videodub|", "/dubbing", "customer"),
-    ("tr_target|", "/dubbing", "customer"),
-    ("tr_pick|", "/dubbing", "customer"),
-    ("tr_more|", "/dubbing", "customer"),
     ("adconcept|", "/video-studio/cinematic-concept", "customer"),
     ("creative|", "/content-studio", "customer"),
     ("vproduct|", "/video/product", "customer"),
@@ -1634,13 +1631,6 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
     },
-    "menu|translation_transcript": {
-        "capability_key": "subtitle_studio",
-        "target": "/subtitle-studio",
-        "feature_key": "subtitle_studio",
-        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
-        "launch_mode": "WEB_NAVIGATION",
-    },
     "menu|translation_document": {
         "capability_key": "documents",
         "target": "/documents",
@@ -1985,6 +1975,80 @@ MENU_TRANSLATION_TELEGRAM_ONLY_ACTIONS = frozenset({
     "menu|translation_voice",
 })
 
+# Frozen Bot baseline note: ``menu|translation_transcript`` stores a
+# ``transcript`` pending source, while ``handle_translation_callback`` only
+# executes ``voice``, ``file`` and ``text`` source types.  The branch returns
+# an unsupported-source alert rather than a translation result.  Keep this
+# source fact visible in the audit instead of letting a similarly named Web
+# editor disguise the broken Bot action as parity.
+TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS = frozenset({"menu|translation_transcript"})
+
+# The Bot translation picker relies on a per-Telegram recent media/file/text
+# slot.  Only these literal non-executing entrances may open a *fresh* signed
+# Web workspace.  They receive no Telegram cache/file identifier, source
+# bytes, language target, Bot request, provider state, job, Xu or payment
+# state.  The Web routes remain guarded and must obtain any source through its
+# own owner-scoped Asset Vault/reference contract.
+TRANSLATION_SOURCE_INTAKE_FRESH_WEB_ACTIONS: dict[str, dict[str, Any]] = {
+    "tr_pick|file": {
+        "target": "/documents/translate",
+        "capability_key": "documents_translate",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_NAVIGATION",
+            "WEB_NAVIGATION_GUARDED",
+            "BOT_TELEGRAM_FILE_CACHE_NOT_REPLAYED",
+            "WEB_OWNER_SCOPED_DOCUMENT_SOURCE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot retrieves a recent Telegram file before it can show a target-language picker. "
+            "The Web opens a fresh guarded Document Translate surface and never receives that cache/file ID, "
+            "bytes, pending request or a translation result."
+        ),
+    },
+    "tr_pick|voice": {
+        "target": "/subtitle-studio",
+        "capability_key": "subtitle_studio",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_NAVIGATION",
+            "WEB_NAVIGATION_GUARDED",
+            "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+            "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot requires recent Telegram audio/video before the voice picker can continue. "
+            "The Web opens only the signed Subtitle Studio manual/Asset-Vault-reference intake; it does not "
+            "read media bytes, run ASR/translation/TTS, create a job or claim an output."
+        ),
+    },
+    "tr_more|voice": {
+        "target": "/subtitle-studio",
+        "capability_key": "subtitle_studio",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_NAVIGATION",
+            "WEB_NAVIGATION_GUARDED",
+            "BOT_TARGET_LANGUAGE_PICKER_NOT_REPLAYED",
+            "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+            "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot literal opens only the extended voice target-language picker. The Web opens a "
+            "fresh Subtitle Studio intake and neither carries the target selector nor performs translation, "
+            "ASR, provider, job, wallet or delivery work."
+        ),
+    },
+}
+
+# Formatted selector suffixes must stay fail-closed.  The literal registry
+# above is intentionally not a namespace wildcard: an unreviewed source kind
+# can be a Telegram cache, pending request or future execution path.
+TRANSLATION_SOURCE_SELECTOR_TEMPLATE_REVIEW_REQUIRED = frozenset({
+    "tr_pick|{*}",
+    "tr_more|{*}",
+})
+
 TRANSLATION_SESSION_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "menu|translation_pair_back_{*}",
     "menu|translation_pair_start_{*}",
@@ -2193,9 +2257,27 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "tr_pick": {
         "priority": "P1",
-        "candidate_boundary": "/dubbing",
-        "authority": "Web-native subtitle/dubbing boundary",
-        "next_contract": "Require an explicit owner-scoped source selection contract before mapping Telegram file-pick actions.",
+        "candidate_boundary": "finite owner-scoped source-selector review",
+        "authority": "Fresh guarded Web intake only for reviewed file/voice literals",
+        "next_contract": "Keep only reviewed file/voice literals as fresh signed navigation. Any other picker source needs an owner-scoped Asset Vault/source contract and must not inherit a route, Telegram cache, provider, job, wallet or payment action.",
+        "source_dispositions": ("SOURCE_VALUE_REQUIRES_FINITE_REVIEW", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot picker resolves a per-Telegram source type and may read recent cached media/file state. An unreviewed suffix is not a safe browser source or execution request.",
+    },
+    "tr_more": {
+        "priority": "P1",
+        "candidate_boundary": "finite target-selector review",
+        "authority": "Fresh guarded Web intake only for reviewed voice literal",
+        "next_contract": "Keep the reviewed `tr_more|voice` navigation separate from dynamic source selectors. Any other suffix needs source review and cannot carry a target language, pending source, provider request or result into Web.",
+        "source_dispositions": ("SOURCE_VALUE_REQUIRES_FINITE_REVIEW", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot `tr_more` family redraws a target-language picker from Telegram-local source state; an unreviewed suffix has no standalone Web semantics.",
+    },
+    "tr_target": {
+        "priority": "P1",
+        "candidate_boundary": "CORE_CANONICAL_TRANSLATION_GUARDED",
+        "authority": "Canonical Bot/provider translation request and delivery boundary",
+        "next_contract": "A separate owner-scoped canonical translation/bridge contract must validate a Web-owned source, estimate/confirm, idempotency, provider/job status, charge policy and private delivery before any target choice can execute.",
+        "source_dispositions": ("CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot target callback consumes Telegram pending text/file/audio state and can call translation paths. A target label is not a Web translation request or result.",
     },
     "freehub": {
         "priority": "P2",
@@ -2259,11 +2341,19 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "tr_transcribe": {
         "priority": "P1",
-        "candidate_boundary": "/asr",
-        "authority": "Owner-scoped Web ASR runtime boundary",
-        "next_contract": "Require a verified owner-scoped source asset plus a dedicated ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot.",
-        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "candidate_boundary": "CORE_CANONICAL_ASR_GUARDED",
+        "authority": "Canonical Bot ASR/provider/job boundary",
+        "next_contract": "Require a verified owner-scoped source asset plus a dedicated canonical ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot or manual Subtitle Studio intake.",
+        "source_dispositions": ("CANONICAL_ASR_PROVIDER_OR_CORE_GUARD", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
         "source_evidence": "Bot `tr_transcribe` requires recent Telegram audio/video input and delegates to Bot transcription logic; it is not an existing Web ASR execution claim.",
+    },
+    "translation_transcript": {
+        "priority": "P1",
+        "candidate_boundary": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN",
+        "authority": "Known-broken Bot pending-source branch; no Web runtime parity claim",
+        "next_contract": "Do not map this Bot menu action to a working Web translation runtime. Keep manual transcript authoring independently available only through the signed Subtitle Studio until a separately reviewed translation contract exists.",
+        "source_dispositions": ("BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT", "BOT_PENDING_TEXT_OR_MEDIA_STATE", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The frozen Bot stores `transcript` pending state, but its translation callback accepts only voice/file/text and returns unsupported source for transcript.",
     },
     "unstructured": {
         "priority": "P0",
@@ -4768,8 +4858,143 @@ def _map_quick_image_planner_callback(
     return None
 
 
+def _map_translation_source_intake_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map reviewed translation picker literals without replaying Bot state.
+
+    The handler is intentionally evaluated before generic callback/namespace
+    routing.  It has no wildcard-to-route branch: only static literals can
+    open a fresh guarded Web intake, while target/provider paths remain
+    symbolic source dispositions.
+    """
+
+    token = str(identifier or "").casefold()
+    action = TRANSLATION_SOURCE_INTAKE_FRESH_WEB_ACTIONS.get(token)
+    if action is not None:
+        target = str(action["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            # The route is a signed compatibility/navigation surface only.
+            # Do not describe it as an executed document/voice translation.
+            "status": _mapping_status(target, existing_routes, telegram_only=False),
+            "resolution": "reviewed_translation_source_navigation_guarded",
+            "source_dispositions": tuple(action["source_dispositions"]),
+            "source_evidence": str(action["source_evidence"]),
+            "translation_source_capability_key": str(action["capability_key"]),
+            "evidence": evidence,
+        }
+    if token == "tr_transcribe":
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "CORE_CANONICAL_ASR_GUARDED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "translation_transcribe_requires_canonical_asr_contract",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_RECENT_AUDIO_OR_VIDEO_STATE",
+                "CANONICAL_ASR_PROVIDER_OR_CORE_GUARD",
+                "CANONICAL_JOB_AND_WALLET_GUARDS",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The frozen Bot requires recent Telegram audio/video and delegates `tr_transcribe` to its "
+                "transcription path. Subtitle Studio's metadata reference is not source bytes or an ASR request."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("tr_target|"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "CORE_CANONICAL_TRANSLATION_GUARDED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "translation_target_requires_canonical_provider_or_core_contract",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_TRANSLATION_REQUEST_STATE",
+                "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+                "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+                "CANONICAL_JOB_AND_WALLET_GUARDS",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters "
+                "translation execution paths. The static target callback cannot become a browser provider, "
+                "job, wallet, payment, output or delivery action."
+            ),
+            "evidence": evidence,
+        }
+    if token in TRANSLATION_SOURCE_SELECTOR_TEMPLATE_REVIEW_REQUIRED or token.startswith("tr_pick|") or token.startswith("tr_more|"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TRANSLATION_SOURCE_SELECTOR_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "translation_source_selector_requires_finite_source_review",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+                "SOURCE_VALUE_REQUIRES_FINITE_REVIEW",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "Only the reviewed `tr_pick|file`, `tr_pick|voice` and `tr_more|voice` literals can open a "
+                "fresh Web navigation surface. A different picker suffix may depend on a Telegram cache, "
+                "pending request or provider path and must not inherit a Web route."
+            ),
+            "evidence": evidence,
+        }
+    return None
+
+
+def _map_known_broken_translation_menu_action(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Keep a source-proven broken Bot menu branch visible but non-actionable."""
+
+    if str(identifier or "").casefold() not in TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS:
+        return None
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "known_broken_bot_translation_transcript",
+        "source_dispositions": (
+            "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
+            "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot menu stores a `transcript` pending source, while its later translation callback "
+            "handles only voice, file and text before returning an unsupported-source alert."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
+    translation_source_mapping = _map_translation_source_intake_callback(identifier, source_kind, evidence, existing_routes)
+    if translation_source_mapping is not None:
+        return translation_source_mapping
+    known_broken_translation_menu_mapping = _map_known_broken_translation_menu_action(identifier, source_kind, evidence)
+    if known_broken_translation_menu_mapping is not None:
+        return known_broken_translation_menu_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -5910,6 +6135,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     """
 
     token = str(template or "").casefold()
+    translation_source_mapping = _map_translation_source_intake_callback(template, "callback_template", evidence, existing_routes)
+    if translation_source_mapping is not None:
+        return translation_source_mapping
     if "{*}" not in token:
         return _map_callback(token, "callback_template", evidence, existing_routes)
     if token.startswith("archive|"):
@@ -6398,6 +6626,8 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
         return "locale_navigation"
     if lowered == "back_main":
         return "root_navigation"
+    if lowered == "menu|translation_transcript":
+        return "translation_transcript"
     if lowered == "tr_transcribe":
         return "tr_transcribe"
     if re.fullmatch(r"\d{1,3}:\d{1,3}", source):

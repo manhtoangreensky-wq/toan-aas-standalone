@@ -2982,8 +2982,9 @@ def ensure_copyfast_schema() -> None:
         )
         # Subtitle Studio is a deliberately text-only Web workspace.  It
         # persists user-authored cues, optional bilingual drafts and immutable
-        # revisions, never raw uploads/media paths/provider IDs/ASR or dubbing
-        # output/job/payment/delivery references.
+        # revisions.  A project may retain one opaque Asset Vault UUID as a
+        # source attestation, but never a blob path, filename, hash, bytes,
+        # provider ID, ASR/dubbing output, job, payment or delivery reference.
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_subtitle_projects (
@@ -3002,11 +3003,32 @@ def ensure_copyfast_schema() -> None:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 archived_at TEXT,
+                source_mode TEXT NOT NULL DEFAULT 'manual',
+                source_asset_id TEXT,
+                source_asset_lifecycle_revision INTEGER,
+                source_rights_confirmed INTEGER NOT NULL DEFAULT 0,
+                source_attested_at TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id),
                 FOREIGN KEY(linked_project_id) REFERENCES web_projects(id)
             )
             """
         )
+        # Language Source Intake is additive for existing Subtitle Studio
+        # installations.  Its values are an opaque owner-scoped Asset Vault
+        # reference and a server timestamp/revision only; the Web never copies
+        # an Asset Vault path, original filename, hash or bytes into this
+        # workspace table.
+        subtitle_project_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_subtitle_projects)").fetchall()}
+        if "source_mode" not in subtitle_project_columns:
+            conn.execute("ALTER TABLE web_subtitle_projects ADD COLUMN source_mode TEXT NOT NULL DEFAULT 'manual'")
+        if "source_asset_id" not in subtitle_project_columns:
+            conn.execute("ALTER TABLE web_subtitle_projects ADD COLUMN source_asset_id TEXT")
+        if "source_asset_lifecycle_revision" not in subtitle_project_columns:
+            conn.execute("ALTER TABLE web_subtitle_projects ADD COLUMN source_asset_lifecycle_revision INTEGER")
+        if "source_rights_confirmed" not in subtitle_project_columns:
+            conn.execute("ALTER TABLE web_subtitle_projects ADD COLUMN source_rights_confirmed INTEGER NOT NULL DEFAULT 0")
+        if "source_attested_at" not in subtitle_project_columns:
+            conn.execute("ALTER TABLE web_subtitle_projects ADD COLUMN source_attested_at TEXT")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_subtitle_project_versions (
@@ -3083,6 +3105,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_projects_linked_account_updated ON web_subtitle_projects(linked_project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_projects_source_asset_account ON web_subtitle_projects(source_asset_id, account_id, updated_at DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_project_versions_project_revision ON web_subtitle_project_versions(subtitle_project_id, account_id, revision DESC)"

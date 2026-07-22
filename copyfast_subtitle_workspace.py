@@ -17,7 +17,7 @@ import uuid
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, subtitle_studio_enabled, transaction, utc_now
@@ -34,6 +34,28 @@ INTENTS = frozenset({"subtitle", "translation", "asr_review", "dubbing_direction
 CAPTION_FORMATS = frozenset({"srt", "vtt"})
 FORMAT_TOOL_MODES = frozenset({"srt_to_vtt", "vtt_to_srt", "text_to_srt"})
 CUE_STATES = frozenset({"active", "archived"})
+SOURCE_MODES = frozenset({"manual", "asset_reference"})
+# This is deliberately a closed extension/MIME vocabulary.  The browser can
+# submit only an opaque UUID; it can never declare a MIME, filename, path,
+# bytes or a Telegram/provider handle for a language source.
+LANGUAGE_SOURCE_ASSET_PAIRS = frozenset({
+    (".mp4", "video/mp4"), (".mov", "video/quicktime"), (".webm", "video/webm"),
+    (".mp3", "audio/mpeg"), (".wav", "audio/wav"), (".m4a", "audio/mp4"),
+    (".ogg", "audio/ogg"), (".txt", "text/plain"),
+    (".srt", "application/x-subrip"), (".vtt", "text/vtt"),
+})
+# Keep the source picker narrowly bounded even though it reads only metadata.
+# This is intentionally separate from Asset Vault's broader upload allowance.
+MAX_LANGUAGE_SOURCE_ASSET_BYTES = 100 * 1024 * 1024
+# Python's ``\s`` vocabulary written explicitly for the SQLite GLOB/trim
+# predicates below.  Listing applies this same non-empty rule *before*
+# LIMIT/OFFSET so malformed legacy names cannot corrupt page traversal.
+LANGUAGE_SOURCE_SQL_WHITESPACE = (
+    "\t\n\x0b\x0c\r\x1c\x1d\x1e\x1f \x85\u00a0\u1680"
+    "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+    "\u2028\u2029\u202f\u205f\u3000"
+)
+LANGUAGE_SOURCE_SQL_HAS_NON_WHITESPACE = "*[^" + LANGUAGE_SOURCE_SQL_WHITESPACE + "]*"
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UNSAFE_CONTROL_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 URL_PATTERN = re.compile(r"(?:https?://|www\.|file:|data:|javascript:)", re.IGNORECASE)
@@ -76,6 +98,7 @@ MAX_LIST_LIMIT = 100
 # prevents an untrusted query string from becoming an unbounded SQLite scan
 # if that quota is raised later.
 MAX_LIST_OFFSET = 10_000
+MAX_SOURCE_ASSET_LIST_LIMIT = 100
 MAX_IMPORT_CHARS = 120_000
 MAX_IMPORT_UTF8_BYTES = 96 * 1024
 MAX_EXPORT_UTF8_BYTES = 96 * 1024
@@ -243,7 +266,26 @@ class ProjectPayload(BaseModel):
 
 
 class ProjectCreateRequest(ProjectPayload):
+    # A source can only be attached when the project is first created.  The
+    # corresponding update request deliberately does not inherit these fields
+    # so a browser cannot silently retarget an existing transcript project.
+    source_mode: str = "manual"
+    source_asset_id: str | None = None
+    source_rights_confirmed: StrictBool = False
     idempotency_key: str
+
+    @field_validator("source_mode")
+    @classmethod
+    def _source_mode(cls, value: str) -> str:
+        normalized = _metadata_text(value, label="Chế độ nguồn ngôn ngữ", minimum=1, maximum=32).lower()
+        if normalized not in SOURCE_MODES:
+            raise ValueError("Chế độ nguồn ngôn ngữ không hợp lệ")
+        return normalized
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def _source_asset(cls, value: str | None) -> str | None:
+        return _optional_uuid(value, label="Language Source Asset ID")
 
     @field_validator("idempotency_key")
     @classmethod
@@ -408,14 +450,22 @@ class SubtitleFormatToolRequest(BaseModel):
 def _boundary(**extra: Any) -> dict[str, Any]:
     return {
         "execution": "authoring_only",
+        "source_bytes_read": False,
         "provider_called": False,
+        "bot_called": False,
+        "bridge_called": False,
         "asr_called": False,
         "tts_called": False,
         "dubbing_called": False,
         "translation_called": False,
+        "job_created": False,
         "output_created": False,
+        "download_created": False,
         "media_uploads": False,
         "preview_available": False,
+        "payment_started": False,
+        "payment_processed": False,
+        "wallet_mutated": False,
         "output_delivery": "guarded",
         **extra,
     }
@@ -474,10 +524,241 @@ def _idempotent(scope: str, account_id: str, key: str, request_fingerprint: str,
 def _project_row(conn: Any, *, project_id: str, account_id: str) -> tuple[Any, ...] | None:
     return conn.execute(
         """SELECT id, linked_project_id, title, source_language, target_language, caption_format, context, tags_json,
-                  intent, lifecycle, revision, created_at, updated_at, archived_at
+                  intent, lifecycle, revision, created_at, updated_at, archived_at, source_mode, source_asset_id,
+                  source_asset_lifecycle_revision, source_rights_confirmed, source_attested_at
            FROM web_subtitle_projects WHERE id=? AND account_id=?""",
         (project_id, account_id),
     ).fetchone()
+
+
+def _language_source_asset_row(conn: Any, *, asset_id: str, account_id: str) -> tuple[Any, ...] | None:
+    """Read only the minimal Asset Vault metadata used by the source picker.
+
+    This deliberately excludes original filename, checksum, storage key, path,
+    URL and every blob/delivery field.  It never opens the underlying Asset
+    Vault object.
+    """
+    return conn.execute(
+        """SELECT id, display_name, extension, content_type, byte_size, state, lifecycle_revision, updated_at
+           FROM web_asset_files WHERE id=? AND account_id=? AND state='active'""",
+        (asset_id, account_id),
+    ).fetchone()
+
+
+def _language_source_asset_eligible(row: tuple[Any, ...] | None) -> bool:
+    if not row:
+        return False
+    try:
+        raw_display_name = str(row[1] or "")
+        extension = str(row[2] or "").strip().lower()
+        content_type = str(row[3] or "").split(";", 1)[0].strip().lower()
+        byte_size_value = row[4]
+        revision_value = row[6]
+        # SQLite INTEGER columns return ``int``.  Reject malformed legacy
+        # values rather than coercing a float/string into an eligible source.
+        if isinstance(byte_size_value, bool) or not isinstance(byte_size_value, int):
+            return False
+        if isinstance(revision_value, bool) or not isinstance(revision_value, int):
+            return False
+        byte_size = byte_size_value
+        revision = revision_value
+        display_name = re.sub(r"\s+", " ", raw_display_name).strip()
+    except (IndexError, TypeError, ValueError):
+        # A malformed legacy record is not an eligible source.  The picker
+        # stays read-only and does not expose database-shape details.
+        return False
+    return (
+        str(row[5] or "") == "active"
+        and (extension, content_type) in LANGUAGE_SOURCE_ASSET_PAIRS
+        and bool(display_name)
+        # Match the SQL list predicate.  Asset Vault itself stores compact
+        # display names, so this rejects only malformed direct/legacy rows.
+        and len(raw_display_name) <= 120
+        and len(display_name) <= 120
+        and 0 < byte_size <= MAX_LANGUAGE_SOURCE_ASSET_BYTES
+        and revision >= 1
+    )
+
+
+def _language_source_asset_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Public picker projection; all fields are owner-scoped metadata only."""
+    return {
+        "id": str(row[0]),
+        "display_name": re.sub(r"\s+", " ", str(row[1] or "")).strip(),
+        "extension": str(row[2]).strip().lower(),
+        "content_type": str(row[3]).split(";", 1)[0].strip().lower(),
+        "byte_size": int(row[4]),
+        "state": str(row[5]),
+        "lifecycle_revision": int(row[6]),
+        "updated_at": str(row[7]),
+    }
+
+
+def _active_language_source_asset(conn: Any, *, asset_id: str, account_id: str) -> dict[str, Any] | None:
+    row = _language_source_asset_row(conn, asset_id=asset_id, account_id=account_id)
+    return _language_source_asset_public(row) if _language_source_asset_eligible(row) else None
+
+
+def _source_request_snapshot(payload: ProjectCreateRequest) -> dict[str, Any]:
+    """Validate browser intent without trusting any browser-supplied media facts."""
+    mode = str(payload.source_mode or "manual")
+    asset_id = payload.source_asset_id
+    confirmed = payload.source_rights_confirmed is True
+    if mode == "manual":
+        if asset_id or confirmed:
+            raise HTTPException(status_code=422, detail="Nguồn nhập thủ công không nhận Asset Vault reference hoặc xác nhận quyền tệp")
+        return {"source_mode": "manual", "source_asset_id": None, "source_rights_confirmed": False}
+    if mode != "asset_reference" or not asset_id or not confirmed:
+        raise HTTPException(status_code=422, detail="Nguồn Asset Vault cần chọn một tệp hợp lệ và xác nhận quyền sử dụng")
+    return {"source_mode": "asset_reference", "source_asset_id": asset_id, "source_rights_confirmed": True}
+
+
+def _create_source_snapshot(conn: Any, *, payload: ProjectCreateRequest, account_id: str, now: str) -> dict[str, Any]:
+    request = _source_request_snapshot(payload)
+    if request["source_mode"] == "manual":
+        return {
+            "source_mode": "manual", "source_asset_id": None, "source_asset_lifecycle_revision": None,
+            "source_rights_confirmed": False, "source_attested_at": None,
+        }
+    asset = _active_language_source_asset(conn, asset_id=str(request["source_asset_id"]), account_id=account_id)
+    if not asset:
+        # Use one result for missing, foreign, archived, altered or unsupported
+        # assets so the picker cannot become an existence oracle.
+        raise HTTPException(status_code=422, detail="Nguồn Asset Vault không còn sẵn sàng cho Web account hiện tại")
+    return {
+        "source_mode": "asset_reference", "source_asset_id": str(asset["id"]),
+        "source_asset_lifecycle_revision": int(asset["lifecycle_revision"]),
+        "source_rights_confirmed": True, "source_attested_at": now,
+    }
+
+
+def _source_snapshot_from_project_row(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Return only a canonical persisted source shape, otherwise guard it.
+
+    The database is deliberately treated as an untrusted legacy boundary too:
+    a row added before this feature, or modified outside this Web contract,
+    must never be silently rewritten into a manual source by an unrelated
+    project/cue mutation.  Callers block writes for the guarded sentinel and
+    disclose no raw source metadata to the browser.
+    """
+    guarded = {
+        "source_mode": "guarded", "source_asset_id": None, "source_asset_lifecycle_revision": None,
+        "source_rights_confirmed": False, "source_attested_at": None,
+    }
+    try:
+        mode = row[14]
+        asset_id_value = row[15]
+        revision_value = row[16]
+        rights_value = row[17]
+        attested_value = row[18]
+    except IndexError:
+        return guarded
+
+    # Old rows created by this additive migration are precisely this NULL/0
+    # shape.  Empty strings, a dangling UUID, a revision, a rights flag or an
+    # attestation alongside manual mode are not equivalent to manual intent.
+    if (
+        mode == "manual"
+        and asset_id_value is None
+        and revision_value is None
+        and isinstance(rights_value, int) and not isinstance(rights_value, bool) and rights_value == 0
+        and attested_value is None
+    ):
+        return {
+            "source_mode": "manual", "source_asset_id": None, "source_asset_lifecycle_revision": None,
+            "source_rights_confirmed": False, "source_attested_at": None,
+        }
+    if mode != "asset_reference" or not isinstance(asset_id_value, str):
+        return guarded
+    asset_id = asset_id_value.strip()
+    try:
+        canonical_asset_id = str(uuid.UUID(asset_id))
+    except (TypeError, ValueError, AttributeError):
+        return guarded
+    if asset_id != canonical_asset_id:
+        return guarded
+    if isinstance(revision_value, bool) or not isinstance(revision_value, int) or revision_value < 1:
+        return guarded
+    if isinstance(rights_value, bool) or not isinstance(rights_value, int) or rights_value != 1:
+        return guarded
+    if not isinstance(attested_value, str) or not (20 <= len(attested_value) <= 80):
+        return guarded
+    try:
+        attested_at = datetime.fromisoformat(attested_value)
+    except ValueError:
+        return guarded
+    if attested_at.tzinfo is None or attested_at.utcoffset() != timedelta(0):
+        return guarded
+    return {
+        "source_mode": "asset_reference", "source_asset_id": canonical_asset_id,
+        "source_asset_lifecycle_revision": revision_value,
+        "source_rights_confirmed": True,
+        "source_attested_at": attested_value,
+    }
+
+
+def _project_language_source_public(conn: Any, *, row: tuple[Any, ...], account_id: str) -> dict[str, Any]:
+    source = _source_snapshot_from_project_row(row)
+    if source["source_mode"] == "manual":
+        return {"mode": "manual", "asset": None, "asset_available": True, "rights_confirmed": False, "attested_at": None}
+    if source["source_mode"] == "guarded":
+        return {"mode": "guarded", "asset": None, "asset_available": False, "rights_confirmed": False, "attested_at": None}
+    asset_id = source.get("source_asset_id")
+    asset = _active_language_source_asset(conn, asset_id=str(asset_id), account_id=account_id) if asset_id else None
+    # A restored/changed Asset Vault lifecycle revision is intentionally not
+    # silently treated as the original attested source.
+    available = bool(asset and int(asset["lifecycle_revision"]) == int(source.get("source_asset_lifecycle_revision") or 0))
+    return {
+        "mode": "asset_reference", "asset": asset if available else None, "asset_available": available,
+        "rights_confirmed": bool(source.get("source_rights_confirmed") is True),
+        "attested_at": source.get("source_attested_at"),
+    }
+
+
+def _language_source_listing(conn: Any, *, account_id: str, limit: int, offset: int) -> dict[str, Any]:
+    pairs = sorted(LANGUAGE_SOURCE_ASSET_PAIRS)
+    # Do not query a raw page and filter it afterward: doing so makes an
+    # ineligible legacy row consume an offset, which can duplicate or skip
+    # otherwise eligible sources.  Every eligibility predicate is inside this
+    # owner-scoped SQL query before LIMIT/OFFSET is applied.
+    extension_sql = "lower(trim(extension, ?))"
+    content_type_sql = (
+        "lower(trim(CASE WHEN instr(content_type, ';') > 0 "
+        "THEN substr(content_type, 1, instr(content_type, ';') - 1) "
+        "ELSE content_type END, ?))"
+    )
+    predicates: list[str] = []
+    values: list[Any] = [account_id]
+    for extension, content_type in pairs:
+        predicates.append(f"({extension_sql}=? AND {content_type_sql}=?)")
+        values.extend([LANGUAGE_SOURCE_SQL_WHITESPACE, extension, LANGUAGE_SOURCE_SQL_WHITESPACE, content_type])
+    values.extend([MAX_LANGUAGE_SOURCE_ASSET_BYTES, LANGUAGE_SOURCE_SQL_HAS_NON_WHITESPACE, limit + 1, offset])
+    rows = conn.execute(
+        f"""SELECT id, display_name, extension, content_type, byte_size, state, lifecycle_revision, updated_at
+            FROM web_asset_files
+            WHERE account_id=?
+              AND state='active'
+              AND ({' OR '.join(predicates)})
+              AND typeof(byte_size)='integer' AND byte_size BETWEEN 1 AND ?
+              AND typeof(lifecycle_revision)='integer' AND lifecycle_revision >= 1
+              AND length(display_name) BETWEEN 1 AND 120
+              AND display_name GLOB ?
+            ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+        values,
+    ).fetchall()
+    # The query filters the full eligibility contract before pagination.  Keep
+    # this list untouched so the public offset is over eligible sources only.
+    page = rows[:limit]
+    returned = len(page)
+    has_more = len(rows) > limit
+    return {
+        "items": [_language_source_asset_public(row) for row in page],
+        "pagination": {"limit": limit, "offset": offset, "returned": returned},
+        "has_more": has_more,
+        "next_offset": offset + returned if has_more and returned else None,
+        "previous_offset": max(0, offset - limit) if offset > 0 else None,
+        **_boundary(execution="asset_reference_metadata_only", output_delivery="none"),
+    }
 
 
 def _cue_row(conn: Any, *, project_id: str, cue_id: str, account_id: str) -> tuple[Any, ...] | None:
@@ -502,6 +783,11 @@ def _revision_conflict() -> dict[str, Any]:
 
 
 def _project_writable(project: tuple[Any, ...]) -> dict[str, Any] | None:
+    if _source_snapshot_from_project_row(project)["source_mode"] == "guarded":
+        return _guarded(
+            "Nguồn ngôn ngữ của subtitle project chưa đúng contract an toàn; project được giữ nguyên để bảo vệ dữ liệu.",
+            "WEB_SUBTITLE_LANGUAGE_SOURCE_GUARDED",
+        )
     state = str(project[9])
     if state == "archived":
         return _guarded("Subtitle project đã archive; hãy khôi phục về Draft trước khi tiếp tục.", "WEB_SUBTITLE_PROJECT_ARCHIVED")
@@ -524,16 +810,26 @@ def _project_reference(conn: Any, *, account_id: str, linked_project_id: str | N
     return {"project": {"id": str(row[0]), "title": str(row[1]), "state": str(row[2])}}
 
 
-def _project_snapshot(payload: ProjectPayload, *, lifecycle: str = "draft") -> dict[str, Any]:
+def _project_snapshot(payload: ProjectPayload, *, lifecycle: str = "draft", source: dict[str, Any] | None = None) -> dict[str, Any]:
+    language_source = source or {
+        "source_mode": "manual", "source_asset_id": None, "source_asset_lifecycle_revision": None,
+        "source_rights_confirmed": False, "source_attested_at": None,
+    }
     return {"title": payload.title, "source_language": payload.source_language, "target_language": payload.target_language,
             "caption_format": payload.caption_format, "context": payload.context, "tags": list(payload.tags),
-            "project_id": payload.project_id, "intent": payload.intent, "lifecycle": lifecycle}
+            "project_id": payload.project_id, "intent": payload.intent, "lifecycle": lifecycle,
+            "source_mode": language_source["source_mode"], "source_asset_id": language_source["source_asset_id"],
+            "source_asset_lifecycle_revision": language_source["source_asset_lifecycle_revision"],
+            "source_rights_confirmed": bool(language_source["source_rights_confirmed"]),
+            "source_attested_at": language_source["source_attested_at"]}
 
 
 def _project_snapshot_from_row(row: tuple[Any, ...], *, lifecycle: str | None = None) -> dict[str, Any]:
+    source = _source_snapshot_from_project_row(row)
     return {"title": str(row[2]), "source_language": str(row[3]), "target_language": str(row[4]),
             "caption_format": str(row[5]), "context": str(row[6]), "tags": _decode_tags(row[7]),
-            "project_id": str(row[1]) if row[1] else None, "intent": str(row[8]), "lifecycle": lifecycle or str(row[9])}
+            "project_id": str(row[1]) if row[1] else None, "intent": str(row[8]), "lifecycle": lifecycle or str(row[9]),
+            **source}
 
 
 def _project_payload_from_snapshot(snapshot: dict[str, Any]) -> ProjectPayload:
@@ -559,12 +855,14 @@ def _cue_payload_from_snapshot(snapshot: dict[str, Any]) -> CuePayload:
         "translated_text": snapshot.get("translated_text", ""), "notes": snapshot.get("notes", "")})
 
 
-def _project_public(row: tuple[Any, ...], *, cue_count: int = 0, include_content: bool = False) -> dict[str, Any]:
+def _project_public(row: tuple[Any, ...], *, cue_count: int = 0, include_content: bool = False, language_source: dict[str, Any] | None = None) -> dict[str, Any]:
     value = {"id": str(row[0]), "project_id": str(row[1]) if row[1] else None, "title": str(row[2]),
              "source_language": str(row[3]), "target_language": str(row[4]), "caption_format": str(row[5]),
              "context_excerpt": _excerpt(row[6], 360), "tags": _decode_tags(row[7]), "intent": str(row[8]),
              "state": str(row[9]), "revision": int(row[10]), "created_at": str(row[11]), "updated_at": str(row[12]),
-             "archived_at": str(row[13]) if row[13] else None, "cue_count": int(cue_count), **_boundary()}
+             "archived_at": str(row[13]) if row[13] else None, "cue_count": int(cue_count),
+             "language_source": language_source or {"mode": "guarded", "asset": None, "asset_available": False, "rights_confirmed": False, "attested_at": None},
+             **_boundary()}
     if include_content:
         value["context"] = str(row[6])
     return value
@@ -611,12 +909,15 @@ def _insert_project(conn: Any, *, project_id: str, account_id: str, snapshot: di
     conn.execute(
         """INSERT INTO web_subtitle_projects
            (id, account_id, linked_project_id, title, source_language, target_language, caption_format, context,
-            tags_json, intent, lifecycle, revision, created_at, updated_at, archived_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            tags_json, intent, lifecycle, revision, created_at, updated_at, archived_at, source_mode, source_asset_id,
+            source_asset_lifecycle_revision, source_rights_confirmed, source_attested_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (project_id, account_id, snapshot.get("project_id"), snapshot["title"], snapshot["source_language"],
          snapshot["target_language"], snapshot["caption_format"], snapshot["context"],
          json.dumps(snapshot["tags"], ensure_ascii=False, separators=(",", ":")), snapshot["intent"], snapshot["lifecycle"],
-         revision, now, now, now if snapshot["lifecycle"] == "archived" else None),
+         revision, now, now, now if snapshot["lifecycle"] == "archived" else None, snapshot["source_mode"],
+         snapshot["source_asset_id"], snapshot["source_asset_lifecycle_revision"], int(bool(snapshot["source_rights_confirmed"])),
+         snapshot["source_attested_at"]),
     )
 
 
@@ -624,11 +925,14 @@ def _write_project(conn: Any, *, project_id: str, account_id: str, snapshot: dic
     conn.execute(
         """UPDATE web_subtitle_projects
            SET linked_project_id=?, title=?, source_language=?, target_language=?, caption_format=?, context=?,
-               tags_json=?, intent=?, lifecycle=?, revision=?, updated_at=?, archived_at=?
+               tags_json=?, intent=?, lifecycle=?, revision=?, updated_at=?, archived_at=?, source_mode=?, source_asset_id=?,
+               source_asset_lifecycle_revision=?, source_rights_confirmed=?, source_attested_at=?
            WHERE id=? AND account_id=?""",
         (snapshot.get("project_id"), snapshot["title"], snapshot["source_language"], snapshot["target_language"],
          snapshot["caption_format"], snapshot["context"], json.dumps(snapshot["tags"], ensure_ascii=False, separators=(",", ":")),
-         snapshot["intent"], snapshot["lifecycle"], revision, now, archived_at, project_id, account_id),
+         snapshot["intent"], snapshot["lifecycle"], revision, now, archived_at, snapshot["source_mode"], snapshot["source_asset_id"],
+         snapshot["source_asset_lifecycle_revision"], int(bool(snapshot["source_rights_confirmed"])), snapshot["source_attested_at"],
+         project_id, account_id),
     )
 
 
@@ -886,6 +1190,7 @@ def _project_detail(conn: Any, *, project_id: str, account_id: str) -> dict[str,
     project = _project_row(conn, project_id=project_id, account_id=account_id)
     if not project:
         return None
+    language_source = _project_language_source_public(conn, row=project, account_id=account_id)
     cue_count = conn.execute(
         "SELECT COUNT(*) FROM web_subtitle_cues WHERE subtitle_project_id=? AND account_id=? AND state='active'", (project_id, account_id)
     ).fetchone()
@@ -906,7 +1211,7 @@ def _project_detail(conn: Any, *, project_id: str, account_id: str) -> dict[str,
         (project_id, account_id, MAX_EVENT_LIMIT),
     ).fetchall()
     refs = _project_reference(conn, account_id=account_id, linked_project_id=str(project[1]) if project[1] else None, active=False)
-    return {"project": _project_public(project, cue_count=int(cue_count[0] or 0), include_content=True),
+    return {"project": _project_public(project, cue_count=int(cue_count[0] or 0), include_content=True, language_source=language_source),
             "versions": [_project_version_public(row) for row in project_versions],
             "cues": [_cue_public(row, include_content=True, versions=_cue_versions(conn, cue_id=str(row[0]), account_id=account_id)) for row in cues],
             "events": [{"action": str(row[0]), "entity_type": str(row[1]), "cue_id": str(row[2]) if row[2] else None,
@@ -1045,6 +1350,25 @@ async def subtitle_references(account: dict = Depends(require_account)):
         return envelope(True, "Đã tải Project liên kết có thể chọn.", data=_references_listing(conn, account_id=str(account["id"])), status_name="read_only")
 
 
+@router.get("/references/language-sources")
+async def subtitle_language_sources(
+    limit: int = Query(default=30, ge=1, le=MAX_SOURCE_ASSET_LIST_LIMIT),
+    offset: int = Query(default=0, ge=0, le=MAX_LIST_OFFSET),
+    account: dict = Depends(require_account),
+):
+    """List only active, owner-scoped language-source metadata.
+
+    The endpoint neither uploads, previews nor reads Asset Vault bytes.  A
+    selected UUID is revalidated inside the create transaction, so this list
+    is never a capability to consume an asset.
+    """
+    _require_enabled()
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        data = _language_source_listing(conn, account_id=str(account["id"]), limit=limit, offset=offset)
+    return envelope(True, "Đã tải nguồn ngôn ngữ có thể tham chiếu.", data=data, status_name="read_only")
+
+
 @router.get("/projects")
 async def subtitle_projects(
     state: str = Query(default="active", max_length=20), q: str = Query(default="", max_length=180),
@@ -1081,6 +1405,8 @@ async def subtitle_projects(
         rows = conn.execute(
             f"""SELECT p.id, p.linked_project_id, p.title, p.source_language, p.target_language, p.caption_format,
                        p.context, p.tags_json, p.intent, p.lifecycle, p.revision, p.created_at, p.updated_at, p.archived_at,
+                       p.source_mode, p.source_asset_id, p.source_asset_lifecycle_revision, p.source_rights_confirmed,
+                       p.source_attested_at,
                        (SELECT COUNT(*) FROM web_subtitle_cues c WHERE c.subtitle_project_id=p.id AND c.account_id=p.account_id AND c.state='active')
                 FROM web_subtitle_projects p WHERE {' AND '.join(where)} ORDER BY p.updated_at DESC, p.id DESC LIMIT ? OFFSET ?""", values
         ).fetchall()
@@ -1093,7 +1419,13 @@ async def subtitle_projects(
             True,
             "Đã tải subtitle projects.",
             data={
-                "items": [_project_public(row[:14], cue_count=int(row[14] or 0)) for row in page],
+                "items": [
+                    _project_public(
+                        row[:19], cue_count=int(row[19] or 0),
+                        language_source=_project_language_source_public(conn, row=row[:19], account_id=account_id),
+                    )
+                    for row in page
+                ],
                 # Do not echo q: it can contain a private phrase used to
                 # search metadata server-side.  State is a finite public
                 # filter value, not authored project content.
@@ -1124,15 +1456,20 @@ async def subtitle_project_detail(project_id: str, account: dict = Depends(requi
 async def subtitle_project_create(payload: ProjectCreateRequest, request: Request, account: dict = Depends(require_account), _csrf: None = Depends(require_csrf)):
     _require_enabled()
     account_id = str(account["id"])
-    snapshot = _project_snapshot(payload)
-    fingerprint = _fingerprint({"action": "create_project", "payload": snapshot})
+    # The request snapshot has no media metadata.  The source asset is looked
+    # up again inside the create transaction, which records the server's
+    # lifecycle revision instead of trusting a browser-provided MIME/size.
+    source_request = _source_request_snapshot(payload)
+    fingerprint = _fingerprint({"action": "create_project", "payload": _project_snapshot(payload), "source": source_request})
 
     def operation(conn: Any) -> dict[str, Any]:
         count = conn.execute("SELECT COUNT(*) FROM web_subtitle_projects WHERE account_id=? AND lifecycle<>'archived'", (account_id,)).fetchone()
         if int(count[0] or 0) >= MAX_PROJECTS_PER_ACCOUNT:
             return _guarded("Đã đạt giới hạn subtitle projects đang hoạt động.", "WEB_SUBTITLE_PROJECT_LIMIT")
-        _project_reference(conn, account_id=account_id, linked_project_id=snapshot.get("project_id"))
         now = utc_now()
+        source = _create_source_snapshot(conn, payload=payload, account_id=account_id, now=now)
+        snapshot = _project_snapshot(payload, source=source)
+        _project_reference(conn, account_id=account_id, linked_project_id=snapshot.get("project_id"))
         project_id = str(uuid.uuid4())
         _insert_project(conn, project_id=project_id, account_id=account_id, snapshot=snapshot, revision=1, now=now)
         _insert_project_version(conn, project_id=project_id, account_id=account_id, revision=1, snapshot=snapshot, now=now)
@@ -1140,8 +1477,8 @@ async def subtitle_project_create(payload: ProjectCreateRequest, request: Reques
         row = _project_row(conn, project_id=project_id, account_id=account_id)
         if not row:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle project")
-        _audit(conn, request=request, account=account, action="subtitle_project_created", target=project_id, detail="Created manual subtitle project")
-        return envelope(True, "Đã tạo subtitle project ở trạng thái Draft.", data={"project": _project_public(row, include_content=False), **_boundary()}, status_name="draft")
+        _audit(conn, request=request, account=account, action="subtitle_project_created", target=project_id, detail=f"Created {source['source_mode']} subtitle project")
+        return envelope(True, "Đã tạo subtitle project ở trạng thái Draft.", data={"project": _project_public(row, include_content=False, language_source=_project_language_source_public(conn, row=row, account_id=account_id)), **_boundary()}, status_name="draft")
 
     return _idempotent(f"web-subtitle-studio:{account_id}:create_project", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1151,8 +1488,8 @@ async def subtitle_project_update(project_id: str, payload: ProjectUpdateRequest
     _require_enabled()
     resolved = _uuid(project_id, label="Subtitle project ID")
     account_id = str(account["id"])
-    snapshot = _project_snapshot(payload)
-    fingerprint = _fingerprint({"action": "update_project", "project_id": resolved, "expected_revision": payload.expected_revision, "payload": snapshot})
+    update_payload = _project_snapshot(payload)
+    fingerprint = _fingerprint({"action": "update_project", "project_id": resolved, "expected_revision": payload.expected_revision, "payload": update_payload, "source_immutable": True})
 
     def operation(conn: Any) -> dict[str, Any]:
         row = _project_row(conn, project_id=resolved, account_id=account_id)
@@ -1163,6 +1500,10 @@ async def subtitle_project_update(project_id: str, payload: ProjectUpdateRequest
             return blocked
         if int(row[10]) != payload.expected_revision:
             return _revision_conflict()
+        # Source mode/UUID/attestation are immutable after creation.  The
+        # update schema rejects those fields and this snapshot comes solely
+        # from the server row, not a client-side hidden form value.
+        snapshot = _project_snapshot(payload, source=_source_snapshot_from_project_row(row))
         _project_reference(conn, account_id=account_id, linked_project_id=snapshot.get("project_id"))
         if not _can_add_version(conn, table="web_subtitle_project_versions", entity_column="subtitle_project_id", entity_id=resolved, account_id=account_id):
             return _guarded("Subtitle project đã đạt giới hạn lịch sử phiên bản.", "WEB_SUBTITLE_VERSION_LIMIT")
@@ -1176,7 +1517,7 @@ async def subtitle_project_update(project_id: str, payload: ProjectUpdateRequest
         if not changed:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle project")
         _audit(conn, request=request, account=account, action="subtitle_project_updated", target=resolved, detail="Updated manual subtitle project")
-        return envelope(True, "Đã lưu revision subtitle project mới.", data={"project": _project_public(changed, include_content=False), **_boundary()}, status_name=str(changed[9]))
+        return envelope(True, "Đã lưu revision subtitle project mới.", data={"project": _project_public(changed, include_content=False, language_source=_project_language_source_public(conn, row=changed, account_id=account_id)), **_boundary()}, status_name=str(changed[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:update_project:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1195,6 +1536,11 @@ async def subtitle_project_lifecycle(project_id: str, payload: LifecycleRequest,
         current = str(row[9])
         if int(row[10]) != payload.expected_revision:
             return _revision_conflict()
+        if _source_snapshot_from_project_row(row)["source_mode"] == "guarded":
+            return _guarded(
+                "Nguồn ngôn ngữ của subtitle project chưa đúng contract an toàn; project được giữ nguyên để bảo vệ dữ liệu.",
+                "WEB_SUBTITLE_LANGUAGE_SOURCE_GUARDED",
+            )
         if not _allowed_transition(current, payload.state):
             return _guarded("Chuyển trạng thái subtitle project không hợp lệ.", "WEB_SUBTITLE_TRANSITION_INVALID")
         if not _can_add_version(conn, table="web_subtitle_project_versions", entity_column="subtitle_project_id", entity_id=resolved, account_id=account_id):
@@ -1209,7 +1555,7 @@ async def subtitle_project_lifecycle(project_id: str, payload: LifecycleRequest,
         if not changed:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle project")
         _audit(conn, request=request, account=account, action="subtitle_project_lifecycle", target=resolved, detail=f"Changed lifecycle to {payload.state}")
-        return envelope(True, "Đã cập nhật self-review lifecycle của subtitle project.", data={"project": _project_public(changed, include_content=False), **_boundary()}, status_name=payload.state)
+        return envelope(True, "Đã cập nhật self-review lifecycle của subtitle project.", data={"project": _project_public(changed, include_content=False, language_source=_project_language_source_public(conn, row=changed, account_id=account_id)), **_boundary()}, status_name=payload.state)
 
     return _idempotent(f"web-subtitle-studio:{account_id}:project_lifecycle:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1240,7 +1586,9 @@ async def subtitle_project_restore_version(project_id: str, payload: RestoreVers
             restored = _project_payload_from_snapshot(source if isinstance(source, dict) else {})
         except (TypeError, ValueError, json.JSONDecodeError) as exc:
             raise HTTPException(status_code=409, detail="Revision subtitle project không hợp lệ") from exc
-        snapshot = _project_snapshot(restored, lifecycle="draft")
+        # Restore replays authored metadata only.  It must not revive or swap
+        # a source reference from an older version after Asset Vault changed.
+        snapshot = _project_snapshot(restored, lifecycle="draft", source=_source_snapshot_from_project_row(row))
         _project_reference(conn, account_id=account_id, linked_project_id=snapshot.get("project_id"))
         now = utc_now()
         revision = int(row[10]) + 1
@@ -1251,7 +1599,7 @@ async def subtitle_project_restore_version(project_id: str, payload: RestoreVers
         if not changed:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle project")
         _audit(conn, request=request, account=account, action="subtitle_project_version_restored", target=resolved, detail=f"Restored revision {payload.target_revision}")
-        return envelope(True, "Đã khôi phục revision thành Draft mới.", data={"project": _project_public(changed, include_content=False), "history_snapshot_recorded": True, **_boundary()}, status_name="draft")
+        return envelope(True, "Đã khôi phục revision thành Draft mới.", data={"project": _project_public(changed, include_content=False, language_source=_project_language_source_public(conn, row=changed, account_id=account_id)), "history_snapshot_recorded": True, **_boundary()}, status_name="draft")
 
     return _idempotent(f"web-subtitle-studio:{account_id}:restore_project:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1286,7 +1634,7 @@ async def subtitle_cue_create(project_id: str, payload: CueCreateRequest, reques
         if not cue:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle cue")
         _audit(conn, request=request, account=account, action="subtitle_cue_created", target=cue_id, detail="Created manual subtitle cue")
-        return envelope(True, "Đã thêm cue do người dùng soạn.", data={"project": _project_public(changed_project, include_content=False), "cue": _cue_public(cue, include_content=True), **_boundary()}, status_name=str(changed_project[9]))
+        return envelope(True, "Đã thêm cue do người dùng soạn.", data={"project": _project_public(changed_project, include_content=False, language_source=_project_language_source_public(conn, row=changed_project, account_id=account_id)), "cue": _cue_public(cue, include_content=True), **_boundary()}, status_name=str(changed_project[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:create_cue:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1326,7 +1674,7 @@ async def subtitle_cue_update(project_id: str, cue_id: str, payload: CueUpdateRe
         if not changed:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle cue")
         _audit(conn, request=request, account=account, action="subtitle_cue_updated", target=resolved_cue, detail="Updated manual subtitle cue")
-        return envelope(True, "Đã lưu revision cue mới.", data={"project": _project_public(changed_project, include_content=False), "cue": _cue_public(changed, include_content=True), **_boundary()}, status_name=str(changed_project[9]))
+        return envelope(True, "Đã lưu revision cue mới.", data={"project": _project_public(changed_project, include_content=False, language_source=_project_language_source_public(conn, row=changed_project, account_id=account_id)), "cue": _cue_public(changed, include_content=True), **_boundary()}, status_name=str(changed_project[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:update_cue:{resolved_project}:{resolved_cue}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1397,7 +1745,7 @@ def _cue_state_mutation(project_id: str, cue_id: str, payload: RevisionRequest |
         if not changed:
             raise HTTPException(status_code=500, detail="Không thể đọc lại subtitle cue")
         _audit(conn, request=request, account=account, action=f"subtitle_{action}", target=resolved_cue, detail=action)
-        return envelope(True, "Đã cập nhật trạng thái cue.", data={"project": _project_public(changed_project, include_content=False), "cue": _cue_public(changed, include_content=True), "history_snapshot_recorded": action == "cue_version_restored", **_boundary()}, status_name=str(changed_project[9]))
+        return envelope(True, "Đã cập nhật trạng thái cue.", data={"project": _project_public(changed_project, include_content=False, language_source=_project_language_source_public(conn, row=changed_project, account_id=account_id)), "cue": _cue_public(changed, include_content=True), "history_snapshot_recorded": action == "cue_version_restored", **_boundary()}, status_name=str(changed_project[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:{action}:{resolved_project}:{resolved_cue}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1456,7 +1804,7 @@ async def subtitle_cue_reorder(project_id: str, payload: ReorderRequest, request
             conn.execute("UPDATE web_subtitle_cues SET ordinal=?, updated_at=? WHERE id=? AND subtitle_project_id=? AND account_id=?", (index, now, cue_id_value, resolved, account_id))
         changed_project = _advance_project_for_cue_change(conn, project=project, account_id=account_id, now=now, action="cues_reordered")
         _audit(conn, request=request, account=account, action="subtitle_cues_reordered", target=resolved, detail=f"Reordered {len(payload.cue_ids)} manual cues")
-        return envelope(True, "Đã cập nhật thứ tự cues.", data={"project": _project_public(changed_project, include_content=False), "reordered": True, **_boundary()}, status_name=str(changed_project[9]))
+        return envelope(True, "Đã cập nhật thứ tự cues.", data={"project": _project_public(changed_project, include_content=False, language_source=_project_language_source_public(conn, row=changed_project, account_id=account_id)), "reordered": True, **_boundary()}, status_name=str(changed_project[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:reorder_cues:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1515,7 +1863,7 @@ async def subtitle_import(project_id: str, payload: ImportRequest, request: Requ
             ordinal += 1
         changed_project = _advance_project_for_cue_change(conn, project=project, account_id=account_id, now=now, action="cues_imported")
         _audit(conn, request=request, account=account, action="subtitle_cues_imported", target=resolved, detail=f"Replaced {len(active_rows)} and imported {len(imported)} bounded {payload.format.upper()} text cues")
-        return envelope(True, "Đã thay thế cues đang hoạt động bằng văn bản SRT/VTT; cues cũ được archive cùng history. Không có tệp, media hoặc transcript engine nào được chạy.", data={"project": _project_public(changed_project, include_content=False), "imported_count": len(imported), "replaced_count": len(active_rows), **_boundary()}, status_name=str(changed_project[9]))
+        return envelope(True, "Đã thay thế cues đang hoạt động bằng văn bản SRT/VTT; cues cũ được archive cùng history. Không có tệp, media hoặc transcript engine nào được chạy.", data={"project": _project_public(changed_project, include_content=False, language_source=_project_language_source_public(conn, row=changed_project, account_id=account_id)), "imported_count": len(imported), "replaced_count": len(active_rows), **_boundary()}, status_name=str(changed_project[9]))
 
     return _idempotent(f"web-subtitle-studio:{account_id}:import:{resolved}", account_id, payload.idempotency_key, fingerprint, operation)
 

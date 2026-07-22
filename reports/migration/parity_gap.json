@@ -24975,15 +24975,18 @@
         "file": "bot.py",
         "line": 49607
       },
-      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
-      "menu_capability_key": "subtitle_studio",
-      "menu_feature_key": "subtitle_studio",
-      "menu_launch_mode": "WEB_NAVIGATION",
-      "resolution": "reviewed_exact_menu_navigation",
+      "fallback_family": "translation_transcript",
+      "resolution": "known_broken_bot_translation_transcript",
       "source": "menu|translation_transcript",
+      "source_dispositions": [
+        "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot menu stores a `transcript` pending source, while its later translation callback handles only voice, file and text before returning an unsupported-source alert.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/subtitle-studio"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN"
     },
     {
       "classification": "customer",
@@ -31517,11 +31520,21 @@
         "file": "bot.py",
         "line": 30570
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_more|voice",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_TARGET_LANGUAGE_PICKER_NOT_REPLAYED",
+        "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal opens only the extended voice target-language picker. The Web opens a fresh Subtitle Studio intake and neither carries the target selector nor performs translation, ASR, provider, job, wallet or delivery work.",
       "source_kind": "callback_data",
       "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "target": "/subtitle-studio",
+      "translation_source_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -31529,11 +31542,21 @@
         "file": "bot.py",
         "line": 30608
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_more|voice",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_TARGET_LANGUAGE_PICKER_NOT_REPLAYED",
+        "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal opens only the extended voice target-language picker. The Web opens a fresh Subtitle Studio intake and neither carries the target selector nor performs translation, ASR, provider, job, wallet or delivery work.",
       "source_kind": "callback_data",
       "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "target": "/subtitle-studio",
+      "translation_source_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -31541,12 +31564,20 @@
         "file": "bot.py",
         "line": 123915
       },
-      "fallback_family": "tr_pick",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_pick|file",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_TELEGRAM_FILE_CACHE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_DOCUMENT_SOURCE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot retrieves a recent Telegram file before it can show a target-language picker. The Web opens a fresh guarded Document Translate surface and never receives that cache/file ID, bytes, pending request or a translation result.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/documents/translate",
+      "translation_source_capability_key": "documents_translate"
     },
     {
       "classification": "customer",
@@ -31554,11 +31585,20 @@
         "file": "bot.py",
         "line": 30495
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_pick|voice",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot requires recent Telegram audio/video before the voice picker can continue. The Web opens only the signed Subtitle Studio manual/Asset-Vault-reference intake; it does not read media bytes, run ASR/translation/TTS, create a job or claim an output.",
       "source_kind": "callback_data",
       "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "target": "/subtitle-studio",
+      "translation_source_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -31566,11 +31606,20 @@
         "file": "bot.py",
         "line": 30561
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_pick|voice",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot requires recent Telegram audio/video before the voice picker can continue. The Web opens only the signed Subtitle Studio manual/Asset-Vault-reference intake; it does not read media bytes, run ASR/translation/TTS, create a job or claim an output.",
       "source_kind": "callback_data",
       "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "target": "/subtitle-studio",
+      "translation_source_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -31578,11 +31627,20 @@
         "file": "bot.py",
         "line": 30602
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_translation_source_navigation_guarded",
       "source": "tr_pick|voice",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "WEB_NAVIGATION_GUARDED",
+        "BOT_RECENT_AUDIO_STATE_NOT_REPLAYED",
+        "WEB_OWNER_SCOPED_LANGUAGE_SOURCE_METADATA_ONLY",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot requires recent Telegram audio/video before the voice picker can continue. The Web opens only the signed Subtitle Studio manual/Asset-Vault-reference intake; it does not read media bytes, run ASR/translation/TTS, create a job or claim an output.",
       "source_kind": "callback_data",
       "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "target": "/subtitle-studio",
+      "translation_source_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -31590,11 +31648,21 @@
         "file": "bot.py",
         "line": 30565
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -31602,11 +31670,21 @@
         "file": "bot.py",
         "line": 30605
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -31614,11 +31692,21 @@
         "file": "bot.py",
         "line": 30566
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -31626,11 +31714,21 @@
         "file": "bot.py",
         "line": 30606
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -31638,11 +31736,21 @@
         "file": "bot.py",
         "line": 30569
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|zh",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/voice"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -31651,16 +31759,19 @@
         "line": 30601
       },
       "fallback_family": "tr_transcribe",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "translation_transcribe_requires_canonical_asr_contract",
       "source": "tr_transcribe",
       "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_RECENT_AUDIO_OR_VIDEO_STATE",
+        "CANONICAL_ASR_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot `tr_transcribe` requires recent Telegram audio/video input and delegates to Bot transcription logic; it is not an existing Web ASR execution claim.",
+      "source_evidence": "The frozen Bot requires recent Telegram audio/video and delegates `tr_transcribe` to its transcription path. Subtitle Studio's metadata reference is not source bytes or an ASR request.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "CORE_CANONICAL_ASR_GUARDED"
     },
     {
       "classification": "admin",
@@ -45219,11 +45330,19 @@
         "file": "bot.py",
         "line": 30593
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_more",
+      "resolution": "translation_source_selector_requires_finite_source_review",
       "source": "tr_more|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "SOURCE_VALUE_REQUIRES_FINITE_REVIEW",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Only the reviewed `tr_pick|file`, `tr_pick|voice` and `tr_more|voice` literals can open a fresh Web navigation surface. A different picker suffix may depend on a Telegram cache, pending request or provider path and must not inherit a Web route.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TRANSLATION_SOURCE_SELECTOR_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -45231,11 +45350,19 @@
         "file": "bot.py",
         "line": 30582
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_pick",
+      "resolution": "translation_source_selector_requires_finite_source_review",
       "source": "tr_pick|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "SOURCE_VALUE_REQUIRES_FINITE_REVIEW",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Only the reviewed `tr_pick|file`, `tr_pick|voice` and `tr_more|voice` literals can open a fresh Web navigation surface. A different picker suffix may depend on a Telegram cache, pending request or provider path and must not inherit a Web route.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TRANSLATION_SOURCE_SELECTOR_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -45243,11 +45370,21 @@
         "file": "bot.py",
         "line": 30558
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|voice|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -45255,11 +45392,21 @@
         "file": "bot.py",
         "line": 30589
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|{*}|en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -45267,11 +45414,21 @@
         "file": "bot.py",
         "line": 30588
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|{*}|vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -45279,11 +45436,21 @@
         "file": "bot.py",
         "line": 30592
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|{*}|zh",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "customer",
@@ -45291,11 +45458,21 @@
         "file": "bot.py",
         "line": 30578
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "tr_target",
+      "resolution": "translation_target_requires_canonical_provider_or_core_contract",
       "source": "tr_target|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_REQUEST_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "CANONICAL_JOB_AND_WALLET_GUARDS",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot validates a target against Telegram-local voice/file/text state and then enters translation execution paths. The static target callback cannot become a browser provider, job, wallet, payment, output or delivery action.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/dubbing"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CORE_CANONICAL_TRANSLATION_GUARDED"
     },
     {
       "classification": "admin",
@@ -57913,6 +58090,34 @@
       ]
     },
     {
+      "authority": "Canonical Bot/provider translation request and delivery boundary",
+      "candidate_boundary": "CORE_CANONICAL_TRANSLATION_GUARDED",
+      "count": 10,
+      "family": "tr_target",
+      "next_contract": "A separate owner-scoped canonical translation/bridge contract must validate a Web-owned source, estimate/confirm, idempotency, provider/job status, charge policy and private delivery before any target choice can execute.",
+      "priority": "P1",
+      "sample_sources": [
+        "tr_target|voice|en",
+        "tr_target|voice|vi",
+        "tr_target|voice|zh",
+        "tr_target|voice|{*}",
+        "tr_target|{*}|en",
+        "tr_target|{*}|vi",
+        "tr_target|{*}|zh",
+        "tr_target|{*}|{*}"
+      ],
+      "source_dispositions": [
+        "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot target callback consumes Telegram pending text/file/audio state and can call translation paths. A target label is not a Web translation request or result.",
+      "source_kinds": [
+        "callback_data",
+        "callback_template"
+      ]
+    },
+    {
       "authority": "Web-native planning",
       "candidate_boundary": "/video-studio/image-motion-planner",
       "count": 8,
@@ -58001,34 +58206,79 @@
       ]
     },
     {
-      "authority": "Web-native subtitle/dubbing boundary",
-      "candidate_boundary": "/dubbing",
+      "authority": "Fresh guarded Web intake only for reviewed voice literal",
+      "candidate_boundary": "finite target-selector review",
       "count": 1,
-      "family": "tr_pick",
-      "next_contract": "Require an explicit owner-scoped source selection contract before mapping Telegram file-pick actions.",
+      "family": "tr_more",
+      "next_contract": "Keep the reviewed `tr_more|voice` navigation separate from dynamic source selectors. Any other suffix needs source review and cannot carry a target language, pending source, provider request or result into Web.",
       "priority": "P1",
       "sample_sources": [
-        "tr_pick|file"
+        "tr_more|{*}"
       ],
+      "source_dispositions": [
+        "SOURCE_VALUE_REQUIRES_FINITE_REVIEW",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot `tr_more` family redraws a target-language picker from Telegram-local source state; an unreviewed suffix has no standalone Web semantics.",
       "source_kinds": [
-        "callback_data"
+        "callback_template"
       ]
     },
     {
-      "authority": "Owner-scoped Web ASR runtime boundary",
-      "candidate_boundary": "/asr",
+      "authority": "Fresh guarded Web intake only for reviewed file/voice literals",
+      "candidate_boundary": "finite owner-scoped source-selector review",
+      "count": 1,
+      "family": "tr_pick",
+      "next_contract": "Keep only reviewed file/voice literals as fresh signed navigation. Any other picker source needs an owner-scoped Asset Vault/source contract and must not inherit a route, Telegram cache, provider, job, wallet or payment action.",
+      "priority": "P1",
+      "sample_sources": [
+        "tr_pick|{*}"
+      ],
+      "source_dispositions": [
+        "SOURCE_VALUE_REQUIRES_FINITE_REVIEW",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot picker resolves a per-Telegram source type and may read recent cached media/file state. An unreviewed suffix is not a safe browser source or execution request.",
+      "source_kinds": [
+        "callback_template"
+      ]
+    },
+    {
+      "authority": "Canonical Bot ASR/provider/job boundary",
+      "candidate_boundary": "CORE_CANONICAL_ASR_GUARDED",
       "count": 1,
       "family": "tr_transcribe",
-      "next_contract": "Require a verified owner-scoped source asset plus a dedicated ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot.",
+      "next_contract": "Require a verified owner-scoped source asset plus a dedicated canonical ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot or manual Subtitle Studio intake.",
       "priority": "P1",
       "sample_sources": [
         "tr_transcribe"
       ],
       "source_dispositions": [
+        "CANONICAL_ASR_PROVIDER_OR_CORE_GUARD",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
       "source_evidence": "Bot `tr_transcribe` requires recent Telegram audio/video input and delegates to Bot transcription logic; it is not an existing Web ASR execution claim.",
+      "source_kinds": [
+        "callback_data"
+      ]
+    },
+    {
+      "authority": "Known-broken Bot pending-source branch; no Web runtime parity claim",
+      "candidate_boundary": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN",
+      "count": 1,
+      "family": "translation_transcript",
+      "next_contract": "Do not map this Bot menu action to a working Web translation runtime. Keep manual transcript authoring independently available only through the signed Subtitle Studio until a separately reviewed translation contract exists.",
+      "priority": "P1",
+      "sample_sources": [
+        "menu|translation_transcript"
+      ],
+      "source_dispositions": [
+        "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot stores `transcript` pending state, but its translation callback accepts only voice/file/text and returns unsupported source for transcript.",
       "source_kinds": [
         "callback_data"
       ]
@@ -58043,7 +58293,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 351,
+      "count": 363,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -58082,6 +58332,11 @@
           "priority": "P1"
         },
         {
+          "count": 10,
+          "family": "tr_target",
+          "priority": "P1"
+        },
+        {
           "count": 8,
           "family": "motion",
           "priority": "P1"
@@ -58108,12 +58363,22 @@
         },
         {
           "count": 1,
+          "family": "tr_more",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
           "family": "tr_pick",
           "priority": "P1"
         },
         {
           "count": 1,
           "family": "tr_transcribe",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
+          "family": "translation_transcript",
           "priority": "P1"
         }
       ],
@@ -58146,7 +58411,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 38,
+      "count": 45,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -58290,12 +58555,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.82,
+  "mapping_coverage_percent": 90.5,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2231,
+    "COPIED_GUARDED": 2220,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 723,
-    "NEEDS_FEATURE_DISPOSITION": 351,
+    "NAVIGATION_ONLY": 722,
+    "NEEDS_FEATURE_DISPOSITION": 363,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -58317,7 +58582,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.82,
+  "safe_disposition_coverage_percent": 90.5,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -58327,15 +58592,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3472,
+    "resolved_static_source_count": 3460,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 38,
-    "unresolved_source_count": 351
+    "unresolved_callback_templates": 45,
+    "unresolved_source_count": 363
   },
-  "static_web_surface_coverage_percent": 58.36,
+  "static_web_surface_coverage_percent": 58.07,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

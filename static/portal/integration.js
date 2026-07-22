@@ -267,6 +267,10 @@
   let subtitleStudioSessionEpoch = 0;
   let subtitleStudioListHydrationEpoch = 0;
   let subtitleStudioDetailHydrationEpoch = 0;
+  // The Language Source picker is a separately paged, metadata-only read.
+  // Keep its epoch independent so a late "load more" response cannot replace
+  // a newer signed Subtitle Studio projection.
+  let subtitleLanguageSourceHydrationEpoch = 0;
   // Workboard cards, references and activity are private to the signed Web
   // account. Keep list and detail reads separately ordered so late results
   // cannot repopulate a newer route, filter page or account session.
@@ -8808,14 +8812,21 @@
   }
 
   // Subtitle & Transcript Workspace is a separate text-authoring boundary.
-  // Unlike a media pipeline it accepts no upload/source/provider/job/file
-  // reference.  Cue text may legitimately contain an uttered/displayed URL;
-  // it stays escaped plain text in the portal and is never a clickable or
-  // fetchable source. Project metadata and editor notes remain stricter.
+  // It accepts no upload, bytes, path, URL, Telegram reference, provider or
+  // job handle.  A new project may retain one owner-scoped opaque Asset Vault
+  // UUID as metadata-only provenance; it is never a browser-readable media
+  // source. Cue text may legitimately contain an uttered/displayed URL; it
+  // stays escaped plain text in the portal and is never clickable or fetched.
   const SUBTITLE_STUDIO_FORMATS = new Set(["srt", "vtt"]);
   const SUBTITLE_STUDIO_INTENTS = new Set(["subtitle", "translation", "asr_review", "dubbing_direction"]);
   const SUBTITLE_STUDIO_PROJECT_STATES = new Set(["draft", "review", "approved", "archived"]);
   const SUBTITLE_FORMAT_TOOL_MODES = new Set(["srt_to_vtt", "vtt_to_srt", "text_to_srt"]);
+  const SUBTITLE_LANGUAGE_SOURCE_MODES = new Set(["manual", "asset_reference"]);
+  const SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS = new Set([
+    ".mp4|video/mp4", ".mov|video/quicktime", ".webm|video/webm",
+    ".mp3|audio/mpeg", ".wav|audio/wav", ".m4a|audio/mp4", ".ogg|audio/ogg",
+    ".txt|text/plain", ".srt|application/x-subrip", ".vtt|text/vtt"
+  ]);
   function validSubtitleStudioProjectId(value) { return validProjectId(value); }
   function validSubtitleStudioCueId(value) { return validProjectId(value); }
   function validSubtitleStudioRevision(value) { return validMemoryRevision(value); }
@@ -8872,7 +8883,8 @@
     if (id && !validSubtitleStudioProjectId(id)) throw new Error(label + " không hợp lệ.");
     return id;
   }
-  function subtitleProjectPayload(fields) {
+  function subtitleProjectPayload(fields, options) {
+    const sourceIntake = Boolean(options && options.sourceIntake === true);
     const title = subtitleStudioLine(fields.title, "Tên transcript project", 2, 180, false);
     const sourceLanguage = subtitleStudioLine(fields.source_language || "vi", "Ngôn ngữ nguồn", 1, 100, false);
     const targetLanguage = subtitleStudioLine(fields.target_language || "en", "Ngôn ngữ bản nháp", 1, 100, false);
@@ -8884,10 +8896,23 @@
     if (!SUBTITLE_STUDIO_FORMATS.has(captionFormat)) throw new Error("Chuẩn preview subtitle không hợp lệ.");
     const safety = subtitleStudioMetadataSafetyError(title, sourceLanguage, targetLanguage, intent, captionFormat, context, ...tags);
     if (safety) throw new Error(safety);
-    return {
+    const payload = {
       title, source_language: sourceLanguage, target_language: targetLanguage, intent, caption_format: captionFormat,
       context, tags, project_id: subtitleStudioReference(fields.project_id, "Project liên kết") || null
     };
+    if (!sourceIntake) return payload;
+    const sourceMode = subtitleStudioLine(fields.source_mode || "manual", "Nguồn ngôn ngữ", 1, 32, false).toLowerCase();
+    if (!SUBTITLE_LANGUAGE_SOURCE_MODES.has(sourceMode)) throw new Error("Nguồn ngôn ngữ không hợp lệ.");
+    if (sourceMode === "manual") {
+      // Clear a stale asset select/checkbox if the user switches back to a
+      // manual transcript.  The server repeats this coherent manual intent.
+      return { ...payload, source_mode: "manual", source_asset_id: null, source_rights_confirmed: false };
+    }
+    const sourceAssetId = subtitleStudioReference(fields.source_asset_id, "Asset Vault nguồn");
+    if (!sourceAssetId || fields.source_rights_confirmed !== true) {
+      throw new Error("Chọn một Asset Vault nguồn và xác nhận quyền sử dụng trước khi tiếp tục.");
+    }
+    return { ...payload, source_mode: "asset_reference", source_asset_id: sourceAssetId, source_rights_confirmed: true };
   }
   function subtitleCuePayload(fields) {
     const startMs = Number(fields.start_ms);
@@ -8979,12 +9004,213 @@
     return Boolean(
       boundary.execution === "authoring_only"
       && boundary.provider_called === false
+      && boundary.bot_called === false
+      && boundary.bridge_called === false
+      && boundary.source_bytes_read === false
       && boundary.output_created === false
+      && boundary.job_created === false
+      && boundary.download_created === false
+      && boundary.payment_started === false
+      && boundary.payment_processed === false
+      && boundary.wallet_mutated === false
       && boundary.asr_called === false
       && boundary.tts_called === false
       && boundary.dubbing_called === false
       && boundary.translation_called === false
     );
+  }
+  function subtitleLanguageSourceAssetIsSafe(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(item.id || "").trim();
+    const name = String(item.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(item.extension || "").trim().toLowerCase();
+    // Source records are an exact finite metadata contract. Do not normalize
+    // MIME parameters here: values outside the allowlist fail closed.
+    const contentType = String(item.content_type || "").trim().toLowerCase();
+    const bytes = Number(item.byte_size);
+    const revision = Number(item.lifecycle_revision);
+    return Boolean(
+      validVaultAssetId(id) && name && name.length <= 120 && String(item.state || "") === "active"
+      && SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS.has(`${extension}|${contentType}`)
+      && Number.isInteger(bytes) && bytes > 0 && bytes <= 100 * 1024 * 1024
+      && Number.isInteger(revision) && revision >= 1
+    );
+  }
+  function subtitleLanguageSourceAttestationIsSafe(value) {
+    if (typeof value !== "string") return false;
+    const text = value.trim();
+    // The server serializes a compact ISO timestamp. Requiring both the
+    // date-time separator and a parseable value prevents a truthy placeholder
+    // from being displayed as an immutable source attestation.
+    return text.length >= 20 && text.length <= 80 && /^\d{4}-\d{2}-\d{2}T/.test(text) && Number.isFinite(Date.parse(text));
+  }
+
+  function subtitleProjectLanguageSourceIsSafe(value) {
+    const project = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!Object.prototype.hasOwnProperty.call(project, "language_source")) return false;
+    const source = project.language_source && typeof project.language_source === "object" && !Array.isArray(project.language_source)
+      ? project.language_source : null;
+    if (!source) return false;
+    if (source.mode === "manual") {
+      return source.asset === null && source.asset_available === true
+        && source.rights_confirmed === false && source.attested_at === null;
+    }
+    if (source.mode === "guarded") {
+      // A malformed legacy/persisted source is intentionally redacted by the
+      // server. It can be displayed only as protected, never as manual or as
+      // a stale asset reference.
+      return source.asset === null && source.asset_available === false
+        && source.rights_confirmed === false && source.attested_at === null;
+    }
+    if (source.mode !== "asset_reference" || source.rights_confirmed !== true || !subtitleLanguageSourceAttestationIsSafe(source.attested_at)) {
+      return false;
+    }
+    // A server can truthfully return a previously attested source as
+    // unavailable after archive/restore/lifecycle drift. That explicit
+    // metadata-only shape is safe to render only as guarded; it is never
+    // downgraded to a manual source and never exposes a stale asset record.
+    if (source.asset_available === false) return source.asset === null;
+    return source.asset_available === true && subtitleLanguageSourceAssetIsSafe(source.asset);
+  }
+
+  function subtitleStudioProjectIsSafe(value) {
+    const project = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    return Boolean(project && validSubtitleStudioProjectId(project.id) && validSubtitleStudioRevision(project.revision)
+      && subtitleProjectLanguageSourceIsSafe(project));
+  }
+
+  function subtitleStudioProjectCreateReceiptIsSafe(value) {
+    // Idempotency intentionally stores and replays a minimal receipt.  It is
+    // not a project hydration response, so it must not be rejected merely
+    // because it omits language_source.  The detail route is hydrated before
+    // anything is rendered, where the complete provenance contract is still
+    // required by subtitleStudioProjectIsSafe().
+    const receipt = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!receipt) return false;
+    const keys = Object.keys(receipt);
+    return keys.length === 3 && keys.every((key) => ["id", "revision", "state"].includes(key))
+      && validSubtitleStudioProjectId(receipt.id)
+      && validSubtitleStudioRevision(receipt.revision)
+      && String(receipt.state || "").trim().toLowerCase() === "draft";
+  }
+
+  const SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT = 30;
+  const SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED = 90;
+  const SUBTITLE_LANGUAGE_SOURCE_MAX_OFFSET = 10_000;
+
+  function subtitleLanguageSourcePageOffset(value, fallback) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= SUBTITLE_LANGUAGE_SOURCE_MAX_OFFSET ? offset : fallback;
+  }
+
+  function subtitleLanguageSourcePagePath(offset) {
+    const safeOffset = subtitleLanguageSourcePageOffset(offset, 0);
+    return `/subtitle-studio/references/language-sources?limit=${SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT}&offset=${safeOffset}`;
+  }
+
+  function subtitleLanguageSourceSafeItem(value) {
+    if (!subtitleLanguageSourceAssetIsSafe(value)) return null;
+    const item = value && typeof value === "object" ? value : {};
+    return {
+      id: String(item.id).trim(),
+      display_name: String(item.display_name).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim(),
+      extension: String(item.extension).trim().toLowerCase(),
+      content_type: String(item.content_type).trim().toLowerCase(),
+      byte_size: Number(item.byte_size),
+      state: "active",
+      lifecycle_revision: Number(item.lifecycle_revision)
+    };
+  }
+
+  function subtitleLanguageSourcesAreSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const boundary = data.boundary && typeof data.boundary === "object" ? data.boundary : data;
+    const pagination = data.pagination && typeof data.pagination === "object" && !Array.isArray(data.pagination) ? data.pagination : {};
+    const items = Array.isArray(data.items) ? data.items : [];
+    const offset = Number(pagination.offset);
+    const limit = Number(pagination.limit);
+    const returned = Number(pagination.returned);
+    const hasMore = data.has_more === true;
+    const nextOffset = data.next_offset === null ? null : subtitleLanguageSourcePageOffset(data.next_offset, -1);
+    const previousOffset = data.previous_offset === null ? null : subtitleLanguageSourcePageOffset(data.previous_offset, -1);
+    return Boolean(
+      boundary.execution === "asset_reference_metadata_only"
+      && boundary.source_bytes_read === false
+      && boundary.provider_called === false && boundary.bot_called === false && boundary.bridge_called === false
+      && boundary.asr_called === false && boundary.translation_called === false && boundary.tts_called === false && boundary.dubbing_called === false
+      && boundary.job_created === false && boundary.output_created === false && boundary.download_created === false
+      && boundary.payment_started === false && boundary.payment_processed === false && boundary.wallet_mutated === false
+      && boundary.output_delivery === "none"
+      && Number.isInteger(offset) && offset >= 0 && offset <= SUBTITLE_LANGUAGE_SOURCE_MAX_OFFSET
+      && Number.isInteger(limit) && limit === SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT
+      && Number.isInteger(returned) && returned === items.length && items.length <= limit
+      && items.every(subtitleLanguageSourceAssetIsSafe)
+      && new Set(items.map((item) => String(item && item.id || "").trim())).size === items.length
+      && (hasMore
+        ? Number.isInteger(nextOffset) && nextOffset > offset && nextOffset <= SUBTITLE_LANGUAGE_SOURCE_MAX_OFFSET
+        : nextOffset === null)
+      && (offset === 0 ? previousOffset === null : Number.isInteger(previousOffset) && previousOffset >= 0 && previousOffset < offset)
+    );
+  }
+
+  function subtitleLanguageSourcesStateIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const boundary = data.boundary && typeof data.boundary === "object" ? data.boundary : {};
+    const pagination = data.pagination && typeof data.pagination === "object" && !Array.isArray(data.pagination) ? data.pagination : {};
+    const items = Array.isArray(data.items) ? data.items : [];
+    const pageLimit = Number(data.page_limit);
+    const renderedLimit = Number(data.rendered_limit);
+    const loaded = Number(pagination.returned);
+    const hasMore = data.has_more === true;
+    const isRenderCapped = data.is_render_capped === true;
+    const nextOffset = data.next_offset === null ? null : subtitleLanguageSourcePageOffset(data.next_offset, -1);
+    return Boolean(
+      boundary.execution === "asset_reference_metadata_only"
+      && boundary.source_bytes_read === false && boundary.provider_called === false && boundary.bot_called === false && boundary.bridge_called === false
+      && boundary.asr_called === false && boundary.translation_called === false && boundary.tts_called === false && boundary.dubbing_called === false
+      && boundary.job_created === false && boundary.output_created === false && boundary.download_created === false
+      && boundary.payment_started === false && boundary.payment_processed === false && boundary.wallet_mutated === false && boundary.output_delivery === "none"
+      && pageLimit === SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT && renderedLimit === SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED
+      && Number.isInteger(loaded) && loaded === items.length && items.length <= renderedLimit
+      && items.every(subtitleLanguageSourceAssetIsSafe)
+      && new Set(items.map((item) => String(item && item.id || "").trim())).size === items.length
+      && (hasMore
+        ? items.length < renderedLimit && Number.isInteger(nextOffset) && nextOffset >= 0 && nextOffset <= SUBTITLE_LANGUAGE_SOURCE_MAX_OFFSET
+        : nextOffset === null)
+      && (isRenderCapped
+        ? !hasMore && items.length === renderedLimit
+        : data.is_render_capped === false)
+    );
+  }
+
+  function subtitleLanguageSourcesStateFromPage(previous, page, append) {
+    if (!subtitleLanguageSourcesAreSafe(page)) return null;
+    const pageItems = page.items.map(subtitleLanguageSourceSafeItem);
+    if (pageItems.some((item) => !item)) return null;
+    const existing = append ? (subtitleLanguageSourcesStateIsSafe(previous) ? previous : null) : null;
+    const pageOffset = Number(page.pagination.offset);
+    if (append && (!existing || pageOffset !== Number(existing.next_offset))) return null;
+    const existingItems = existing && Array.isArray(existing.items) ? existing.items : [];
+    const seen = new Set();
+    const merged = [...existingItems, ...pageItems]
+      .filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true))
+      .slice(0, SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED);
+    // Duplicates or a cap-truncated page must not pretend every next row is
+    // available. Stop at the explicit browser-safe bound instead.
+    const appendedAll = merged.length === existingItems.length + pageItems.length;
+    const isRenderCapped = page.has_more === true && merged.length >= SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED;
+    const canLoadMore = appendedAll && page.has_more === true && !isRenderCapped;
+    return {
+      boundary: page.boundary,
+      items: merged,
+      pagination: { limit: SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT, offset: 0, returned: merged.length },
+      page_limit: SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT,
+      rendered_limit: SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED,
+      is_render_capped: isRenderCapped,
+      has_more: canLoadMore,
+      next_offset: canLoadMore ? Number(page.next_offset) : null,
+      previous_offset: null
+    };
   }
 
   async function downloadPromptLibraryExport() {
@@ -9484,6 +9710,7 @@
     ++analyticsWorkspaceSessionEpoch;
     ++channelStrategySessionEpoch;
     ++subtitleStudioSessionEpoch;
+    ++subtitleLanguageSourceHydrationEpoch;
     ++workboardSessionEpoch;
     ++supportSessionEpoch;
     ++contentHandoffSessionEpoch;
@@ -10179,6 +10406,7 @@
       "subtitle-studio-filter": Boolean(account && subtitleStudioEnabled),
       "subtitle-studio-filter-clear": Boolean(account && subtitleStudioEnabled),
       "subtitle-studio-page": Boolean(account && subtitleStudioEnabled),
+      "subtitle-language-source-more": Boolean(account && subtitleStudioEnabled),
       "subtitle-project-create": Boolean(account && me.csrf_token && subtitleStudioEnabled),
       "subtitle-project-update": Boolean(account && me.csrf_token && subtitleStudioEnabled),
       "subtitle-project-lifecycle": Boolean(account && me.csrf_token && subtitleStudioEnabled),
@@ -10416,6 +10644,7 @@
     ++subtitleStudioSessionEpoch;
     ++subtitleStudioListHydrationEpoch;
     ++subtitleStudioDetailHydrationEpoch;
+    ++subtitleLanguageSourceHydrationEpoch;
     ++workboardSessionEpoch;
     ++workboardListHydrationEpoch;
     ++workboardDetailHydrationEpoch;
@@ -10896,6 +11125,7 @@
       subtitleProjectDetail: {},
       subtitleProjectEstimate: {},
       subtitleStudioReferences: {},
+      subtitleLanguageSources: {},
       subtitleStudioEvents: [],
       subtitleStudioFilter: { q: "", state: "active" },
       subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
@@ -11557,7 +11787,7 @@
       // Never fall back to legacy subtitle/translate/dubbing/ASR state.  This
       // surface owns only signed Web authoring metadata and fails closed.
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: { q: "", state: "active" }, subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         subtitleStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
@@ -14563,28 +14793,34 @@
     // Use only the signed Web-owned Subtitle Studio API.  It must never read
     // broad legacy `/subtitle`, `/translate`, `/dubbing` or `/asr` state.
     const requestEpoch = ++subtitleStudioListHydrationEpoch;
+    // A whole-workspace refresh supersedes any in-flight metadata-only source
+    // append.  Without this invalidation an older page-30 response could be
+    // merged into the freshly loaded page-0 source list.
+    ++subtitleLanguageSourceHydrationEpoch;
     const sessionEpoch = subtitleStudioSessionEpoch;
     const expectedPath = currentPortalPath();
     if (!isNativeSubtitleStudioPath(expectedPath)) return { stale: true };
     const requested = subtitleStudioListOptions(overrides);
     try {
-      const [summaryResult, projectsResult, eventsResult, referencesResult] = await Promise.all([
+      const [summaryResult, projectsResult, eventsResult, referencesResult, languageSourcesResult] = await Promise.all([
         api("/subtitle-studio/summary"),
         api(subtitleStudioProjectsPath(requested)),
         api("/subtitle-studio/events?limit=50"),
-        api("/subtitle-studio/references")
+        api("/subtitle-studio/references"),
+        api(subtitleLanguageSourcePagePath(0), { cache: "no-store" })
       ]);
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
       const projectsData = projectsResult.data && typeof projectsResult.data === "object" ? projectsResult.data : {};
       const eventsData = eventsResult.data && typeof eventsResult.data === "object" ? eventsResult.data : {};
       const references = referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {};
-      if (!subtitleStudioBoundaryIsSafe(summary) || !subtitleStudioBoundaryIsSafe(projectsData) || !subtitleStudioBoundaryIsSafe(eventsData) || !subtitleStudioBoundaryIsSafe(references)) {
+      const languageSources = languageSourcesResult.data && typeof languageSourcesResult.data === "object" ? languageSourcesResult.data : {};
+      const languageSourceState = subtitleLanguageSourcesStateFromPage({}, languageSources, false);
+      const rawProjects = Array.isArray(projectsData.items) ? projectsData.items : [];
+      if (!subtitleStudioBoundaryIsSafe(summary) || !subtitleStudioBoundaryIsSafe(projectsData) || !subtitleStudioBoundaryIsSafe(eventsData) || !subtitleStudioBoundaryIsSafe(references) || !languageSourceState || !rawProjects.every(subtitleStudioProjectIsSafe)) {
         throw new Error("Boundary Subtitle Studio chưa được máy chủ xác nhận.");
       }
-      const projects = Array.isArray(projectsData.items)
-        ? projectsData.items.filter((item) => item && validSubtitleStudioProjectId(item.id) && validSubtitleStudioRevision(item.revision)).slice(0, SUBTITLE_STUDIO_LIST_LIMIT)
-        : [];
+      const projects = rawProjects.slice(0, SUBTITLE_STUDIO_LIST_LIMIT);
       const events = Array.isArray(eventsData.items)
         ? eventsData.items.filter((item) => item && validSubtitleStudioProjectId(item.project_id) && validSubtitleStudioRevision(item.revision)).slice(0, 50)
         : [];
@@ -14592,7 +14828,7 @@
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       merge({
         subtitleStudioSummary: summary, subtitleProjects: projects, subtitleStudioEvents: events,
-        subtitleStudioReferences: references,
+        subtitleStudioReferences: references, subtitleLanguageSources: languageSourceState,
         subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioFilter: listing.filters, subtitleStudioListing: listing, subtitleStudioReadState: "ready",
         pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "ready", "/subtitle-studio/new": "ready" }
       });
@@ -14601,12 +14837,36 @@
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       const listing = { filters: { q: requested.q, state: requested.state }, pagination: { limit: SUBTITLE_STUDIO_LIST_LIMIT, offset: requested.offset, returned: 0, has_more: false, next_offset: null, previous_offset: requested.offset >= SUBTITLE_STUDIO_LIST_LIMIT ? requested.offset - SUBTITLE_STUDIO_LIST_LIMIT : null } };
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: listing.filters, subtitleStudioListing: listing, subtitleStudioReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "guarded", "/subtitle-studio/new": "guarded" }
       });
       return { projects: [], events: [], listing };
     }
+  }
+
+  async function hydrateSubtitleLanguageSources(offset) {
+    const requestEpoch = ++subtitleLanguageSourceHydrationEpoch;
+    const sessionEpoch = subtitleStudioSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativeSubtitleStudioPath(expectedPath)) return null;
+    const previous = base().subtitleLanguageSources;
+    if (!subtitleLanguageSourcesStateIsSafe(previous)) {
+      throw new Error("Danh sách nguồn ngôn ngữ hiện tại chưa được xác nhận an toàn.");
+    }
+    const expectedOffset = Number(previous.next_offset);
+    const requestedOffset = subtitleLanguageSourcePageOffset(offset, -1);
+    if (!Number.isInteger(expectedOffset) || requestedOffset !== expectedOffset) {
+      throw new Error("Trang nguồn ngôn ngữ không còn hợp lệ. Hãy làm mới Subtitle Studio.");
+    }
+    const result = await api(subtitleLanguageSourcePagePath(requestedOffset), { cache: "no-store" });
+    if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleLanguageSourceHydrationEpoch, sessionEpoch, expectedPath)) return null;
+    const page = result.data && typeof result.data === "object" ? result.data : {};
+    const state = subtitleLanguageSourcesStateFromPage(previous, page, true);
+    if (!state) throw new Error("Nguồn ngôn ngữ chưa qua kiểm tra metadata owner-scoped.");
+    if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleLanguageSourceHydrationEpoch, sessionEpoch, expectedPath)) return null;
+    merge({ subtitleLanguageSources: state });
+    return state;
   }
 
   async function hydrateSubtitleProject(projectId) {
@@ -14623,7 +14883,7 @@
       const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
       const references = referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {};
       const project = data.project && typeof data.project === "object" ? data.project : null;
-      if (!subtitleStudioBoundaryIsSafe(data) || !subtitleStudioBoundaryIsSafe(references) || !project || !validSubtitleStudioProjectId(project.id) || String(project.id) !== String(projectId) || !validSubtitleStudioRevision(project.revision)) {
+      if (!subtitleStudioBoundaryIsSafe(data) || !subtitleStudioBoundaryIsSafe(references) || !subtitleStudioProjectIsSafe(project) || String(project.id) !== String(projectId)) {
         throw new Error("Transcript project không còn khả dụng cho Web account hiện tại.");
       }
       const archived = String(project.state || "") === "archived";
@@ -14654,7 +14914,7 @@
     } catch (_) {
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: { q: "", state: "active" }, subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: SUBTITLE_STUDIO_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         subtitleStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
@@ -24933,6 +25193,31 @@
         await hydrateSubtitleStudio({ offset });
         return;
       }
+      if (action === "subtitle-language-source-more") {
+        if (!isNativeSubtitleStudioPath(route) || currentPortalPath() !== route) {
+          throw new Error("Chỉ có thể tải thêm nguồn ngôn ngữ từ Subtitle Studio đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["subtitle-language-source-more"] === true)) {
+          throw new Error("Cần signed Web session để tải thêm metadata Asset Vault của bạn.");
+        }
+        const sources = base().subtitleLanguageSources;
+        if (!subtitleLanguageSourcesStateIsSafe(sources) || sources.has_more !== true) {
+          throw new Error("Không còn trang nguồn ngôn ngữ an toàn để tải thêm.");
+        }
+        const offset = subtitleLanguageSourcePageOffset(fields.__subtitleLanguageSourceOffset, -1);
+        if (offset !== Number(sources.next_offset)) {
+          throw new Error("Trang nguồn ngôn ngữ không còn khớp. Hãy làm mới Subtitle Studio.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const loaded = await hydrateSubtitleLanguageSources(offset);
+          if (!loaded) return;
+          toast("Đã tải thêm metadata nguồn ngôn ngữ của Web account hiện tại.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "subtitle-asset-operation-refresh") {
         if (route !== SUBTITLE_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== SUBTITLE_ASSET_OPERATIONS_ROUTE) {
           throw new Error("Chỉ có thể làm mới Subtitle Asset Operations từ trang đang mở.");
@@ -25742,14 +26027,14 @@
         return;
       }
       if (action === "subtitle-project-create") {
-        const payload = subtitleProjectPayload(fields);
+        const payload = subtitleProjectPayload(fields, { sourceIntake: true });
         await subtitleStudioMutation({
           action, route, scope: "subtitle-studio:project:create", path: "/subtitle-studio/projects", payload,
           onSuccess: async (result) => {
             const data = result.data && typeof result.data === "object" ? result.data : {};
             const receipt = data.project && typeof data.project === "object" ? data.project : null;
             const projectId = receipt && validSubtitleStudioProjectId(receipt.id) ? String(receipt.id) : "";
-            if (!subtitleStudioBoundaryIsSafe(data) || !projectId || !validSubtitleStudioRevision(receipt.revision)) {
+            if (!subtitleStudioBoundaryIsSafe(data) || !projectId || !subtitleStudioProjectCreateReceiptIsSafe(receipt)) {
               throw new Error("Máy chủ chưa trả receipt transcript project Web-native hợp lệ.");
             }
             await hydrateSubtitleStudio();
