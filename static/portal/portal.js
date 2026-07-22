@@ -22989,6 +22989,109 @@
     window.dispatchEvent(new CustomEvent("toanaas:storyboard-composer-draft-edited"));
   }
 
+  function imageMotionPlannerFormInteger(value) {
+    if (typeof value === "number" && Number.isSafeInteger(value)) return value;
+    const text = typeof value === "string" ? value.trim() : "";
+    if (!/^(?:0|[1-9]\d*)$/.test(text)) return NaN;
+    const parsed = Number(text);
+    return Number.isSafeInteger(parsed) ? parsed : NaN;
+  }
+
+  function normalizeImageMotionPlannerFormSaveSource(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    return normalizeImageMotionSaveSource({
+      ...source,
+      duration_seconds: imageMotionPlannerFormInteger(source.duration_seconds)
+    });
+  }
+
+  function imageMotionPlannerFormMatchesSavedSource(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-motion-planner-compose") return false;
+    const current = normalizeImageMotionPlannerFormSaveSource(collectFormFields(form));
+    const saved = normalizeImageMotionSaveSource(getBootstrap().imageMotionPlannerSaveSource);
+    return Boolean(current.direction_id && saved.direction_id
+      && IMAGE_MOTION_SAVE_SOURCE_KEYS.every((key) => current[key] === saved[key]));
+  }
+
+  function ensureImageMotionPlannerDraftControls(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-motion-planner-compose") return;
+    if (!form.id) form.id = "image-motion-planner-form";
+    const page = form.closest(".portal-cinematic-concept");
+    if (page) page.classList.add("portal-image-motion-planner");
+    document.querySelectorAll('[data-portal-action="image-motion-planner-save-plan"]').forEach((control) => {
+      control.setAttribute("data-portal-form-id", form.id);
+    });
+    const footer = form.querySelector(".portal-form-footer");
+    if (footer && !footer.querySelector("[data-image-motion-planner-stale-note]")) {
+      const note = document.createElement("span");
+      note.className = "portal-form-note portal-image-motion-planner-stale-note";
+      note.setAttribute("data-image-motion-planner-stale-note", "");
+      note.setAttribute("role", "status");
+      note.setAttribute("aria-live", "polite");
+      note.hidden = true;
+      footer.insertBefore(note, footer.lastElementChild || null);
+    }
+    if (!page) return;
+    const layout = page.querySelector(".portal-cinematic-concept-layout");
+    const result = layout && layout.nextElementSibling;
+    const resultState = normalizeImageMotionResult(getBootstrap().imageMotionPlannerResult);
+    if (result && result.matches("section")) {
+      if (resultState.planner) result.setAttribute("data-image-motion-planner-rendered-result", "");
+      else result.removeAttribute("data-image-motion-planner-rendered-result");
+    }
+    const savePanel = result && result.nextElementSibling;
+    const receipt = normalizeImageMotionSaveReceipt(getBootstrap().imageMotionPlannerSaveReceipt);
+    const receiptSurface = savePanel && savePanel.nextElementSibling;
+    if (receiptSurface && receiptSurface.matches("section")) {
+      if (receipt.plan && validVideoStudioPlanId(receipt.plan.id)) receiptSurface.setAttribute("data-image-motion-planner-saved-receipt", "");
+      else receiptSurface.removeAttribute("data-image-motion-planner-saved-receipt");
+    }
+  }
+
+  function synchronizeImageMotionPlannerDraftFreshness(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-motion-planner-compose") return;
+    ensureImageMotionPlannerDraftControls(form);
+    const page = form.closest(".portal-image-motion-planner");
+    const hasPlan = Boolean(page && page.querySelector("[data-image-motion-planner-rendered-result], [data-image-motion-planner-saved-receipt]"));
+    const note = form.querySelector("[data-image-motion-planner-stale-note]");
+    if (!hasPlan) {
+      form.dataset.imageMotionPlannerDraftState = "empty";
+      if (note) { note.hidden = true; note.textContent = ""; }
+      return;
+    }
+    const receipt = normalizeImageMotionSaveReceipt(getBootstrap().imageMotionPlannerSaveReceipt);
+    const alreadySaved = Boolean(receipt.plan && validVideoStudioPlanId(receipt.plan.id));
+    const fresh = imageMotionPlannerFormMatchesSavedSource(form);
+    const saveAllowed = fresh && !alreadySaved;
+    form.dataset.imageMotionPlannerDraftState = fresh ? (alreadySaved ? "saved" : "fresh") : "stale";
+    if (note) {
+      note.hidden = fresh;
+      note.textContent = fresh
+        ? ""
+        : "Direction hoặc lựa chọn motion đã thay đổi. Image Motion Plan hoặc Video Plan đang hiển thị thuộc lựa chọn trước; hãy tạo lại trước khi lưu.";
+    }
+    (page ? page.querySelectorAll("[data-image-motion-planner-rendered-result], [data-image-motion-planner-saved-receipt]") : []).forEach((surface) => {
+      surface.toggleAttribute("data-stale", !fresh);
+    });
+    (page ? page.querySelectorAll('[data-portal-action="image-motion-planner-save-plan"]') : []).forEach((control) => {
+      if (!Object.prototype.hasOwnProperty.call(control.dataset, "imageMotionPlannerInitialDisabled")) {
+        control.dataset.imageMotionPlannerInitialDisabled = String(control.disabled);
+      }
+      const disabled = !saveAllowed || control.dataset.imageMotionPlannerInitialDisabled === "true";
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !fresh) control.setAttribute("title", "Direction hoặc lựa chọn motion đã thay đổi; hãy tạo lại Image Motion Plan trước khi lưu.");
+      else if (disabled && alreadySaved) control.setAttribute("title", "Image Motion Plan này đã được lưu thành Video Plan Draft. Tạo lại plan nếu cần lưu một plan khác.");
+      else control.removeAttribute("title");
+    });
+  }
+
+  function markImageMotionPlannerDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-motion-planner-compose") return;
+    synchronizeImageMotionPlannerDraftFreshness(form);
+    window.dispatchEvent(new CustomEvent("toanaas:image-motion-planner-draft-edited"));
+  }
+
   function synchronizeQuickImagePlannerForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
     const source = form.querySelector('[data-quick-image-planner-source]');
@@ -24056,6 +24159,9 @@
       if (form && form.getAttribute("data-portal-action") === "storyboard-composer-compose") {
         markStoryboardComposerDraftEdited(form);
       }
+      if (form && form.getAttribute("data-portal-action") === "image-motion-planner-compose") {
+        markImageMotionPlannerDraftEdited(form);
+      }
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
@@ -24087,6 +24193,9 @@
         }
         if (form.getAttribute("data-portal-action") === "storyboard-composer-compose") {
           markStoryboardComposerDraftEdited(form);
+        }
+        if (form.getAttribute("data-portal-action") === "image-motion-planner-compose") {
+          markImageMotionPlannerDraftEdited(form);
         }
         if (event.target && event.target.name === "preset") {
           synchronizeImageResizePreset(form);
@@ -24256,6 +24365,9 @@
     });
     main.querySelectorAll('[data-portal-action="storyboard-composer-compose"]').forEach((form) => {
       synchronizeStoryboardComposerDraftFreshness(form);
+    });
+    main.querySelectorAll('[data-portal-action="image-motion-planner-compose"]').forEach((form) => {
+      synchronizeImageMotionPlannerDraftFreshness(form);
     });
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
