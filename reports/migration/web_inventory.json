@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9314,
+      "line": 9348,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6862,
+      "line": 6885,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -12810,7 +12810,7 @@
   "schema_version": "1.7",
   "source_files_discovered": 294,
   "source_files_scanned": 294,
-  "source_fingerprint_sha256": "47ae77dbe603f00f7b01e6677b71ade72db4a0d366f2f4d496133557e02dae4b",
+  "source_fingerprint_sha256": "1c631a413b968a7484e46863c448bce5b58fc0564083afce4f19f944431f1fdd",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast97-media-cancel-boundary",
   "ui_path_references": [
     {

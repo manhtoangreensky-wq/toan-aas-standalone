@@ -5401,20 +5401,43 @@ def _map_media_creator_cancel_callback(
     source review instead of gaining an implicit browser reset or route.
     """
 
-    contract = MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS.get(str(identifier or ""))
-    if contract is None:
-        return None
-    return {
-        "source_kind": source_kind,
-        "source": identifier,
-        "target": "TELEGRAM_ONLY",
-        "classification": "customer",
-        "status": "TELEGRAM_ONLY",
-        "resolution": "reviewed_media_creator_cancel_requires_bot_local_pending_state",
-        "source_dispositions": tuple(contract["source_dispositions"]),
-        "source_evidence": str(contract["source_evidence"]),
-        "evidence": evidence,
-    }
+    raw_identifier = str(identifier or "")
+    contract = MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS.get(raw_identifier)
+    if contract is not None:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_media_creator_cancel_requires_bot_local_pending_state",
+            "source_dispositions": tuple(contract["source_dispositions"]),
+            "source_evidence": str(contract["source_evidence"]),
+            "evidence": evidence,
+        }
+    if raw_identifier.casefold().startswith("create_media|cancel"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "media_creator_cancel_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_MEDIA_CREATOR_CANCEL_OR_PENDING_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+                "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "Only the frozen raw `create_media|cancel` literal was reviewed. A case variant or suffix may "
+                "change the Bot state machine, so it cannot inherit the Bot-only cancellation disposition, a "
+                "Web route, a browser reset, browser history action, job cancellation or runtime effect."
+            ),
+            "evidence": evidence,
+        }
+    return None
 
 
 def _map_translation_source_intake_callback(
@@ -7580,7 +7603,10 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     if translation_source_mapping is not None:
         return translation_source_mapping
     if "{*}" not in token:
-        return _map_callback(token, "callback_template", evidence, existing_routes)
+        # Preserve the raw static literal for finite contracts that are
+        # intentionally case-sensitive. Normalized `token` remains only for
+        # wildcard/prefix classification below.
+        return _map_callback(str(template or ""), "callback_template", evidence, existing_routes)
     if token.startswith("archive|"):
         # Dynamic Archive suffixes can encode Bot department/type/search state
         # or identifiers.  Keep all of them fail-closed instead of inheriting
@@ -8845,6 +8871,14 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ", ".join(str(value) for value in contract["source_dispositions"]),
         ]
         for source, contract in sorted(MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS.items())
+    ] + [
+        [
+            "other create_media|cancel*",
+            "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED",
+            "media_creator_cancel_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_MEDIA_CREATOR_CANCEL_OR_PENDING_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET, NO_WEB_NAVIGATION_OR_BROWSER_ACTION, NO_RUNTIME_CLAIM",
+        ],
     ]
     quick_image_planner_contract_rows = [
         [
