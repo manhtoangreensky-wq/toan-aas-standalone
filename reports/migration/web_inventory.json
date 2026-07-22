@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1881,
+      "line": 1910,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,17 +179,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4293,
+      "line": 4322,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4301,
+      "line": 4330,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4309,
+      "line": 4338,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9233,
+      "line": 9314,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6802,
+      "line": 6862,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -7041,7 +7041,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2756,
+      "occurrences": 2773,
       "provider": "Telegram"
     }
   ],
@@ -12808,10 +12808,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 293,
-  "source_files_scanned": 293,
-  "source_fingerprint_sha256": "d2114c016a9477c4f61e2d02976de804b882eb05cfd33e693ff4557f6d1aaa97",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast96-postback-readiness-admin-guidance",
+  "source_files_discovered": 294,
+  "source_files_scanned": 294,
+  "source_fingerprint_sha256": "47ae77dbe603f00f7b01e6677b71ade72db4a0d366f2f4d496133557e02dae4b",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast97-media-cancel-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
