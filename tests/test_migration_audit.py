@@ -2579,6 +2579,45 @@ def test_operator_menu_category_navigation_is_admin_only_and_defers_video_produc
     assert "opmenu|" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
 
 
+def test_operator_menu_root_is_an_exact_fresh_admin_entry_not_browser_back_navigation() -> None:
+    """The only reviewed Operator root literal opens the guarded ERP overview."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    assert audit.OPERATOR_MENU_ROOT_NAVIGATION == {
+        "callback": "opmenu|root",
+        "target": "/admin",
+        "admin_feature_key": "admin_overview",
+        "title": "AI Operator",
+    }
+
+    mapped = audit._map_callback("opmenu|root", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert mapped["classification"] == "admin"
+    assert mapped["target"] == "/admin"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_operator_menu_root_navigation"
+    assert mapped["operator_menu_entry"] == "root"
+    assert mapped["operator_admin_feature_key"] == "admin_overview"
+    assert mapped["operator_menu_title"] == "AI Operator"
+    assert mapped["operator_navigation_mode"] == "FRESH_ADMIN_ERP_ROOT"
+    assert mapped["source_dispositions"] == (
+        "BOT_ADMIN_ONLY",
+        "BOT_OPERATOR_MENU_RENDER_ONLY",
+        "BOT_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    # Bot callback data is case-sensitive. A spelling/case variant must stay
+    # visible for review, never inherit this exact navigation allowance.
+    unknown = audit._map_callback("OPMENU|ROOT", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["resolution"] != "reviewed_operator_menu_root_navigation"
+
+    from copyfast_registry import menu_capability_catalog
+
+    assert "opmenu|root" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
+
+
 def test_system_data_stewardship_navigation_is_finite_and_never_leaks_bot_state() -> None:
     """System/data buttons can only open separately guarded Web read routes."""
 
