@@ -120,6 +120,7 @@ async def dashboard():
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
+        "CREATIVE_VARIANT_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -139,6 +140,7 @@ async def dashboard():
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
+    assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -2670,6 +2672,70 @@ def workboard_keyboard(job_id, task_id, stage):
     assert "Bot Workboard/Task callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Workboard/Task callbacks are separate from the Web Workboard" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
     assert "Bot Workboard/Task callbacks are distinct from the Web Workboard" in (tmp_path / "docs" / "STATE_AND_DATABASE_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_creative_variant_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
+    """Telegram-admin Creative selection must not become a Web Content Studio action."""
+
+    audit = _load_audit_module()
+    routes = {"/content-studio", "/admin", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "creative|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    for identifier in (
+        "creative|select|41",
+        "CREATIVE|SELECT|41",
+        "creative|select|41|future",
+        "creative|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "creative_variant_callback_requires_web_native_owner_role_contract"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "BOT_CREATIVE_VARIANT_IDENTIFIER" in mapped["source_dispositions"]
+        assert "CANONICAL_BOT_CREATIVE_VARIANT_SELECTION_AND_PRODUCTION_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_CREATIVE_VARIANT_OR_HANDOFF_STATE_REPLAY" in mapped["source_dispositions"]
+
+    for template in (
+        "creative|select|{*}",
+        "CREATIVE|SELECT|{*}",
+        "creative|select|{*}|future",
+        "creative|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "creative_variant_callback_requires_web_native_owner_role_contract"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def creative_keyboard(variant_id):
+    InlineKeyboardButton("select", callback_data=f"creative|select|{variant_id}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert templates["creative|select|{*}"]["target"] == "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED"
+    assert templates["creative|select|{*}"]["classification"] == "admin"
+    contract = (tmp_path / "docs" / "CREATIVE_VARIANT_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "creative\\|*" in contract
+    assert "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED" in contract
+    assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Creative callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Creative callbacks are separate from the Web Creative Studio" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Creative callbacks are distinct from the Web Creative Studio" in (tmp_path / "docs" / "STATE_AND_DATABASE_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

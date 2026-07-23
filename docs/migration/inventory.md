@@ -12,7 +12,7 @@
 | Conversation handlers | 0 | n/a |
 | FastAPI routes | 139 | 640 |
 | Background/job signals | 194 | 32 |
-| Database tables | 97 | 210 |
+| Database tables | 97 | 212 |
 | Environment names | 364 | 199 |
 | Provider names | 15 | 16 |
 
