@@ -197,6 +197,155 @@ SUPPORT_ADVISOR_EXTERNAL_BOUNDARIES = {
     "provider_or_job_lookup": False,
     "bot_or_telegram": False,
 }
+# Consultation Brief is a deliberately closed Web-native catalog distilled
+# from the useful *topics* of the frozen Bot support menu.  It is not a Bot
+# callback compatibility layer: a selected item can only create an in-memory
+# draft which the customer may explicitly copy into the normal Web case form.
+# No item carries a price, quote, contract, contact channel or provider action.
+CONSULTATION_BRIEF_CATALOG_VERSION = "2026-07-23"
+CONSULTATION_BRIEF_BOUNDARIES = {
+    "case_auto_create": False,
+    "lead_or_crm_write": False,
+    "external_notification": False,
+    "contact_collection": False,
+    "quote_or_contract": False,
+    "payment_or_wallet": False,
+    "bot_or_telegram": False,
+    "provider_job_or_asset": False,
+}
+CONSULTATION_BRIEF_GROUPS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "premium",
+        "title": "Gói cao cấp",
+        "summary": "Làm rõ phạm vi sử dụng và mức hỗ trợ cần trao đổi trước khi bạn tự gửi yêu cầu Web.",
+        "services": (
+            {
+                "id": "web-premium-creator",
+                "category": "premium_lead",
+                "title": "Cá nhân / Creator",
+                "summary": "Tư vấn cách tổ chức công việc sáng tạo cá nhân trong Web App.",
+                "prompt": "Nêu loại nội dung và nhịp làm việc bạn muốn tối ưu.",
+            },
+            {
+                "id": "web-premium-shop",
+                "category": "premium_lead",
+                "title": "Shop / Affiliate",
+                "summary": "Làm rõ nhu cầu nội dung, vận hành hoặc báo cáo cho hoạt động bán hàng.",
+                "prompt": "Nêu quy trình bán hàng hoặc kênh nội dung cần được trao đổi.",
+            },
+            {
+                "id": "web-premium-business",
+                "category": "premium_lead",
+                "title": "Doanh nghiệp",
+                "summary": "Chuẩn bị bối cảnh đội nhóm và yêu cầu vận hành ở mức không nhạy cảm.",
+                "prompt": "Nêu quy mô công việc, vai trò sử dụng và ràng buộc cần cân nhắc.",
+            },
+            {
+                "id": "web-premium-private",
+                "category": "premium_lead",
+                "title": "Trao đổi riêng về nhu cầu",
+                "summary": "Đặt câu hỏi về phạm vi phù hợp mà không tạo báo giá hoặc cam kết dịch vụ.",
+                "prompt": "Nêu vấn đề cần làm rõ và tiêu chí bạn muốn dùng để đánh giá.",
+            },
+        ),
+    },
+    {
+        "id": "custom_bot",
+        "title": "Giải pháp tùy chỉnh",
+        "summary": "Mô tả bài toán Web ở mức tổng quát; bản nháp không tạo Bot, kết nối hay cấu hình mới.",
+        "services": (
+            {
+                "id": "web-custom-shop",
+                "category": "custom_bot_lead",
+                "title": "Quy trình cho shop",
+                "summary": "Trao đổi về luồng hỗ trợ hoạt động bán hàng hoặc vận hành shop.",
+                "prompt": "Nêu các bước thủ công hiện tại và điểm cần được cải thiện.",
+            },
+            {
+                "id": "web-custom-content",
+                "category": "custom_bot_lead",
+                "title": "Quy trình nội dung",
+                "summary": "Làm rõ nhu cầu biên tập, phê duyệt hoặc tổ chức nội dung.",
+                "prompt": "Nêu loại nội dung, các bước review và kết quả cần có.",
+            },
+            {
+                "id": "web-custom-support",
+                "category": "custom_bot_lead",
+                "title": "Quy trình hỗ trợ khách hàng",
+                "summary": "Xác định bối cảnh hỗ trợ và thông tin cần tổ chức trong Web.",
+                "prompt": "Nêu các nhóm câu hỏi hoặc bước chăm sóc cần được làm rõ.",
+            },
+            {
+                "id": "web-custom-internal",
+                "category": "custom_bot_lead",
+                "title": "Vận hành nội bộ",
+                "summary": "Trao đổi nhu cầu phối hợp, theo dõi hoặc chuẩn hóa công việc nội bộ.",
+                "prompt": "Nêu vai trò tham gia, quy trình hiện có và điểm đang bị gián đoạn.",
+            },
+            {
+                "id": "web-custom-custom",
+                "category": "custom_bot_lead",
+                "title": "Bài toán khác",
+                "summary": "Bắt đầu từ vấn đề cụ thể trước khi đánh giá phạm vi phù hợp.",
+                "prompt": "Nêu vấn đề cốt lõi và kết quả tối thiểu bạn muốn đạt được.",
+            },
+        ),
+    },
+    {
+        "id": "service",
+        "title": "Tư vấn dịch vụ",
+        "summary": "Chọn đúng loại công việc để chuẩn bị câu hỏi rõ ràng, không kích hoạt engine hay tạo output.",
+        "services": (
+            {
+                "id": "web-service-image",
+                "category": "service_consulting",
+                "title": "Ảnh / thiết kế",
+                "summary": "Tìm hiểu loại đầu ra hình ảnh hoặc quy trình thiết kế phù hợp.",
+                "prompt": "Nêu loại ảnh, mục đích sử dụng và tiêu chí đầu ra cần làm rõ.",
+            },
+            {
+                "id": "web-service-video",
+                "category": "service_consulting",
+                "title": "Video",
+                "summary": "Làm rõ nhu cầu video, cấu trúc nội dung và cách review trong Web.",
+                "prompt": "Nêu mục tiêu video, định dạng dự kiến và các bước bạn muốn trao đổi.",
+            },
+            {
+                "id": "web-service-frame-video",
+                "category": "service_consulting",
+                "title": "Ảnh thành video",
+                "summary": "Chuẩn bị câu hỏi về biến đổi hình ảnh thành chuyển động hoặc storyboard.",
+                "prompt": "Nêu loại tư liệu đầu vào và phong cách chuyển động muốn tìm hiểu.",
+            },
+            {
+                "id": "web-service-document",
+                "category": "service_consulting",
+                "title": "Tài liệu / PDF",
+                "summary": "Trao đổi nhu cầu xử lý, tổ chức hoặc xuất tài liệu trong luồng phù hợp.",
+                "prompt": "Nêu loại tài liệu và thao tác hoặc kết quả cần được tư vấn.",
+            },
+            {
+                "id": "web-service-voice",
+                "category": "service_consulting",
+                "title": "Giọng nói / âm thanh",
+                "summary": "Làm rõ use case audio, lời đọc hoặc nội dung cần chuẩn bị.",
+                "prompt": "Nêu mục đích sử dụng âm thanh và yêu cầu nội dung ở mức tổng quát.",
+            },
+            {
+                "id": "web-service-package",
+                "category": "service_consulting",
+                "title": "Gói và khả năng sử dụng",
+                "summary": "Đặt câu hỏi về khả năng phù hợp, không tạo đơn hoặc thay đổi giá/quyền.",
+                "prompt": "Nêu cách bạn dự định sử dụng và điều cần được làm rõ trước khi quyết định.",
+            },
+        ),
+    },
+)
+CONSULTATION_BRIEF_SERVICES = {
+    str(service["id"]): service
+    for group in CONSULTATION_BRIEF_GROUPS
+    for service in group["services"]
+}
 CASE_PRIORITIES = frozenset({"low", "normal", "high", "urgent"})
 CASE_STATES = frozenset({
     "new", "reviewing", "waiting_user", "waiting_provider",
@@ -272,6 +421,20 @@ MANUAL_PAYMENT_PATTERN = re.compile(
 # hyphens.  Permit only separators between digits so unrelated numbers from a
 # prose sentence cannot be joined into a false candidate.
 CARD_CANDIDATE_PATTERN = re.compile(r"(?<![0-9A-Za-z])[0-9](?:[\s./-]*[0-9]){12,18}(?![0-9A-Za-z])")
+# A Consultation Brief is intentionally contact-free because the customer is
+# already identified by the signed Web session.  Keep these detectors scoped
+# to the new, non-persistent composer; existing Support cases retain their
+# established content contract and may be reviewed independently.
+EMAIL_ADDRESS_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})+(?![A-Za-z0-9.-])",
+    re.IGNORECASE,
+)
+PHONE_NUMBER_PATTERN = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s().-]*\d){8,10}(?!\d)")
+CONTACT_LABEL_PATTERN = re.compile(
+    r"\b(?:email|e-mail|zalo|telegram|phone|số\s*điện\s*thoại|so\s*dien\s*thoai|sđt|sdt)\s*(?:[:=]|là|la)\s*\S+",
+    re.IGNORECASE,
+)
+TELEGRAM_HANDLE_PATTERN = re.compile(r"(?<![A-Za-z0-9._])@[A-Za-z][A-Za-z0-9_]{4,31}\b")
 MAX_ACTIVE_CASES = 100
 MAX_MESSAGES_PER_CASE = 500
 MAX_SUBJECT = 180
@@ -369,6 +532,34 @@ def _safe_text(value: Any, *, label: str, minimum: int, maximum: int, allow_empt
     return text
 
 
+def _contains_consultation_contact(value: str) -> bool:
+    text = str(value or "")
+    return bool(
+        EMAIL_ADDRESS_PATTERN.search(text)
+        or PHONE_NUMBER_PATTERN.search(text)
+        or CONTACT_LABEL_PATTERN.search(text)
+        or TELEGRAM_HANDLE_PATTERN.search(text)
+    )
+
+
+def _consultation_line(value: Any, *, label: str, minimum: int, maximum: int) -> str:
+    text = _safe_line(value, label=label, minimum=minimum, maximum=maximum)
+    if _contains_consultation_contact(text):
+        raise ValueError(
+            "Consultation Brief dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung"
+        )
+    return text
+
+
+def _consultation_text(value: Any, *, label: str, minimum: int, maximum: int) -> str:
+    text = _safe_text(value, label=label, minimum=minimum, maximum=maximum)
+    if _contains_consultation_contact(text):
+        raise ValueError(
+            "Consultation Brief dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung"
+        )
+    return text
+
+
 def _validated_line(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bool = False) -> str:
     try:
         return _safe_line(value, label=label, minimum=minimum, maximum=maximum, allow_empty=allow_empty)
@@ -381,6 +572,37 @@ def _category(value: Any) -> str:
     if normalized not in CASE_CATEGORIES:
         raise ValueError("Nhóm yêu cầu hỗ trợ không hợp lệ")
     return normalized
+
+
+def _consultation_service_id(value: Any) -> str:
+    normalized = str(value or "").strip()
+    if normalized not in CONSULTATION_BRIEF_SERVICES:
+        raise ValueError("Loại tư vấn Web không hợp lệ")
+    return normalized
+
+
+def _consultation_service_public(service: dict[str, Any]) -> dict[str, str]:
+    """Project one server-owned catalog item without exposing mutable internals."""
+
+    return {
+        "id": str(service["id"]),
+        "category": str(service["category"]),
+        "title": str(service["title"]),
+        "summary": str(service["summary"]),
+        "prompt": str(service["prompt"]),
+    }
+
+
+def _consultation_catalog_public() -> list[dict[str, Any]]:
+    return [
+        {
+            "id": str(group["id"]),
+            "title": str(group["title"]),
+            "summary": str(group["summary"]),
+            "services": [_consultation_service_public(service) for service in group["services"]],
+        }
+        for group in CONSULTATION_BRIEF_GROUPS
+    ]
 
 
 def _priority(value: Any) -> str:
@@ -837,6 +1059,35 @@ class CaseCreateRequest(SupportRequestModel):
         return _safe_text(value, label="Nội dung", minimum=3, maximum=MAX_DETAIL)
 
 
+class ConsultationBriefComposeRequest(SupportRequestModel):
+    """Validated input for a non-persistent customer-side consultation draft."""
+
+    service_id: str = Field(min_length=3, max_length=64)
+    goal: str = Field(min_length=3, max_length=600)
+    current_context: str = Field(min_length=3, max_length=1_000)
+    requested_outcome: str = Field(min_length=3, max_length=1_000)
+
+    @field_validator("service_id")
+    @classmethod
+    def validate_service_id(cls, value: str) -> str:
+        return _consultation_service_id(value)
+
+    @field_validator("goal")
+    @classmethod
+    def validate_goal(cls, value: str) -> str:
+        return _consultation_line(value, label="Mục tiêu", minimum=3, maximum=600)
+
+    @field_validator("current_context")
+    @classmethod
+    def validate_current_context(cls, value: str) -> str:
+        return _consultation_text(value, label="Bối cảnh hiện tại", minimum=3, maximum=1_000)
+
+    @field_validator("requested_outcome")
+    @classmethod
+    def validate_requested_outcome(cls, value: str) -> str:
+        return _consultation_text(value, label="Kết quả cần tư vấn", minimum=3, maximum=1_000)
+
+
 class CaseReplyRequest(SupportRequestModel):
     body: str = Field(min_length=1, max_length=MAX_REPLY)
     expected_revision: int = Field(ge=1, le=1_000_000)
@@ -1028,6 +1279,90 @@ async def support_advisor(category: str = "general_support", account: dict = Dep
             "automation": "none",
         },
         status_name="read_only",
+    )
+
+
+@router.get("/consultation-brief/catalog")
+async def consultation_brief_catalog(_account: dict = Depends(require_account)):
+    """Return the closed Web consultation catalog without creating a record.
+
+    The catalog is intentionally account-gated, but it is not personalized,
+    does not read a Bot conversation and does not start a CRM, quote, payment
+    or provider flow.  The browser treats every field as untrusted again when
+    it renders or selects an item.
+    """
+
+    _require_support_enabled()
+    return envelope(
+        True,
+        "Chọn một nhu cầu để tạo bản nháp tư vấn trong Web; chưa có yêu cầu nào được tạo.",
+        data={
+            "catalog_version": CONSULTATION_BRIEF_CATALOG_VERSION,
+            "groups": _consultation_catalog_public(),
+            "boundaries": dict(CONSULTATION_BRIEF_BOUNDARIES),
+            "delivery": "web_view_only",
+            "persistence": "none",
+            "automation": "none",
+        },
+        status_name="read_only",
+    )
+
+
+@router.post("/consultation-brief/compose")
+async def compose_consultation_brief(
+    payload: ConsultationBriefComposeRequest,
+    _account: dict = Depends(require_csrf),
+):
+    """Produce one deterministic, non-persistent consultation draft.
+
+    This endpoint does not call ``ensure_copyfast_schema`` or ``transaction``
+    on purpose.  A customer must explicitly copy this returned draft into the
+    existing, CSRF/idempotent case form and submit that form separately before
+    any Support Desk record can exist.
+    """
+
+    _require_support_enabled()
+    service = CONSULTATION_BRIEF_SERVICES[payload.service_id]
+    selection = _consultation_service_public(service)
+    subject = _safe_line(
+        f"Tư vấn: {selection['title']}",
+        label="Chủ đề bản nháp",
+        minimum=3,
+        maximum=MAX_SUBJECT,
+    )
+    detail = _safe_text(
+        "\n".join((
+            f"Nhu cầu đã chọn: {selection['title']}",
+            f"Mục tiêu: {payload.goal}",
+            f"Bối cảnh hiện tại: {payload.current_context}",
+            f"Kết quả cần tư vấn: {payload.requested_outcome}",
+            "",
+            "Ghi chú: Đây là bản nháp do khách tự xác nhận trong Web; không phải báo giá, hợp đồng, lead, case hoặc cam kết xử lý.",
+        )),
+        label="Nội dung bản nháp",
+        minimum=3,
+        maximum=MAX_DETAIL,
+    )
+    return envelope(
+        True,
+        "Đã tạo bản nháp trong bộ nhớ Web. Bạn tự quyết định có đưa nó vào form yêu cầu hay không.",
+        data={
+            "catalog_version": CONSULTATION_BRIEF_CATALOG_VERSION,
+            "selection": selection,
+            "draft": {
+                "category": selection["category"],
+                "priority": "normal",
+                "subject": subject,
+                "detail": detail,
+            },
+            "boundaries": dict(CONSULTATION_BRIEF_BOUNDARIES),
+            "case_created": False,
+            "input_persisted": False,
+            "delivery": "web_view_only",
+            "persistence": "none",
+            "automation": "none",
+        },
+        status_name="draft",
     )
 
 

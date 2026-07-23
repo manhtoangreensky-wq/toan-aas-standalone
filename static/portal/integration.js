@@ -292,6 +292,12 @@
   // checklist response must never replace a newer selected category, route or
   // signed account projection.
   let supportAdvisorHydrationEpoch = 0;
+  // Consultation Brief has one catalog read and one non-persistent compose
+  // response. Keep both independently ordered so neither can cross a route
+  // change, signed-account refresh or a Support Desk failure.
+  let supportConsultationCatalogHydrationEpoch = 0;
+  let supportConsultationComposeRequestEpoch = 0;
+  let supportConsultationComposeInFlight = false;
   let supportCustomerDetailHydrationEpoch = 0;
   let supportAdminListHydrationEpoch = 0;
   let supportAdminDetailHydrationEpoch = 0;
@@ -1562,6 +1568,229 @@
     const category = String(value || "").trim().toLowerCase();
     if (!SUPPORT_CASE_CATEGORIES.has(category)) throw new Error("Hãy chọn một nhóm hỗ trợ Web hợp lệ.");
     return category;
+  }
+
+  function setSupportConsultationComposeBusy(busy) {
+    const form = document.querySelector('[data-portal-form][data-portal-action="support-consultation-compose"][data-portal-route="/support"]');
+    if (!form) return;
+    const controls = Array.from(form.querySelectorAll("input, textarea, select, button"));
+    const handoffControls = Array.from(document.querySelectorAll('[data-portal-action="support-consultation-handoff"][data-portal-route="/support"]'));
+    const allControls = controls.concat(handoffControls);
+    if (busy) {
+      form.setAttribute("aria-busy", "true");
+      allControls.forEach((control) => {
+        control.dataset.supportConsultationWasDisabled = control.disabled ? "true" : "false";
+        control.disabled = true;
+      });
+      const submit = form.querySelector('button[type="submit"]');
+      if (submit) {
+        submit.dataset.supportConsultationBusyLabel = submit.textContent || "";
+        submit.textContent = "Đang tạo bản nháp…";
+      }
+      return;
+    }
+    form.removeAttribute("aria-busy");
+    allControls.forEach((control) => {
+      const prior = control.dataset.supportConsultationWasDisabled;
+      if (prior === "false") control.disabled = false;
+      delete control.dataset.supportConsultationWasDisabled;
+    });
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit && Object.prototype.hasOwnProperty.call(submit.dataset, "supportConsultationBusyLabel")) {
+      submit.textContent = submit.dataset.supportConsultationBusyLabel;
+      delete submit.dataset.supportConsultationBusyLabel;
+    }
+  }
+
+  // Consultation Brief deliberately uses a second closed catalog rather than
+  // raw `support|*` Bot callbacks.  The expected mapping stays in the browser
+  // too, so a malformed server response cannot turn a visible selection into
+  // a different Support category or an unreviewed external action.
+  const SUPPORT_CONSULTATION_CATALOG_VERSION = "2026-07-23";
+  const SUPPORT_CONSULTATION_GROUP_IDS = Object.freeze(["premium", "custom_bot", "service"]);
+  const SUPPORT_CONSULTATION_GROUP_SERVICE_IDS = Object.freeze({
+    premium: Object.freeze(["web-premium-creator", "web-premium-shop", "web-premium-business", "web-premium-private"]),
+    custom_bot: Object.freeze(["web-custom-shop", "web-custom-content", "web-custom-support", "web-custom-internal", "web-custom-custom"]),
+    service: Object.freeze(["web-service-image", "web-service-video", "web-service-frame-video", "web-service-document", "web-service-voice", "web-service-package"])
+  });
+  const SUPPORT_CONSULTATION_SERVICE_META = Object.freeze({
+    "web-premium-creator": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-shop": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-business": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-private": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-custom-shop": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-content": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-support": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-internal": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-custom": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-service-image": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-frame-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-document": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-voice": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-package": Object.freeze({ group: "service", category: "service_consulting" })
+  });
+  const SUPPORT_CONSULTATION_BOUNDARY_KEYS = Object.freeze([
+    "case_auto_create", "lead_or_crm_write", "external_notification", "contact_collection",
+    "quote_or_contract", "payment_or_wallet", "bot_or_telegram", "provider_job_or_asset"
+  ]);
+  const SUPPORT_CONSULTATION_EMAIL_PATTERN = /(?<![A-Za-z0-9._%+-])[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})+(?![A-Za-z0-9.-])/i;
+  const SUPPORT_CONSULTATION_PHONE_PATTERN = /(?<!\d)(?:\+?84|0)(?:[\s().-]*\d){8,10}(?!\d)/;
+  const SUPPORT_CONSULTATION_CONTACT_LABEL_PATTERN = /\b(?:email|e-mail|zalo|telegram|phone|số\s*điện\s*thoại|so\s*dien\s*thoai|sđt|sdt)\s*(?:[:=]|là|la)\s*\S+/i;
+  const SUPPORT_CONSULTATION_TELEGRAM_HANDLE_PATTERN = /(?<![A-Za-z0-9._])@[A-Za-z][A-Za-z0-9_]{4,31}\b/;
+
+  function supportConsultationText(value, maximum, minimum = 3) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportConsultationDetail(value, maximum, minimum = 3) {
+    const text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportConsultationBoundaries(value) {
+    const boundaries = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    return SUPPORT_CONSULTATION_BOUNDARY_KEYS.every((key) => boundaries[key] === false)
+      && Object.keys(boundaries).length === SUPPORT_CONSULTATION_BOUNDARY_KEYS.length
+      ? { ...boundaries }
+      : null;
+  }
+
+  function supportConsultationServiceId(value) {
+    const serviceId = String(value || "").trim();
+    if (!Object.prototype.hasOwnProperty.call(SUPPORT_CONSULTATION_SERVICE_META, serviceId)) {
+      throw new Error("Hãy chọn một nhu cầu tư vấn Web hợp lệ.");
+    }
+    return serviceId;
+  }
+
+  function supportConsultationCatalogProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    const boundaries = data ? supportConsultationBoundaries(data.boundaries) : null;
+    const groups = data && Array.isArray(data.groups) ? data.groups : [];
+    if (!data || data.catalog_version !== SUPPORT_CONSULTATION_CATALOG_VERSION
+      || data.delivery !== "web_view_only" || data.persistence !== "none" || data.automation !== "none"
+      || !boundaries || groups.length !== SUPPORT_CONSULTATION_GROUP_IDS.length) {
+      return { catalog: {}, readState: "guarded" };
+    }
+    const seen = new Set();
+    const projectedGroups = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const source = groups[index] && typeof groups[index] === "object" && !Array.isArray(groups[index]) ? groups[index] : null;
+      const groupId = source ? String(source.id || "").trim() : "";
+      const title = source ? supportConsultationText(source.title, 120) : "";
+      const summary = source ? supportConsultationText(source.summary, 360) : "";
+      const expectedIds = SUPPORT_CONSULTATION_GROUP_SERVICE_IDS[groupId];
+      const services = source && Array.isArray(source.services) ? source.services : [];
+      if (!source || groupId !== SUPPORT_CONSULTATION_GROUP_IDS[index] || !title || !summary
+        || !Array.isArray(expectedIds) || services.length !== expectedIds.length) {
+        return { catalog: {}, readState: "guarded" };
+      }
+      const projectedServices = [];
+      for (let serviceIndex = 0; serviceIndex < services.length; serviceIndex += 1) {
+        const item = services[serviceIndex] && typeof services[serviceIndex] === "object" && !Array.isArray(services[serviceIndex]) ? services[serviceIndex] : null;
+        const serviceId = item ? String(item.id || "").trim() : "";
+        const meta = SUPPORT_CONSULTATION_SERVICE_META[serviceId];
+        const category = item ? String(item.category || "").trim().toLowerCase() : "";
+        const serviceTitle = item ? supportConsultationText(item.title, 140) : "";
+        const serviceSummary = item ? supportConsultationText(item.summary, 300) : "";
+        const prompt = item ? supportConsultationText(item.prompt, 320) : "";
+        if (!item || serviceId !== expectedIds[serviceIndex] || seen.has(serviceId)
+          || !meta || meta.group !== groupId || meta.category !== category || !SUPPORT_CASE_CATEGORIES.has(category)
+          || !serviceTitle || !serviceSummary || !prompt) {
+          return { catalog: {}, readState: "guarded" };
+        }
+        seen.add(serviceId);
+        projectedServices.push({ id: serviceId, category, title: serviceTitle, summary: serviceSummary, prompt });
+      }
+      projectedGroups.push({ id: groupId, title, summary, services: projectedServices });
+    }
+    if (seen.size !== Object.keys(SUPPORT_CONSULTATION_SERVICE_META).length) return { catalog: {}, readState: "guarded" };
+    return {
+      catalog: {
+        catalog_version: SUPPORT_CONSULTATION_CATALOG_VERSION,
+        groups: projectedGroups,
+        boundaries,
+        delivery: "web_view_only",
+        persistence: "none",
+        automation: "none"
+      },
+      readState: "ready"
+    };
+  }
+
+  function supportConsultationPreviewProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    const boundaries = data ? supportConsultationBoundaries(data.boundaries) : null;
+    const selection = data && data.selection && typeof data.selection === "object" && !Array.isArray(data.selection) ? data.selection : null;
+    const draft = data && data.draft && typeof data.draft === "object" && !Array.isArray(data.draft) ? data.draft : null;
+    const serviceId = selection ? String(selection.id || "").trim() : "";
+    const meta = SUPPORT_CONSULTATION_SERVICE_META[serviceId];
+    const category = selection ? String(selection.category || "").trim().toLowerCase() : "";
+    const title = selection ? supportConsultationText(selection.title, 140) : "";
+    const summary = selection ? supportConsultationText(selection.summary, 300) : "";
+    const prompt = selection ? supportConsultationText(selection.prompt, 320) : "";
+    const draftCategory = draft ? String(draft.category || "").trim().toLowerCase() : "";
+    const draftPriority = draft ? String(draft.priority || "").trim().toLowerCase() : "";
+    const subject = draft ? supportConsultationText(draft.subject, 180) : "";
+    const detail = draft ? supportConsultationDetail(draft.detail, 4000) : "";
+    if (!data || data.catalog_version !== SUPPORT_CONSULTATION_CATALOG_VERSION
+      || data.delivery !== "web_view_only" || data.persistence !== "none" || data.automation !== "none"
+      || data.case_created !== false || data.input_persisted !== false || !boundaries
+      || !meta || meta.category !== category || draftCategory !== category || draftPriority !== "normal"
+      || !title || !summary || !prompt || !subject || !detail) {
+      return { preview: {}, readState: "guarded" };
+    }
+    return {
+      preview: {
+        catalog_version: SUPPORT_CONSULTATION_CATALOG_VERSION,
+        selection: { id: serviceId, category, title, summary, prompt },
+        draft: { category, priority: "normal", subject, detail },
+        boundaries,
+        case_created: false,
+        input_persisted: false,
+        delivery: "web_view_only",
+        persistence: "none",
+        automation: "none"
+      },
+      readState: "ready"
+    };
+  }
+
+  function supportConsultationContactError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    return SUPPORT_CONSULTATION_EMAIL_PATTERN.test(text)
+      || SUPPORT_CONSULTATION_PHONE_PATTERN.test(text)
+      || SUPPORT_CONSULTATION_CONTACT_LABEL_PATTERN.test(text)
+      || SUPPORT_CONSULTATION_TELEGRAM_HANDLE_PATTERN.test(text)
+      ? "Consultation Brief dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung."
+      : "";
+  }
+
+  function supportConsultationComposePayload(fields, catalog) {
+    const serviceId = supportConsultationServiceId(fields.service_id);
+    const selected = catalog && Array.isArray(catalog.groups)
+      ? catalog.groups.flatMap((group) => Array.isArray(group.services) ? group.services : []).find((item) => item && item.id === serviceId)
+      : null;
+    if (!selected || selected.category !== SUPPORT_CONSULTATION_SERVICE_META[serviceId].category) {
+      throw new Error("Catalog tư vấn Web chưa sẵn sàng. Hãy tải lại trang rồi thử lại.");
+    }
+    const goal = String(fields.goal || "").replace(/\s+/g, " ").trim();
+    const currentContext = String(fields.current_context || "").replace(/\r\n?/g, "\n").trim();
+    const requestedOutcome = String(fields.requested_outcome || "").replace(/\r\n?/g, "\n").trim();
+    if (!supportConsultationText(goal, 600)) throw new Error("Mục tiêu cần từ 3 đến 600 ký tự hợp lệ.");
+    if (!supportConsultationDetail(currentContext, 1000)) throw new Error("Bối cảnh hiện tại cần từ 3 đến 1.000 ký tự hợp lệ.");
+    if (!supportConsultationDetail(requestedOutcome, 1000)) throw new Error("Kết quả cần tư vấn cần từ 3 đến 1.000 ký tự hợp lệ.");
+    const safetyError = validateWebSupportText(goal, currentContext, requestedOutcome);
+    if (safetyError) throw new Error(safetyError);
+    const contactError = supportConsultationContactError(goal, currentContext, requestedOutcome);
+    if (contactError) throw new Error(contactError);
+    return { service_id: serviceId, goal, current_context: currentContext, requested_outcome: requestedOutcome };
   }
 
   function validSupportRevision(value) {
@@ -10628,6 +10857,9 @@
     ++workboardSessionEpoch;
     ++supportSessionEpoch;
     ++supportAdvisorHydrationEpoch;
+    ++supportConsultationCatalogHydrationEpoch;
+    ++supportConsultationComposeRequestEpoch;
+    supportConsultationComposeInFlight = false;
     ++contentHandoffSessionEpoch;
     ++partnerCrmSessionEpoch;
     ++contentStudioSessionEpoch;
@@ -11502,6 +11734,11 @@
       // nor needs a CSRF token; the endpoint still verifies the session and
       // Support Desk feature gate before returning any guide.
       "support-advisor-view": Boolean(account && supportDeskEnabled),
+      // Consultation Brief is a signed Web-only catalog plus a CSRF-protected
+      // transient draft. It does not create a case; case creation keeps its
+      // existing independent capability below.
+      "support-consultation-view": Boolean(account && supportDeskEnabled),
+      "support-consultation-compose": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-create": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-reply": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-transition": Boolean(account && me.csrf_token && supportDeskEnabled),
@@ -11618,6 +11855,9 @@
     ++supportSessionEpoch;
     ++supportCustomerListHydrationEpoch;
     ++supportAdvisorHydrationEpoch;
+    ++supportConsultationCatalogHydrationEpoch;
+    ++supportConsultationComposeRequestEpoch;
+    supportConsultationComposeInFlight = false;
     ++supportCustomerDetailHydrationEpoch;
     ++supportAdminListHydrationEpoch;
     ++supportAdminDetailHydrationEpoch;
@@ -12282,6 +12522,11 @@
       supportAdvisor: {},
       supportAdvisorReadState: account && supportDeskEnabled ? "idle" : "guarded",
       supportAdvisorSelection: "general_support",
+      supportConsultationCatalog: {},
+      supportConsultationReadState: account && supportDeskEnabled ? "idle" : "guarded",
+      supportConsultationPreview: {},
+      supportConsultationSelection: "",
+      supportConsultationDraftInput: {},
       supportEvents: [],
       supportEventsReadState: account && supportDeskEnabled ? "loading" : "guarded",
       supportCaseDetail: {},
@@ -12894,7 +13139,10 @@
       else clearVideoPreviewProjection("guarded");
     }
     if (account && supportDeskEnabled) {
-      if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
+      if (currentPath === "/support") {
+        await Promise.all([hydrateSupportDesk(), hydrateSupportConsultationCatalog()]);
+      }
+      else if (currentPath === "/tickets") await hydrateSupportDesk();
       else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
       else if (currentPath === "/admin/support") await hydrateSupportAdmin();
       else if (supportAdminCaseIdFromPath(currentPath)) await hydrateSupportAdminCase(supportAdminCaseIdFromPath(currentPath));
@@ -12902,7 +13150,7 @@
       // Support pages never fall back to Bot tickets, generic admin data or a
       // stale browser cache when the local feature gate/session is unavailable.
       merge({
-        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportAttachmentAssets: [],
+        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportConsultationCatalog: {}, supportConsultationReadState: "guarded", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {}, supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportAttachmentAssets: [],
         supportCaseFilter: { q: "", state: "all", category: "" },
         supportCaseListing: supportCaseListingProjection({ q: "", state: "all", category: "" }, 0, {}, 0),
         supportReadState: "guarded",
@@ -16142,6 +16390,22 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function supportConsultationCatalogRequestIsCurrent(requestEpoch, sessionEpoch) {
+    return requestEpoch === supportConsultationCatalogHydrationEpoch
+      && sessionEpoch === supportSessionEpoch
+      && currentPortalPath() === "/support"
+      && base().supportDeskEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function supportConsultationComposeRequestIsCurrent(requestEpoch, sessionEpoch) {
+    return requestEpoch === supportConsultationComposeRequestEpoch
+      && sessionEpoch === supportSessionEpoch
+      && currentPortalPath() === "/support"
+      && base().supportDeskEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
   async function hydrateSupportAdvisor(categoryValue) {
     const category = supportAdvisorCategory(categoryValue);
     const requestEpoch = ++supportAdvisorHydrationEpoch;
@@ -16167,6 +16431,38 @@
       }
       merge({ supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: category });
       throw error;
+    }
+  }
+
+  async function hydrateSupportConsultationCatalog() {
+    const requestEpoch = ++supportConsultationCatalogHydrationEpoch;
+    ++supportConsultationComposeRequestEpoch;
+    supportConsultationComposeInFlight = false;
+    const sessionEpoch = supportSessionEpoch;
+    if (!supportConsultationCatalogRequestIsCurrent(requestEpoch, sessionEpoch)) {
+      return { catalog: {}, readState: "guarded", stale: true };
+    }
+    // The catalog and its resulting draft are page-memory only. Do not leave
+    // a prior account's selection or raw brief visible while the signed read
+    // is loading, and never write either to browser storage or URL state.
+    merge({ supportConsultationCatalog: {}, supportConsultationReadState: "loading", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {} });
+    try {
+      const result = await api("/support/consultation-brief/catalog");
+      if (!supportConsultationCatalogRequestIsCurrent(requestEpoch, sessionEpoch)) {
+        return { catalog: {}, readState: "guarded", stale: true };
+      }
+      const projection = supportConsultationCatalogProjection(result);
+      merge({ supportConsultationCatalog: projection.catalog, supportConsultationReadState: projection.readState, supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {} });
+      return projection;
+    } catch (error) {
+      if (!supportConsultationCatalogRequestIsCurrent(requestEpoch, sessionEpoch)) {
+        return { catalog: {}, readState: "guarded", stale: true };
+      }
+      // Catalog is an optional preparation panel. Its failure must not abort
+      // the normal Support Desk bootstrap; keep the panel guarded and let its
+      // narrow in-page retry action request a fresh closed catalog later.
+      merge({ supportConsultationCatalog: {}, supportConsultationReadState: "guarded", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {} });
+      return { catalog: {}, readState: "guarded", error };
     }
   }
 
@@ -16214,8 +16510,11 @@
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerListHydrationEpoch, sessionEpoch, currentPath)) return { stale: true };
       // Never retain an old account's support content after a failed scoped
       // read.  There is no Bot fallback and no browser-side case cache.
+      ++supportConsultationCatalogHydrationEpoch;
+      ++supportConsultationComposeRequestEpoch;
+      supportConsultationComposeInFlight = false;
       merge({
-        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportCaseFilter: filter,
+        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportConsultationCatalog: {}, supportConsultationReadState: "guarded", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {}, supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportCaseFilter: filter,
         supportCaseListing: supportCaseListingProjection(filter, offset, {}, 0), supportReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded", "/support": "guarded", "/tickets": "guarded" }
       });
@@ -28327,6 +28626,136 @@
         if (subjectField && typeof subjectField.scrollIntoView === "function") subjectField.scrollIntoView({ behavior: "auto", block: "center" });
         if (subjectField && typeof subjectField.focus === "function") subjectField.focus({ preventScroll: true });
         toast("Đã chọn nhóm trong form. Hãy tự viết chủ đề và nội dung trước khi gửi yêu cầu.");
+        return;
+      }
+      if (action === "support-consultation-catalog-retry") {
+        if (route !== "/support" || currentPortalPath() !== "/support" || !(base().capabilities && base().capabilities["support-consultation-view"] === true)) {
+          throw new Error("Catalog tư vấn chỉ khả dụng trong signed Web session.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const projection = await hydrateSupportConsultationCatalog();
+          if (!projection || projection.readState !== "ready") {
+            throw new Error("Catalog tư vấn chưa sẵn sàng. Không có dữ liệu cũ nào được dùng thay thế.");
+          }
+          toast("Đã tải lại catalog tư vấn an toàn trong Web.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-consultation-compose") {
+        if (route !== "/support" || currentPortalPath() !== "/support" || !(base().capabilities && base().capabilities["support-consultation-compose"] === true)) {
+          throw new Error("Cần signed Web session và CSRF để tạo bản nháp tư vấn.");
+        }
+        if (supportConsultationComposeInFlight) {
+          toast("Bản nháp đang được tạo. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        const catalogProjection = supportConsultationCatalogProjection({ data: base().supportConsultationCatalog });
+        if (base().supportConsultationReadState !== "ready" || catalogProjection.readState !== "ready") {
+          throw new Error("Catalog tư vấn Web chưa sẵn sàng. Hãy tải lại trang rồi thử lại.");
+        }
+        const payload = supportConsultationComposePayload(fields, catalogProjection.catalog);
+        // This is bounded signed-page state only. It keeps the customer's
+        // reviewed fields visible after a preview re-render, but never enters
+        // generic transient storage, a URL, service worker, or an API write.
+        merge({ supportConsultationDraftInput: payload });
+        const scope = `support:consultation-brief:compose:${payload.service_id}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Bản nháp đang được tạo. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        const requestEpoch = ++supportConsultationComposeRequestEpoch;
+        const sessionEpoch = supportSessionEpoch;
+        if (!supportConsultationComposeRequestIsCurrent(requestEpoch, sessionEpoch)) {
+          releaseSubmission(submission);
+          return;
+        }
+        supportConsultationComposeInFlight = true;
+        let acknowledged = false;
+        setSupportConsultationComposeBusy(true);
+        try {
+          const result = await api("/support/consultation-brief/compose", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+          });
+          acknowledged = true;
+          if (!supportConsultationComposeRequestIsCurrent(requestEpoch, sessionEpoch)) return;
+          const projection = supportConsultationPreviewProjection(result);
+          const currentCatalog = supportConsultationCatalogProjection({ data: base().supportConsultationCatalog });
+          if (projection.readState !== "ready" || currentCatalog.readState !== "ready") {
+            throw new Error("Máy chủ chưa trả bản nháp tư vấn hợp lệ. Không có yêu cầu nào được tạo.");
+          }
+          if (!currentCatalog.catalog.groups.some((group) => group.services.some((item) => item.id === projection.preview.selection.id && item.category === projection.preview.draft.category))) {
+            throw new Error("Bản nháp không còn khớp catalog tư vấn đang mở. Không có yêu cầu nào được tạo.");
+          }
+          merge({
+            supportConsultationPreview: projection.preview,
+            supportConsultationSelection: projection.preview.selection.id
+          });
+          toast(result.message || "Đã tạo bản nháp trong Web. Chưa có yêu cầu nào được tạo.");
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          if (supportConsultationComposeRequestIsCurrent(requestEpoch, sessionEpoch)) {
+            supportConsultationComposeInFlight = false;
+            setSupportConsultationComposeBusy(false);
+          }
+        }
+        return;
+      }
+      if (action === "support-consultation-handoff") {
+        if (route !== "/support" || currentPortalPath() !== "/support" || !(base().capabilities && base().capabilities["support-consultation-compose"] === true)) {
+          throw new Error("Bản nháp tư vấn chỉ khả dụng trong signed Web session hiện tại.");
+        }
+        if (supportConsultationComposeInFlight) {
+          throw new Error("Đang tạo bản nháp mới; hãy chờ hoàn tất trước khi đưa nội dung vào form yêu cầu.");
+        }
+        const catalogProjection = supportConsultationCatalogProjection({ data: base().supportConsultationCatalog });
+        const previewProjection = supportConsultationPreviewProjection({ data: base().supportConsultationPreview });
+        if (base().supportConsultationReadState !== "ready" || catalogProjection.readState !== "ready" || previewProjection.readState !== "ready") {
+          throw new Error("Hãy tạo một bản nháp tư vấn hợp lệ trước khi đưa vào form yêu cầu.");
+        }
+        const preview = previewProjection.preview;
+        const serviceIsCurrent = catalogProjection.catalog.groups.some((group) => group.services.some((item) => (
+          item.id === preview.selection.id && item.category === preview.draft.category
+        )));
+        if (!serviceIsCurrent || preview.draft.priority !== "normal") {
+          throw new Error("Bản nháp không còn khớp catalog tư vấn hiện tại. Không có yêu cầu nào được tạo.");
+        }
+        // Do not trust any service/category carried by the clicked DOM node.
+        // The strict, current server projection is the sole source for this
+        // local handoff, and the normal case form remains the only case write.
+        const categoryField = document.querySelector("#support-category");
+        const priorityField = document.querySelector("#support-priority");
+        const subjectField = document.querySelector("#support-subject");
+        const detailField = document.querySelector("#support-detail");
+        const categoryOptions = categoryField && categoryField.options ? Array.from(categoryField.options) : [];
+        const priorityOptions = priorityField && priorityField.options ? Array.from(priorityField.options) : [];
+        if (!categoryField || !priorityField || !subjectField || !detailField
+          || !categoryOptions.some((option) => String(option.value || "") === preview.draft.category)
+          || !priorityOptions.some((option) => String(option.value || "") === "normal")) {
+          throw new Error("Form yêu cầu Web chưa sẵn sàng. Hãy làm mới trang rồi thử lại.");
+        }
+        categoryField.value = preview.draft.category;
+        priorityField.value = "normal";
+        subjectField.value = preview.draft.subject;
+        detailField.value = preview.draft.detail;
+        [categoryField, priorityField, subjectField, detailField].forEach((field) => {
+          field.dispatchEvent(new Event("input", { bubbles: true }));
+          field.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        // Clear only after input/change has fed the normal form's own
+        // page-memory draft. This action never posts a case or navigates.
+        merge({ supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {} });
+        const mountedSubject = document.querySelector("#support-subject");
+        if (mountedSubject && typeof mountedSubject.scrollIntoView === "function") mountedSubject.scrollIntoView({ behavior: "auto", block: "center" });
+        if (mountedSubject && typeof mountedSubject.focus === "function") mountedSubject.focus({ preventScroll: true });
+        toast("Đã đưa bản nháp vào form. Hãy tự kiểm tra rồi bấm “Tạo yêu cầu” nếu muốn gửi.");
         return;
       }
       if (action === "support-cases-filter" || action === "support-cases-filter-clear") {

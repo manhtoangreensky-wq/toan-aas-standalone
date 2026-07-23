@@ -190,6 +190,11 @@ Production Web App for `app.toanaas.vn`.
   never auto-creates a case, classifies with AI, contacts Bot/Telegram or
   reads provider/job/payment state. See
   [`WEB_SUPPORT_ADVISOR_CONTRACT.md`](docs/migration/WEB_SUPPORT_ADVISOR_CONTRACT.md).
+  Consultation Brief adds a closed Premium/custom/service catalog and a
+  CSRF-protected, non-persistent draft that the customer may explicitly copy
+  into the same normal form; it never creates a case/lead, quote, contact,
+  payment or external action. See
+  [`WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md`](docs/migration/WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md).
 - `WEBAPP_AUTOPILOT_ENABLED` defaults to `false`. `/operations` and the
   staff-only `/admin/operations` can observe Web-native Support Desk metadata
   and a signed scheduler's bounded receipts. Automatic metadata triage is
@@ -283,6 +288,10 @@ private Bot bridge.
   The optional self-service checklist at `/support` is only a signed,
   read-only preparation aid and never creates or changes a case. See
   [`WEB_SUPPORT_ADVISOR_CONTRACT.md`](docs/migration/WEB_SUPPORT_ADVISOR_CONTRACT.md).
+  Consultation Brief is likewise a signed Web-only preparation step: it
+  produces a page-memory draft and only fills the normal form after an
+  explicit customer confirmation. See
+  [`WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md`](docs/migration/WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md).
 - `/project-packages` is a distinct Web-native private ZIP export of a
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See

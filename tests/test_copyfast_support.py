@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 import importlib
 import sqlite3
 import sys
+import time
 
 from fastapi.testclient import TestClient
 
@@ -985,3 +986,196 @@ def test_support_advisor_is_signed_closed_and_has_no_support_or_audit_write(tmp_
         response = disabled.get("/api/v1/support/advisor", params={"category": "general_support"})
         assert response.status_code == 503
         assert response.json()["ok"] is False
+
+
+def test_support_consultation_brief_is_signed_csrf_bound_and_never_writes_a_case(tmp_path, monkeypatch):
+    """A consultation draft remains transient until the normal case form is submitted."""
+
+    expected_boundaries = {
+        "case_auto_create": False,
+        "lead_or_crm_write": False,
+        "external_notification": False,
+        "contact_collection": False,
+        "quote_or_contract": False,
+        "payment_or_wallet": False,
+        "bot_or_telegram": False,
+        "provider_job_or_asset": False,
+    }
+    expected_ids = {
+        "web-premium-creator", "web-premium-shop", "web-premium-business", "web-premium-private",
+        "web-custom-shop", "web-custom-content", "web-custom-support", "web-custom-internal", "web-custom-custom",
+        "web-service-image", "web-service-video", "web-service-frame-video", "web-service-document", "web-service-voice", "web-service-package",
+    }
+    payload = {
+        "service_id": "web-custom-content",
+        "goal": "Chuẩn hóa quy trình nội dung cho một đội nhỏ",
+        "current_context": "Đội đang duyệt ý tưởng và kịch bản bằng nhiều tài liệu rời.",
+        "requested_outcome": "Muốn hiểu rõ phạm vi workflow Web phù hợp trước khi tự gửi yêu cầu.",
+    }
+
+    with make_client(tmp_path, monkeypatch) as client:
+        anonymous = client.get("/api/v1/support/consultation-brief/catalog")
+        assert anonymous.status_code == 401
+
+        csrf = register_and_login(client, "support-consultation@example.com")
+        support = importlib.import_module("copyfast_support")
+        assert set(support.CONSULTATION_BRIEF_SERVICES) == expected_ids
+
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            before = {
+                table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("web_support_cases", "web_support_messages", "web_support_events", "web_audit_events")
+            }
+
+        def forbidden_side_effect(*_args, **_kwargs):
+            raise AssertionError("Consultation Brief must not reach support DB or audit helpers")
+
+        # Catalog/compose are intentionally pure, non-persistent calculations.
+        # Fail the test if a later refactor accidentally reaches any Support
+        # schema, transaction, or audit helper even before a case could exist.
+        monkeypatch.setattr(support, "ensure_copyfast_schema", forbidden_side_effect)
+        monkeypatch.setattr(support, "transaction", forbidden_side_effect)
+        monkeypatch.setattr(support, "_record_audit", forbidden_side_effect)
+
+        catalog = client.get("/api/v1/support/consultation-brief/catalog")
+        assert catalog.status_code == 200
+        assert catalog.headers["cache-control"] == "no-store, private"
+        catalog_data = catalog.json()["data"]
+        assert catalog.json()["status"] == "read_only"
+        assert catalog_data["catalog_version"] == support.CONSULTATION_BRIEF_CATALOG_VERSION
+        assert catalog_data["delivery"] == "web_view_only"
+        assert catalog_data["persistence"] == "none"
+        assert catalog_data["automation"] == "none"
+        assert catalog_data["boundaries"] == expected_boundaries
+        assert [group["id"] for group in catalog_data["groups"]] == ["premium", "custom_bot", "service"]
+        assert {item["id"] for group in catalog_data["groups"] for item in group["services"]} == expected_ids
+        assert all("support|" not in item["id"] for group in catalog_data["groups"] for item in group["services"])
+
+        denied = client.post("/api/v1/support/consultation-brief/compose", json=payload)
+        assert denied.status_code == 403
+        assert denied.json()["error_code"] == "REQUEST_DENIED"
+
+        composed = client.post(
+            "/api/v1/support/consultation-brief/compose",
+            headers={"X-CSRF-Token": csrf},
+            json=payload,
+        )
+        assert composed.status_code == 200
+        body = composed.json()
+        assert body["ok"] is True
+        assert body["status"] == "draft"
+        data = body["data"]
+        assert data["catalog_version"] == support.CONSULTATION_BRIEF_CATALOG_VERSION
+        assert data["selection"]["id"] == payload["service_id"]
+        assert data["draft"]["category"] == "custom_bot_lead"
+        assert data["draft"]["priority"] == "normal"
+        assert data["draft"]["subject"] == "Tư vấn: Quy trình nội dung"
+        assert payload["goal"] in data["draft"]["detail"]
+        assert data["case_created"] is False
+        assert data["input_persisted"] is False
+        assert data["delivery"] == "web_view_only"
+        assert data["persistence"] == "none"
+        assert data["automation"] == "none"
+        assert data["boundaries"] == expected_boundaries
+
+        for invalid_payload in (
+            {**payload, "service_id": "support|premium"},
+            {**payload, "service_id": "web-unknown"},
+            {**payload, "goal": "api_key=super-secret-value-should-not-pass"},
+            {**payload, "current_context": "Mã giao dịch: 123456 cần được xem xét"},
+            {**payload, "requested_outcome": "Hãy liên hệ contact@example.com để trao đổi"},
+            {**payload, "current_context": "Số điện thoại của tôi là 0912345678"},
+            {**payload, "requested_outcome": "Zalo: trao đổi riêng trước khi gửi yêu cầu"},
+            {**payload, "goal": "Hãy nhắn @toanaas_support để trao đổi"},
+            {**payload, "unexpected": "browser fields are forbidden"},
+        ):
+            rejected = client.post(
+                "/api/v1/support/consultation-brief/compose",
+                headers={"X-CSRF-Token": csrf},
+                json=invalid_payload,
+            )
+            assert rejected.status_code == 422
+
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            after = {
+                table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in before
+            }
+        assert after == before
+
+    with make_client(tmp_path, monkeypatch, support_enabled=False) as disabled:
+        csrf = register_and_login(disabled, "support-consultation-disabled@example.com")
+        assert disabled.get("/api/v1/support/consultation-brief/catalog").status_code == 503
+        assert disabled.post(
+            "/api/v1/support/consultation-brief/compose",
+            headers={"X-CSRF-Token": csrf},
+            json=payload,
+        ).status_code == 503
+
+
+def test_support_consultation_brief_has_one_fixed_pre_route_rate_limit_bucket(tmp_path, monkeypatch):
+    """Both canonical and trailing-slash requests are guarded before parsing/CSRF."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        register_and_login(client, "support-consultation-rate@example.com")
+        app_module = sys.modules["app"]
+        app_module._auth_rate_windows.clear()
+        key = "support-consultation-brief-compose:testclient"
+        app_module._auth_rate_windows[key] = [time.monotonic()] * 30
+
+        for path in (
+            "/api/v1/support/consultation-brief/compose",
+            "/api/v1/support/consultation-brief/compose/",
+        ):
+            guarded = client.post(path, json={})
+            assert guarded.status_code == 429
+            body = guarded.json()
+            assert body["error_code"] == "AUTH_RATE_LIMITED"
+            assert body["status"] == "guarded"
+
+
+def test_support_consultation_brief_rejects_oversized_raw_bodies_before_router(tmp_path, monkeypatch):
+    """Both route spellings receive the same pre-parse cap and no case write."""
+
+    expected_boundary = {
+        "catalog_version": "2026-07-23",
+        "boundaries": {
+            "case_auto_create": False,
+            "lead_or_crm_write": False,
+            "external_notification": False,
+            "contact_collection": False,
+            "quote_or_contract": False,
+            "payment_or_wallet": False,
+            "bot_or_telegram": False,
+            "provider_job_or_asset": False,
+        },
+        "case_created": False,
+        "input_persisted": False,
+        "delivery": "web_view_only",
+        "persistence": "none",
+        "automation": "none",
+    }
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "support-consultation-body@example.com")
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            before = conn.execute("SELECT COUNT(*) FROM web_support_cases").fetchone()[0]
+
+        raw = b'{"padding":"' + (b"x" * (17 * 1024)) + b'"}'
+        for path in (
+            "/api/v1/support/consultation-brief/compose",
+            "/api/v1/support/consultation-brief/compose/",
+        ):
+            rejected = client.post(
+                path,
+                headers={"X-CSRF-Token": csrf, "Content-Type": "application/json"},
+                content=raw,
+                follow_redirects=False,
+            )
+            assert rejected.status_code == 413
+            assert rejected.json()["error_code"] == "WEB_SUPPORT_CONSULTATION_BRIEF_BODY_TOO_LARGE"
+            assert rejected.headers["cache-control"] == "no-store, private"
+            assert rejected.json()["data"] == expected_boundary
+
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            after = conn.execute("SELECT COUNT(*) FROM web_support_cases").fetchone()[0]
+        assert after == before
