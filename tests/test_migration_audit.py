@@ -2481,7 +2481,7 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     routes = {"/support", "/tickets", "/admin", "/{page_path:path}"}
     evidence = {"file": "bot.py", "line": 1}
 
-    assert not any(prefix in {"support|", "ticket|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert not any(prefix in {"support|", "ticket|", "feedback|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
 
     customer_identifiers = (
         "support|start",
@@ -2508,6 +2508,23 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapped["source_dispositions"]
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
+
+    for identifier in (
+        "feedback|start",
+        "feedback|cat|refund",
+        "feedback|cat|payment_topup",
+        "feedback|cancel",
+        "FEEDBACK|CAT|REFUND",
+        "feedback|cat|refund|future",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
+        assert "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION" in mapped["source_dispositions"]
 
     for identifier in (
         "ticket|admin",
@@ -2543,6 +2560,8 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         ("TICKET|ST|{*}|{*}", "admin"),
         ("ticket|pv|{*}|future", "customer"),
         ("support|future|{*}", "customer"),
+        ("feedback|cat|{*}", "customer"),
+        ("FEEDBACK|CAT|{*}", "customer"),
     ):
         mapped = audit._map_callback_template(template, evidence, routes)
         assert mapped is not None
@@ -2562,6 +2581,8 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     InlineKeyboardButton("attachment", callback_data=f"ticket|attach|{ticket_id}")
     InlineKeyboardButton("status", callback_data=f"ticket|st|{ticket_id}|refund_pending")
     InlineKeyboardButton("admin", callback_data=f"ticket|{admin_kind}|{ticket_id}")
+    InlineKeyboardButton("feedback", callback_data="feedback|cat|refund")
+    InlineKeyboardButton("feedback category", callback_data=f"feedback|cat|{service_type}")
 ''',
         encoding="utf-8",
     )
@@ -2577,13 +2598,16 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert templates["ticket|attach|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|st|{*}|refund_pending"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|{*}|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert callbacks["feedback|cat|refund"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["feedback|cat|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     contract = (tmp_path / "docs" / "SUPPORT_TICKET_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "support\\|*" in contract
     assert "ticket\\|*" in contract
+    assert "feedback\\|*" in contract
     assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
-    assert "Bot Support/Ticket callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
-    assert "Bot Support/Ticket callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Support/Ticket/Feedback callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
 
 
 def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:

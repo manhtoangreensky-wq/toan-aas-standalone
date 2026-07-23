@@ -7342,11 +7342,23 @@
         "file": "bot.py",
         "line": 38643
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|document_pdf",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7354,11 +7366,23 @@
         "file": "bot.py",
         "line": 38645
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|feature_request",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7366,11 +7390,23 @@
         "file": "bot.py",
         "line": 38642
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|image_error",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7378,11 +7414,23 @@
         "file": "bot.py",
         "line": 38645
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|other",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7390,11 +7438,23 @@
         "file": "bot.py",
         "line": 38644
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|package_combo",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7402,23 +7462,47 @@
         "file": "bot.py",
         "line": 38642
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|payment_topup",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 38644
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|refund",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7426,11 +7510,23 @@
         "file": "bot.py",
         "line": 38643
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|cat|video_error",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7438,11 +7534,23 @@
         "file": "bot.py",
         "line": 46984
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|start",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7450,11 +7558,23 @@
         "file": "bot.py",
         "line": 47030
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|start",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7462,11 +7582,23 @@
         "file": "bot.py",
         "line": 47042
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|start",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7474,11 +7606,23 @@
         "file": "bot.py",
         "line": 47053
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|start",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -7486,11 +7630,23 @@
         "file": "bot.py",
         "line": 60051
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "feedback",
+      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
       "source": "feedback|start",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
+        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/tickets"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -67365,6 +67521,33 @@
       ]
     },
     {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 13,
+      "family": "feedback",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "feedback|cat|document_pdf",
+        "feedback|cat|feature_request",
+        "feedback|cat|image_error",
+        "feedback|cat|other",
+        "feedback|cat|package_combo",
+        "feedback|cat|payment_topup",
+        "feedback|cat|refund",
+        "feedback|cat|video_error",
+        "feedback|start"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "callback_data"
+      ]
+    },
+    {
       "authority": "Canonical Bot admin or separate Web admin archive",
       "candidate_boundary": "/admin",
       "count": 11,
@@ -67612,7 +67795,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 838,
+      "count": 851,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -67668,6 +67851,11 @@
         {
           "count": 22,
           "family": "docflow",
+          "priority": "P1"
+        },
+        {
+          "count": 13,
+          "family": "feedback",
           "priority": "P1"
         },
         {
@@ -67904,12 +68092,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 78.18,
+  "mapping_coverage_percent": 77.84,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1676,
+    "COPIED_GUARDED": 1663,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 838,
+    "NEEDS_FEATURE_DISPOSITION": 851,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -67931,7 +68119,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 78.18,
+  "safe_disposition_coverage_percent": 77.84,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2841,
@@ -67941,15 +68129,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3840,
-    "resolved_static_source_count": 3002,
+    "resolved_static_source_count": 2989,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3951,
     "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
-    "unresolved_source_count": 838
+    "unresolved_source_count": 851
   },
-  "static_web_surface_coverage_percent": 43.65,
+  "static_web_surface_coverage_percent": 43.31,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
