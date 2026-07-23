@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1910,
+      "line": 1909,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,17 +179,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4322,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
       "line": 4330,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "line": 4338,
+      "token": "<dynamic:callback_data>"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 4346,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9411,
+      "line": 9493,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6931,
+      "line": 6987,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6813,7 +6813,7 @@
         "copyfast_web_engine.py",
         "customer_api.py"
       ],
-      "occurrences": 981,
+      "occurrences": 983,
       "provider": "PayOS"
     },
     {
@@ -7041,7 +7041,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2774,
+      "occurrences": 2804,
       "provider": "Telegram"
     }
   ],
@@ -12808,10 +12808,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 294,
-  "source_files_scanned": 294,
-  "source_fingerprint_sha256": "b83d571d08a563f4413c13a02737cc11887cddc52189651c775a2f97932f7fc0",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast98-quick-image-case-boundary",
+  "source_files_discovered": 295,
+  "source_files_scanned": 295,
+  "source_fingerprint_sha256": "e5d428704b29582affc0c7bb95413f5054d0e6c2ed71631b66b407dd011175d1",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast99-create-media-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

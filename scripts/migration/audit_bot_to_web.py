@@ -777,7 +777,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("license_music|", "/media-workspace", "customer"),
     ("select_media|", "/media-workspace", "customer"),
     ("play_media|", "/media-workspace", "customer"),
-    ("create_media|", "/media-factory", "customer"),
     ("imgtool|", "/image", "customer"),
     ("prov|", "/image", "customer"),
     # Payment namespaces stay at a canonical, explicitly guarded entry point.
@@ -2670,9 +2669,18 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "create_media": {
         "priority": "P1",
-        "candidate_boundary": "/media-factory",
-        "authority": "Web-native planning",
-        "next_contract": "Map Quick Idea choices to an explicit Media Factory blueprint; media generation and provider calls remain unavailable until a separate runtime exists.",
+        "candidate_boundary": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED",
+        "authority": "Canonical Bot Telegram Media Creator state; separate Web-native contract required",
+        "next_contract": "Keep residual create_media callbacks outside generic routes. Exact cancellation and finite Quick Image dispositions have their own contracts; every other menu/tier/aspect/confirmation/future source requires handler-level review and a separately signed Web-native contract before it gains any browser meaning.",
+        "source_dispositions": (
+            "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen Bot create_media handler clears/redraws Telegram state and can select media/tier/aspect, consume confirmations, inspect guards or enter provider/job/payment branches. A callback label is not a Web Media Factory, membership or video feature action.",
     },
     "marketing": {
         "priority": "P1",
@@ -5486,6 +5494,51 @@ def _map_media_creator_cancel_callback(
     return None
 
 
+def _media_creator_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for a Media Creator callback without its own Web contract."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "media_creator_callback_requires_source_review",
+        "source_dispositions": (
+            "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual "
+            "actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a "
+            "confirmation token, create a canonical checkout/job transition, or enter a future branch. "
+            "Only the separately reviewed exact cancellation and Quick Image contracts may receive their "
+            "own dispositions; every other spelling requires a new Web-native contract."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_residual_media_creator_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Keep all non-contracted ``create_media`` actions out of generic routes."""
+
+    if not str(identifier or "").casefold().startswith("create_media|"):
+        return None
+    return _media_creator_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_translation_source_intake_callback(
     identifier: str,
     source_kind: str,
@@ -6442,6 +6495,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
+    residual_media_creator_mapping = _map_residual_media_creator_callback(identifier, source_kind, evidence)
+    if residual_media_creator_mapping is not None:
+        return residual_media_creator_mapping
     if token.startswith("docflow|"):
         return _map_docflow_callback(identifier, source_kind, evidence)
     if token.startswith("archive|"):
@@ -7664,6 +7720,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # reviewed literals are handled above by _map_callback; a template
         # must remain an explicit source-review boundary.
         return _map_interface_locale_callback(template, "callback_template", evidence, existing_routes)
+    media_creator_cancel_mapping = _map_media_creator_cancel_callback(template, "callback_template", evidence)
+    if media_creator_cancel_mapping is not None:
+        return media_creator_cancel_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -7677,6 +7736,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         or token.startswith("shopai|package|")
     ):
         return _quick_image_planner_source_review_mapping(template, "callback_template", evidence)
+    residual_media_creator_mapping = _map_residual_media_creator_callback(template, "callback_template", evidence)
+    if residual_media_creator_mapping is not None:
+        return residual_media_creator_mapping
     if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         # These callbacks embed a Bot note identifier. `delete_yes` is a
         # canonical Bot write, while view/delete resolve the same Bot row for
@@ -8936,6 +8998,15 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_MEDIA_CREATOR_CANCEL_OR_PENDING_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET, NO_WEB_NAVIGATION_OR_BROWSER_ACTION, NO_RUNTIME_CLAIM",
         ],
     ]
+    media_creator_contract_rows = [
+        [
+            "all other create_media|* literals/templates, including main/support/pricing/trend, image/video tier/aspect and generic add/skip/choice/confirm patterns",
+            "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED",
+            "media_creator_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "no Web route, browser reset/history action, provider/job/wallet/payment/output/delivery claim",
+        ],
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -9120,6 +9191,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`POSTBACK_READINESS_CALLBACK_CONTRACT.md`](POSTBACK_READINESS_CALLBACK_CONTRACT.md) — exact Bot postback-hint disposition: fresh canonical-admin readiness guidance only; configuration, connection material, ingress, attribution and financial effects stay Bot-canonical.\n"
         + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
         + "- [`MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md) — exact Bot Media Creator cancellation stays Telegram-only because it clears broad Bot-local pending state; Web never resets drafts, session, history or navigation from that callback.\n"
+        + "- [`MEDIA_CREATOR_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CALLBACK_CONTRACT.md) — residual Bot Media Creator callbacks remain explicit source-review boundaries; no generic callback opens Media Factory, membership or a video feature route.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -9187,6 +9259,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             media_creator_cancel_contract_rows,
         )
         + "\n\nThe reviewed literal is **not** a browser cancel, back or reset action. The standalone Web must not navigate to a dashboard, mutate a global draft/session, clear unrelated Web state, replay the Telegram message, invoke a provider/job/payment operation, or claim that any external work was cancelled. A Web-native workflow may define its own scoped cancel control only from its own signed draft contract. Case variants, suffixes and future `create_media|*` values remain source-review-required and cannot inherit this Bot-only disposition.\n",
+    )
+    write(
+        "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
+        "# Media Creator residual callback contract\n\n"
+        "The frozen Bot dispatches `create_media|*` through one Telegram Media Creator handler. Its residual actions can redraw Telegram menus, clear per-user pending state, select media/tier/aspect, consume confirmation state, inspect guards, or enter a provider/job/payment path. They are not browser controls or Web feature launches.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Status", "Required boundary"],
+            media_creator_contract_rows,
+        )
+        + "\n\nExact `create_media|cancel` is covered separately by `MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md`. Only the finite lowercase Quick Image literals/templates in `QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md` retain their own fresh Planner or canonical Bot-only dispositions. Every remaining case variant, suffix, tier/aspect, menu, support/pricing/trend or future `create_media|*` source must receive an explicit Web-native contract before it may gain any browser meaning. In particular it never becomes `/media-factory`, `/membership`, a video feature route, browser back/reset, provider/job/wallet/PayOS action, output, asset or delivery claim.\n",
     )
     write(
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",

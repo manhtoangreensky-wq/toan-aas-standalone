@@ -5652,11 +5652,21 @@
         "file": "bot.py",
         "line": 92112
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|image_tier_low",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -5664,11 +5674,21 @@
         "file": "bot.py",
         "line": 92114
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|image_tier_standard",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6640,11 +6660,21 @@
         "file": "bot.py",
         "line": 45357
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6652,11 +6682,21 @@
         "file": "bot.py",
         "line": 45366
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6664,11 +6704,21 @@
         "file": "bot.py",
         "line": 45372
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6676,11 +6726,21 @@
         "file": "bot.py",
         "line": 45376
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6688,11 +6748,21 @@
         "file": "bot.py",
         "line": 45405
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6700,11 +6770,21 @@
         "file": "bot.py",
         "line": 45415
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6712,11 +6792,21 @@
         "file": "bot.py",
         "line": 45422
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6724,11 +6814,21 @@
         "file": "bot.py",
         "line": 69331
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6736,11 +6836,21 @@
         "file": "bot.py",
         "line": 92113
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6748,11 +6858,21 @@
         "file": "bot.py",
         "line": 98304
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|quick_video",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6760,11 +6880,21 @@
         "file": "bot.py",
         "line": 69327
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|video_tier_basic",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -6772,11 +6902,21 @@
         "file": "bot.py",
         "line": 69328
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|video_tier_common",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46614,11 +46754,21 @@
         "file": "bot.py",
         "line": 92153
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|image_tier_{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46626,11 +46776,21 @@
         "file": "bot.py",
         "line": 92174
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|image_tier_{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46678,11 +46838,21 @@
         "file": "bot.py",
         "line": 96933
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|video_tier_{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46690,11 +46860,21 @@
         "file": "bot.py",
         "line": 91653
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_add",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46702,11 +46882,21 @@
         "file": "bot.py",
         "line": 91831
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_add",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46714,11 +46904,21 @@
         "file": "bot.py",
         "line": 91858
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_aspect_{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46726,11 +46926,21 @@
         "file": "bot.py",
         "line": 91747
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_choice",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46738,11 +46948,21 @@
         "file": "bot.py",
         "line": 91830
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_confirm",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -46750,11 +46970,21 @@
         "file": "bot.py",
         "line": 91654
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "create_media",
+      "resolution": "media_creator_callback_requires_source_review",
       "source": "create_media|{*}_skip",
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches `create_media|*` through a Telegram Media Creator handler. Residual actions can clear pending state, redraw a Bot menu, select a media/tier/aspect, consume a confirmation token, create a canonical checkout/job transition, or enter a future branch. Only the separately reviewed exact cancellation and Quick Image contracts may receive their own dispositions; every other spelling requires a new Web-native contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-factory"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -62191,6 +62421,41 @@
       ]
     },
     {
+      "authority": "Canonical Bot Telegram Media Creator state; separate Web-native contract required",
+      "candidate_boundary": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED",
+      "count": 23,
+      "family": "create_media",
+      "next_contract": "Keep residual create_media callbacks outside generic routes. Exact cancellation and finite Quick Image dispositions have their own contracts; every other menu/tier/aspect/confirmation/future source requires handler-level review and a separately signed Web-native contract before it gains any browser meaning.",
+      "priority": "P1",
+      "sample_sources": [
+        "create_media|image_tier_low",
+        "create_media|image_tier_standard",
+        "create_media|image_tier_{*}",
+        "create_media|quick_video",
+        "create_media|video_tier_basic",
+        "create_media|video_tier_common",
+        "create_media|video_tier_{*}",
+        "create_media|{*}_add",
+        "create_media|{*}_aspect_{*}",
+        "create_media|{*}_choice",
+        "create_media|{*}_confirm",
+        "create_media|{*}_skip"
+      ],
+      "source_dispositions": [
+        "BOT_MEDIA_CREATOR_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot create_media handler clears/redraws Telegram state and can select media/tier/aspect, consume confirmations, inspect guards or enter provider/job/payment branches. A callback label is not a Web Media Factory, membership or video feature action.",
+      "source_kinds": [
+        "callback_data",
+        "callback_template"
+      ]
+    },
+    {
       "authority": "Bot pending state remains Bot-owned; Web tools are independently Web-native",
       "candidate_boundary": "/document-workspace + independent /documents/* tools",
       "count": 22,
@@ -62424,7 +62689,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 481,
+      "count": 504,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -62450,6 +62715,11 @@
         {
           "count": 33,
           "family": "tvflow",
+          "priority": "P1"
+        },
+        {
+          "count": 23,
+          "family": "create_media",
           "priority": "P1"
         },
         {
@@ -62537,7 +62807,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 62,
+      "count": 71,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -62681,12 +62951,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 87.47,
+  "mapping_coverage_percent": 86.88,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2080,
+    "COPIED_GUARDED": 2057,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 481,
+    "NEEDS_FEATURE_DISPOSITION": 504,
     "TELEGRAM_ONLY": 518
   },
   "metric_scope": {
@@ -62708,7 +62978,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 87.47,
+  "safe_disposition_coverage_percent": 86.88,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2841,
@@ -62718,15 +62988,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3840,
-    "resolved_static_source_count": 3359,
+    "resolved_static_source_count": 3336,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3951,
     "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 62,
-    "unresolved_source_count": 481
+    "unresolved_callback_templates": 71,
+    "unresolved_source_count": 504
   },
-  "static_web_surface_coverage_percent": 54.17,
+  "static_web_surface_coverage_percent": 53.57,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

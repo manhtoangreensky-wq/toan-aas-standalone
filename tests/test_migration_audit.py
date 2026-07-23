@@ -111,6 +111,7 @@ async def dashboard():
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "BILLING_MENU_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
+        "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
@@ -2100,6 +2101,81 @@ def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_na
     assert "create_media|cancel" in contract
     assert "not** a browser cancel, back or reset action" in contract
     assert "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_residual_media_creator_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
+    """Residual Media Creator state must never inherit keyword/namespace routes."""
+
+    audit = _load_audit_module()
+    routes = {"/media-factory", "/membership", "/features/video", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "create_media|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    for token in (
+        "create_media|main",
+        "create_media|support",
+        "create_media|pricing",
+        "create_media|quick_video",
+        "create_media|image_tier_low",
+        "create_media|video_tier_basic",
+        "CREATE_MEDIA|QUICK_VIDEO",
+        "create_media|future_action",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "media_creator_callback_requires_source_review"
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "create_media|image_tier_{*}",
+        "create_media|video_tier_{*}",
+        "create_media|{*}_add",
+        "create_media|{*}_confirm",
+        "create_media|{*}_aspect_{*}",
+        "CREATE_MEDIA|VIDEO_TIER_{*}",
+        "create_media|future_{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "media_creator_callback_requires_source_review"
+
+    assert audit._map_callback("create_media|quick_image", "callback_data", evidence, routes)["target"] == "/image/quick-planner"
+    assert audit._map_callback("create_media|cancel", "callback_data", evidence, routes)["target"] == "TELEGRAM_ONLY"
+    assert audit._map_callback_template("create_media|qi_ratio_{*}", evidence, routes)["target"] == "/image/quick-planner"
+    assert audit._map_callback_template("create_media|qi_tier_{*}", evidence, routes)["target"] == "TELEGRAM_ONLY"
+    assert audit._map_callback_template("create_media|cancel_{*}", evidence, routes)["target"] == "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def media_creator_keyboard(tier):
+    InlineKeyboardButton("Quick video", callback_data="create_media|quick_video")
+    InlineKeyboardButton("Image tier", callback_data="create_media|image_tier_low")
+    InlineKeyboardButton("Video tier", callback_data=f"create_media|video_tier_{tier}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert callbacks["create_media|quick_video"]["target"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+    assert callbacks["create_media|image_tier_low"]["target"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+    assert templates["create_media|video_tier_{*}"]["target"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+    fallback = next(item for item in result["parity_gap"]["feature_disposition_backlog"] if item["family"] == "create_media")
+    assert fallback["candidate_boundary"] == "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED"
+    assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in fallback["source_dispositions"]
+    contract = (tmp_path / "docs" / "MEDIA_CREATOR_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED" in contract
+    assert "never becomes `/media-factory`" in contract
+    assert "MEDIA_CREATOR_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
 def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigation() -> None:
