@@ -115,6 +115,7 @@ async def dashboard():
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "SHOPAI_CALLBACK_CONTRACT.md",
         "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md",
+        "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -129,6 +130,7 @@ async def dashboard():
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
+    assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -1871,7 +1873,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
         "videodub|type|{*}": "/dubbing",
         "videoaddon|export|{*}": "/video/add-ons",
-        "manual|history|{*}": "/wallet/topup",
     }
     for template, target in expected.items():
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -2193,6 +2194,117 @@ def shopai_video_job_keyboard(task_id, job_id):
     assert "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED" in contract
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "ShopAI Video Job status/main/retry" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_manual_payment_callbacks_out_of_web_routes(tmp_path: Path) -> None:
+    """Telegram bill/deposit IDs must never become browser wallet inputs."""
+
+    audit = _load_audit_module()
+    routes = {"/wallet/topup", "/wallet/history", "/admin/payments", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "manual|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.MANUAL_PAYMENT_CUSTOMER_TELEGRAM_ONLY_CALLBACK_TEMPLATES == {
+        "manual|start|{*}|{*}",
+        "manual|currency|{*}|{*}",
+        "manual|currency|VND|{*}",
+        "manual|currency|USD|{*}",
+        "manual|currency|CNY|{*}",
+        "manual|history|{*}",
+        "manual|vndamount|{*}|{*}",
+        "manual|menu|{*}",
+        "manual|method|{*}|{*}",
+        "manual|fxamount|{*}|{*}|{*}",
+        "manual|fxcustom|{*}|{*}",
+        "manual|fxmethod|{*}|{*}|{*}|{*}",
+        "manual|fxmethod|CNY|{*}|momo_tuithantai|{*}",
+        "manual|fxmethod|CNY|{*}|usdt_trc20|{*}",
+        "manual|fxmethod|CNY|{*}|zalopay_merchant|{*}",
+        "manual|fxmethod|CNY|{*}|zalopay_personal|{*}",
+        "manual|fxmethod|USD|{*}|usdt_trc20|{*}",
+        "manual|await_bill|{*}",
+    }
+    assert audit.MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES == {
+        "manual|approve|{*}",
+        "manual|approve_expected|{*}",
+        "manual|approve_custom|{*}",
+        "manual|reject|{*}",
+        "manual|confirm|{*}|{*}",
+    }
+
+    for template in sorted(audit.MANUAL_PAYMENT_CUSTOMER_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_manual_payment_requires_canonical_bot_state"
+        assert "TELEGRAM_IDENTITY_CONTEXT" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+
+    for template in sorted(audit.MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_manual_payment_requires_canonical_bot_state"
+        assert "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL" in mapped["source_dispositions"]
+
+    for identifier in (
+        "manual|",
+        "manual|history|123456",
+        "manual|await_bill|123456",
+        "manual|confirm|17|100",
+        "manual|future|opaque",
+        "MANUAL|HISTORY|123456",
+        "manual|reject|17|future",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "manual_payment_callback_requires_exact_source_review"
+        assert "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "MANUAL|HISTORY|{*}",
+        "manual|history|{*}|future",
+        "manual|confirm|{*}|{*}|future",
+        "manual|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "manual_payment_callback_requires_exact_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def manual_keyboard(pkg_key, uid, currency, amount, method, deposit_id, expected_xu):
+    InlineKeyboardButton("start", callback_data=f"manual|start|{pkg_key}|{uid}")
+    InlineKeyboardButton("history", callback_data=f"manual|history|{uid}")
+    InlineKeyboardButton("method", callback_data=f"manual|method|{method}|{uid}")
+    InlineKeyboardButton("await", callback_data=f"manual|await_bill|{uid}")
+    InlineKeyboardButton("approve", callback_data=f"manual|approve_expected|{deposit_id}")
+    InlineKeyboardButton("confirm", callback_data=f"manual|confirm|{deposit_id}|{expected_xu}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert templates["manual|start|{*}|{*}"]["target"] == "TELEGRAM_ONLY"
+    assert templates["manual|history|{*}"]["target"] == "TELEGRAM_ONLY"
+    assert templates["manual|confirm|{*}|{*}"]["target"] == "TELEGRAM_ONLY"
+    contract = (tmp_path / "docs" / "MANUAL_PAYMENT_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "manual\\|await_bill\\|{*}" in contract
+    assert "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED" in contract
+    assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Manual payment callback" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

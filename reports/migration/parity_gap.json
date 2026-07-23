@@ -47604,8 +47604,17 @@
         "file": "bot.py",
         "line": 7994
       },
-      "resolution": "bot_canonical_admin_dynamic_flow",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|approve_custom|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -47616,8 +47625,17 @@
         "file": "bot.py",
         "line": 7994
       },
-      "resolution": "bot_canonical_admin_dynamic_flow",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|approve_expected|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -47628,23 +47646,41 @@
         "file": "bot.py",
         "line": 7843
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|await_bill|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 31436
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|confirm|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47652,11 +47688,20 @@
         "file": "bot.py",
         "line": 7584
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|currency|CNY|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47664,11 +47709,20 @@
         "file": "bot.py",
         "line": 7581
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|currency|USD|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47676,11 +47730,20 @@
         "file": "bot.py",
         "line": 7580
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|currency|VND|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47688,11 +47751,20 @@
         "file": "bot.py",
         "line": 7698
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|currency|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47700,11 +47772,20 @@
         "file": "bot.py",
         "line": 31554
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|currency|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47712,11 +47793,20 @@
         "file": "bot.py",
         "line": 7656
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxamount|{*}|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47724,11 +47814,20 @@
         "file": "bot.py",
         "line": 7660
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxcustom|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47736,11 +47835,20 @@
         "file": "bot.py",
         "line": 7698
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxcustom|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47748,11 +47856,20 @@
         "file": "bot.py",
         "line": 7689
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxmethod|CNY|{*}|momo_tuithantai|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47760,11 +47877,20 @@
         "file": "bot.py",
         "line": 7693
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxmethod|CNY|{*}|usdt_trc20|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47772,11 +47898,20 @@
         "file": "bot.py",
         "line": 7692
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxmethod|CNY|{*}|zalopay_merchant|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47784,11 +47919,20 @@
         "file": "bot.py",
         "line": 7688
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxmethod|CNY|{*}|zalopay_personal|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47796,11 +47940,20 @@
         "file": "bot.py",
         "line": 7696
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|fxmethod|USD|{*}|usdt_trc20|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47808,11 +47961,20 @@
         "file": "bot.py",
         "line": 7586
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47820,11 +47982,20 @@
         "file": "bot.py",
         "line": 7627
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47832,11 +48003,20 @@
         "file": "bot.py",
         "line": 7843
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47844,11 +48024,20 @@
         "file": "bot.py",
         "line": 7996
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47856,11 +48045,20 @@
         "file": "bot.py",
         "line": 121493
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47868,11 +48066,20 @@
         "file": "bot.py",
         "line": 123830
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|history|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47880,11 +48087,20 @@
         "file": "bot.py",
         "line": 7606
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|menu|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47892,11 +48108,20 @@
         "file": "bot.py",
         "line": 7627
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|menu|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47904,11 +48129,20 @@
         "file": "bot.py",
         "line": 7660
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|menu|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47916,11 +48150,20 @@
         "file": "bot.py",
         "line": 7881
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|menu|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47928,11 +48171,20 @@
         "file": "bot.py",
         "line": 7623
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|method|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -47940,8 +48192,17 @@
         "file": "bot.py",
         "line": 7995
       },
-      "resolution": "bot_canonical_admin_dynamic_flow",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|reject|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -47952,8 +48213,17 @@
         "file": "bot.py",
         "line": 31437
       },
-      "resolution": "bot_canonical_admin_dynamic_flow",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|reject|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -47964,11 +48234,20 @@
         "file": "bot.py",
         "line": 7602
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|vndamount|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -47976,11 +48255,20 @@
         "file": "bot.py",
         "line": 7603
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_manual_payment_requires_canonical_bot_state",
       "source": "manual|vndamount|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_MANUAL_PAYMENT_STATE",
+        "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill or deposit state. Customer selections can create/update the manual bill and require a Telegram photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts or replays these callback values.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -63074,11 +63362,11 @@
   },
   "mapping_coverage_percent": 86.88,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2043,
+    "COPIED_GUARDED": 2015,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
     "NEEDS_FEATURE_DISPOSITION": 504,
-    "TELEGRAM_ONLY": 532
+    "TELEGRAM_ONLY": 560
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -63117,7 +63405,7 @@
     "unresolved_callback_templates": 71,
     "unresolved_source_count": 504
   },
-  "static_web_surface_coverage_percent": 53.2,
+  "static_web_surface_coverage_percent": 52.47,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

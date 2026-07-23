@@ -779,9 +779,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("play_media|", "/media-workspace", "customer"),
     ("imgtool|", "/image", "customer"),
     ("prov|", "/image", "customer"),
-    # Payment namespaces stay at a canonical, explicitly guarded entry point.
-    # This does not turn the Web into a second PayOS/manual-payment writer.
-    ("manual|", "/wallet/topup", "customer"),
     ("opmenu|", "/admin", "admin"),
 )
 
@@ -844,6 +841,40 @@ SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "shopai_video_job|{*}",
     "shopai_video_job|status|{*}",
     "shopai_video_job|retry|{*}",
+})
+
+# Frozen baseline b29d0d4: the manual-payment handler is a Telegram-native
+# state machine.  Its values carry a Telegram user id, an active bill/deposit
+# reference, currency/method/amount selections, or an admin approval state.
+# Even the history callback accepts a Telegram uid and contains an admin
+# cross-user exception.  None is a safe browser route or Web-owned record id.
+MANUAL_PAYMENT_CUSTOMER_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "manual|start|{*}|{*}",
+    "manual|currency|{*}|{*}",
+    "manual|currency|VND|{*}",
+    "manual|currency|USD|{*}",
+    "manual|currency|CNY|{*}",
+    "manual|history|{*}",
+    "manual|vndamount|{*}|{*}",
+    "manual|menu|{*}",
+    "manual|method|{*}|{*}",
+    "manual|fxamount|{*}|{*}|{*}",
+    "manual|fxcustom|{*}|{*}",
+    "manual|fxmethod|{*}|{*}|{*}|{*}",
+    "manual|fxmethod|CNY|{*}|momo_tuithantai|{*}",
+    "manual|fxmethod|CNY|{*}|usdt_trc20|{*}",
+    "manual|fxmethod|CNY|{*}|zalopay_merchant|{*}",
+    "manual|fxmethod|CNY|{*}|zalopay_personal|{*}",
+    "manual|fxmethod|USD|{*}|usdt_trc20|{*}",
+    "manual|await_bill|{*}",
+})
+MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    # `approve` is a legacy form still accepted by the frozen handler.
+    "manual|approve|{*}",
+    "manual|approve_expected|{*}",
+    "manual|approve_custom|{*}",
+    "manual|reject|{*}",
+    "manual|confirm|{*}|{*}",
 })
 
 # The frozen Bot's one literal Media Creator cancellation branch clears a
@@ -5602,6 +5633,105 @@ def _map_shopai_video_job_callback(
     return _shopai_video_job_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _manual_payment_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep frozen manual-payment callbacks inside canonical Bot handling.
+
+    The Bot callbacks carry Telegram user, bill/deposit and approval state.
+    Customer forms may create/update a manual bill, calculate a price, render
+    payment instructions or require a Telegram bill upload.  Admin forms can
+    approve/reject a deposit and ultimately credit Xu.  The audit records the
+    boundary but deliberately exposes no Web navigation or browser action.
+    """
+
+    raw_identifier = str(identifier or "")
+    classification = (
+        "admin"
+        if raw_identifier in MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES
+        else "customer"
+    )
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": classification,
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_manual_payment_requires_canonical_bot_state",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_MANUAL_PAYMENT_STATE",
+            "CANONICAL_BOT_WALLET_LEDGER_OR_PAYMENT_APPROVAL",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot manual-payment handler binds callback values to Telegram identity and active bill "
+            "or deposit state. Customer selections can create/update the manual bill and require a Telegram "
+            "photo/TXID; history accepts a Telegram uid and has an admin cross-user path. Admin approve/reject/"
+            "confirm transitions can mutate pending deposits, canonical Xu, finance/audit/promo/referral/tier "
+            "records and Telegram notifications. The standalone Web has no owner-scoped adapter that accepts "
+            "or replays these callback values."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _manual_payment_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for a non-frozen manual-payment callback spelling."""
+
+    raw_identifier = str(identifier or "")
+    token = raw_identifier.casefold()
+    classification = "admin" if token.startswith(("manual|approve", "manual|reject", "manual|confirm")) else "customer"
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED",
+        "classification": classification,
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "manual_payment_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_MANUAL_PAYMENT_CALLBACK_OR_IDENTIFIER",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PROVIDER_PAYMENT_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "Only exact manual-payment templates reviewed from the frozen Bot baseline are classified as "
+            "Telegram-only. A case variant, missing token, suffix or future manual callback can alter "
+            "Telegram bill/deposit/approval state, wallet ledger or payment behavior and cannot inherit a "
+            "Web wallet/top-up/history route, browser navigation/reset or runtime action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_manual_payment_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Map only exact frozen manual-payment templates; reject all other values."""
+
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.casefold().startswith("manual|"):
+        return None
+    if (
+        raw_identifier in MANUAL_PAYMENT_CUSTOMER_TELEGRAM_ONLY_CALLBACK_TEMPLATES
+        or raw_identifier in MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES
+    ):
+        return _manual_payment_telegram_only_mapping(identifier, source_kind, evidence)
+    return _manual_payment_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -6683,6 +6813,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     shopai_video_job_mapping = _map_shopai_video_job_callback(identifier, source_kind, evidence)
     if shopai_video_job_mapping is not None:
         return shopai_video_job_mapping
+    manual_payment_mapping = _map_manual_payment_callback(identifier, source_kind, evidence)
+    if manual_payment_mapping is not None:
+        return manual_payment_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -7920,6 +8053,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     shopai_video_job_mapping = _map_shopai_video_job_callback(template, "callback_template", evidence)
     if shopai_video_job_mapping is not None:
         return shopai_video_job_mapping
+    manual_payment_mapping = _map_manual_payment_callback(template, "callback_template", evidence)
+    if manual_payment_mapping is not None:
+        return manual_payment_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -8287,19 +8423,6 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
             "classification": "admin",
             "status": "TELEGRAM_ONLY",
             "resolution": "bot_admin_only_dynamic_flow",
-            "evidence": evidence,
-        }
-    if token.startswith("manual|approve") or token.startswith("manual|reject"):
-        # Manual-payment approval mutates canonical Bot/provider/wallet state.
-        # Cinematic Ad admin callbacks were already handled by their exact
-        # mapper above; they cannot inherit this generic admin disposition.
-        return {
-            "source_kind": "callback_template",
-            "source": template,
-            "target": "TELEGRAM_ONLY",
-            "classification": "admin",
-            "status": "TELEGRAM_ONLY",
-            "resolution": "bot_canonical_admin_dynamic_flow",
             "evidence": evidence,
         }
     for prefix, target, classification in DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES:
@@ -9266,6 +9389,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web top-up/jobs/video route, browser navigation/reset, provider/job/wallet/payment/output/delivery action or runtime claim",
         ],
     ]
+    manual_payment_contract_rows = [
+        [
+            ", ".join(sorted(MANUAL_PAYMENT_CUSTOMER_TELEGRAM_ONLY_CALLBACK_TEMPLATES)),
+            "TELEGRAM_ONLY",
+            "bot_manual_payment_requires_canonical_bot_state",
+            "Telegram uid plus active manual bill, currency/method/amount or bill-upload state; history also has an admin cross-user path",
+        ],
+        [
+            ", ".join(sorted(MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES)),
+            "TELEGRAM_ONLY",
+            "bot_manual_payment_requires_canonical_bot_state",
+            "admin approval state can reject or confirm a deposit and mutate canonical Xu, finance/audit/promo/referral/tier records",
+        ],
+        [
+            "case variants, missing token, suffixes or other manual|* values",
+            "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED",
+            "manual_payment_callback_requires_exact_source_review",
+            "no Web wallet/top-up/history/admin route, browser navigation/reset, payment/provider/ledger/job/output/delivery action or runtime claim",
+        ],
+    ]
     vproduct_contract_rows = [
         [
             ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
@@ -9416,6 +9559,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/Xu execution remains canonical Bot-only.\n"
         + "- [`SHOPAI_CALLBACK_CONTRACT.md`](SHOPAI_CALLBACK_CONTRACT.md) — exact ShopAI confirmation/package/cancel templates remain canonical Bot-only; no ShopAI callback can become a Web top-up, payment, job, provider or output action.\n"
         + "- [`SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`](SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md) — exact ShopAI Video Job callbacks remain canonical Bot-only; no task/job identifier can become a Web top-up, video/jobs route, browser action, provider poll, billing mutation or output-delivery claim.\n"
+        + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -9524,6 +9668,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             shopai_video_job_contract_rows,
         )
         + "\n\nOnly exact lowercase forms in this table retain the Bot-only disposition. Every case variant, bare value, suffix and future `shopai_video_job|*` value resolves to `SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED`. It cannot open `/wallet/topup`, `/jobs` or a video page; navigate/reset the browser; poll a provider; mutate a job, Xu/package/payment/refund record; retry a job; expose an output or claim delivery. A future Web-native job center must begin from its own signed session and verified owner-scoped record through a separately reviewed bridge/read model; it must never accept or replay a Telegram task/job callback.\n",
+    )
+    write(
+        "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
+        "# Manual payment callback contract\n\n"
+        "The frozen Bot owns the `manual|*` callback handler. Customer callbacks bind package/currency/amount/method choices and history to a Telegram UID plus active manual-bill state; they can calculate payment instructions and require a Telegram photo/TXID before writing a pending deposit. `manual|history|{*}` is not a safe read-only browser action because it accepts a Telegram UID and the Bot has an admin cross-user history exception. Admin approval/reject/confirm callbacks require Bot admin checks and can mutate pending-deposit status, canonical Xu, finance/audit/promo/referral/tier records and Telegram notifications. These callbacks are not a Web top-up/history/admin route, browser back/reset action, Web upload contract, payment reference, ledger identifier or delivery contract.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback source", "Web target/boundary", "Audit resolution", "Required boundary"],
+            manual_payment_contract_rows,
+        )
+        + "\n\nOnly exact lowercase templates in this table retain the Bot-only disposition. Every case variant, missing token, suffix and future `manual|*` value resolves to `MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED`. It cannot open `/wallet/topup`, `/wallet/history` or `/admin/payments`; navigate/reset the browser; accept a bill/image/TXID; create/approve/finalize a payment; mutate Xu or any ledger; invoke a provider; create/retry/refund a job; expose an output or claim delivery. A future Web-native wallet/top-up/history feature must begin from a separately reviewed signed-session, CSRF, owner/role-checked and idempotent bridge/read-model contract. It must never accept or replay a Telegram callback, UID, bill/deposit ID or approval state.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -9967,7 +10121,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# PayOS, wallet, and jobs boundary\n\n"
         "- Canonical writer: Telegram bot.\n"
         "- Web App role: signed-session caller of the private bridge; it must never credit Xu, finalize PayOS, or add a second payment webhook.\n"
-        "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event.\n"
+        "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.\n\n"
         "## Related bot tables detected statically\n\n"
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
@@ -10108,7 +10262,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# PayOS, wallet and job safety map\n\n"
         "- One canonical PayOS webhook and wallet writer: Telegram bot.\n"
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
-        "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction.\n"
+        "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
