@@ -1654,6 +1654,175 @@ BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
+# These exact Bot-admin category pages only render a menu, a summary or an
+# explanatory status.  They may begin a fresh canonical-admin Web read route,
+# but must never transfer a Telegram admin identity, menu context, finance or
+# provider snapshot, command, test/freeze control, package mutation, payment
+# state, job state or runtime authority into the browser.  Keep this registry
+# private to the static auditor: the product's public menu catalog must never
+# expose raw Bot identifiers or an administrator destination.
+ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|admin": {
+        "target": "/admin",
+        "classification": "admin",
+        "feature_key": "admin_overview",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+            "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin "
+            "overview and never receives a Telegram admin identity, command, pending state, provider, payment, "
+            "wallet/Xu, job, runtime or write authority."
+        ),
+    },
+    "menu|operator": {
+        # ``/admin/operations`` is a separately authorized Web Support-staff
+        # surface, not a canonical Bot-admin surface.  The frozen Bot item is
+        # admin-only, so its safe Web equivalent is the canonical Admin ERP
+        # overview rather than a route that would widen the audience.
+        "target": "/admin",
+        "classification": "admin",
+        "feature_key": "admin_overview",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_OPERATOR_MENU_CONTEXT_NOT_REPLAYED",
+            "NO_OPERATOR_COMMAND_OR_AUTOMATION_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot operator entry renders command-category guidance. The Web opens the canonical Admin ERP "
+            "overview rather than the separately-authorized Web Support Operations surface; it cannot receive a "
+            "Bot command snippet, operator state, deployment, provider, job or automation-control authority."
+        ),
+    },
+    "menu|finance": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized "
+            "Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS "
+            "or report/export parameter."
+        ),
+    },
+    "menu|admin_packages": {
+        "target": "/admin/packages",
+        "classification": "admin",
+        "feature_key": "admin_packages",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PACKAGE_MENU_CONTEXT_NOT_REPLAYED",
+            "NO_PACKAGE_GRANT_REVOKE_OR_ENTITLEMENT_ACTION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot package menu is explanatory and links to Bot command guidance. The Web opens a canonical "
+            "admin package read surface only; it receives no package code, user ID, grant/revoke request, order, "
+            "entitlement, Xu, PayOS or payment state."
+        ),
+    },
+    "menu|admin_provider": {
+        "target": "/admin/providers",
+        "classification": "admin",
+        "feature_key": "admin_providers",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PROVIDER_MENU_CONTEXT_NOT_REPLAYED",
+            "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot provider entry draws a Telegram menu with tests and freeze controls. The Web opens only its "
+            "separately authorized providers read route; it receives no configuration, secret, test, freeze, "
+            "unfreeze, provider payload, job, billing or runtime action."
+        ),
+    },
+    "menu|admin_overview": {
+        "target": "/admin",
+        "classification": "admin",
+        "feature_key": "admin_overview",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_OVERVIEW_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot overview formats a Bot-side finance snapshot. The Web independently authorizes its ERP "
+            "overview and receives no snapshot, period, payment, wallet/Xu, provider, job or write authority "
+            "from the callback."
+        ),
+    },
+    "menu|admin_provider_status": {
+        "target": "/admin/providers",
+        "classification": "admin",
+        "feature_key": "admin_providers",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PROVIDER_STATUS_NOT_REPLAYED",
+            "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot status button formats Bot provider/freeze state. The Web starts a new canonical-admin read "
+            "route and does not receive that snapshot, a secret, test request, freeze control, job, billing or "
+            "runtime authority."
+        ),
+    },
+    "menu|admin_provider_usage": {
+        "target": "/admin/provider-cost",
+        "classification": "admin",
+        "feature_key": "admin_provider_cost",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PROVIDER_USAGE_NOT_REPLAYED",
+            "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot usage button formats a provider usage snapshot. The Web opens a separately authorized cost "
+            "read surface and receives no provider usage payload, secret, test, freeze control, job, payment or "
+            "runtime action."
+        ),
+    },
+}
+
 # The frozen Bot's affiliate menu exposes this exact admin-only hint. The
 # corresponding Bot command derives live connection/configuration material and
 # receives canonical performance events, so this finite callback can start
@@ -7878,6 +8047,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     # exact source token: a future spelling or case variant must be reviewed
     # instead of inheriting the canonical-admin navigation disposition.
     billing_menu_navigation_entry = BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
+    admin_erp_navigation_entry = ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.get(identifier)
     postback_readiness_navigation_entry = POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
     tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(token)
@@ -7926,6 +8096,27 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "billing_menu_feature_key": str(billing_menu_navigation_entry["feature_key"]),
             "billing_menu_authority": str(billing_menu_navigation_entry["authority"]),
             "billing_menu_launch_mode": str(billing_menu_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if admin_erp_navigation_entry is not None:
+        # This private, exact allow-list is only evidence that a Bot admin
+        # category/status page may start a *fresh* canonical-admin Web read
+        # route. It never turns the raw callback into a browser API, carries
+        # Bot snapshots/commands or grants payment, provider, package, job or
+        # runtime control.
+        target = str(admin_erp_navigation_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(admin_erp_navigation_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_admin_erp_fresh_web_navigation",
+            "source_dispositions": tuple(admin_erp_navigation_entry["source_dispositions"]),
+            "source_evidence": str(admin_erp_navigation_entry["source_evidence"]),
+            "admin_erp_feature_key": str(admin_erp_navigation_entry["feature_key"]),
+            "admin_erp_authority": str(admin_erp_navigation_entry["authority"]),
+            "admin_erp_launch_mode": str(admin_erp_navigation_entry["launch_mode"]),
             "evidence": evidence,
         }
     if system_data_stewardship_entry is not None:
@@ -10119,6 +10310,18 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
     ]
+    admin_erp_menu_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_admin_erp_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.items()
+    ]
     postback_readiness_contract_rows = [
         [
             source,
@@ -10757,6 +10960,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — exact Bot-admin Billing menu disposition; it may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
+        + "- [`ADMIN_ERP_MENU_CALLBACK_CONTRACT.md`](ADMIN_ERP_MENU_CALLBACK_CONTRACT.md) — eight exact Bot-admin category/status menu dispositions; each opens only a fresh canonical-admin Web read route and never transfers Bot snapshots, commands, provider/package/payment controls or runtime authority.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
         + "- [`VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`](VIDEO_FINALIZATION_CALLBACK_CONTRACT.md) — exact Bot Video Finishing session boundaries; the separate signed Web workflow never replays Telegram draft, quote, export or payment callbacks.\n"
@@ -11160,6 +11364,25 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             billing_menu_contract_rows,
         )
         + "\n\nThe sole reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. Any other `menu|billing*` value remains source-review-required and cannot inherit this Admin route.\n",
+    )
+    write(
+        "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
+        "# Admin ERP menu callback disposition contract\n\n"
+        "The eight exact Bot menu values below are administrator-only category, summary or status screens. "
+        "They are static source evidence for a **fresh** Web Admin ERP read navigation only. The standalone Web "
+        "never receives a raw callback token, Telegram identity/role, Bot menu or pending state, command snippet, "
+        "finance/provider snapshot, package code/user ID, payment/ledger/Xu/PayOS state, job/runtime state, secret "
+        "or write authority.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            admin_erp_menu_contract_rows,
+        )
+        + "\n\nEvery row repeats canonical signed-admin authorization on its target route. It is navigation only: it does "
+        "not expose an Admin button to customers, pass a Bot admin role to the browser, grant/revoke a package, "
+        "change entitlement, create/finalize a payment, mutate Xu/ledger/PayOS, test/freeze/unfreeze a provider, "
+        "run a command, inspect an unredacted snapshot, retry/refund a job, restart a worker or claim runtime health. "
+        "Case variants, suffixes and all other `menu|admin_*` values remain fail-closed source-review records and "
+        "cannot inherit one of these routes.\n",
     )
     write(
         "POSTBACK_READINESS_CALLBACK_CONTRACT.md",

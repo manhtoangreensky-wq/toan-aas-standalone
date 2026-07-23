@@ -201,6 +201,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_features", "Readiness", "admin", "/admin/features", "admin"),
     WebFeature("admin_freezes", "Bảo trì & freeze", "admin", "/admin/freezes", "admin"),
     WebFeature("admin_pricing", "Giá & gói", "admin", "/admin/pricing", "admin"),
+    WebFeature("admin_packages", "Packages", "admin", "/admin/packages", "admin", description="Catalog package chỉ đọc theo canonical signed-admin boundary; không grant, revoke, đổi entitlement, tạo checkout hoặc thay đổi Xu/PayOS từ browser."),
     WebFeature("admin_promos", "Khuyến mãi", "admin", "/admin/promos", "admin"),
     WebFeature("admin_leads", "Leads", "admin", "/admin/leads", "admin"),
     WebFeature("admin_tickets", "CSKH", "admin", "/admin/tickets", "admin"),

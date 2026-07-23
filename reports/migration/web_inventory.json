@@ -16,13 +16,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 2126,
+      "line": 2295,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6073,
+      "line": 6242,
       "target": "_map_shopai_video_job_callback"
     },
     {
@@ -82,13 +82,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6042,
+      "line": 6211,
       "target": "_shopai_video_job_source_review_mapping"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6004,
+      "line": 6173,
       "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
@@ -197,37 +197,37 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4417,
+      "line": 4586,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4461,
+      "line": 4630,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4476,
+      "line": 4645,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4825,
+      "line": 4994,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4833,
+      "line": 5002,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4841,
+      "line": 5010,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4849,
+      "line": 5018,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -263,19 +263,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6099,
+      "line": 6268,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6458,
+      "line": 6627,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11553,
+      "line": 11776,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -287,7 +287,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11308,
+      "line": 11531,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -329,7 +329,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11052,
+      "line": 11256,
       "operation": "UPDATE",
       "table": "bot"
     },
@@ -359,37 +359,37 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6012,
+      "line": 6181,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6034,
+      "line": 6203,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6511,
+      "line": 6680,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11012,
+      "line": 11216,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11067,
+      "line": 11271,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8346,
+      "line": 8537,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -659,13 +659,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11554,
+      "line": 11777,
       "operation": "UPDATE",
       "table": "linked"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11702,
+      "line": 11925,
       "operation": "UPDATE",
       "table": "linked"
     },
@@ -731,19 +731,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10789,
+      "line": 10993,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11077,
+      "line": 11281,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 11528,
+      "line": 11751,
       "operation": "UPDATE",
       "table": "or"
     },
@@ -3263,7 +3263,7 @@
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2694,
+      "line": 2698,
       "operation": "UPDATE",
       "table": "web_media_collections"
     },
@@ -3287,19 +3287,19 @@
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2733,
+      "line": 2737,
       "operation": "INSERT INTO",
       "table": "web_media_items"
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2780,
+      "line": 2784,
       "operation": "UPDATE",
       "table": "web_media_items"
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2819,
+      "line": 2823,
       "operation": "DELETE FROM",
       "table": "web_media_items"
     },
@@ -3329,7 +3329,7 @@
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2150,
+      "line": 2154,
       "operation": "INSERT INTO",
       "table": "web_memory_events"
     },
@@ -3377,7 +3377,7 @@
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2144,
+      "line": 2148,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
@@ -3437,7 +3437,7 @@
     },
     {
       "file": "copyfast_music_media.py",
-      "line": 2138,
+      "line": 2142,
       "operation": "INSERT INTO",
       "table": "web_memory_notes"
     },
@@ -6939,7 +6939,7 @@
         "copyfast_web_engine.py",
         "customer_api.py"
       ],
-      "occurrences": 992,
+      "occurrences": 1010,
       "provider": "PayOS"
     },
     {
@@ -7169,7 +7169,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 5381,
+      "occurrences": 5388,
       "provider": "Telegram"
     }
   ],
@@ -7933,7 +7933,7 @@
     {
       "endpoint": "list_audio_assets",
       "file": "copyfast_music_media.py",
-      "line": 2217,
+      "line": 2221,
       "methods": [
         "GET"
       ],
@@ -8383,7 +8383,7 @@
     {
       "endpoint": "list_collections",
       "file": "copyfast_music_media.py",
-      "line": 2334,
+      "line": 2338,
       "methods": [
         "GET"
       ],
@@ -8392,7 +8392,7 @@
     {
       "endpoint": "create_collection",
       "file": "copyfast_music_media.py",
-      "line": 2394,
+      "line": 2398,
       "methods": [
         "POST"
       ],
@@ -8401,7 +8401,7 @@
     {
       "endpoint": "get_collection",
       "file": "copyfast_music_media.py",
-      "line": 2435,
+      "line": 2439,
       "methods": [
         "GET"
       ],
@@ -8410,7 +8410,7 @@
     {
       "endpoint": "update_collection",
       "file": "copyfast_music_media.py",
-      "line": 2446,
+      "line": 2450,
       "methods": [
         "PATCH"
       ],
@@ -8419,7 +8419,7 @@
     {
       "endpoint": "archive_collection",
       "file": "copyfast_music_media.py",
-      "line": 2536,
+      "line": 2540,
       "methods": [
         "POST"
       ],
@@ -8428,7 +8428,7 @@
     {
       "endpoint": "compose_collection_brief",
       "file": "copyfast_music_media.py",
-      "line": 2646,
+      "line": 2650,
       "methods": [
         "POST"
       ],
@@ -8437,7 +8437,7 @@
     {
       "endpoint": "duplicate_collection",
       "file": "copyfast_music_media.py",
-      "line": 2548,
+      "line": 2552,
       "methods": [
         "POST"
       ],
@@ -8446,7 +8446,7 @@
     {
       "endpoint": "attach_media_item",
       "file": "copyfast_music_media.py",
-      "line": 2703,
+      "line": 2707,
       "methods": [
         "POST"
       ],
@@ -8455,7 +8455,7 @@
     {
       "endpoint": "update_media_item",
       "file": "copyfast_music_media.py",
-      "line": 2759,
+      "line": 2763,
       "methods": [
         "PATCH"
       ],
@@ -8464,7 +8464,7 @@
     {
       "endpoint": "detach_media_item",
       "file": "copyfast_music_media.py",
-      "line": 2804,
+      "line": 2808,
       "methods": [
         "POST"
       ],
@@ -8473,7 +8473,7 @@
     {
       "endpoint": "preview_media_item",
       "file": "copyfast_music_media.py",
-      "line": 2271,
+      "line": 2275,
       "methods": [
         "GET"
       ],
@@ -8482,7 +8482,7 @@
     {
       "endpoint": "restore_collection",
       "file": "copyfast_music_media.py",
-      "line": 2542,
+      "line": 2546,
       "methods": [
         "POST"
       ],
@@ -8491,7 +8491,7 @@
     {
       "endpoint": "restore_collection_version",
       "file": "copyfast_music_media.py",
-      "line": 2589,
+      "line": 2593,
       "methods": [
         "POST"
       ],
@@ -8977,7 +8977,7 @@
     {
       "endpoint": "media_workspace_events",
       "file": "copyfast_music_media.py",
-      "line": 2838,
+      "line": 2842,
       "methods": [
         "GET"
       ],
@@ -10156,7 +10156,7 @@
     {
       "endpoint": "media_workspace_policy",
       "file": "copyfast_music_media.py",
-      "line": 2198,
+      "line": 2202,
       "methods": [
         "GET"
       ],
@@ -11344,7 +11344,7 @@
     {
       "endpoint": "media_workspace_summary",
       "file": "copyfast_music_media.py",
-      "line": 2190,
+      "line": 2194,
       "methods": [
         "GET"
       ],
@@ -11857,7 +11857,7 @@
     {
       "endpoint": "compose_music_direction_presets",
       "file": "copyfast_music_media.py",
-      "line": 2009,
+      "line": 2013,
       "methods": [
         "POST"
       ],
@@ -11866,7 +11866,7 @@
     {
       "endpoint": "compose_music_prompt",
       "file": "copyfast_music_media.py",
-      "line": 1988,
+      "line": 1992,
       "methods": [
         "POST"
       ],
@@ -11875,7 +11875,7 @@
     {
       "endpoint": "save_music_prompt_composer_to_memory",
       "file": "copyfast_music_media.py",
-      "line": 2063,
+      "line": 2067,
       "methods": [
         "POST"
       ],
@@ -12010,7 +12010,7 @@
     {
       "endpoint": "compose_sfx_cue_sheet",
       "file": "copyfast_music_media.py",
-      "line": 2036,
+      "line": 2040,
       "methods": [
         "POST"
       ],
@@ -12954,10 +12954,10 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 306,
-  "source_files_scanned": 306,
-  "source_fingerprint_sha256": "20e9497430f2b2ccc14794cd34b1ffeaf08218b24676fc7e327aeabb3e4f3d90",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast114-sfx-cue-sheet",
+  "source_files_discovered": 308,
+  "source_files_scanned": 308,
+  "source_fingerprint_sha256": "4a25ae597096f581105302941e72f7d5f219f55aff5ea03604d68603cf84aa13",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast115-nonvideo-menu-finite-catalog",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
