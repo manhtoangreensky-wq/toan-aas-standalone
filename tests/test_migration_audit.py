@@ -4220,6 +4220,37 @@ def test_static_audit_keeps_dynamic_media_preview_callbacks_telegram_only(tmp_pa
         assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
         assert mapped["target"] == "TELEGRAM_ONLY"
 
+    assert not any(
+        prefix in {"license_music|", "play_media|", "select_media|"}
+        for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES
+    )
+    for identifier in (
+        "license_music|9|future",
+        "play_media|9|future",
+        "select_media|9|future",
+        "LICENSE_MUSIC|9",
+        "play_media|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "media_selection_callback_requires_web_native_owner_asset_contract"
+        assert "BOT_MEDIA_PREVIEW_CACHE_INDEX" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_MEDIA_CACHE_INDEX_OR_SELECTED_STATE_REPLAY" in mapped["source_dispositions"]
+
+    for template in (
+        "license_music|{*}|future",
+        "play_media|{*}|future",
+        "select_media|{*}|future",
+        "LICENSE_MUSIC|{*}",
+    ):
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["target"] == "MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+
     bot_root = tmp_path / "bot"
     web_root = tmp_path / "web"
     bot_root.mkdir()
@@ -4262,7 +4293,9 @@ async def portal(page_path):
     assert "media_preview" not in backlog
     contract = tmp_path / "docs" / "MEDIA_PREVIEW_CALLBACK_CONTRACT.md"
     assert contract.is_file()
-    assert "Bot cache index" in contract.read_text(encoding="utf-8")
+    contract_text = contract.read_text(encoding="utf-8")
+    assert "Bot cache index" in contract_text
+    assert "MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED" in contract_text
     environment_contract = tmp_path / "docs" / "ENV_AND_PROVIDER_MAP.md"
     assert environment_contract.is_file()
     assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in environment_contract.read_text(encoding="utf-8")
