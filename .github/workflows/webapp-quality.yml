@@ -87,6 +87,8 @@ jobs:
             tests/test_portal_navigation_ux_contracts.py \
             tests/test_copyfast_music_directions.py \
             tests/test_music_directions_portal_contracts.py \
+            tests/test_copyfast_sfx_cue_sheet.py \
+            tests/test_sfx_cue_sheet_portal_contracts.py \
             tests/test_migration_audit.py::test_static_audit_never_imports_source_and_redacts_secret_literals \
             tests/test_migration_audit.py::test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog \
             tests/test_migration_audit.py::test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only \

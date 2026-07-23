@@ -10,6 +10,7 @@
   const IMAGE_OCR_ROUTE = "/documents/ocr";
   const PDF_OCR_ROUTE = "/documents/pdf-ocr";
   const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";
+  const SFX_CUE_SHEET_ROUTE = "/media-workspace/sfx-cue-sheet";
   const SUBTITLE_ASSET_OPERATIONS_ROUTE = "/subtitle/assets";
   const SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT = 50;
   const SUBTITLE_ASSET_OPERATIONS_MAX_BYTES = 96 * 1024;
@@ -321,6 +322,10 @@
   // route change or signed bootstrap invalidates any older explicit request.
   let musicDirectionPresetComposeRequestEpoch = 0;
   let musicDirectionPresetComposePendingRequestEpoch = 0;
+  // SFX Cue Sheet is an equally transient editorial receipt. It uses its own
+  // fence so a delayed cue sheet cannot replace a newer brief or selection.
+  let sfxCueSheetComposeRequestEpoch = 0;
+  let sfxCueSheetComposePendingRequestEpoch = 0;
   // Voice Studio keeps private script/consent metadata. Separate list,
   // vault and cue-sheet reads must not survive a session or route change.
   let voiceStudioSessionEpoch = 0;
@@ -628,14 +633,15 @@
     return window.__TOAN_AAS_PORTAL__ && typeof window.__TOAN_AAS_PORTAL__ === "object" ? window.__TOAN_AAS_PORTAL__ : {};
   }
 
-  function clearImageOcrTransientDraft() {
-    // Image OCR selections are intentionally tab-memory only. A fresh server
-    // bootstrap or sign-out must not retain even an asset ID/language choice
-    // for a different signed account.
+  function clearSessionScopedTransientDrafts() {
+    // These scalar form choices are intentionally tab-memory only. A fresh
+    // server bootstrap or sign-out must not carry an unsent source/brief from
+    // one signed account to another.
     if (window.TOANAASPortal && typeof window.TOANAASPortal.clearTransientFormDraft === "function") {
       window.TOANAASPortal.clearTransientFormDraft(IMAGE_OCR_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_WORD_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(SFX_CUE_SHEET_ROUTE);
     }
   }
 
@@ -991,6 +997,12 @@
   function setMusicDirectionPresetSubmissionStatus(message) {
     const form = document.querySelector('[data-portal-form][data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"]');
     const announcement = form && form.querySelector("[data-music-direction-selection]");
+    if (announcement) announcement.textContent = String(message || "");
+  }
+
+  function setSfxCueSheetSubmissionStatus(message) {
+    const form = document.querySelector('[data-portal-form][data-portal-action="sfx-cue-sheet-compose"][data-portal-route="/media-workspace/sfx-cue-sheet"]');
+    const announcement = form && form.querySelector("[data-sfx-cue-sheet-selection]");
     if (announcement) announcement.textContent = String(message || "");
   }
 
@@ -3042,6 +3054,26 @@
   // suffixed values, and any full Bot command. A bare known keyword is only
   // rejected when it is the entire brief; normal prose is not Bot input.
   const MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = /^\s*(?:suggest_music\|.*|\/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$/i;
+  const SFX_CUE_SHEET_PRESET_IDS = new Set([
+    "motion_transition", "interface_confirm", "reveal_impact", "status_signal", "caption_emphasis"
+  ]);
+  const SFX_CUE_SHEET_PRESET_FAMILIES = Object.freeze({
+    motion_transition: "motion", interface_confirm: "interface", reveal_impact: "impact",
+    status_signal: "signal", caption_emphasis: "emphasis"
+  });
+  const SFX_CUE_SHEET_FAMILIES = new Set(Object.values(SFX_CUE_SHEET_PRESET_FAMILIES));
+  const SFX_CUE_SHEET_PLACEMENT_IDS = Object.freeze(["opening", "transition", "closing"]);
+  const SFX_CUE_SHEET_BOUNDARY_KEYS = Object.freeze([
+    ...MUSIC_PROMPT_COMPOSER_BOUNDARY_KEYS, "source_video_inspected", "catalog_searched", "sfx_generated"
+  ]);
+  const SFX_CUE_SHEET_RESULT_KEYS = Object.freeze(["cue_sheet", ...SFX_CUE_SHEET_BOUNDARY_KEYS]);
+  const SFX_CUE_SHEET_KEYS = Object.freeze([
+    "title", "description", "language", "web_sfx_preset_id", "cue_family", "cues", "placement_notice", "cautions", "review_before_use"
+  ]);
+  const SFX_CUE_SHEET_CUE_KEYS = Object.freeze([
+    "ordinal", "placement_id", "placement", "cue_role", "direction", "mix_note", "avoid_note", "editorial_note"
+  ]);
+  const SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN = /^\s*(?:(?:sfx_quick|music_quick)\|.*|\/sfx_library(?:\s.*)?|(?:play_sfx|select_sfx|open_sfx_source|license_sfx)\|.*|(?:whoosh|click|cinematic(?:\s+hit)?|notification|pop|custom_sfx))\s*$/i;
   const MUSIC_PROMPT_COMPOSER_MARKUP_PATTERN = /<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i;
 
   function validMediaCollectionId(value) {
@@ -3066,9 +3098,13 @@
     return String(path || "").split("?")[0] === "/media-workspace/music-directions";
   }
 
+  function isNativeSfxCueSheetPath(path) {
+    return String(path || "").split("?")[0] === "/media-workspace/sfx-cue-sheet";
+  }
+
   function isNativeMediaWorkspacePath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
+    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || isNativeSfxCueSheetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
   }
 
   function mediaWorkspaceSafetyError(...values) {
@@ -3263,6 +3299,95 @@
       && composer.description === payload.description
       && composer.language === payload.language
       && musicDirectionPresetComposerMatchesPreset(payload.web_preset_id, composer));
+  }
+
+  function sfxCueSheetSafetyError(...values) {
+    const standard = mediaWorkspaceSafetyError(...values);
+    if (standard) return standard;
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (MUSIC_PROMPT_COMPOSER_MARKUP_PATTERN.test(text)) return "SFX Cue Sheet không nhận markup hoặc chỉ dẫn thực thi.";
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "SFX Cue Sheet không nhận URL hoặc scheme tệp trong brief.";
+    if (/\b(?:(?:provider|engine|audio|preview|output|job|asset|collection|telegram)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "SFX Cue Sheet không nhận handle hệ thống, source media, job, asset hoặc Telegram trong brief.";
+    return "";
+  }
+
+  function sfxCueSheetPayload(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    const allowed = ["description", "language", "web_sfx_preset_id"];
+    if (Object.keys(source).length !== allowed.length || !allowed.every((key) => Object.prototype.hasOwnProperty.call(source, key))) {
+      throw new Error("SFX Cue Sheet chỉ nhận brief, ngôn ngữ và một preset Web.");
+    }
+    if (typeof source.description !== "string" || typeof source.language !== "string" || typeof source.web_sfx_preset_id !== "string") {
+      throw new Error("SFX Cue Sheet cần brief, ngôn ngữ và preset dạng text hợp lệ.");
+    }
+    const description = source.description.replace(/\s+/g, " ").trim();
+    const language = source.language.trim().toLowerCase();
+    const presetId = source.web_sfx_preset_id.trim();
+    if (description.length < 2 || description.length > 500 || description.includes("\u0000")) {
+      throw new Error("Brief SFX cần từ 2 đến 500 ký tự hợp lệ.");
+    }
+    if (!MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language) || !SFX_CUE_SHEET_PRESET_IDS.has(presetId)) {
+      throw new Error("Ngôn ngữ hoặc preset SFX Web không hợp lệ. Hãy chọn lại từ các lựa chọn trong trang.");
+    }
+    if (SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN.test(description)) {
+      throw new Error("Brief không nhận callback, lệnh hoặc keyword Bot. Hãy viết mô tả Web đầy đủ.");
+    }
+    const safety = sfxCueSheetSafetyError(description, language, presetId);
+    if (safety) throw new Error(safety);
+    return { description, language, web_sfx_preset_id: presetId };
+  }
+
+  function sfxCueSheetBoundaryIsSafe(value) {
+    return musicPromptComposerExactKeys(value, SFX_CUE_SHEET_BOUNDARY_KEYS)
+      && value.execution === "web_native_deterministic_sfx_cue_sheet_only"
+      && value.input_persisted === false && value.source_audio_inspected === false && value.source_video_inspected === false
+      && value.provider_called === false && value.catalog_searched === false && value.ai_music_called === false && value.sfx_generated === false
+      && value.lyrics_generated === false && value.audio_created === false && value.preview_created === false && value.output_created === false
+      && value.job_created === false && value.wallet_mutated === false && value.payment_started === false
+      && value.asset_saved === false && value.collection_saved === false && value.publish_action_created === false
+      && value.telegram_called === false && value.rights_verified === false;
+  }
+
+  function sfxCueSheetCueIsSafe(value, ordinal, placementId) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!musicPromptComposerExactKeys(item, SFX_CUE_SHEET_CUE_KEYS)
+      || !Number.isInteger(item.ordinal) || item.ordinal !== ordinal || item.placement_id !== placementId) return false;
+    return ["placement", "cue_role", "direction", "mix_note", "avoid_note", "editorial_note"].every((key) => Boolean(musicPromptComposerText(item[key], 2, key === "direction" ? 1600 : 1200, false)));
+  }
+
+  function sfxCueSheetResultIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!musicPromptComposerExactKeys(data, SFX_CUE_SHEET_RESULT_KEYS)) return false;
+    const boundary = {};
+    SFX_CUE_SHEET_BOUNDARY_KEYS.forEach((key) => { boundary[key] = data[key]; });
+    if (!sfxCueSheetBoundaryIsSafe(boundary)) return false;
+    const cueSheet = data.cue_sheet && typeof data.cue_sheet === "object" && !Array.isArray(data.cue_sheet) ? data.cue_sheet : {};
+    if (!musicPromptComposerExactKeys(cueSheet, SFX_CUE_SHEET_KEYS)) return false;
+    const title = musicPromptComposerText(cueSheet.title, 2, 180, false);
+    const description = musicPromptComposerText(cueSheet.description, 2, 500, false);
+    const language = String(cueSheet.language || "");
+    const presetId = String(cueSheet.web_sfx_preset_id || "");
+    const cueFamily = String(cueSheet.cue_family || "");
+    const notice = musicPromptComposerText(cueSheet.placement_notice, 2, 1600, false);
+    const cautions = musicPromptComposerStringListIsSafe(cueSheet.cautions, 0, 6, 1200);
+    const review = musicPromptComposerStringListIsSafe(cueSheet.review_before_use, 1, 6, 1200);
+    const cues = Array.isArray(cueSheet.cues) ? cueSheet.cues : [];
+    const validCues = cues.length === SFX_CUE_SHEET_PLACEMENT_IDS.length
+      && cues.every((cue, index) => sfxCueSheetCueIsSafe(cue, index + 1, SFX_CUE_SHEET_PLACEMENT_IDS[index]));
+    const cueText = validCues ? cues.flatMap((cue) => [cue.placement, cue.cue_role, cue.direction, cue.mix_note, cue.avoid_note, cue.editorial_note]) : [];
+    const safety = sfxCueSheetSafetyError(title, description, notice, ...cueText, ...(cueSheet.cautions || []), ...(cueSheet.review_before_use || []));
+    return Boolean(title && description && MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language)
+      && SFX_CUE_SHEET_PRESET_IDS.has(presetId) && SFX_CUE_SHEET_FAMILIES.has(cueFamily)
+      && cueFamily === SFX_CUE_SHEET_PRESET_FAMILIES[presetId] && notice && cautions && review && validCues && !safety);
+  }
+
+  function sfxCueSheetResultMatchesSource(source, result) {
+    let payload;
+    try { payload = sfxCueSheetPayload(source); } catch (_) { return false; }
+    const cueSheet = result && result.cue_sheet && typeof result.cue_sheet === "object" ? result.cue_sheet : {};
+    return Boolean(sfxCueSheetResultIsSafe(result)
+      && cueSheet.description === payload.description && cueSheet.language === payload.language
+      && cueSheet.web_sfx_preset_id === payload.web_sfx_preset_id);
   }
 
   // Saving is a separate, explicit Web-owned handoff. Retain only the
@@ -10448,6 +10573,8 @@
     ++mediaWorkspaceSessionEpoch;
     ++musicDirectionPresetComposeRequestEpoch;
     musicDirectionPresetComposePendingRequestEpoch = 0;
+    ++sfxCueSheetComposeRequestEpoch;
+    sfxCueSheetComposePendingRequestEpoch = 0;
     ++voiceStudioSessionEpoch;
     ++videoStudioSessionEpoch;
     ++imageMotionPlannerSessionEpoch;
@@ -10492,10 +10619,10 @@
     ++workspaceDraftSessionEpoch;
     ++telegramLinkStatusSessionEpoch;
     ++paymentOptionsSessionEpoch;
-    // Every signed bootstrap starts from a blank Image OCR selection. The
-    // source ID and language remain only in the current form interaction,
-    // never across a server-derived account projection.
-    clearImageOcrTransientDraft();
+    // Every signed bootstrap starts from blank route-local authoring values.
+    // OCR source selections and an unsent SFX brief remain only in the active
+    // form interaction, never across a server-derived account projection.
+    clearSessionScopedTransientDrafts();
     // A bootstrap can follow a sign-out, account switch or route change while
     // a private Memory request is still in flight. Invalidate both channels
     // before clearing state so the earlier account can never merge afterward.
@@ -10628,6 +10755,9 @@
     // own opaque Web preset contract and a distinct transient receipt. It
     // does not inherit Composer's Memory save or any runtime capability.
     const musicDirectionPresetsEnabled = mediaWorkspaceEnabled;
+    // SFX Cue Sheet shares only the narrow maintenance gate. It is an
+    // editorial text receipt, not a catalog, SFX generator or media runtime.
+    const sfxCueSheetEnabled = mediaWorkspaceEnabled;
     // Content Studio is a signed-account authoring workspace only. Its flag
     // deliberately has no Bot bridge, Telegram, provider, payment, Xu, job
     // or publishing implication.
@@ -11071,6 +11201,7 @@
       "music-prompt-compose": Boolean(account && me.csrf_token && musicPromptComposerEnabled),
       "music-prompt-composer-save-memory": Boolean(account && me.csrf_token && musicPromptComposerEnabled && memoryCenterEnabled),
       "music-direction-preset-compose": Boolean(account && me.csrf_token && musicDirectionPresetsEnabled),
+      "sfx-cue-sheet-compose": Boolean(account && me.csrf_token && sfxCueSheetEnabled),
       "content-studio-view": Boolean(account && contentStudioEnabled),
       "content-studio-refresh": Boolean(account && contentStudioEnabled),
       "content-studio-page": Boolean(account && contentStudioEnabled),
@@ -11637,6 +11768,7 @@
       mediaWorkspaceEnabled,
       musicPromptComposerEnabled,
       musicDirectionPresetsEnabled,
+      sfxCueSheetEnabled,
       contentStudioEnabled,
       channelStrategyEnabled,
       contentHandoffEnabled,
@@ -11754,6 +11886,11 @@
       // Audio Library/Memory/Bot record.
       musicDirectionPresetDraft: {},
       musicDirectionPresetResult: {},
+      // SFX Cue Sheet has one bounded request/receipt pair in tab memory.
+      // Clear it on bootstrap rather than rehydrating source media, a
+      // collection, a catalog result or a Bot state.
+      sfxCueSheetDraft: {},
+      sfxCueSheetResult: {},
       // Fail closed across account/session transitions. Content Studio never
       // uses a prior owner's projection or generic canonical feature data.
       contentStudioSummary: {},
@@ -12222,6 +12359,7 @@
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/music-prompt-composer": account && musicPromptComposerEnabled ? "ready" : "guarded",
         "/media-workspace/music-directions": account && musicDirectionPresetsEnabled ? "ready" : "guarded",
+        "/media-workspace/sfx-cue-sheet": account && sfxCueSheetEnabled ? "ready" : "guarded",
         "/content-studio": account && contentStudioEnabled ? "processing" : "guarded",
         "/content-studio/new": account && contentStudioEnabled ? "processing" : "guarded",
         "/content/channel-strategy": account && channelStrategyEnabled ? "processing" : "guarded",
@@ -12435,6 +12573,13 @@
       if (!(account && musicDirectionPresetsEnabled)) merge({
         musicDirectionPresetDraft: {}, musicDirectionPresetResult: {},
         pageStates: { ...(base().pageStates || {}), "/media-workspace/music-directions": "guarded" }
+      });
+    } else if (isNativeSfxCueSheetPath(currentPath)) {
+      // SFX Cue Sheet has no collection/history/source-media hydration. Its
+      // brief and receipt remain current-session text only.
+      if (!(account && sfxCueSheetEnabled)) merge({
+        sfxCueSheetDraft: {}, sfxCueSheetResult: {},
+        pageStates: { ...(base().pageStates || {}), "/media-workspace/sfx-cue-sheet": "guarded" }
       });
     } else if (account && mediaWorkspaceEnabled && ["/media-workspace", "/media-workspace/new"].includes(currentPath)) await hydrateMediaWorkspace();
     else if (account && mediaWorkspaceEnabled && mediaWorkspaceCollectionIdFromPath(currentPath)) await hydrateMediaCollection(mediaWorkspaceCollectionIdFromPath(currentPath));
@@ -23624,6 +23769,72 @@
         }
         return;
       }
+      if (action === "sfx-cue-sheet-compose") {
+        const expectedPath = "/media-workspace/sfx-cue-sheet";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) {
+          throw new Error("SFX Cue Sheet chỉ nhận thao tác từ màn hình SFX Cue Sheet đang mở.");
+        }
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (capabilities["sfx-cue-sheet-compose"] !== true) {
+          throw new Error("Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập SFX Cue Sheet.");
+        }
+        const payload = sfxCueSheetPayload(fields);
+        const requestEpoch = ++sfxCueSheetComposeRequestEpoch;
+        sfxCueSheetComposePendingRequestEpoch = requestEpoch;
+        setActionBusy(action, route, true);
+        setSfxCueSheetSubmissionStatus("Đang lập ba cue semantic từ preset và brief hiện tại…");
+        try {
+          const result = await api("/media-workspace/tools/sfx-cue-sheet/compose", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (requestEpoch !== sfxCueSheetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status === "guarded") {
+            if (!sfxCueSheetBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới SFX Cue Sheet an toàn.");
+            merge({
+              sfxCueSheetDraft: payload,
+              sfxCueSheetResult: {},
+              pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+            });
+            toast(result.message || "Brief cần được điều chỉnh trước khi lập cue sheet.");
+            return;
+          }
+          if (result.status !== "draft" || !sfxCueSheetResultMatchesSource(payload, data)) {
+            throw new Error("Máy chủ chưa trả SFX Cue Sheet Web-native an toàn và khớp brief hiện tại.");
+          }
+          merge({
+            sfxCueSheetDraft: payload,
+            sfxCueSheetResult: { source: payload, receipt: data },
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
+          });
+          setSfxCueSheetSubmissionStatus("Đã lập 3 cue semantic. Kết quả ở bên dưới.");
+          toast(result.message || "Đã lập ba cue semantic để review trong phiên hiện tại.");
+        } catch (error) {
+          if (requestEpoch !== sfxCueSheetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
+          const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
+          const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
+          if (!guarded || !sfxCueSheetBoundaryIsSafe(guardedData)) {
+            setSfxCueSheetSubmissionStatus("Không thể lập cue sheet. Kiểm tra lại brief, preset và kết nối rồi thử lại.");
+            throw error;
+          }
+          merge({
+            sfxCueSheetDraft: payload,
+            sfxCueSheetResult: {},
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+          });
+          toast(guarded.message || "Brief cần được điều chỉnh trước khi lập cue sheet.");
+        } finally {
+          if (sfxCueSheetComposePendingRequestEpoch === requestEpoch
+            && requestEpoch === sfxCueSheetComposeRequestEpoch
+            && currentPortalPath() === expectedPath) {
+            sfxCueSheetComposePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+          }
+        }
+        return;
+      }
       if (action === "music-prompt-compose") {
         const payload = musicPromptComposerPayload(fields);
         // The composer remains request-only. Starting a new direction drops
@@ -30267,7 +30478,7 @@
         return;
       }
       if (action === "auth-logout") {
-        clearImageOcrTransientDraft();
+        clearSessionScopedTransientDrafts();
         const result = await api("/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         toast(result.message || "Đã đăng xuất.");
         window.location.assign("/login");
@@ -31545,10 +31756,20 @@
       setActionBusy("music-direction-preset-compose", "/media-workspace/music-directions", false);
     }
   });
+  window.addEventListener("toanaas:sfx-cue-sheet-draft-edited", () => {
+    // A local edit owns the newer brief. Fence an older explicit response
+    // without reset, navigation, storage or an implicit follow-up request.
+    if (currentPortalPath() !== "/media-workspace/sfx-cue-sheet") return;
+    ++sfxCueSheetComposeRequestEpoch;
+    if (sfxCueSheetComposePendingRequestEpoch) {
+      sfxCueSheetComposePendingRequestEpoch = 0;
+      setActionBusy("sfx-cue-sheet-compose", "/media-workspace/sfx-cue-sheet", false);
+    }
+  });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;
   function startInitialHydration() {
-    clearImageOcrTransientDraft();
+    clearSessionScopedTransientDrafts();
     if (!initialHydration) initialHydration = hydrate().catch(() => {});
     return initialHydration;
   }

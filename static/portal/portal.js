@@ -898,6 +898,17 @@
       "Sau khi bạn bấm lập direction, server chỉ trả text deterministic để review. Không có provider, audio, lyrics, player, preview, output, job, ví Xu, PayOS, Memory, asset, collection, publish, delivery hoặc Telegram action."
     ]
   });
+  // SFX Cue Sheet is deliberately separate from Music Directions and the
+  // Bot's SFX catalog callbacks. It gives an editor three semantic review
+  // positions only; it never pretends to inspect source media or find, play,
+  // create, preview or deliver a sound.
+  customerPage("/media-workspace/sfx-cue-sheet", "SFX Cue Sheet", "Chọn một hướng SFX Web, viết brief và lập ba cue semantic để biên tập review trước khi dùng trong workflow được cấp riêng.", ICONS.music, {
+    layout: "sfx-cue-sheet", type: "sfx-cue-sheet", fields: [], action: "none", status: "ready",
+    notes: [
+      "Preset chỉ thay đổi form cục bộ. Không có request, điều hướng, reset, callback Bot hoặc keyword Telegram khi bạn đổi lựa chọn.",
+      "Khi bạn chủ động bấm lập cue sheet, server chỉ trả ba chỉ dẫn văn bản semantic: mở đầu, chuyển đoạn và kết. Không có source video/audio được kiểm tra, catalog/provider, SFX, preview, output, job, ví Xu, PayOS, asset, collection, publish, delivery hoặc Telegram action."
+    ]
+  });
   customerPage("/content-studio", "Creative Content Studio", "Workspace chuyên nghiệp để tổ chức brief, caption, hook, script, storyboard và content pack với version history riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Content Studio là authoring workspace Web-native. Nó không gọi Bot, provider, ví Xu, PayOS, job, publish hoặc delivery.", "Composer chỉ tạo ba khung nháp cục bộ có nhãn rõ ràng để biên tập; không tự nhận là AI output hoặc nội dung đã được duyệt."]
@@ -2433,6 +2444,36 @@
   // relying on a cross-file lexical binding that does not exist at runtime.
   const MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = /^\s*(?:suggest_music\|.*|\/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$/i;
 
+  // SFX Cue Sheet uses a separate, opaque Web vocabulary. These IDs are not
+  // Bot callback values, catalog search queries or sound names. The UI only
+  // uses them to bind one bounded editorial brief to three semantic cues.
+  const SFX_CUE_SHEET_PRESET_IDS = new Set([
+    "motion_transition", "interface_confirm", "reveal_impact", "status_signal", "caption_emphasis"
+  ]);
+  const SFX_CUE_SHEET_PRESET_FAMILIES = Object.freeze({
+    motion_transition: "motion",
+    interface_confirm: "interface",
+    reveal_impact: "impact",
+    status_signal: "signal",
+    caption_emphasis: "emphasis"
+  });
+  const SFX_CUE_SHEET_FAMILIES = new Set(Object.values(SFX_CUE_SHEET_PRESET_FAMILIES));
+  const SFX_CUE_SHEET_PLACEMENT_IDS = new Set(["opening", "transition", "closing"]);
+  const SFX_CUE_SHEET_BOUNDARY_KEYS = Object.freeze([
+    ...MUSIC_PROMPT_COMPOSER_BOUNDARY_KEYS, "source_video_inspected", "catalog_searched", "sfx_generated"
+  ]);
+  const SFX_CUE_SHEET_RESULT_KEYS = Object.freeze(["cue_sheet", ...SFX_CUE_SHEET_BOUNDARY_KEYS]);
+  const SFX_CUE_SHEET_KEYS = Object.freeze([
+    "title", "description", "language", "web_sfx_preset_id", "cue_family", "cues", "placement_notice", "cautions", "review_before_use"
+  ]);
+  const SFX_CUE_SHEET_CUE_KEYS = Object.freeze([
+    "ordinal", "placement_id", "placement", "cue_role", "direction", "mix_note", "avoid_note", "editorial_note"
+  ]);
+  // Reject a full raw Bot callback/command or raw sound keyword as a brief,
+  // while keeping normal human prose such as "thêm nhịp click nhẹ" valid.
+  const SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN = /^\s*(?:(?:sfx_quick|music_quick)\|.*|\/sfx_library(?:\s.*)?|(?:play_sfx|select_sfx|open_sfx_source|license_sfx)\|.*|(?:whoosh|click|cinematic(?:\s+hit)?|notification|pop|custom_sfx))\s*$/i;
+  const SFX_CUE_SHEET_UNSAFE_CONTENT_PATTERN = /<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i;
+
   function musicPromptComposerHasExactKeys(value, keys) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
     const actual = Object.keys(value);
@@ -2572,6 +2613,123 @@
     const composer = receipt.composer && typeof receipt.composer === "object" ? receipt.composer : {};
     if (!source.description || !composer || composer.description !== source.description || composer.language !== source.language
       || !musicDirectionPresetComposerMatchesPreset(source.web_preset_id, composer)) return {};
+    return { source, receipt };
+  }
+
+  // Keep the SFX receipt validator separate from Music Directions. A cue
+  // sheet is only editorial text with three semantic placements; it must not
+  // be repaired from a catalog, raw callback, media timeline or any other
+  // runtime-shaped response in the browser.
+  function sfxCueSheetText(value, minimum, maximum, allowEmpty) {
+    return musicPromptComposerText(value, minimum, maximum, allowEmpty);
+  }
+
+  function sfxCueSheetContentsAreSafe(values) {
+    const text = (Array.isArray(values) ? values : []).map((value) => String(value || "")).join("\n");
+    if (SFX_CUE_SHEET_UNSAFE_CONTENT_PATTERN.test(text)) return false;
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return false;
+    if (/\b(?:(?:provider|engine|audio|preview|output|job|asset|collection|telegram)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return false;
+    return true;
+  }
+
+  function sfxCueSheetBoundaryIsSafe(value) {
+    return musicPromptComposerHasExactKeys(value, SFX_CUE_SHEET_BOUNDARY_KEYS)
+      && value.execution === "web_native_deterministic_sfx_cue_sheet_only"
+      && value.input_persisted === false && value.source_audio_inspected === false && value.source_video_inspected === false
+      && value.provider_called === false && value.catalog_searched === false && value.ai_music_called === false && value.sfx_generated === false
+      && value.lyrics_generated === false && value.audio_created === false && value.preview_created === false && value.output_created === false
+      && value.job_created === false && value.wallet_mutated === false && value.payment_started === false
+      && value.asset_saved === false && value.collection_saved === false && value.publish_action_created === false
+      && value.telegram_called === false && value.rights_verified === false;
+  }
+
+  function sfxCueSheetCue(value, expectedOrdinal, expectedPlacementId) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const ordinal = source.ordinal;
+    const placementId = typeof source.placement_id === "string" ? source.placement_id : "";
+    const placement = sfxCueSheetText(source.placement, 2, 240, false);
+    const cueRole = sfxCueSheetText(source.cue_role, 2, 600, false);
+    const direction = sfxCueSheetText(source.direction, 2, 1600, false);
+    const mixNote = sfxCueSheetText(source.mix_note, 2, 1200, false);
+    const avoidNote = sfxCueSheetText(source.avoid_note, 2, 1200, false);
+    const editorialNote = sfxCueSheetText(source.editorial_note, 2, 1200, false);
+    if (!musicPromptComposerHasExactKeys(source, SFX_CUE_SHEET_CUE_KEYS)
+      || !Number.isInteger(ordinal) || ordinal !== expectedOrdinal
+      || placementId !== expectedPlacementId || !SFX_CUE_SHEET_PLACEMENT_IDS.has(placementId)
+      || !placement || !cueRole || !direction || !mixNote || !avoidNote || !editorialNote) return null;
+    return {
+      ordinal, placement_id: placementId, placement, cue_role: cueRole, direction,
+      mix_note: mixNote, avoid_note: avoidNote, editorial_note: editorialNote
+    };
+  }
+
+  function normalizeSfxCueSheetReceipt(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    if (!musicPromptComposerHasExactKeys(source, SFX_CUE_SHEET_RESULT_KEYS)) return {};
+    const boundary = {};
+    SFX_CUE_SHEET_BOUNDARY_KEYS.forEach((key) => { boundary[key] = source[key]; });
+    if (!sfxCueSheetBoundaryIsSafe(boundary)) return {};
+    const cueSheet = source.cue_sheet && typeof source.cue_sheet === "object" && !Array.isArray(source.cue_sheet) ? source.cue_sheet : {};
+    if (!musicPromptComposerHasExactKeys(cueSheet, SFX_CUE_SHEET_KEYS)) return {};
+    const title = sfxCueSheetText(cueSheet.title, 2, 180, false);
+    const description = sfxCueSheetText(cueSheet.description, 2, 500, false);
+    const language = typeof cueSheet.language === "string" ? cueSheet.language : "";
+    const presetId = typeof cueSheet.web_sfx_preset_id === "string" ? cueSheet.web_sfx_preset_id : "";
+    const cueFamily = typeof cueSheet.cue_family === "string" ? cueSheet.cue_family : "";
+    const placementNotice = sfxCueSheetText(cueSheet.placement_notice, 2, 1600, false);
+    const cautions = musicPromptComposerStringList(cueSheet.cautions, 0, 6, 1200);
+    const reviewBeforeUse = musicPromptComposerStringList(cueSheet.review_before_use, 1, 6, 1200);
+    const placementIds = ["opening", "transition", "closing"];
+    const rawCues = Array.isArray(cueSheet.cues) ? cueSheet.cues : [];
+    const cues = rawCues.length === placementIds.length
+      ? rawCues.map((item, index) => sfxCueSheetCue(item, index + 1, placementIds[index])) : [];
+    const expectedFamily = SFX_CUE_SHEET_PRESET_FAMILIES[presetId];
+    const safeTextValues = [
+      title, description, placementNotice,
+      ...cues.filter(Boolean).flatMap((cue) => [cue.placement, cue.cue_role, cue.direction, cue.mix_note, cue.avoid_note, cue.editorial_note]),
+      ...(cautions || []), ...(reviewBeforeUse || [])
+    ];
+    if (!title || !description || !MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language)
+      || !SFX_CUE_SHEET_PRESET_IDS.has(presetId) || !SFX_CUE_SHEET_FAMILIES.has(cueFamily)
+      || cueFamily !== expectedFamily || !placementNotice || cues.length !== placementIds.length || cues.some((cue) => cue === null)
+      || cautions === null || reviewBeforeUse === null || !sfxCueSheetContentsAreSafe(safeTextValues)) return {};
+    return {
+      cue_sheet: {
+        title, description, language, web_sfx_preset_id: presetId, cue_family: cueFamily, cues,
+        placement_notice: placementNotice, cautions, review_before_use: reviewBeforeUse
+      },
+      execution: "web_native_deterministic_sfx_cue_sheet_only",
+      input_persisted: false, source_audio_inspected: false, source_video_inspected: false,
+      provider_called: false, catalog_searched: false, ai_music_called: false, sfx_generated: false,
+      lyrics_generated: false, audio_created: false, preview_created: false, output_created: false,
+      job_created: false, wallet_mutated: false, payment_started: false, asset_saved: false,
+      collection_saved: false, publish_action_created: false, telegram_called: false, rights_verified: false
+    };
+  }
+
+  function normalizeSfxCueSheetSource(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["description", "language", "web_sfx_preset_id"];
+    if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return {};
+    const description = sfxCueSheetText(source.description, 2, 500, false);
+    const language = typeof source.language === "string" ? source.language : "";
+    const presetId = typeof source.web_sfx_preset_id === "string" ? source.web_sfx_preset_id : "";
+    if (!description || description !== source.description || SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN.test(description)
+      || !MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language) || !SFX_CUE_SHEET_PRESET_IDS.has(presetId)
+      || !sfxCueSheetContentsAreSafe([description])) return {};
+    return { description, language, web_sfx_preset_id: presetId };
+  }
+
+  function normalizeSfxCueSheetState(raw) {
+    const state = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["source", "receipt"];
+    if (Object.keys(state).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(state, key))) return {};
+    const source = normalizeSfxCueSheetSource(state.source);
+    const receipt = normalizeSfxCueSheetReceipt(state.receipt);
+    const cueSheet = receipt.cue_sheet && typeof receipt.cue_sheet === "object" ? receipt.cue_sheet : {};
+    if (!source.description || !cueSheet || cueSheet.description !== source.description || cueSheet.language !== source.language
+      || cueSheet.web_sfx_preset_id !== source.web_sfx_preset_id
+      || cueSheet.cue_family !== SFX_CUE_SHEET_PRESET_FAMILIES[source.web_sfx_preset_id]) return {};
     return { source, receipt };
   }
 
@@ -7151,6 +7309,13 @@
       // This is cleared on signed bootstrap and never uses browser storage.
       musicDirectionPresetDraft: normalizeMusicDirectionPresetSource(source.musicDirectionPresetDraft),
       musicDirectionPresetResult: normalizeMusicDirectionPresetState(source.musicDirectionPresetResult),
+      // SFX Cue Sheet follows the same request/receipt isolation but is not a
+      // Music Direction, SFX catalog or media record. Its brief and three
+      // semantic cues are current-session text only and fail closed if a
+      // response does not exactly match the selected opaque Web preset.
+      sfxCueSheetEnabled: source.sfxCueSheetEnabled === true,
+      sfxCueSheetDraft: normalizeSfxCueSheetSource(source.sfxCueSheetDraft),
+      sfxCueSheetResult: normalizeSfxCueSheetState(source.sfxCueSheetResult),
       // Content Studio is a standalone signed-account authoring surface.
       // Keep only bounded owner-scoped projections; no generic Bot fallback or
       // browser persistence can refill this state after a failed hydration.
@@ -8291,7 +8456,7 @@
       {
         label: "AI Labs & Media",
         links: [
-          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/audio/assets", "Audio Asset Operations", ICONS.music]
+          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/media-workspace/sfx-cue-sheet", "SFX Cue Sheet", ICONS.music], ["/audio/assets", "Audio Asset Operations", ICONS.music]
         ]
       },
       {
@@ -10298,6 +10463,7 @@
     const eventList = events.length ? `<div class="portal-media-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ lưu nhãn thao tác và revision; không hiển thị brief, attribution hoặc license note.", "○");
     return `<article class="portal-page portal-media-workspace">${renderHero(page, context)}
       <section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">Private Audio Library & Briefing</span><h2>Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo</h2><p>Tạo collection cho music/SFX brief, liên kết planning với Project và gắn audio đã nằm trong Asset Vault. Đây là workspace authoring; không phải generator, catalog provider hay trình phát audio.</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>Audio references</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>Đã đánh dấu</dd></div></dl></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Công cụ biên tập nhanh</span><h2 class="portal-card-title">Lập SFX theo ngữ cảnh trước khi chọn nguồn âm thanh</h2><p class="portal-card-subtitle">SFX Cue Sheet tạo ba vị trí semantic để review. Đây là công cụ Web độc lập: không mở catalog, preview, job, ví Xu hay thao tác Telegram.</p></div>${badge("ready")}</div><div class="portal-form-footer"><span class="portal-form-note">Chọn preset và viết brief mới trên trang riêng; không chuyển collection, file hoặc dữ liệu account sang công cụ này.</span><a class="portal-button portal-button--primary" href="/media-workspace/sfx-cue-sheet">Mở SFX Cue Sheet <span aria-hidden="true">→</span></a></div></section>
       <div class="portal-media-workspace-layout"><section class="portal-card portal-card-pad portal-media-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo audio collection</h2><p class="portal-card-subtitle">Lưu creative brief riêng tư với owner check, CSRF, idempotency và version history. Chưa có AI request hoặc media output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(mediaCollectionFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Collection chỉ lưu authoring metadata. Audio được gắn riêng từ Asset Vault sau khi server owner-check.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo collection</button></div></form></section>${renderMediaPolicy(context)}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục collection</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại; nội dung đầy đủ chỉ nạp sau owner check khi mở collection.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="/media-workspace">Làm mới</button></div><form class="portal-media-filter" data-portal-form data-portal-no-transient data-portal-action="media-workspace-filter" data-portal-route="/media-workspace" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại, không lưu localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="/media-workspace">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm collection</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context))}${renderMediaWorkspacePagination(listing)}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không có raw brief, file path, URL hoặc data provider.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "ready"))} authoring · ${safeText(String(execution.generation || "guarded"))} generation</span></div>${eventList}</section>
@@ -10825,6 +10991,116 @@
       <div class="portal-music-directions-layout"><section class="portal-card portal-card-pad portal-music-directions-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Step 1 · chọn preset</span><h2 class="portal-card-title">Lập Music Directions</h2><p class="portal-card-subtitle">Chọn một preset rồi viết brief. Thao tác chọn chỉ thay đổi form cục bộ; request chỉ được gửi sau khi bạn bấm nút xác nhận bên dưới.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-direction-preset-compose" data-portal-route="/media-workspace/music-directions" data-music-direction-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-music-directions-picker"><legend>Preset Web <span aria-hidden="true">*</span></legend><p id="music-directions-preset-help" class="portal-field-help">Chỉ chọn một preset. Không có request, điều hướng, quay lại, reset hoặc tự submit khi bạn đổi lựa chọn.</p><div class="portal-music-directions-preset-grid">${cards}</div><p class="portal-music-directions-selection" data-music-direction-selection aria-live="polite">${selectedPresetId ? `Đã chọn ${safeText(String(selectedLabel))}. Hoàn tất brief rồi bấm lập direction.` : "Chưa chọn preset. Hãy chọn một hướng trước khi lập direction."}</p></fieldset>${renderFields(musicDirectionPresetFields(), canCompose, context, values, "music-directions")}<div class="portal-form-footer"><span class="portal-form-note">Server kiểm tra signed session, CSRF và schema rồi chỉ dựng ba direction text deterministic. Không có audio, lyric, provider, preview, output, job, thanh toán hoặc lưu dữ liệu trong thao tác này.</span><button class="portal-button portal-button--primary" type="submit" data-music-direction-submit${submitEnabled ? "" : " disabled"}>Lập 3 music direction</button></div></form></section><aside class="portal-card portal-card-pad portal-music-directions-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ lập direction text</h2><p class="portal-card-subtitle">Module này không phải music generator. Nó không mở player, catalog track, voice, source audio hay workflow thực thi.</p></div>${badge("guarded")}</div><div class="portal-music-directions-guard-list"><span><strong>Bot callback / keyword</strong><em>off</em></span><span><strong>Provider / AI music</strong><em>off</em></span><span><strong>Lyrics / audio / preview</strong><em>off</em></span><span><strong>Output / job / payment</strong><em>off</em></span><span><strong>Asset / collection / delivery</strong><em>off</em></span><span><strong>Telegram action</strong><em>off</em></span></div></aside></div>
       ${renderMusicDirectionPresetResult(context.musicDirectionPresetResult)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Preset giúp bắt đầu nhanh, không thay thế review của bạn</h2><p class="portal-card-subtitle">Kiểm tra quyền sử dụng, claim, thương hiệu, consent và bối cảnh trước khi chuyển bất kỳ prompt nào sang một workflow được cấp riêng.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  // SFX Cue Sheet is a Web-native editorial surface, not a sound library.
+  // The five choices below are opaque preset IDs mirrored by the server only
+  // to reject cross-preset receipts; none is a raw Bot callback or sound
+  // query. Native radios make selection keyboard/touch accessible while an
+  // explicit submit preserves the customer's flow.
+  const SFX_CUE_SHEET_ROUTE = "/media-workspace/sfx-cue-sheet";
+  const SFX_CUE_SHEET_PRESETS = Object.freeze([
+    { id: "motion_transition", label: "Chuyển động mượt", detail: "Nhấn nhẹ để làm rõ một điểm chuyển cảnh hoặc thay đổi nhịp.", cue: "Chuyển đoạn" },
+    { id: "interface_confirm", label: "Xác nhận giao diện", detail: "Phản hồi thao tác gọn, rõ nhưng không cạnh tranh với nội dung.", cue: "Tương tác" },
+    { id: "reveal_impact", label: "Điểm nhấn reveal", detail: "Nhấn vừa phải cho một khoảnh khắc mở lộ hoặc kết luận.", cue: "Reveal" },
+    { id: "status_signal", label: "Tín hiệu trạng thái", detail: "Tạo phân biệt mềm cho thay đổi trạng thái hoặc thông tin quan trọng.", cue: "Trạng thái" },
+    { id: "caption_emphasis", label: "Nhấn caption / CTA", detail: "Hỗ trợ caption hoặc lời kêu gọi hành động mà không lấn át lời nói.", cue: "Caption / CTA" }
+  ]);
+
+  function sfxCueSheetTransientFormValues(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const description = typeof source.description === "string" ? source.description.slice(0, 500) : "";
+    const language = MUSIC_PROMPT_COMPOSER_LANGUAGES.has(source.language) ? source.language : "vi";
+    const presetId = SFX_CUE_SHEET_PRESET_IDS.has(source.web_sfx_preset_id) ? source.web_sfx_preset_id : "";
+    return { description, language, web_sfx_preset_id: presetId };
+  }
+
+  function rememberSfxCueSheetTransientDraft(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "sfx-cue-sheet-compose") return;
+    // Preserve only the three bounded scalar form values in tab memory. This
+    // lets an unrelated Portal remount retain an unsent edit without turning
+    // it into a server draft, browser storage entry or request side effect.
+    transientFormDrafts.set(SFX_CUE_SHEET_ROUTE, sfxCueSheetTransientFormValues(collectFormFields(form)));
+  }
+
+  function sfxCueSheetFormValues(context) {
+    const signedSession = Boolean(context && context.session && context.session.authenticated === true);
+    const transient = signedSession && transientFormDrafts.has(SFX_CUE_SHEET_ROUTE)
+      ? sfxCueSheetTransientFormValues(transientFormValues(SFX_CUE_SHEET_ROUTE))
+      : null;
+    const draft = normalizeSfxCueSheetSource(context && context.sfxCueSheetDraft);
+    const state = normalizeSfxCueSheetState(context && context.sfxCueSheetResult);
+    const source = transient || (draft.description ? draft : (state.source && typeof state.source === "object" ? state.source : {}));
+    const description = typeof source.description === "string" ? source.description : "";
+    const language = MUSIC_PROMPT_COMPOSER_LANGUAGES.has(source.language) ? source.language : "vi";
+    const presetId = SFX_CUE_SHEET_PRESET_IDS.has(source.web_sfx_preset_id) ? source.web_sfx_preset_id : "";
+    return { description, language, web_sfx_preset_id: presetId };
+  }
+
+  function sfxCueSheetFields() {
+    return [
+      { name: "description", label: "Brief SFX", control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video onboarding ứng dụng, cần làm rõ lúc chuyển màn hình và khi hiện CTA cuối", help: "Nêu bối cảnh, hành động cần làm rõ và cảm giác mong muốn. Không nhập URL, token, file ID, nguồn media, callback/keyword Bot, yêu cầu mô phỏng tác giả/tác phẩm hoặc thông tin thanh toán." },
+      { name: "language", label: "Ngôn ngữ cue sheet", control: "select", required: true, options: [["vi", "Tiếng Việt"], ["en", "English"]], help: "Ngôn ngữ để server dựng ba chỉ dẫn biên tập. Đây không phải lựa chọn giọng đọc hoặc file âm thanh." }
+    ];
+  }
+
+  function sfxCueSheetPlacementLabel(placementId, fallback) {
+    const labels = { opening: "Mở đầu", transition: "Chuyển đoạn / proof", closing: "Kết / CTA" };
+    return labels[placementId] || fallback || "Vị trí biên tập";
+  }
+
+  function renderSfxCueSheetResult(raw) {
+    const state = normalizeSfxCueSheetState(raw);
+    const source = state.source && typeof state.source === "object" ? state.source : null;
+    const receipt = state.receipt && typeof state.receipt === "object" ? state.receipt : null;
+    const cueSheet = receipt && receipt.cue_sheet && typeof receipt.cue_sheet === "object" ? receipt.cue_sheet : null;
+    if (!source || !cueSheet) {
+      return `<section class="portal-card portal-card-pad portal-sfx-cue-sheet-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Cue sheet receipt</span><h2 class="portal-card-title">Chưa có cue sheet để review</h2><p class="portal-card-subtitle">Chọn một preset, mô tả bối cảnh và bấm lập cue sheet. Browser không tự thay lựa chọn của bạn bằng callback Bot, keyword, catalog hoặc một kết quả mặc định.</p></div>${badge("empty")}</div></section>`;
+    }
+    const selectedPreset = SFX_CUE_SHEET_PRESETS.find((item) => item.id === source.web_sfx_preset_id);
+    const cues = Array.isArray(cueSheet.cues) ? cueSheet.cues : [];
+    const cautionItems = Array.isArray(cueSheet.cautions) && cueSheet.cautions.length
+      ? cueSheet.cautions : ["Vẫn cần kiểm tra quyền sử dụng, claim, thương hiệu, consent và ngữ cảnh trước khi đưa direction sang workflow khác."];
+    const reviewItems = Array.isArray(cueSheet.review_before_use) && cueSheet.review_before_use.length
+      ? cueSheet.review_before_use : ["Review cùng người biên tập trước khi quyết định dùng bất kỳ nguồn âm thanh nào ở workflow được cấp riêng."];
+    // A tab-local edit is deliberately allowed to make this receipt stale,
+    // but it never replaces its last server-validated content. This check
+    // survives an unrelated Portal remount without browser persistence.
+    const activeSource = transientFormDrafts.has(SFX_CUE_SHEET_ROUTE)
+      ? sfxCueSheetTransientFormValues(transientFormValues(SFX_CUE_SHEET_ROUTE))
+      : source;
+    const receiptIsStale = source.description !== activeSource.description
+      || source.language !== activeSource.language
+      || source.web_sfx_preset_id !== activeSource.web_sfx_preset_id;
+    const cueItems = cues.map((cue) => `<li><span class="portal-sfx-cue-sheet-index">${safeText(String(cue.ordinal || "").padStart(2, "0"))}</span><div><div class="portal-sfx-cue-sheet-list-head"><strong>${safeText(sfxCueSheetPlacementLabel(String(cue.placement_id || ""), String(cue.placement || "")))}</strong><em>${safeText(String(cue.cue_role || ""))}</em></div><p>${safeText(String(cue.editorial_note || ""))}</p><dl><div><dt>Direction</dt><dd>${safeText(String(cue.direction || ""))}</dd></div><div><dt>Mix note</dt><dd>${safeText(String(cue.mix_note || ""))}</dd></div><div><dt>Tránh</dt><dd>${safeText(String(cue.avoid_note || ""))}</dd></div></dl></div></li>`).join("");
+    const cautionMarkup = cautionItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
+    const reviewMarkup = reviewItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
+    return `<section class="portal-card portal-card-pad portal-sfx-cue-sheet-result" data-sfx-cue-sheet-receipt data-stale="${receiptIsStale ? "true" : "false"}">
+      <div class="portal-card-header"><div><span class="portal-section-kicker">Cue sheet receipt · session only</span><h2 class="portal-card-title" tabindex="-1" data-sfx-cue-sheet-result-heading>${safeText(String(cueSheet.title || "SFX Cue Sheet"))}</h2><p class="portal-card-subtitle">${safeText(String(cueSheet.description || ""))} Đây là ba chỉ dẫn biên tập semantic để review, không phải SFX, file, player, preview, output hoặc xác nhận delivery.</p></div>${badge("read_only")}</div>
+      <div class="portal-sfx-cue-sheet-meta"><span>${safeText(selectedPreset ? selectedPreset.label : "Preset Web")}</span><span>${safeText(String(cueSheet.cue_family || "").toUpperCase())}</span><span>${safeText(String(cueSheet.language || "").toUpperCase())}</span><span>3 vị trí semantic · không có mốc thời gian media</span></div>
+      <p class="portal-sfx-cue-sheet-notice">${safeText(String(cueSheet.placement_notice || ""))}</p>
+      <ol class="portal-sfx-cue-sheet-list">${cueItems}</ol>
+      <section class="portal-sfx-cue-sheet-review"><strong>Cảnh báo và review trước khi dùng ở workflow khác</strong><ul>${cautionMarkup}</ul><div><strong>Checklist</strong><ul>${reviewMarkup}</ul></div></section>
+      <p class="portal-form-note">Receipt chỉ tồn tại trong phiên hiện tại. Module không kiểm tra source video/audio, không tìm catalog, tạo SFX, preview, output, job, ví Xu, PayOS, asset, collection, publish, delivery hoặc Telegram action.</p>
+    </section>`;
+  }
+
+  function renderSfxCueSheet(page, context) {
+    const canCompose = Boolean(context.capabilities && context.capabilities["sfx-cue-sheet-compose"] === true);
+    const values = sfxCueSheetFormValues(context);
+    const selectedPresetId = SFX_CUE_SHEET_PRESET_IDS.has(values.web_sfx_preset_id) ? values.web_sfx_preset_id : "";
+    const cards = SFX_CUE_SHEET_PRESETS.map((preset) => {
+      const selected = preset.id === selectedPresetId;
+      return `<label class="portal-sfx-cue-sheet-preset-card" data-sfx-cue-sheet-preset-card="${safeText(preset.id)}" data-selected="${selected ? "true" : "false"}"><input class="portal-sfx-cue-sheet-radio" type="radio" name="web_sfx_preset_id" value="${safeText(preset.id)}"${selected ? " checked" : ""}${canCompose ? "" : " disabled"} aria-describedby="sfx-cue-sheet-preset-help"><span class="portal-sfx-cue-sheet-preset-copy"><strong>${safeText(preset.label)}</strong><small>${safeText(preset.detail)}</small></span><span class="portal-sfx-cue-sheet-preset-cue">${safeText(preset.cue)}</span></label>`;
+    }).join("");
+    const submitEnabled = canCompose && Boolean(selectedPresetId);
+    const selectedLabel = (SFX_CUE_SHEET_PRESETS.find((item) => item.id === selectedPresetId) || {}).label || "preset Web";
+    return `<article class="portal-page portal-sfx-cue-sheet">${renderHero(page, context)}
+      <section class="portal-sfx-cue-sheet-intro"><div><span class="portal-section-kicker">Web-native editorial SFX planning</span><h2>Đặt điểm nhấn có chủ đích, rồi review theo ngữ cảnh thật.</h2><p>Năm preset Web này giúp bạn bắt đầu nhanh bằng ba vị trí semantic: mở đầu, chuyển đoạn và kết. Không có timeline số vì module chưa kiểm tra bất kỳ source video hoặc audio nào.</p></div><dl><div><dt>5</dt><dd>Preset Web đã review</dd></div><div><dt>3</dt><dd>Vị trí semantic</dd></div><div><dt>0</dt><dd>File hoặc preview</dd></div></dl></section>
+      <div class="portal-sfx-cue-sheet-layout"><section class="portal-card portal-card-pad portal-sfx-cue-sheet-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Step 1 · chọn hướng</span><h2 class="portal-card-title">Lập SFX Cue Sheet</h2><p class="portal-card-subtitle">Chọn một preset rồi viết brief. Việc chọn chỉ thay đổi form cục bộ; request chỉ được gửi khi bạn chủ động bấm nút xác nhận bên dưới.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="sfx-cue-sheet-compose" data-portal-route="/media-workspace/sfx-cue-sheet" data-sfx-cue-sheet-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-sfx-cue-sheet-picker"><legend>Preset SFX Web <span aria-hidden="true">*</span></legend><p id="sfx-cue-sheet-preset-help" class="portal-field-help">Chỉ chọn một preset. Không có request, điều hướng, quay lại, reset hoặc tự submit khi bạn đổi lựa chọn.</p><div class="portal-sfx-cue-sheet-preset-grid">${cards}</div><p class="portal-sfx-cue-sheet-selection" data-sfx-cue-sheet-selection aria-live="polite">${selectedPresetId ? `Đã chọn ${safeText(String(selectedLabel))}. Hoàn tất brief rồi bấm lập cue sheet.` : "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet."}</p></fieldset>${renderFields(sfxCueSheetFields(), canCompose, context, values, "sfx-cue-sheet")}<div class="portal-form-footer"><span class="portal-form-note">Server kiểm tra signed session, CSRF và schema rồi chỉ dựng ba chỉ dẫn semantic. Không có source media inspection, catalog/provider, SFX, preview, output, job, thanh toán hoặc lưu dữ liệu trong thao tác này.</span><button class="portal-button portal-button--primary" type="submit" data-sfx-cue-sheet-submit${submitEnabled ? "" : " disabled"}>Lập 3 cue semantic</button></div></form></section><aside class="portal-card portal-card-pad portal-sfx-cue-sheet-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ lập cue text</h2><p class="portal-card-subtitle">Module này không phải SFX library hoặc generator. Nó không kiểm tra source media, mở catalog/player, chọn sound hay thực thi workflow.</p></div>${badge("guarded")}</div><div class="portal-sfx-cue-sheet-guard-list"><span><strong>Raw Bot callback / keyword</strong><em>off</em></span><span><strong>Source video / audio inspect</strong><em>off</em></span><span><strong>Catalog / provider / SFX</strong><em>off</em></span><span><strong>Player / preview / output</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / collection / delivery</strong><em>off</em></span><span><strong>Telegram action</strong><em>off</em></span></div></aside></div>
+      ${renderSfxCueSheetResult(context.sfxCueSheetResult)}
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Cue sheet chỉ giúp biên tập bắt đầu đúng chỗ</h2><p class="portal-card-subtitle">Kiểm tra quyền sử dụng, claim, thương hiệu, consent và ngữ cảnh source thật trước khi chọn bất kỳ nguồn âm thanh nào trong một workflow được cấp riêng.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -22940,6 +23216,7 @@
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "music-prompt-composer": return renderMusicPromptComposer(page, context);
       case "music-direction-presets": return renderMusicDirectionPresets(page, context);
+      case "sfx-cue-sheet": return renderSfxCueSheet(page, context);
       case "content-studio": return renderContentStudio(page, context);
       case "content-studio-detail": return renderContentStudioDetail(page, context);
       case "channel-strategy": return renderChannelStrategy(page, context);
@@ -23130,6 +23407,45 @@
     // network behavior; integration discards a now-stale receipt if the user
     // edits the local form while a prior explicit request is still pending.
     window.dispatchEvent(new CustomEvent("toanaas:music-direction-preset-draft-edited"));
+  }
+
+  function synchronizeSfxCueSheetForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "sfx-cue-sheet-compose") return;
+    const enabled = form.getAttribute("data-sfx-cue-sheet-compose-enabled") === "true";
+    const selected = form.querySelector('input[name="web_sfx_preset_id"]:checked');
+    const presetId = selected && SFX_CUE_SHEET_PRESET_IDS.has(String(selected.value || "")) ? String(selected.value) : "";
+    const preset = SFX_CUE_SHEET_PRESETS.find((item) => item.id === presetId);
+    form.querySelectorAll("[data-sfx-cue-sheet-preset-card]").forEach((card) => {
+      card.setAttribute("data-selected", String(card.getAttribute("data-sfx-cue-sheet-preset-card") === presetId));
+    });
+    const submit = form.querySelector("[data-sfx-cue-sheet-submit]");
+    if (submit) {
+      submit.disabled = !(enabled && presetId);
+      submit.setAttribute("aria-disabled", String(!(enabled && presetId)));
+    }
+    const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
+    if (announcement) {
+      announcement.textContent = preset
+        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập cue sheet.`
+        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.";
+    }
+  }
+
+  function markSfxCueSheetDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "sfx-cue-sheet-compose") return;
+    rememberSfxCueSheetTransientDraft(form);
+    synchronizeSfxCueSheetForm(form);
+    // Keep the last valid receipt visible but explicitly stale. An edit never
+    // sends a request, changes route, resets fields or fabricates a cue sheet.
+    const receipt = form.closest(".portal-sfx-cue-sheet")?.querySelector(".portal-sfx-cue-sheet-result[data-sfx-cue-sheet-receipt]");
+    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+      receipt.setAttribute("data-stale", "true");
+      const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
+      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập cue sheet khi bạn sẵn sàng tạo receipt mới.";
+    }
+    // Integration uses this event only to fence a delayed explicit request.
+    // It has no storage, submit, network or navigation side effect.
+    window.dispatchEvent(new CustomEvent("toanaas:sfx-cue-sheet-draft-edited"));
   }
 
   function synchronizeImageResizePreset(form) {
@@ -24789,6 +25105,9 @@
       if (form && form.getAttribute("data-portal-action") === "music-direction-preset-compose") {
         markMusicDirectionPresetDraftEdited(form);
       }
+      if (form && form.getAttribute("data-portal-action") === "sfx-cue-sheet-compose") {
+        markSfxCueSheetDraftEdited(form);
+      }
       if (form && form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
         synchronizeCinematicConceptDraftFreshness(form);
       }
@@ -24825,6 +25144,9 @@
         }
         if (form.getAttribute("data-portal-action") === "music-direction-preset-compose") {
           markMusicDirectionPresetDraftEdited(form);
+        }
+        if (form.getAttribute("data-portal-action") === "sfx-cue-sheet-compose") {
+          markSfxCueSheetDraftEdited(form);
         }
         if (form.getAttribute("data-portal-action") === "cinematic-concept-compose"
           && event.target && event.target.name === "message_mode") {
@@ -24954,6 +25276,24 @@
     player.addEventListener("error", () => dispatch("video-preview-player-error", {}), { once: true });
   }
 
+  function placeSfxCueSheetReceipt(main) {
+    // The receipt is emitted after the shared page template, then moved into
+    // its own named grid area during the same mount. This puts a just-created
+    // receipt immediately after the form on narrow screens and below both
+    // cards on desktop, without an automatic route change or scroll jump.
+    const layout = main && main.querySelector(".portal-sfx-cue-sheet-layout");
+    const receipt = main && main.querySelector(".portal-sfx-cue-sheet-result");
+    const boundary = layout && layout.querySelector(".portal-sfx-cue-sheet-boundary");
+    const status = main && main.querySelector("[data-sfx-cue-sheet-selection]");
+    if (status) {
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      status.setAttribute("aria-atomic", "true");
+    }
+    if (!layout || !receipt || !boundary || receipt.parentElement === layout) return;
+    layout.insertBefore(receipt, boundary);
+  }
+
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
@@ -25001,6 +25341,7 @@
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
+    placeSfxCueSheetReceipt(main);
     bindVideoPreviewPlayer(main);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-project-create"]').forEach((form) => synchronizeSubtitleLanguageSourceForm(form));

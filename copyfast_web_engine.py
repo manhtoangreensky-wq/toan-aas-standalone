@@ -118,6 +118,11 @@ ENGINE_SPECS.update(_many(("music_prompt_composer",), mode=ENGINE_MODE_WEB_NATIV
 # callback, provider/Bot request, audio/media output/job, memory/asset write,
 # wallet/payment mutation or Telegram action.
 ENGINE_SPECS.update(_many(("music_direction_presets",), mode=ENGINE_MODE_WEB_NATIVE, flags=("music_media_workspace_enabled",), handler="music_direction_presets"))
+# SFX Cue Sheet is an equally bounded Web-native editorial receipt.  It uses
+# three semantic positions only, rather than claiming a source-media timeline
+# or exposing a Bot callback, catalog/provider, preview/audio, job, asset,
+# payment or Telegram action.
+ENGINE_SPECS.update(_many(("sfx_cue_sheet",), mode=ENGINE_MODE_WEB_NATIVE, flags=("music_media_workspace_enabled",), handler="sfx_cue_sheet"))
 ENGINE_SPECS.update(_many(("voice_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("voice_studio_enabled",), handler="voice_studio"))
 # Voice Direction Composer is a bounded, transient adaptation of the Bot's
 # static voice-style suggestions.  It only returns editorial text; it has no

@@ -119,6 +119,7 @@ async def dashboard():
         "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
         "AUDIO_HUB_CALLBACK_CONTRACT.md",
+        "SFX_CUE_SHEET_CONTRACT.md",
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
         "CREATIVE_VARIANT_CALLBACK_CONTRACT.md",
@@ -141,6 +142,7 @@ async def dashboard():
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
     assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
+    assert "SFX_CUE_SHEET_CONTRACT.md" in readme
     assert "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
@@ -4534,14 +4536,24 @@ async def portal(page_path):
     assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in contract
     assert "music-prompt-composer" in contract
     assert "music-directions" in contract
+    assert "sfx-cue-sheet" in contract
+    assert "does not modify Bot code" in contract
     music_directions_contract = (tmp_path / "docs" / "MUSIC_DIRECTION_PRESET_CONTRACT.md").read_text(encoding="utf-8")
     assert "/media-workspace/music-directions" in music_directions_contract
     assert "web_preset_id" in music_directions_contract
     assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in music_directions_contract
     assert "No Web request may forward a raw Bot callback" in music_directions_contract
+    sfx_cue_sheet_contract = (tmp_path / "docs" / "SFX_CUE_SHEET_CONTRACT.md").read_text(encoding="utf-8")
+    assert "/media-workspace/sfx-cue-sheet" in sfx_cue_sheet_contract
+    assert "web_sfx_preset_id" in sfx_cue_sheet_contract
+    assert "motion_transition" in sfx_cue_sheet_contract
+    assert "opening`, `transition` and `closing`" in sfx_cue_sheet_contract
+    assert "AUDIO_HUB_SOURCE_REVIEW_REQUIRED" in sfx_cue_sheet_contract
+    assert "does not modify Bot code" in sfx_cue_sheet_contract
     readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
     assert "MUSIC_DIRECTION_PRESET_CONTRACT.md" in readme
+    assert "SFX_CUE_SHEET_CONTRACT.md" in readme
     assert "Bot Audio Hub callbacks are a Telegram state-machine boundary" in (tmp_path / "docs" / "payos-wallet-jobs.md").read_text(encoding="utf-8")
     assert "Bot Audio Hub callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
