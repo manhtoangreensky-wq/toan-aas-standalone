@@ -10800,6 +10800,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
         + "- [`MUSIC_PROMPT_COMPOSER_CONTRACT.md`](MUSIC_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived music prompt directions with no Suno/provider/audio/job/payment/asset/collection/Telegram action.\n"
         + "- [`MUSIC_DIRECTION_PRESET_CONTRACT.md`](MUSIC_DIRECTION_PRESET_CONTRACT.md) — independent signed Music Directions from opaque Web preset IDs; it never accepts a Bot callback or keyword and has no provider/audio/job/payment/asset/collection/Telegram action.\n"
+        + "- [`SFX_CUE_SHEET_CONTRACT.md`](SFX_CUE_SHEET_CONTRACT.md) — independent signed SFX editorial cue sheet from opaque Web preset IDs; it keeps Bot SFX callbacks source-review-only and never claims a timeline, catalog/provider, audio, preview, job, asset, payment or Telegram action.\n"
         + "- [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.\n"
         + "- [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.\n"
         + "- [`ADMIN_DOMAIN_CENTERS_CONTRACT.md`](ADMIN_DOMAIN_CENTERS_CONTRACT.md) — safe first-class Admin navigation for Publishing, Growth, Finance and Trends.\n"
@@ -10854,7 +10855,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             audio_hub_contract_rows,
         )
-        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The signed `/media-workspace/music-prompt-composer` and `/media-workspace/music-directions` surfaces are independent deterministic text-planning flows entered fresh by a signed Web user. Music Directions accepts only a bounded opaque lower-case `web_preset_id` plus a new Web description; it rejects raw Bot callbacks, full Bot `/music_library` commands, bare Bot keywords, Bot mode/selection internals and unknown request fields, while ordinary prose is never interpreted or forwarded as Bot input. It produces no audio, provider request, job, asset, collection, payment, wallet mutation or delivery. See `MUSIC_DIRECTION_PRESET_CONTRACT.md`. A future Web Audio Hub must still start from its own signed owner-scoped data and separately reviewed execution contract.\n",
+        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The signed `/media-workspace/music-prompt-composer` and `/media-workspace/music-directions` surfaces are independent deterministic text-planning flows entered fresh by a signed Web user. Music Directions accepts only a bounded opaque lower-case `web_preset_id` plus a new Web description; it rejects raw Bot callbacks, full Bot `/music_library` commands, bare Bot keywords, Bot mode/selection internals and unknown request fields, while ordinary prose is never interpreted or forwarded as Bot input. It produces no audio, provider request, job, asset, collection, payment, wallet mutation or delivery. See `MUSIC_DIRECTION_PRESET_CONTRACT.md`. The separate signed `/media-workspace/sfx-cue-sheet` surface is also independent: it maps only fresh Web opaque IDs to three semantic editorial positions and does not accept `sfx_quick|*`, `music_quick|custom_sfx`, Bot SFX keywords, cache values or a source-media timeline. It performs no catalog/provider search, playback/audio creation, job, asset/collection or payment action; see `SFX_CUE_SHEET_CONTRACT.md`. This Web-only contract does not modify Bot code. A future Web Audio Hub must still start from its own signed owner-scoped data and separately reviewed execution contract.\n",
     )
     write(
         "MUSIC_DIRECTION_PRESET_CONTRACT.md",
@@ -10909,6 +10910,59 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- `suggest_music|sales`, `suggest_music|tech`, `suggest_music|cinematic`, `suggest_music|review`, and `suggest_music|trend`;\n"
         "- every case variant, missing token, suffix, unknown value, or future `suggest_music|*` value.\n\n"
         "No Web request may forward a raw Bot callback, Telegram identity/context, keyword, cache index, selected media, provider result, wallet/payment state, job identifier, output or delivery state. A future real audio/catalog experience requires its own owner-scoped, reviewed execution and delivery contract.\n",
+    )
+    write(
+        "SFX_CUE_SHEET_CONTRACT.md",
+        "# SFX Cue Sheet Composer contract\n\n"
+        "## Purpose and authority\n\n"
+        "`/media-workspace/sfx-cue-sheet` is an independent signed Web-native editorial planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `sfx_quick|*` callbacks, `/sfx_library` command, provider search, preview/select keyboard or media cache. This Web-only contract does not modify Bot code, Bot state, provider configuration, Xu, PayOS, jobs or Telegram delivery. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`.\n\n"
+        "The frozen Bot SFX picker contains `whoosh`, `click`, `cinematic`, `notification` and `pop` actions under Telegram product context; its custom-SFX entry is also a `music_quick|custom_sfx` callback. The Bot's `send_sfx_library_results` can call its configured Freesound path, save a per-user preview cache and expose Telegram preview/select controls. None of that runtime behavior is copied into Web.\n\n"
+        "The page instead offers five reviewed, opaque Web preset IDs:\n\n"
+        "| Web `web_sfx_preset_id` | Editorial intent |\n"
+        "| --- | --- |\n"
+        "| `motion_transition` | Chuyển động mượt |\n"
+        "| `interface_confirm` | Xác nhận giao diện |\n"
+        "| `reveal_impact` | Điểm nhấn mở lộ |\n"
+        "| `status_signal` | Tín hiệu trạng thái |\n"
+        "| `caption_emphasis` | Nhấn caption |\n\n"
+        "These identifiers are server-owned Web contract values. They are neither Bot action names nor catalog keywords, and they do not select a provider, library result, preview, asset, job, audio file or output.\n\n"
+        "## Explicit Web flow\n\n"
+        "1. A signed Web account selects one native radio preset. Changing that local selection must not navigate, reset history, send a request, search a catalog, call a provider or submit automatically.\n"
+        "2. The user writes a new editorial brief and explicitly chooses **Lập SFX cue sheet**.\n"
+        "3. The browser sends a CSRF-protected request to `POST /api/v1/media-workspace/tools/sfx-cue-sheet/compose` with the exact strict JSON shape:\n\n"
+        "```json\n"
+        "{\n"
+        "  \"description\": \"Mô tả mới do người dùng nhập\",\n"
+        "  \"language\": \"vi\",\n"
+        "  \"web_sfx_preset_id\": \"motion_transition\"\n"
+        "}\n"
+        "```\n\n"
+        "The strict schema forbids unknown fields. `language` is exactly `vi` or `en`, and `web_sfx_preset_id` must exactly match one lower-case reviewed value. Case variants, suffixes, unreviewed IDs, raw `sfx_quick|*` or `music_quick|*` callback values, a full `/sfx_library` command, preview/select syntax and an exact bare Bot SFX keyword are rejected. Ordinary prose that merely mentions a sound term is never interpreted or forwarded as Bot input.\n\n"
+        "## Bounded result\n\n"
+        "A valid explicit request returns a deterministic, transient text receipt with exactly three ordered semantic cue positions: `opening`, `transition` and `closing`. These are editorial placements only. The service does not receive, open or inspect a video/audio source, so it must not fabricate duration, millisecond timestamps, waveform positions, beat detection or a synchronized timeline.\n\n"
+        "```text\n"
+        "execution = web_native_deterministic_sfx_cue_sheet_only\n"
+        "input_persisted = false\n"
+        "source_video_inspected = false\n"
+        "source_audio_inspected = false\n"
+        "catalog_searched = false\n"
+        "provider_called = false\n"
+        "sfx_generated = false\n"
+        "audio_created = false\n"
+        "preview_created = false\n"
+        "output_created = false\n"
+        "job_created = false\n"
+        "wallet_mutated = false\n"
+        "payment_started = false\n"
+        "asset_saved = false\n"
+        "collection_saved = false\n"
+        "publish_action_created = false\n"
+        "telegram_called = false\n"
+        "rights_verified = false\n"
+        "```\n\n"
+        "The receipt may contain only textual cue role, direction, mix, avoid and editorial-review notes. It does not search Freesound or another catalog, create/play/preview/download/upload audio, call the Bot or a provider, create a job, calculate or mutate Xu, start/finalize PayOS, save Memory/asset/collection state, publish or claim delivery. It is not evidence that a sound, timing, license, rights clearance, provider result or output exists.\n\n"
+        "## Callback boundary remains unchanged\n\n"
+        "Every original Bot SFX callback remains `AUDIO_HUB_SOURCE_REVIEW_REQUIRED`, including exact values, context forms, case variants, missing tokens, suffixes and future `sfx_quick|*` values. `music_quick|custom_sfx` and related Audio Hub actions remain source-review-only too. No Web request may forward a raw Bot callback, Telegram identity/context, cache index, provider result, selected media, preview value, wallet/payment state, job identifier, output or delivery state. A future real SFX catalog or execution experience requires its own owner-scoped, reviewed bridge/execution and delivery contract.\n",
     )
     write(
         "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",

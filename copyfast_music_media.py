@@ -121,6 +121,59 @@ MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = re.compile(
     r"^\s*(?:suggest_music\|.*|/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$",
     re.IGNORECASE,
 )
+# The frozen Bot's SFX picker is a Telegram product-context dispatcher.  These
+# opaque Web IDs deliberately describe editorial intent instead of copying the
+# Bot's `sfx_quick|context|action` payloads or provider-search keywords.  They
+# are resolved only on the server and have no fallback/default behavior.
+SFX_CUE_SHEET_PRESET_MAP: dict[str, dict[str, str]] = {
+    "motion_transition": {
+        "cue_family": "motion",
+        "label_vi": "Chuyển động mượt",
+        "label_en": "Motion transition",
+        "direction_vi": "điểm chuyển cảnh nhẹ, rõ hướng chuyển động",
+        "direction_en": "a light transition accent that clarifies motion",
+    },
+    "interface_confirm": {
+        "cue_family": "interface",
+        "label_vi": "Xác nhận giao diện",
+        "label_en": "Interface confirmation",
+        "direction_vi": "phản hồi thao tác gọn, không gây mệt tai",
+        "direction_en": "a concise interaction confirmation without listener fatigue",
+    },
+    "reveal_impact": {
+        "cue_family": "impact",
+        "label_vi": "Điểm nhấn mở lộ",
+        "label_en": "Reveal impact",
+        "direction_vi": "điểm nhấn có lực vừa phải cho khoảnh khắc reveal",
+        "direction_en": "a controlled impact accent for a reveal moment",
+    },
+    "status_signal": {
+        "cue_family": "signal",
+        "label_vi": "Tín hiệu trạng thái",
+        "label_en": "Status signal",
+        "direction_vi": "tín hiệu mềm, phân biệt nhưng không chen lấn nội dung",
+        "direction_en": "a gentle status signal that does not compete with content",
+    },
+    "caption_emphasis": {
+        "cue_family": "emphasis",
+        "label_vi": "Nhấn caption",
+        "label_en": "Caption emphasis",
+        "direction_vi": "nhịp nhấn ngắn để hỗ trợ caption hoặc CTA",
+        "direction_en": "a short emphasis that supports captions or a CTA",
+    },
+}
+SFX_CUE_SHEET_PRESET_IDS = frozenset(SFX_CUE_SHEET_PRESET_MAP)
+SFX_CUE_SHEET_FAMILIES = frozenset(item["cue_family"] for item in SFX_CUE_SHEET_PRESET_MAP.values())
+SFX_CUE_SHEET_PLACEMENT_IDS = frozenset({"opening", "transition", "closing"})
+# Raw callback, command, preview/select or provider-library syntax has no Web
+# meaning.  Bare Bot terms are rejected only when they are the whole brief, so
+# a legitimate sentence that happens to mention one stays ordinary Web prose.
+SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN = re.compile(
+    r"^\s*(?:(?:sfx_quick|music_quick)\|.*|/sfx_library(?:\s.*)?|"
+    r"(?:play_sfx|select_sfx|open_sfx_source|license_sfx)\|.*|"
+    r"(?:whoosh|click|cinematic(?:\s+hit)?|notification|pop|custom_sfx))\s*$",
+    re.IGNORECASE,
+)
 # The explicit Composer-to-Memory handoff owns its write in this router, but
 # remains bounded by the same durable envelope as Memory Center. Do not import
 # private Memory router helpers: this handoff stays independent at runtime.
@@ -1080,6 +1133,25 @@ def _music_direction_preset_boundary() -> dict[str, Any]:
     }
 
 
+def _sfx_cue_sheet_boundary() -> dict[str, Any]:
+    """Return the explicit no-runtime boundary for an SFX editorial brief.
+
+    A cue sheet describes where an editor may consider an accent after they
+    inspect real media.  It does not inspect that media, search a sound
+    catalog, create a sound, preview, output, job, asset, collection or any
+    Bot state.  Keeping these flags literal makes the receipt safe to render
+    as an advisory Web-native surface instead of a disguised provider action.
+    """
+
+    return {
+        **_music_prompt_composer_boundary(),
+        "execution": "web_native_deterministic_sfx_cue_sheet_only",
+        "source_video_inspected": False,
+        "catalog_searched": False,
+        "sfx_generated": False,
+    }
+
+
 def _music_prompt_composer_guard(marker: str) -> dict[str, Any] | None:
     if not marker:
         return None
@@ -1103,6 +1175,20 @@ def _music_direction_preset_guard(marker: str) -> dict[str, Any] | None:
         data=_music_direction_preset_boundary(),
         status_name="guarded",
         error_code="WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD",
+    )
+
+
+def _sfx_cue_sheet_guard(marker: str) -> dict[str, Any] | None:
+    """Keep a rights-sensitive brief guarded without producing a cue sheet."""
+
+    if not marker:
+        return None
+    return envelope(
+        False,
+        "Brief cần được viết lại theo hướng nguyên bản, không mô phỏng nghệ sĩ, ca sĩ, bài hát, beat, giai điệu hoặc giọng cụ thể.",
+        data=_sfx_cue_sheet_boundary(),
+        status_name="guarded",
+        error_code="WEB_SFX_CUE_COPYRIGHT_GUARD",
     )
 
 
@@ -1261,6 +1347,147 @@ class MusicDirectionPresetRequest(BaseModel):
         if raw not in MUSIC_DIRECTION_PRESET_IDS:
             raise ValueError("Preset Music Directions không hợp lệ")
         return raw
+
+
+class SfxCueSheetRequest(BaseModel):
+    """Strict, transient request for an editorial SFX cue sheet.
+
+    This is deliberately not a SFX catalog, a Bot callback adapter, an audio
+    upload, a preview selector or an execution request.  The browser chooses a
+    reviewed opaque Web preset plus a normal editorial brief; the server owns
+    every semantic cue/template in the returned text-only receipt.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    description: StrictStr
+    language: StrictStr
+    web_sfx_preset_id: StrictStr
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: StrictStr) -> str:
+        text = _music_prompt_composer_line(
+            value,
+            label="Brief SFX",
+            minimum=2,
+            maximum=MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION,
+        )
+        if SFX_CUE_SHEET_RAW_BOT_INPUT_PATTERN.fullmatch(text):
+            raise ValueError("Brief SFX không nhận callback, lệnh, preview/select hoặc keyword Bot; hãy viết brief Web đầy đủ")
+        return text
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Ngôn ngữ", allowed=MUSIC_PROMPT_COMPOSER_LANGUAGES)
+
+    @field_validator("web_sfx_preset_id")
+    @classmethod
+    def validate_web_sfx_preset_id(cls, value: StrictStr) -> str:
+        raw = _music_prompt_composer_line(value, label="Preset SFX Cue Sheet", minimum=1, maximum=64)
+        # Opaque IDs intentionally have no aliases or fallback direction.
+        if raw not in SFX_CUE_SHEET_PRESET_IDS:
+            raise ValueError("Preset SFX Cue Sheet không hợp lệ")
+        return raw
+
+
+class SfxCueSheetCue(BaseModel):
+    """One semantic editorial position, not an audio or provider object."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ordinal: StrictInt = Field(ge=1, le=3)
+    placement_id: StrictStr
+    placement: StrictStr
+    cue_role: StrictStr
+    direction: StrictStr
+    mix_note: StrictStr
+    avoid_note: StrictStr
+    editorial_note: StrictStr
+
+    @field_validator("placement_id")
+    @classmethod
+    def validate_placement_id(cls, value: StrictStr) -> str:
+        if value not in SFX_CUE_SHEET_PLACEMENT_IDS:
+            raise ValueError("Vị trí cue SFX không hợp lệ")
+        return value
+
+    @field_validator("placement", "cue_role", "direction", "mix_note", "avoid_note", "editorial_note")
+    @classmethod
+    def validate_text(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Nội dung cue SFX", maximum=1_600)
+
+
+class SfxCueSheetResult(BaseModel):
+    """Exact browser schema for a stateless SFX editorial receipt."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: StrictStr
+    description: StrictStr
+    language: StrictStr
+    web_sfx_preset_id: StrictStr
+    cue_family: StrictStr
+    cues: list[SfxCueSheetCue] = Field(min_length=3, max_length=3)
+    placement_notice: StrictStr
+    cautions: list[StrictStr] = Field(default_factory=list, max_length=6)
+    review_before_use: list[StrictStr] = Field(min_length=1, max_length=6)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Tiêu đề SFX Cue Sheet", maximum=180)
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(
+            value,
+            label="Brief SFX kết quả",
+            maximum=MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION,
+        )
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Ngôn ngữ kết quả", allowed=MUSIC_PROMPT_COMPOSER_LANGUAGES)
+
+    @field_validator("web_sfx_preset_id")
+    @classmethod
+    def validate_web_sfx_preset_id(cls, value: StrictStr) -> str:
+        if value not in SFX_CUE_SHEET_PRESET_IDS:
+            raise ValueError("Preset SFX Cue Sheet kết quả không hợp lệ")
+        return value
+
+    @field_validator("cue_family")
+    @classmethod
+    def validate_cue_family(cls, value: StrictStr) -> str:
+        if value not in SFX_CUE_SHEET_FAMILIES:
+            raise ValueError("Cue family kết quả không hợp lệ")
+        return value
+
+    @field_validator("placement_notice")
+    @classmethod
+    def validate_placement_notice(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Ghi chú vị trí cue SFX", maximum=1_200)
+
+    @field_validator("cautions", "review_before_use")
+    @classmethod
+    def validate_lists(cls, value: list[StrictStr], info: Any) -> list[str]:
+        if not isinstance(value, list):
+            raise ValueError("Danh sách review SFX Cue Sheet không hợp lệ")
+        label = "Lưu ý SFX Cue Sheet" if info.field_name == "cautions" else "Checklist review SFX Cue Sheet"
+        return [_music_prompt_composer_output_line(item, label=label, maximum=1_600) for item in value]
+
+    def model_post_init(self, __context: Any) -> None:
+        expected_family = SFX_CUE_SHEET_PRESET_MAP[self.web_sfx_preset_id]["cue_family"]
+        if self.cue_family != expected_family:
+            raise ValueError("Cue family phải khớp preset SFX Cue Sheet")
+        if [item.ordinal for item in self.cues] != [1, 2, 3]:
+            raise ValueError("Cue SFX phải có ba ordinal liên tiếp từ một đến ba")
+        if [item.placement_id for item in self.cues] != ["opening", "transition", "closing"]:
+            raise ValueError("Cue SFX phải giữ thứ tự mở đầu, chuyển đoạn và kết thúc")
 
 
 def _require_memory_handoff_enabled() -> None:
@@ -1505,6 +1732,156 @@ def _music_direction_preset_composer_payload(payload: MusicDirectionPresetReques
     )
 
 
+def _sfx_cue_sheet_rows(payload: SfxCueSheetRequest) -> list[dict[str, str | int]]:
+    """Build three semantic editor notes without fabricating a media timeline.
+
+    The only positions here are editorial labels.  A real source video/audio
+    timeline has not been uploaded, inspected or parsed, so returning seconds
+    or offsets would falsely imply knowledge this request does not contain.
+    """
+
+    try:
+        preset = SFX_CUE_SHEET_PRESET_MAP[payload.web_sfx_preset_id]
+    except KeyError as exc:  # Defensive: validation already rejects a fallback.
+        raise HTTPException(status_code=422, detail="Preset SFX Cue Sheet không hợp lệ") from exc
+
+    excerpt = _music_prompt_composer_excerpt(payload.description, 180)
+    # A customer brief often already ends in punctuation.  Keep the rendered
+    # editorial sentence clean instead of displaying a distracting ``..`` in
+    # the cue card, while still terminating an unpunctuated excerpt safely.
+    excerpt_sentence = excerpt if excerpt.endswith((".", "!", "?", "…")) else f"{excerpt}."
+    if payload.language == "vi":
+        label = preset["label_vi"]
+        direction = preset["direction_vi"]
+        definitions = (
+            (
+                "opening",
+                "Mở đầu",
+                "Neo nhịp nhận diện",
+                f"Dùng hướng {label.lower()}: {direction}. Bám vào câu mở hoặc hình ảnh đầu từ brief: {excerpt_sentence}",
+                "Giữ cue ngắn và nhường ưu tiên cho lời mở, thông tin chính hoặc âm thanh hiện trường.",
+                "Tránh signature sound của thương hiệu khác, sample chưa rõ quyền hoặc cue che mất hook.",
+                "Editor tự chọn điểm đặt chính xác sau khi có media và nhịp dựng thật.",
+            ),
+            (
+                "transition",
+                "Chuyển đoạn / bằng chứng",
+                "Làm rõ thay đổi cảnh",
+                f"Dùng hướng {label.lower()}: {direction}. Chỉ nhấn khi brief chuyển ý, đổi cảnh hoặc đưa bằng chứng: {excerpt_sentence}",
+                "Giảm mức cue nếu đang có voice-over, phụ đề dày hoặc âm thanh gốc quan trọng.",
+                "Không lặp cue theo mỗi cut; tránh cảm giác thông báo liên tục hoặc gây mệt tai.",
+                "Editor đối chiếu pacing, nhịp hình và nội dung đã duyệt trước khi đặt cue.",
+            ),
+            (
+                "closing",
+                "CTA / kết",
+                "Khép nhịp và chừa chỗ cho hành động",
+                f"Dùng hướng {label.lower()}: {direction}. Hỗ trợ CTA hoặc câu kết từ brief: {excerpt_sentence}",
+                "Để cue lùi sau CTA, logo, legal copy và phần đọc quan trọng thay vì cạnh tranh với chúng.",
+                "Tránh đóng bằng âm thanh nhận diện của bên thứ ba hoặc hiệu ứng quá mạnh làm sai sắc thái thương hiệu.",
+                "Editor xác nhận CTA, logo, lời đọc và thông tin pháp lý vẫn rõ ràng trên bản dựng cuối.",
+            ),
+        )
+    else:
+        label = preset["label_en"]
+        direction = preset["direction_en"]
+        definitions = (
+            (
+                "opening",
+                "Opening",
+                "Anchor the opening rhythm",
+                f"Use the {label.lower()} direction: {direction}. Support the first line or visual described in the brief: {excerpt_sentence}",
+                "Keep the cue concise and give priority to opening narration, core information, or location sound.",
+                "Avoid another brand's signature sound, unverified samples, or a cue that masks the hook.",
+                "The editor chooses the exact placement only after real media and edit pacing are available.",
+            ),
+            (
+                "transition",
+                "Transition / proof",
+                "Clarify a scene change",
+                f"Use the {label.lower()} direction: {direction}. Accent only a narrative turn, scene change, or proof point in the brief: {excerpt_sentence}",
+                "Reduce the cue when voice-over, dense captions, or important location sound is present.",
+                "Do not repeat it on every cut; avoid a constant-notification feel or listener fatigue.",
+                "The editor checks pacing, picture rhythm, and approved messaging before placing the cue.",
+            ),
+            (
+                "closing",
+                "CTA / closing",
+                "Close the rhythm and leave room for action",
+                f"Use the {label.lower()} direction: {direction}. Support the CTA or final line in the brief: {excerpt_sentence}",
+                "Place the cue behind the CTA, logo, legal copy, and critical narration rather than competing with them.",
+                "Avoid ending with a third-party signature sound or an impact that changes the brand tone.",
+                "The editor confirms the CTA, logo, narration, and legal information remain clear in the final edit.",
+            ),
+        )
+    return [
+        {
+            "ordinal": ordinal,
+            "placement_id": placement_id,
+            "placement": placement,
+            "cue_role": cue_role,
+            "direction": cue_direction,
+            "mix_note": mix_note,
+            "avoid_note": avoid_note,
+            "editorial_note": editorial_note,
+        }
+        for ordinal, (placement_id, placement, cue_role, cue_direction, mix_note, avoid_note, editorial_note) in enumerate(
+            definitions,
+            start=1,
+        )
+    ]
+
+
+def _compose_sfx_cue_sheet(payload: SfxCueSheetRequest) -> dict[str, Any]:
+    """Return a text-only, stateless SFX cue-sheet receipt for Web editing."""
+
+    preset = SFX_CUE_SHEET_PRESET_MAP[payload.web_sfx_preset_id]
+    if payload.language == "vi":
+        title = "SFX cue sheet biên tập"
+        placement_notice = (
+            "Ba vị trí là nhãn biên tập: mở đầu, chuyển đoạn và CTA/kết. Hệ thống không nhận, đọc hoặc phân tích video/audio nguồn, "
+            "nên receipt này không có timestamp, timeline hay cue âm thanh thực."
+        )
+        cautions = [
+            "Đây là cue sheet dạng văn bản; không tìm thư viện, tạo SFX, preview, audio, output, job, asset hoặc delivery.",
+            "Không dùng cue sheet để sao chép signature sound, sample, nhận diện thương hiệu hoặc âm thanh của bên thứ ba.",
+            "Tự kiểm tra license, attribution, quyền thương mại, thương hiệu, voice-over, subtitle và yêu cầu phát hành ở workflow riêng.",
+        ]
+        review = [
+            "Đối chiếu từng vị trí semantic với timeline media thật trước khi chọn hoặc đặt bất kỳ âm thanh nào.",
+            "Kiểm tra cue không che lời đọc, CTA, phụ đề, âm thanh hiện trường, cảnh báo hoặc thông tin pháp lý.",
+            "Xác nhận asset cuối cùng có quyền dùng phù hợp và phù hợp tone thương hiệu trước khi xuất bản.",
+        ]
+    else:
+        title = "Editorial SFX cue sheet"
+        placement_notice = (
+            "The three positions are editorial labels only: opening, transition, and CTA/closing. The service does not receive, read, or analyze "
+            "source video/audio, so this receipt contains no timestamp, timeline, or actual sound cue."
+        )
+        cautions = [
+            "This is a text-only cue sheet; it searches no library and creates no SFX, preview, audio, output, job, asset, or delivery.",
+            "Do not use the cue sheet to copy a third party's signature sound, sample, sonic identity, or brand identifier.",
+            "Independently check license, attribution, commercial rights, brands, voice-over, subtitles, and release requirements in a separate workflow.",
+        ]
+        review = [
+            "Match each semantic position to the real media timeline before selecting or placing any sound.",
+            "Check that a cue does not mask narration, CTA, subtitles, location sound, warnings, or legal information.",
+            "Confirm that the final asset is appropriately licensed and fits the brand tone before release.",
+        ]
+    result = {
+        "title": title,
+        "description": payload.description,
+        "language": payload.language,
+        "web_sfx_preset_id": payload.web_sfx_preset_id,
+        "cue_family": preset["cue_family"],
+        "cues": _sfx_cue_sheet_rows(payload),
+        "placement_notice": placement_notice,
+        "cautions": cautions,
+        "review_before_use": review,
+    }
+    return SfxCueSheetResult.model_validate(result).model_dump()
+
+
 def _music_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, str, list[str]]:
     """Serialize the server-recomputed selected direction as one Web note.
 
@@ -1655,6 +2032,33 @@ async def compose_music_direction_presets(
         True,
         "Đã lập ba hướng nhạc dạng văn bản để review từ preset Web đã chọn. Không có nhạc, lyrics, audio, preview, output, job, thanh toán hoặc Telegram action nào được tạo.",
         data={"composer": composer, **_music_direction_preset_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/sfx-cue-sheet/compose")
+async def compose_sfx_cue_sheet(
+    payload: SfxCueSheetRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return three advisory SFX positions from one explicit Web preset.
+
+    This endpoint remains intentionally separate from Bot SFX callbacks and
+    from any provider/library flow.  It never receives source media, searches
+    a catalog, creates/plays/downloads audio, opens a job, touches a wallet or
+    payment, stores an asset/collection, or changes Telegram state.
+    """
+
+    _require_enabled()
+    del account  # Signed session/CSRF is the only account boundary for this tool.
+    guarded = _sfx_cue_sheet_guard(_music_prompt_composer_marker(payload.description))
+    if guarded:
+        return guarded
+    cue_sheet = _compose_sfx_cue_sheet(payload)
+    return envelope(
+        True,
+        "Đã lập ba vị trí SFX dạng văn bản để editor review. Không có timeline nguồn, thư viện, preview, audio, output, job, tài sản, thanh toán hoặc Telegram action nào được tạo.",
+        data={"cue_sheet": cue_sheet, **_sfx_cue_sheet_boundary()},
         status_name="draft",
     )
 
