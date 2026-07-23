@@ -36,6 +36,25 @@ output has been copied into the browser.
 | `menu|guide_faq` | `/support` | signed customer | starts owner-scoped Web support; no raw Telegram ID, Bot chat/support/refund state or automatic action |
 | `menu|memory_storage_cleanup` | `/account/workspace-care` | signed Web-native customer | opens navigation-only Web guidance; no Bot storage cleanup, quota, add-on, TTL, archive or delete action is replayed |
 
+## Separately guarded Feedback → Support Desk entry
+
+The following nine exact Bot feedback entries may only open a fresh signed
+`/support` form. They are private static-audit source evidence, not public
+browser callbacks. No raw callback or category is carried in a route, query,
+fragment, form, storage, API request or Web support record; the customer must
+explicitly choose a Web category and submit a new owner-scoped case.
+
+| Bot source action | Web destination | Web authority | Boundary preserved |
+| --- | --- | --- | --- |
+| `feedback|start` | `/support` | signed Web-native customer | opens a blank support intake; no Bot feedback pending/text/classifier/ticket/admin-alert state |
+| `feedback|cat|payment_topup`, `feedback|cat|package_combo`, `feedback|cat|refund` | `/support` | signed Web-native customer | opens a blank Web support intake; no payment/refund request, bill/TXID, Xu, PayOS, ledger or automatic action |
+| `feedback|cat|image_error`, `feedback|cat|video_error`, `feedback|cat|document_pdf` | `/support` | signed Web-native customer | opens a blank support intake; no image/video/document source, provider, job, output or execution action; `video_error` is only a support taxonomy label |
+| `feedback|cat|feature_request`, `feedback|cat|other` | `/support` | signed Web-native customer | opens a blank support intake; no Bot selected category, pending text, ticket/lead/attachment, notification or delivery state |
+
+`feedback|cancel`, all unknown/case/suffix/extra-segment values and every
+dynamic `feedback|cat|{*}` template remain fail-closed source-review records.
+They cannot reset a Web form or inherit `/support`.
+
 ## Separately guarded System & Data navigation
 
 The following finite administrative buttons remain private to the static

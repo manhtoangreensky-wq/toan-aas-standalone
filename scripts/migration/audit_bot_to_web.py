@@ -6568,6 +6568,104 @@ SUPPORT_TICKET_ADMIN_CALLBACK_ACTIONS = frozenset({
 })
 
 
+# The frozen Bot feedback keyboard exposes these exact literals only.  Each
+# may begin a *fresh* signed Web Support Desk intake.  This is static audit
+# evidence, not a browser callback catalog: a raw Bot token or category is
+# never placed in a URL, form, storage, API request or Web support record.
+#
+# The opaque ``web_support_intent`` values are review labels for this auditor
+# alone. They deliberately do not preselect a Web category or create a case;
+# the customer must make that choice and submit a new owner-scoped form in the
+# independently authorized Web Support Desk.
+FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS: dict[str, dict[str, str]] = {
+    "feedback|start": {
+        "target": "/support",
+        "web_support_intent": "web_support_start",
+    },
+    "feedback|cat|payment_topup": {
+        "target": "/support",
+        "web_support_intent": "web_support_billing_inquiry",
+    },
+    "feedback|cat|image_error": {
+        "target": "/support",
+        "web_support_intent": "web_support_image_help",
+    },
+    # This is only a Support Desk taxonomy cue. It neither opens a Video
+    # route nor claims a video job, render, output or provider capability.
+    "feedback|cat|video_error": {
+        "target": "/support",
+        "web_support_intent": "web_support_video_help",
+    },
+    "feedback|cat|document_pdf": {
+        "target": "/support",
+        "web_support_intent": "web_support_document_help",
+    },
+    "feedback|cat|package_combo": {
+        "target": "/support",
+        "web_support_intent": "web_support_package_help",
+    },
+    "feedback|cat|refund": {
+        "target": "/support",
+        "web_support_intent": "web_support_account_review",
+    },
+    "feedback|cat|feature_request": {
+        "target": "/support",
+        "web_support_intent": "web_support_product_feedback",
+    },
+    "feedback|cat|other": {
+        "target": "/support",
+        "web_support_intent": "web_support_general",
+    },
+}
+
+
+def _feedback_fresh_web_support_navigation_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map only the finite feedback menu literals to a new Web intake.
+
+    Exact lookup is intentional: Bot case variants, unknown categories,
+    suffixes, extra segments and dynamic templates must continue through the
+    source-review boundary below rather than inheriting a Web route.
+    """
+
+    action = FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS.get(identifier)
+    if action is None:
+        return None
+    target = str(action["target"])
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": target,
+        "classification": "customer",
+        "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+        "resolution": "reviewed_feedback_fresh_web_support_navigation",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+            "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+            "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+            "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+            "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+            "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+            "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. "
+            "The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, "
+            "and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, "
+            "wallet/Xu, provider, job or runtime action."
+        ),
+        "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+        "feedback_support_launch_mode": "WEB_NAVIGATION",
+        "web_support_intent": str(action["web_support_intent"]),
+        "evidence": evidence,
+    }
+
+
 def _support_ticket_callback_classification(identifier: str) -> str:
     """Preserve the Bot's role boundary while keeping all callback data opaque."""
 
@@ -6637,8 +6735,18 @@ def _map_support_ticket_callback(
     identifier: str,
     source_kind: str,
     evidence: dict[str, Any],
+    existing_routes: set[str],
 ) -> dict[str, Any] | None:
-    """Fail closed for every Bot Support/Ticket/Feedback callback until Web-native flows exist."""
+    """Map finite feedback intake navigation; fail closed for every other action."""
+
+    fresh_feedback_navigation = _feedback_fresh_web_support_navigation_mapping(
+        identifier,
+        source_kind,
+        evidence,
+        existing_routes,
+    )
+    if fresh_feedback_navigation is not None:
+        return fresh_feedback_navigation
 
     token = str(identifier or "").casefold()
     if not token.startswith(("support|", "ticket|", "feedback|")):
@@ -8003,7 +8111,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     imgtool_mapping = _map_imgtool_callback(identifier, source_kind, evidence)
     if imgtool_mapping is not None:
         return imgtool_mapping
-    support_ticket_mapping = _map_support_ticket_callback(identifier, source_kind, evidence)
+    support_ticket_mapping = _map_support_ticket_callback(identifier, source_kind, evidence, existing_routes)
     if support_ticket_mapping is not None:
         return support_ticket_mapping
     workboard_task_mapping = _map_workboard_task_callback(identifier, source_kind, evidence)
@@ -9306,7 +9414,7 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     imgtool_mapping = _map_imgtool_callback(template, "callback_template", evidence)
     if imgtool_mapping is not None:
         return imgtool_mapping
-    support_ticket_mapping = _map_support_ticket_callback(template, "callback_template", evidence)
+    support_ticket_mapping = _map_support_ticket_callback(template, "callback_template", evidence, existing_routes)
     if support_ticket_mapping is not None:
         return support_ticket_mapping
     audio_hub_mapping = _map_audio_hub_callback(template, "callback_template", evidence)
@@ -10766,7 +10874,29 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web image route, browser navigation/reset, Telegram-file replay, provider/job/payment/output/delivery action or runtime claim",
         ],
     ]
+    feedback_menu_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_feedback_fresh_web_support_navigation",
+            "NAVIGATION_ONLY",
+            "SIGNED_WEB_NATIVE_CUSTOMER",
+            str(contract["web_support_intent"]),
+            "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION, FINITE_BOT_FEEDBACK_INTENT_ONLY, "
+            "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER, BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED, "
+            "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED, WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY, "
+            "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION, "
+            "NO_RUNTIME_CLAIM",
+        ]
+        for source, contract in FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS.items()
+    ]
     support_ticket_contract_rows = [
+        [
+            ", ".join(FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS),
+            "/support",
+            "reviewed_feedback_fresh_web_support_navigation",
+            "finite fresh signed Web Support Desk navigation only; no Bot callback/category/pending/ticket/attachment/classifier/admin-alert or external-action replay",
+        ],
         [
             "all frozen support|* literals and templates",
             "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
@@ -10780,7 +10910,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "Telegram user plus customer-owned Bot ticket, reply/attachment pending state and Bot ticket identifier",
         ],
         [
-            "all frozen feedback|* literals and templates",
+            "all other feedback|* literals and templates, including cancel, unknown category, case/suffix/extra-segment variants",
             "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
             "support_ticket_callback_requires_web_native_owner_role_contract",
             "Telegram user plus selected feedback category and pending text; the next Bot message can classify/create a support ticket and alert an admin, including refund review",
@@ -10988,7 +11118,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
         + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
         + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — Bot Image Tools callbacks remain source-review boundaries; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a generic Web image route or browser action.\n"
-        + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket/Feedback callbacks remain owner/role/source-review boundaries; no Telegram ticket, lead, attachment, feedback category/pending text, admin preview or delivery state becomes a generic Web portal action.\n"
+        + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket/Feedback callbacks remain owner/role/source-review boundaries apart from the finite Feedback → fresh Web Support Desk entry contract; no Telegram ticket, lead, attachment, pending text, admin preview or delivery state becomes a Web portal action.\n"
+        + "- [`FEEDBACK_MENU_CALLBACK_CONTRACT.md`](FEEDBACK_MENU_CALLBACK_CONTRACT.md) — nine exact Bot feedback entry literals may only open a fresh signed Web Support Desk form; no callback/category is sent to the browser and no Bot ticket/refund/payment/runtime behavior is replayed.\n"
         + "- [`WORKBOARD_TASK_CALLBACK_CONTRACT.md`](WORKBOARD_TASK_CALLBACK_CONTRACT.md) — Bot Workboard/Task callbacks remain Telegram-admin/source-review boundaries; no production job/task ID, stage/status or handoff prompt becomes a generic Web Workboard or Admin action.\n"
         + "- [`CREATIVE_VARIANT_CALLBACK_CONTRACT.md`](CREATIVE_VARIANT_CALLBACK_CONTRACT.md) — Bot Creative callbacks remain Telegram-admin/source-review boundaries; no creative variant ID, selected state, production update or handoff instruction becomes a generic Web Content Studio or Admin action.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
@@ -11253,12 +11384,22 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "# Support, Ticket and Feedback callback contract\n\n"
-        "The frozen Bot owns the `support|*`, `ticket|*` and `feedback|*` callback handlers. They are Telegram support workflows, not Web portal actions: callbacks bind a Telegram user to short-lived support/lead/ticket input state or a selected feedback category and pending text; they can create or update Bot support records, resolve a customer ticket against Bot ownership, accept a Telegram attachment, create a refund-review ticket and alert an admin, or enter admin-only search, assignment, status, suggested-reply, send, refund-pending, lead and file-delivery paths. No callback is a Web ticket ID, browser back/reset action, support request, attachment authorization, admin permission or delivery contract.\n\n"
+        "The frozen Bot owns the `support|*`, `ticket|*` and `feedback|*` callback handlers. They are Telegram support workflows, not Web portal actions: callbacks bind a Telegram user to short-lived support/lead/ticket input state or a selected feedback category and pending text; they can create or update Bot support records, resolve a customer ticket against Bot ownership, accept a Telegram attachment, create a refund-review ticket and alert an admin, or enter admin-only search, assignment, status, suggested-reply, send, refund-pending, lead and file-delivery paths. The nine finite Feedback entry literals below are the sole navigation-only exception: they start a brand-new signed Web Support Desk form and do not transfer a callback, category or Bot state. No callback is a Web ticket ID, browser back/reset action, support request, attachment authorization, admin permission or delivery contract.\n\n"
         + _markdown_table(
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             support_ticket_contract_rows,
         )
-        + "\n\nEvery `support|*`, `ticket|*` and `feedback|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id, feedback category or pending input; create/update/assign/resolve a Bot ticket; request or mark a refund; send a Telegram reply/file; or claim a result. A future Web Support Desk must start from its own signed customer/staff session, server-side ownership and role checks, CSRF, confirmation/idempotency/audit rules for writes, owner-scoped Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram ticket state.\n",
+        + "\n\nEvery other `support|*`, `ticket|*` and `feedback|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id, feedback category or pending input; create/update/assign/resolve a Bot ticket; request or mark a refund; send a Telegram reply/file; or claim a result. The finite Feedback entry exception is described in `FEEDBACK_MENU_CALLBACK_CONTRACT.md`: a new Web case still requires an explicit customer form, signed session, CSRF and idempotency. It never accepts or replays a Bot callback, category or Telegram ticket state.\n",
+    )
+    write(
+        "FEEDBACK_MENU_CALLBACK_CONTRACT.md",
+        "# Feedback menu callback disposition contract\n\n"
+        "The nine exact frozen Bot Feedback menu values below are private static-audit source evidence for a **fresh signed** Web Support Desk navigation only. The Browser never receives the raw Bot callback or category in a route, query, fragment, form, storage, API request or support record. `Web audit intent` is a static reviewer label, not a preselected Web category and not a customer-controlled value. The customer must choose a category, describe the issue and submit a new owner-scoped Web case through the existing CSRF and idempotency boundary.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Fresh Web target", "Audit resolution", "Status", "Authority", "Web audit intent", "Required boundary"],
+            feedback_menu_contract_rows,
+        )
+        + "\n\nThis navigation does not clear/create Bot pending state, call the Bot feedback classifier, create/update a Bot ticket or lead, notify Telegram/email, accept a Bot attachment/ticket ID, request/mark a refund, create/finalize a payment, mutate Xu/ledger/PayOS, call a provider, create/retry/refund a job, expose an output or claim runtime success. `feedback|cat|video_error` is only a Web Support Desk taxonomy cue; it does not open a Video route or enable a Video render/job/output. `feedback|cancel`, every unknown/case/suffix/extra-segment value and every dynamic `feedback|cat|{*}` template remain source-review-required and cannot inherit `/support`.\n",
     )
     write(
         "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
@@ -11772,7 +11913,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks are a Telegram state-machine boundary: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is only Bot keyword guidance. None may route/replay into Web; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. Web must not route or replay them; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. Only nine exact Feedback menu literals may start a fresh signed Web Support Desk form; no raw callback/category or Bot state is transferred, and every other value stays source-review-required. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks are Telegram-admin creative-selection controls: `creative|*` can select a canonical variant, clear sibling selection and update linked production job state. Web must not route or replay them; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
         "- Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.\n\n"
@@ -11920,7 +12061,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. No callback may open `/image` or invoke Web provider/job/wallet/payment/output/delivery behavior; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks stay outside the Web route layer: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. No callback may open a Web support/ticket/Admin route or invoke Web ticket/ledger/delivery behavior; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. The sole exception is the nine exact Feedback entry literals, which may only begin a fresh signed `/support` form without forwarding a callback/category or invoking Web ticket/ledger/delivery behavior. Every other value remains source-review-required; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks stay outside the Web route layer: `creative|*` requires Bot-admin Telegram identity and can select a canonical creative variant, clear sibling selection and update linked production job state. No callback may open `/content-studio` or an Admin route or invoke Web creative/job/provider/output/ledger/delivery behavior; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
@@ -11948,7 +12089,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Web CRM manager", "Signed server-side local admin role", "Read redacted, Web-owned Partner & Lead CRM pipeline records.", "Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data."],
             ],
         )
-        + "\n\nBot Support/Ticket/Feedback callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, feedback category, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n\n"
+        + "\n\nBot Support/Ticket/Feedback callbacks are separate from the Web Support Desk: apart from the nine exact Feedback entries that may only open a new signed `/support` form, the Browser must never replay a Bot ticket/lead/attachment identifier, feedback category, pending input, admin-preview or Telegram delivery state. The entry exception transfers no callback/category/state and is documented in `FEEDBACK_MENU_CALLBACK_CONTRACT.md`; see also `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n\n"
         + "Bot Workboard/Task callbacks are separate from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n\n"
         + "Bot Creative callbacks are separate from the Web Creative Studio: the Browser must never replay a Bot creative-variant identifier, selected state, production-job update, handoff instruction or Telegram-admin context. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n\n"
         + "`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
