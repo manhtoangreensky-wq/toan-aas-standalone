@@ -249,13 +249,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6005,
+      "line": 6017,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10766,
+      "line": 10784,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -267,7 +267,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10524,
+      "line": 10542,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -309,7 +309,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10289,
+      "line": 10307,
       "operation": "UPDATE",
       "table": "bot"
     },
@@ -351,25 +351,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6058,
+      "line": 6070,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10249,
+      "line": 10267,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10304,
+      "line": 10322,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7776,
+      "line": 7788,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -639,13 +639,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10767,
+      "line": 10785,
       "operation": "UPDATE",
       "table": "linked"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10914,
+      "line": 10932,
       "operation": "UPDATE",
       "table": "linked"
     },
@@ -711,19 +711,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10146,
+      "line": 10164,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10314,
+      "line": 10332,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10744,
+      "line": 10762,
       "operation": "UPDATE",
       "table": "or"
     },
@@ -7147,7 +7147,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 4501,
+      "occurrences": 4531,
       "provider": "Telegram"
     }
   ],
@@ -12916,8 +12916,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 303,
   "source_files_scanned": 303,
-  "source_fingerprint_sha256": "d22a53c2e4a60972d365ef52957888bb38851402c8dfa03204e2dc2972377f88",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast109-media-selection-callback-boundary",
+  "source_fingerprint_sha256": "e899cb823e2e8cafc41f2156a492438b8db41a2f9ab7965723f4c50c0b0f0d33",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast110-document-flow-callback-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

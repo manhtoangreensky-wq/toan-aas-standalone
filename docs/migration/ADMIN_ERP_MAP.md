@@ -10,7 +10,7 @@ Admin navigation is an ERP information architecture, not a browser-issued permis
 | Web Support Desk | Signed server-side staff role | Operate owner-scoped Web support cases, triage and review handoffs. | Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract. |
 | Web CRM manager | Signed server-side local admin role | Read redacted, Web-owned Partner & Lead CRM pipeline records. | Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data. |
 
-Bot Support/Ticket callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.
+Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, feedback category, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.
 
 Bot Workboard/Task callbacks are separate from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.
 
