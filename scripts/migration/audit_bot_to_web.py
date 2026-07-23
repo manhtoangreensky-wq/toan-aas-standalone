@@ -764,8 +764,6 @@ STORYPACK_RUNTIME_OR_MEDIA_PREFIXES = (
 # deep link from a Telegram object ID.  The Web must obtain any record through
 # its own signed, owner/role-checked API after navigation.
 DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
-    ("ticket|", "/support", "customer"),
-    ("support|", "/support", "customer"),
     ("pipe|", "/workboard", "customer"),
     ("task|", "/workboard", "customer"),
     ("storyboard|", "/video-studio/storyboard-composer", "customer"),
@@ -5934,6 +5932,91 @@ def _map_imgtool_callback(
     return _imgtool_source_review_mapping(identifier, source_kind, evidence)
 
 
+SUPPORT_TICKET_ADMIN_CALLBACK_ACTIONS = frozenset({
+    "admin",
+    "al",
+    "av",
+    "asearch",
+    "stats",
+    "templates",
+    "st",
+    "reply",
+    "suggest",
+    "send",
+    "ask",
+    "note",
+    "assign",
+    "lead",
+    "file",
+})
+
+
+def _support_ticket_callback_classification(identifier: str) -> str:
+    """Preserve the Bot's role boundary while keeping all callback data opaque."""
+
+    parts = str(identifier or "").casefold().split("|")
+    if len(parts) > 1 and parts[0] == "ticket" and parts[1] in SUPPORT_TICKET_ADMIN_CALLBACK_ACTIONS:
+        return "admin"
+    return "customer"
+
+
+def _support_ticket_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Telegram Support/Ticket state transitions out of generic Web routes."""
+
+    classification = _support_ticket_callback_classification(identifier)
+    role_dispositions = (
+        (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
+        )
+        if classification == "admin"
+        else ("CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",)
+    )
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
+        "classification": classification,
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
+            *role_dispositions,
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support "
+            "pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, "
+            "accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file "
+            "flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the "
+            "callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_support_ticket_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Fail closed for every Bot Support/Ticket callback until Web-native flows exist."""
+
+    token = str(identifier or "").casefold()
+    if not token.startswith(("support|", "ticket|")):
+        return None
+    return _support_ticket_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -7027,6 +7110,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     imgtool_mapping = _map_imgtool_callback(identifier, source_kind, evidence)
     if imgtool_mapping is not None:
         return imgtool_mapping
+    support_ticket_mapping = _map_support_ticket_callback(identifier, source_kind, evidence)
+    if support_ticket_mapping is not None:
+        return support_ticket_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8276,6 +8362,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     imgtool_mapping = _map_imgtool_callback(template, "callback_template", evidence)
     if imgtool_mapping is not None:
         return imgtool_mapping
+    support_ticket_mapping = _map_support_ticket_callback(template, "callback_template", evidence)
+    if support_ticket_mapping is not None:
+        return support_ticket_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -9657,6 +9746,32 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web image route, browser navigation/reset, Telegram-file replay, provider/job/payment/output/delivery action or runtime claim",
         ],
     ]
+    support_ticket_contract_rows = [
+        [
+            "all frozen support|* literals and templates",
+            "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
+            "support_ticket_callback_requires_web_native_owner_role_contract",
+            "Telegram user plus support/lead pending state; branches can clear or set pending input and create a Bot support ticket or lead",
+        ],
+        [
+            "customer ticket|* literals and templates",
+            "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
+            "support_ticket_callback_requires_web_native_owner_role_contract",
+            "Telegram user plus customer-owned Bot ticket, reply/attachment pending state and Bot ticket identifier",
+        ],
+        [
+            "admin ticket|{admin,al,av,asearch,stats,templates,st,reply,suggest,send,ask,note,assign,lead,file}|*",
+            "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
+            "support_ticket_callback_requires_web_native_owner_role_contract",
+            "Bot admin role plus ticket ID/search/preview/attachment state; can mutate ticket status/assignment/reply/lead state or deliver Telegram messages/files",
+        ],
+        [
+            "case variants, missing tokens, suffixes or future support|*/ticket|* values",
+            "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED",
+            "support_ticket_callback_requires_web_native_owner_role_contract",
+            "no Web support/tickets/admin route, browser navigation/reset, ticket/lead/attachment replay, refund/ledger action, Telegram delivery or runtime claim",
+        ],
+    ]
     vproduct_contract_rows = [
         [
             ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
@@ -9810,6 +9925,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
         + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
         + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — Bot Image Tools callbacks remain source-review boundaries; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a generic Web image route or browser action.\n"
+        + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket callbacks remain owner/role/source-review boundaries; no Telegram ticket, lead, attachment, admin preview or delivery state becomes a generic Web portal action.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -9948,6 +10064,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             imgtool_contract_rows,
         )
         + "\n\nEvery `imgtool|*` source, including the known lowercase literals, remains `IMGTOOL_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native contract exists. It cannot open `/image`, navigate/reset the browser, receive/replay a Telegram file id or pending/result state, save a Bot note, consume a ShopAI token, select a Bot tier, invoke a provider, charge/refund Xu, create/retry/refund a job, expose an output or claim delivery. A future Web Image Studio must begin with its own signed owner-scoped upload/Asset Vault reference, CSRF-protected draft, independently recomputed authorization/price and idempotent provider-job/output contract. It must never accept or replay a Bot callback or Telegram media state.\n",
+    )
+    write(
+        "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
+        "# Support and Ticket callback contract\n\n"
+        "The frozen Bot owns the `support|*` and `ticket|*` callback handlers. They are Telegram support workflows, not Web portal actions: callbacks bind a Telegram user to short-lived support/lead/ticket input state, create or update Bot support records, resolve a customer ticket against Bot ownership, accept a Telegram attachment, or enter admin-only search, assignment, status, suggested-reply, send, refund-pending, lead and file-delivery paths. No callback is a Web ticket ID, browser back/reset action, support request, attachment authorization, admin permission or delivery contract.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
+            support_ticket_contract_rows,
+        )
+        + "\n\nEvery `support|*` and `ticket|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id or pending input; create/update/assign/resolve a Bot ticket; mark refund-pending; send a Telegram reply/file; or claim a result. A future Web Support Desk must start from its own signed customer/staff session, server-side ownership and role checks, CSRF, confirmation/idempotency/audit rules for writes, owner-scoped Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram ticket state.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -10394,6 +10520,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Support/Ticket callbacks are a Telegram owner/role workflow boundary: `support|*` and `ticket|*` can use support/lead/ticket/attachment/pending state and Bot admin reply/delivery controls. Web must not route or replay them; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
         "- Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.\n\n"
         "## Related bot tables detected statically\n\n"
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
@@ -10537,6 +10664,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. No callback may open `/image` or invoke Web provider/job/wallet/payment/output/delivery behavior; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Support/Ticket callbacks stay outside the Web route layer: `support|*` and `ticket|*` use Telegram identity, support/lead/ticket/attachment/pending state and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. No callback may open a Web support/ticket/Admin route or invoke Web ticket/ledger/delivery behavior; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
@@ -10562,7 +10690,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Web CRM manager", "Signed server-side local admin role", "Read redacted, Web-owned Partner & Lead CRM pipeline records.", "Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data."],
             ],
         )
-        + "\n\n`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
+        + "\n\nBot Support/Ticket callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n\n"
+        + "`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
         "`WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; "
         "the server still checks the signed role on every request.\n\n"
         + "The following is a Bot command compatibility map. A target is a signed guarded Web surface or a "

@@ -16,13 +16,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1966,
+      "line": 1964,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5627,
+      "line": 5625,
       "target": "_map_shopai_video_job_callback"
     },
     {
@@ -82,13 +82,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5596,
+      "line": 5594,
       "target": "_shopai_video_job_source_review_mapping"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5558,
+      "line": 5556,
       "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
@@ -197,17 +197,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4387,
+      "line": 4385,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4395,
+      "line": 4393,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4403,
+      "line": 4401,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -222,7 +222,7 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 209,
+    "database_tables": 210,
     "env_references": 199,
     "providers": 16,
     "routes": 640,
@@ -243,7 +243,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5653,
+      "line": 5651,
+      "operation": "UPDATE",
+      "table": "a"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 5998,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -255,7 +261,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10160,
+      "line": 10286,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -296,6 +302,12 @@
       "table": "b2b_projects"
     },
     {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 10071,
+      "operation": "UPDATE",
+      "table": "bot"
+    },
+    {
       "file": "campaign.py",
       "line": 21,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -321,25 +333,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5566,
+      "line": 5564,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5588,
+      "line": 5586,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9915,
+      "line": 10031,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7522,
+      "line": 7608,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -5517,6 +5529,7 @@
     "affiliate_links",
     "any",
     "b2b_projects",
+    "bot",
     "campaigns",
     "canonical",
     "choices",
@@ -7084,7 +7097,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 3094,
+      "occurrences": 3968,
       "provider": "Telegram"
     }
   ],
@@ -12851,10 +12864,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 299,
-  "source_files_scanned": 299,
-  "source_fingerprint_sha256": "f05a53ca6c4b8461214ab1cb12f37131a88583a3a2b735bbadead9b8b0e70f10",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast105-imgtool-callback-boundary",
+  "source_files_discovered": 300,
+  "source_files_scanned": 300,
+  "source_fingerprint_sha256": "ba420685c0fd9ed03d398f4b95c5c4b765f4ee1116ff920a44a044911d04255d",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast106-support-ticket-callback-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

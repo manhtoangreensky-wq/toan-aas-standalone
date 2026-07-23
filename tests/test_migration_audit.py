@@ -118,6 +118,7 @@ async def dashboard():
         "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
         "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
+        "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -135,6 +136,7 @@ async def dashboard():
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
+    assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -1872,7 +1874,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
-        "ticket|reply|{*}": "/support",
         "pipe|stage|review|{*}": "/workboard",
         "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
         "videodub|type|{*}": "/dubbing",
@@ -2468,6 +2469,118 @@ def image_tools_keyboard(tier, ratio, token):
     assert "IMGTOOL_SOURCE_REVIEW_REQUIRED" in contract
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot Image Tools callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
+    """Telegram support/ticket state and role checks must not become Web actions."""
+
+    audit = _load_audit_module()
+    routes = {"/support", "/tickets", "/admin", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix in {"support|", "ticket|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    customer_identifiers = (
+        "support|start",
+        "support|ticket",
+        "support|premium_type|business",
+        "support|consult_need|video|0",
+        "ticket|start",
+        "ticket|cat|refund",
+        "ticket|mine",
+        "ticket|pv|42",
+        "ticket|reply_user|42",
+        "ticket|done|42",
+        "ticket|attach|42",
+        "SUPPORT|TICKET",
+        "ticket|pv|42|future",
+        "support|future|opaque",
+    )
+    for identifier in customer_identifiers:
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
+        assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
+
+    for identifier in (
+        "ticket|admin",
+        "ticket|al|new|0",
+        "ticket|av|42|new",
+        "ticket|asearch|all",
+        "ticket|stats",
+        "ticket|templates",
+        "ticket|st|42|refund_pending",
+        "ticket|reply|42",
+        "ticket|suggest|42|0",
+        "ticket|send|42",
+        "ticket|ask|42",
+        "ticket|note|42",
+        "ticket|assign|42",
+        "ticket|lead|42|contact",
+        "ticket|file|42",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY" in mapped["source_dispositions"]
+
+    for template, classification in (
+        ("support|premium_type|{*}", "customer"),
+        ("support|consult_need|{*}|{*}", "customer"),
+        ("ticket|pv|{*}", "customer"),
+        ("ticket|reply_user|{*}", "customer"),
+        ("ticket|st|{*}|{*}", "admin"),
+        ("ticket|send|{*}", "admin"),
+        ("TICKET|ST|{*}|{*}", "admin"),
+        ("ticket|pv|{*}|future", "customer"),
+        ("support|future|{*}", "customer"),
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == classification
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def support_ticket_keyboard(ticket_id, service_type, admin_kind):
+    InlineKeyboardButton("support", callback_data="support|ticket")
+    InlineKeyboardButton("consult", callback_data=f"support|consult_need|{service_type}|0")
+    InlineKeyboardButton("ticket", callback_data=f"ticket|pv|{ticket_id}")
+    InlineKeyboardButton("attachment", callback_data=f"ticket|attach|{ticket_id}")
+    InlineKeyboardButton("status", callback_data=f"ticket|st|{ticket_id}|refund_pending")
+    InlineKeyboardButton("admin", callback_data=f"ticket|{admin_kind}|{ticket_id}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert callbacks["support|ticket"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["support|consult_need|{*}|0"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["ticket|pv|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["ticket|attach|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["ticket|st|{*}|refund_pending"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["ticket|{*}|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    contract = (tmp_path / "docs" / "SUPPORT_TICKET_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "support\\|*" in contract
+    assert "ticket\\|*" in contract
+    assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
+    assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Support/Ticket callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Support/Ticket callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

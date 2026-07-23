@@ -10,6 +10,8 @@ Admin navigation is an ERP information architecture, not a browser-issued permis
 | Web Support Desk | Signed server-side staff role | Operate owner-scoped Web support cases, triage and review handoffs. | Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract. |
 | Web CRM manager | Signed server-side local admin role | Read redacted, Web-owned Partner & Lead CRM pipeline records. | Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data. |
 
+Bot Support/Ticket callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.
+
 `WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and `WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; the server still checks the signed role on every request.
 
 The following is a Bot command compatibility map. A target is a signed guarded Web surface or a canonical bridge projection; it is never proof that a browser may execute the Bot command directly.
