@@ -51,6 +51,29 @@ payment, Xu or job state to the browser.
 | `menu|system_backup_help` | `/admin/backups` | signed canonical admin read | metadata route only; no create/delete/restore/download backup action |
 | `menu|internal_archive` | `/admin/internal-documents` | signed Web-local admin | independent Web private archive; no Bot archive record/file ID/Telegram attachment is replayed |
 
+## Separately guarded Admin ERP category navigation
+
+The following exact administrator-only Bot menu values can open only a fresh,
+canonical-role-checked Admin ERP read route. They live in the private static
+auditor, not in the customer-facing menu catalog. A destination does not carry
+the Telegram identity or role, Bot menu/pending context, command text,
+finance/provider snapshot, package/user selector, payment/Xu/ledger/PayOS
+state, job/runtime state, secret or any write authority into Web.
+
+| Bot source action | Web destination | Web authority | Boundary preserved |
+| --- | --- | --- | --- |
+| `menu|admin`, `menu|admin_overview` | `/admin` | signed canonical admin read | opens a fresh ERP overview; no Bot overview/finance snapshot or Admin command is replayed |
+| `menu|operator` | `/admin` | signed canonical admin read | opens a fresh ERP overview; the separately authorized Web Support Operations route is not inherited, and no Bot operator command, automation or runtime action is replayed |
+| `menu|finance` | `/admin/finance` | signed canonical admin read | opens Finance & Revenue independently; no Bot period, ledger, payment, Xu, PayOS or export data |
+| `menu|admin_packages` | `/admin/packages` | signed canonical admin read | opens the Web package read surface; no package code/user, grant/revoke, entitlement, order or checkout state |
+| `menu|admin_provider`, `menu|admin_provider_status` | `/admin/providers` | signed canonical admin read | opens providers read metadata only; no Bot status snapshot, secret, test, freeze or unfreeze action |
+| `menu|admin_provider_usage` | `/admin/provider-cost` | signed canonical admin read | opens provider-cost metadata only; no Bot usage snapshot, secret, test, freeze, billing or runtime action |
+
+Any case variant, suffix, `menu|admin_confirm_*`, `menu|admin_provider_test`,
+freeze/smoke/provider custom action, dynamic finance/tax action or unreviewed
+`menu|admin_*` value remains fail-closed. It cannot inherit these Admin routes
+or become a browser-side control.
+
 ## Separately guarded Tax Readiness & Accounting Guidance
 
 The following finite administrative buttons remain private to the static

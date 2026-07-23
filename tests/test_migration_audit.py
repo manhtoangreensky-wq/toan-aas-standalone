@@ -110,6 +110,7 @@ async def dashboard():
         "UNREFERENCED_STATIC_MODULES.md",
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "BILLING_MENU_CALLBACK_CONTRACT.md",
+        "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
@@ -136,6 +137,7 @@ async def dashboard():
     assert "BOT_COMPANION_HANDOFF.md" in readme
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
+    assert "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
@@ -1465,6 +1467,65 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
     assert all("menu|billing" not in str(item) for item in public_catalog)
     assert all(item["route"] != "/admin/payments" for item in public_catalog)
     assert "menu|billing" not in audit.MENU_ACTION_REGISTRY
+
+
+def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> None:
+    """Finite Bot-admin menus open fresh ERP reads, never browser controls."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected = {
+        "menu|admin": ("/admin", "admin_overview"),
+        "menu|operator": ("/admin", "admin_overview"),
+        "menu|finance": ("/admin/finance", "admin_finance"),
+        "menu|admin_packages": ("/admin/packages", "admin_packages"),
+        "menu|admin_provider": ("/admin/providers", "admin_providers"),
+        "menu|admin_overview": ("/admin", "admin_overview"),
+        "menu|admin_provider_status": ("/admin/providers", "admin_providers"),
+        "menu|admin_provider_usage": ("/admin/provider-cost", "admin_provider_cost"),
+    }
+    assert set(audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS) == set(expected)
+
+    for callback, (target, feature_key) in expected.items():
+        descriptor = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert descriptor["target"] == target
+        assert descriptor["feature_key"] == feature_key
+        assert descriptor["classification"] == "admin"
+        assert descriptor["authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert descriptor["launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["target"] == target
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_admin_erp_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["admin_erp_feature_key"] == feature_key
+        assert mapped["admin_erp_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert mapped["admin_erp_launch_mode"] == "WEB_NAVIGATION"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    # Exact identifiers are source evidence only. Case changes, suffixes and
+    # sensitive child actions must not inherit an ERP route or a Web control.
+    for callback in (
+        "MENU|ADMIN",
+        "menu|admin_future",
+        "menu|admin_provider_future",
+        "menu|admin_confirm_freeze_image",
+        "menu|admin_provider_test",
+        "menu|finance_compliance_update",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["resolution"] != "reviewed_admin_erp_fresh_web_navigation"
+
+    from copyfast_registry import FEATURE_BY_KEY, menu_capability_catalog
+
+    assert FEATURE_BY_KEY["admin_packages"].route == "/admin/packages"
+    public_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    for callback in expected:
+        assert callback not in public_catalog
+    assert all(item["route"] not in set(target for target, _feature in expected.values()) for item in menu_capability_catalog())
 
 
 def test_static_audit_keeps_package_purchase_callbacks_in_catalog_or_bot_payment_boundary(tmp_path: Path) -> None:

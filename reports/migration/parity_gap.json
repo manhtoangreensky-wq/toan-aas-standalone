@@ -17184,424 +17184,464 @@
       "target": "/notes"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 38497
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 40884
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 46988
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 47033
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 47045
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 47056
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49767
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49770
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49775
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49777
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121508
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121522
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121923
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122245
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122290
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122370
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122389
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122417
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 126958
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 127055
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_ADMIN_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_ADMIN_WRITE_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot action redraws its administrator category menu. The Web starts a fresh canonical-admin overview and never receives a Telegram admin identity, command, pending state, provider, payment, wallet/Xu, job, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
       "classification": "admin",
@@ -17961,46 +18001,52 @@
       "target": "TELEGRAM_ONLY"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49761
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_overview",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_OVERVIEW_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot overview formats a Bot-side finance snapshot. The Web independently authorizes its ERP overview and receives no snapshot, period, payment, wallet/Xu, provider, job or write authority from the callback.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_packages",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49759
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_packages",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PACKAGE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_PACKAGE_GRANT_REVOKE_OR_ENTITLEMENT_ACTION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot package menu is explanatory and links to Bot command guidance. The Web opens a canonical admin package read surface only; it receives no package code, user ID, grant/revoke request, order, entitlement, Xu, PayOS or payment state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/packages"
     },
     {
       "classification": "admin",
@@ -18087,109 +18133,119 @@
       "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_providers",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49762
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot provider entry draws a Telegram menu with tests and freeze controls. The Web opens only its separately authorized providers read route; it receives no configuration, secret, test, freeze, unfreeze, provider payload, job, billing or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/providers"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_providers",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121981
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot provider entry draws a Telegram menu with tests and freeze controls. The Web opens only its separately authorized providers read route; it receives no configuration, secret, test, freeze, unfreeze, provider payload, job, billing or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/providers"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_providers",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122270
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot provider entry draws a Telegram menu with tests and freeze controls. The Web opens only its separately authorized providers read route; it receives no configuration, secret, test, freeze, unfreeze, provider payload, job, billing or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/providers"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_providers",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49774
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider_status",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_STATUS_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot status button formats Bot provider/freeze state. The Web starts a new canonical-admin read route and does not receive that snapshot, a secret, test request, freeze control, job, billing or runtime authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/providers"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_providers",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122287
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider_status",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_STATUS_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot status button formats Bot provider/freeze state. The Web starts a new canonical-admin read route and does not receive that snapshot, a secret, test request, freeze control, job, billing or runtime authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/providers"
     },
     {
       "classification": "admin",
@@ -18213,25 +18269,27 @@
       "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_provider_cost",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122289
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|admin_provider_usage",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_PROVIDER_USAGE_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_OR_CONTROL_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot usage button formats a provider usage snapshot. The Web opens a separately authorized cost read surface and receives no provider usage payload, secret, test, freeze control, job, payment or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/provider-cost"
     },
     {
       "billing_menu_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18365,130 +18423,148 @@
       "target": "/documents"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49760
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121530
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121536
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121542
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121546
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121789
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot finance entry opens a Telegram category keyboard. The Web starts a separately authorized Finance & Revenue read route and receives no Bot finance row, period, ledger, payment, Xu, PayOS or report/export parameter.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "classification": "admin",
@@ -28065,46 +28141,50 @@
       "target": "TELEGRAM_ONLY"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49758
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|operator",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_OPERATOR_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_OPERATOR_COMMAND_OR_AUTOMATION_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot operator entry renders command-category guidance. The Web opens the canonical Admin ERP overview rather than the separately-authorized Web Support Operations surface; it cannot receive a Bot command snippet, operator state, deployment, provider, job or automation-control authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_overview",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49775
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|operator",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_OPERATOR_MENU_CONTEXT_NOT_REPLAYED",
+        "NO_OPERATOR_COMMAND_OR_AUTOMATION_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot operator entry renders command-category guidance. The Web opens the canonical Admin ERP overview rather than the separately-authorized Web Support Operations surface; it cannot receive a Bot command snippet, operator state, deployment, provider, job or automation-control authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
       "classification": "customer",
@@ -73994,12 +74074,11 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 129,
+      "count": 93,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
       "sample_sources": [
-        "menu|admin",
         "menu|admin_billing_duyet",
         "menu|admin_billing_payos",
         "menu|admin_billing_pending",
@@ -74009,8 +74088,9 @@
         "menu|admin_confirm_maintenance_off",
         "menu|admin_confirm_maintenance_on",
         "menu|admin_confirm_refund_job",
-        "menu|admin_overview",
-        "menu|admin_packages"
+        "menu|admin_packages_catalog",
+        "menu|admin_packages_grant_combo",
+        "menu|admin_packages_grant_monthly"
       ],
       "source_kinds": [
         "callback_data",
@@ -74624,7 +74704,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 1153,
+      "count": 1117,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -74633,7 +74713,7 @@
           "priority": "P0"
         },
         {
-          "count": 129,
+          "count": 93,
           "family": "menu",
           "priority": "P0"
         },
@@ -74931,12 +75011,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 71.55,
+  "mapping_coverage_percent": 72.44,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1574,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 1153,
+    "NAVIGATION_ONLY": 795,
+    "NEEDS_FEATURE_DISPOSITION": 1117,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -74958,7 +75038,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 71.55,
+  "safe_disposition_coverage_percent": 72.44,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -74968,13 +75048,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 2900,
+    "resolved_static_source_count": 2936,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 332,
-    "unresolved_source_count": 1153
+    "unresolved_source_count": 1117
   },
   "static_web_surface_coverage_percent": 38.84,
   "telegram_link_callback_contract": {
