@@ -22,7 +22,7 @@
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-05-31\\files-mentioned-by-the-user-bot\\toanaas-hotfix-28ff87f"
   },
-  "generated_at_utc": "2026-07-23T04:41:24+00:00",
+  "generated_at_utc": "2026-07-23T05:22:00+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -32,6 +32,6 @@
   "schema_version": "1.7",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast104-provider-callback-boundary"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast105-imgtool-callback-boundary"
   }
 }

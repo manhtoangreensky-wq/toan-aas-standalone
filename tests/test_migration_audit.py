@@ -117,6 +117,7 @@ async def dashboard():
         "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md",
         "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
         "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
+        "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -133,6 +134,7 @@ async def dashboard():
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
+    assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -2391,6 +2393,81 @@ def provider_keyboard(uid):
     assert "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED" in contract
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Provider choice stays a Bot handoff" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
+    """Telegram Image Tools state must never become a generic `/image` action."""
+
+    audit = _load_audit_module()
+    routes = {"/image", "/wallet/topup", "/jobs", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "imgtool|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    for identifier in (
+        "imgtool|",
+        "imgtool|prompt_need_image",
+        "imgtool|prompt_use",
+        "imgtool|prompt_tier|basic",
+        "imgtool|edit_ai",
+        "imgtool|resize_method|pad",
+        "imgtool|editor_preset|photo_clear_detail",
+        "IMGTOOL|PROMPT_NEED_IMAGE",
+        "imgtool|prompt_tier|basic|future",
+        "imgtool|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "imgtool_callback_requires_web_native_image_workflow_contract"
+        assert "BOT_IMAGE_TOOL_PENDING_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "imgtool|prompt_tier|{*}",
+        "imgtool|resize_ratio|{*}",
+        "imgtool|prompt_confirm_change|{*}",
+        "IMGTOOL|PROMPT_TIER|{*}",
+        "imgtool|prompt_tier|{*}|future",
+        "imgtool|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "imgtool_callback_requires_web_native_image_workflow_contract"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def image_tools_keyboard(tier, ratio, token):
+    InlineKeyboardButton("prompt", callback_data="imgtool|prompt_need_image")
+    InlineKeyboardButton("tier", callback_data=f"imgtool|prompt_tier|{tier}")
+    InlineKeyboardButton("ratio", callback_data=f"imgtool|resize_ratio|{ratio}")
+    InlineKeyboardButton("confirm", callback_data=f"imgtool|prompt_confirm_change|{token}")
+    InlineKeyboardButton("edit", callback_data="imgtool|edit_ai")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert callbacks["imgtool|prompt_need_image"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    assert callbacks["imgtool|edit_ai"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    assert templates["imgtool|prompt_tier|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    assert templates["imgtool|resize_ratio|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    assert templates["imgtool|prompt_confirm_change|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    contract = (tmp_path / "docs" / "IMAGE_TOOLS_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "imgtool\\|*" in contract
+    assert "IMGTOOL_SOURCE_REVIEW_REQUIRED" in contract
+    assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Image Tools callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:
