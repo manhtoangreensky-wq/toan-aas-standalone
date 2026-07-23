@@ -16,8 +16,14 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1914,
+      "line": 1926,
       "target": "_job_lock_recovery_source_review_dispositions"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "kind": "function",
+      "line": 5587,
+      "target": "_map_shopai_video_job_callback"
     },
     {
       "file": "copyfast_api.py",
@@ -72,6 +78,18 @@
       "kind": "function",
       "line": 73,
       "target": "_scheduler_state"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "kind": "function",
+      "line": 5556,
+      "target": "_shopai_video_job_source_review_mapping"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "kind": "function",
+      "line": 5518,
+      "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
       "file": "copyfast_support.py",
@@ -179,17 +197,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4335,
+      "line": 4347,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4343,
+      "line": 4355,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4351,
+      "line": 4363,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -198,13 +216,13 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 29,
+    "background_jobs": 32,
     "callback_data": 3,
     "callback_handlers": 0,
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 208,
+    "database_tables": 209,
     "env_references": 199,
     "providers": 16,
     "routes": 640,
@@ -231,7 +249,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9600,
+      "line": 9736,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +315,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7076,
+      "line": 5526,
+      "operation": "UPDATE",
+      "table": "canonical"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 5548,
+      "operation": "UPDATE",
+      "table": "canonical"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 9521,
+      "operation": "UPDATE",
+      "table": "canonical"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 7178,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -5476,6 +5512,7 @@
     "any",
     "b2b_projects",
     "campaigns",
+    "canonical",
     "choices",
     "credit_events",
     "erp_approvals",
@@ -7041,7 +7078,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2814,
+      "occurrences": 2844,
       "provider": "Telegram"
     }
   ],
@@ -12808,10 +12845,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 295,
-  "source_files_scanned": 295,
-  "source_fingerprint_sha256": "8751accaa19de1924d0a45748ce6da3d587892b6091d95fe28832a5ed537fe87",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast100-shopai-boundary",
+  "source_files_discovered": 296,
+  "source_files_scanned": 296,
+  "source_fingerprint_sha256": "617bf20545840f03b64bf18b6267307034d078ab6f77b8474592a5e7b2df917e",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast101-shopai-video-job-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
