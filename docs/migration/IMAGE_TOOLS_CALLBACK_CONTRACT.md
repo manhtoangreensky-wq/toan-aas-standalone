@@ -1,0 +1,10 @@
+# Image Tools callback contract
+
+The frozen Bot owns the `imgtool|*` callback handler. It is a broad Telegram Image Tools state machine rather than a browser menu: it reads the Telegram caller and per-user pending/result state, can reuse Telegram file identifiers, generate or save prompt/note state, perform local image edits/resizes, enter ShopAI confirmation/tier and canonical Xu/provider paths, and send outputs back to Telegram. No `imgtool|*` callback identifies a Web-owned draft, uploaded asset, owner-scoped job, browser history entry, Web checkout or safe browser action.
+
+| Frozen Bot callback family | Web target/boundary | Audit resolution | Required boundary |
+| --- | --- | --- | --- |
+| all frozen imgtool\|* literals and templates | IMGTOOL_SOURCE_REVIEW_REQUIRED | imgtool_callback_requires_web_native_image_workflow_contract | Telegram user plus pending image/file/result/prompt/memory state; branches can enter local output, ShopAI tier/confirmation, canonical Xu/provider and Telegram delivery |
+| case variants, missing tokens, suffixes or future imgtool\|* values | IMGTOOL_SOURCE_REVIEW_REQUIRED | imgtool_callback_requires_web_native_image_workflow_contract | no Web image route, browser navigation/reset, Telegram-file replay, provider/job/payment/output/delivery action or runtime claim |
+
+Every `imgtool|*` source, including the known lowercase literals, remains `IMGTOOL_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native contract exists. It cannot open `/image`, navigate/reset the browser, receive/replay a Telegram file id or pending/result state, save a Bot note, consume a ShopAI token, select a Bot tier, invoke a provider, charge/refund Xu, create/retry/refund a job, expose an output or claim delivery. A future Web Image Studio must begin with its own signed owner-scoped upload/Asset Vault reference, CSRF-protected draft, independently recomputed authorization/price and idempotent provider-job/output contract. It must never accept or replay a Bot callback or Telegram media state.
