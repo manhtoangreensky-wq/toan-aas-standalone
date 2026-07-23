@@ -778,7 +778,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("select_media|", "/media-workspace", "customer"),
     ("play_media|", "/media-workspace", "customer"),
     ("imgtool|", "/image", "customer"),
-    ("prov|", "/image", "customer"),
 )
 
 # Frozen baseline b29d0d4: the Bot Quick Image conversation has a useful
@@ -874,6 +873,18 @@ MANUAL_PAYMENT_ADMIN_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "manual|approve_custom|{*}",
     "manual|reject|{*}",
     "manual|confirm|{*}|{*}",
+})
+
+# Frozen baseline b29d0d4: provider-choice callbacks consume a Telegram-user
+# pending voice/image request. They can charge/refund canonical Xu, invoke a
+# configured provider or local fallback and deliver an output in Telegram.
+# They are neither a Web image/voice route nor browser-owned provider choice.
+PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "prov|voice|paid|{*}",
+    "prov|voice|free|{*}",
+    "prov|image|paid|{*}",
+    "prov|image|free|{*}",
+    "prov|cancel|cancel|{*}",
 })
 
 # The frozen Bot's one literal Media Creator cancellation branch clears a
@@ -5790,6 +5801,85 @@ def _map_operator_menu_callback(
     return _operator_menu_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _provider_choice_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep frozen provider-choice callbacks inside canonical Bot handling."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "customer",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_provider_choice_requires_canonical_pending_state",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_PENDING_PROVIDER_SELECTION_STATE",
+            "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+            "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that "
+            "user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured "
+            "provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can "
+            "refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, "
+            "pending request, UID, charge, provider response or output."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _provider_choice_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for an unreviewed provider-choice callback spelling."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "provider_choice_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_PROVIDER_CHOICE_CALLBACK_OR_PENDING_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "Only exact provider-choice templates observed in the frozen Bot baseline are classified as "
+            "Telegram-only. A case variant, missing token, suffix or future provider callback can alter "
+            "pending user state, provider selection, canonical Xu charge/refund or Telegram output delivery "
+            "and cannot inherit an image/voice route, browser navigation/reset or runtime action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_provider_choice_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Map only exact frozen provider-choice templates; reject every other value."""
+
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.casefold().startswith("prov|"):
+        return None
+    if raw_identifier in PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return _provider_choice_telegram_only_mapping(identifier, source_kind, evidence)
+    return _provider_choice_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -6877,6 +6967,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     operator_menu_mapping = _map_operator_menu_callback(identifier, source_kind, evidence)
     if operator_menu_mapping is not None:
         return operator_menu_mapping
+    provider_choice_mapping = _map_provider_choice_callback(identifier, source_kind, evidence)
+    if provider_choice_mapping is not None:
+        return provider_choice_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8120,6 +8213,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     operator_menu_mapping = _map_operator_menu_callback(template, "callback_template", evidence)
     if operator_menu_mapping is not None:
         return operator_menu_mapping
+    provider_choice_mapping = _map_provider_choice_callback(template, "callback_template", evidence)
+    if provider_choice_mapping is not None:
+        return provider_choice_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -9473,6 +9569,20 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web wallet/top-up/history/admin route, browser navigation/reset, payment/provider/ledger/job/output/delivery action or runtime claim",
         ],
     ]
+    provider_choice_contract_rows = [
+        [
+            ", ".join(sorted(PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES)),
+            "TELEGRAM_ONLY",
+            "bot_provider_choice_requires_canonical_pending_state",
+            "Telegram uid plus a consumed pending voice/image request; canonical Xu charge/refund, provider/fallback and Telegram output delivery remain Bot-only",
+        ],
+        [
+            "case variants, missing token, suffixes or other prov|* values",
+            "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED",
+            "provider_choice_callback_requires_exact_source_review",
+            "no Web image/voice/wallet route, browser navigation/reset, provider/job/payment/output/delivery action or runtime claim",
+        ],
+    ]
     vproduct_contract_rows = [
         [
             ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
@@ -9624,6 +9734,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`SHOPAI_CALLBACK_CONTRACT.md`](SHOPAI_CALLBACK_CONTRACT.md) — exact ShopAI confirmation/package/cancel templates remain canonical Bot-only; no ShopAI callback can become a Web top-up, payment, job, provider or output action.\n"
         + "- [`SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`](SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md) — exact ShopAI Video Job callbacks remain canonical Bot-only; no task/job identifier can become a Web top-up, video/jobs route, browser action, provider poll, billing mutation or output-delivery claim.\n"
         + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
+        + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -9742,6 +9853,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             manual_payment_contract_rows,
         )
         + "\n\nOnly exact lowercase templates in this table retain the Bot-only disposition. Every case variant, missing token, suffix and future `manual|*` value resolves to `MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED`. It cannot open `/wallet/topup`, `/wallet/history` or `/admin/payments`; navigate/reset the browser; accept a bill/image/TXID; create/approve/finalize a payment; mutate Xu or any ledger; invoke a provider; create/retry/refund a job; expose an output or claim delivery. A future Web-native wallet/top-up/history feature must begin from a separately reviewed signed-session, CSRF, owner/role-checked and idempotent bridge/read-model contract. It must never accept or replay a Telegram callback, UID, bill/deposit ID or approval state.\n",
+    )
+    write(
+        "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
+        "# Provider choice callback contract\n\n"
+        "The frozen Bot owns the `prov|*` callback handler. Each reviewed callback carries exactly a service, mode and Telegram uid. The handler verifies that uid against the Telegram caller, consumes a short-lived `USER_PENDING` voice/image request, and can cancel with a canonical Xu refund or continue through canonical charge/refund, provider/fallback and Telegram media delivery. It is not a Web image/voice route, browser choice, Web-owned quote, provider request, job identifier, asset, checkout, wallet record or delivery contract.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback source", "Web target/boundary", "Audit resolution", "Required boundary"],
+            provider_choice_contract_rows,
+        )
+        + "\n\nOnly exact lowercase templates in this table retain the Bot-only disposition. Every case variant, missing token, suffix and future `prov|*` value resolves to `PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED`. It cannot open `/image`, `/voice-vault` or `/wallet/topup`; navigate/reset the browser; accept a Telegram uid or pending request; invoke a provider; charge/refund Xu; create/retry/refund a job; expose an output or claim delivery. A future Web-native image or voice workflow must begin from its own signed owner-scoped draft, independently recomputed authorization/price and idempotent provider-job contract. It must never accept or replay a Telegram provider-choice callback.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -10186,6 +10307,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Canonical writer: Telegram bot.\n"
         "- Web App role: signed-session caller of the private bridge; it must never credit Xu, finalize PayOS, or add a second payment webhook.\n"
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
+        "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.\n\n"
         "## Related bot tables detected statically\n\n"
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
@@ -10327,6 +10449,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- One canonical PayOS webhook and wallet writer: Telegram bot.\n"
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
+        "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
