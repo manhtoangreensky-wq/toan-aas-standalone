@@ -48650,11 +48650,20 @@
         "file": "bot.py",
         "line": 114491
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "opmenu",
+      "resolution": "operator_menu_callback_requires_exact_source_review",
       "source": "opmenu|{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_OPERATOR_MENU_COMMAND_SNIPPET_OR_CALLBACK_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot operator callback checks ADMIN_ID then redraws a Telegram category or a text snippet containing privileged commands and API examples. These can refer to Telegram takeover, mission/job/channel/affiliate/calendar/publish/finance/runtime operations, provider-like work or other canonical state. An unreviewed value cannot inherit an Admin route, browser reset, command executor, provider/job/wallet/payment/publish action or runtime claim.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/admin"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "OPERATOR_MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -62940,6 +62949,22 @@
       ]
     },
     {
+      "authority": "Server-authorized Admin ERP",
+      "candidate_boundary": "/admin",
+      "count": 2,
+      "family": "opmenu",
+      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
+      "priority": "P1",
+      "sample_sources": [
+        "opmenu|cat_production",
+        "opmenu|{*}"
+      ],
+      "source_kinds": [
+        "callback_data",
+        "callback_template"
+      ]
+    },
+    {
       "authority": "Source review required",
       "candidate_boundary": "source_review_required",
       "count": 1,
@@ -62994,20 +63019,6 @@
       "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
       "source_kinds": [
         "command"
-      ]
-    },
-    {
-      "authority": "Server-authorized Admin ERP",
-      "candidate_boundary": "/admin",
-      "count": 1,
-      "family": "opmenu",
-      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
-      "priority": "P1",
-      "sample_sources": [
-        "opmenu|cat_production"
-      ],
-      "source_kinds": [
-        "callback_data"
       ]
     },
     {
@@ -63098,7 +63109,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 504,
+      "count": 505,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -63147,6 +63158,11 @@
           "priority": "P1"
         },
         {
+          "count": 2,
+          "family": "opmenu",
+          "priority": "P1"
+        },
+        {
           "count": 1,
           "family": "command:clear_job_lock",
           "priority": "P1"
@@ -63159,11 +63175,6 @@
         {
           "count": 1,
           "family": "command:refund_job",
-          "priority": "P1"
-        },
-        {
-          "count": 1,
-          "family": "opmenu",
           "priority": "P1"
         },
         {
@@ -63216,7 +63227,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 71,
+      "count": 72,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -63360,12 +63371,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 86.88,
+  "mapping_coverage_percent": 86.85,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2015,
+    "COPIED_GUARDED": 2014,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 504,
+    "NEEDS_FEATURE_DISPOSITION": 505,
     "TELEGRAM_ONLY": 560
   },
   "metric_scope": {
@@ -63387,7 +63398,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 86.88,
+  "safe_disposition_coverage_percent": 86.85,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2841,
@@ -63397,15 +63408,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3840,
-    "resolved_static_source_count": 3336,
+    "resolved_static_source_count": 3335,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3951,
     "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 71,
-    "unresolved_source_count": 504
+    "unresolved_callback_templates": 72,
+    "unresolved_source_count": 505
   },
-  "static_web_surface_coverage_percent": 52.47,
+  "static_web_surface_coverage_percent": 52.45,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

@@ -37,7 +37,11 @@ reviewed entry starts a fresh, independently authorized Admin ERP route.
   output, review and render-related snippets. The user asked that the Video
   menu be completed last, so it cannot inherit `/admin/jobs` or another
   convenient-looking route.
-- Every individual `opmenu|...` command remains source-reviewed/guarded. The
-  category mapping never turns a text snippet into a browser control.
+- Every unlisted `opmenu|...` action — including the generated
+  `opmenu|{*}` template, nested command snippets, case variants and future
+  values — resolves to `OPERATOR_MENU_SOURCE_REVIEW_REQUIRED`. It cannot
+  inherit `/admin`, browser navigation/reset, a command executor, provider,
+  job, wallet, payment, publish or runtime action.
+- The category mapping never turns a text snippet into a browser control.
 - Web does not alter Bot, provider configuration, PayOS, wallet/Xu ledger,
   webhook, Railway environment or deployment settings in this scope.

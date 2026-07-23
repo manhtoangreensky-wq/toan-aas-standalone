@@ -779,7 +779,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("play_media|", "/media-workspace", "customer"),
     ("imgtool|", "/image", "customer"),
     ("prov|", "/image", "customer"),
-    ("opmenu|", "/admin", "admin"),
 )
 
 # Frozen baseline b29d0d4: the Bot Quick Image conversation has a useful
@@ -5732,6 +5731,65 @@ def _map_manual_payment_callback(
     return _manual_payment_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _operator_menu_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for an unreviewed Operator menu callback.
+
+    The frozen Bot's operator handler is an ADMIN_ID-protected Telegram
+    directory.  Beyond its reviewed top-level root/category entries it merely
+    redraws a message containing privileged command/API snippets.  A snippet
+    is neither a browser navigation intent nor a verified Web operation.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "OPERATOR_MENU_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "operator_menu_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_OPERATOR_MENU_COMMAND_SNIPPET_OR_CALLBACK_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot operator callback checks ADMIN_ID then redraws a Telegram category or a text "
+            "snippet containing privileged commands and API examples. These can refer to Telegram takeover, "
+            "mission/job/channel/affiliate/calendar/publish/finance/runtime operations, provider-like work "
+            "or other canonical state. An unreviewed value cannot inherit an Admin route, browser reset, "
+            "command executor, provider/job/wallet/payment/publish action or runtime claim."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_operator_menu_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Keep only reviewed top-level Operator entries out of namespace fallback."""
+
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.casefold().startswith("opmenu|"):
+        return None
+    if (
+        raw_identifier == OPERATOR_MENU_ROOT_NAVIGATION["callback"]
+        or raw_identifier in OPERATOR_MENU_CATEGORY_REGISTRY
+        or raw_identifier in OPERATOR_MENU_DEFERRED_CATEGORIES
+    ):
+        # Existing finite mappings below retain their explicit fresh Admin
+        # navigation/deferred dispositions. No raw Bot value is transferred.
+        return None
+    return _operator_menu_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -6816,6 +6874,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     manual_payment_mapping = _map_manual_payment_callback(identifier, source_kind, evidence)
     if manual_payment_mapping is not None:
         return manual_payment_mapping
+    operator_menu_mapping = _map_operator_menu_callback(identifier, source_kind, evidence)
+    if operator_menu_mapping is not None:
+        return operator_menu_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8056,6 +8117,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     manual_payment_mapping = _map_manual_payment_callback(template, "callback_template", evidence)
     if manual_payment_mapping is not None:
         return manual_payment_mapping
+    operator_menu_mapping = _map_operator_menu_callback(template, "callback_template", evidence)
+    if operator_menu_mapping is not None:
+        return operator_menu_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
