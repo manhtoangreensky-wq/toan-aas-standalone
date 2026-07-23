@@ -926,3 +926,62 @@ def test_support_staff_role_is_provisioned_server_side_email_allowlists_are_igno
         response = disabled.get("/api/v1/support/summary")
         assert response.status_code == 503
         assert response.json()["ok"] is False
+
+
+def test_support_advisor_is_signed_closed_and_has_no_support_or_audit_write(tmp_path, monkeypatch):
+    """Advisor guidance is a bounded GET, never an implicit ticket workflow."""
+    expected_boundaries = {
+        "ticket_auto_create": False,
+        "notification": False,
+        "payment_or_refund": False,
+        "provider_or_job_lookup": False,
+        "bot_or_telegram": False,
+    }
+    valid_topics = {"technical", "billing_review", "product_consulting", "general"}
+
+    with make_client(tmp_path, monkeypatch) as client:
+        anonymous = client.get("/api/v1/support/advisor")
+        assert anonymous.status_code == 401
+
+        register_and_login(client, "support-advisor@example.com")
+        support = importlib.import_module("copyfast_support")
+        assert set(support.SUPPORT_ADVISOR_GUIDES) == set(support.CASE_CATEGORIES)
+
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            before = {
+                table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("web_support_cases", "web_support_messages", "web_support_events", "web_audit_events")
+            }
+
+        for category in sorted(support.CASE_CATEGORIES):
+            response = client.get("/api/v1/support/advisor", params={"category": category})
+            assert response.status_code == 200
+            assert response.headers["cache-control"] == "no-store, private"
+            body = response.json()
+            assert body["ok"] is True
+            assert body["status"] == "read_only"
+            assert body["data"]["delivery"] == "web_view_only"
+            assert body["data"]["automation"] == "none"
+            guide = body["data"]["guide"]
+            assert guide["category"] == category
+            assert guide["topic"] in valid_topics
+            assert guide["boundaries"] == expected_boundaries
+            assert 3 <= len(guide["checklist"]) <= 4
+            assert all(isinstance(item, str) and item.strip() for item in guide["checklist"])
+            assert all("support|" not in item and "ticket|" not in item for item in guide["checklist"])
+
+        invalid = client.get("/api/v1/support/advisor", params={"category": "support|open_ticket"})
+        assert invalid.status_code == 422
+
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            after = {
+                table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in before
+            }
+        assert after == before
+
+    with make_client(tmp_path, monkeypatch, support_enabled=False) as disabled:
+        register_and_login(disabled, "support-advisor-disabled@example.com")
+        response = disabled.get("/api/v1/support/advisor", params={"category": "general_support"})
+        assert response.status_code == 503
+        assert response.json()["ok"] is False

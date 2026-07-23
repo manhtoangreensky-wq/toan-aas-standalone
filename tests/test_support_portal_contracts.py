@@ -77,7 +77,20 @@ def test_support_hydrates_owner_scoped_native_routes_with_no_bridge_fallback() -
     assert 'api(`/support/admin/cases/${encodeURIComponent(String(caseId))}`)' in INTEGRATION
     assert 'if (account && supportDeskEnabled)' in INTEGRATION
     assert 'else if (isNativeSupportPath(currentPath))' in INTEGRATION
-    assert 'supportSummary: {}, supportCases: [], supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}' in INTEGRATION
+    # A feature/session reset must drop both the normal case projection and
+    # the read-only Advisor state. Keep these independent assertions so a
+    # future safe reset field cannot make this test depend on one line-wrap.
+    for reset_field in (
+        "supportSummary: {}",
+        "supportCases: []",
+        "supportAdvisor: {}",
+        'supportAdvisorReadState: "guarded"',
+        'supportAdvisorSelection: "general_support"',
+        "supportEvents: []",
+        'supportEventsReadState: "guarded"',
+        "supportCaseDetail: {}",
+    ):
+        assert reset_field in INTEGRATION
 
     # The customer pager is a signed, page-memory receipt. It must survive
     # normalizeBootstrap just as the separate staff pager does; otherwise a

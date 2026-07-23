@@ -185,6 +185,11 @@ Production Web App for `app.toanaas.vn`.
   Bot tickets, send notifications, accept payment proof, alter Xu/PayOS,
   call providers, refund or create jobs. See
   [`WEB_SUPPORT_DESK_CONTRACT.md`](docs/migration/WEB_SUPPORT_DESK_CONTRACT.md).
+  Its signed, read-only Support Advisor may show a reviewed checklist for an
+  existing category before the customer voluntarily fills the normal form; it
+  never auto-creates a case, classifies with AI, contacts Bot/Telegram or
+  reads provider/job/payment state. See
+  [`WEB_SUPPORT_ADVISOR_CONTRACT.md`](docs/migration/WEB_SUPPORT_ADVISOR_CONTRACT.md).
 - `WEBAPP_AUTOPILOT_ENABLED` defaults to `false`. `/operations` and the
   staff-only `/admin/operations` can observe Web-native Support Desk metadata
   and a signed scheduler's bounded receipts. Automatic metadata triage is
@@ -275,6 +280,9 @@ private Bot bridge.
   Telegram/email/push delivery, accept manual payment evidence, alter the
   wallet/Xu/PayOS ledger, execute a refund or call a provider/job. See
   [`WEB_SUPPORT_DESK_CONTRACT.md`](docs/migration/WEB_SUPPORT_DESK_CONTRACT.md).
+  The optional self-service checklist at `/support` is only a signed,
+  read-only preparation aid and never creates or changes a case. See
+  [`WEB_SUPPORT_ADVISOR_CONTRACT.md`](docs/migration/WEB_SUPPORT_ADVISOR_CONTRACT.md).
 - `/project-packages` is a distinct Web-native private ZIP export of a
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See

@@ -16,6 +16,7 @@ def _function_source(name: str, next_name: str) -> str:
 def test_support_reads_are_epoch_guarded_by_signed_session_and_native_route() -> None:
     for epoch in (
         "supportSessionEpoch",
+        "supportAdvisorHydrationEpoch",
         "supportCustomerListHydrationEpoch",
         "supportCustomerDetailHydrationEpoch",
         "supportAdminListHydrationEpoch",
@@ -33,6 +34,29 @@ def test_support_reads_are_epoch_guarded_by_signed_session_and_native_route() ->
         "base().session && base().session.authenticated === true",
     ):
         assert requirement in helper
+
+
+def test_support_advisor_discards_stale_or_malformed_guidance_before_rendering() -> None:
+    helper = INTEGRATION[
+        INTEGRATION.index("function supportAdvisorRequestIsCurrent"):
+        INTEGRATION.index("async function hydrateSupportDesk")
+    ]
+    for requirement in (
+        "requestEpoch === supportAdvisorHydrationEpoch",
+        "sessionEpoch === supportSessionEpoch",
+        'currentPortalPath() === "/support"',
+        "base().supportDeskEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    hydration = _function_source("hydrateSupportAdvisor", "hydrateSupportDesk")
+    assert "const requestEpoch = ++supportAdvisorHydrationEpoch;" in hydration
+    assert 'merge({ supportAdvisor: {}, supportAdvisorReadState: "loading", supportAdvisorSelection: category });' in hydration
+    assert 'api(`/support/advisor?category=${encodeURIComponent(category)}`)' in hydration
+    assert "const projection = supportAdvisorGuideProjection(result);" in hydration
+    assert "if (!supportAdvisorRequestIsCurrent(requestEpoch, sessionEpoch))" in hydration
+    assert 'merge({ supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: category });' in hydration
 
 
 def test_customer_and_staff_support_hydrators_ignore_late_responses_before_merge() -> None:

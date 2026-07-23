@@ -1136,6 +1136,25 @@ a { color: inherit; text-decoration: none; }
 .portal-support-layout, .portal-support-detail-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(270px, .85fr); gap: 18px; align-items: start; }
 .portal-support-intake { background: linear-gradient(152deg, rgba(23, 34, 71, .96), rgba(8, 18, 34, .99)); }
 .portal-support-boundary { background: linear-gradient(155deg, rgba(28, 30, 64, .79), rgba(11, 18, 37, .96)); }
+.portal-support-advisor { display: grid; gap: 15px; border-color: rgba(125, 210, 201, .24); background: linear-gradient(145deg, rgba(10, 45, 50, .72), rgba(10, 24, 42, .94)); }
+.portal-support-advisor .portal-card-header { margin-bottom: 0; }
+.portal-support-advisor-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(215px, .48fr); gap: 13px; align-items: end; padding: 14px; border: 1px solid var(--portal-border); border-radius: 14px; background: rgba(3, 17, 29, .34); }
+.portal-support-advisor-form .portal-field { gap: 7px; }
+.portal-support-advisor-form .portal-select, .portal-support-advisor-form .portal-button, .portal-support-advisor-actions .portal-button { min-height: 44px; }
+.portal-support-advisor-form-action { display: grid; gap: 9px; align-items: end; }
+.portal-support-advisor-form-action .portal-form-note { min-height: 29px; margin: 0; }
+.portal-support-advisor-result { display: grid; gap: 13px; min-height: 82px; padding: 15px; border: 1px dashed rgba(144, 195, 210, .26); border-radius: 14px; background: rgba(5, 18, 31, .42); }
+.portal-support-advisor-result[data-state="ready"] { border-style: solid; border-color: rgba(97, 219, 198, .32); background: linear-gradient(145deg, rgba(14, 57, 59, .52), rgba(6, 23, 39, .68)); }
+.portal-support-advisor-result[data-state="guarded"] { border-color: rgba(255, 211, 122, .34); background: rgba(62, 48, 19, .24); }
+.portal-support-advisor-result > div { min-width: 0; }
+.portal-support-advisor-result h3 { margin: 5px 0 6px; color: var(--portal-text); font-size: 16px; letter-spacing: -.018em; }
+.portal-support-advisor-result p { max-width: 790px; margin: 0; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.62; }
+.portal-support-advisor-checklist { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; counter-reset: support-advisor-step; }
+.portal-support-advisor-checklist li { display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 10px; align-items: start; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.58; counter-increment: support-advisor-step; }
+.portal-support-advisor-checklist li::before { display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid rgba(105, 223, 204, .37); border-radius: 999px; background: rgba(77, 204, 187, .1); color: var(--portal-accent); content: counter(support-advisor-step); font-size: 10px; font-weight: 840; }
+.portal-support-advisor-handoff { padding-top: 12px; border-top: 1px solid var(--portal-border); }
+.portal-support-advisor-actions { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; }
+.portal-support-advisor-actions > span { color: var(--portal-muted); font-size: 11px; line-height: 1.45; }
 .portal-support-filter { display: grid; grid-template-columns: minmax(150px, .65fr) minmax(170px, .7fr) minmax(210px, 1.25fr); gap: 12px; align-items: end; padding: 13px; border: 1px solid rgba(141, 168, 255, .16); border-radius: 15px; background: rgba(9, 18, 40, .5); }
 .portal-support-filter .portal-field { gap: 6px; }
 .portal-support-filter .portal-form-footer { grid-column: 1 / -1; margin-top: 0; padding-top: 1px; }
@@ -2444,6 +2463,10 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 700px) {
   .portal-header { min-height: 62px; padding: calc(11px + var(--portal-safe-top)) calc(16px + var(--portal-safe-right)) 11px calc(16px + var(--portal-safe-left)); }
   .portal-start-guide-grid { grid-template-columns: 1fr; }
+  .portal-support-advisor-form { grid-template-columns: 1fr; }
+  .portal-support-advisor-form-action .portal-button { width: 100%; }
+  .portal-support-advisor-actions { align-items: stretch; flex-direction: column; }
+  .portal-support-advisor-actions .portal-button { width: 100%; }
   .portal-main { padding: 23px calc(16px + var(--portal-safe-right)) calc(92px + var(--portal-safe-bottom)) calc(16px + var(--portal-safe-left)); }
   .portal-mobile-nav {
     position: fixed;

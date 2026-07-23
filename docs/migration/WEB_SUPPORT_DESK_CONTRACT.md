@@ -68,6 +68,7 @@ require `confirm: true`.  All responses use the common envelope.
 
 ```text
 GET  /api/v1/support/summary
+GET  /api/v1/support/advisor?category=
 GET  /api/v1/support/cases?limit=&offset=&state=&category=&q=
 POST /api/v1/support/cases
 GET  /api/v1/support/cases/{case_id}
