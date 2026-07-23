@@ -3060,6 +3060,64 @@ def test_operator_menu_root_is_an_exact_fresh_admin_entry_not_browser_back_navig
     assert "opmenu|root" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
 
 
+def test_operator_menu_unreviewed_actions_do_not_inherit_an_admin_route(tmp_path: Path) -> None:
+    """Nested Operator snippets are not browser commands or admin navigation."""
+
+    audit = _load_audit_module()
+    routes = {"/admin", "/admin/jobs", "/admin/runtime", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "opmenu|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    for callback in (
+        "opmenu|missionrun",
+        "opmenu|telegramtakeover",
+        "opmenu|publisherrun",
+        "opmenu|cat_future",
+        "opmenu|unknown",
+        "OPMENU|ROOT",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "OPERATOR_MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "operator_menu_callback_requires_exact_source_review"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "opmenu|{*}",
+        "opmenu|missionrun|future",
+        "opmenu|cat_future_{*}",
+        "OPMENU|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "OPERATOR_MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "operator_menu_callback_requires_exact_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def operator_category_keyboard(action):
+    InlineKeyboardButton("Run", callback_data=f"opmenu|{action}")
+    InlineKeyboardButton("Root", callback_data="opmenu|root")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert templates["opmenu|{*}"]["target"] == "OPERATOR_MENU_SOURCE_REVIEW_REQUIRED"
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    assert callbacks["opmenu|root"]["target"] == "/admin"
+
+
 def test_system_data_stewardship_navigation_is_finite_and_never_leaks_bot_state() -> None:
     """System/data buttons can only open separately guarded Web read routes."""
 
