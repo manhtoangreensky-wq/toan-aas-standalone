@@ -7643,6 +7643,18 @@
       supportDeskEnabled: source.supportDeskEnabled === true,
       supportSummary: source.supportSummary && typeof source.supportSummary === "object" ? source.supportSummary : {},
       supportCases: Array.isArray(source.supportCases) ? source.supportCases.slice(0, 100) : [],
+      // Advisor guidance remains an ephemeral, signed Web projection.  It is
+      // neither a case draft nor a Bot compatibility payload and must fail
+      // closed when a bootstrap/session refresh does not carry a valid object.
+      supportAdvisor: source.supportAdvisor && typeof source.supportAdvisor === "object" && !Array.isArray(source.supportAdvisor)
+        ? source.supportAdvisor
+        : {},
+      supportAdvisorReadState: ["idle", "loading", "ready", "guarded"].includes(String(source.supportAdvisorReadState || ""))
+        ? String(source.supportAdvisorReadState)
+        : "guarded",
+      supportAdvisorSelection: SUPPORT_CASE_CATEGORIES.some(([key]) => key === String(source.supportAdvisorSelection || "").trim().toLowerCase())
+        ? String(source.supportAdvisorSelection).trim().toLowerCase()
+        : "general_support",
       supportEvents: Array.isArray(source.supportEvents) ? source.supportEvents.slice(0, 100) : [],
       supportEventsReadState: ["loading", "ready", "guarded"].includes(String(source.supportEventsReadState || ""))
         ? String(source.supportEventsReadState)
@@ -18500,6 +18512,10 @@
     ["service_consulting", "Tư vấn dịch vụ"], ["premium_lead", "Gói cao cấp"], ["custom_bot_lead", "Bot tùy chỉnh"], ["other", "Khác"]
   ]);
   const SUPPORT_CASE_PRIORITIES = Object.freeze([["low", "Thấp"], ["normal", "Bình thường"], ["high", "Cao"], ["urgent", "Khẩn"]]);
+  const SUPPORT_ADVISOR_TOPICS = Object.freeze(["technical", "billing_review", "product_consulting", "general"]);
+  const SUPPORT_ADVISOR_BOUNDARY_KEYS = Object.freeze([
+    "ticket_auto_create", "notification", "payment_or_refund", "provider_or_job_lookup", "bot_or_telegram"
+  ]);
   const SUPPORT_CASE_LIST_LIMIT = 30;
   const SUPPORT_ADMIN_CASE_LIST_LIMIT = 50;
   const SUPPORT_CASE_MAX_LIST_OFFSET = 10000;
@@ -18522,6 +18538,68 @@
   function supportCasePriorityLabel(value) {
     const match = SUPPORT_CASE_PRIORITIES.find(([key]) => key === String(value || "").trim().toLowerCase());
     return match ? match[1] : "Bình thường";
+  }
+
+  function supportAdvisorText(value, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= 3 && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportAdvisorGuide(context) {
+    const source = context && context.supportAdvisor && typeof context.supportAdvisor === "object" && !Array.isArray(context.supportAdvisor)
+      ? context.supportAdvisor
+      : null;
+    if (!source) return null;
+    const category = String(source.category || "").trim().toLowerCase();
+    const topic = String(source.topic || "").trim().toLowerCase();
+    const title = supportAdvisorText(source.title, 140);
+    const summary = supportAdvisorText(source.summary, 440);
+    const handoff = supportAdvisorText(source.handoff, 440);
+    const checklist = Array.isArray(source.checklist)
+      ? source.checklist.map((item) => supportAdvisorText(item, 260))
+      : [];
+    const boundaries = source.boundaries && typeof source.boundaries === "object" && !Array.isArray(source.boundaries)
+      ? source.boundaries
+      : {};
+    const validBoundaries = SUPPORT_ADVISOR_BOUNDARY_KEYS.every((key) => boundaries[key] === false)
+      && Object.keys(boundaries).length === SUPPORT_ADVISOR_BOUNDARY_KEYS.length;
+    if (!SUPPORT_CASE_CATEGORIES.some(([key]) => key === category)
+      || !SUPPORT_ADVISOR_TOPICS.includes(topic)
+      || !title || !summary || !handoff
+      || checklist.length < 3 || checklist.length > 4 || checklist.some((item) => !item) || !validBoundaries) {
+      return null;
+    }
+    return { category, topic, title, summary, checklist, handoff };
+  }
+
+  function renderSupportAdvisor(context) {
+    const canView = Boolean(context.capabilities && context.capabilities["support-advisor-view"] === true);
+    const readState = ["idle", "loading", "ready", "guarded"].includes(String(context.supportAdvisorReadState || ""))
+      ? String(context.supportAdvisorReadState)
+      : "guarded";
+    const guide = supportAdvisorGuide(context);
+    const candidateSelection = String(context.supportAdvisorSelection || "").trim().toLowerCase();
+    const selectedCategory = guide
+      ? guide.category
+      : (SUPPORT_CASE_CATEGORIES.some(([key]) => key === candidateSelection) ? candidateSelection : "general_support");
+    const disabled = canView ? "" : " disabled";
+    const status = guide && readState === "ready" ? "read_only" : (readState === "loading" ? "processing" : (readState === "idle" ? "ready" : "guarded"));
+    const reason = context.session && context.session.authenticated === true
+      ? (context.supportDeskEnabled === true ? "Chọn một nhóm để xem checklist trước khi bạn tự quyết định tạo ticket." : "Web Support Desk đang tạm dừng theo cấu hình máy chủ.")
+      : "Đăng nhập bằng signed Web session để xem checklist hỗ trợ riêng của Web.";
+    const unavailableText = readState === "loading"
+      ? "Đang tải checklist từ Web Support Desk…"
+      : (readState === "guarded"
+        ? (canView
+          ? "Checklist tạm chưa xác minh. Bạn vẫn có thể tự tạo yêu cầu Web nếu cần."
+          : (context.session && context.session.authenticated === true
+            ? "Checklist chưa khả dụng vì Web Support Desk đang tạm dừng theo cấu hình máy chủ."
+            : "Đăng nhập bằng signed Web session để xem checklist hỗ trợ riêng của Web."))
+        : "Checklist sẽ xuất hiện tại đây; việc xem checklist không gửi yêu cầu nào.");
+    const result = guide && readState === "ready"
+      ? `<div class="portal-support-advisor-result" data-state="ready" role="status" aria-live="polite"><div><span class="portal-section-kicker">${safeText(supportCaseCategoryLabel(guide.category))}</span><h3>${safeText(guide.title)}</h3><p>${safeText(guide.summary)}</p></div><ol class="portal-support-advisor-checklist">${guide.checklist.map((item) => `<li>${safeText(item)}</li>`).join("")}</ol><p class="portal-support-advisor-handoff">${safeText(guide.handoff)}</p><div class="portal-support-advisor-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="support-advisor-handoff" data-portal-route="/support" data-support-advisor-category="${safeText(guide.category)}">Dùng nhóm này trong yêu cầu</button><span>Chưa có yêu cầu nào được tạo.</span></div></div>`
+      : `<div class="portal-support-advisor-result" data-state="${safeText(readState === "loading" ? "loading" : (readState === "guarded" ? "guarded" : "idle"))}" role="status" aria-live="polite"><p>${safeText(unavailableText)}</p></div>`;
+    return `<section class="portal-card portal-card-pad portal-support-advisor" id="support-advisor" aria-labelledby="support-advisor-title"><div class="portal-card-header"><div><span class="portal-section-kicker">Tự hỗ trợ trước</span><h2 class="portal-card-title" id="support-advisor-title">Làm rõ vấn đề trước khi gửi yêu cầu</h2><p class="portal-card-subtitle">Nhận checklist ngắn theo nhóm Web hiện hữu. Không có phân loại AI, thông báo ngoài hệ thống hay ticket tự tạo.</p></div>${badge(status)}</div><form class="portal-form portal-support-advisor-form" data-portal-form data-portal-no-transient data-portal-action="support-advisor-guide" data-portal-route="/support" novalidate><label class="portal-field" for="support-advisor-category"><span>Nhóm cần xem checklist</span><select class="portal-select" id="support-advisor-category" name="category"${disabled}>${supportCategoryOptions(selectedCategory, false)}</select></label><div class="portal-support-advisor-form-action"><span class="portal-form-note">${safeText(reason)}</span><button class="portal-button" type="submit"${disabled}>Xem checklist</button></div></form>${result}</section>`;
   }
 
   function supportCaseTimestamp(value) {
@@ -18777,7 +18855,12 @@
     const eventState = context.supportEventsReadState === "ready" ? "read_only" : (context.supportEventsReadState === "loading" ? "processing" : "guarded");
     const disabled = enabled ? "" : " disabled";
     const reason = context.session.authenticated !== true ? "Đăng nhập bằng signed Web session để tạo yêu cầu." : (context.supportDeskEnabled ? "CSRF hoặc quyền tạo yêu cầu chưa sẵn sàng cho phiên này." : "Web Support Desk đang tạm dừng theo cấu hình máy chủ.");
-    return `<article class="portal-page portal-support-desk">${renderHero(page, context)}<section class="portal-support-intro"><div><span class="portal-section-kicker">Web-native Support Desk</span><h2>Trao đổi rõ ràng, riêng tư và có trạng thái</h2><p>Case, phản hồi và timeline được giữ trong Web App theo signed account. Đây không phải Telegram inbox và không tự gửi email, Telegram hay thông báo provider.</p></div><dl><div><dt>Web-only</dt><dd>Không sao chép lịch sử Bot</dd></div><div><dt>CSRF + audit</dt><dd>Mọi write đều được server kiểm tra</dd></div></dl></section>${supportStateStats(context.supportSummary)}<div class="portal-support-layout"><section class="portal-card portal-card-pad portal-support-intake"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo yêu cầu mới</h2><p class="portal-card-subtitle">Mô tả vấn đề, bối cảnh và kết quả bạn mong muốn. Không đính kèm dữ liệu thanh toán hoặc thông tin nhạy cảm.</p></div>${badge(enabled ? "ready" : state)}</div><form class="portal-form" data-portal-form data-portal-action="support-case-create" data-portal-route="/support" novalidate><div class="portal-fields"><div class="portal-field"><label for="support-category">Nhóm yêu cầu</label><select class="portal-select" id="support-category" name="category"${disabled}>${supportCategoryOptions(values.category || "general_support", false)}</select></div><div class="portal-field"><label for="support-priority">Mức ưu tiên</label><select class="portal-select" id="support-priority" name="priority"${disabled}>${supportPriorityOptions(values.priority || "normal")}</select></div><div class="portal-field portal-field--wide"><label for="support-subject">Chủ đề <span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="support-subject" name="subject" type="text" minlength="3" maxlength="180" required value="${safeText(String(values.subject || ""))}" placeholder="Ví dụ: Không mở được file PDF riêng tư"${disabled}></div><div class="portal-field portal-field--wide"><label for="support-detail">Nội dung <span class="portal-required-mark" aria-hidden="true">*</span></label><textarea class="portal-textarea" id="support-detail" name="detail" minlength="3" maxlength="4000" required placeholder="Nêu bước bạn đã thử, thời điểm xảy ra và kết quả mong muốn…"${disabled}>${safeText(String(values.detail || ""))}</textarea><span class="portal-field-help">Không gửi password, API key, token, OTP/CVV, số thẻ, bill/TXID, số tài khoản hoặc QR thanh toán.</span></div></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(enabled ? "Yêu cầu chỉ được ghi trong Web Support Desk; không tạo ticket Bot hoặc external delivery." : reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Tạo yêu cầu</button></div></form></section><aside class="portal-card portal-card-pad portal-support-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Phạm vi an toàn</h2><p class="portal-card-subtitle">Support Desk xử lý trao đổi trong Web, không xử lý bí mật hoặc đối soát thanh toán bằng nội dung tự do.</p></div>${badge("read_only")}</div><ul class="portal-project-steps"><li><strong>Không có thông báo giả</strong><span>Trạng thái và phản hồi chỉ hiển thị khi bạn mở Web App.</span></li><li><strong>Không có ledger write</strong><span>Không cộng/trừ Xu, tạo PayOS order hay hoàn tiền từ case.</span></li><li><strong>Không có upload ngầm</strong><span>Phiên bản đầu tiên nhận văn bản; không nhận tệp Telegram hoặc proof thanh toán.</span></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Xem tất cả yêu cầu</a></div></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu gần đây</h2><p class="portal-card-subtitle">Chỉ case thuộc Web account hiện tại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="/support"${context.capabilities && context.capabilities["support-case-refresh"] === true ? "" : " disabled"}>Làm mới</button></div>${renderSupportCaseCards(cases, false)}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động Web gần đây</h2><p class="portal-card-subtitle">Audit/event hiển thị không bao gồm nội dung case.</p></div>${badge(eventState)}</div>${renderSupportActivity(context.supportEvents, context.supportEventsReadState)}</section></article>`;
+    const intro = `<section class="portal-support-intro"><div><span class="portal-section-kicker">Web-native Support Desk</span><h2>Trao đổi rõ ràng, riêng tư và có trạng thái</h2><p>Case, phản hồi và timeline được giữ trong Web App theo signed account. Đây không phải Telegram inbox và không tự gửi email, Telegram hay thông báo provider.</p></div><dl><div><dt>Web-only</dt><dd>Không sao chép lịch sử Bot</dd></div><div><dt>CSRF + audit</dt><dd>Mọi write đều được server kiểm tra</dd></div></dl></section>`;
+    const intake = `<section class="portal-card portal-card-pad portal-support-intake"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo yêu cầu mới</h2><p class="portal-card-subtitle">Mô tả vấn đề, bối cảnh và kết quả bạn mong muốn. Không đính kèm dữ liệu thanh toán hoặc thông tin nhạy cảm.</p></div>${badge(enabled ? "ready" : state)}</div><form class="portal-form" data-portal-form data-portal-action="support-case-create" data-portal-route="/support" novalidate><div class="portal-fields"><div class="portal-field"><label for="support-category">Nhóm yêu cầu</label><select class="portal-select" id="support-category" name="category"${disabled}>${supportCategoryOptions(values.category || "general_support", false)}</select></div><div class="portal-field"><label for="support-priority">Mức ưu tiên</label><select class="portal-select" id="support-priority" name="priority"${disabled}>${supportPriorityOptions(values.priority || "normal")}</select></div><div class="portal-field portal-field--wide"><label for="support-subject">Chủ đề <span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="support-subject" name="subject" type="text" minlength="3" maxlength="180" required value="${safeText(String(values.subject || ""))}" placeholder="Ví dụ: Không mở được file PDF riêng tư"${disabled}></div><div class="portal-field portal-field--wide"><label for="support-detail">Nội dung <span class="portal-required-mark" aria-hidden="true">*</span></label><textarea class="portal-textarea" id="support-detail" name="detail" minlength="3" maxlength="4000" required placeholder="Nêu bước bạn đã thử, thời điểm xảy ra và kết quả mong muốn…"${disabled}>${safeText(String(values.detail || ""))}</textarea><span class="portal-field-help">Không gửi password, API key, token, OTP/CVV, số thẻ, bill/TXID, số tài khoản hoặc QR thanh toán.</span></div></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(enabled ? "Yêu cầu chỉ được ghi trong Web Support Desk; không tạo ticket Bot hoặc external delivery." : reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Tạo yêu cầu</button></div></form></section>`;
+    const boundary = `<aside class="portal-card portal-card-pad portal-support-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Phạm vi an toàn</h2><p class="portal-card-subtitle">Support Desk xử lý trao đổi trong Web, không xử lý bí mật hoặc đối soát thanh toán bằng nội dung tự do.</p></div>${badge("read_only")}</div><ul class="portal-project-steps"><li><strong>Không có thông báo giả</strong><span>Trạng thái và phản hồi chỉ hiển thị khi bạn mở Web App.</span></li><li><strong>Không có ledger write</strong><span>Không cộng/trừ Xu, tạo PayOS order hay hoàn tiền từ case.</span></li><li><strong>Không có upload ngầm</strong><span>Phiên bản đầu tiên nhận văn bản; không nhận tệp Telegram hoặc proof thanh toán.</span></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Xem tất cả yêu cầu</a></div></aside>`;
+    const recentCases = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu gần đây</h2><p class="portal-card-subtitle">Chỉ case thuộc Web account hiện tại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="/support"${context.capabilities && context.capabilities["support-case-refresh"] === true ? "" : " disabled"}>Làm mới</button></div>${renderSupportCaseCards(cases, false)}</section>`;
+    const activity = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động Web gần đây</h2><p class="portal-card-subtitle">Audit/event hiển thị không bao gồm nội dung case.</p></div>${badge(eventState)}</div>${renderSupportActivity(context.supportEvents, context.supportEventsReadState)}</section>`;
+    return `<article class="portal-page portal-support-desk">${renderHero(page, context)}${intro}${renderSupportAdvisor(context)}${supportStateStats(context.supportSummary)}<div class="portal-support-layout">${intake}${boundary}</div>${recentCases}${activity}</article>`;
   }
 
   function renderSupportCases(page, context) {

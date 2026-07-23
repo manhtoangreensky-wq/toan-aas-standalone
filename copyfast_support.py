@@ -40,6 +40,163 @@ CASE_CATEGORIES = frozenset({
     "general_support", "service_consulting", "premium_lead",
     "custom_bot_lead", "other",
 })
+# The Advisor is intentionally a bounded, read-only preparation aid for the
+# existing Web Support Desk.  It has no free-text classifier, AI/provider call
+# or Bot compatibility layer.  Each guide returns one *existing* Web case
+# category so the browser can offer a deliberate handoff to the normal,
+# CSRF/idempotent case composer without creating or changing a case itself.
+SUPPORT_ADVISOR_GUIDES: dict[str, dict[str, Any]] = {
+    "image_error": {
+        "topic": "technical",
+        "title": "Kiểm tra thao tác ảnh trước khi gửi yêu cầu",
+        "summary": "Ghi nhận bối cảnh hiển thị để đội ngũ Web có đủ thông tin xem lại, nhưng checklist này không tự xác nhận lỗi hay tạo lại ảnh.",
+        "checklist": (
+            "Xác nhận bạn đang ở đúng Web account và làm mới trang một lần.",
+            "Ghi tên khu vực thao tác, thời điểm gần đúng và kết quả đang thấy.",
+            "Mô tả điều bạn đã thử; không gửi token, mật khẩu hoặc thông tin thanh toán.",
+        ),
+        "handoff": "Nếu vẫn cần hỗ trợ, hãy tự mô tả lỗi trong yêu cầu Web. Không có kiểm tra provider hoặc output tự động từ checklist.",
+    },
+    "video_error": {
+        "topic": "technical",
+        "title": "Chuẩn bị thông tin về thao tác video",
+        "summary": "Checklist chỉ giúp bạn mô tả hiện tượng rõ hơn; nó không kiểm tra tiến trình, trạng thái engine hoặc tạo video thay thế.",
+        "checklist": (
+            "Kiểm tra đúng workspace và làm mới trang trước khi báo lỗi.",
+            "Ghi bước đang thực hiện, thời điểm gần đúng và kết quả hiển thị.",
+            "Chỉ nêu ngữ cảnh cần thiết; không gửi secret, mã thanh toán hoặc dữ liệu của người khác.",
+        ),
+        "handoff": "Bạn tự quyết định gửi ticket Web sau khi xem checklist; hệ thống không tự mở case hoặc cam kết kết quả video.",
+    },
+    "document_pdf": {
+        "topic": "technical",
+        "title": "Chuẩn bị thông tin về tài liệu hoặc PDF",
+        "summary": "Xác định thao tác và kết quả mong muốn trước khi gửi yêu cầu; checklist không đọc file, không tải file lên và không tạo output.",
+        "checklist": (
+            "Xác nhận bạn đang mở đúng khu vực tài liệu của signed Web account.",
+            "Ghi thao tác, định dạng mong muốn và thời điểm gần đúng của hiện tượng.",
+            "Không dán nội dung nhạy cảm, URL private, path máy tính hay thông tin thanh toán.",
+        ),
+        "handoff": "Nếu cần người hỗ trợ xem lại, hãy mô tả bối cảnh trong ticket Web; việc đọc file chỉ có thể diễn ra trong workflow riêng có quyền phù hợp.",
+    },
+    "payment_topup": {
+        "topic": "billing_review",
+        "title": "Chuẩn bị yêu cầu đối soát nạp tiền",
+        "summary": "Support Advisor không xác nhận giao dịch, cộng Xu, tạo đơn hoặc đối soát thanh toán. Nó chỉ giúp bạn gửi yêu cầu Web an toàn nếu cần review.",
+        "checklist": (
+            "Kiểm tra lại trạng thái hiển thị trong account và thời điểm bạn quan sát.",
+            "Nêu vấn đề cần được xem xét bằng mô tả ngắn, không đính kèm chứng từ nhạy cảm.",
+            "Không gửi bill, TXID, QR, số tài khoản, số thẻ, OTP/CVV hoặc mật khẩu vào Web Support Desk.",
+        ),
+        "handoff": "Một ticket chỉ ghi nhận yêu cầu review trong Web; nó không chứng minh thanh toán, cộng Xu hay thay đổi ledger.",
+    },
+    "package_combo": {
+        "topic": "billing_review",
+        "title": "Chuẩn bị câu hỏi về gói dịch vụ",
+        "summary": "Checklist giúp bạn làm rõ gói và nhu cầu cần giải đáp. Nó không tạo đơn, đổi gói, thay giá hay thay đổi quyền sử dụng.",
+        "checklist": (
+            "Ghi tên gói hoặc màn hình bạn đang xem cùng nhu cầu muốn làm rõ.",
+            "Nêu thời điểm gần đúng và kết quả hiển thị trong account hiện tại.",
+            "Không gửi mã giao dịch, QR, số tài khoản, số thẻ, OTP/CVV hay thông tin đăng nhập.",
+        ),
+        "handoff": "Bạn có thể tự gửi ticket Web để nhân sự xem lại; ticket không tự tạo hoặc điều chỉnh giao dịch.",
+    },
+    "refund": {
+        "topic": "billing_review",
+        "title": "Chuẩn bị yêu cầu xem xét hoàn tiền",
+        "summary": "Checklist không phê duyệt, từ chối hoặc thực hiện hoàn tiền. Nó chỉ giúp bạn mô tả yêu cầu rõ ràng để được xem xét trong luồng Web.",
+        "checklist": (
+            "Nêu dịch vụ hoặc tình huống cần được xem xét và thời điểm gần đúng.",
+            "Mô tả ngắn gọn lý do và kết quả bạn mong muốn được làm rõ.",
+            "Không gửi bill, TXID, QR, số tài khoản, số thẻ, OTP/CVV hoặc bất kỳ secret nào.",
+        ),
+        "handoff": "Ticket Web chỉ là yêu cầu review; không có hoàn tiền, cập nhật wallet/Xu hoặc thông báo ngoài hệ thống tự động.",
+    },
+    "feature_request": {
+        "topic": "product_consulting",
+        "title": "Chuẩn bị đề xuất tính năng",
+        "summary": "Biến ý tưởng thành yêu cầu có thể đánh giá, không hứa hẹn roadmap, thời điểm phát hành hoặc quyền truy cập mới.",
+        "checklist": (
+            "Mô tả vấn đề người dùng đang gặp thay vì chỉ nêu tên tính năng.",
+            "Nêu kết quả mong muốn và ví dụ sử dụng ngắn gọn.",
+            "Không gửi dữ liệu khách hàng, secret hoặc thông tin thanh toán vào mô tả.",
+        ),
+        "handoff": "Bạn có thể gửi ticket Web để lưu ý kiến; việc tiếp nhận không đồng nghĩa tính năng đã được duyệt hay triển khai.",
+    },
+    "lead_consulting": {
+        "topic": "product_consulting",
+        "title": "Chuẩn bị yêu cầu tư vấn",
+        "summary": "Gom mục tiêu và bối cảnh để đội ngũ hiểu nhu cầu; checklist không đặt lịch, tạo hợp đồng hoặc cam kết dịch vụ.",
+        "checklist": (
+            "Nêu mục tiêu, loại nội dung hoặc quy trình bạn muốn tìm hiểu.",
+            "Cho biết quy mô hoặc ràng buộc cần cân nhắc ở mức không nhạy cảm.",
+            "Không gửi dữ liệu nhận diện, tài liệu mật, secret hoặc thông tin thanh toán.",
+        ),
+        "handoff": "Ticket Web chỉ ghi nhận nhu cầu tư vấn; không tự gửi email, Telegram hoặc tạo lead ở hệ thống ngoài.",
+    },
+    "service_consulting": {
+        "topic": "product_consulting",
+        "title": "Chuẩn bị câu hỏi về dịch vụ",
+        "summary": "Làm rõ use case trước khi hỏi để trao đổi hiệu quả hơn; checklist không bật dịch vụ hay xác nhận phạm vi thực hiện.",
+        "checklist": (
+            "Nêu mục tiêu và loại kết quả bạn muốn tìm hiểu.",
+            "Ghi công cụ hoặc khu vực Web liên quan nếu bạn đã xác định được.",
+            "Không gửi thông tin đăng nhập, secret, dữ liệu thanh toán hoặc dữ liệu của người khác.",
+        ),
+        "handoff": "Bạn có thể tự tạo yêu cầu Web để trao đổi; hệ thống không tự kích hoạt dịch vụ hoặc gọi engine bên ngoài.",
+    },
+    "premium_lead": {
+        "topic": "product_consulting",
+        "title": "Chuẩn bị nhu cầu gói cao cấp",
+        "summary": "Checklist giúp mô tả nhu cầu trước khi trao đổi. Nó không báo giá, tạo gói, thay quyền truy cập hoặc cam kết phạm vi.",
+        "checklist": (
+            "Nêu mục tiêu sử dụng và quy mô công việc muốn trao đổi.",
+            "Ghi các yêu cầu vận hành hoặc hỗ trợ quan trọng ở mức không nhạy cảm.",
+            "Không gửi thông tin thanh toán, dữ liệu hợp đồng, secret hoặc thông tin đăng nhập.",
+        ),
+        "handoff": "Một ticket Web mở đầu cuộc trao đổi; nó không phải báo giá hoặc xác nhận mua gói.",
+    },
+    "custom_bot_lead": {
+        "topic": "product_consulting",
+        "title": "Chuẩn bị nhu cầu giải pháp tùy chỉnh",
+        "summary": "Ghi rõ bài toán và ràng buộc trước khi liên hệ. Checklist không tạo Bot, kết nối hệ thống hay thay đổi cấu hình hiện hữu.",
+        "checklist": (
+            "Mô tả quy trình cần hỗ trợ và người dùng dự kiến ở mức tổng quát.",
+            "Nêu kết quả cần đạt, ràng buộc kỹ thuật hoặc vận hành không nhạy cảm.",
+            "Không gửi API key, token, mật khẩu, dữ liệu khách hàng hoặc thông tin thanh toán.",
+        ),
+        "handoff": "Bạn có thể gửi yêu cầu Web để được xem xét; hệ thống không tự tạo Bot, kết nối Telegram hoặc triển khai tích hợp.",
+    },
+    "general_support": {
+        "topic": "general",
+        "title": "Chuẩn bị yêu cầu hỗ trợ chung",
+        "summary": "Một mô tả ngắn, có bối cảnh giúp phân luồng rõ hơn. Checklist không tự phân loại bằng AI hay tạo phản hồi thay nhân sự.",
+        "checklist": (
+            "Nêu việc bạn đang cố thực hiện và kết quả đang thấy.",
+            "Ghi thời điểm gần đúng và bước bạn đã thử nếu có.",
+            "Không gửi password, token, OTP/CVV, số thẻ, mã thanh toán hoặc dữ liệu riêng tư của người khác.",
+        ),
+        "handoff": "Nếu vẫn cần hỗ trợ, bạn chủ động tạo ticket Web với mô tả của mình; hệ thống không tự gửi hoặc tự trả lời thay bạn.",
+    },
+    "other": {
+        "topic": "general",
+        "title": "Làm rõ yêu cầu trước khi gửi",
+        "summary": "Khi chưa phù hợp nhóm nào, hãy mô tả bối cảnh và mục tiêu theo cách an toàn. Checklist không suy đoán hành động hay kết quả.",
+        "checklist": (
+            "Viết ngắn gọn điều bạn cần làm rõ và kết quả mong muốn.",
+            "Nêu khu vực Web liên quan cùng thời điểm gần đúng nếu có.",
+            "Loại bỏ secret, OTP/CVV, dữ liệu thanh toán và thông tin không thuộc quyền chia sẻ của bạn.",
+        ),
+        "handoff": "Bạn vẫn tự quyết định gửi ticket Web; không có phân loại Bot, tự tạo case hoặc thông báo ra bên ngoài.",
+    },
+}
+SUPPORT_ADVISOR_EXTERNAL_BOUNDARIES = {
+    "ticket_auto_create": False,
+    "notification": False,
+    "payment_or_refund": False,
+    "provider_or_job_lookup": False,
+    "bot_or_telegram": False,
+}
 CASE_PRIORITIES = frozenset({"low", "normal", "high", "urgent"})
 CASE_STATES = frozenset({
     "new", "reviewing", "waiting_user", "waiting_provider",
@@ -831,6 +988,45 @@ async def support_summary(account: dict = Depends(require_account)):
         True,
         "Tổng quan Web Support Desk của account hiện tại.",
         data={"states": states, "active": active, "delivery": "web_view_only"},
+        status_name="read_only",
+    )
+
+
+@router.get("/advisor")
+async def support_advisor(category: str = "general_support", account: dict = Depends(require_account)):
+    """Return one bounded, Web-only support preparation checklist.
+
+    The endpoint deliberately owns neither a support case nor a classifier.
+    It does not query a Bot record, job, provider, payment, wallet/Xu or
+    refund ledger.  A user must explicitly submit the existing case composer
+    after reading the checklist.
+    """
+    _require_support_enabled()
+    try:
+        normalized_category = _category(category)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    guide = SUPPORT_ADVISOR_GUIDES.get(normalized_category)
+    if not guide:
+        # Keep the endpoint closed even if a future case category is added
+        # without a deliberately reviewed self-service guide.
+        raise HTTPException(status_code=503, detail="Checklist hỗ trợ Web chưa sẵn sàng cho nhóm này.")
+    return envelope(
+        True,
+        "Checklist tự hỗ trợ chỉ để chuẩn bị yêu cầu Web; bạn vẫn tự quyết định có gửi ticket hay không.",
+        data={
+            "guide": {
+                "category": normalized_category,
+                "topic": str(guide["topic"]),
+                "title": str(guide["title"]),
+                "summary": str(guide["summary"]),
+                "checklist": list(guide["checklist"]),
+                "handoff": str(guide["handoff"]),
+                "boundaries": dict(SUPPORT_ADVISOR_EXTERNAL_BOUNDARIES),
+            },
+            "delivery": "web_view_only",
+            "automation": "none",
+        },
         status_name="read_only",
     )
 

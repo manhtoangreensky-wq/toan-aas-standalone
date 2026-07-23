@@ -288,6 +288,10 @@
   // response can never cross a signed session, route or role refresh.
   let supportSessionEpoch = 0;
   let supportCustomerListHydrationEpoch = 0;
+  // Advisor requests are independent of case list/detail reads.  A delayed
+  // checklist response must never replace a newer selected category, route or
+  // signed account projection.
+  let supportAdvisorHydrationEpoch = 0;
   let supportCustomerDetailHydrationEpoch = 0;
   let supportAdminListHydrationEpoch = 0;
   let supportAdminDetailHydrationEpoch = 0;
@@ -1502,6 +1506,62 @@
       return { items: [], readState: "guarded" };
     }
     return { items: data.items, readState: "ready" };
+  }
+
+  // Advisor content is server-owned but still treated as untrusted at the
+  // browser boundary.  Only one closed Web category, a bounded checklist and
+  // explicit false external-boundary flags may be displayed or used for the
+  // non-writing handoff back to the case composer.
+  const SUPPORT_ADVISOR_TOPICS = new Set(["technical", "billing_review", "product_consulting", "general"]);
+  const SUPPORT_ADVISOR_BOUNDARY_KEYS = Object.freeze([
+    "ticket_auto_create", "notification", "payment_or_refund", "provider_or_job_lookup", "bot_or_telegram"
+  ]);
+
+  function supportAdvisorText(value, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= 3 && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportAdvisorGuideProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    const source = data && data.guide && typeof data.guide === "object" && !Array.isArray(data.guide)
+      ? data.guide
+      : null;
+    if (!data || !source || data.delivery !== "web_view_only" || data.automation !== "none") {
+      return { guide: {}, readState: "guarded" };
+    }
+    const category = String(source.category || "").trim().toLowerCase();
+    const topic = String(source.topic || "").trim().toLowerCase();
+    const title = supportAdvisorText(source.title, 140);
+    const summary = supportAdvisorText(source.summary, 440);
+    const handoff = supportAdvisorText(source.handoff, 440);
+    const checklist = Array.isArray(source.checklist)
+      ? source.checklist.map((item) => supportAdvisorText(item, 260))
+      : [];
+    const boundaries = source.boundaries && typeof source.boundaries === "object" && !Array.isArray(source.boundaries)
+      ? source.boundaries
+      : {};
+    const validBoundaries = SUPPORT_ADVISOR_BOUNDARY_KEYS.every((key) => boundaries[key] === false)
+      && Object.keys(boundaries).length === SUPPORT_ADVISOR_BOUNDARY_KEYS.length;
+    if (!SUPPORT_CASE_CATEGORIES.has(category)
+      || !SUPPORT_ADVISOR_TOPICS.has(topic)
+      || !title || !summary || !handoff
+      || checklist.length < 3 || checklist.length > 4 || checklist.some((item) => !item)
+      || !validBoundaries) {
+      return { guide: {}, readState: "guarded" };
+    }
+    return {
+      guide: { category, topic, title, summary, checklist, handoff, boundaries: { ...boundaries } },
+      readState: "ready"
+    };
+  }
+
+  function supportAdvisorCategory(value) {
+    const category = String(value || "").trim().toLowerCase();
+    if (!SUPPORT_CASE_CATEGORIES.has(category)) throw new Error("Hãy chọn một nhóm hỗ trợ Web hợp lệ.");
+    return category;
   }
 
   function validSupportRevision(value) {
@@ -10567,6 +10627,7 @@
     ++subtitleLanguageSourceHydrationEpoch;
     ++workboardSessionEpoch;
     ++supportSessionEpoch;
+    ++supportAdvisorHydrationEpoch;
     ++contentHandoffSessionEpoch;
     ++partnerCrmSessionEpoch;
     ++contentStudioSessionEpoch;
@@ -11437,6 +11498,10 @@
       // here: the support endpoints check protected role_cache themselves.
       "support-case-view": Boolean(account && supportDeskEnabled),
       "support-case-refresh": Boolean(account && supportDeskEnabled),
+      // Advisor is a signed, read-only checklist.  It neither writes a case
+      // nor needs a CSRF token; the endpoint still verifies the session and
+      // Support Desk feature gate before returning any guide.
+      "support-advisor-view": Boolean(account && supportDeskEnabled),
       "support-case-create": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-reply": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-transition": Boolean(account && me.csrf_token && supportDeskEnabled),
@@ -11552,6 +11617,7 @@
     ++workboardDetailHydrationEpoch;
     ++supportSessionEpoch;
     ++supportCustomerListHydrationEpoch;
+    ++supportAdvisorHydrationEpoch;
     ++supportCustomerDetailHydrationEpoch;
     ++supportAdminListHydrationEpoch;
     ++supportAdminDetailHydrationEpoch;
@@ -12213,6 +12279,9 @@
       // customer's case/thread/role visible in the browser.
       supportSummary: {},
       supportCases: [],
+      supportAdvisor: {},
+      supportAdvisorReadState: account && supportDeskEnabled ? "idle" : "guarded",
+      supportAdvisorSelection: "general_support",
       supportEvents: [],
       supportEventsReadState: account && supportDeskEnabled ? "loading" : "guarded",
       supportCaseDetail: {},
@@ -12833,7 +12902,7 @@
       // Support pages never fall back to Bot tickets, generic admin data or a
       // stale browser cache when the local feature gate/session is unavailable.
       merge({
-        supportSummary: {}, supportCases: [], supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportAttachmentAssets: [],
+        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportAttachmentAssets: [],
         supportCaseFilter: { q: "", state: "all", category: "" },
         supportCaseListing: supportCaseListingProjection({ q: "", state: "all", category: "" }, 0, {}, 0),
         supportReadState: "guarded",
@@ -16065,6 +16134,42 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function supportAdvisorRequestIsCurrent(requestEpoch, sessionEpoch) {
+    return requestEpoch === supportAdvisorHydrationEpoch
+      && sessionEpoch === supportSessionEpoch
+      && currentPortalPath() === "/support"
+      && base().supportDeskEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateSupportAdvisor(categoryValue) {
+    const category = supportAdvisorCategory(categoryValue);
+    const requestEpoch = ++supportAdvisorHydrationEpoch;
+    const sessionEpoch = supportSessionEpoch;
+    if (!supportAdvisorRequestIsCurrent(requestEpoch, sessionEpoch)) {
+      return { guide: {}, readState: "guarded", stale: true };
+    }
+    // Do not retain a previous category's advice while the user requests a
+    // different one.  The selection is in page memory only, never URL or
+    // browser storage, and it never becomes ticket text or a server write.
+    merge({ supportAdvisor: {}, supportAdvisorReadState: "loading", supportAdvisorSelection: category });
+    try {
+      const result = await api(`/support/advisor?category=${encodeURIComponent(category)}`);
+      if (!supportAdvisorRequestIsCurrent(requestEpoch, sessionEpoch)) {
+        return { guide: {}, readState: "guarded", stale: true };
+      }
+      const projection = supportAdvisorGuideProjection(result);
+      merge({ supportAdvisor: projection.guide, supportAdvisorReadState: projection.readState, supportAdvisorSelection: category });
+      return projection;
+    } catch (error) {
+      if (!supportAdvisorRequestIsCurrent(requestEpoch, sessionEpoch)) {
+        return { guide: {}, readState: "guarded", stale: true };
+      }
+      merge({ supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: category });
+      throw error;
+    }
+  }
+
   async function hydrateSupportDesk(filterValue, offsetValue) {
     // Support Desk is a signed-account Web projection, deliberately separate
     // from `hydrateCanonicalData` and the legacy `/support/tickets` bridge.
@@ -16110,7 +16215,7 @@
       // Never retain an old account's support content after a failed scoped
       // read.  There is no Bot fallback and no browser-side case cache.
       merge({
-        supportSummary: {}, supportCases: [], supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportCaseFilter: filter,
+        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportCaseFilter: filter,
         supportCaseListing: supportCaseListingProjection(filter, offset, {}, 0), supportReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded", "/support": "guarded", "/tickets": "guarded" }
       });
@@ -28177,6 +28282,51 @@
         } finally {
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "support-advisor-guide") {
+        if (route !== "/support" || currentPortalPath() !== "/support" || !(base().capabilities && base().capabilities["support-advisor-view"] === true)) {
+          throw new Error("Cần signed Web session để xem checklist hỗ trợ.");
+        }
+        const category = supportAdvisorCategory(fields.category);
+        setActionBusy(action, route, true);
+        try {
+          const projection = await hydrateSupportAdvisor(category);
+          if (projection.stale) return;
+          if (projection.readState !== "ready" || !projection.guide || !projection.guide.category) {
+            toast("Checklist chưa có dữ liệu hợp lệ. Bạn vẫn có thể tự tạo yêu cầu Web nếu cần.", "error");
+            return;
+          }
+          toast("Đã hiển thị checklist. Chưa có yêu cầu nào được tạo.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-advisor-handoff") {
+        if (route !== "/support" || currentPortalPath() !== "/support" || !(base().capabilities && base().capabilities["support-advisor-view"] === true)) {
+          throw new Error("Checklist hỗ trợ chỉ khả dụng trong signed Web session.");
+        }
+        const projection = supportAdvisorGuideProjection({
+          data: { guide: base().supportAdvisor, delivery: "web_view_only", automation: "none" }
+        });
+        if (base().supportAdvisorReadState !== "ready" || projection.readState !== "ready" || !projection.guide.category) {
+          throw new Error("Hãy xem checklist hợp lệ cho nhóm này trước khi dùng nhóm trong yêu cầu.");
+        }
+        // Never trust a category carried by a clicked DOM control.  Reuse only
+        // the strict, current server projection retained for this signed page.
+        const category = supportAdvisorCategory(projection.guide.category);
+        const categoryField = document.querySelector("#support-category");
+        const options = categoryField && categoryField.options ? Array.from(categoryField.options) : [];
+        if (!categoryField || !options.some((option) => String(option.value || "") === category)) {
+          throw new Error("Form yêu cầu Web chưa sẵn sàng. Hãy làm mới trang rồi thử lại.");
+        }
+        categoryField.value = category;
+        categoryField.dispatchEvent(new Event("change", { bubbles: true }));
+        const subjectField = document.querySelector("#support-subject");
+        if (subjectField && typeof subjectField.scrollIntoView === "function") subjectField.scrollIntoView({ behavior: "auto", block: "center" });
+        if (subjectField && typeof subjectField.focus === "function") subjectField.focus({ preventScroll: true });
+        toast("Đã chọn nhóm trong form. Hãy tự viết chủ đề và nội dung trước khi gửi yêu cầu.");
         return;
       }
       if (action === "support-cases-filter" || action === "support-cases-filter-clear") {
