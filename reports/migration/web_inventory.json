@@ -16,13 +16,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1926,
+      "line": 1957,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5587,
+      "line": 5618,
       "target": "_map_shopai_video_job_callback"
     },
     {
@@ -82,13 +82,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5556,
+      "line": 5587,
       "target": "_shopai_video_job_source_review_mapping"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 5518,
+      "line": 5549,
       "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
@@ -197,17 +197,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4347,
+      "line": 4378,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4355,
+      "line": 4386,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4363,
+      "line": 4394,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -242,6 +242,12 @@
       "table": "a"
     },
     {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 5644,
+      "operation": "UPDATE",
+      "table": "a"
+    },
+    {
       "file": "copyfast_support.py",
       "line": 1315,
       "operation": "UPDATE",
@@ -249,7 +255,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9736,
+      "line": 9890,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -315,25 +321,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5526,
+      "line": 5557,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5548,
+      "line": 5579,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9521,
+      "line": 9665,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7178,
+      "line": 7311,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6850,7 +6856,7 @@
         "copyfast_web_engine.py",
         "customer_api.py"
       ],
-      "occurrences": 983,
+      "occurrences": 982,
       "provider": "PayOS"
     },
     {
@@ -7078,7 +7084,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2844,
+      "occurrences": 3007,
       "provider": "Telegram"
     }
   ],
@@ -12845,10 +12851,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 296,
-  "source_files_scanned": 296,
-  "source_fingerprint_sha256": "617bf20545840f03b64bf18b6267307034d078ab6f77b8474592a5e7b2df917e",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast101-shopai-video-job-boundary",
+  "source_files_discovered": 298,
+  "source_files_scanned": 298,
+  "source_fingerprint_sha256": "ac7f7ad08d03aced2c57b3fa745e15a18e3c2c8d7ab9f585d4b2c1e5bdd1ffec",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast102-manual-payment-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
