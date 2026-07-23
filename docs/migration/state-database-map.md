@@ -18,6 +18,11 @@ The Bot `pipe|*` and `task|*` callbacks are Telegram-admin transitions over cano
 The Bot `creative|*` callback is a Telegram-admin selection transition over canonical creative-variant and production-job rows. A Web Creative Studio must use independently authorized Web records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, variant identifier, selected state, production update or handoff value. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.
 
 
+## Bot Audio Hub callback boundary
+
+The Bot `music_quick|*`, `sfx_quick|*` and `media_quick|*` callbacks are a Telegram state machine over product context, guided pending input, music/SFX/media caches, selected media, voice-profile and Video Finishing state. A Web Audio Hub must start from Web-owned owner-scoped data and never accepts/replays a Bot callback, cache index, profile ID, finalization value or keyword. `suggest_music|*` is Bot reply guidance only, not a browser preset. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.
+
+
 ## Additive Web-native Video Poster state
 
 | Table | Owner | Purpose | Explicitly not authoritative for |

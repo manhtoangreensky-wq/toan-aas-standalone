@@ -118,6 +118,7 @@ async def dashboard():
         "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
         "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
+        "AUDIO_HUB_CALLBACK_CONTRACT.md",
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
         "CREATIVE_VARIANT_CALLBACK_CONTRACT.md",
@@ -138,6 +139,7 @@ async def dashboard():
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
+    assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in readme
@@ -3957,7 +3959,7 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
     assert gap["coverage_comparability"] == {
         "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
         "feature_progress_claim": False,
-        "reason": "Schema 1.7 retains the 1.6 inventory corrections and records the finite Free Hub prompt-library category template as fresh signed Gallery navigation only; its Bot suggestion and pending state are not Web contracts.",
+        "reason": "Schema 1.9 retains the 1.8 inventory corrections and adds bounded source-only coverage for frozen Audio Hub product-context helper callbacks, including source-local literal lambda actions, without inferring Bot state or Web behavior.",
         "scope_changes": [
             "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
             "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -3965,6 +3967,8 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
             "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
             "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
             "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
+            "Bot Audio Hub and suggest-music callbacks are source-review boundaries instead of keyword-derived Music/Video Web routes.",
+            "Frozen Audio Hub product-context helper calls and source-local literal/formatted lambda actions are inventoried as concrete or opaque three-segment evidence; dynamic context/state is never evaluated.",
             "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
         ],
         "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
@@ -4323,6 +4327,262 @@ async def portal(page_path):
     environment_contract = tmp_path / "docs" / "ENV_AND_PROVIDER_MAP.md"
     assert environment_contract.is_file()
     assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in environment_contract.read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: Path) -> None:
+    """Stateful Bot Audio Hub callbacks cannot infer Music, Video or Media routes."""
+
+    audit = _load_audit_module()
+    routes = {"/features/music", "/features/video", "/media-workspace", "/voice-vault", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(
+        prefix in {"music_quick|", "sfx_quick|", "media_quick|", "suggest_music|"}
+        for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES
+    )
+
+    for identifier in (
+        "music_quick|calm",
+        "music_quick|trend",
+        "music_quick|voice_clone_confirmed:4",
+        "sfx_quick|whoosh",
+        "media_quick|product",
+        "MEDIA_QUICK|VOICE_PROFILE_SAVE:4",
+        "music_quick|calm|future",
+        "sfx_quick|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "audio_hub_callback_requires_web_native_owner_asset_execution_contract"
+        assert "BOT_AUDIO_PRODUCT_CONTEXT_AND_PENDING_STATE" in mapped["source_dispositions"]
+        assert "BOT_MUSIC_SFX_MEDIA_CACHE_OR_SELECTED_STATE" in mapped["source_dispositions"]
+        assert "BOT_VOICE_PROFILE_OR_VIDEO_FINALIZATION_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_BOT_AUDIO_STATE_CACHE_PROFILE_OR_VIDEO_FINALIZATION_REPLAY" in mapped["source_dispositions"]
+        assert "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for identifier in (
+        "suggest_music|sales",
+        "suggest_music|trend",
+        "SUGGEST_MUSIC|CINEMATIC",
+        "suggest_music|review|future",
+        "suggest_music|unknown",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "suggest_music_callback_requires_fresh_web_native_preset_contract"
+        assert "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING" in mapped["source_dispositions"]
+
+    for template in (
+        "music_quick|{*}",
+        "sfx_quick|{*}",
+        "media_quick|{*}",
+        "MUSIC_QUICK|{*}",
+        "music_quick|{*}|future",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "audio_hub_callback_requires_web_native_owner_asset_execution_contract"
+
+    for template in (
+        "suggest_music|{*}",
+        "SUGGEST_MUSIC|{*}",
+        "suggest_music|{*}|future",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "suggest_music_callback_requires_fresh_web_native_preset_contract"
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+action = "ignored"
+preset = "ignored"
+InlineKeyboardButton("Music", callback_data="music_quick|calm")
+InlineKeyboardButton("Music trend", callback_data="music_quick|trend")
+InlineKeyboardButton("SFX", callback_data="sfx_quick|whoosh")
+InlineKeyboardButton("Media", callback_data="media_quick|product")
+InlineKeyboardButton("Suggestion", callback_data="suggest_music|trend")
+InlineKeyboardButton("Music dynamic", callback_data=f"music_quick|{action}")
+InlineKeyboardButton("SFX dynamic", callback_data=f"sfx_quick|{action}")
+InlineKeyboardButton("Media dynamic", callback_data=f"media_quick|{action}")
+InlineKeyboardButton("Suggestion dynamic", callback_data=f"suggest_music|{preset}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/features/music")
+async def music():
+    return {}
+@app.get("/features/video")
+async def video():
+    return {}
+@app.get("/media-workspace")
+async def media_workspace():
+    return {}
+@app.get("/voice-vault")
+async def voice_vault():
+    return {}
+@app.get("/{page_path:path}")
+async def portal(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    mappings = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_mappings"] + result["parity_gap"]["callback_template_mappings"]
+    }
+    for source in ("music_quick|calm", "music_quick|trend", "sfx_quick|whoosh", "media_quick|product", "music_quick|{*}", "sfx_quick|{*}", "media_quick|{*}"):
+        assert mappings[source]["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
+        assert mappings[source]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    for source in ("suggest_music|trend", "suggest_music|{*}"):
+        assert mappings[source]["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
+        assert mappings[source]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert not {
+        item["target"]
+        for source, item in mappings.items()
+        if source.startswith(("music_quick|", "sfx_quick|", "media_quick|", "suggest_music|"))
+    }.intersection({"/features/music", "/features/video", "/media-workspace", "/voice-vault"})
+
+    backlog = {item["family"]: item for item in result["parity_gap"]["feature_disposition_backlog"]}
+    assert "audio_hub" in backlog
+    assert "suggest_music" in backlog
+    contract = (tmp_path / "docs" / "AUDIO_HUB_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "AUDIO_HUB_SOURCE_REVIEW_REQUIRED" in contract
+    assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in contract
+    assert "music-prompt-composer" in contract
+    assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Audio Hub callbacks are a Telegram state-machine boundary" in (tmp_path / "docs" / "payos-wallet-jobs.md").read_text(encoding="utf-8")
+    assert "Bot Audio Hub callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_inventories_audio_hub_product_context_helper_shapes(tmp_path: Path) -> None:
+    """Large-file mode preserves real Audio Hub helper evidence fail-closed."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+PRODUCT_CONTEXT_SHOWROOM = "showroom"
+PRODUCT_CONTEXT_VIDEO_ADDON = "video_addon"
+
+def product_context_callback(namespace, context, action):
+    return f"{namespace}|{context}|{action}"
+
+def direct_audio_buttons():
+    product_context_callback("music_quick", PRODUCT_CONTEXT_SHOWROOM, "root")
+    product_context_callback("music_quick", PRODUCT_CONTEXT_VIDEO_ADDON, "voice_custom")
+
+def audio_library_buttons(product_context, profile_id):
+    ctx = normalize_product_context(product_context)
+    music_cb = lambda action: product_context_callback("music_quick", ctx, action)
+    sfx_cb = lambda action: product_context_callback("sfx_quick", ctx, action)
+    media_cb = lambda action: product_context_callback("media_quick", ctx, action)
+    return [
+        music_cb("prompt_seed"),
+        music_cb(f"voice_profile_select:{profile_id}"),
+        sfx_cb("whoosh"),
+        sfx_cb("notification"),
+        media_cb("kitchen"),
+        media_cb("product"),
+    ]
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/features/music")
+async def music():
+    return {}
+@app.get("/features/video")
+async def video():
+    return {}
+@app.get("/media-workspace")
+async def media():
+    return {}
+@app.get("/voice-vault")
+async def voice():
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    results = []
+    try:
+        for mode, max_ast_parse_bytes in (("ast", original_max_ast_parse_bytes), ("large", 1)):
+            audit.MAX_AST_PARSE_BYTES = max_ast_parse_bytes
+            results.append(
+                (
+                    mode,
+                    audit.run_audit(
+                        bot_root,
+                        web_root,
+                        "baseline",
+                        tmp_path / "reports" / mode,
+                        tmp_path / "docs" / mode,
+                    ),
+                )
+            )
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+    for mode, result in results:
+        inventory = result["bot_inventory"]
+        concrete = {item["token"] for item in inventory["callback_data"]}
+        templates = {item["template"] for item in inventory["callback_templates"]}
+        assert {
+            "music_quick|showroom|root",
+            "music_quick|video_addon|voice_custom",
+        }.issubset(concrete), mode
+        assert {
+            "music_quick|{*}|{*}",
+            "music_quick|{*}|prompt_seed",
+            "music_quick|{*}|voice_profile_select:{*}",
+            "sfx_quick|{*}|{*}",
+            "sfx_quick|{*}|whoosh",
+            "sfx_quick|{*}|notification",
+            "media_quick|{*}|{*}",
+            "media_quick|{*}|kitchen",
+            "media_quick|{*}|product",
+        }.issubset(templates), mode
+
+        audio_mappings = [
+            item
+            for item in result["parity_gap"]["callback_mappings"] + result["parity_gap"]["callback_template_mappings"]
+            if item["source"].casefold().startswith(("music_quick|", "sfx_quick|", "media_quick|"))
+        ]
+        assert audio_mappings, mode
+        assert {item["target"] for item in audio_mappings} == {"AUDIO_HUB_SOURCE_REVIEW_REQUIRED"}, mode
+        assert {item["status"] for item in audio_mappings} == {"NEEDS_FEATURE_DISPOSITION"}, mode
+        assert not {item["target"] for item in audio_mappings}.intersection(
+            {"/features/music", "/features/video", "/media-workspace", "/voice-vault"}
+        ), mode
+    contract = (tmp_path / "docs" / "large" / "AUDIO_HUB_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "product_context_callback" in contract
+    assert "opaque" in contract
 
 
 def test_static_audit_does_not_mistake_aspect_ratio_tuples_for_callbacks(tmp_path: Path) -> None:
