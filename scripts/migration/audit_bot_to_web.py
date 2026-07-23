@@ -782,7 +782,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     # Payment namespaces stay at a canonical, explicitly guarded entry point.
     # This does not turn the Web into a second PayOS/manual-payment writer.
     ("manual|", "/wallet/topup", "customer"),
-    ("shopai_video_job|", "/wallet/topup", "customer"),
     ("opmenu|", "/admin", "admin"),
 )
 
@@ -832,6 +831,19 @@ SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "shopai|confirm|{*}",
     "shopai|package|{*}",
     "shopai|cancel|{*}",
+})
+
+# Frozen baseline b29d0d4: the ShopAI Video Job handler owns task/job IDs,
+# Telegram ownership checks, provider polling, Bot delivery and billing/retry
+# state.  Even `main` redraws a Telegram menu, so none of these values is a
+# Web video route, browser back action, owner-scoped Web job ID or top-up.
+SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACKS = frozenset({
+    "shopai_video_job|main",
+})
+SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "shopai_video_job|{*}",
+    "shopai_video_job|status|{*}",
+    "shopai_video_job|retry|{*}",
 })
 
 # The frozen Bot's one literal Media Creator cancellation branch clears a
@@ -5503,6 +5515,93 @@ def _map_shopai_callback(
     return _shopai_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _shopai_video_job_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep exact ShopAI Video Job callbacks inside canonical Bot handling.
+
+    The raw task/job value is Telegram-owned Bot state.  Its handler can poll
+    a provider, check Bot database ownership, update canonical job/billing
+    records, deliver an output over Telegram, or begin a guarded retry.  The
+    one `main` literal redraws the Telegram menu and must not become browser
+    navigation/history behavior.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "customer",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+            "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and "
+            "admin state, can poll the provider, update canonical job/error/result/billing records, deliver a "
+            "video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. "
+            "The standalone Web has no adapter that accepts or replays this callback or identifier."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _shopai_video_job_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for a non-frozen ShopAI Video Job spelling or identifier."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "shopai_video_job_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_SHOPAI_VIDEO_JOB_CALLBACK_OR_IDENTIFIER",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "Only four finite lowercase ShopAI Video Job callback forms from the frozen Bot baseline are "
+            "reviewed. A case variant, bare value, suffix or future callback may alter canonical job ownership, "
+            "provider poll/delivery, retry or billing behavior and cannot inherit a Web top-up, jobs, video, "
+            "browser navigation/reset, provider, wallet/payment, output or delivery action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_shopai_video_job_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Map only exact frozen ShopAI Video Job forms; reject every other one."""
+
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.casefold().startswith("shopai_video_job|"):
+        return None
+    if (
+        raw_identifier in SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACKS
+        or raw_identifier in SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES
+    ):
+        return _shopai_video_job_telegram_only_mapping(identifier, source_kind, evidence)
+    return _shopai_video_job_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -6581,6 +6680,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     shopai_mapping = _map_shopai_callback(identifier, source_kind, evidence)
     if shopai_mapping is not None:
         return shopai_mapping
+    shopai_video_job_mapping = _map_shopai_video_job_callback(identifier, source_kind, evidence)
+    if shopai_video_job_mapping is not None:
+        return shopai_video_job_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -7815,6 +7917,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     shopai_mapping = _map_shopai_callback(template, "callback_template", evidence)
     if shopai_mapping is not None:
         return shopai_mapping
+    shopai_video_job_mapping = _map_shopai_video_job_callback(template, "callback_template", evidence)
+    if shopai_video_job_mapping is not None:
+        return shopai_video_job_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -9141,6 +9246,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web wallet/top-up route, browser navigation/reset, provider/job/Xu/payment/output/delivery action or runtime claim",
         ],
     ]
+    shopai_video_job_contract_rows = [
+        [
+            ", ".join(sorted(SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACKS)),
+            "TELEGRAM_ONLY",
+            "bot_shopai_video_job_requires_canonical_bot_state",
+            "redraws the Bot Telegram main menu; it is not a Web video route, browser back action or history reset",
+        ],
+        [
+            ", ".join(sorted(SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES)),
+            "TELEGRAM_ONLY",
+            "bot_shopai_video_job_requires_canonical_bot_state",
+            "opaque task/job identifier is resolved against canonical Bot ownership; provider poll, job/billing update, Telegram delivery and guarded retry remain Bot-only",
+        ],
+        [
+            "case variants, bare values, suffixes or other shopai_video_job|* values",
+            "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED",
+            "shopai_video_job_callback_requires_exact_source_review",
+            "no Web top-up/jobs/video route, browser navigation/reset, provider/job/wallet/payment/output/delivery action or runtime claim",
+        ],
+    ]
     vproduct_contract_rows = [
         [
             ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
@@ -9290,6 +9415,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`MEDIA_CREATOR_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CALLBACK_CONTRACT.md) — residual Bot Media Creator callbacks remain explicit source-review boundaries; no generic callback opens Media Factory, membership or a video feature route.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/Xu execution remains canonical Bot-only.\n"
         + "- [`SHOPAI_CALLBACK_CONTRACT.md`](SHOPAI_CALLBACK_CONTRACT.md) — exact ShopAI confirmation/package/cancel templates remain canonical Bot-only; no ShopAI callback can become a Web top-up, payment, job, provider or output action.\n"
+        + "- [`SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`](SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md) — exact ShopAI Video Job callbacks remain canonical Bot-only; no task/job identifier can become a Web top-up, video/jobs route, browser action, provider poll, billing mutation or output-delivery claim.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -9388,6 +9514,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             shopai_contract_rows,
         )
         + "\n\nOnly the exact lowercase templates in this table retain the Bot-only disposition. Every case variant, missing token, suffix and future `shopai|*` value resolves to `SHOPAI_SOURCE_REVIEW_REQUIRED`. It cannot navigate to `/wallet/topup`, create/approve/finalize a payment, mutate Xu, invoke a provider, create/retry/cancel/refund a job, reset browser state, expose an output or claim delivery. A future Web-native ShopAI-like capability must start from a separately designed signed owner-scoped contract with independently recomputed price/authorization/idempotency; it must not accept or replay a Telegram token.\n",
+    )
+    write(
+        "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md",
+        "# ShopAI Video Job callback contract\n\n"
+        "The frozen Bot owns the `shopai_video_job|*` callback handler. Its observed callback forms either redraw the Telegram main menu, resolve a task ID against canonical Bot ownership, display an admin-only provider status panel, poll the provider and update canonical job/error/result state, deliver a video in Telegram, or start a guarded retry that can enter billing/confirmation state. The callback is not a Web video/jobs route, a browser back/reset action, a Web-owned task identifier, an owner-scoped download, a read-only provider API or a safe retry operation.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback source", "Web target/boundary", "Audit resolution", "Required boundary"],
+            shopai_video_job_contract_rows,
+        )
+        + "\n\nOnly exact lowercase forms in this table retain the Bot-only disposition. Every case variant, bare value, suffix and future `shopai_video_job|*` value resolves to `SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED`. It cannot open `/wallet/topup`, `/jobs` or a video page; navigate/reset the browser; poll a provider; mutate a job, Xu/package/payment/refund record; retry a job; expose an output or claim delivery. A future Web-native job center must begin from its own signed session and verified owner-scoped record through a separately reviewed bridge/read model; it must never accept or replay a Telegram task/job callback.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -9976,6 +10112,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
+        "- ShopAI Video Job status/main/retry is distinct from Xu top-up and a Web job page. Its Bot task/job identifiers drive ownership checks, provider polling, canonical job/billing updates, Telegram delivery and guarded retry; no `shopai_video_job|*` callback may open a Web route or invoke provider/job/wallet/payment/output/delivery behavior. See `SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
         "- Bot video-job stats can only open a fresh signed `/admin/jobs` view for one reviewed admin callback. Canonical approve/cancel actions stay Telegram-only until a dedicated owner-scoped admin bridge exists; the Web never accepts a Bot job ID. See `VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Video Finishing callbacks remain Telegram-only because they consume or mutate the Telegram finalization session. The separately signed Web workflow starts from its own owner-scoped draft and never accepts Bot media, quote, export or payment state. See `VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`.\n"
         "- Storage quota add-on purchase is distinct from Xu top-up. Bot menu/custom/confirm callbacks remain Telegram-only until an owner-scoped storage bridge exists; the Web must not create a storage order, checkout, quota entitlement, or second webhook/ledger. See `STORAGE_ADDON_CALLBACK_CONTRACT.md`.\n"

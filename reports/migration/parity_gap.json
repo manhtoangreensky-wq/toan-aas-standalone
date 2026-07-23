@@ -31652,11 +31652,19 @@
         "file": "bot.py",
         "line": 67499
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31664,11 +31672,19 @@
         "file": "bot.py",
         "line": 67540
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31676,11 +31692,19 @@
         "file": "bot.py",
         "line": 67552
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31688,11 +31712,19 @@
         "file": "bot.py",
         "line": 67577
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31700,11 +31732,19 @@
         "file": "bot.py",
         "line": 67648
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31712,11 +31752,19 @@
         "file": "bot.py",
         "line": 98306
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31724,11 +31772,19 @@
         "file": "bot.py",
         "line": 98382
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -31736,11 +31792,19 @@
         "file": "bot.py",
         "line": 98457
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|main",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48754,11 +48818,19 @@
         "file": "bot.py",
         "line": 67492
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_video_job_requires_canonical_bot_state",
       "source": "shopai_video_job|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_JOB_OWNERSHIP_AND_STATE",
+        "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot ShopAI Video Job handler resolves a task/job identifier against Bot ownership and admin state, can poll the provider, update canonical job/error/result/billing records, deliver a video over Telegram, or start a guarded retry. Its `main` action redraws the Telegram main menu. The standalone Web has no adapter that accepts or replays this callback or identifier.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -63002,11 +63074,11 @@
   },
   "mapping_coverage_percent": 86.88,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2052,
+    "COPIED_GUARDED": 2043,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
     "NEEDS_FEATURE_DISPOSITION": 504,
-    "TELEGRAM_ONLY": 523
+    "TELEGRAM_ONLY": 532
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -63045,7 +63117,7 @@
     "unresolved_callback_templates": 71,
     "unresolved_source_count": 504
   },
-  "static_web_surface_coverage_percent": 53.44,
+  "static_web_surface_coverage_percent": 53.2,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

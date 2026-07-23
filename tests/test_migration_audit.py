@@ -114,6 +114,7 @@ async def dashboard():
         "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "SHOPAI_CALLBACK_CONTRACT.md",
+        "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -127,6 +128,7 @@ async def dashboard():
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
+    assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -2107,6 +2109,90 @@ def shopai_keyboard(token):
     assert "SHOPAI_SOURCE_REVIEW_REQUIRED" in contract
     assert "SHOPAI_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "ShopAI confirmation/package/cancel" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_shopai_video_job_callbacks_out_of_web_routes(tmp_path: Path) -> None:
+    """Canonical Bot video-job task IDs must never become browser workflow inputs."""
+
+    audit = _load_audit_module()
+    routes = {"/wallet/topup", "/jobs", "/features/video", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "shopai_video_job|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACKS == {"shopai_video_job|main"}
+    assert audit.SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES == {
+        "shopai_video_job|{*}",
+        "shopai_video_job|status|{*}",
+        "shopai_video_job|retry|{*}",
+    }
+
+    for identifier in sorted(audit.SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACKS):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_shopai_video_job_requires_canonical_bot_state"
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+
+    for template in sorted(audit.SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_shopai_video_job_requires_canonical_bot_state"
+        assert "CANONICAL_BOT_PROVIDER_POLL_DELIVERY_AND_BILLING_BOUNDARY" in mapped["source_dispositions"]
+
+    for identifier in (
+        "SHOPAI_VIDEO_JOB|MAIN",
+        "shopai_video_job|",
+        "shopai_video_job|opaque-task",
+        "shopai_video_job|status",
+        "shopai_video_job|status|opaque-task|future",
+        "shopai_video_job|retry|opaque-job",
+        "shopai_video_job|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "shopai_video_job_callback_requires_exact_source_review"
+        assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "SHOPAI_VIDEO_JOB|{*}",
+        "shopai_video_job|status|future_{*}",
+        "shopai_video_job|retry|{*}|future",
+        "shopai_video_job|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "shopai_video_job_callback_requires_exact_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def shopai_video_job_keyboard(task_id, job_id):
+    InlineKeyboardButton("check", callback_data=f"shopai_video_job|{task_id}")
+    InlineKeyboardButton("status", callback_data=f"shopai_video_job|status|{task_id}")
+    InlineKeyboardButton("retry", callback_data=f"shopai_video_job|retry|{job_id}")
+    InlineKeyboardButton("main", callback_data="shopai_video_job|main")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert all(templates[template]["target"] == "TELEGRAM_ONLY" for template in audit.SHOPAI_VIDEO_JOB_TELEGRAM_ONLY_CALLBACK_TEMPLATES)
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    assert callbacks["shopai_video_job|main"]["target"] == "TELEGRAM_ONLY"
+    contract = (tmp_path / "docs" / "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "shopai_video_job\\|retry\\|{*}" in contract
+    assert "SHOPAI_VIDEO_JOB_SOURCE_REVIEW_REQUIRED" in contract
+    assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "ShopAI Video Job status/main/retry" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

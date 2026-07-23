@@ -2,7 +2,7 @@
 
 | Area | Bot | Web App |
 | --- | --- | --- |
-| Source files scanned | 172 | 295 |
+| Source files scanned | 172 | 296 |
 | Noncanonical Bot drafts excluded | 4 | n/a |
 | Commands | 773 | n/a |
 | Callback handler registrations | 54 | Dispatcher evidence only; not a user-action parity claim |
@@ -11,8 +11,8 @@
 | Unresolved callback templates | 283 | n/a |
 | Conversation handlers | 0 | n/a |
 | FastAPI routes | 139 | 640 |
-| Background/job signals | 194 | 29 |
-| Database tables | 97 | 208 |
+| Background/job signals | 194 | 32 |
+| Database tables | 97 | 209 |
 | Environment names | 364 | 199 |
 | Provider names | 15 | 16 |
 
