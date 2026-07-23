@@ -887,6 +887,17 @@
       "Không có audio, Suno, music provider, preview, output, job, ví Xu, PayOS, asset, publish hay delivery. Kiểm tra quyền, claim, thương hiệu và mục đích sử dụng trước khi chuyển prompt sang một workflow khác."
     ]
   });
+  // Music Directions is an independent Web-native preset screen. Its opaque
+  // IDs are not Telegram callbacks or Bot `/music_library` keywords, and the
+  // selection is deliberately local until the customer explicitly submits a
+  // bounded brief for deterministic text-only review.
+  customerPage("/media-workspace/music-directions", "Music Directions", "Chọn một preset Web đã review, viết brief và chủ động lập ba direction nhạc dạng văn bản để so sánh.", ICONS.music, {
+    layout: "music-direction-presets", type: "music-direction-presets", fields: [], action: "none", status: "ready",
+    notes: [
+      "Chọn preset chỉ thay đổi form trong trang hiện tại; không gửi request, điều hướng, reset, gọi Bot hay chuyển tiếp callback/keyword Telegram.",
+      "Sau khi bạn bấm lập direction, server chỉ trả text deterministic để review. Không có provider, audio, lyrics, player, preview, output, job, ví Xu, PayOS, Memory, asset, collection, publish, delivery hoặc Telegram action."
+    ]
+  });
   customerPage("/content-studio", "Creative Content Studio", "Workspace chuyên nghiệp để tổ chức brief, caption, hook, script, storyboard và content pack với version history riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Content Studio là authoring workspace Web-native. Nó không gọi Bot, provider, ví Xu, PayOS, job, publish hoặc delivery.", "Composer chỉ tạo ba khung nháp cục bộ có nhãn rõ ràng để biên tập; không tự nhận là AI output hoặc nội dung đã được duyệt."]
@@ -2402,6 +2413,25 @@
   const MUSIC_PROMPT_COMPOSER_USAGE_NOTE_KEYS = Object.freeze([
     "voice_mix_notes", "edit_notes", "rights_notes", "delivery_notes"
   ]);
+  // These are deliberately Web-owned opaque IDs. Do not add Telegram
+  // callback values or Bot `/music_library` keywords to this allowlist.
+  const MUSIC_DIRECTION_PRESET_IDS = new Set([
+    "commercial_bright", "cinematic_brand", "warm_story", "technology_future", "short_viral"
+  ]);
+  // Keep a local verification mirror because Portal and integration are
+  // independent bundles. The browser uses this only to reject a receipt that
+  // belongs to a different opaque Web preset; it never submits these fields.
+  const MUSIC_DIRECTION_PRESET_COMPOSER_SELECTIONS = Object.freeze({
+    commercial_bright: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 1 }),
+    cinematic_brand: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 2 }),
+    warm_story: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 3 }),
+    technology_future: Object.freeze({ mode: "background", suggestion_set: "alternate", selected_suggestion: 1 }),
+    short_viral: Object.freeze({ mode: "background", suggestion_set: "alternate", selected_suggestion: 2 })
+  });
+  // Keep the raw Bot boundary local to this rendering bundle as well as the
+  // integration bundle. The Portal normalizer must fail closed without
+  // relying on a cross-file lexical binding that does not exist at runtime.
+  const MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = /^\s*(?:suggest_music\|.*|\/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$/i;
 
   function musicPromptComposerHasExactKeys(value, keys) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -2494,6 +2524,55 @@
       wallet_mutated: false, payment_started: false, asset_saved: false, collection_saved: false,
       publish_action_created: false, telegram_called: false, rights_verified: false
     };
+  }
+
+  function normalizeMusicDirectionPresetReceipt(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    // Reuse the exact Composer response shape only after pinning this distinct
+    // receipt boundary. The source object is never mutated or repaired; a
+    // response with a wrong execution marker stays absent from the UI.
+    if (source.execution !== "web_native_deterministic_music_direction_only") return {};
+    const composerReceipt = normalizeMusicPromptComposerResult({
+      ...source,
+      execution: "web_native_deterministic_music_prompt_only"
+    });
+    if (!composerReceipt.composer) return {};
+    return { ...composerReceipt, execution: "web_native_deterministic_music_direction_only" };
+  }
+
+  function normalizeMusicDirectionPresetSource(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["description", "language", "web_preset_id"];
+    if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return {};
+    const description = musicPromptComposerText(source.description, 2, 500, false);
+    const language = typeof source.language === "string" ? source.language : "";
+    const presetId = typeof source.web_preset_id === "string" ? source.web_preset_id : "";
+    // A receipt is only shown for the exact bounded request that created it;
+    // never repair a malformed or case-folded raw Bot-style value in browser.
+    if (!description || description !== source.description || MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN.test(description) || !MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language) || !MUSIC_DIRECTION_PRESET_IDS.has(presetId)) return {};
+    return { description, language, web_preset_id: presetId };
+  }
+
+  function musicDirectionPresetComposerMatchesPreset(presetId, composer) {
+    const expected = typeof presetId === "string"
+      ? MUSIC_DIRECTION_PRESET_COMPOSER_SELECTIONS[presetId]
+      : null;
+    return Boolean(expected && composer && typeof composer === "object"
+      && composer.mode === expected.mode
+      && composer.suggestion_set === expected.suggestion_set
+      && composer.selected_suggestion === expected.selected_suggestion);
+  }
+
+  function normalizeMusicDirectionPresetState(raw) {
+    const state = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["source", "receipt"];
+    if (Object.keys(state).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(state, key))) return {};
+    const source = normalizeMusicDirectionPresetSource(state.source);
+    const receipt = normalizeMusicDirectionPresetReceipt(state.receipt);
+    const composer = receipt.composer && typeof receipt.composer === "object" ? receipt.composer : {};
+    if (!source.description || !composer || composer.description !== source.description || composer.language !== source.language
+      || !musicDirectionPresetComposerMatchesPreset(source.web_preset_id, composer)) return {};
+    return { source, receipt };
   }
 
   // The explicit Memory handoff keeps only the original bounded Composer
@@ -7063,6 +7142,15 @@
       // storage after signed bootstrap.
       musicPromptComposerSaveSource: normalizeMusicPromptComposerSaveSource(source.musicPromptComposerSaveSource),
       musicPromptComposerSaveReceipt: normalizeMusicPromptComposerSaveReceipt(source.musicPromptComposerSaveReceipt),
+      // Music Directions keeps one request/receipt pair only in current
+      // presentation state. It has no Memory handoff and cannot be rebuilt
+      // from Audio Library, a Bot pending state or browser persistence.
+      musicDirectionPresetsEnabled: source.musicDirectionPresetsEnabled === true,
+      // A policy-rejected explicit submit retains only its bounded typed
+      // values in current tab state, so the form never resets the customer.
+      // This is cleared on signed bootstrap and never uses browser storage.
+      musicDirectionPresetDraft: normalizeMusicDirectionPresetSource(source.musicDirectionPresetDraft),
+      musicDirectionPresetResult: normalizeMusicDirectionPresetState(source.musicDirectionPresetResult),
       // Content Studio is a standalone signed-account authoring surface.
       // Keep only bounded owner-scoped projections; no generic Bot fallback or
       // browser persistence can refill this state after a failed hydration.
@@ -8696,7 +8784,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -10677,6 +10765,66 @@
       ${renderMusicPromptComposerResult(context.musicPromptComposerResult, context.musicPromptComposerSaveSource, canSaveToMemory)}
       ${renderMusicPromptComposerSaveReceipt(context.musicPromptComposerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review prompt trước, thực thi bằng contract riêng sau</h2><p class="portal-card-subtitle">Dùng direction như một brief để rà soát quyền sử dụng, claim, thương hiệu và tone. Khi cần lưu lịch sử, dùng Audio Library riêng; việc đó cũng không tạo audio.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  // Music Directions deliberately uses only Web-owned preset IDs. The cards
+  // are native radio controls so mouse, touch and keyboard selection share
+  // one accessible, local-only state transition before explicit submit.
+  const MUSIC_DIRECTION_PRESETS = Object.freeze([
+    { id: "commercial_bright", label: "Thương mại sáng", detail: "Nhịp rõ, CTA gọn cho social hoặc landing.", cue: "Bán hàng trực diện" },
+    { id: "technology_future", label: "Công nghệ tương lai", detail: "Không khí hiện đại, nét số và nhịp tập trung.", cue: "Sản phẩm công nghệ" },
+    { id: "cinematic_brand", label: "Cinematic thương hiệu", detail: "Không gian giàu cảm xúc cho câu chuyện thương hiệu.", cue: "Brand film" },
+    { id: "warm_story", label: "Kể chuyện ấm", detail: "Nhịp gần gũi để dẫn chuyện và tạo tin cậy.", cue: "Human story" },
+    { id: "short_viral", label: "Short-form bắt nhịp", detail: "Mở nhanh, dễ nhớ cho định dạng ngắn.", cue: "Reels / Shorts" }
+  ]);
+
+  function musicDirectionPresetFormValues(context) {
+    const draft = normalizeMusicDirectionPresetSource(context && context.musicDirectionPresetDraft);
+    const state = normalizeMusicDirectionPresetState(context && context.musicDirectionPresetResult);
+    const source = draft.description ? draft : (state.source && typeof state.source === "object" ? state.source : {});
+    const description = typeof source.description === "string" ? source.description : "";
+    const language = MUSIC_PROMPT_COMPOSER_LANGUAGES.has(source.language) ? source.language : "vi";
+    const webPresetId = MUSIC_DIRECTION_PRESET_IDS.has(source.web_preset_id) ? source.web_preset_id : "";
+    return { description, language, web_preset_id: webPresetId };
+  }
+
+  function musicDirectionPresetFields() {
+    return [
+      { name: "description", label: "Brief âm nhạc", control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video giới thiệu ứng dụng quản lý công việc cho chủ shop nhỏ, cần nhịp tin cậy và hiện đại", help: "Viết mục tiêu, đối tượng và cảm xúc cần truyền tải. Không nhập URL, token, file ID, nguồn audio, yêu cầu mô phỏng nghệ sĩ/ca sĩ/bài hát hoặc thông tin thanh toán." },
+      { name: "language", label: "Ngôn ngữ brief", control: "select", required: true, options: [["vi", "Tiếng Việt"], ["en", "English"]], help: "Ngôn ngữ để server dựng ba direction text. Đây không phải lựa chọn giọng hát hoặc ngôn ngữ audio." }
+    ];
+  }
+
+  function renderMusicDirectionPresetResult(raw) {
+    const state = normalizeMusicDirectionPresetState(raw);
+    const source = state.source && typeof state.source === "object" ? state.source : null;
+    const receipt = state.receipt && typeof state.receipt === "object" ? state.receipt : null;
+    const composer = receipt && receipt.composer && typeof receipt.composer === "object" ? receipt.composer : null;
+    if (!source || !composer) {
+      return `<section class="portal-card portal-card-pad portal-music-directions-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Review receipt</span><h2 class="portal-card-title">Chưa có direction để review</h2><p class="portal-card-subtitle">Chọn một preset, nhập brief và bấm lập direction. Browser không tự thay lựa chọn của bạn bằng callback Bot, keyword hay direction mặc định.</p></div>${badge("empty")}</div></section>`;
+    }
+    const selectedPreset = MUSIC_DIRECTION_PRESETS.find((item) => item.id === source.web_preset_id);
+    const suggestions = Array.isArray(composer.suggestions) ? composer.suggestions : [];
+    const selected = composer.selected_direction && typeof composer.selected_direction === "object" ? composer.selected_direction : {};
+    return `<section class="portal-card portal-card-pad portal-music-directions-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Direction receipt · session only</span><h2 class="portal-card-title">${safeText(String(composer.title || "Music Directions"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.description || ""))} Đây là ba hướng text để review, không phải track, audio, player, preview, output hoặc xác nhận delivery.</p></div>${badge("read_only")}</div><div class="portal-music-directions-meta"><span>${safeText(selectedPreset ? selectedPreset.label : "Preset Web")}</span><span>${safeText(String(composer.language || "").toUpperCase())}</span><span>Hướng ${safeText(String(composer.selected_suggestion || ""))} được server chọn theo preset</span></div><ol class="portal-music-directions-list">${suggestions.map((item) => `<li${Number(item.choice) === Number(selected.choice) ? " data-selected=\"true\"" : ""}><span class="portal-music-directions-index">${safeText(String(item.choice || "").padStart(2, "0"))}</span><div><div class="portal-music-directions-list-head"><strong>${safeText(String(item.name || ""))}</strong>${Number(item.choice) === Number(selected.choice) ? "<em>Đang review</em>" : ""}</div><p>${safeText(String(item.mood || ""))} · ${safeText(String(item.tempo || ""))} · ${safeText(String(item.duration || ""))}</p><dl><div><dt>Use case</dt><dd>${safeText(String(item.use_case || ""))}</dd></div><div><dt>Prompt text</dt><dd><pre>${safeText(String(item.prompt || ""))}</pre></dd></div></dl></div></li>`).join("")}</ol><section class="portal-music-directions-review"><strong>Kiểm tra trước khi dùng ở workflow khác</strong><ul>${(Array.isArray(composer.review_before_use) ? composer.review_before_use : []).map((item) => `<li>${safeText(String(item || ""))}</li>`).join("")}</ul></section><p class="portal-form-note">Receipt chỉ tồn tại trong phiên hiện tại và không tạo audio, lyrics, provider call, job, ví Xu, PayOS, asset, collection, publish, delivery hoặc Telegram action.</p></section>`;
+  }
+
+  function renderMusicDirectionPresets(page, context) {
+    const canCompose = Boolean(context.capabilities && context.capabilities["music-direction-preset-compose"] === true);
+    const values = musicDirectionPresetFormValues(context);
+    const selectedPresetId = MUSIC_DIRECTION_PRESET_IDS.has(values.web_preset_id) ? values.web_preset_id : "";
+    const cards = MUSIC_DIRECTION_PRESETS.map((preset) => {
+      const selected = preset.id === selectedPresetId;
+      return `<label class="portal-music-directions-preset-card" data-music-direction-preset-card="${safeText(preset.id)}" data-selected="${selected ? "true" : "false"}"><input class="portal-music-directions-radio" type="radio" name="web_preset_id" value="${safeText(preset.id)}"${selected ? " checked" : ""}${canCompose ? "" : " disabled"} aria-describedby="music-directions-preset-help"><span class="portal-music-directions-preset-copy"><strong>${safeText(preset.label)}</strong><small>${safeText(preset.detail)}</small></span><span class="portal-music-directions-preset-cue">${safeText(preset.cue)}</span></label>`;
+    }).join("");
+    const submitEnabled = canCompose && Boolean(selectedPresetId);
+    const selectedLabel = (MUSIC_DIRECTION_PRESETS.find((item) => item.id === selectedPresetId) || {}).label || "preset Web";
+    return `<article class="portal-page portal-music-directions">${renderHero(page, context)}
+      <section class="portal-music-directions-intro"><div><span class="portal-section-kicker">Web-native music planning</span><h2>Chọn hướng nhạc có chủ đích, rồi review trước khi làm bất kỳ điều gì khác.</h2><p>Năm preset này là lựa chọn Web riêng, giúp bắt đầu brief nhanh nhưng vẫn yêu cầu bạn xem lại mô tả và chủ động bấm lập direction. Chúng không tiếp nhận callback, keyword hay trạng thái pending của Telegram Bot.</p></div><dl><div><dt>5</dt><dd>Preset đã review</dd></div><div><dt>3</dt><dd>Direction để so sánh</dd></div><div><dt>0</dt><dd>Audio được tạo</dd></div></dl></section>
+      <div class="portal-music-directions-layout"><section class="portal-card portal-card-pad portal-music-directions-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Step 1 · chọn preset</span><h2 class="portal-card-title">Lập Music Directions</h2><p class="portal-card-subtitle">Chọn một preset rồi viết brief. Thao tác chọn chỉ thay đổi form cục bộ; request chỉ được gửi sau khi bạn bấm nút xác nhận bên dưới.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-direction-preset-compose" data-portal-route="/media-workspace/music-directions" data-music-direction-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-music-directions-picker"><legend>Preset Web <span aria-hidden="true">*</span></legend><p id="music-directions-preset-help" class="portal-field-help">Chỉ chọn một preset. Không có request, điều hướng, quay lại, reset hoặc tự submit khi bạn đổi lựa chọn.</p><div class="portal-music-directions-preset-grid">${cards}</div><p class="portal-music-directions-selection" data-music-direction-selection aria-live="polite">${selectedPresetId ? `Đã chọn ${safeText(String(selectedLabel))}. Hoàn tất brief rồi bấm lập direction.` : "Chưa chọn preset. Hãy chọn một hướng trước khi lập direction."}</p></fieldset>${renderFields(musicDirectionPresetFields(), canCompose, context, values, "music-directions")}<div class="portal-form-footer"><span class="portal-form-note">Server kiểm tra signed session, CSRF và schema rồi chỉ dựng ba direction text deterministic. Không có audio, lyric, provider, preview, output, job, thanh toán hoặc lưu dữ liệu trong thao tác này.</span><button class="portal-button portal-button--primary" type="submit" data-music-direction-submit${submitEnabled ? "" : " disabled"}>Lập 3 music direction</button></div></form></section><aside class="portal-card portal-card-pad portal-music-directions-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ lập direction text</h2><p class="portal-card-subtitle">Module này không phải music generator. Nó không mở player, catalog track, voice, source audio hay workflow thực thi.</p></div>${badge("guarded")}</div><div class="portal-music-directions-guard-list"><span><strong>Bot callback / keyword</strong><em>off</em></span><span><strong>Provider / AI music</strong><em>off</em></span><span><strong>Lyrics / audio / preview</strong><em>off</em></span><span><strong>Output / job / payment</strong><em>off</em></span><span><strong>Asset / collection / delivery</strong><em>off</em></span><span><strong>Telegram action</strong><em>off</em></span></div></aside></div>
+      ${renderMusicDirectionPresetResult(context.musicDirectionPresetResult)}
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Preset giúp bắt đầu nhanh, không thay thế review của bạn</h2><p class="portal-card-subtitle">Kiểm tra quyền sử dụng, claim, thương hiệu, consent và bối cảnh trước khi chuyển bất kỳ prompt nào sang một workflow được cấp riêng.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -22791,6 +22939,7 @@
       case "media-workspace": return renderMediaWorkspace(page, context);
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "music-prompt-composer": return renderMusicPromptComposer(page, context);
+      case "music-direction-presets": return renderMusicDirectionPresets(page, context);
       case "content-studio": return renderContentStudio(page, context);
       case "content-studio-detail": return renderContentStudioDetail(page, context);
       case "channel-strategy": return renderChannelStrategy(page, context);
@@ -22940,6 +23089,47 @@
       values[input.name] = input.type === "checkbox" ? input.checked : input.value;
     });
     transientFormDrafts.set(route, values);
+  }
+
+  function synchronizeMusicDirectionPresetForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
+    const enabled = form.getAttribute("data-music-direction-compose-enabled") === "true";
+    const selected = form.querySelector('input[name="web_preset_id"]:checked');
+    const presetId = selected && MUSIC_DIRECTION_PRESET_IDS.has(String(selected.value || "")) ? String(selected.value) : "";
+    const preset = MUSIC_DIRECTION_PRESETS.find((item) => item.id === presetId);
+    form.querySelectorAll("[data-music-direction-preset-card]").forEach((card) => {
+      card.setAttribute("data-selected", String(card.getAttribute("data-music-direction-preset-card") === presetId));
+    });
+    const submit = form.querySelector("[data-music-direction-submit]");
+    if (submit) {
+      submit.disabled = !(enabled && presetId);
+      submit.setAttribute("aria-disabled", String(!(enabled && presetId)));
+    }
+    const announcement = form.querySelector("[data-music-direction-selection]");
+    if (announcement) {
+      announcement.textContent = preset
+        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập direction.`
+        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập direction.";
+    }
+  }
+
+  function markMusicDirectionPresetDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
+    synchronizeMusicDirectionPresetForm(form);
+    // Preserve the existing receipt instead of silently clearing the form,
+    // but label it once as stale when its source brief no longer matches the
+    // local draft. The next successful explicit request renders a fresh
+    // receipt without this marker.
+    const receipt = form.closest(".portal-music-directions")?.querySelector('.portal-music-directions-result[aria-live="polite"]');
+    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+      receipt.setAttribute("data-stale", "true");
+      const announcement = form.querySelector("[data-music-direction-selection]");
+      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập direction khi bạn sẵn sàng tạo receipt mới.";
+    }
+    // This is request fencing only. It has no navigation, storage, submit or
+    // network behavior; integration discards a now-stale receipt if the user
+    // edits the local form while a prior explicit request is still pending.
+    window.dispatchEvent(new CustomEvent("toanaas:music-direction-preset-draft-edited"));
   }
 
   function synchronizeImageResizePreset(form) {
@@ -23710,6 +23900,13 @@
       if (input.type === "file") {
         const selected = input.files ? Array.from(input.files) : [];
         if (selected.length) fields[input.name] = input.multiple ? selected : selected[0];
+        return;
+      }
+      // A radio group represents exactly one current choice. Do not let the
+      // final DOM radio overwrite the checked one; that would silently submit
+      // a different preset than the customer selected.
+      if (input.type === "radio") {
+        if (input.checked) fields[input.name] = input.value;
         return;
       }
       fields[input.name] = input.type === "checkbox" ? input.checked : input.value;
@@ -24589,6 +24786,9 @@
     document.addEventListener("input", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
+      if (form && form.getAttribute("data-portal-action") === "music-direction-preset-compose") {
+        markMusicDirectionPresetDraftEdited(form);
+      }
       if (form && form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
         synchronizeCinematicConceptDraftFreshness(form);
       }
@@ -24622,6 +24822,9 @@
         }
         if (form.getAttribute("data-portal-action") === "content-prompt-pack-compose" && event.target && event.target.name === "kind") {
           synchronizeContentPromptPackSuggestions(form);
+        }
+        if (form.getAttribute("data-portal-action") === "music-direction-preset-compose") {
+          markMusicDirectionPresetDraftEdited(form);
         }
         if (form.getAttribute("data-portal-action") === "cinematic-concept-compose"
           && event.target && event.target.name === "message_mode") {

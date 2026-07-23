@@ -98,6 +98,29 @@ MUSIC_PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
 MUSIC_PROMPT_COMPOSER_SETS = frozenset({"primary", "alternate"})
 MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION = 500
 MUSIC_PROMPT_COMPOSER_MAX_TEXT = 2_400
+# Music Directions is intentionally a separate Web-native contract.  These
+# opaque IDs are not Bot callback payloads or Bot music-library keywords.  The
+# browser can choose one direction, but only the server resolves it to the
+# deterministic Composer defaults below.  That keeps the old Bot callback
+# surface out of the Web API and prevents an unknown value from falling back
+# to a generic sales/default direction.
+MUSIC_DIRECTION_PRESET_MAP: dict[str, tuple[str, str, int]] = {
+    "commercial_bright": ("background", "primary", 1),
+    "cinematic_brand": ("background", "primary", 2),
+    "warm_story": ("background", "primary", 3),
+    "technology_future": ("background", "alternate", 1),
+    "short_viral": ("background", "alternate", 2),
+}
+MUSIC_DIRECTION_PRESET_IDS = frozenset(MUSIC_DIRECTION_PRESET_MAP)
+# The frozen Bot's callback path forwards one of these short values to
+# `/music_library`. They are not useful Web briefs, and accepting any raw
+# callback form or complete Bot command would blur the boundary between the
+# two UIs. The five bare keywords are rejected only when they are the whole
+# brief, so ordinary prose is never interpreted as Bot input.
+MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = re.compile(
+    r"^\s*(?:suggest_music\|.*|/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$",
+    re.IGNORECASE,
+)
 # The explicit Composer-to-Memory handoff owns its write in this router, but
 # remains bounded by the same durable envelope as Memory Center. Do not import
 # private Memory router helpers: this handoff stays independent at runtime.
@@ -1043,6 +1066,20 @@ def _music_prompt_composer_boundary() -> dict[str, Any]:
     }
 
 
+def _music_direction_preset_boundary() -> dict[str, Any]:
+    """Return the no-runtime receipt boundary for Music Directions.
+
+    The response deliberately has the same all-false side-effect contract as
+    the lower-level Composer, with a distinct execution label so a consumer
+    cannot mistake this Web preset tool for audio generation or a Bot flow.
+    """
+
+    return {
+        **_music_prompt_composer_boundary(),
+        "execution": "web_native_deterministic_music_direction_only",
+    }
+
+
 def _music_prompt_composer_guard(marker: str) -> dict[str, Any] | None:
     if not marker:
         return None
@@ -1052,6 +1089,20 @@ def _music_prompt_composer_guard(marker: str) -> dict[str, Any] | None:
         data=_music_prompt_composer_boundary(),
         status_name="guarded",
         error_code="WEB_MUSIC_PROMPT_COPYRIGHT_GUARD",
+    )
+
+
+def _music_direction_preset_guard(marker: str) -> dict[str, Any] | None:
+    """Guard Music Directions without returning the Composer boundary."""
+
+    if not marker:
+        return None
+    return envelope(
+        False,
+        "Mô tả cần được viết lại theo hướng nguyên bản, không mô phỏng nghệ sĩ, ca sĩ, bài hát, beat, giai điệu hoặc giọng cụ thể.",
+        data=_music_direction_preset_boundary(),
+        status_name="guarded",
+        error_code="WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD",
     )
 
 
@@ -1166,6 +1217,50 @@ class MusicPromptComposerRequest(BaseModel):
     @classmethod
     def validate_suggestion_set(cls, value: StrictStr) -> str:
         return _music_prompt_composer_code(value, label="Nhóm gợi ý", allowed=MUSIC_PROMPT_COMPOSER_SETS)
+
+
+class MusicDirectionPresetRequest(BaseModel):
+    """Strict, server-owned input for the five Web Music Directions presets.
+
+    It intentionally does not expose Composer mode/set/choice controls.  A
+    client therefore cannot replay an old Bot payload, select an unspecified
+    catalog entry, or rely on a fallback default.  The endpoint resolves the
+    reviewed Web ID itself before using the shared deterministic composer.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    description: StrictStr
+    language: StrictStr
+    web_preset_id: StrictStr
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: StrictStr) -> str:
+        text = _music_prompt_composer_line(
+            value,
+            label="Mô tả nhạc",
+            minimum=2,
+            maximum=MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION,
+        )
+        if MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN.fullmatch(text):
+            raise ValueError("Mô tả nhạc không nhận callback, lệnh hoặc keyword Bot; hãy viết brief Web đầy đủ")
+        return text
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Ngôn ngữ", allowed=MUSIC_PROMPT_COMPOSER_LANGUAGES)
+
+    @field_validator("web_preset_id")
+    @classmethod
+    def validate_web_preset_id(cls, value: StrictStr) -> str:
+        raw = _music_prompt_composer_line(value, label="Preset Music Directions", minimum=1, maximum=64)
+        # Unlike language codes, this ID is intentionally opaque.  Do not
+        # case-fold aliases: callers must use the exact reviewed Web value.
+        if raw not in MUSIC_DIRECTION_PRESET_IDS:
+            raise ValueError("Preset Music Directions không hợp lệ")
+        return raw
 
 
 def _require_memory_handoff_enabled() -> None:
@@ -1388,6 +1483,28 @@ def _compose_music_prompt(payload: MusicPromptComposerRequest) -> dict[str, Any]
     return MusicPromptComposerResult.model_validate(result).model_dump()
 
 
+def _music_direction_preset_composer_payload(payload: MusicDirectionPresetRequest) -> MusicPromptComposerRequest:
+    """Resolve a reviewed Web preset to Composer internals on the server.
+
+    ``web_preset_id`` was strictly validated above, but this defensive lookup
+    remains explicit so this route can never silently choose a default if the
+    catalog changes.  The browser never selects or submits these internal
+    Composer selection fields; it may only verify the bounded server receipt.
+    """
+
+    try:
+        mode, suggestion_set, selected_suggestion = MUSIC_DIRECTION_PRESET_MAP[payload.web_preset_id]
+    except KeyError as exc:  # Defensive: no fallback is permitted for a preset.
+        raise HTTPException(status_code=422, detail="Preset Music Directions không hợp lệ") from exc
+    return MusicPromptComposerRequest(
+        description=payload.description,
+        mode=mode,
+        language=payload.language,
+        suggestion_set=suggestion_set,
+        selected_suggestion=selected_suggestion,
+    )
+
+
 def _music_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, str, list[str]]:
     """Serialize the server-recomputed selected direction as one Web note.
 
@@ -1511,6 +1628,33 @@ async def compose_music_prompt(
         True,
         "Đã tạo ba hướng prompt nhạc dạng văn bản để review. Không có nhạc, lyrics, audio, preview, output, job, thanh toán hoặc Telegram action nào được tạo.",
         data={"composer": composer, **_music_prompt_composer_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/music-directions/compose")
+async def compose_music_direction_presets(
+    payload: MusicDirectionPresetRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return three transient directions from one explicit Web preset.
+
+    This is not a compatibility endpoint for Bot callbacks.  It performs no
+    database or Memory write, provider/Bot/bridge request, audio/preview/job
+    creation, wallet/payment mutation, asset/collection save, publishing or
+    Telegram action.
+    """
+
+    _require_enabled()
+    del account  # Signed session/CSRF is the only account boundary for this tool.
+    guarded = _music_direction_preset_guard(_music_prompt_composer_marker(payload.description))
+    if guarded:
+        return guarded
+    composer = _compose_music_prompt(_music_direction_preset_composer_payload(payload))
+    return envelope(
+        True,
+        "Đã lập ba hướng nhạc dạng văn bản để review từ preset Web đã chọn. Không có nhạc, lyrics, audio, preview, output, job, thanh toán hoặc Telegram action nào được tạo.",
+        data={"composer": composer, **_music_direction_preset_boundary()},
         status_name="draft",
     )
 
