@@ -37725,7 +37725,7 @@
         "line": 78804
       },
       "fallback_family": "suggest_music",
-      "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+      "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
       "source": "suggest_music|cinematic",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -37738,7 +37738,7 @@
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
+      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
@@ -37750,7 +37750,7 @@
         "line": 78805
       },
       "fallback_family": "suggest_music",
-      "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+      "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
       "source": "suggest_music|review",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -37763,7 +37763,7 @@
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
+      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
@@ -37775,7 +37775,7 @@
         "line": 78802
       },
       "fallback_family": "suggest_music",
-      "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+      "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
       "source": "suggest_music|sales",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -37788,7 +37788,7 @@
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
+      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
@@ -37800,7 +37800,7 @@
         "line": 78803
       },
       "fallback_family": "suggest_music",
-      "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+      "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
       "source": "suggest_music|tech",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -37813,7 +37813,7 @@
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
+      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
@@ -37825,7 +37825,7 @@
         "line": 78806
       },
       "fallback_family": "suggest_music",
-      "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+      "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
       "source": "suggest_music|trend",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -37838,7 +37838,7 @@
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
+      "source_evidence": "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for the Bot /music_library command. Its five known presets are not Web route identifiers, while an unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
@@ -74396,11 +74396,11 @@
       ]
     },
     {
-      "authority": "Bot Telegram preset-to-keyword reply guidance; separate Web-native text planning only",
-      "candidate_boundary": "fresh Web-native music-direction preset catalog with server-owned fixed hints",
+      "authority": "Bot Telegram preset-to-keyword reply guidance; independent Web-native deterministic text planning",
+      "candidate_boundary": "independent Web-native Music Directions contract with server-owned opaque preset IDs",
       "count": 5,
       "family": "suggest_music",
-      "next_contract": "The five known suggest_music presets are Bot text guidance, not browser callbacks. A future Web entry may offer its own reviewed static music-direction preset catalog without accepting or forwarding a Bot callback/token/keyword; it must remain separate from provider catalog, playback, selection, wallet, job and delivery behavior.",
+      "next_contract": "The five known suggest_music presets remain Bot text guidance, not browser callbacks. The independent /media-workspace/music-directions contract starts from a signed Web request with an opaque web_preset_id and description; it accepts or forwards neither a Bot callback/token/keyword nor a /music_library search. It remains separate from provider catalog, playback, selection, wallet, job and delivery behavior.",
       "priority": "P1",
       "sample_sources": [
         "suggest_music|cinematic",

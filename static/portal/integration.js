@@ -317,6 +317,10 @@
   let mediaWorkspaceListHydrationEpoch = 0;
   let mediaWorkspaceAudioHydrationEpoch = 0;
   let mediaWorkspaceDetailHydrationEpoch = 0;
+  // Music Directions is a transient, signed-tab text receipt. A later edit,
+  // route change or signed bootstrap invalidates any older explicit request.
+  let musicDirectionPresetComposeRequestEpoch = 0;
+  let musicDirectionPresetComposePendingRequestEpoch = 0;
   // Voice Studio keeps private script/consent metadata. Separate list,
   // vault and cue-sheet reads must not survive a session or route change.
   let voiceStudioSessionEpoch = 0;
@@ -984,6 +988,12 @@
     });
   }
 
+  function setMusicDirectionPresetSubmissionStatus(message) {
+    const form = document.querySelector('[data-portal-form][data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"]');
+    const announcement = form && form.querySelector("[data-music-direction-selection]");
+    if (announcement) announcement.textContent = String(message || "");
+  }
+
   function stableValue(value) {
     if (typeof File !== "undefined" && value instanceof File) {
       return { file_name: value.name, content_size: Number(value.size || 0), content_type: value.type || "", modified_at: Number(value.lastModified || 0) };
@@ -1046,6 +1056,9 @@
     // The dedicated navigator submits exactly one reviewed presentation
     // preference. It cannot replay unrelated profile values from an old tab
     // or carry identity/workflow data into this narrow endpoint.
+    if (!Object.prototype.hasOwnProperty.call(source, "locale")) {
+      throw new Error("Hãy chọn một ngôn ngữ giao diện trước khi lưu.");
+    }
     return { locale: profileUpdateInterfaceLocale(source.locale) };
   }
 
@@ -3012,6 +3025,23 @@
   const MUSIC_PROMPT_COMPOSER_USAGE_NOTE_KEYS = Object.freeze([
     "voice_mix_notes", "edit_notes", "rights_notes", "delivery_notes"
   ]);
+  const MUSIC_DIRECTION_PRESET_IDS = new Set([
+    "commercial_bright", "cinematic_brand", "warm_story", "technology_future", "short_viral"
+  ]);
+  // This small verification map mirrors the server-owned resolution only so a
+  // browser can reject a structurally valid receipt for the wrong Web preset.
+  // It is never sent as input: the POST contract remains the opaque preset ID.
+  const MUSIC_DIRECTION_PRESET_COMPOSER_SELECTIONS = Object.freeze({
+    commercial_bright: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 1 }),
+    cinematic_brand: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 2 }),
+    warm_story: Object.freeze({ mode: "background", suggestion_set: "primary", selected_suggestion: 3 }),
+    technology_future: Object.freeze({ mode: "background", suggestion_set: "alternate", selected_suggestion: 1 }),
+    short_viral: Object.freeze({ mode: "background", suggestion_set: "alternate", selected_suggestion: 2 })
+  });
+  // Reject the whole raw Bot callback namespace, including unknown/missing/
+  // suffixed values, and any full Bot command. A bare known keyword is only
+  // rejected when it is the entire brief; normal prose is not Bot input.
+  const MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN = /^\s*(?:suggest_music\|.*|\/music_library(?:\s.*)?|(?:cinematic|review|sales|tech|trend))\s*$/i;
   const MUSIC_PROMPT_COMPOSER_MARKUP_PATTERN = /<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i;
 
   function validMediaCollectionId(value) {
@@ -3032,9 +3062,13 @@
     return String(path || "").split("?")[0] === "/media-workspace/music-prompt-composer";
   }
 
+  function isNativeMusicDirectionPresetPath(path) {
+    return String(path || "").split("?")[0] === "/media-workspace/music-directions";
+  }
+
   function isNativeMediaWorkspacePath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || isNativeMusicPromptComposerPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
+    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
   }
 
   function mediaWorkspaceSafetyError(...values) {
@@ -3092,6 +3126,32 @@
     return { description, mode, language, suggestion_set: suggestionSet, selected_suggestion: Number(selectedRaw) };
   }
 
+  function musicDirectionPresetPayload(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    const allowed = ["description", "language", "web_preset_id"];
+    if (Object.keys(source).length !== allowed.length || !allowed.every((key) => Object.prototype.hasOwnProperty.call(source, key))) {
+      throw new Error("Music Directions chỉ nhận brief, ngôn ngữ và một preset Web.");
+    }
+    if (typeof source.description !== "string" || typeof source.language !== "string" || typeof source.web_preset_id !== "string") {
+      throw new Error("Music Directions cần brief, ngôn ngữ và preset dạng text hợp lệ.");
+    }
+    const description = source.description.replace(/\s+/g, " ").trim();
+    const language = source.language.trim();
+    const webPresetId = source.web_preset_id.trim();
+    if (description.length < 2 || description.length > 500 || description.includes("\u0000")) {
+      throw new Error("Brief âm nhạc cần từ 2 đến 500 ký tự hợp lệ.");
+    }
+    if (!MUSIC_PROMPT_COMPOSER_LANGUAGES.has(language) || !MUSIC_DIRECTION_PRESET_IDS.has(webPresetId)) {
+      throw new Error("Ngôn ngữ hoặc preset Web không hợp lệ. Hãy chọn lại từ các lựa chọn trong trang.");
+    }
+    if (MUSIC_DIRECTION_PRESET_RAW_BOT_INPUT_PATTERN.test(description)) {
+      throw new Error("Brief không nhận callback, lệnh hoặc keyword Bot. Hãy viết mô tả Web đầy đủ.");
+    }
+    const safety = musicPromptComposerSafetyError(description, language, webPresetId);
+    if (safety) throw new Error(safety);
+    return { description, language, web_preset_id: webPresetId };
+  }
+
   function musicPromptComposerStringListIsSafe(value, minimumItems, maximumItems, itemMaximum) {
     return Array.isArray(value) && value.length >= minimumItems && value.length <= maximumItems
       && value.every((item) => Boolean(musicPromptComposerText(item, 2, itemMaximum, false)));
@@ -3111,6 +3171,17 @@
   function musicPromptComposerBoundaryIsSafe(value) {
     return musicPromptComposerExactKeys(value, MUSIC_PROMPT_COMPOSER_RESULT_KEYS)
       && value.execution === "web_native_deterministic_music_prompt_only"
+      && value.input_persisted === false && value.source_audio_inspected === false
+      && value.provider_called === false && value.ai_music_called === false && value.lyrics_generated === false
+      && value.audio_created === false && value.preview_created === false && value.output_created === false
+      && value.job_created === false && value.wallet_mutated === false && value.payment_started === false
+      && value.asset_saved === false && value.collection_saved === false && value.publish_action_created === false
+      && value.telegram_called === false && value.rights_verified === false;
+  }
+
+  function musicDirectionPresetBoundaryIsSafe(value) {
+    return musicPromptComposerExactKeys(value, MUSIC_PROMPT_COMPOSER_RESULT_KEYS)
+      && value.execution === "web_native_deterministic_music_direction_only"
       && value.input_persisted === false && value.source_audio_inspected === false
       && value.provider_called === false && value.ai_music_called === false && value.lyrics_generated === false
       && value.audio_created === false && value.preview_created === false && value.output_created === false
@@ -3150,6 +3221,48 @@
       && selectedFromSuggestions && musicPromptComposerSameSuggestion(selectedFromSuggestions, selectedDirection)
       && usageIsSafe && cautions && review && !safety
     );
+  }
+
+  function musicDirectionPresetResultIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    // Reuse the strict nested Composer validation only after the distinct
+    // Music Directions boundary has been proven. The response object is not
+    // mutated, and a mismatched execution marker cannot be accepted.
+    if (!musicDirectionPresetBoundaryIsSafe(data)) return false;
+    return musicPromptComposerResultIsSafe({
+      ...data,
+      execution: "web_native_deterministic_music_prompt_only"
+    });
+  }
+
+  function musicDirectionPresetExpectedComposerSelection(presetId) {
+    const expected = typeof presetId === "string"
+      ? MUSIC_DIRECTION_PRESET_COMPOSER_SELECTIONS[presetId]
+      : null;
+    return expected && typeof expected === "object" ? expected : null;
+  }
+
+  function musicDirectionPresetComposerMatchesPreset(presetId, composer) {
+    const expected = musicDirectionPresetExpectedComposerSelection(presetId);
+    return Boolean(expected && composer && typeof composer === "object"
+      && composer.mode === expected.mode
+      && composer.suggestion_set === expected.suggestion_set
+      && composer.selected_suggestion === expected.selected_suggestion);
+  }
+
+  function musicDirectionPresetResultMatchesSource(source, result) {
+    let payload;
+    try {
+      payload = musicDirectionPresetPayload(source);
+    } catch (_) {
+      return false;
+    }
+    const data = result && typeof result === "object" && !Array.isArray(result) ? result : {};
+    const composer = data.composer && typeof data.composer === "object" && !Array.isArray(data.composer) ? data.composer : {};
+    return Boolean(musicDirectionPresetResultIsSafe(data)
+      && composer.description === payload.description
+      && composer.language === payload.language
+      && musicDirectionPresetComposerMatchesPreset(payload.web_preset_id, composer));
   }
 
   // Saving is a separate, explicit Web-owned handoff. Retain only the
@@ -10333,6 +10446,8 @@
     ++partnerCrmSessionEpoch;
     ++contentStudioSessionEpoch;
     ++mediaWorkspaceSessionEpoch;
+    ++musicDirectionPresetComposeRequestEpoch;
+    musicDirectionPresetComposePendingRequestEpoch = 0;
     ++voiceStudioSessionEpoch;
     ++videoStudioSessionEpoch;
     ++imageMotionPlannerSessionEpoch;
@@ -10509,6 +10624,10 @@
     // collection storage, music generation, previews, Bot actions, jobs,
     // wallets, payment or delivery capability.
     const musicPromptComposerEnabled = mediaWorkspaceEnabled;
+    // Music Directions shares the same narrow maintenance gate, but has its
+    // own opaque Web preset contract and a distinct transient receipt. It
+    // does not inherit Composer's Memory save or any runtime capability.
+    const musicDirectionPresetsEnabled = mediaWorkspaceEnabled;
     // Content Studio is a signed-account authoring workspace only. Its flag
     // deliberately has no Bot bridge, Telegram, provider, payment, Xu, job
     // or publishing implication.
@@ -10951,6 +11070,7 @@
       "media-workspace-item-detach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "music-prompt-compose": Boolean(account && me.csrf_token && musicPromptComposerEnabled),
       "music-prompt-composer-save-memory": Boolean(account && me.csrf_token && musicPromptComposerEnabled && memoryCenterEnabled),
+      "music-direction-preset-compose": Boolean(account && me.csrf_token && musicDirectionPresetsEnabled),
       "content-studio-view": Boolean(account && contentStudioEnabled),
       "content-studio-refresh": Boolean(account && contentStudioEnabled),
       "content-studio-page": Boolean(account && contentStudioEnabled),
@@ -11516,6 +11636,7 @@
       guideCenterEnabled,
       mediaWorkspaceEnabled,
       musicPromptComposerEnabled,
+      musicDirectionPresetsEnabled,
       contentStudioEnabled,
       channelStrategyEnabled,
       contentHandoffEnabled,
@@ -11628,6 +11749,11 @@
       // from a Bot pending result, a collection, or browser persistence.
       musicPromptComposerSaveSource: {},
       musicPromptComposerSaveReceipt: {},
+      // The preset receipt can contain a private brief. Clear it before each
+      // signed bootstrap; it must never cross accounts or become a restored
+      // Audio Library/Memory/Bot record.
+      musicDirectionPresetDraft: {},
+      musicDirectionPresetResult: {},
       // Fail closed across account/session transitions. Content Studio never
       // uses a prior owner's projection or generic canonical feature data.
       contentStudioSummary: {},
@@ -12095,6 +12221,7 @@
         "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/music-prompt-composer": account && musicPromptComposerEnabled ? "ready" : "guarded",
+        "/media-workspace/music-directions": account && musicDirectionPresetsEnabled ? "ready" : "guarded",
         "/content-studio": account && contentStudioEnabled ? "processing" : "guarded",
         "/content-studio/new": account && contentStudioEnabled ? "processing" : "guarded",
         "/content/channel-strategy": account && channelStrategyEnabled ? "processing" : "guarded",
@@ -12187,7 +12314,7 @@
     else if (account && ["/campaigns", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     else if (account && isNativeContentHandoffPath(currentPath)) await hydrateCampaignPlans();
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeCreativeMotionGuidePath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath) && !isNativeMusicDirectionPresetPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeCreativeMotionGuidePath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -12301,6 +12428,13 @@
       if (!(account && musicPromptComposerEnabled)) merge({
         musicPromptComposerResult: {}, musicPromptComposerSaveSource: {}, musicPromptComposerSaveReceipt: {},
         pageStates: { ...(base().pageStates || {}), "/media-workspace/music-prompt-composer": "guarded" }
+      });
+    } else if (isNativeMusicDirectionPresetPath(currentPath)) {
+      // This route intentionally has no collection/history/project hydration.
+      // Its text receipt is current-session only and has no Memory handoff.
+      if (!(account && musicDirectionPresetsEnabled)) merge({
+        musicDirectionPresetDraft: {}, musicDirectionPresetResult: {},
+        pageStates: { ...(base().pageStates || {}), "/media-workspace/music-directions": "guarded" }
       });
     } else if (account && mediaWorkspaceEnabled && ["/media-workspace", "/media-workspace/new"].includes(currentPath)) await hydrateMediaWorkspace();
     else if (account && mediaWorkspaceEnabled && mediaWorkspaceCollectionIdFromPath(currentPath)) await hydrateMediaCollection(mediaWorkspaceCollectionIdFromPath(currentPath));
@@ -13595,6 +13729,7 @@
       && currentPortalPath() === expectedPath
       && isNativeMediaWorkspacePath(expectedPath)
       && !isNativeMusicPromptComposerPath(expectedPath)
+      && !isNativeMusicDirectionPresetPath(expectedPath)
       && base().mediaWorkspaceEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
   }
@@ -13605,7 +13740,7 @@
     const path = currentPortalPath();
     const requestEpoch = ++mediaWorkspaceListHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
-    if (!isNativeMediaWorkspacePath(path) || isNativeMusicPromptComposerPath(path)) return { stale: true };
+    if (!isNativeMediaWorkspacePath(path) || isNativeMusicPromptComposerPath(path) || isNativeMusicDirectionPresetPath(path)) return { stale: true };
     const listView = path === "/media-workspace" || path === "/media-workspace/new";
     const priorListing = base().mediaWorkspaceListing && typeof base().mediaWorkspaceListing === "object"
       ? base().mediaWorkspaceListing
@@ -13666,7 +13801,7 @@
     const requestEpoch = ++mediaWorkspaceAudioHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     const expectedPath = currentPortalPath();
-    if (!isNativeMediaWorkspacePath(expectedPath) || isNativeMusicPromptComposerPath(expectedPath)) return { stale: true };
+    if (!isNativeMediaWorkspacePath(expectedPath) || isNativeMusicPromptComposerPath(expectedPath) || isNativeMusicDirectionPresetPath(expectedPath)) return { stale: true };
     const priorListing = base().mediaAudioAssetListing && typeof base().mediaAudioAssetListing === "object"
       ? base().mediaAudioAssetListing
       : mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0);
@@ -23418,6 +23553,77 @@
         }
         return;
       }
+      if (action === "music-direction-preset-compose") {
+        const expectedPath = "/media-workspace/music-directions";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) {
+          throw new Error("Music Directions chỉ nhận thao tác từ màn hình Music Directions đang mở.");
+        }
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (capabilities["music-direction-preset-compose"] !== true) {
+          throw new Error("Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập Music Directions.");
+        }
+        const payload = musicDirectionPresetPayload(fields);
+        const requestEpoch = ++musicDirectionPresetComposeRequestEpoch;
+        musicDirectionPresetComposePendingRequestEpoch = requestEpoch;
+        // Do not merge/reset here: the native form intentionally keeps the
+        // customer's visible local selection and brief until this explicit
+        // request either yields the matching receipt or is superseded.
+        setActionBusy(action, route, true);
+        setMusicDirectionPresetSubmissionStatus("Đang lập ba music direction từ preset và brief hiện tại…");
+        try {
+          const result = await api("/media-workspace/tools/music-directions/compose", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (requestEpoch !== musicDirectionPresetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status === "guarded") {
+            if (!musicDirectionPresetBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới Music Directions an toàn.");
+            merge({
+              // Keep the bounded local draft in tab memory so a policy guard
+              // never erases the customer's preset/brief. It is not stored
+              // in a browser cache, Memory, collection or server record.
+              musicDirectionPresetDraft: payload,
+              musicDirectionPresetResult: {},
+              pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+            });
+            toast(result.message || "Brief cần được điều chỉnh trước khi lập music direction.");
+            return;
+          }
+          if (result.status !== "draft" || !musicDirectionPresetResultMatchesSource(payload, data)) {
+            throw new Error("Máy chủ chưa trả Music Directions Web-native an toàn và khớp brief hiện tại.");
+          }
+          merge({
+            musicDirectionPresetDraft: payload,
+            musicDirectionPresetResult: { source: payload, receipt: data },
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
+          });
+          toast(result.message || "Đã lập ba music direction để review trong phiên hiện tại.");
+        } catch (error) {
+          if (requestEpoch !== musicDirectionPresetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
+          const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
+          const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
+          if (!guarded || !musicDirectionPresetBoundaryIsSafe(guardedData)) {
+            setMusicDirectionPresetSubmissionStatus("Không thể lập direction. Kiểm tra lại brief, preset và kết nối rồi thử lại.");
+            throw error;
+          }
+          merge({
+            musicDirectionPresetDraft: payload,
+            musicDirectionPresetResult: {},
+            pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+          });
+          toast(guarded.message || "Brief cần được điều chỉnh trước khi lập music direction.");
+        } finally {
+          if (musicDirectionPresetComposePendingRequestEpoch === requestEpoch
+            && requestEpoch === musicDirectionPresetComposeRequestEpoch
+            && currentPortalPath() === expectedPath) {
+            musicDirectionPresetComposePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+          }
+        }
+        return;
+      }
       if (action === "music-prompt-compose") {
         const payload = musicPromptComposerPayload(fields);
         // The composer remains request-only. Starting a new direction drops
@@ -31326,6 +31532,18 @@
     if (creativeMotionGuidePendingKind()) return;
     ++creativeMotionGuideSuggestionsRequestEpoch;
     ++creativeMotionGuideComposeRequestEpoch;
+  });
+  window.addEventListener("toanaas:music-direction-preset-draft-edited", () => {
+    // The Portal emits this only after a customer changes the local native
+    // form. A delayed receipt for the earlier explicit request must never
+    // replace the new selection, navigate, reset the form or become a saved
+    // record. This listener makes no network request of its own.
+    if (currentPortalPath() !== "/media-workspace/music-directions") return;
+    ++musicDirectionPresetComposeRequestEpoch;
+    if (musicDirectionPresetComposePendingRequestEpoch) {
+      musicDirectionPresetComposePendingRequestEpoch = 0;
+      setActionBusy("music-direction-preset-compose", "/media-workspace/music-directions", false);
+    }
   });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;

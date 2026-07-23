@@ -3394,6 +3394,74 @@ a { color: inherit; text-decoration: none; }
   .portal-music-prompt-composer-suggestion-head { align-items: flex-start; flex-direction: column; }
 }
 
+/* Music Directions is a compact Web-native picker, not an audio player or
+   catalog. Keep its cues calm, high-contrast and application-like; selection
+   changes only the native form until the customer explicitly submits it. */
+.portal-music-directions { display: grid; gap: 18px; min-width: 0; }
+.portal-music-directions-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 19px; align-items: center; padding: clamp(22px, 3vw, 35px); border: 1px solid rgba(45, 212, 191, .3); border-radius: 22px; background: #121a26; box-shadow: 0 19px 47px rgba(0, 0, 0, .18); }
+.portal-music-directions-intro h2 { margin: 7px 0 9px; color: #f8fafc; font-size: clamp(27px, 3vw, 41px); letter-spacing: -.049em; }
+.portal-music-directions-intro p { max-width: 760px; margin: 0; color: #aab8c7; line-height: 1.72; }
+.portal-music-directions-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-music-directions-intro dl > div { min-width: 0; min-height: 108px; padding: 15px; border: 1px solid #2a394b; border-radius: 15px; background: #0d151f; }
+.portal-music-directions-intro dt { color: #7ce7d4; font-size: 23px; font-weight: 850; letter-spacing: -.045em; }
+.portal-music-directions-intro dd { margin: 7px 0 0; color: #aab8c7; font-size: 10px; line-height: 1.46; }
+.portal-music-directions-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
+.portal-music-directions-form, .portal-music-directions-boundary, .portal-music-directions-result { background: #121a26; }
+.portal-music-directions-boundary { display: grid; gap: 14px; }
+.portal-music-directions-picker { min-width: 0; margin: 0; padding: 0; border: 0; }
+.portal-music-directions-picker legend { padding: 0; color: #f8fafc; font-size: 13px; font-weight: 780; }
+.portal-music-directions-picker legend span { color: #f87171; }
+.portal-music-directions-preset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 11px; }
+.portal-music-directions-preset-card { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: start; min-width: 0; min-height: 94px; padding: 13px; border: 1px solid #2a394b; border-radius: 14px; background: #0d151f; color: #f8fafc; cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+.portal-music-directions-preset-card:hover { border-color: rgba(45, 212, 191, .62); background: #122229; }
+.portal-music-directions-preset-card[data-selected="true"] { border-color: #2dd4bf; background: #102b2b; box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .19); }
+.portal-music-directions-radio { width: 20px; height: 20px; margin: 1px 0 0; accent-color: #2dd4bf; cursor: pointer; }
+.portal-music-directions-radio:focus-visible { outline: 3px solid rgba(45, 212, 191, .78); outline-offset: 3px; }
+.portal-music-directions-preset-copy { display: grid; gap: 5px; min-width: 0; }
+.portal-music-directions-preset-copy strong { color: #f8fafc; font-size: 12px; line-height: 1.32; }
+.portal-music-directions-preset-copy small { color: #aab8c7; font-size: 10px; line-height: 1.55; }
+.portal-music-directions-preset-cue { grid-column: 2; display: inline-flex; justify-self: start; min-width: 0; margin-top: 2px; padding: 4px 7px; border: 1px solid rgba(45, 212, 191, .22); border-radius: 999px; color: #9be9dc; font-size: 8px; font-weight: 760; letter-spacing: .04em; line-height: 1.35; text-transform: uppercase; }
+.portal-music-directions-selection { min-height: 20px; margin: 10px 0 0; color: #aab8c7; font-size: 10px; line-height: 1.55; }
+.portal-music-directions-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.portal-music-directions-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid #2a394b; border-radius: 11px; background: #0d151f; }
+.portal-music-directions-guard-list strong { overflow: hidden; color: #d7e6e5; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.portal-music-directions-guard-list em { flex: 0 0 auto; padding: 3px 6px; border: 1px solid rgba(45, 212, 191, .3); border-radius: 999px; background: rgba(45, 212, 191, .1); color: #b8f6ed; font-size: 8px; font-style: normal; font-weight: 760; letter-spacing: .045em; text-transform: uppercase; }
+.portal-music-directions-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.portal-music-directions-meta span { display: inline-flex; min-width: 0; max-width: 100%; padding: 6px 9px; border: 1px solid rgba(45, 212, 191, .26); border-radius: 999px; background: rgba(45, 212, 191, .1); color: #d7faf4; font-size: 9px; font-weight: 720; line-height: 1.45; overflow-wrap: anywhere; }
+.portal-music-directions-list { display: grid; gap: 10px; margin: 15px 0 0; padding: 0; list-style: none; }
+.portal-music-directions-list li { display: grid; grid-template-columns: 31px minmax(0, 1fr); gap: 11px; min-width: 0; padding: 12px; border: 1px solid #2a394b; border-radius: 14px; background: #0d151f; }
+.portal-music-directions-list li[data-selected="true"] { border-color: rgba(45, 212, 191, .64); background: #102b2b; box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .14); }
+.portal-music-directions-index { display: inline-grid; width: 31px; height: 25px; place-items: center; border: 1px solid rgba(45, 212, 191, .34); border-radius: 8px; background: rgba(45, 212, 191, .1); color: #d7faf4; font-size: 8px; font-weight: 820; letter-spacing: .06em; }
+.portal-music-directions-list-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; min-width: 0; }
+.portal-music-directions-list-head strong { color: #f8fafc; font-size: 12px; letter-spacing: -.015em; }
+.portal-music-directions-list-head em { padding: 3px 7px; border: 1px solid rgba(45, 212, 191, .3); border-radius: 999px; background: rgba(45, 212, 191, .1); color: #b8f6ed; font-size: 8px; font-style: normal; font-weight: 770; letter-spacing: .04em; }
+.portal-music-directions-list p { margin: 7px 0 0; color: #aab8c7; font-size: 10px; line-height: 1.55; }
+.portal-music-directions-list dl { display: grid; gap: 7px; margin: 10px 0 0; }
+.portal-music-directions-list dl > div { min-width: 0; padding: 8px; border-radius: 9px; background: #172234; }
+.portal-music-directions-list dt { color: #aab8c7; font-size: 8px; font-weight: 780; letter-spacing: .055em; text-transform: uppercase; }
+.portal-music-directions-list dd { margin: 4px 0 0; color: #d7e6e5; font-size: 9px; line-height: 1.58; overflow-wrap: anywhere; }
+.portal-music-directions-list pre { min-width: 0; max-height: 180px; margin: 0; overflow: auto; color: #e0f2ef; font: 9px/1.62 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.portal-music-directions-review { display: grid; gap: 8px; margin-top: 14px; padding: 14px; border: 1px solid rgba(248, 113, 113, .26); border-radius: 14px; background: rgba(86, 31, 37, .24); }
+.portal-music-directions-review strong { color: #ffe0e0; font-size: 11px; }
+.portal-music-directions-review ul { display: grid; gap: 6px; margin: 0; padding-left: 17px; color: #e7c5c8; font-size: 10px; line-height: 1.58; }
+.portal-music-directions-result > .portal-form-note { display: block; margin: 14px 0 0; }
+.portal-music-directions-result[data-stale="true"] { border-color: rgba(255, 211, 122, .72); }
+.portal-music-directions-result[data-stale="true"]::after { display: block; margin-top: 12px; color: #ffd37a; content: "Brief đã thay đổi — receipt này thuộc brief trước. Bấm lập direction để tạo receipt mới."; font-size: 10px; font-weight: 720; line-height: 1.55; }
+
+@media (max-width: 980px) {
+  .portal-music-directions-intro, .portal-music-directions-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .portal-music-directions-intro { padding: 20px; border-radius: 18px; }
+  .portal-music-directions-intro dl, .portal-music-directions-preset-grid, .portal-music-directions-guard-list { grid-template-columns: 1fr; }
+  .portal-music-directions-preset-card { min-height: 88px; }
+}
+@media (max-width: 440px) {
+  .portal-music-directions-list li { grid-template-columns: 25px minmax(0, 1fr); gap: 8px; padding: 10px; }
+  .portal-music-directions-index { width: 25px; height: 23px; font-size: 7px; }
+  .portal-music-directions-list-head { align-items: flex-start; flex-direction: column; }
+}
+
 /* Coordination workspaces deliberately look operational rather than like a
    public landing page: quiet hierarchy, readable states and dense-but-safe
    data cards for private Content Handoff and Partner CRM flows. */

@@ -4435,10 +4435,13 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
         assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
         assert mapped["classification"] == "customer"
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "suggest_music_callback_requires_fresh_web_native_preset_contract"
+        assert mapped["resolution"] == "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract"
         assert "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE" in mapped["source_dispositions"]
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING" in mapped["source_dispositions"]
+        assert "opaque Web preset ID" in mapped["source_evidence"]
+        assert "web_route" not in mapped
+        assert "web_action" not in mapped
 
     for template in (
         "music_quick|{*}",
@@ -4462,7 +4465,7 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
         assert mapped is not None
         assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "suggest_music_callback_requires_fresh_web_native_preset_contract"
+        assert mapped["resolution"] == "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract"
 
     bot_root = tmp_path / "bot"
     web_root = tmp_path / "web"
@@ -4530,7 +4533,15 @@ async def portal(page_path):
     assert "AUDIO_HUB_SOURCE_REVIEW_REQUIRED" in contract
     assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in contract
     assert "music-prompt-composer" in contract
-    assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "music-directions" in contract
+    music_directions_contract = (tmp_path / "docs" / "MUSIC_DIRECTION_PRESET_CONTRACT.md").read_text(encoding="utf-8")
+    assert "/media-workspace/music-directions" in music_directions_contract
+    assert "web_preset_id" in music_directions_contract
+    assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in music_directions_contract
+    assert "No Web request may forward a raw Bot callback" in music_directions_contract
+    readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
+    assert "MUSIC_DIRECTION_PRESET_CONTRACT.md" in readme
     assert "Bot Audio Hub callbacks are a Telegram state-machine boundary" in (tmp_path / "docs" / "payos-wallet-jobs.md").read_text(encoding="utf-8")
     assert "Bot Audio Hub callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 

@@ -113,6 +113,11 @@ ENGINE_SPECS.update(_many(("media_factory",), mode=ENGINE_MODE_WEB_NATIVE, flags
 ENGINE_SPECS.update(_many(("creative_flow",), mode=ENGINE_MODE_WEB_NATIVE, flags=("media_factory_enabled",), handler="creative_flow"))
 ENGINE_SPECS.update(_many(("media_workspace",), mode=ENGINE_MODE_WEB_NATIVE, flags=("music_media_workspace_enabled",), handler="music_media_workspace"))
 ENGINE_SPECS.update(_many(("music_prompt_composer",), mode=ENGINE_MODE_WEB_NATIVE, flags=("music_media_workspace_enabled",), handler="music_prompt_composer"))
+# Music Directions has its own server-owned five-preset contract.  It creates
+# only a transient deterministic text receipt and never exposes a raw Bot
+# callback, provider/Bot request, audio/media output/job, memory/asset write,
+# wallet/payment mutation or Telegram action.
+ENGINE_SPECS.update(_many(("music_direction_presets",), mode=ENGINE_MODE_WEB_NATIVE, flags=("music_media_workspace_enabled",), handler="music_direction_presets"))
 ENGINE_SPECS.update(_many(("voice_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("voice_studio_enabled",), handler="voice_studio"))
 # Voice Direction Composer is a bounded, transient adaptation of the Bot's
 # static voice-style suggestions.  It only returns editorial text; it has no

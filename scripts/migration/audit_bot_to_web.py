@@ -2839,9 +2839,9 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "suggest_music": {
         "priority": "P1",
-        "candidate_boundary": "fresh Web-native music-direction preset catalog with server-owned fixed hints",
-        "authority": "Bot Telegram preset-to-keyword reply guidance; separate Web-native text planning only",
-        "next_contract": "The five known suggest_music presets are Bot text guidance, not browser callbacks. A future Web entry may offer its own reviewed static music-direction preset catalog without accepting or forwarding a Bot callback/token/keyword; it must remain separate from provider catalog, playback, selection, wallet, job and delivery behavior.",
+        "candidate_boundary": "independent Web-native Music Directions contract with server-owned opaque preset IDs",
+        "authority": "Bot Telegram preset-to-keyword reply guidance; independent Web-native deterministic text planning",
+        "next_contract": "The five known suggest_music presets remain Bot text guidance, not browser callbacks. The independent /media-workspace/music-directions contract starts from a signed Web request with an opaque web_preset_id and description; it accepts or forwards neither a Bot callback/token/keyword nor a /music_library search. It remains separate from provider catalog, playback, selection, wallet, job and delivery behavior.",
         "source_dispositions": (
             "TELEGRAM_IDENTITY_CONTEXT",
             "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE",
@@ -6661,7 +6661,7 @@ def _audio_hub_source_review_mapping(
             "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
             "classification": "customer",
             "status": "NEEDS_FEATURE_DISPOSITION",
-            "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+            "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
             "source_dispositions": (
                 "TELEGRAM_IDENTITY_CONTEXT",
                 "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE",
@@ -6676,9 +6676,9 @@ def _audio_hub_source_review_mapping(
             "source_evidence": (
                 "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for "
                 "the Bot /music_library command. Its five known presets are not Web route identifiers, while an "
-                "unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone "
-                "Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, "
-                "selection, wallet, job or delivery action."
+                "unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent "
+                "Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts "
+                "or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action."
             ),
             "evidence": evidence,
         }
@@ -10071,14 +10071,14 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         [
             "suggest_music|sales, suggest_music|tech, suggest_music|cinematic, suggest_music|review, suggest_music|trend",
             "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
-            "suggest_music_callback_requires_fresh_web_native_preset_contract",
-            "Bot text-only preset-to-keyword guidance; a future Web preset must be a fresh server-owned catalog, not raw callback/keyword forwarding",
+            "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
+            "Bot text-only preset-to-keyword guidance. The independent Web Music Directions contract uses opaque server-owned web_preset_id values; it accepts or forwards no raw Bot callback or keyword.",
         ],
         [
             "case variants, missing tokens, suffixes or other suggest_music|* values",
             "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
-            "suggest_music_callback_requires_fresh_web_native_preset_contract",
-            "unknown Bot values fall back to a default keyword, so they are not stable Web intent/catalog/provider inputs",
+            "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
+            "unknown Bot values fall back to a default keyword, so they remain source-review-only rather than stable Web intent, catalog or provider inputs.",
         ],
     ]
     payos_alert_contract_rows = [
@@ -10799,6 +10799,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) and [`STORYPACK_CALLBACK_CONTRACT.md`](STORYPACK_CALLBACK_CONTRACT.md) — signed storyboard planning and finite Storypack callback dispositions; Bot pending/latest/save/prompt/runtime branches never become browser actions.\n"
         + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
         + "- [`MUSIC_PROMPT_COMPOSER_CONTRACT.md`](MUSIC_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived music prompt directions with no Suno/provider/audio/job/payment/asset/collection/Telegram action.\n"
+        + "- [`MUSIC_DIRECTION_PRESET_CONTRACT.md`](MUSIC_DIRECTION_PRESET_CONTRACT.md) — independent signed Music Directions from opaque Web preset IDs; it never accepts a Bot callback or keyword and has no provider/audio/job/payment/asset/collection/Telegram action.\n"
         + "- [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.\n"
         + "- [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.\n"
         + "- [`ADMIN_DOMAIN_CENTERS_CONTRACT.md`](ADMIN_DOMAIN_CENTERS_CONTRACT.md) — safe first-class Admin navigation for Publishing, Growth, Finance and Trends.\n"
@@ -10853,7 +10854,61 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             audio_hub_contract_rows,
         )
-        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The existing signed `/media-workspace/music-prompt-composer` is an independent deterministic text-planning surface entered fresh by a Web user. It accepts neither a Bot callback nor Bot keyword/state, and it does not create audio, a provider request, a job, an asset, a payment or a delivery. A future Web Audio Hub or preset catalog must start from its own signed owner-scoped data and separately reviewed execution contract.\n",
+        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The signed `/media-workspace/music-prompt-composer` and `/media-workspace/music-directions` surfaces are independent deterministic text-planning flows entered fresh by a signed Web user. Music Directions accepts only a bounded opaque lower-case `web_preset_id` plus a new Web description; it rejects raw Bot callbacks, full Bot `/music_library` commands, bare Bot keywords, Bot mode/selection internals and unknown request fields, while ordinary prose is never interpreted or forwarded as Bot input. It produces no audio, provider request, job, asset, collection, payment, wallet mutation or delivery. See `MUSIC_DIRECTION_PRESET_CONTRACT.md`. A future Web Audio Hub must still start from its own signed owner-scoped data and separately reviewed execution contract.\n",
+    )
+    write(
+        "MUSIC_DIRECTION_PRESET_CONTRACT.md",
+        "# Music Directions preset contract\n\n"
+        "## Purpose and authority\n\n"
+        "`/media-workspace/music-directions` is an independent signed Web-native text-planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `suggest_music|*` callback family. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`; its five callbacks reply with a Bot `/music_library` keyword and stay `SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED` in the parity audit.\n\n"
+        "The page offers five reviewed, opaque Web preset IDs:\n\n"
+        "| Web `web_preset_id` | User-facing direction |\n"
+        "| --- | --- |\n"
+        "| `commercial_bright` | Thương mại sáng |\n"
+        "| `technology_future` | Công nghệ tương lai |\n"
+        "| `cinematic_brand` | Cinematic thương hiệu |\n"
+        "| `warm_story` | Kể chuyện ấm |\n"
+        "| `short_viral` | Short-form bắt nhịp |\n\n"
+        "These identifiers are Web-only contract values. Their server-owned mapping to deterministic prompt-composer hints is not a browser-supplied mode, catalog choice, Bot preset or `/music_library` search keyword.\n\n"
+        "## Explicit Web flow\n\n"
+        "1. A signed Web account selects one radio preset. Selection changes only the local form state: it must not navigate, reset history, send a request, call a provider or submit automatically.\n"
+        "2. The user enters a new description and explicitly chooses **Lập music directions**.\n"
+        "3. The browser sends a CSRF-protected request to `POST /api/v1/media-workspace/tools/music-directions/compose` with the exact strict JSON shape:\n\n"
+        "```json\n"
+        "{\n"
+        "  \"description\": \"Mô tả mới do người dùng nhập\",\n"
+        "  \"language\": \"vi\",\n"
+        "  \"web_preset_id\": \"commercial_bright\"\n"
+        "}\n"
+        "```\n\n"
+        "The strict schema forbids unknown fields, and `web_preset_id` must exactly match one lower-case value in the finite allowlist. Case variants, suffixes, raw `suggest_music|*` callback values, Bot mode/selection internals, and every unreviewed ID are rejected. As a description, a raw callback, a full Bot `/music_library` command, or an exact bare Bot keyword is rejected; ordinary prose is never interpreted or forwarded as a Bot preset, catalog, provider, playback, job, wallet or delivery action. The server derives its own finite hint mapping; the browser never selects an internal suggestion set or choice.\n\n"
+        "## Bounded result\n\n"
+        "On a valid explicit request, the service returns only a deterministic, transient text-planning receipt with:\n\n"
+        "```text\n"
+        "execution = web_native_deterministic_music_direction_only\n"
+        "input_persisted = false\n"
+        "source_audio_inspected = false\n"
+        "provider_called = false\n"
+        "ai_music_called = false\n"
+        "lyrics_generated = false\n"
+        "audio_created = false\n"
+        "preview_created = false\n"
+        "output_created = false\n"
+        "job_created = false\n"
+        "wallet_mutated = false\n"
+        "payment_started = false\n"
+        "asset_saved = false\n"
+        "collection_saved = false\n"
+        "publish_action_created = false\n"
+        "telegram_called = false\n"
+        "rights_verified = false\n"
+        "```\n\n"
+        "It may present three text directions for manual review. It does not save to Memory, create an audio file or player, inspect source audio, call the Bot, Key4U, Suno or another provider, create a job, calculate or mutate Xu, start/finalize PayOS, save an asset/collection, publish, or claim delivery. The result is not evidence of generated music, playback rights, license clearance, provider availability or delivery.\n\n"
+        "## Callback boundary remains unchanged\n\n"
+        "The independent page does not give browser meaning to any original Bot callback. All of these remain source-review-only and must not acquire a Web route, browser action or request parameter:\n\n"
+        "- `suggest_music|sales`, `suggest_music|tech`, `suggest_music|cinematic`, `suggest_music|review`, and `suggest_music|trend`;\n"
+        "- every case variant, missing token, suffix, unknown value, or future `suggest_music|*` value.\n\n"
+        "No Web request may forward a raw Bot callback, Telegram identity/context, keyword, cache index, selected media, provider result, wallet/payment state, job identifier, output or delivery state. A future real audio/catalog experience requires its own owner-scoped, reviewed execution and delivery contract.\n",
     )
     write(
         "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",
