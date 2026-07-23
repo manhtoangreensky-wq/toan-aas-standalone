@@ -116,6 +116,7 @@ async def dashboard():
         "SHOPAI_CALLBACK_CONTRACT.md",
         "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md",
         "MANUAL_PAYMENT_CALLBACK_CONTRACT.md",
+        "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -131,6 +132,7 @@ async def dashboard():
     assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
+    assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -2305,6 +2307,90 @@ def manual_keyboard(pkg_key, uid, currency, amount, method, deposit_id, expected
     assert "MANUAL_PAYMENT_SOURCE_REVIEW_REQUIRED" in contract
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Manual payment callback" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_provider_choice_callbacks_out_of_web_routes(tmp_path: Path) -> None:
+    """Telegram pending/provider callbacks must never become browser actions."""
+
+    audit = _load_audit_module()
+    routes = {"/image", "/voice-vault", "/wallet/topup", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "prov|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES == {
+        "prov|voice|paid|{*}",
+        "prov|voice|free|{*}",
+        "prov|image|paid|{*}",
+        "prov|image|free|{*}",
+        "prov|cancel|cancel|{*}",
+    }
+
+    for template in sorted(audit.PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_provider_choice_requires_canonical_pending_state"
+        assert "TELEGRAM_IDENTITY_CONTEXT" in mapped["source_dispositions"]
+        assert "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY" in mapped["source_dispositions"]
+        assert "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+
+    for identifier in (
+        "prov|",
+        "prov|voice|paid|123456",
+        "prov|voice|free|123456",
+        "prov|image|paid|123456",
+        "prov|cancel|cancel|123456",
+        "prov|future|opaque|123456",
+        "PROV|VOICE|PAID|123456",
+        "prov|voice|paid|123456|future",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "provider_choice_callback_requires_exact_source_review"
+        assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "PROV|VOICE|PAID|{*}",
+        "prov|voice|paid|{*}|future",
+        "prov|cancel|cancel",
+        "prov|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "provider_choice_callback_requires_exact_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def provider_keyboard(uid):
+    InlineKeyboardButton("voice paid", callback_data=f"prov|voice|paid|{uid}")
+    InlineKeyboardButton("voice free", callback_data=f"prov|voice|free|{uid}")
+    InlineKeyboardButton("image paid", callback_data=f"prov|image|paid|{uid}")
+    InlineKeyboardButton("image free", callback_data=f"prov|image|free|{uid}")
+    InlineKeyboardButton("cancel", callback_data=f"prov|cancel|cancel|{uid}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    for template in audit.PROVIDER_CHOICE_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        assert templates[template]["target"] == "TELEGRAM_ONLY"
+        assert templates[template]["status"] == "TELEGRAM_ONLY"
+    contract = (tmp_path / "docs" / "PROVIDER_CHOICE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "prov\\|cancel\\|cancel\\|{*}" in contract
+    assert "PROVIDER_CHOICE_SOURCE_REVIEW_REQUIRED" in contract
+    assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Provider choice stays a Bot handoff" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

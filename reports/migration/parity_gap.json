@@ -49017,11 +49017,20 @@
         "file": "bot.py",
         "line": 30795
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_provider_choice_requires_canonical_pending_state",
       "source": "prov|cancel|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_PROVIDER_SELECTION_STATE",
+        "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+        "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, pending request, UID, charge, provider response or output.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/image"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -49029,11 +49038,20 @@
         "file": "bot.py",
         "line": 30792
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_provider_choice_requires_canonical_pending_state",
       "source": "prov|image|free|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_PROVIDER_SELECTION_STATE",
+        "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+        "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, pending request, UID, charge, provider response or output.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/image"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -49041,11 +49059,20 @@
         "file": "bot.py",
         "line": 30786
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_provider_choice_requires_canonical_pending_state",
       "source": "prov|image|paid|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_PROVIDER_SELECTION_STATE",
+        "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+        "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, pending request, UID, charge, provider response or output.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/image"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -49053,11 +49080,20 @@
         "file": "bot.py",
         "line": 30777
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_provider_choice_requires_canonical_pending_state",
       "source": "prov|voice|free|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_PROVIDER_SELECTION_STATE",
+        "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+        "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, pending request, UID, charge, provider response or output.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/image"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -49065,11 +49101,20 @@
         "file": "bot.py",
         "line": 30771
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_provider_choice_requires_canonical_pending_state",
       "source": "prov|voice|paid|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_PROVIDER_SELECTION_STATE",
+        "CANONICAL_BOT_WALLET_CHARGE_REFUND_OR_PAYMENT_BOUNDARY",
+        "BOT_PROVIDER_EXECUTION_OUTPUT_AND_DELIVERY_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot provider-choice handler binds the callback to a Telegram user and consumes that user's pending voice/image request. It can charge or refund canonical Xu, invoke a configured provider or local fallback, create a temporary output and deliver it over Telegram. Cancel can refund a prior charge. The standalone Web has no adapter that accepts or replays this callback, pending request, UID, charge, provider response or output.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/image"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -63373,11 +63418,11 @@
   },
   "mapping_coverage_percent": 86.85,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2014,
+    "COPIED_GUARDED": 2009,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
     "NEEDS_FEATURE_DISPOSITION": 505,
-    "TELEGRAM_ONLY": 560
+    "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -63416,7 +63461,7 @@
     "unresolved_callback_templates": 72,
     "unresolved_source_count": 505
   },
-  "static_web_surface_coverage_percent": 52.45,
+  "static_web_surface_coverage_percent": 52.32,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
