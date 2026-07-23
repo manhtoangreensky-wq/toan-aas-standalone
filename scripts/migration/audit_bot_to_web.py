@@ -34,7 +34,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.9"
+SCHEMA_VERSION = "2.0"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -1875,6 +1875,174 @@ GUIDED_VIDEO_MENU_DEFERRED_ACTIONS = frozenset({
     "menu|guide_video_ai",
     "menu|guide_guided_video",
 })
+
+# These six direct ``menu|*`` callbacks were still reaching the old generic
+# Dashboard fallback.  The frozen Bot does not treat them as Dashboard links:
+# it redraws a Video menu, checks Local Worker readiness, displays a
+# job-message-only Telegram hint, or shows admin command snippets.  They stay
+# visible as finite source-review records until the intentionally last Video
+# menu phase can define an owner-scoped Web contract.  The static auditor is
+# the only place that retains their raw Telegram identifiers.
+VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|video_ai_true": {
+        "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "resolution": "video_ai_menu_requires_final_video_menu_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_VIDEO_MENU_RENDER_ONLY",
+            "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+            "BOT_PROVIDER_OUTPUT_BILLING_STATE_MACHINE",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter "
+            "Bot-owned prompt, image, reference-media, provider, output, job and canonical billing "
+            "branches, so a raw menu callback cannot open or execute a generic Web Video surface."
+        ),
+    },
+    "menu|video_frame_intro": {
+        "target": "FRAME_VIDEO_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "resolution": "frame_video_intro_requires_worker_and_media_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_LOCAL_WORKER_READINESS",
+            "BOT_FRAME_VIDEO_MEDIA_OR_PENDING_STATE",
+            "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+            "NO_WORKER_OR_OUTPUT_STATUS_CLAIM",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot checks its frame-video worker/public-render guards and either sets a "
+            "Bot-local maintenance error or redraws a Telegram image-slideshow keyboard. A Web page "
+            "must not inherit worker readiness, uploaded Telegram media, render authority or output state."
+        ),
+    },
+    "menu|hint_video_status": {
+        "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_TELEGRAM_JOB_MESSAGE_CONTEXT",
+            "CANONICAL_BOT_VIDEO_JOB_OR_SUPPORT_HANDOFF",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_JOB_LOOKUP_OR_STATUS_CLAIM",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot tells a customer to use the status button attached to the original "
+            "Telegram job message or contact support with Telegram/job context. It does not identify "
+            "a browser job record, owner-scoped read model or safe Web status action."
+        ),
+    },
+    "menu|hint_film_blueprint": {
+        "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+            "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot gates this internal hint, then only displays a /film_blueprint command snippet. "
+            "It is not a Web plan, production job, worker control, provider call or admin mutation."
+        ),
+    },
+    "menu|hint_scene_pack": {
+        "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+            "BOT_VIDEO_JOB_IDENTIFIER_OR_PRODUCTION_COMMAND_STATE",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot gates this internal hint, then displays a /scene_pack command example containing "
+            "a Bot job identifier placeholder. It cannot become a browser job lookup, scene action, "
+            "provider call, worker action or admin mutation."
+        ),
+    },
+    "menu|hint_growth_loop": {
+        "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+            "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+            "VIDEO_MENU_LAST",
+            "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot gates this internal hint, then only displays a /growth_loop command snippet. "
+            "It is not a Web workflow, production job, publish action, provider call or admin mutation."
+        ),
+    },
+}
+
+MENU_SOURCE_REVIEW_BASE_DISPOSITIONS = (
+    "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+    "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+    "FINITE_MENU_CATALOG_REQUIRED",
+    "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+    "NO_RUNTIME_CLAIM",
+)
+
+
+def _menu_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    *,
+    contract: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Fail closed for a raw Bot menu callback without a finite Web contract."""
+
+    if contract is not None:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": str(contract["target"]),
+            "classification": str(contract["classification"]),
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": str(contract["resolution"]),
+            "source_dispositions": tuple(contract["source_dispositions"]),
+            "source_evidence": str(contract["source_evidence"]),
+            "evidence": evidence,
+        }
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "MENU_SOURCE_REVIEW_REQUIRED",
+        # Classification is audit metadata only.  It does not grant a Web
+        # route or role: an unknown menu value in an admin-only family still
+        # requires a separate canonical authorization contract.
+        "classification": "admin" if _is_admin_command(identifier, "") else "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "menu_callback_requires_finite_exact_web_contract",
+        "source_dispositions": MENU_SOURCE_REVIEW_BASE_DISPOSITIONS,
+        "source_evidence": (
+            "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear "
+            "pending/session state before its role and action branches. This unreviewed callback cannot "
+            "become a browser route, history/back/reset behavior, feature action or authority grant."
+        ),
+        "evidence": evidence,
+    }
 
 # The frozen Bot's stale-job help is an admin-only explanatory branch. It can
 # lead toward canonical job-lock/refund confirmation state, but only this one
@@ -7618,6 +7786,15 @@ def _map_creative_motion_guide_callback(
 
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
+    # Telegram callback payloads are case-sensitive.  The frozen menu
+    # dispatcher is also broad enough to clear pending state before it checks
+    # authority, so a changed namespace/action spelling must not borrow the
+    # lower-case Web catalog simply because this static audit normalizes other
+    # callback families for classification.
+    if token.startswith("menu|") and (
+        not identifier.startswith("menu|") or identifier != token
+    ):
+        return _menu_source_review_mapping(identifier, source_kind, evidence)
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
@@ -7689,7 +7866,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
-    menu_entry = MENU_ACTION_REGISTRY.get(token)
+    # Exact source keys only. Raw Bot callbacks never reach a browser; this
+    # lookup records which frozen literal may begin a fresh Web navigation.
+    menu_entry = MENU_ACTION_REGISTRY.get(identifier)
     memory_navigation_entry = MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     marketing_navigation_entry = MARKETING_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     guided_start_navigation_entry = GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
@@ -8394,6 +8573,21 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    video_menu_source_review = VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.get(identifier)
+    if video_menu_source_review is not None:
+        return _menu_source_review_mapping(
+            identifier,
+            source_kind,
+            evidence,
+            contract=video_menu_source_review,
+        )
+    if identifier.startswith("menu|") and menu_entry is None and not telegram_only:
+        # Every remaining menu literal is source-review-only. In particular,
+        # do not let a name like ``admin``, ``video`` or ``back`` obtain a
+        # generic Admin/Dashboard route, history navigation or form reset.
+        # Existing canonical Bot-only actions retain TELEGRAM_ONLY precedence
+        # below; this audit must not erase a stricter source boundary.
+        return _menu_source_review_mapping(identifier, source_kind, evidence)
     if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
@@ -9725,7 +9919,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "coverage_comparability": {
                 "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
                 "feature_progress_claim": False,
-                "reason": "Schema 1.9 retains the 1.8 inventory corrections and adds bounded source-only coverage for frozen Audio Hub product-context helper callbacks, including source-local literal lambda actions, without inferring Bot state or Web behavior.",
+                "reason": "Schema 2.0 retains the 1.9 inventory corrections and replaces residual generic menu-to-Dashboard/Admin implications with exact, fail-closed menu source-review records, including the finite deferred Video menu/worker/status/admin-hint actions.",
                 "scope_changes": [
                     "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
                     "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -9736,6 +9930,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                     "Bot Audio Hub and suggest-music callbacks are source-review boundaries instead of keyword-derived Music/Video Web routes.",
                     "Frozen Audio Hub product-context helper calls and source-local literal/formatted lambda actions are inventoried as concrete or opaque three-segment evidence; dynamic context/state is never evaluated.",
                     "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
+                    "Residual menu callbacks are exact/case-sensitive source-review records instead of generic Dashboard/Admin navigation; six Video, worker, job-status and internal-command hints carry their own deferred boundary.",
                 ],
                 "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
             },
@@ -9761,7 +9956,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
                 "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
                 "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-                "Schema 1.9 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview and Audio Hub callback state, inventories bounded Audio Hub product-context helper evidence, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
+                "Schema 2.0 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview/Audio Hub/menu state, inventories bounded Audio Hub product-context helper evidence, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -10134,6 +10329,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED, BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED, VIDEO_MENU_LAST, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ]
         for source in sorted(GUIDED_VIDEO_MENU_DEFERRED_ACTIONS)
+    ]
+    video_menu_deferred_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            str(contract["resolution"]),
+            "NEEDS_FEATURE_DISPOSITION",
+            str(contract["classification"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items()
+    ] + [
+        [
+            "case variants, malformed values, suffixes or other menu|* values not in the finite catalog",
+            "MENU_SOURCE_REVIEW_REQUIRED",
+            "menu_callback_requires_finite_exact_web_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "customer",
+            ", ".join(MENU_SOURCE_REVIEW_BASE_DISPOSITIONS),
+        ],
     ]
     system_data_stewardship_contract_rows = [
         [
@@ -10556,6 +10771,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
+        + "- [`VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md`](VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md) — six residual Video/worker/status/admin-hint menu callbacks plus unknown menu values are fail-closed source-review boundaries; they never fall back to Dashboard/Admin/history/reset behavior.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot tax-menu dispositions: fresh canonical-admin guidance navigation with no finance data, calculation, export, file, ledger, payment or profile action replay.\n"
         + "- [`POSTBACK_READINESS_CALLBACK_CONTRACT.md`](POSTBACK_READINESS_CALLBACK_CONTRACT.md) — exact Bot postback-hint disposition: fresh canonical-admin readiness guidance only; configuration, connection material, ingress, attribution and financial effects stay Bot-canonical.\n"
@@ -10928,6 +11144,27 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\n`menu|guide_quick_start` starts the signed Web catalog at `/features`; it is navigation only, not a wizard execution. `menu|guide_faq` starts the signed Support Desk, which uses the Web account and owner-scoped ticket contract rather than a raw Telegram-ID field, Bot chat transcript, screenshot, refund request or status. The pre-existing image, music and canonical wallet navigation entries also begin fresh Web pages and carry no Telegram context.\n\n"
         "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They remain visible migration backlog records until the final finite Video menu phase can define an independently signed, owner-scoped Web contract without replaying the Bot state machine.\n",
+    )
+    write(
+        "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md",
+        "# Deferred Video menu callback contract\n\n"
+        "The frozen Bot routes every `menu|*` value through one Telegram dispatcher. That dispatcher can clear "
+        "pending/session state before it checks the caller and action. The standalone Web therefore never receives "
+        "a raw menu callback, Telegram identity, Bot message, pending value, media reference, worker state, job "
+        "identifier, command snippet, provider state, output, Xu/wallet/PayOS state or completion signal.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Web target/boundary", "Audit resolution", "Status", "Audience", "Required boundary"],
+            video_menu_deferred_contract_rows,
+        )
+        + "\n\nThe six exact entries above do **not** open `/dashboard`, `/video-studio`, `/jobs`, an Admin command page "
+        "or browser history/back/reset behavior. `menu|video_ai_true` only redraws child Telegram choices; "
+        "`menu|video_frame_intro` first checks Bot worker/readiness state; `menu|hint_video_status` refers to a "
+        "status button attached to the original Telegram job message; and the three internal hints only display "
+        "Bot command snippets. None proves a Web job, worker, provider, output or delivery contract.\n\n"
+        "A future final Video menu phase must start from a fresh signed Web draft and independently prove ownership, "
+        "role checks, CSRF/idempotency for writes, asset validation, provider/worker authorization, quote/confirmation, "
+        "canonical billing boundaries and verified private delivery. It must not replay a Bot callback, session, "
+        "message/job identifier or command text.\n",
     )
     write(
         "SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md",

@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Observed-runtime static Web-surface coverage: **40.71%**. Observed-runtime typed source-disposition coverage: **73.43%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
+Observed-runtime static Web-surface coverage: **38.84%**. Observed-runtime typed source-disposition coverage: **71.55%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |

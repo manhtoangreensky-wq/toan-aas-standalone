@@ -22,16 +22,16 @@
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-05-31\\files-mentioned-by-the-user-bot\\toanaas-hotfix-28ff87f"
   },
-  "generated_at_utc": "2026-07-23T08:13:37+00:00",
+  "generated_at_utc": "2026-07-23T09:21:13+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
     "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
     "Report/document text is sanitized for secret-shaped literals."
   ],
-  "schema_version": "1.9",
+  "schema_version": "2.0",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast111-audio-hub-callback-boundary"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast112-menu-callback-catalog"
   }
 }
