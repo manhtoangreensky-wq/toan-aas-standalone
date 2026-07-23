@@ -3849,11 +3849,12 @@ def test_postback_readiness_navigation_is_exact_and_never_becomes_a_configuratio
 
 
 def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_finance_adapter() -> None:
-    """Only reviewed tax-menu guidance can open the static canonical-admin page."""
+    """Only reviewed finance/tax guidance can open the static canonical-admin page."""
 
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
+        "menu|finance_help",
         "menu|finance_tax",
         "menu|tax_checklist",
         "menu|tax_custom_help",
@@ -3881,6 +3882,13 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
             "NO_RUNTIME_CLAIM",
         ):
             assert disposition in mapped["source_dispositions"]
+        if callback == "menu|finance_help":
+            assert "BOT_FINANCE_COMMAND_GUIDANCE_NOT_REPLAYED" in mapped["source_dispositions"]
+            assert "NO_BOT_FINANCE_COMMAND_TEXT_TRANSFER" in mapped["source_dispositions"]
+
+        case_variant = audit._map_callback(callback.upper(), "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert case_variant["target"] != "/admin/finance/tax-readiness"
+        assert case_variant["resolution"] != "reviewed_tax_accounting_guidance_fresh_web_navigation"
 
     # The frozen Bot classifies its entire tax_ family as admin-only. The
     # finite guidance list cannot turn calculation, profile or CSV branches
@@ -3919,14 +3927,23 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
             assert disposition in mapped["source_dispositions"]
         assert operation_disposition in mapped["source_dispositions"]
 
+        case_variant = audit._map_callback(token.upper(), "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert case_variant["target"] != "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+        assert case_variant["resolution"] != "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
+
     for token in (
+        "MENU|finance_help",
+        "menu|finance_help|future",
+        "menu|finance_overview",
+        "menu|finance_export",
+        "menu|finance_add_expense",
         "menu|finance_compliance",
         "archive|dept|tax_invoice",
         "menu|tax_future",
     ):
         assert token not in audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
         mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
-        if token.startswith("menu|tax_"):
+        if token.casefold().startswith("menu|tax_"):
             assert mapped["classification"] == "admin"
         assert mapped["target"] != "/admin/finance/tax-readiness"
         assert mapped["resolution"] != "reviewed_tax_accounting_guidance_fresh_web_navigation"

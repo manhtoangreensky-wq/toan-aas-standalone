@@ -133,12 +133,23 @@ def test_tax_readiness_audit_contract_is_finite_and_documents_the_no_transfer_bo
         audit.index("TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_BASE_DISPOSITIONS")
     ]
     for callback in (
+        "menu|finance_help",
         "menu|finance_tax",
         "menu|tax_checklist",
         "menu|tax_custom_help",
     ):
         assert callback in registry
-    for excluded in ("menu|tax_estimate", "menu|tax_config", "menu|tax_export", "menu|tax_export_custom_help", "menu|tax_export_month", "menu|tax_*"):
+    for excluded in (
+        "menu|finance_overview",
+        "menu|finance_export",
+        "menu|finance_add_expense",
+        "menu|tax_estimate",
+        "menu|tax_config",
+        "menu|tax_export",
+        "menu|tax_export_custom_help",
+        "menu|tax_export_month",
+        "menu|tax_*",
+    ):
         assert f'"{excluded}":' not in registry
 
     assert "TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS" in audit
@@ -150,5 +161,25 @@ def test_tax_readiness_audit_contract_is_finite_and_documents_the_no_transfer_bo
     for callback in ("menu|tax_export", "menu|tax_export_month", "menu|tax_export_custom_help"):
         assert callback in source_review_registry
 
-    assert "Separately guarded Tax Readiness & Accounting Guidance" in catalog
-    assert "fresh checklist/handoff guidance only" in catalog
+    tax_catalog = catalog[
+        catalog.index("## Separately guarded Tax Readiness & Accounting Guidance"):
+        catalog.index("## Separately guarded Postback Readiness")
+    ]
+    for callback in (
+        "menu|finance_help",
+        "menu|finance_tax",
+        "menu|tax_checklist",
+        "menu|tax_custom_help",
+    ):
+        assert f"`{callback}`" in tax_catalog
+    for excluded in (
+        "menu|finance_overview",
+        "menu|finance_export",
+        "menu|finance_add_expense",
+        "menu|tax_estimate",
+        "menu|tax_export",
+        "menu|tax_export_custom_help",
+    ):
+        assert f"`{excluded}`" not in tax_catalog
+    assert "no Bot command text" in tax_catalog
+    assert "fresh command/checklist guidance only" in tax_catalog

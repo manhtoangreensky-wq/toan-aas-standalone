@@ -18934,20 +18934,27 @@
         "file": "bot.py",
         "line": 121507
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
       "source": "menu|finance_help",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMMAND_GUIDANCE_NOT_REPLAYED",
+        "NO_BOT_FINANCE_COMMAND_TEXT_TRANSFER",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The Bot redraws static finance command guidance and its Telegram keyboard. The Web opens a separately authorized readiness guide only and receives no Bot command text, callback, Telegram identity, finance data, period, report, export, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness",
+      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
+      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
     },
     {
       "classification": "admin",
@@ -74100,7 +74107,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 93,
+      "count": 92,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -74703,7 +74710,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 1104,
+      "count": 1103,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -74712,7 +74719,7 @@
           "priority": "P0"
         },
         {
-          "count": 93,
+          "count": 92,
           "family": "menu",
           "priority": "P0"
         },
@@ -75005,12 +75012,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 72.76,
+  "mapping_coverage_percent": 72.79,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1574,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 808,
-    "NEEDS_FEATURE_DISPOSITION": 1104,
+    "NAVIGATION_ONLY": 809,
+    "NEEDS_FEATURE_DISPOSITION": 1103,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -75032,7 +75039,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 72.76,
+  "safe_disposition_coverage_percent": 72.79,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75042,13 +75049,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 2949,
+    "resolved_static_source_count": 2950,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 332,
-    "unresolved_source_count": 1104
+    "unresolved_source_count": 1103
   },
   "static_web_surface_coverage_percent": 38.84,
   "telegram_link_callback_contract": {
