@@ -1,6 +1,6 @@
 # Telegram bot inventory
 
-Discovered `773` registered commands, `54` callback-handler registrations, `2841` concrete callback-data values, and `283` unresolved callback templates from static source. A handler registration is dispatcher evidence, not one customer action. `57` records belong to the legacy `handlers/` package outside the observed `bot.py` import closure and stay evidence-only.
+Discovered `773` registered commands, `54` callback-handler registrations, `2862` concrete callback-data values, and `475` unresolved callback templates from static source. A handler registration is dispatcher evidence, not one customer action. `57` records belong to the legacy `handlers/` package outside the observed `bot.py` import closure and stay evidence-only.
 
 Excluded clearly named Bot drafts: `code hoàn chỉnh của claude.py`, `config/pricing_matrix_draft.json`, `docs/BACKUP_AND_RECOVERY.md`, `nháp 2.py`.
 

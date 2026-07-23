@@ -34,7 +34,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.7"
+SCHEMA_VERSION = "1.9"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -2652,6 +2652,39 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_dispositions": ("BOT_MEDIA_PREVIEW_CACHE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
         "source_evidence": "Bot preview buttons resolve a short-lived per-user cache, deliver media or guidance through Telegram, and can mutate Bot selected-media state for later Bot-only workflows.",
     },
+    "audio_hub": {
+        "priority": "P0",
+        "candidate_boundary": "separate signed Web Audio Hub draft, owner-scoped assets and independently authorized execution contract",
+        "authority": "Canonical Bot Telegram audio product context, pending/cache/profile/video-finalization state and delivery boundary",
+        "next_contract": "The broad music_quick/sfx_quick/media_quick dispatcher must remain outside browser routing. A future Web Audio Hub must begin with a fresh signed Web draft and owner-scoped Web assets, then separately review provider/catalog, quote, confirmation, job, output and delivery behavior; never accept or replay a Bot callback, pending record, cache index, profile ID or video-finalization state.",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_AUDIO_PRODUCT_CONTEXT_AND_PENDING_STATE",
+            "BOT_MUSIC_SFX_MEDIA_CACHE_OR_SELECTED_STATE",
+            "BOT_VOICE_PROFILE_OR_VIDEO_FINALIZATION_STATE",
+            "CANONICAL_BOT_PROVIDER_WALLET_OR_TELEGRAM_DELIVERY_BOUNDARY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen music_quick/sfx_quick/media_quick dispatcher first enters per-Telegram-user product context, then can mutate guided prompt/voice/video state, use per-user catalog caches, create/use voice profiles, invoke providers, charge a voice-profile save or send Telegram media.",
+    },
+    "suggest_music": {
+        "priority": "P1",
+        "candidate_boundary": "fresh Web-native music-direction preset catalog with server-owned fixed hints",
+        "authority": "Bot Telegram preset-to-keyword reply guidance; separate Web-native text planning only",
+        "next_contract": "The five known suggest_music presets are Bot text guidance, not browser callbacks. A future Web entry may offer its own reviewed static music-direction preset catalog without accepting or forwarding a Bot callback/token/keyword; it must remain separate from provider catalog, playback, selection, wallet, job and delivery behavior.",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE",
+            "TELEGRAM_CHAT_GUIDANCE",
+            "EXACT_SOURCE_GRAMMAR_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen suggest_music handler parses a Telegram callback preset and replies with a Bot /music_library search instruction. Unknown/suffixed callback values fall back to a default keyword, so the raw payload is not a stable Web intent or catalog request.",
+    },
     "pkgbuy": {
         "priority": "P0",
         "candidate_boundary": "fresh /packages catalog navigation or canonical Bot package checkout",
@@ -3364,6 +3397,32 @@ CALLBACK_TEMPLATE_TOKEN_RE = re.compile(
     rf"^{CALLBACK_TEMPLATE_SEGMENT_RE}(?:[|:]{CALLBACK_TEMPLATE_SEGMENT_RE})+$"
 )
 CALLBACK_TEMPLATE_FORMATTED_VALUE_RE = re.compile(r"\{[^{}]*\}")
+# The frozen Bot builds most Audio Hub buttons through this one helper instead
+# of spelling ``callback_data=...`` at each button.  Its implementation is
+# deliberately simple and known from the frozen baseline:
+# ``product_context_callback(namespace, context, action)`` returns exactly
+# ``namespace|normalize_product_context(context)|action``.  The bounded static
+# resolver below reads only literal namespaces, frozen context constants and
+# literal/formatted action shapes; it never evaluates ``ctx``, a lambda, a
+# product context normalizer or any Bot state.
+AUDIO_HUB_PRODUCT_CONTEXT_CALLBACK_RE = re.compile(
+    r"\bproduct_context_callback\s*\(\s*"
+    r"(?P<namespace_quote>['\"])(?P<namespace>music_quick|sfx_quick|media_quick)(?P=namespace_quote)\s*,\s*"
+    r"(?P<context>[^,\r\n]{1,160}?)\s*,\s*(?P<action>[^)\r\n]{1,240}?)\s*\)",
+    re.IGNORECASE,
+)
+AUDIO_HUB_PRODUCT_CONTEXT_LAMBDA_RE = re.compile(
+    r"(?m)^(?P<indent>[ \t]*)(?P<alias>[A-Za-z_]\w*)\s*=\s*lambda\s+"
+    r"(?P<argument>[A-Za-z_]\w*)\s*:\s*product_context_callback\s*\(\s*"
+    r"(?P<namespace_quote>['\"])(?P<namespace>music_quick|sfx_quick|media_quick)(?P=namespace_quote)\s*,\s*"
+    r"(?P<context>[^,\r\n]{1,160}?)\s*,\s*(?P=argument)\s*\)",
+    re.IGNORECASE,
+)
+AUDIO_HUB_FROZEN_CONTEXT_CONSTANTS = {
+    "PRODUCT_CONTEXT_SHOWROOM": "showroom",
+    "PRODUCT_CONTEXT_VIDEO_ADDON": "video_addon",
+}
+AUDIO_HUB_LITERAL_SEGMENT_RE = re.compile(r"(?P<quote>['\"])(?P<value>[A-Za-z0-9_.:-]+)(?P=quote)$")
 # The three helpers below deliberately share the same reviewed, literal Web
 # planner prefixes.  Their raw f-string callback templates remain in the
 # inventory, but a source-only pass may derive the two concrete callback
@@ -4056,6 +4115,212 @@ def _guided_video_helper_tokens(helper: str, template: str, prefixes: set[str]) 
     return [(prefix, template.replace("{*}", prefix, 1)) for prefix in sorted(prefixes)]
 
 
+def _audio_hub_literal_segment(expression: str) -> str | None:
+    """Return one safely quoted callback segment without evaluating source."""
+
+    match = AUDIO_HUB_LITERAL_SEGMENT_RE.fullmatch(str(expression or "").strip())
+    return str(match.group("value")) if match else None
+
+
+def _audio_hub_frozen_context(expression: str) -> str | None:
+    """Recognize only the two frozen canonical context constants/literals."""
+
+    raw = str(expression or "").strip()
+    if raw in AUDIO_HUB_FROZEN_CONTEXT_CONSTANTS:
+        return AUDIO_HUB_FROZEN_CONTEXT_CONSTANTS[raw]
+    literal = _audio_hub_literal_segment(raw)
+    return literal if literal in set(AUDIO_HUB_FROZEN_CONTEXT_CONSTANTS.values()) else None
+
+
+def _audio_hub_action_template(expression: str) -> tuple[str, bool]:
+    """Return a literal/formatted action shape, never a source value.
+
+    A formatted action is retained only as an opaque ``{*}`` template.  This
+    lets the audit show the real source shape (for example
+    ``voice_profile_select:{*}``) without exposing or deriving a profile id.
+    Any other expression remains one fully opaque action segment.
+    """
+
+    raw = str(expression or "").strip()
+    literal = _audio_hub_literal_segment(raw)
+    if literal is not None:
+        return literal, False
+    formatted = re.fullmatch(r"f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)", raw)
+    if formatted:
+        template = CALLBACK_TEMPLATE_FORMATTED_VALUE_RE.sub("{*}", str(formatted.group("body") or ""))
+        return template, True
+    return "{*}", False
+
+
+def _append_reviewed_audio_hub_product_context_callback(
+    *,
+    namespace: str,
+    context_expression: str,
+    action_expression: str,
+    root: Path,
+    path: Path,
+    line: int,
+    callback_templates: list[dict[str, Any]],
+    callback_data: list[dict[str, Any]],
+    seen: dict[str, set[tuple[Any, ...]]],
+    origin: str,
+    lambda_alias: str | None = None,
+    lambda_definition_line: int | None = None,
+) -> None:
+    """Record one frozen Audio Hub helper shape as source-review evidence.
+
+    This deliberately does not call ``normalize_product_context`` or inspect
+    any runtime object.  A concrete callback is emitted only when both the
+    frozen context and action are literal.  Every partial/dynamic call stays a
+    three-segment opaque template and therefore enters the existing fail-closed
+    Audio Hub disposition rather than a generic Web route.
+    """
+
+    normalized_namespace = str(namespace or "").casefold()
+    if normalized_namespace not in {"music_quick", "sfx_quick", "media_quick"}:
+        return
+    context = _audio_hub_frozen_context(context_expression)
+    action, action_is_formatted = _audio_hub_action_template(action_expression)
+    literal_action = _audio_hub_literal_segment(action_expression)
+    relative_path = _relative(path, root)
+    common = {
+        "resolution": "reviewed_audio_hub_product_context_callback_source_shape",
+        "helper": "product_context_callback",
+        "origin": origin,
+        "literal_namespace": normalized_namespace,
+        "frozen_context": context,
+        "context_is_frozen_static": context is not None,
+        "action_is_literal": literal_action is not None,
+        "action_is_formatted_template": action_is_formatted,
+        "file": relative_path,
+        "line": int(line),
+    }
+    if lambda_alias is not None:
+        common["lambda_alias"] = lambda_alias
+    if lambda_definition_line is not None:
+        common["lambda_definition_line"] = int(lambda_definition_line)
+
+    if context is not None and literal_action is not None:
+        token = f"{normalized_namespace}|{context}|{literal_action}"
+        if CALLBACK_LITERAL_TOKEN_RE.fullmatch(token):
+            _append_unique(
+                callback_data,
+                seen["callback_data"],
+                {"token": token, **common},
+                ("token", "file", "line"),
+            )
+            return
+
+    template = f"{normalized_namespace}|{context or '{*}'}|{action}"
+    # A malformed/unknown action expression must not accidentally become a
+    # structured callback template.  Keep a valid fully opaque family marker
+    # instead; it remains source-review-required and has no Web behavior.
+    if not CALLBACK_TEMPLATE_TOKEN_RE.fullmatch(template):
+        template = f"{normalized_namespace}|{{*}}|{{*}}"
+    _append_unique(
+        callback_templates,
+        seen["callback_template"],
+        {"template": template, **common},
+        ("template", "file", "line"),
+    )
+
+
+def _resolve_reviewed_audio_hub_product_context_callbacks(
+    *,
+    text: str,
+    root: Path,
+    path: Path,
+    callback_templates: list[dict[str, Any]],
+    callback_data: list[dict[str, Any]],
+    seen: dict[str, set[tuple[Any, ...]]],
+) -> None:
+    """Inventory the frozen Audio Hub helper without symbolic execution.
+
+    The monolithic Bot uses ``product_context_callback`` both directly and
+    through local ``lambda action`` aliases.  Direct calls derive a concrete
+    three-segment token only for literal context/action values.  For a local
+    lambda, literal/formatted calls in the same function body contribute an
+    opaque action template; a dynamic context remains ``{*}``.  The pass never
+    follows variables, calls the normalizer, imports Bot code, or crosses a
+    function boundary.
+    """
+
+    for match in AUDIO_HUB_PRODUCT_CONTEXT_CALLBACK_RE.finditer(text):
+        _append_reviewed_audio_hub_product_context_callback(
+            namespace=str(match.group("namespace") or ""),
+            context_expression=str(match.group("context") or ""),
+            action_expression=str(match.group("action") or ""),
+            root=root,
+            path=path,
+            line=_line_for_offset(text, match.start()),
+            callback_templates=callback_templates,
+            callback_data=callback_data,
+            seen=seen,
+            origin="direct_product_context_callback",
+        )
+
+    definitions = list(FUNCTION_DEFINITION_RE.finditer(text))
+    if not definitions:
+        return
+    for lambda_match in AUDIO_HUB_PRODUCT_CONTEXT_LAMBDA_RE.finditer(text):
+        containing_index = next(
+            (
+                index
+                for index in range(len(definitions) - 1, -1, -1)
+                if definitions[index].start() <= lambda_match.start()
+            ),
+            None,
+        )
+        if containing_index is None:
+            continue
+        body_end = (
+            definitions[containing_index + 1].start()
+            if containing_index + 1 < len(definitions)
+            else len(text)
+        )
+        scope = text[lambda_match.end():body_end]
+        alias = str(lambda_match.group("alias") or "")
+        if not alias:
+            continue
+        literal_call_re = re.compile(
+            rf"(?<![A-Za-z0-9_]){re.escape(alias)}\s*\(\s*(?P<quote>['\"])(?P<action>[A-Za-z0-9_.:-]+)(?P=quote)\s*\)"
+        )
+        formatted_call_re = re.compile(
+            rf"(?<![A-Za-z0-9_]){re.escape(alias)}\s*\(\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)\s*\)"
+        )
+        lambda_line = _line_for_offset(text, lambda_match.start())
+        for call in literal_call_re.finditer(scope):
+            _append_reviewed_audio_hub_product_context_callback(
+                namespace=str(lambda_match.group("namespace") or ""),
+                context_expression=str(lambda_match.group("context") or ""),
+                action_expression=f'"{str(call.group("action") or "")}"',
+                root=root,
+                path=path,
+                line=_line_for_offset(text, lambda_match.end() + call.start()),
+                callback_templates=callback_templates,
+                callback_data=callback_data,
+                seen=seen,
+                origin="source_local_audio_hub_lambda_literal_action",
+                lambda_alias=alias,
+                lambda_definition_line=lambda_line,
+            )
+        for call in formatted_call_re.finditer(scope):
+            _append_reviewed_audio_hub_product_context_callback(
+                namespace=str(lambda_match.group("namespace") or ""),
+                context_expression=str(lambda_match.group("context") or ""),
+                action_expression=f'f"{str(call.group("body") or "")}"',
+                root=root,
+                path=path,
+                line=_line_for_offset(text, lambda_match.end() + call.start()),
+                callback_templates=callback_templates,
+                callback_data=callback_data,
+                seen=seen,
+                origin="source_local_audio_hub_lambda_formatted_action",
+                lambda_alias=alias,
+                lambda_definition_line=lambda_line,
+            )
+
+
 def _resolve_reviewed_guided_video_helper_callbacks(
     *,
     text: str,
@@ -4389,6 +4654,14 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
     for path in files:
         if path.suffix.lower() != ".py":
             continue
+        _resolve_reviewed_audio_hub_product_context_callbacks(
+            text=_read_source(path),
+            root=root,
+            path=path,
+            callback_templates=callback_templates,
+            callback_data=callback_data,
+            seen=seen,
+        )
         _resolve_reviewed_guided_video_helper_callbacks(
             text=_read_source(path),
             root=root,
@@ -6188,6 +6461,109 @@ def _map_media_selection_callback(
     return _media_selection_source_review_mapping(identifier, source_kind, evidence)
 
 
+AUDIO_HUB_CALLBACK_PREFIXES = ("music_quick|", "sfx_quick|", "media_quick|")
+SUGGEST_MUSIC_CALLBACK_PREFIX = "suggest_music|"
+
+
+def _audio_hub_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep the broad Bot Audio Hub dispatcher out of generic Web routing.
+
+    ``music_quick|*``, ``sfx_quick|*`` and ``media_quick|*`` share one
+    Telegram dispatcher.  It enters Bot product context before branching and
+    can later use per-user pending/cache/profile/video-finalization state,
+    provider paths, canonical Xu, or Telegram delivery.  A label such as
+    ``music`` or ``trend`` therefore cannot safely imply a browser Music or
+    Video route.
+
+    ``suggest_music|*`` is intentionally represented separately below.  Its
+    known values are Bot text guidance, but the raw callback still is not a
+    Web preset parameter, navigation request or provider/catalog action.
+    """
+
+    token = str(identifier or "").casefold()
+    is_suggestion = token.startswith(SUGGEST_MUSIC_CALLBACK_PREFIX)
+    if is_suggestion:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "suggest_music_callback_requires_fresh_web_native_preset_contract",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE",
+                "TELEGRAM_CHAT_GUIDANCE",
+                "EXACT_SOURCE_GRAMMAR_REQUIRED",
+                "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+                "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING",
+                "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION",
+                "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for "
+                "the Bot /music_library command. Its five known presets are not Web route identifiers, while an "
+                "unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The standalone "
+                "Web has no endpoint that accepts or forwards this callback/keyword to a catalog, provider, playback, "
+                "selection, wallet, job or delivery action."
+            ),
+            "evidence": evidence,
+        }
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "AUDIO_HUB_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "audio_hub_callback_requires_web_native_owner_asset_execution_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_AUDIO_PRODUCT_CONTEXT_AND_PENDING_STATE",
+            "BOT_MUSIC_SFX_MEDIA_CACHE_OR_SELECTED_STATE",
+            "BOT_VOICE_PROFILE_OR_VIDEO_FINALIZATION_STATE",
+            "CANONICAL_BOT_PROVIDER_WALLET_OR_TELEGRAM_DELIVERY_BOUNDARY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_BOT_AUDIO_STATE_CACHE_PROFILE_OR_VIDEO_FINALIZATION_REPLAY",
+            "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot music_quick/sfx_quick/media_quick dispatcher binds the callback to a Telegram caller and "
+            "enters product context before parsing the action. Its branches can set/clear guided pending input, save "
+            "prompt or selected-media state, use short-lived per-user music/SFX/media caches, mutate a Video Finishing "
+            "session, operate on voice-profile identifiers, call provider/catalog paths, charge a voice-profile save or "
+            "deliver media in Telegram. The standalone Web has no adapter that accepts or replays the callback, Bot "
+            "pending/cache/profile/finalization state, provider result, canonical Xu action or Telegram delivery state."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_audio_hub_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Fail closed for all Bot Audio Hub and suggestion callback values.
+
+    Case variants, missing tokens, suffixes and future values are deliberately
+    caught as source-review records too.  Raw Bot callbacks must never inherit
+    a generic keyword-derived Web feature route.
+    """
+
+    token = str(identifier or "").casefold()
+    if not token.startswith((*AUDIO_HUB_CALLBACK_PREFIXES, SUGGEST_MUSIC_CALLBACK_PREFIX)):
+        return None
+    return _audio_hub_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -7293,6 +7669,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     media_selection_mapping = _map_media_selection_callback(identifier, source_kind, evidence)
     if media_selection_mapping is not None:
         return media_selection_mapping
+    audio_hub_mapping = _map_audio_hub_callback(identifier, source_kind, evidence)
+    if audio_hub_mapping is not None:
+        return audio_hub_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8545,6 +8924,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     support_ticket_mapping = _map_support_ticket_callback(template, "callback_template", evidence)
     if support_ticket_mapping is not None:
         return support_ticket_mapping
+    audio_hub_mapping = _map_audio_hub_callback(template, "callback_template", evidence)
+    if audio_hub_mapping is not None:
+        return audio_hub_mapping
     workboard_task_mapping = _map_workboard_task_callback(template, "callback_template", evidence)
     if workboard_task_mapping is not None:
         return workboard_task_mapping
@@ -9020,6 +9402,10 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
     lowered = source.casefold()
     if lowered in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS:
         return "media_preview"
+    if lowered.startswith(AUDIO_HUB_CALLBACK_PREFIXES):
+        return "audio_hub"
+    if lowered.startswith(SUGGEST_MUSIC_CALLBACK_PREFIX):
+        return "suggest_music"
     if lowered == "menu_affiliate" or lowered.startswith("affiliate_"):
         return "affiliate"
     if lowered == "menu_freelance" or lowered.startswith("freelance_"):
@@ -9339,7 +9725,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "coverage_comparability": {
                 "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
                 "feature_progress_claim": False,
-                "reason": "Schema 1.7 retains the 1.6 inventory corrections and records the finite Free Hub prompt-library category template as fresh signed Gallery navigation only; its Bot suggestion and pending state are not Web contracts.",
+                "reason": "Schema 1.9 retains the 1.8 inventory corrections and adds bounded source-only coverage for frozen Audio Hub product-context helper callbacks, including source-local literal lambda actions, without inferring Bot state or Web behavior.",
                 "scope_changes": [
                     "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
                     "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -9347,6 +9733,8 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                     "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
                     "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
                     "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
+                    "Bot Audio Hub and suggest-music callbacks are source-review boundaries instead of keyword-derived Music/Video Web routes.",
+                    "Frozen Audio Hub product-context helper calls and source-local literal/formatted lambda actions are inventoried as concrete or opaque three-segment evidence; dynamic context/state is never evaluated.",
                     "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
                 ],
                 "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
@@ -9373,7 +9761,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
                 "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
                 "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-                "Schema 1.7 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
+                "Schema 1.9 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview and Audio Hub callback state, inventories bounded Audio Hub product-context helper evidence, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -9477,6 +9865,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ", ".join(str(value) for value in policy["source_dispositions"]),
         ]
         for source, policy in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS.items()
+    ]
+    audio_hub_contract_rows = [
+        [
+            "music_quick|*, sfx_quick|*, media_quick|* (all literals and templates, including case variants, suffixes and future actions)",
+            "AUDIO_HUB_SOURCE_REVIEW_REQUIRED",
+            "audio_hub_callback_requires_web_native_owner_asset_execution_contract",
+            "Telegram product context plus pending prompt/voice state, per-user music/SFX/media cache or selected state, voice-profile/video-finalization state and possible provider/Xu/Telegram-delivery branches",
+        ],
+        [
+            "suggest_music|sales, suggest_music|tech, suggest_music|cinematic, suggest_music|review, suggest_music|trend",
+            "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
+            "suggest_music_callback_requires_fresh_web_native_preset_contract",
+            "Bot text-only preset-to-keyword guidance; a future Web preset must be a fresh server-owned catalog, not raw callback/keyword forwarding",
+        ],
+        [
+            "case variants, missing tokens, suffixes or other suggest_music|* values",
+            "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
+            "suggest_music_callback_requires_fresh_web_native_preset_contract",
+            "unknown Bot values fall back to a default keyword, so they are not stable Web intent/catalog/provider inputs",
+        ],
     ]
     payos_alert_contract_rows = [
         [
@@ -10130,6 +10538,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md) — finite Bot document command entrypoints that only open fresh signed Web-native document pages; no Bot state or raw API is replayed.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
+        + "- [`AUDIO_HUB_CALLBACK_CONTRACT.md`](AUDIO_HUB_CALLBACK_CONTRACT.md) — Bot Audio Hub and suggestion callbacks remain source-review boundaries; no product context, cache, voice/video state, keyword or Telegram action becomes generic Web navigation.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — exact Bot-admin Billing menu disposition; it may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
@@ -10218,6 +10627,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             media_preview_contract_rows,
         )
         + "\n\nOnly the exact reviewed templates in this table stay `TELEGRAM_ONLY`. Case variants, missing tokens, suffixes and future `license_music|*`, `play_media|*` or `select_media|*` values resolve to `MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED`; they cannot open `/media-workspace`, navigate/reset the browser, replay a Bot cache index or selected state, invoke a provider/library action, send Telegram delivery, claim license clearance, or create a job/payment/output. A future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference.\n",
+    )
+    write(
+        "AUDIO_HUB_CALLBACK_CONTRACT.md",
+        "# Audio Hub and music-suggestion callback contract\n\n"
+        "The frozen Bot owns four related Telegram callback namespaces: `music_quick|*`, `sfx_quick|*`, `media_quick|*` and `suggest_music|*`. They are not browser controls. The first three are one broad stateful dispatcher: it enters Telegram product context before branching and can set/clear pending input, retain prompt or selected-media state, use short-lived user-scoped music/SFX/media caches, mutate Video Finishing or voice-profile state, enter provider/catalog paths, charge a voice-profile save, or send media in Telegram. Most buttons are built through the frozen `product_context_callback(namespace, context, action)` helper, whose emitted shape is `namespace|normalized-context|action`; the static audit records only its literal source shapes and keeps dynamic context/action values opaque. A callback label such as `music`, `media`, `trend` or `voice` therefore cannot safely infer a Web Music, Video, Voice or Media Workspace route.\n\n"
+        "`suggest_music|sales|tech|cinematic|review|trend` is narrower: it only returns a Bot text instruction containing a fixed `/music_library` keyword. It still is not a Web navigation parameter, catalog query, provider request or playback/selection command. Unknown, suffixed and case-variant values are not stable Web intent because the Bot handler falls back to a default keyword.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
+            audio_hub_contract_rows,
+        )
+        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The existing signed `/media-workspace/music-prompt-composer` is an independent deterministic text-planning surface entered fresh by a Web user. It accepts neither a Bot callback nor Bot keyword/state, and it does not create audio, a provider request, a job, an asset, a payment or a delivery. A future Web Audio Hub or preset catalog must start from its own signed owner-scoped data and separately reviewed execution contract.\n",
     )
     write(
         "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",
@@ -10760,6 +11180,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "The Bot `pipe|*` and `task|*` callbacks are Telegram-admin transitions over canonical production job/task rows. A Web Workboard must use independently authorized Web work records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, job/task identifier, stage/status or handoff value. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         + "\n\n## Bot Creative variant callback boundary\n\n"
         + "The Bot `creative|*` callback is a Telegram-admin selection transition over canonical creative-variant and production-job rows. A Web Creative Studio must use independently authorized Web records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, variant identifier, selected state, production update or handoff value. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
+        + "\n\n## Bot Audio Hub callback boundary\n\n"
+        + "The Bot `music_quick|*`, `sfx_quick|*` and `media_quick|*` callbacks are a Telegram state machine over product context, guided pending input, music/SFX/media caches, selected media, voice-profile and Video Finishing state. A Web Audio Hub must start from Web-owned owner-scoped data and never accepts/replays a Bot callback, cache index, profile ID, finalization value or keyword. `suggest_music|*` is Bot reply guidance only, not a browser preset. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         + "\n\n## Additive Web-native Video Poster state\n\n"
         + "| Table | Owner | Purpose | Explicitly not authoritative for |\n"
         + "| --- | --- | --- | --- |\n"
@@ -10780,6 +11202,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Audio Hub callbacks are a Telegram state-machine boundary: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is only Bot keyword guidance. None may route/replay into Web; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. Web must not route or replay them; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks are Telegram-admin creative-selection controls: `creative|*` can select a canonical variant, clear sibling selection and update linked production job state. Web must not route or replay them; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
@@ -10927,6 +11350,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. No callback may open `/image` or invoke Web provider/job/wallet/payment/output/delivery behavior; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Audio Hub callbacks stay outside the Web route layer: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. No callback may open a Web support/ticket/Admin route or invoke Web ticket/ledger/delivery behavior; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks stay outside the Web route layer: `creative|*` requires Bot-admin Telegram identity and can select a canonical creative variant, clear sibling selection and update linked production job state. No callback may open `/content-studio` or an Admin route or invoke Web creative/job/provider/output/ledger/delivery behavior; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
