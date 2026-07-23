@@ -97,14 +97,19 @@ or become a browser-side control.
 
 The following finite administrative buttons remain private to the static
 auditor. They only open a fresh, literal guidance page after the canonical
-signed-admin route check. They do not pass a Telegram identity, finance row,
-tax profile, period, calculation, report, CSV/file, payment reference, Xu
-ledger, PayOS state, provider state, archive row or delivery state to the
-browser.
+signed-admin route check. They do not pass a Telegram identity, Bot command
+text, finance row, tax profile, period, calculation, report, CSV/file, payment
+reference, Xu ledger, PayOS state, provider state, archive row or delivery
+state to the browser.
 
 | Bot source action | Web destination | Web authority | Boundary preserved |
 | --- | --- | --- | --- |
-| `menu|finance_tax`, `menu|tax_checklist`, `menu|tax_export`, `menu|tax_custom_help`, `menu|tax_export_custom_help` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh checklist/handoff guidance only; no calculation, finance read, export/file, tax profile/compliance mutation, payment/ledger/provider action or runtime claim |
+| `menu|finance_help`, `menu|finance_tax`, `menu|tax_checklist`, `menu|tax_custom_help` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh command/checklist guidance only; no Bot command text, calculation, finance read, export/file, tax profile/compliance mutation, payment/ledger/provider action or runtime claim |
+
+The four literals above are the complete allow-list. Every other
+`menu|finance_*` or `menu|tax_*` value, including case variants, suffixes,
+period selectors and export actions, remains fail-closed and cannot inherit
+this route.
 
 ## Separately guarded Postback Readiness
 
@@ -153,7 +158,7 @@ is generated in `BILLING_MENU_CALLBACK_CONTRACT.md`.
   or Asset Vault retention.
 - `menu|tax_estimate`, `menu|tax_config`, period-specific tax estimate/export
   actions, `finance_compliance*`, `archive|dept|tax_invoice`, every other
-  `menu|tax_*` value and `menu|clear_stale_jobs_help` remain
+  `menu|finance_*` or `menu|tax_*` value and `menu|clear_stale_jobs_help` remain
   outside this catalog. They need separate canonical finance/job/private-file
   contracts and never inherit a browser route from a namespace or label.
 - Translation, payment/admin writes, provider controls and any other dynamic
