@@ -413,6 +413,14 @@ AUTH_CREDENTIAL_BODY_MAX_BYTES = 8 * 1024
 # forms and reject it before JSON/Pydantic/SQLite handling.
 INTERFACE_LOCALE_BODY_MAX_BYTES = 2 * 1024
 INTERFACE_LOCALE_API_PATH = "/api/v1/auth/profile/interface-locale"
+# Consultation Brief accepts three bounded text fields only. Count the raw
+# ASGI stream before CSRF/Pydantic parsing so a signed request cannot turn its
+# transient, non-persistent preview route into an oversized-body sink.
+SUPPORT_CONSULTATION_BRIEF_BODY_MAX_BYTES = 16 * 1024
+SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS = frozenset({
+    "/api/v1/support/consultation-brief/compose",
+    "/api/v1/support/consultation-brief/compose/",
+})
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -464,6 +472,7 @@ class PromptLibraryBodyLimitMiddleware:
         admin_document_archive_upload_max_bytes: int = ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
         auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
         interface_locale_max_bytes: int = INTERFACE_LOCALE_BODY_MAX_BYTES,
+        support_consultation_brief_max_bytes: int = SUPPORT_CONSULTATION_BRIEF_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -502,6 +511,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.admin_document_archive_upload_max_bytes = int(admin_document_archive_upload_max_bytes)
         self.auth_credential_max_bytes = int(auth_credential_max_bytes)
         self.interface_locale_max_bytes = int(interface_locale_max_bytes)
+        self.support_consultation_brief_max_bytes = int(support_consultation_brief_max_bytes)
 
     @staticmethod
     def _is_admin_document_archive_upload_path(path: str) -> bool:
@@ -557,6 +567,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/admin/governance/")
                 or PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(path)
                 or path == INTERFACE_LOCALE_API_PATH
+                or path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
                 or path in {
                     "/api/v1/auth/login",
                     "/api/v1/auth/register",
@@ -642,6 +653,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.governance_max_bytes
         if path == INTERFACE_LOCALE_API_PATH:
             return self.interface_locale_max_bytes
+        if path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS:
+            return self.support_consultation_brief_max_bytes
         if path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -698,6 +711,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_governance = path.startswith("/api/v1/admin/governance/")
         is_admin_document_archive_upload = self._is_admin_document_archive_upload_path(path)
         is_interface_locale = path == INTERFACE_LOCALE_API_PATH
+        is_support_consultation_brief = path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
         is_auth_credential = path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -718,7 +732,17 @@ class PromptLibraryBodyLimitMiddleware:
         # This route family is authoring-only.  Include the explicit boundary
         # even on an early raw-body rejection, before its router can run.
         boundary = (
-            copyfast_prompt_studio._boundary()
+            {
+                "catalog_version": copyfast_support.CONSULTATION_BRIEF_CATALOG_VERSION,
+                "boundaries": dict(copyfast_support.CONSULTATION_BRIEF_BOUNDARIES),
+                "case_created": False,
+                "input_persisted": False,
+                "delivery": "web_view_only",
+                "persistence": "none",
+                "automation": "none",
+            }
+            if is_support_consultation_brief
+            else copyfast_prompt_studio._boundary()
             if is_prompt_studio
             else copyfast_content_handoff._boundary(record_persisted=False)
             if is_content_handoff
@@ -760,7 +784,9 @@ class PromptLibraryBodyLimitMiddleware:
             envelope(
                 False,
                 (
-                    "Lựa chọn ngôn ngữ giao diện vượt giới hạn kích thước an toàn."
+                    "Bản nháp tư vấn vượt giới hạn kích thước an toàn."
+                    if is_support_consultation_brief
+                    else "Lựa chọn ngôn ngữ giao diện vượt giới hạn kích thước an toàn."
                     if is_interface_locale
                     else "Thông tin đăng nhập vượt giới hạn kích thước an toàn."
                     if is_auth_credential
@@ -837,7 +863,9 @@ class PromptLibraryBodyLimitMiddleware:
                 data=boundary,
                 status_name="guarded",
                 error_code=(
-                    "WEB_INTERFACE_LOCALE_BODY_TOO_LARGE"
+                    "WEB_SUPPORT_CONSULTATION_BRIEF_BODY_TOO_LARGE"
+                    if is_support_consultation_brief
+                    else "WEB_INTERFACE_LOCALE_BODY_TOO_LARGE"
                     if is_interface_locale
                     else "WEB_AUTH_CREDENTIAL_BODY_TOO_LARGE"
                     if is_auth_credential
@@ -1042,6 +1070,7 @@ app.add_middleware(
     admin_document_archive_upload_max_bytes=ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
     auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
     interface_locale_max_bytes=INTERFACE_LOCALE_BODY_MAX_BYTES,
+    support_consultation_brief_max_bytes=SUPPORT_CONSULTATION_BRIEF_BODY_MAX_BYTES,
 )
 
 
@@ -1504,6 +1533,14 @@ async def security_headers(request: Request, call_next):
     # checks and does not affect the legacy Bot bridge ticket endpoint.
     support_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/cases")
     support_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/admin/cases")
+    # Consultation Brief only returns a transient, Web-owned draft, but it
+    # still accepts bounded signed input. Give its exact route a fixed bucket
+    # so malformed requests and trailing-slash redirects cannot allocate an
+    # unbounded rate-key family before CSRF/Pydantic validation.
+    support_consultation_compose = request.method == "POST" and request.url.path in {
+        "/api/v1/support/consultation-brief/compose",
+        "/api/v1/support/consultation-brief/compose/",
+    }
     operations_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/approvals/")
     reliability_followup_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/followups/")
     reliability_followup_read = request.method == "GET" and (
@@ -1665,6 +1702,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if support_admin_write:
         rate_limit = 30
+    if support_consultation_compose:
+        rate_limit = 30
     if operations_admin_write:
         rate_limit = 20
     if reliability_followup_write:
@@ -1755,6 +1794,7 @@ async def security_headers(request: Request, call_next):
             else "video-operation-read" if video_operation_read
             else "frame-video-operation-read" if frame_video_operation_read
             else "video-transform-operation-read" if video_transform_operation_read
+            else "support-consultation-brief-compose" if support_consultation_compose
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"

@@ -7655,6 +7655,24 @@
       supportAdvisorSelection: SUPPORT_CASE_CATEGORIES.some(([key]) => key === String(source.supportAdvisorSelection || "").trim().toLowerCase())
         ? String(source.supportAdvisorSelection).trim().toLowerCase()
         : "general_support",
+      // Consultation Brief is an ephemeral signed-page projection. The
+      // renderer and integration both re-validate its closed catalog/preview
+      // before displaying or handing anything to the normal case form.
+      supportConsultationCatalog: source.supportConsultationCatalog && typeof source.supportConsultationCatalog === "object" && !Array.isArray(source.supportConsultationCatalog)
+        ? source.supportConsultationCatalog
+        : {},
+      supportConsultationReadState: ["idle", "loading", "ready", "guarded"].includes(String(source.supportConsultationReadState || ""))
+        ? String(source.supportConsultationReadState)
+        : "guarded",
+      supportConsultationPreview: source.supportConsultationPreview && typeof source.supportConsultationPreview === "object" && !Array.isArray(source.supportConsultationPreview)
+        ? source.supportConsultationPreview
+        : {},
+      supportConsultationSelection: /^[a-z0-9-]{0,64}$/.test(String(source.supportConsultationSelection || "").trim())
+        ? String(source.supportConsultationSelection).trim()
+        : "",
+      supportConsultationDraftInput: source.supportConsultationDraftInput && typeof source.supportConsultationDraftInput === "object" && !Array.isArray(source.supportConsultationDraftInput)
+        ? source.supportConsultationDraftInput
+        : {},
       supportEvents: Array.isArray(source.supportEvents) ? source.supportEvents.slice(0, 100) : [],
       supportEventsReadState: ["loading", "ready", "guarded"].includes(String(source.supportEventsReadState || ""))
         ? String(source.supportEventsReadState)
@@ -18602,6 +18620,175 @@
     return `<section class="portal-card portal-card-pad portal-support-advisor" id="support-advisor" aria-labelledby="support-advisor-title"><div class="portal-card-header"><div><span class="portal-section-kicker">Tự hỗ trợ trước</span><h2 class="portal-card-title" id="support-advisor-title">Làm rõ vấn đề trước khi gửi yêu cầu</h2><p class="portal-card-subtitle">Nhận checklist ngắn theo nhóm Web hiện hữu. Không có phân loại AI, thông báo ngoài hệ thống hay ticket tự tạo.</p></div>${badge(status)}</div><form class="portal-form portal-support-advisor-form" data-portal-form data-portal-no-transient data-portal-action="support-advisor-guide" data-portal-route="/support" novalidate><label class="portal-field" for="support-advisor-category"><span>Nhóm cần xem checklist</span><select class="portal-select" id="support-advisor-category" name="category"${disabled}>${supportCategoryOptions(selectedCategory, false)}</select></label><div class="portal-support-advisor-form-action"><span class="portal-form-note">${safeText(reason)}</span><button class="portal-button" type="submit"${disabled}>Xem checklist</button></div></form>${result}</section>`;
   }
 
+  // Consultation Brief is a small, signed-page preparation flow. It has a
+  // deliberately closed catalog and remains separate from the normal Support
+  // case write: compose only returns a transient draft; handoff is explicit.
+  const SUPPORT_CONSULTATION_CATALOG_VERSION = "2026-07-23";
+  const SUPPORT_CONSULTATION_GROUP_IDS = Object.freeze(["premium", "custom_bot", "service"]);
+  const SUPPORT_CONSULTATION_GROUP_SERVICE_IDS = Object.freeze({
+    premium: Object.freeze(["web-premium-creator", "web-premium-shop", "web-premium-business", "web-premium-private"]),
+    custom_bot: Object.freeze(["web-custom-shop", "web-custom-content", "web-custom-support", "web-custom-internal", "web-custom-custom"]),
+    service: Object.freeze(["web-service-image", "web-service-video", "web-service-frame-video", "web-service-document", "web-service-voice", "web-service-package"])
+  });
+  const SUPPORT_CONSULTATION_SERVICE_META = Object.freeze({
+    "web-premium-creator": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-shop": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-business": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-private": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-custom-shop": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-content": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-support": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-internal": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-custom": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-service-image": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-frame-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-document": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-voice": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-package": Object.freeze({ group: "service", category: "service_consulting" })
+  });
+  const SUPPORT_CONSULTATION_BOUNDARY_KEYS = Object.freeze([
+    "case_auto_create", "lead_or_crm_write", "external_notification", "contact_collection",
+    "quote_or_contract", "payment_or_wallet", "bot_or_telegram", "provider_job_or_asset"
+  ]);
+
+  function supportConsultationText(value, maximum, minimum = 3) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportConsultationDetail(value, maximum, minimum = 3) {
+    const text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportConsultationBoundaries(value) {
+    const boundaries = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    return SUPPORT_CONSULTATION_BOUNDARY_KEYS.every((key) => boundaries[key] === false)
+      && Object.keys(boundaries).length === SUPPORT_CONSULTATION_BOUNDARY_KEYS.length
+      ? { ...boundaries }
+      : null;
+  }
+
+  function supportConsultationCatalog(context) {
+    const source = context && context.supportConsultationCatalog && typeof context.supportConsultationCatalog === "object" && !Array.isArray(context.supportConsultationCatalog)
+      ? context.supportConsultationCatalog
+      : null;
+    const boundaries = source ? supportConsultationBoundaries(source.boundaries) : null;
+    const groups = source && Array.isArray(source.groups) ? source.groups : [];
+    if (!source || source.catalog_version !== SUPPORT_CONSULTATION_CATALOG_VERSION
+      || source.delivery !== "web_view_only" || source.persistence !== "none" || source.automation !== "none"
+      || !boundaries || groups.length !== SUPPORT_CONSULTATION_GROUP_IDS.length) return null;
+    const seen = new Set();
+    const projectedGroups = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const group = groups[index] && typeof groups[index] === "object" && !Array.isArray(groups[index]) ? groups[index] : null;
+      const groupId = group ? String(group.id || "").trim() : "";
+      const title = group ? supportConsultationText(group.title, 120) : "";
+      const summary = group ? supportConsultationText(group.summary, 360) : "";
+      const expectedIds = SUPPORT_CONSULTATION_GROUP_SERVICE_IDS[groupId];
+      const services = group && Array.isArray(group.services) ? group.services : [];
+      if (!group || groupId !== SUPPORT_CONSULTATION_GROUP_IDS[index] || !title || !summary
+        || !Array.isArray(expectedIds) || services.length !== expectedIds.length) return null;
+      const projectedServices = [];
+      for (let serviceIndex = 0; serviceIndex < services.length; serviceIndex += 1) {
+        const item = services[serviceIndex] && typeof services[serviceIndex] === "object" && !Array.isArray(services[serviceIndex]) ? services[serviceIndex] : null;
+        const id = item ? String(item.id || "").trim() : "";
+        const meta = SUPPORT_CONSULTATION_SERVICE_META[id];
+        const category = item ? String(item.category || "").trim().toLowerCase() : "";
+        const itemTitle = item ? supportConsultationText(item.title, 140) : "";
+        const itemSummary = item ? supportConsultationText(item.summary, 300) : "";
+        const prompt = item ? supportConsultationText(item.prompt, 320) : "";
+        if (!item || id !== expectedIds[serviceIndex] || seen.has(id) || !meta || meta.group !== groupId
+          || meta.category !== category || !SUPPORT_CASE_CATEGORIES.some(([key]) => key === category)
+          || !itemTitle || !itemSummary || !prompt) return null;
+        seen.add(id);
+        projectedServices.push({ id, category, title: itemTitle, summary: itemSummary, prompt });
+      }
+      projectedGroups.push({ id: groupId, title, summary, services: projectedServices });
+    }
+    return seen.size === Object.keys(SUPPORT_CONSULTATION_SERVICE_META).length
+      ? { groups: projectedGroups, boundaries }
+      : null;
+  }
+
+  function supportConsultationDraftInput(context, catalog) {
+    const source = context && context.supportConsultationDraftInput && typeof context.supportConsultationDraftInput === "object" && !Array.isArray(context.supportConsultationDraftInput)
+      ? context.supportConsultationDraftInput
+      : {};
+    const candidateServiceId = String(source.service_id || "").trim();
+    const serviceId = catalog && Object.prototype.hasOwnProperty.call(SUPPORT_CONSULTATION_SERVICE_META, candidateServiceId)
+      && catalog.groups.some((group) => group.services.some((item) => item.id === candidateServiceId))
+      ? candidateServiceId
+      : "";
+    // Preserve only bounded text already entered on this signed page. These
+    // values are never saved to generic draft memory or browser storage.
+    return {
+      serviceId,
+      goal: supportConsultationText(source.goal, 600, 0),
+      currentContext: supportConsultationDetail(source.current_context, 1000, 0),
+      requestedOutcome: supportConsultationDetail(source.requested_outcome, 1000, 0),
+    };
+  }
+
+  function supportConsultationPreview(context, catalog) {
+    const source = context && context.supportConsultationPreview && typeof context.supportConsultationPreview === "object" && !Array.isArray(context.supportConsultationPreview)
+      ? context.supportConsultationPreview
+      : null;
+    const selection = source && source.selection && typeof source.selection === "object" && !Array.isArray(source.selection) ? source.selection : null;
+    const draft = source && source.draft && typeof source.draft === "object" && !Array.isArray(source.draft) ? source.draft : null;
+    const boundaries = source ? supportConsultationBoundaries(source.boundaries) : null;
+    const serviceId = selection ? String(selection.id || "").trim() : "";
+    const meta = SUPPORT_CONSULTATION_SERVICE_META[serviceId];
+    const catalogService = catalog && catalog.groups
+      ? catalog.groups.flatMap((group) => group.services).find((item) => item.id === serviceId)
+      : null;
+    const category = selection ? String(selection.category || "").trim().toLowerCase() : "";
+    const selectionTitle = selection ? supportConsultationText(selection.title, 140) : "";
+    const draftCategory = draft ? String(draft.category || "").trim().toLowerCase() : "";
+    const priority = draft ? String(draft.priority || "").trim().toLowerCase() : "";
+    const subject = draft ? supportConsultationText(draft.subject, 180) : "";
+    const detail = draft ? supportConsultationDetail(draft.detail, 4000) : "";
+    if (!source || source.catalog_version !== SUPPORT_CONSULTATION_CATALOG_VERSION || source.delivery !== "web_view_only"
+      || source.persistence !== "none" || source.automation !== "none" || source.case_created !== false
+      || source.input_persisted !== false || !boundaries || !meta || !catalogService || meta.category !== category
+      || draftCategory !== category || priority !== "normal" || !selectionTitle || !subject || !detail) return null;
+    return { serviceId, category, title: selectionTitle, subject, detail };
+  }
+
+  function renderSupportConsultationBrief(context) {
+    const canView = Boolean(context.capabilities && context.capabilities["support-consultation-view"] === true);
+    const canCompose = Boolean(context.capabilities && context.capabilities["support-consultation-compose"] === true);
+    const readState = ["idle", "loading", "ready", "guarded"].includes(String(context.supportConsultationReadState || ""))
+      ? String(context.supportConsultationReadState)
+      : "guarded";
+    const catalog = supportConsultationCatalog(context);
+    const draftInput = supportConsultationDraftInput(context, catalog);
+    const preview = supportConsultationPreview(context, catalog);
+    const selectedService = preview
+      ? preview.serviceId
+      : (draftInput.serviceId || (Object.prototype.hasOwnProperty.call(SUPPORT_CONSULTATION_SERVICE_META, String(context.supportConsultationSelection || "").trim())
+        ? String(context.supportConsultationSelection).trim()
+        : ""));
+    const status = catalog && readState === "ready" ? (preview ? "draft" : "ready") : (readState === "loading" ? "processing" : "guarded");
+    const disabled = canCompose && catalog && readState === "ready" ? "" : " disabled";
+    const options = catalog
+      ? catalog.groups.map((group) => `<optgroup label="${safeText(group.title)}">${group.services.map((item) => `<option value="${safeText(item.id)}"${item.id === selectedService ? " selected" : ""}>${safeText(item.title)}</option>`).join("")}</optgroup>`).join("")
+      : "";
+    const reason = !canView
+      ? "Đăng nhập bằng signed Web session để dùng bản nháp tư vấn riêng của Web."
+      : !catalog
+        ? (readState === "loading" ? "Đang tải catalog tư vấn an toàn từ Web Support Desk…" : "Catalog tư vấn tạm chưa xác minh; form được khóa thay vì dùng dữ liệu cũ.")
+        : "Bản nháp chỉ tồn tại trong trang hiện tại. Nó không tạo case, lead, báo giá, thông báo hoặc tác vụ bên ngoài.";
+    const retry = !catalog && readState === "guarded" && canView
+      ? '<div class="portal-support-consultation-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-consultation-catalog-retry" data-portal-route="/support">Tải lại catalog tư vấn</button><span>Không dùng dữ liệu cũ hoặc fallback khi catalog chưa được xác minh.</span></div>'
+      : "";
+    const result = preview
+      ? `<div class="portal-support-consultation-result" data-state="ready" role="status" aria-live="polite"><div><span class="portal-section-kicker">Bản nháp Web-only</span><h3>${safeText(preview.subject)}</h3><p>${safeText(preview.title)} · Nhóm yêu cầu sẽ được chọn là ${safeText(supportCaseCategoryLabel(preview.category))} với ưu tiên bình thường.</p></div><pre>${safeText(preview.detail)}</pre><div class="portal-support-consultation-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="support-consultation-handoff" data-portal-route="/support" data-portal-confirm="Đưa bản nháp này vào form yêu cầu Web? Nội dung đang có trong form sẽ được thay thế; thao tác này chưa tạo yêu cầu.">Đưa vào form yêu cầu</button><span>Bạn vẫn cần tự kiểm tra và bấm “Tạo yêu cầu” ở form bên dưới.</span></div></div>`
+      : `<div class="portal-support-consultation-result" data-state="${safeText(readState === "loading" ? "loading" : (readState === "guarded" ? "guarded" : "idle"))}" role="status" aria-live="polite"><p>${safeText(readState === "loading" ? "Đang kiểm tra catalog tư vấn; chưa có bản nháp nào được tạo." : "Chọn nhu cầu, bổ sung bối cảnh rồi tạo bản nháp để tự review trước khi gửi yêu cầu.")}</p>${retry}</div>`;
+    return `<section class="portal-card portal-card-pad portal-support-consultation" id="support-consultation-brief" aria-labelledby="support-consultation-title"><div class="portal-card-header"><div><span class="portal-section-kicker">Tư vấn theo nhu cầu</span><h2 class="portal-card-title" id="support-consultation-title">Soạn bản nháp trước khi gửi yêu cầu</h2><p class="portal-card-subtitle">Chọn một nhu cầu đã được rà soát, mô tả ngắn gọn và xem bản nháp. Luồng này không chuyển trang, không tạo yêu cầu tự động.</p></div>${badge(status)}</div><form class="portal-form portal-support-consultation-form" data-portal-form data-portal-no-transient data-portal-action="support-consultation-compose" data-portal-route="/support" novalidate><div class="portal-fields"><label class="portal-field" for="support-consultation-service"><span>Nhu cầu cần tư vấn <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" id="support-consultation-service" name="service_id" required${disabled}><option value=""${selectedService ? "" : " selected"} disabled>Chọn nhu cầu phù hợp</option>${options}</select></label><label class="portal-field portal-field--wide" for="support-consultation-goal"><span>Mục tiêu <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" id="support-consultation-goal" name="goal" type="text" minlength="3" maxlength="600" required value="${safeText(draftInput.goal)}" placeholder="Ví dụ: Tìm cách tổ chức quy trình nội dung cho đội nhỏ"${disabled}></label><label class="portal-field portal-field--wide" for="support-consultation-context"><span>Bối cảnh hiện tại <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" id="support-consultation-context" name="current_context" minlength="3" maxlength="1000" required placeholder="Nêu quy trình hoặc điểm đang cần làm rõ ở mức không nhạy cảm…"${disabled}>${safeText(draftInput.currentContext)}</textarea></label><label class="portal-field portal-field--wide" for="support-consultation-outcome"><span>Kết quả cần tư vấn <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" id="support-consultation-outcome" name="requested_outcome" minlength="3" maxlength="1000" required placeholder="Nêu điều bạn muốn hiểu rõ trước khi tự gửi yêu cầu…"${disabled}>${safeText(draftInput.requestedOutcome)}</textarea><span class="portal-field-help">Không nhập email, số điện thoại, Zalo, Telegram, secret hoặc thông tin thanh toán. Signed Web account đã xác định phiên của bạn.</span></label></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Tạo bản nháp để review</button></div></form>${result}</section>`;
+  }
+
   function supportCaseTimestamp(value) {
     const raw = String(value || "").trim();
     if (!raw) return "—";
@@ -18860,7 +19047,7 @@
     const boundary = `<aside class="portal-card portal-card-pad portal-support-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Phạm vi an toàn</h2><p class="portal-card-subtitle">Support Desk xử lý trao đổi trong Web, không xử lý bí mật hoặc đối soát thanh toán bằng nội dung tự do.</p></div>${badge("read_only")}</div><ul class="portal-project-steps"><li><strong>Không có thông báo giả</strong><span>Trạng thái và phản hồi chỉ hiển thị khi bạn mở Web App.</span></li><li><strong>Không có ledger write</strong><span>Không cộng/trừ Xu, tạo PayOS order hay hoàn tiền từ case.</span></li><li><strong>Không có upload ngầm</strong><span>Phiên bản đầu tiên nhận văn bản; không nhận tệp Telegram hoặc proof thanh toán.</span></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Xem tất cả yêu cầu</a></div></aside>`;
     const recentCases = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu gần đây</h2><p class="portal-card-subtitle">Chỉ case thuộc Web account hiện tại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="/support"${context.capabilities && context.capabilities["support-case-refresh"] === true ? "" : " disabled"}>Làm mới</button></div>${renderSupportCaseCards(cases, false)}</section>`;
     const activity = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động Web gần đây</h2><p class="portal-card-subtitle">Audit/event hiển thị không bao gồm nội dung case.</p></div>${badge(eventState)}</div>${renderSupportActivity(context.supportEvents, context.supportEventsReadState)}</section>`;
-    return `<article class="portal-page portal-support-desk">${renderHero(page, context)}${intro}${renderSupportAdvisor(context)}${supportStateStats(context.supportSummary)}<div class="portal-support-layout">${intake}${boundary}</div>${recentCases}${activity}</article>`;
+    return `<article class="portal-page portal-support-desk">${renderHero(page, context)}${intro}${renderSupportAdvisor(context)}${renderSupportConsultationBrief(context)}${supportStateStats(context.supportSummary)}<div class="portal-support-layout">${intake}${boundary}</div>${recentCases}${activity}</article>`;
   }
 
   function renderSupportCases(page, context) {

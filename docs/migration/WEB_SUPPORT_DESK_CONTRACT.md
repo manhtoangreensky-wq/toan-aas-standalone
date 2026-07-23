@@ -26,6 +26,7 @@ Static audit evidence is the frozen Bot SHA
 | Bot capability | Web-native equivalent | Boundary / status |
 | --- | --- | --- |
 | `/support`, `/gopy`, ticket category choice | `/support` case composer with category, priority, subject and detail | Implemented as a private Web case; no Bot ticket is created. |
+| Premium/custom/service consultation topic choices | `/support` Consultation Brief catalog, preview and explicit form handoff | Web-only preparation; it never accepts a Bot callback/state, creates a lead/case, quote, contract or external contact. |
 | `/tickets`, `/ticket_status` | `/tickets` list and `/tickets/{id}` immutable message/event timeline | Implemented for Web-owned cases only. Bot ticket history remains separate. |
 | Bot customer reply conversation | Owner-scoped customer reply, close and reopen actions | Implemented with CSRF, revision and idempotency. |
 | `/support_tickets`, `/support_ticket`, `/support_close`, `/ticket_admin` | `/admin/support` triage, staff-only case detail, public/internal reply and state/priority update | Implemented Web-native; no canonical refund, provider or Bot command is invoked. |
@@ -69,6 +70,8 @@ require `confirm: true`.  All responses use the common envelope.
 ```text
 GET  /api/v1/support/summary
 GET  /api/v1/support/advisor?category=
+GET  /api/v1/support/consultation-brief/catalog
+POST /api/v1/support/consultation-brief/compose
 GET  /api/v1/support/cases?limit=&offset=&state=&category=&q=
 POST /api/v1/support/cases
 GET  /api/v1/support/cases/{case_id}
@@ -145,6 +148,12 @@ all other `/admin/*` routes retain their canonical Bot-admin guard.
 ## Security and privacy controls
 
 - The router imports no Bot bridge and performs no HTTP/provider/PayOS/wallet/job call.
+- Consultation Brief has a closed 15-item catalog and produces only a
+  non-persistent page-memory draft.  It requires signed session/CSRF for
+  compose, rejects contact details in addition to the regular sensitive-data
+  guard, has no support/audit/CRM write, and can only fill the existing normal
+  form after the customer confirms.  See
+  [`WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md`](WEB_CONSULTATION_BRIEF_COMPOSER_CONTRACT.md).
 - Content is bounded and rejects API/GitHub/Google/AWS-style keys, bearer tokens,
   passwords, OTP/verification codes/CVV, every 13–19 digit card-shaped value
   (including spaces, repeated whitespace, dots, slashes or line breaks), and

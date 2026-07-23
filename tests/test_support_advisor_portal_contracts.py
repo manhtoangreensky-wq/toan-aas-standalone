@@ -12,7 +12,7 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 
 def test_support_advisor_renderer_is_a_signed_accessible_non_writing_handoff() -> None:
     start = PORTAL.index("function renderSupportAdvisor")
-    renderer = PORTAL[start:PORTAL.index("function supportCaseTimestamp", start)]
+    renderer = PORTAL[start:PORTAL.index("function renderSupportConsultationBrief", start)]
 
     for required in (
         'id="support-advisor"',
@@ -59,7 +59,7 @@ def test_support_advisor_accepts_only_a_closed_server_shape_and_never_writes() -
         assert requirement in INTEGRATION
 
     action_start = INTEGRATION.index('if (action === "support-advisor-guide")')
-    action_end = INTEGRATION.index('if (action === "support-cases-filter" || action === "support-cases-filter-clear")', action_start)
+    action_end = INTEGRATION.index('if (action === "support-consultation-compose")', action_start)
     actions = INTEGRATION[action_start:action_end]
     for forbidden in (
         "api(",
