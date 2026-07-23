@@ -122,6 +122,7 @@ async def dashboard():
         "AUDIO_HUB_CALLBACK_CONTRACT.md",
         "SFX_CUE_SHEET_CONTRACT.md",
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
+        "FEEDBACK_MENU_CALLBACK_CONTRACT.md",
         "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
         "CREATIVE_VARIANT_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
@@ -147,6 +148,7 @@ async def dashboard():
     assert "SFX_CUE_SHEET_CONTRACT.md" in readme
     assert "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
+    assert "FEEDBACK_MENU_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
@@ -2576,13 +2578,56 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
 
+    # Only the finite feedback keyboard entries can start a fresh Web-native
+    # Support Desk form. The opaque Web audit intent is not a query/form/API
+    # value and never preselects a customer support category.
+    feedback_navigation = {
+        "feedback|start": "web_support_start",
+        "feedback|cat|payment_topup": "web_support_billing_inquiry",
+        "feedback|cat|image_error": "web_support_image_help",
+        "feedback|cat|video_error": "web_support_video_help",
+        "feedback|cat|document_pdf": "web_support_document_help",
+        "feedback|cat|package_combo": "web_support_package_help",
+        "feedback|cat|refund": "web_support_account_review",
+        "feedback|cat|feature_request": "web_support_product_feedback",
+        "feedback|cat|other": "web_support_general",
+    }
+    assert set(audit.FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS) == set(feedback_navigation)
+    expected_feedback_dispositions = {
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    }
+    for identifier, web_intent in feedback_navigation.items():
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "/support"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_feedback_fresh_web_support_navigation"
+        assert mapped["feedback_support_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
+        assert mapped["feedback_support_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["web_support_intent"] == web_intent
+        assert set(mapped["source_dispositions"]) == expected_feedback_dispositions
+
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    for identifier in feedback_navigation:
+        assert identifier not in public_catalog
+
     for identifier in (
-        "feedback|start",
-        "feedback|cat|refund",
-        "feedback|cat|payment_topup",
         "feedback|cancel",
+        "FEEDBACK|START",
         "FEEDBACK|CAT|REFUND",
+        "feedback|start|future",
         "feedback|cat|refund|future",
+        "feedback|cat|unknown",
+        "feedback|cat|other|future",
     ):
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
         assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
@@ -2665,15 +2710,21 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert templates["ticket|attach|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|st|{*}|refund_pending"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|{*}|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
-    assert callbacks["feedback|cat|refund"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert callbacks["feedback|cat|refund"]["target"] == "/support"
+    assert callbacks["feedback|cat|refund"]["resolution"] == "reviewed_feedback_fresh_web_support_navigation"
+    assert callbacks["feedback|cat|refund"]["web_support_intent"] == "web_support_account_review"
     assert templates["feedback|cat|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     contract = (tmp_path / "docs" / "SUPPORT_TICKET_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    feedback_contract = (tmp_path / "docs" / "FEEDBACK_MENU_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "support\\|*" in contract
     assert "ticket\\|*" in contract
     assert "feedback\\|*" in contract
     assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
+    assert "feedback\\|cat\\|refund" in feedback_contract
+    assert "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER" in feedback_contract
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
-    assert "Bot Support/Ticket/Feedback callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "FEEDBACK_MENU_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "The sole exception is the nine exact Feedback entry literals" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
 
 

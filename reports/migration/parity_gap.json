@@ -7342,23 +7342,25 @@
         "file": "bot.py",
         "line": 38643
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|document_pdf",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_document_help"
     },
     {
       "classification": "customer",
@@ -7366,23 +7368,25 @@
         "file": "bot.py",
         "line": 38645
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|feature_request",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_product_feedback"
     },
     {
       "classification": "customer",
@@ -7390,23 +7394,25 @@
         "file": "bot.py",
         "line": 38642
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|image_error",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_image_help"
     },
     {
       "classification": "customer",
@@ -7414,23 +7420,25 @@
         "file": "bot.py",
         "line": 38645
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|other",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_general"
     },
     {
       "classification": "customer",
@@ -7438,23 +7446,25 @@
         "file": "bot.py",
         "line": 38644
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|package_combo",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_package_help"
     },
     {
       "classification": "customer",
@@ -7462,23 +7472,25 @@
         "file": "bot.py",
         "line": 38642
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|payment_topup",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_billing_inquiry"
     },
     {
       "classification": "customer",
@@ -7486,23 +7498,25 @@
         "file": "bot.py",
         "line": 38644
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|refund",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_account_review"
     },
     {
       "classification": "customer",
@@ -7510,23 +7524,25 @@
         "file": "bot.py",
         "line": 38643
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|cat|video_error",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_video_help"
     },
     {
       "classification": "customer",
@@ -7534,23 +7550,25 @@
         "file": "bot.py",
         "line": 46984
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|start",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_start"
     },
     {
       "classification": "customer",
@@ -7558,23 +7576,25 @@
         "file": "bot.py",
         "line": 47030
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|start",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_start"
     },
     {
       "classification": "customer",
@@ -7582,23 +7602,25 @@
         "file": "bot.py",
         "line": 47042
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|start",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_start"
     },
     {
       "classification": "customer",
@@ -7606,23 +7628,25 @@
         "file": "bot.py",
         "line": 47053
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|start",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_start"
     },
     {
       "classification": "customer",
@@ -7630,23 +7654,25 @@
         "file": "bot.py",
         "line": 60051
       },
-      "fallback_family": "feedback",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "feedback_support_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "feedback_support_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_feedback_fresh_web_support_navigation",
       "source": "feedback|start",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_FEEDBACK_CATEGORY_AND_PENDING_TEXT_STATE",
-        "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
-        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+        "FINITE_BOT_FEEDBACK_INTENT_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER",
+        "BOT_FEEDBACK_PENDING_STATE_NOT_REPLAYED",
+        "BOT_CLASSIFIER_TICKET_ADMIN_ALERT_NOT_REPLAYED",
+        "WEB_EXPLICIT_CSRF_IDEMPOTENT_CASE_CREATION_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot feedback handler binds a Telegram user to a selected category and short-lived pending text; its next text can classify/create a Bot support ticket and alert an admin, including a refund-review request. The standalone Web has no adapter that accepts or replays the callback, category, pending text, Bot ticket record, admin alert or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot feedback menu item may open a new, signed Web Support Desk form only. The Web never receives the Bot callback or feedback category, clears or creates no Bot pending state, and does not invoke the Bot classifier/ticket/admin-alert path, Telegram delivery, refund, payment, wallet/Xu, provider, job or runtime action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/support",
+      "web_support_intent": "web_support_start"
     },
     {
       "classification": "customer",
@@ -74402,33 +74428,6 @@
       ]
     },
     {
-      "authority": "Source review required",
-      "candidate_boundary": "source_review_required",
-      "count": 13,
-      "family": "feedback",
-      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
-      "priority": "P1",
-      "sample_sources": [
-        "feedback|cat|document_pdf",
-        "feedback|cat|feature_request",
-        "feedback|cat|image_error",
-        "feedback|cat|other",
-        "feedback|cat|package_combo",
-        "feedback|cat|payment_topup",
-        "feedback|cat|refund",
-        "feedback|cat|video_error",
-        "feedback|start"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Canonical Bot admin or separate Web admin archive",
       "candidate_boundary": "/admin",
       "count": 11,
@@ -74704,7 +74703,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 1117,
+      "count": 1104,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -74765,11 +74764,6 @@
         {
           "count": 22,
           "family": "docflow",
-          "priority": "P1"
-        },
-        {
-          "count": 13,
-          "family": "feedback",
           "priority": "P1"
         },
         {
@@ -75011,12 +75005,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 72.44,
+  "mapping_coverage_percent": 72.76,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1574,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 795,
-    "NEEDS_FEATURE_DISPOSITION": 1117,
+    "NAVIGATION_ONLY": 808,
+    "NEEDS_FEATURE_DISPOSITION": 1104,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -75038,7 +75032,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 72.44,
+  "safe_disposition_coverage_percent": 72.76,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75048,13 +75042,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 2936,
+    "resolved_static_source_count": 2949,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 332,
-    "unresolved_source_count": 1117
+    "unresolved_source_count": 1104
   },
   "static_web_surface_coverage_percent": 38.84,
   "telegram_link_callback_contract": {
