@@ -126,6 +126,7 @@ async def dashboard():
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
+        "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -140,6 +141,7 @@ async def dashboard():
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
     assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
+    assert "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in readme
@@ -2983,7 +2985,8 @@ async def page(page_path):
     assert command_mappings["/opaque_flow"]["status"] == "NEEDS_FEATURE_DISPOSITION"
     assert command_mappings["/opaque_flow"]["resolution"] == "unreviewed_dashboard_fallback_requires_feature_disposition"
     assert callback_mappings["menu|video"]["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert callback_mappings["menu|video"]["resolution"] == "menu_callback_requires_explicit_feature_disposition"
+    assert callback_mappings["menu|video"]["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+    assert callback_mappings["menu|video"]["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
     assert gap["static_web_surface_coverage_percent"] == 0.0
     assert gap["mapping_coverage_percent"] == 33.33
     assert gap["workflow_equivalence"] == {
@@ -3205,6 +3208,63 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
             "SOURCE_STATE_MACHINE_REQUIRED",
             "NO_RUNTIME_CLAIM",
         )
+
+
+def test_menu_callbacks_are_exact_and_residual_video_menu_actions_fail_closed() -> None:
+    """No loose Bot menu action may become Dashboard/Admin/browser navigation."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback, contract in audit.VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == contract["target"]
+        assert mapped["classification"] == contract["classification"]
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == contract["resolution"]
+        assert mapped["source_dispositions"] == contract["source_dispositions"]
+        assert mapped["target"] not in {"/dashboard", "/video-studio", "/jobs", "/admin", "/admin/callbacks"}
+
+    # Every existing finite catalog entry remains a reviewed navigation path;
+    # fail-closing the residual namespace must not block a valid Web route.
+    for callback, descriptor in audit.MENU_ACTION_REGISTRY.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == descriptor["target"]
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] in {
+            "reviewed_exact_menu_navigation",
+            "reviewed_guided_start_fresh_web_navigation",
+            "reviewed_memory_fresh_web_navigation",
+        }
+
+    # The Bot callback grammar is case-sensitive, and a raw/unknown callback
+    # can affect Bot pending state before authority is checked. Case variants,
+    # suffixes and new Admin-looking names therefore cannot borrow a route.
+    expected_classification = {
+        "menu|future_video_action": "customer",
+        "menu|video_ai_true|again": "customer",
+        "menu|MAIN": "customer",
+        "MENU|main": "customer",
+        "menu|admin_future_action": "admin",
+    }
+    for callback, classification in expected_classification.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == classification
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert mapped["source_dispositions"] == audit.MENU_SOURCE_REVIEW_BASE_DISPOSITIONS
+        assert mapped["target"] not in {"/dashboard", "/video-studio", "/jobs", "/admin", "/admin/callbacks"}
+
+    # A stricter existing Bot-only boundary always wins over the residual
+    # source-review guard. These are not Web confirmation, smoke, provider or
+    # maintenance controls.
+    for callback in ("menu|smoke_video", "menu|admin_confirm_freeze_frame"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "telegram_only"
 
 
 def test_profile_benefits_and_pricing_read_navigation_preserve_the_referral_boundary() -> None:
@@ -3959,7 +4019,7 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
     assert gap["coverage_comparability"] == {
         "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
         "feature_progress_claim": False,
-        "reason": "Schema 1.9 retains the 1.8 inventory corrections and adds bounded source-only coverage for frozen Audio Hub product-context helper callbacks, including source-local literal lambda actions, without inferring Bot state or Web behavior.",
+        "reason": "Schema 2.0 retains the 1.9 inventory corrections and replaces residual generic menu-to-Dashboard/Admin implications with exact, fail-closed menu source-review records, including the finite deferred Video menu/worker/status/admin-hint actions.",
         "scope_changes": [
             "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
             "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -3970,6 +4030,7 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
             "Bot Audio Hub and suggest-music callbacks are source-review boundaries instead of keyword-derived Music/Video Web routes.",
             "Frozen Audio Hub product-context helper calls and source-local literal/formatted lambda actions are inventoried as concrete or opaque three-segment evidence; dynamic context/state is never evaluated.",
             "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
+            "Residual menu callbacks are exact/case-sensitive source-review records instead of generic Dashboard/Admin navigation; six Video, worker, job-status and internal-command hints carry their own deferred boundary.",
         ],
         "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
     }

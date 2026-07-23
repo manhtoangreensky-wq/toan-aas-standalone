@@ -17189,11 +17189,20 @@
         "file": "bot.py",
         "line": 38497
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17201,11 +17210,20 @@
         "file": "bot.py",
         "line": 40884
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17213,11 +17231,20 @@
         "file": "bot.py",
         "line": 46988
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17225,11 +17252,20 @@
         "file": "bot.py",
         "line": 47033
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17237,11 +17273,20 @@
         "file": "bot.py",
         "line": 47045
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17249,11 +17294,20 @@
         "file": "bot.py",
         "line": 47056
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17261,11 +17315,20 @@
         "file": "bot.py",
         "line": 49767
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17273,11 +17336,20 @@
         "file": "bot.py",
         "line": 49770
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17285,11 +17357,20 @@
         "file": "bot.py",
         "line": 49775
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17297,11 +17378,20 @@
         "file": "bot.py",
         "line": 49777
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17309,11 +17399,20 @@
         "file": "bot.py",
         "line": 121508
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17321,11 +17420,20 @@
         "file": "bot.py",
         "line": 121522
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17333,11 +17441,20 @@
         "file": "bot.py",
         "line": 121923
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17345,11 +17462,20 @@
         "file": "bot.py",
         "line": 122245
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17357,11 +17483,20 @@
         "file": "bot.py",
         "line": 122290
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17369,11 +17504,20 @@
         "file": "bot.py",
         "line": 122370
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17381,11 +17525,20 @@
         "file": "bot.py",
         "line": 122389
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17393,11 +17546,20 @@
         "file": "bot.py",
         "line": 122417
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17405,11 +17567,20 @@
         "file": "bot.py",
         "line": 126958
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17417,11 +17588,20 @@
         "file": "bot.py",
         "line": 127055
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17429,11 +17609,20 @@
         "file": "bot.py",
         "line": 122387
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_billing_duyet",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17441,11 +17630,20 @@
         "file": "bot.py",
         "line": 122388
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_billing_payos",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17453,11 +17651,20 @@
         "file": "bot.py",
         "line": 122387
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_billing_pending",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17465,11 +17672,20 @@
         "file": "bot.py",
         "line": 122388
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_billing_tuchoi",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17565,11 +17781,20 @@
         "file": "bot.py",
         "line": 121980
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_confirm_maintenance_off",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17577,11 +17802,20 @@
         "file": "bot.py",
         "line": 122209
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_confirm_maintenance_off",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17589,11 +17823,20 @@
         "file": "bot.py",
         "line": 121980
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_confirm_maintenance_on",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17723,11 +17966,20 @@
         "file": "bot.py",
         "line": 49761
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_overview",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17735,11 +17987,20 @@
         "file": "bot.py",
         "line": 49759
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_packages",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17747,11 +18008,20 @@
         "file": "bot.py",
         "line": 122415
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_packages_catalog",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17759,11 +18029,20 @@
         "file": "bot.py",
         "line": 122415
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_packages_grant_combo",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17771,11 +18050,20 @@
         "file": "bot.py",
         "line": 122416
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_packages_grant_monthly",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17783,11 +18071,20 @@
         "file": "bot.py",
         "line": 122416
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_packages_user",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17795,11 +18092,20 @@
         "file": "bot.py",
         "line": 49762
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17807,11 +18113,20 @@
         "file": "bot.py",
         "line": 121981
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17819,11 +18134,20 @@
         "file": "bot.py",
         "line": 122270
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17831,11 +18155,20 @@
         "file": "bot.py",
         "line": 49774
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider_status",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17843,11 +18176,20 @@
         "file": "bot.py",
         "line": 122287
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider_status",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17855,11 +18197,20 @@
         "file": "bot.py",
         "line": 122287
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider_test",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -17867,11 +18218,20 @@
         "file": "bot.py",
         "line": 122289
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|admin_provider_usage",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "billing_menu_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18010,11 +18370,20 @@
         "file": "bot.py",
         "line": 49760
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18022,11 +18391,20 @@
         "file": "bot.py",
         "line": 121530
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18034,11 +18412,20 @@
         "file": "bot.py",
         "line": 121536
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18046,11 +18433,20 @@
         "file": "bot.py",
         "line": 121542
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18058,11 +18454,20 @@
         "file": "bot.py",
         "line": 121546
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18070,11 +18475,20 @@
         "file": "bot.py",
         "line": 121789
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18082,11 +18496,20 @@
         "file": "bot.py",
         "line": 121505
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_add_expense",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18094,11 +18517,20 @@
         "file": "bot.py",
         "line": 121535
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_add_expense",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18106,11 +18538,20 @@
         "file": "bot.py",
         "line": 59205
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18118,11 +18559,20 @@
         "file": "bot.py",
         "line": 121505
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18130,11 +18580,20 @@
         "file": "bot.py",
         "line": 121787
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18142,11 +18601,20 @@
         "file": "bot.py",
         "line": 121797
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18154,11 +18622,20 @@
         "file": "bot.py",
         "line": 121836
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18166,11 +18643,20 @@
         "file": "bot.py",
         "line": 121842
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_compliance_update",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18178,11 +18664,20 @@
         "file": "bot.py",
         "line": 121536
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_expense_categories",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18190,11 +18685,20 @@
         "file": "bot.py",
         "line": 121534
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_expense_last_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18202,11 +18706,20 @@
         "file": "bot.py",
         "line": 121503
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_expense_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18214,11 +18727,20 @@
         "file": "bot.py",
         "line": 121534
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_expense_this_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18226,11 +18748,20 @@
         "file": "bot.py",
         "line": 121535
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_expense_year",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18238,11 +18769,20 @@
         "file": "bot.py",
         "line": 121504
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_export",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18250,11 +18790,20 @@
         "file": "bot.py",
         "line": 121545
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_export_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18262,11 +18811,20 @@
         "file": "bot.py",
         "line": 121545
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_export_year",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18274,11 +18832,20 @@
         "file": "bot.py",
         "line": 121507
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_help",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18286,11 +18853,20 @@
         "file": "bot.py",
         "line": 121502
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_overview",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18298,11 +18874,20 @@
         "file": "bot.py",
         "line": 121504
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_profit",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18310,11 +18895,20 @@
         "file": "bot.py",
         "line": 121541
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_profit_this_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18322,11 +18916,20 @@
         "file": "bot.py",
         "line": 121541
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_profit_year",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18334,11 +18937,20 @@
         "file": "bot.py",
         "line": 121502
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18346,11 +18958,20 @@
         "file": "bot.py",
         "line": 121529
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue_custom_help",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18358,11 +18979,20 @@
         "file": "bot.py",
         "line": 121528
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue_last_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18370,11 +19000,20 @@
         "file": "bot.py",
         "line": 121503
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18382,11 +19021,20 @@
         "file": "bot.py",
         "line": 121528
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue_this_month",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -18394,11 +19042,20 @@
         "file": "bot.py",
         "line": 121529
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|finance_revenue_year",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -19418,56 +20075,92 @@
       "target": "/documents/split"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49746
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_film_blueprint",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then only displays a /film_blueprint command snippet. It is not a Web plan, production job, worker control, provider call or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49750
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_film_blueprint",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then only displays a /film_blueprint command snippet. It is not a Web plan, production job, worker control, provider call or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49748
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_growth_loop",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then only displays a /growth_loop command snippet. It is not a Web workflow, production job, publish action, provider call or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49751
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_growth_loop",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then only displays a /growth_loop command snippet. It is not a Web workflow, production job, publish action, provider call or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -19556,30 +20249,48 @@
       "target": "/reminders"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49747
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_scene_pack",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_JOB_IDENTIFIER_OR_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then displays a /scene_pack command example containing a Bot job identifier placeholder. It cannot become a browser job lookup, scene action, provider call, worker action or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49751
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
       "source": "menu|hint_scene_pack",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "BOT_VIDEO_JOB_IDENTIFIER_OR_PRODUCTION_COMMAND_STATE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_ADMIN_COMMAND_OR_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot gates this internal hint, then displays a /scene_pack command example containing a Bot job identifier placeholder. It cannot become a browser job lookup, scene action, provider call, worker action or admin mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -19588,11 +20299,20 @@
         "line": 45384
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
       "source": "menu|hint_video_status",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TELEGRAM_JOB_MESSAGE_CONTEXT",
+        "CANONICAL_BOT_VIDEO_JOB_OR_SUPPORT_HANDOFF",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_JOB_LOOKUP_OR_STATUS_CLAIM",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -19601,11 +20321,20 @@
         "line": 49412
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
       "source": "menu|hint_video_status",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TELEGRAM_JOB_MESSAGE_CONTEXT",
+        "CANONICAL_BOT_VIDEO_JOB_OR_SUPPORT_HANDOFF",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_JOB_LOOKUP_OR_STATUS_CLAIM",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -19614,11 +20343,20 @@
         "line": 49420
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
       "source": "menu|hint_video_status",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TELEGRAM_JOB_MESSAGE_CONTEXT",
+        "CANONICAL_BOT_VIDEO_JOB_OR_SUPPORT_HANDOFF",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_JOB_LOOKUP_OR_STATUS_CLAIM",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -19627,11 +20365,20 @@
         "line": 49428
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
       "source": "menu|hint_video_status",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TELEGRAM_JOB_MESSAGE_CONTEXT",
+        "CANONICAL_BOT_VIDEO_JOB_OR_SUPPORT_HANDOFF",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_JOB_LOOKUP_OR_STATUS_CLAIM",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -27323,11 +28070,20 @@
         "file": "bot.py",
         "line": 49758
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|operator",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -27335,11 +28091,20 @@
         "file": "bot.py",
         "line": 49775
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|operator",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -27493,11 +28258,20 @@
         "file": "bot.py",
         "line": 122202
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "menu_callback_requires_finite_exact_web_contract",
       "source": "menu|provider_custom_help",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "FINITE_MENU_CATALOG_REQUIRED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -29530,11 +30304,21 @@
         "line": 50995
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_ai_menu_requires_final_video_menu_contract",
       "source": "menu|video_ai_true",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_MENU_RENDER_ONLY",
+        "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+        "BOT_PROVIDER_OUTPUT_BILLING_STATE_MACHINE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29543,11 +30327,21 @@
         "line": 51000
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_ai_menu_requires_final_video_menu_contract",
       "source": "menu|video_ai_true",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_MENU_RENDER_ONLY",
+        "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+        "BOT_PROVIDER_OUTPUT_BILLING_STATE_MACHINE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29556,11 +30350,21 @@
         "line": 51573
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_ai_menu_requires_final_video_menu_contract",
       "source": "menu|video_ai_true",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_MENU_RENDER_ONLY",
+        "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+        "BOT_PROVIDER_OUTPUT_BILLING_STATE_MACHINE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29569,11 +30373,21 @@
         "line": 51812
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "video_ai_menu_requires_final_video_menu_contract",
       "source": "menu|video_ai_true",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_MENU_RENDER_ONLY",
+        "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+        "BOT_PROVIDER_OUTPUT_BILLING_STATE_MACHINE",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29598,11 +30412,22 @@
         "line": 40850
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "frame_video_intro_requires_worker_and_media_contract",
       "source": "menu|video_frame_intro",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_LOCAL_WORKER_READINESS",
+        "BOT_FRAME_VIDEO_MEDIA_OR_PENDING_STATE",
+        "BOT_VIDEO_CHILD_CALLBACKS_NOT_REPLAYED",
+        "VIDEO_MENU_LAST",
+        "NO_WEB_VIDEO_ROUTE_OR_ACTION",
+        "NO_WORKER_OR_OUTPUT_STATUS_CLAIM",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot checks its frame-video worker/public-render guards and either sets a Bot-local maintenance error or redraws a Telegram image-slideshow keyboard. A Web page must not inherit worker readiness, uploaded Telegram media, render authority or output state.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "FRAME_VIDEO_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -73113,7 +73938,7 @@
   "coverage_comparability": {
     "feature_progress_claim": false,
     "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
-    "reason": "Schema 1.9 retains the 1.8 inventory corrections and adds bounded source-only coverage for frozen Audio Hub product-context helper callbacks, including source-local literal lambda actions, without inferring Bot state or Web behavior.",
+    "reason": "Schema 2.0 retains the 1.9 inventory corrections and replaces residual generic menu-to-Dashboard/Admin implications with exact, fail-closed menu source-review records, including the finite deferred Video menu/worker/status/admin-hint actions.",
     "scope_changes": [
       "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
       "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -73123,7 +73948,8 @@
       "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
       "Bot Audio Hub and suggest-music callbacks are source-review boundaries instead of keyword-derived Music/Video Web routes.",
       "Frozen Audio Hub product-context helper calls and source-local literal/formatted lambda actions are inventoried as concrete or opaque three-segment evidence; dynamic context/state is never evaluated.",
-      "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser."
+      "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
+      "Residual menu callbacks are exact/case-sensitive source-review records instead of generic Dashboard/Admin navigation; six Video, worker, job-status and internal-command hints carry their own deferred boundary."
     ],
     "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES"
   },
@@ -73168,23 +73994,23 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 53,
+      "count": 129,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
       "sample_sources": [
+        "menu|admin",
+        "menu|admin_billing_duyet",
+        "menu|admin_billing_payos",
+        "menu|admin_billing_pending",
+        "menu|admin_billing_tuchoi",
         "menu|admin_confirm_ack_{*}",
         "menu|admin_confirm_clear_stale_jobs",
+        "menu|admin_confirm_maintenance_off",
+        "menu|admin_confirm_maintenance_on",
         "menu|admin_confirm_refund_job",
-        "menu|guide_guided_video",
-        "menu|guide_video_ai",
-        "menu|hint_film_blueprint",
-        "menu|hint_growth_loop",
-        "menu|hint_scene_pack",
-        "menu|hint_video_status",
-        "menu|tax_config",
-        "menu|tax_estimate",
-        "menu|tax_estimate_month"
+        "menu|admin_overview",
+        "menu|admin_packages"
       ],
       "source_kinds": [
         "callback_data",
@@ -73798,7 +74624,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 1077,
+      "count": 1153,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -73807,7 +74633,7 @@
           "priority": "P0"
         },
         {
-          "count": 53,
+          "count": 129,
           "family": "menu",
           "priority": "P0"
         },
@@ -74105,12 +74931,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 73.43,
+  "mapping_coverage_percent": 71.55,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1650,
+    "COPIED_GUARDED": 1574,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 1077,
+    "NEEDS_FEATURE_DISPOSITION": 1153,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -74124,7 +74950,7 @@
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
     "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
     "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-    "Schema 1.9 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview and Audio Hub callback state, inventories bounded Audio Hub product-context helper evidence, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
+    "Schema 2.0 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview/Audio Hub/menu state, inventories bounded Audio Hub product-context helper evidence, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
     "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
     "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
     "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -74132,8 +74958,8 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 73.43,
-  "schema_version": "1.9",
+  "safe_disposition_coverage_percent": 71.55,
+  "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
     "callback_handler_dispatchers": 54,
@@ -74142,15 +74968,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 2976,
+    "resolved_static_source_count": 2900,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 332,
-    "unresolved_source_count": 1077
+    "unresolved_source_count": 1153
   },
-  "static_web_surface_coverage_percent": 40.71,
+  "static_web_surface_coverage_percent": 38.84,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
