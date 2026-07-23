@@ -14,6 +14,8 @@ Bot Support/Ticket callbacks are separate from the Web Support Desk: the Browser
 
 Bot Workboard/Task callbacks are separate from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.
 
+Bot Creative callbacks are separate from the Web Creative Studio: the Browser must never replay a Bot creative-variant identifier, selected state, production-job update, handoff instruction or Telegram-admin context. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.
+
 `WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and `WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; the server still checks the signed role on every request.
 
 The following is a Bot command compatibility map. A target is a signed guarded Web surface or a canonical bridge projection; it is never proof that a browser may execute the Bot command directly.

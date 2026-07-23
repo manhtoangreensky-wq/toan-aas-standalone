@@ -50722,28 +50722,56 @@
       ]
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 115216
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "creative",
+      "resolution": "creative_variant_callback_requires_web_native_owner_role_contract",
       "source": "creative|select|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_ADMIN_ONLY",
+        "BOT_CREATIVE_VARIANT_IDENTIFIER",
+        "CANONICAL_BOT_CREATIVE_VARIANT_SELECTION_AND_PRODUCTION_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_CREATIVE_VARIANT_OR_HANDOFF_STATE_REPLAY",
+        "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot `creative|*` handler requires the configured Telegram admin, accepts only a select action with an opaque creative-variant ID, resolves it against the Bot owner, marks the selected variant and resets sibling variants, updates canonical production job stage/status/note, then renders a Telegram handoff instruction. The standalone Web has no adapter that accepts or replays the callback, Bot variant ID, selected state, production-job change, handoff instruction or Telegram admin context.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/content-studio"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 115241
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "creative",
+      "resolution": "creative_variant_callback_requires_web_native_owner_role_contract",
       "source": "creative|select|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_ADMIN_ONLY",
+        "BOT_CREATIVE_VARIANT_IDENTIFIER",
+        "CANONICAL_BOT_CREATIVE_VARIANT_SELECTION_AND_PRODUCTION_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_CREATIVE_VARIANT_OR_HANDOFF_STATE_REPLAY",
+        "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
+        "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot `creative|*` handler requires the configured Telegram admin, accepts only a select action with an opaque creative-variant ID, resolves it against the Bot owner, marks the selected variant and resets sibling variants, updates canonical production job stage/status/note, then renders a Telegram handoff instruction. The standalone Web has no adapter that accepts or replays the callback, Bot variant ID, selected state, production-job change, handoff instruction or Telegram admin context.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/content-studio"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CREATIVE_VARIANT_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -67405,6 +67433,25 @@
       ]
     },
     {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 2,
+      "family": "creative",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "creative|select|{*}"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "callback_template"
+      ]
+    },
+    {
       "authority": "Server-authorized Admin ERP",
       "candidate_boundary": "/admin",
       "count": 2,
@@ -67565,7 +67612,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 836,
+      "count": 838,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -67640,6 +67687,11 @@
         },
         {
           "count": 2,
+          "family": "creative",
+          "priority": "P1"
+        },
+        {
+          "count": 2,
           "family": "opmenu",
           "priority": "P1"
         },
@@ -67708,7 +67760,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 138,
+      "count": 140,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -67852,12 +67904,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 78.23,
+  "mapping_coverage_percent": 78.18,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1678,
+    "COPIED_GUARDED": 1676,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
-    "NEEDS_FEATURE_DISPOSITION": 836,
+    "NEEDS_FEATURE_DISPOSITION": 838,
     "TELEGRAM_ONLY": 565
   },
   "metric_scope": {
@@ -67879,7 +67931,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 78.23,
+  "safe_disposition_coverage_percent": 78.18,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2841,
@@ -67889,15 +67941,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3840,
-    "resolved_static_source_count": 3004,
+    "resolved_static_source_count": 3002,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3951,
     "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 138,
-    "unresolved_source_count": 836
+    "unresolved_callback_templates": 140,
+    "unresolved_source_count": 838
   },
-  "static_web_surface_coverage_percent": 43.7,
+  "static_web_surface_coverage_percent": 43.65,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

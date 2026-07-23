@@ -7,6 +7,7 @@
 - Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.
 - Bot Support/Ticket callbacks are a Telegram owner/role workflow boundary: `support|*` and `ticket|*` can use support/lead/ticket/attachment/pending state and Bot admin reply/delivery controls. Web must not route or replay them; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.
 - Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.
+- Bot Creative callbacks are Telegram-admin creative-selection controls: `creative|*` can select a canonical variant, clear sibling selection and update linked production job state. Web must not route or replay them; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.
 - Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.
 
 ## Related bot tables detected statically
