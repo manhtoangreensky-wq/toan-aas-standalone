@@ -769,9 +769,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("videoaddon|", "/video/add-ons", "customer"),
     ("framevideo|", "/video-studio", "customer"),
     ("videoedit|", "/video-studio", "customer"),
-    ("license_music|", "/media-workspace", "customer"),
-    ("select_media|", "/media-workspace", "customer"),
-    ("play_media|", "/media-workspace", "customer"),
 )
 
 # Frozen baseline b29d0d4: the Bot Quick Image conversation has a useful
@@ -3271,6 +3268,19 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot resolves a cached media result then writes its selected-media state for later Bot flows. The formatted value is not a Web-owned media selection or asset reference.",
     },
 }
+
+# These three templates are the only Media-selection forms that were observed
+# in the frozen Bot source.  Their spelling is deliberately exact: normalizing
+# case here would let a future/hand-crafted callback inherit an unrelated
+# Telegram-only disposition instead of reaching the explicit source-review
+# boundary below.
+MEDIA_SELECTION_EXACT_CALLBACK_TEMPLATES = frozenset(
+    {
+        "license_music|{*}",
+        "play_media|{*}",
+        "select_media|{*}",
+    }
+)
 
 # These public Bot commands can contain words such as ``factory`` or mention
 # an admin review in their handler, which the generic static heuristic sees as
@@ -6116,6 +6126,56 @@ def _map_creative_variant_callback(
     return _creative_variant_source_review_mapping(identifier, source_kind, evidence)
 
 
+MEDIA_SELECTION_CALLBACK_PREFIXES = ("license_music|", "play_media|", "select_media|")
+
+
+def _media_selection_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Bot media-preview cache indexes and selected-media state out of Web routes."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "media_selection_callback_requires_web_native_owner_asset_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_MEDIA_PREVIEW_CACHE_INDEX",
+            "BOT_SELECTED_MEDIA_OR_MUSIC_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_MEDIA_CACHE_INDEX_OR_SELECTED_STATE_REPLAY",
+            "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot media-preview and Pixabay handlers bind a numeric callback index to a Telegram user's "
+            "short-lived music/SFX/media cache. They can send a Telegram preview, select an item into Bot selected-media "
+            "state for later workflows, or display license/source information. The standalone Web has no adapter that "
+            "accepts or replays the cache index, selected-media state, provider result, Telegram preview or license action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_media_selection_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Fail closed for Bot media-selection callbacks until Web-native asset flows exist."""
+
+    if not str(identifier or "").casefold().startswith(MEDIA_SELECTION_CALLBACK_PREFIXES):
+        return None
+    return _media_selection_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -7218,6 +7278,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     creative_variant_mapping = _map_creative_variant_callback(identifier, source_kind, evidence)
     if creative_variant_mapping is not None:
         return creative_variant_mapping
+    media_selection_mapping = _map_media_selection_callback(identifier, source_kind, evidence)
+    if media_selection_mapping is not None:
+        return media_selection_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8632,7 +8695,15 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         }
     media_preview_mapping = _map_media_preview_callback_template(template, evidence)
     if media_preview_mapping is not None:
-        return media_preview_mapping
+        # The original generic media-preview mapper case-folds its lookup. For
+        # the three stateful Media-selection namespaces, retain Bot-only only
+        # for the exact frozen templates; a case variant is an unreviewed
+        # value and must not inherit a Web route or a Bot-only state contract.
+        if raw_template in MEDIA_SELECTION_EXACT_CALLBACK_TEMPLATES or token not in MEDIA_SELECTION_EXACT_CALLBACK_TEMPLATES:
+            return media_preview_mapping
+    media_selection_mapping = _map_media_selection_callback(template, "callback_template", evidence)
+    if media_selection_mapping is not None:
+        return media_selection_mapping
     if token == PACKAGE_PURCHASE_CONFIRM_CALLBACK_TEMPLATE:
         # This one Bot f-string is the canonical package-payment transition:
         # it creates a pending Bot order, calls PayOS, records checkout state
@@ -10128,7 +10199,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Bot callback template", "Required authority boundary", "Audit resolution", "Status", "Source dispositions"],
             media_preview_contract_rows,
         )
-        + "\n\nA future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference. It must not accept a Bot cache index, replay the Telegram callback, read Bot selected-media state, claim license clearance, or trigger a Bot/video/provider action.\n",
+        + "\n\nOnly the exact reviewed templates in this table stay `TELEGRAM_ONLY`. Case variants, missing tokens, suffixes and future `license_music|*`, `play_media|*` or `select_media|*` values resolve to `MEDIA_SELECTION_SOURCE_REVIEW_REQUIRED`; they cannot open `/media-workspace`, navigate/reset the browser, replay a Bot cache index or selected state, invoke a provider/library action, send Telegram delivery, claim license clearance, or create a job/payment/output. A future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference.\n",
     )
     write(
         "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",
