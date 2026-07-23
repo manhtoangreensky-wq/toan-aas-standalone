@@ -48766,11 +48766,19 @@
         "file": "bot.py",
         "line": 67877
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48778,11 +48786,19 @@
         "file": "bot.py",
         "line": 90855
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48790,11 +48806,19 @@
         "file": "bot.py",
         "line": 91884
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48802,11 +48826,19 @@
         "file": "bot.py",
         "line": 100850
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48814,11 +48846,19 @@
         "file": "bot.py",
         "line": 101071
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|cancel|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -48826,15 +48866,16 @@
         "file": "bot.py",
         "line": 37708
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48845,15 +48886,16 @@
         "file": "bot.py",
         "line": 67874
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48864,15 +48906,16 @@
         "file": "bot.py",
         "line": 90854
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48883,15 +48926,16 @@
         "file": "bot.py",
         "line": 91512
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48902,15 +48946,16 @@
         "file": "bot.py",
         "line": 91883
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48921,15 +48966,16 @@
         "file": "bot.py",
         "line": 96737
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48940,15 +48986,16 @@
         "file": "bot.py",
         "line": 100849
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48959,15 +49006,16 @@
         "file": "bot.py",
         "line": 101070
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|confirm|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -48978,15 +49026,16 @@
         "file": "bot.py",
         "line": 37707
       },
-      "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+      "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
       "source": "shopai|package|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
-        "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, or begin canonical payment/delivery. The Web Planner has no adapter for those effects.",
+      "source_evidence": "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation of that same pending state. The standalone Web has no owner-scoped adapter for this token or any resulting mutation.",
       "source_kind": "callback_template",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
@@ -62953,11 +63002,11 @@
   },
   "mapping_coverage_percent": 86.88,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2057,
+    "COPIED_GUARDED": 2052,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 759,
     "NEEDS_FEATURE_DISPOSITION": 504,
-    "TELEGRAM_ONLY": 518
+    "TELEGRAM_ONLY": 523
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -62996,7 +63045,7 @@
     "unresolved_callback_templates": 71,
     "unresolved_source_count": 504
   },
-  "static_web_surface_coverage_percent": 53.57,
+  "static_web_surface_coverage_percent": 53.44,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
