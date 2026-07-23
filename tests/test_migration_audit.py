@@ -119,6 +119,7 @@ async def dashboard():
         "PROVIDER_CHOICE_CALLBACK_CONTRACT.md",
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
+        "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -137,6 +138,7 @@ async def dashboard():
     assert "PROVIDER_CHOICE_CALLBACK_CONTRACT.md" in readme
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
+    assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -1874,7 +1876,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
-        "pipe|stage|review|{*}": "/workboard",
         "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
         "videodub|type|{*}": "/dubbing",
         "videoaddon|export|{*}": "/video/add-ons",
@@ -2581,6 +2582,94 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot Support/Ticket callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Support/Ticket callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
+    """Telegram-admin production transitions must not become Web Workboard actions."""
+
+    audit = _load_audit_module()
+    routes = {"/workboard", "/admin", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix in {"pipe|", "task|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    for identifier in (
+        "pipe|stage|voice|12",
+        "pipe|stage|edit|12",
+        "pipe|stage|review|12",
+        "pipe|stage|publish|12",
+        "pipe|stage|script|12",
+        "pipe|status|ready|12",
+        "pipe|status|published|12",
+        "pipe|status|blocked|12",
+        "task|status|queued|31",
+        "task|status|working|31",
+        "task|status|ready|31",
+        "task|status|blocked|31",
+        "task|handoff|x|31",
+        "PIPE|STAGE|REVIEW|12",
+        "pipe|status|published|12|future",
+        "task|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "workboard_task_callback_requires_web_native_owner_role_contract"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY" in mapped["source_dispositions"]
+
+    for template in (
+        "pipe|stage|{*}|{*}",
+        "pipe|status|{*}|{*}",
+        "task|status|{*}|{*}",
+        "task|handoff|x|{*}",
+        "PIPE|STAGE|{*}|{*}",
+        "pipe|stage|{*}|{*}|future",
+        "task|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "workboard_task_callback_requires_web_native_owner_role_contract"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def workboard_keyboard(job_id, task_id, stage):
+    InlineKeyboardButton("stage", callback_data=f"pipe|stage|{stage}|{job_id}")
+    InlineKeyboardButton("published", callback_data=f"pipe|status|published|{job_id}")
+    InlineKeyboardButton("task", callback_data=f"task|status|ready|{task_id}")
+    InlineKeyboardButton("handoff", callback_data=f"task|handoff|x|{task_id}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    for template in (
+        "pipe|stage|{*}|{*}",
+        "pipe|status|published|{*}",
+        "task|status|ready|{*}",
+        "task|handoff|x|{*}",
+    ):
+        assert templates[template]["target"] == "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+        assert templates[template]["classification"] == "admin"
+    contract = (tmp_path / "docs" / "WORKBOARD_TASK_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "pipe\\|*" in contract
+    assert "task\\|*" in contract
+    assert "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED" in contract
+    assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Workboard/Task callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Workboard/Task callbacks are separate from the Web Workboard" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+    assert "Bot Workboard/Task callbacks are distinct from the Web Workboard" in (tmp_path / "docs" / "STATE_AND_DATABASE_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:
