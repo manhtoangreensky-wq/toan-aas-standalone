@@ -764,8 +764,6 @@ STORYPACK_RUNTIME_OR_MEDIA_PREFIXES = (
 # deep link from a Telegram object ID.  The Web must obtain any record through
 # its own signed, owner/role-checked API after navigation.
 DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
-    ("pipe|", "/workboard", "customer"),
-    ("task|", "/workboard", "customer"),
     ("storyboard|", "/video-studio/storyboard-composer", "customer"),
     ("videodub|", "/dubbing", "customer"),
     ("creative|", "/content-studio", "customer"),
@@ -6017,6 +6015,59 @@ def _map_support_ticket_callback(
     return _support_ticket_source_review_mapping(identifier, source_kind, evidence)
 
 
+WORKBOARD_TASK_CALLBACK_PREFIXES = ("pipe|", "task|")
+
+
+def _workboard_task_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Bot-admin production job/task transitions out of Web navigation."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_ADMIN_ONLY",
+            "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
+            "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
+            "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque "
+            "production job/task ID, and update canonical production stage/status/task/handoff state before rendering a "
+            "Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task "
+            "callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that "
+            "accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram "
+            "admin context."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_workboard_task_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Fail closed for every Bot Workboard/Task callback until Web-native flows exist."""
+
+    if not str(identifier or "").casefold().startswith(WORKBOARD_TASK_CALLBACK_PREFIXES):
+        return None
+    return _workboard_task_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -7113,6 +7164,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     support_ticket_mapping = _map_support_ticket_callback(identifier, source_kind, evidence)
     if support_ticket_mapping is not None:
         return support_ticket_mapping
+    workboard_task_mapping = _map_workboard_task_callback(identifier, source_kind, evidence)
+    if workboard_task_mapping is not None:
+        return workboard_task_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -8365,6 +8419,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     support_ticket_mapping = _map_support_ticket_callback(template, "callback_template", evidence)
     if support_ticket_mapping is not None:
         return support_ticket_mapping
+    workboard_task_mapping = _map_workboard_task_callback(template, "callback_template", evidence)
+    if workboard_task_mapping is not None:
+        return workboard_task_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -9772,6 +9829,26 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "no Web support/tickets/admin route, browser navigation/reset, ticket/lead/attachment replay, refund/ledger action, Telegram delivery or runtime claim",
         ],
     ]
+    workboard_task_contract_rows = [
+        [
+            "all frozen pipe|stage|*/pipe|status|* literals and templates",
+            "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
+            "workboard_task_callback_requires_web_native_owner_role_contract",
+            "Telegram admin plus opaque Bot production job ID; updates canonical production stage/status, including publish/blocked transitions",
+        ],
+        [
+            "all frozen task|status|*/task|handoff|* literals and templates",
+            "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
+            "workboard_task_callback_requires_web_native_owner_role_contract",
+            "Telegram admin plus opaque Bot production task ID; validates/updates canonical task status or moves it into a Bot handoff prompt",
+        ],
+        [
+            "case variants, missing tokens, suffixes or future pipe|*/task|* values",
+            "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
+            "workboard_task_callback_requires_web_native_owner_role_contract",
+            "no Web Workboard/Admin route, browser navigation/reset, Bot job/task/status/handoff replay, provider/output/delivery/ledger action or runtime claim",
+        ],
+    ]
     vproduct_contract_rows = [
         [
             ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
@@ -9926,6 +10003,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
         + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — Bot Image Tools callbacks remain source-review boundaries; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a generic Web image route or browser action.\n"
         + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket callbacks remain owner/role/source-review boundaries; no Telegram ticket, lead, attachment, admin preview or delivery state becomes a generic Web portal action.\n"
+        + "- [`WORKBOARD_TASK_CALLBACK_CONTRACT.md`](WORKBOARD_TASK_CALLBACK_CONTRACT.md) — Bot Workboard/Task callbacks remain Telegram-admin/source-review boundaries; no production job/task ID, stage/status or handoff prompt becomes a generic Web Workboard or Admin action.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -10074,6 +10152,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             support_ticket_contract_rows,
         )
         + "\n\nEvery `support|*` and `ticket|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id or pending input; create/update/assign/resolve a Bot ticket; mark refund-pending; send a Telegram reply/file; or claim a result. A future Web Support Desk must start from its own signed customer/staff session, server-side ownership and role checks, CSRF, confirmation/idempotency/audit rules for writes, owner-scoped Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram ticket state.\n",
+    )
+    write(
+        "WORKBOARD_TASK_CALLBACK_CONTRACT.md",
+        "# Workboard and Task callback contract\n\n"
+        "The frozen Bot owns the `pipe|*` and `task|*` callback handlers. They are Telegram-admin production controls, not Web Workboard navigation: each handler requires the configured Telegram admin, parses an opaque production job/task ID, changes canonical stage/status or task/handoff state, and renders a Telegram result. A callback is not a Web-owned work item, Admin permission, browser back/reset, safe handoff, output authorization, provider action or delivery contract.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
+            workboard_task_contract_rows,
+        )
+        + "\n\nEvery `pipe|*` and `task|*` source remains `WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/workboard` or an Admin route; navigate/reset the browser; receive/replay a Bot job/task ID, stage/status value or handoff prompt; update canonical Bot production state; invoke a provider; expose an output; send a delivery; mutate a payment/refund/ledger record; or claim completion. A future Web Workboard must start from its own signed staff session, server-side role checks, CSRF, confirmation/idempotency/audit rules for writes, and independently owned Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram production state.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -10500,6 +10588,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Bot-only (bridge/read contract required)", str(len(bot_tables - web_tables)), ", ".join(sorted(bot_tables - web_tables)[:30]) or "None"],
             ],
         )
+        + "\n\n## Bot Workboard and Task callback boundary\n\n"
+        + "The Bot `pipe|*` and `task|*` callbacks are Telegram-admin transitions over canonical production job/task rows. A Web Workboard must use independently authorized Web work records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, job/task identifier, stage/status or handoff value. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         + "\n\n## Additive Web-native Video Poster state\n\n"
         + "| Table | Owner | Purpose | Explicitly not authoritative for |\n"
         + "| --- | --- | --- | --- |\n"
@@ -10521,6 +10611,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket callbacks are a Telegram owner/role workflow boundary: `support|*` and `ticket|*` can use support/lead/ticket/attachment/pending state and Bot admin reply/delivery controls. Web must not route or replay them; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Provider/payments remain disabled in local/test unless an explicit feature flag and approved integration are present.\n\n"
         "## Related bot tables detected statically\n\n"
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
@@ -10654,7 +10745,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "| Jobs / outputs | Bot + workers | Read/status via bridge, signed delivery only |\n"
         "| Web session / CSRF | Web App | Local additive session database only |\n\n"
         + _markdown_table(["Table set", "Count", "Examples"], [["Bot", str(len(bot_tables)), ", ".join(sorted(bot_tables)[:30]) or "None"], ["Web", str(len(web_tables)), ", ".join(sorted(web_tables)[:30]) or "None"]])
-        + "\n",
+        + "\n\nBot Workboard/Task callbacks are distinct from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n",
     )
     write(
         "PAYOS_WALLET_JOB_MAP.md",
@@ -10665,6 +10756,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. No callback may open `/image` or invoke Web provider/job/wallet/payment/output/delivery behavior; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket callbacks stay outside the Web route layer: `support|*` and `ticket|*` use Telegram identity, support/lead/ticket/attachment/pending state and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. No callback may open a Web support/ticket/Admin route or invoke Web ticket/ledger/delivery behavior; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
@@ -10691,6 +10783,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ],
         )
         + "\n\nBot Support/Ticket callbacks are separate from the Web Support Desk: the Browser must never replay a Bot ticket/lead/attachment identifier, pending input, admin-preview or Telegram delivery state. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.\n\n"
+        + "Bot Workboard/Task callbacks are separate from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n\n"
         + "`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
         "`WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; "
         "the server still checks the signed role on every request.\n\n"

@@ -8,6 +8,11 @@ The bot remains the canonical writer for identity, wallet, PayOS, jobs, and prov
 | Web discovered | 210 | a, above, active, affiliate_links, any, b2b_projects, bot, campaigns, canonical, choices, credit_events, erp_approvals, erp_assets, erp_attendance, erp_banners, erp_chat, erp_customers, erp_employees, erp_goals, erp_inventory, erp_okrs, erp_production, erp_projects, erp_purchases, erp_sales, erp_social, erp_transactions, erp_workloads, family, feedback |
 | Bot-only (bridge/read contract required) | 86 | api_debug_events, audit_logs, birthday, birthday_gifts, birthday_review_requests, channel_profiles, content_calendar, content_performance_events, creative_variants, feature_flags, finance_compliance_notes, finance_expense_events, finance_revenue_events, finance_usage_events, gift_assignments, gift_beta_requests, gift_redemptions, growth_recommendations, internal_documents, launch_bonus_redemptions, leads, local_worker_jobs, long_video_projects, long_video_scenes, media_factory_jobs, member_tier_overrides, member_tier_rewards, memory_events, memory_notes, memory_plans |
 
+## Bot Workboard and Task callback boundary
+
+The Bot `pipe|*` and `task|*` callbacks are Telegram-admin transitions over canonical production job/task rows. A Web Workboard must use independently authorized Web work records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, job/task identifier, stage/status or handoff value. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.
+
+
 ## Additive Web-native Video Poster state
 
 | Table | Owner | Purpose | Explicitly not authoritative for |

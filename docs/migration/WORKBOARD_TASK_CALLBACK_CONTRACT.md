@@ -1,0 +1,11 @@
+# Workboard and Task callback contract
+
+The frozen Bot owns the `pipe|*` and `task|*` callback handlers. They are Telegram-admin production controls, not Web Workboard navigation: each handler requires the configured Telegram admin, parses an opaque production job/task ID, changes canonical stage/status or task/handoff state, and renders a Telegram result. A callback is not a Web-owned work item, Admin permission, browser back/reset, safe handoff, output authorization, provider action or delivery contract.
+
+| Frozen Bot callback family | Web target/boundary | Audit resolution | Required boundary |
+| --- | --- | --- | --- |
+| all frozen pipe\|stage\|*/pipe\|status\|* literals and templates | WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED | workboard_task_callback_requires_web_native_owner_role_contract | Telegram admin plus opaque Bot production job ID; updates canonical production stage/status, including publish/blocked transitions |
+| all frozen task\|status\|*/task\|handoff\|* literals and templates | WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED | workboard_task_callback_requires_web_native_owner_role_contract | Telegram admin plus opaque Bot production task ID; validates/updates canonical task status or moves it into a Bot handoff prompt |
+| case variants, missing tokens, suffixes or future pipe\|*/task\|* values | WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED | workboard_task_callback_requires_web_native_owner_role_contract | no Web Workboard/Admin route, browser navigation/reset, Bot job/task/status/handoff replay, provider/output/delivery/ledger action or runtime claim |
+
+Every `pipe|*` and `task|*` source remains `WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/workboard` or an Admin route; navigate/reset the browser; receive/replay a Bot job/task ID, stage/status value or handoff prompt; update canonical Bot production state; invoke a provider; expose an output; send a delivery; mutate a payment/refund/ledger record; or claim completion. A future Web Workboard must start from its own signed staff session, server-side role checks, CSRF, confirmation/idempotency/audit rules for writes, and independently owned Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram production state.
