@@ -113,6 +113,7 @@ async def dashboard():
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
+        "SHOPAI_CALLBACK_CONTRACT.md",
         "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
@@ -125,6 +126,7 @@ async def dashboard():
     assert "BOT_COMPANION_HANDOFF.md" in readme
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
+    assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
@@ -1878,13 +1880,14 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         assert mapped["status"] == "COPIED_GUARDED"
         assert mapped["resolution"] == "reviewed_namespace_compatibility_route"
 
-    for template in ("shopai|confirm|{*}", "shopai|package|{*}"):
+    assert not any(prefix == "shopai|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    for template in sorted(audit.SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
         assert mapped is not None
         assert mapped["target"] == "TELEGRAM_ONLY"
         assert mapped["status"] == "TELEGRAM_ONLY"
-        assert mapped["resolution"] == "bot_quick_image_tier_or_confirm_requires_canonical_bot_state"
-        assert "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY" in mapped["source_dispositions"]
+        assert mapped["resolution"] == "bot_shopai_confirmation_requires_canonical_bot_state"
+        assert "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY" in mapped["source_dispositions"]
 
     for template in sorted(audit.MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -1965,10 +1968,6 @@ def test_static_audit_maps_frozen_quick_image_draft_but_keeps_tier_and_checkout_
         "create_media|QI_ENTRY",
         "create_media|qi_logo_pos|not_frozen",
         "create_media|qi_future",
-        "shopai|confirm",
-        "SHOPAI|PACKAGE",
-        "SHOPAI|CONFIRM|opaque",
-        "shopai|package|opaque",
     ):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
         assert mapped["target"] == "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED"
@@ -1981,9 +1980,6 @@ def test_static_audit_maps_frozen_quick_image_draft_but_keeps_tier_and_checkout_
         "create_media|quick_image|future_{*}",
         "create_media|QI_TIER_{*}",
         "create_media|qi_unknown_{*}",
-        "shopai|confirm",
-        "SHOPAI|CONFIRM|{*}",
-        "shopai|package|future_{*}",
     ):
         mapped = audit._map_callback_template(template, evidence, routes)
         assert mapped is not None
@@ -2038,6 +2034,79 @@ async def quick_image_planner():
     assert "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED" in contract
     assert "exact lowercase frozen literals" in contract
     assert "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_shopai_confirmation_state_out_of_web_topup(tmp_path: Path) -> None:
+    """ShopAI opaque tokens are Bot-only confirmation/billing state, never top-up routes."""
+
+    audit = _load_audit_module()
+    routes = {"/wallet/topup", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert not any(prefix == "shopai|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES == {
+        "shopai|confirm|{*}",
+        "shopai|package|{*}",
+        "shopai|cancel|{*}",
+    }
+    for template in sorted(audit.SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_shopai_confirmation_requires_canonical_bot_state"
+        assert "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+
+    for identifier in (
+        "shopai|confirm",
+        "shopai|cancel",
+        "shopai|confirm|opaque",
+        "shopai|package|opaque",
+        "shopai|cancel|opaque",
+        "SHOPAI|CONFIRM|opaque",
+        "shopai|future|opaque",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SHOPAI_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "shopai_callback_requires_exact_source_review"
+        assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+
+    for template in (
+        "SHOPAI|CONFIRM|{*}",
+        "shopai|package|future_{*}",
+        "shopai|cancel|future_{*}",
+        "shopai|future|{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "SHOPAI_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "shopai_callback_requires_exact_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def shopai_keyboard(token):
+    InlineKeyboardButton("confirm", callback_data=f"shopai|confirm|{token}")
+    InlineKeyboardButton("package", callback_data=f"shopai|package|{token}")
+    InlineKeyboardButton("cancel", callback_data=f"shopai|cancel|{token}")
+''',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    mappings = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert all(mappings[template]["target"] == "TELEGRAM_ONLY" for template in audit.SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES)
+    contract = (tmp_path / "docs" / "SHOPAI_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "shopai\\|cancel\\|{*}" in contract
+    assert "SHOPAI_SOURCE_REVIEW_REQUIRED" in contract
+    assert "SHOPAI_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "ShopAI confirmation/package/cancel" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:

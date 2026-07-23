@@ -782,7 +782,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     # Payment namespaces stay at a canonical, explicitly guarded entry point.
     # This does not turn the Web into a second PayOS/manual-payment writer.
     ("manual|", "/wallet/topup", "customer"),
-    ("shopai|", "/wallet/topup", "customer"),
     ("shopai_video_job|", "/wallet/topup", "customer"),
     ("opmenu|", "/admin", "admin"),
 )
@@ -823,10 +822,16 @@ QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES = frozenset({
 QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS = frozenset({"create_media|qi_back_tier"})
 QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "create_media|qi_tier_{*}",
-    # These opaque confirmation/package tokens are shared canonical Bot
-    # checkout transitions.  They must never inherit the generic top-up route.
+})
+
+# Frozen baseline b29d0d4: ShopAI confirmation callbacks consume an opaque,
+# short-lived Bot record bound to the Telegram user.  They can then branch to
+# canonical Xu, provider, job, package or payment state.  The values are not a
+# browser checkout, top-up reference or Web-owned job identifier.
+SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "shopai|confirm|{*}",
     "shopai|package|{*}",
+    "shopai|cancel|{*}",
 })
 
 # The frozen Bot's one literal Media Creator cancellation branch clears a
@@ -5413,6 +5418,91 @@ def _quick_image_planner_source_review_mapping(
     }
 
 
+def _shopai_canonical_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep exact ShopAI confirmation transitions inside the canonical Bot.
+
+    A ShopAI token is neither a Web payment reference nor a reusable feature
+    selection.  The frozen Bot resolves it against a short-lived record bound
+    to a Telegram user, consumes that record, and may continue to canonical
+    billing/provider/job handling.  The static audit records the boundary but
+    deliberately exposes no browser action.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "customer",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_shopai_confirmation_requires_canonical_bot_state",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+            "CANONICAL_SHOPAI_XU_PROVIDER_JOB_OR_PAYMENT_BOUNDARY",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot resolves the opaque ShopAI confirmation/package/cancel token against a "
+            "short-lived pending confirmation for the Telegram user, then consumes it. Confirm/package can "
+            "continue into canonical Xu/provider/job/payment state; cancel records the Bot-side cancellation "
+            "of that same pending state. The standalone Web has no owner-scoped adapter for this token or "
+            "any resulting mutation."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _shopai_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for an unreviewed or case-variant ShopAI callback."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "SHOPAI_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "shopai_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_SHOPAI_CALLBACK_OR_PENDING_CONFIRMATION_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "Only finite lowercase ShopAI confirmation/package/cancel templates observed in the frozen Bot "
+            "baseline are classified as Bot-only. A case variant, missing token, suffix or future ShopAI "
+            "callback may change canonical pending confirmation, Xu, provider, job or payment behavior and "
+            "cannot inherit a Web wallet/top-up route, browser navigation, state reset or runtime action."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_shopai_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Map only exact frozen ShopAI templates; keep every other value visible."""
+
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.casefold().startswith("shopai|"):
+        return None
+    if raw_identifier in SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return _shopai_canonical_telegram_only_mapping(identifier, source_kind, evidence)
+    return _shopai_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -5434,10 +5524,6 @@ def _map_quick_image_planner_callback(
     if (
         token.startswith("create_media|quick_image")
         or token.startswith("create_media|qi_")
-        or token == "shopai|confirm"
-        or token.startswith("shopai|confirm|")
-        or token == "shopai|package"
-        or token.startswith("shopai|package|")
     ):
         return _quick_image_planner_source_review_mapping(identifier, source_kind, evidence)
     return None
@@ -6492,6 +6578,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     media_creator_cancel_mapping = _map_media_creator_cancel_callback(identifier, source_kind, evidence)
     if media_creator_cancel_mapping is not None:
         return media_creator_cancel_mapping
+    shopai_mapping = _map_shopai_callback(identifier, source_kind, evidence)
+    if shopai_mapping is not None:
+        return shopai_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -7723,6 +7812,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     media_creator_cancel_mapping = _map_media_creator_cancel_callback(template, "callback_template", evidence)
     if media_creator_cancel_mapping is not None:
         return media_creator_cancel_mapping
+    shopai_mapping = _map_shopai_callback(template, "callback_template", evidence)
+    if shopai_mapping is not None:
+        return shopai_mapping
     if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
     if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
@@ -7730,10 +7822,6 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     if (
         token.startswith("create_media|quick_image")
         or token.startswith("create_media|qi_")
-        or token == "shopai|confirm"
-        or token.startswith("shopai|confirm|")
-        or token == "shopai|package"
-        or token.startswith("shopai|package|")
     ):
         return _quick_image_planner_source_review_mapping(template, "callback_template", evidence)
     residual_media_creator_mapping = _map_residual_media_creator_callback(template, "callback_template", evidence)
@@ -9033,16 +9121,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "Bot tier/one-time confirmation state and canonical Xu/provider/job boundary",
         ],
         [
-            "shopai|confirm|{*}, shopai|package|{*}",
-            "TELEGRAM_ONLY",
-            "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
-            "opaque canonical checkout/confirmation; no browser payment, ledger, job or delivery action",
-        ],
-        [
-            "case variants, suffixes or unreviewed create_media|quick_image / create_media|qi_* spellings; ShopAI confirm/package variants",
+            "case variants, suffixes or unreviewed create_media|quick_image / create_media|qi_* spellings",
             "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED",
             "quick_image_planner_callback_requires_exact_source_review",
             "no Web route, Bot checkout disposition, browser state reset, provider/job/wallet/payment or delivery action",
+        ],
+    ]
+    shopai_contract_rows = [
+        [
+            ", ".join(sorted(SHOPAI_CANONICAL_TELEGRAM_ONLY_CALLBACK_TEMPLATES)),
+            "TELEGRAM_ONLY",
+            "bot_shopai_confirmation_requires_canonical_bot_state",
+            "opaque token is bound to a Telegram user, expires and is consumed by canonical Bot confirmation/package/cancel handling",
+        ],
+        [
+            "case variants, missing token, suffixes or other shopai|* values",
+            "SHOPAI_SOURCE_REVIEW_REQUIRED",
+            "shopai_callback_requires_exact_source_review",
+            "no Web wallet/top-up route, browser navigation/reset, provider/job/Xu/payment/output/delivery action or runtime claim",
         ],
     ]
     vproduct_contract_rows = [
@@ -9192,7 +9288,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
         + "- [`MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md) — exact Bot Media Creator cancellation stays Telegram-only because it clears broad Bot-local pending state; Web never resets drafts, session, history or navigation from that callback.\n"
         + "- [`MEDIA_CREATOR_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CALLBACK_CONTRACT.md) — residual Bot Media Creator callbacks remain explicit source-review boundaries; no generic callback opens Media Factory, membership or a video feature route.\n"
-        + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
+        + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/Xu execution remains canonical Bot-only.\n"
+        + "- [`SHOPAI_CALLBACK_CONTRACT.md`](SHOPAI_CALLBACK_CONTRACT.md) — exact ShopAI confirmation/package/cancel templates remain canonical Bot-only; no ShopAI callback can become a Web top-up, payment, job, provider or output action.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -9273,14 +9370,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "# Quick Image Planner callback contract\n\n"
-        "The frozen Bot Quick Image conversation contains a non-executing draft grammar followed by a canonical tier/ShopAI confirmation path. The standalone Web Planner is a fresh signed, CSRF-protected deterministic prompt-plan surface at `/image/quick-planner`; it does not import Bot state, expose raw callbacks, or execute an image workflow.\n\n"
+        "The frozen Bot Quick Image conversation contains a non-executing draft grammar followed by a canonical tier and confirmation path. The standalone Web Planner is a fresh signed, CSRF-protected deterministic prompt-plan surface at `/image/quick-planner`; it does not import Bot state, expose raw callbacks, or execute an image workflow.\n\n"
         + _markdown_table(
             ["Frozen Bot source", "Web target/boundary", "Audit resolution", "Required boundary"],
             quick_image_planner_contract_rows,
         )
-        + "\n\nOnly the exact lowercase frozen literals and templates in this table may inherit these dispositions. Case variants, suffixes, other `create_media|quick_image` / `create_media|qi_*` values, and `shopai|confirm|*` / `shopai|package|*` variants resolve to `QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED`; they never route to Planner, wallet/top-up or checkout.\n\n"
+        + "\n\nOnly the exact lowercase frozen literals and templates in this table may inherit these dispositions. Case variants, suffixes and other `create_media|quick_image` / `create_media|qi_*` values resolve to `QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED`; they never route to Planner, wallet/top-up or checkout. ShopAI confirmation handling has its own separate `SHOPAI_CALLBACK_CONTRACT.md`.\n\n"
         "The static auditor derives the nine `qi_logo_pos` values only from the direct frozen helper call that supplies the literal Quick Image prefix. It does not map the helper's shared dynamic `create_media|{*}|…` template globally because regular image/video flows also use it.\n\n"
         "The Web request accepts only a finite catalog key or an original bounded custom brief, deterministic variation, ratio, optional text brand direction and placement, and locale. It has no image upload, preview, source analysis, provider/Bot/Core Bridge call, tier, quote, confirmation token, job, asset, Xu/wallet mutation, PayOS payment, webhook, publish action or delivery. `prompt_plan_only_no_real_image` is a manual-review plan, not evidence that an image or watermark exists.\n",
+    )
+    write(
+        "SHOPAI_CALLBACK_CONTRACT.md",
+        "# ShopAI confirmation callback contract\n\n"
+        "The frozen Bot owns the `shopai|*` callback handler. Its only observed templates are `confirm`, `package` and `cancel` with one opaque token. The handler requires exactly three callback parts, resolves the token against a short-lived pending confirmation tied to `query.from_user.id`, rejects wrong/expired/replayed tokens and consumes a valid record before continuing. Confirm/package can enter canonical Xu, package, provider, job, payment, output and refund guards; cancel records a Bot-side cancellation for that same pending confirmation. This is not a Web top-up, browser checkout, browser cancel/back/reset, asset, job identifier or delivery contract.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback source", "Web target/boundary", "Audit resolution", "Required boundary"],
+            shopai_contract_rows,
+        )
+        + "\n\nOnly the exact lowercase templates in this table retain the Bot-only disposition. Every case variant, missing token, suffix and future `shopai|*` value resolves to `SHOPAI_SOURCE_REVIEW_REQUIRED`. It cannot navigate to `/wallet/topup`, create/approve/finalize a payment, mutate Xu, invoke a provider, create/retry/cancel/refund a job, reset browser state, expose an output or claim delivery. A future Web-native ShopAI-like capability must start from a separately designed signed owner-scoped contract with independently recomputed price/authorization/idempotency; it must not accept or replay a Telegram token.\n",
     )
     write(
         "VPRODUCT_CALLBACK_CONTRACT.md",
@@ -9868,6 +9975,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
+        "- ShopAI confirmation/package/cancel is distinct from Xu top-up. Its opaque token is Telegram-user-bound, short-lived and consumed by canonical Bot billing/provider/job handling; no `shopai|*` callback may open `/wallet/topup` or invoke a Web payment, ledger, job, provider, output or delivery action. See `SHOPAI_CALLBACK_CONTRACT.md`.\n"
         "- Bot video-job stats can only open a fresh signed `/admin/jobs` view for one reviewed admin callback. Canonical approve/cancel actions stay Telegram-only until a dedicated owner-scoped admin bridge exists; the Web never accepts a Bot job ID. See `VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Video Finishing callbacks remain Telegram-only because they consume or mutate the Telegram finalization session. The separately signed Web workflow starts from its own owner-scoped draft and never accepts Bot media, quote, export or payment state. See `VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`.\n"
         "- Storage quota add-on purchase is distinct from Xu top-up. Bot menu/custom/confirm callbacks remain Telegram-only until an owner-scoped storage bridge exists; the Web must not create a storage order, checkout, quota entitlement, or second webhook/ledger. See `STORAGE_ADDON_CALLBACK_CONTRACT.md`.\n"
