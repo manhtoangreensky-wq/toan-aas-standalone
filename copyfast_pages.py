@@ -23,6 +23,7 @@ CAMPAIGN_PLAN_PATH = re.compile(r"^/campaigns/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a
 PROJECT_PATH = re.compile(r"^/projects/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 PROMPT_LIBRARY_PATH = re.compile(r"^/prompt-library/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 MEDIA_WORKSPACE_PATH = re.compile(r"^/media-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+AUDIO_HUB_PATH = re.compile(r"^/audio-hub/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CONTENT_STUDIO_PATH = re.compile(r"^/content-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 VOICE_STUDIO_PATH = re.compile(r"^/voice-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 VIDEO_STUDIO_PATH = re.compile(r"^/video-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -103,6 +104,8 @@ _PORTAL_SHELL_TITLES = {
     "/workspace/setup": {"vi": "Thiết lập workspace · TOAN AAS", "en": "Workspace setup · TOAN AAS", "zh": "工作台设置 · TOAN AAS"},
     "/workspace-menu": {"vi": "Chuyển workspace · TOAN AAS", "en": "Switch workspace · TOAN AAS", "zh": "切换工作台 · TOAN AAS"},
     "/starter-kits": {"vi": "Starter Kits · TOAN AAS", "en": "Starter Kits · TOAN AAS", "zh": "入门套件 · TOAN AAS"},
+    "/audio-hub": {"vi": "Audio Production Hub · TOAN AAS", "en": "Audio Production Hub · TOAN AAS", "zh": "音频制作中心 · TOAN AAS"},
+    "/audio-hub/new": {"vi": "Audio Production Brief mới · TOAN AAS", "en": "New Audio Production Brief · TOAN AAS", "zh": "新建音频制作简报 · TOAN AAS"},
 }
 
 
@@ -181,6 +184,8 @@ def _title_for(path: str) -> str:
         return "Template Prompt mới"
     if normalized == "/content-studio/new":
         return "Content Brief mới"
+    if normalized == "/audio-hub/new":
+        return "Audio Production Brief mới"
     if normalized == "/voice-studio/new":
         return "Voice direction mới"
     if normalized == "/video-studio/new":
@@ -236,6 +241,8 @@ def _title_for(path: str) -> str:
         return "Partner & Lead CRM"
     if MEDIA_WORKSPACE_PATH.fullmatch(normalized):
         return "Audio Library & Briefing"
+    if AUDIO_HUB_PATH.fullmatch(normalized):
+        return "Audio Production Hub"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
         return "Chi tiết kế hoạch"
     if PROJECT_PATH.fullmatch(normalized):
@@ -272,6 +279,12 @@ def _shell_title_for(path: str, locale: str) -> str:
     titles = _PORTAL_SHELL_TITLES.get(normalized)
     if titles:
         return titles[locale]
+    if AUDIO_HUB_PATH.fullmatch(normalized):
+        return {
+            "vi": "Audio Production Board · TOAN AAS",
+            "en": "Audio Production Board · TOAN AAS",
+            "zh": "音频制作看板 · TOAN AAS",
+        }[locale]
     # Do not present a Vietnamese route title as if it were reviewed English
     # or Simplified Chinese. The browser catalog upgrades individual workspace
     # titles as those renderers opt in; the first paint stays truthful now.
@@ -288,7 +301,7 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     normalized = ("/" + path.lstrip("/")) if path else "/"
     normalized = normalized.rstrip("/") or "/"
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/starter-kits"} and not is_starter_kit_detail and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/starter-kits"} and not is_starter_kit_detail and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     locale = _interface_locale(interface_locale)
     shell_copy = _PORTAL_SHELL_COPY[locale]

@@ -31,12 +31,16 @@ def test_media_workspace_is_a_real_signed_web_route_not_a_bot_music_shell() -> N
     assert "MEDIA_WORKSPACE_PATH" in PAGES
     assert "MEDIA_WORKSPACE_PATH.fullmatch(normalized)" in PAGES
     assert 'botCompanionPage("/media-workspace"' not in PORTAL
-    assert 'href="/media-workspace/${encodeURIComponent(id)}"' in PORTAL
+    assert "function mediaWorkspaceCollectionRoute(page, collectionId)" in PORTAL
+    assert "mediaWorkspaceCollectionRoute({ routePath: route }, id)" in PORTAL
 
 
 def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api() -> None:
     for helper in (
         "mediaWorkspaceCollectionIdFromPath",
+        "mediaWorkspaceVisualRoot",
+        "mediaWorkspaceCollectionRoute",
+        "isMediaWorkspaceListViewPath",
         "isNativeMediaWorkspacePath",
         "mediaWorkspaceSafetyError",
         "mediaWorkspaceFilterPayload",
@@ -218,5 +222,6 @@ def test_media_workspace_reads_ignore_late_session_route_and_page_responses() ->
     assert "const requestEpoch = ++mediaWorkspaceAudioHydrationEpoch;" in audio_read
     assert "mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceAudioHydrationEpoch, sessionEpoch, expectedPath)" in audio_read
     assert "const requestEpoch = ++mediaWorkspaceDetailHydrationEpoch;" in detail_read
+    assert "const route = mediaWorkspaceCollectionRoute(collectionId, visualRoute || currentPortalPath());" in detail_read
     assert "if (currentPortalPath() !== route) return null;" in detail_read
     assert "mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceDetailHydrationEpoch, sessionEpoch, route)" in detail_read

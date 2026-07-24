@@ -1,6 +1,7 @@
 /* Only public portal shell assets are cached. API, wallet, payment, admin,
    Support Desk cases/messages, Prompt Library templates/previews/exports,
-   Audio Library & Briefing collections/briefs/Asset Vault references, Creative
+   Audio Library & Briefing collections/briefs/Asset Vault references, Audio
+   Production Hub projections, Creative
    Content Studio briefs/content pieces/history, Voice Studio consent metadata/
    scripts/cue sheets/history, uploads,
    /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
@@ -19,7 +20,7 @@
    /api/v1/document-workspace, /api/v1/chat-workspace, /api/v1/analytics-workspace, /api/v1/workboard,
     /api/v1/workspace/setup, /api/v1/workspace/starter-kits,
     /api/v1/operations, /internal/v1/operations, /api/v1/inbox, /internal/v1/notifications,
-    private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/motion-guide`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/music-prompt-composer`, `/media-workspace/music-directions` and `/media-workspace/sfx-cue-sheet`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
+    private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/motion-guide`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/*`, private `/audio-hub/*`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
      private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/guides` and `/api/v1/guides`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
      private `/content/handoffs/*`, private `/crm/*`, private `/operations/*`, private `/admin/operations/*`, private `/admin/reliability/*`, private `/inbox/*`, private `/automation/*` and private `/workspace-menu` routes and private delivery URLs are
     private `/starter-kits/*` routes and private delivery URLs are intentionally
@@ -132,6 +133,12 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/video-studio/story-video-plan",
   "/guides/source-rights",
   "/" + "api/v1/media-workspace",
+  // Audio Production Hub is an account-private visual projection over the
+  // owner-scoped Media Workspace API. Keep every route out of Cache Storage;
+  // no collection brief, Asset Vault reference or revision may survive a
+  // sign-out/account switch through a public PWA shell cache.
+  "/media-workspace",
+  "/audio-hub",
   "/media-workspace/music-prompt-composer",
   "/media-workspace/music-directions",
   "/media-workspace/sfx-cue-sheet",
