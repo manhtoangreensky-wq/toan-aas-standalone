@@ -5158,12 +5158,29 @@
   const OPERATIONS_DESK_BOOTSTRAP_KINDS = new Set([
     "support_case", "operations_incident", "operations_approval", "reliability_followup", "content_handoff"
   ]);
+  const OPERATIONS_DESK_BOOTSTRAP_KIND_LIST = Object.freeze([
+    "support_case", "operations_incident", "operations_approval", "reliability_followup", "content_handoff"
+  ]);
   const OPERATIONS_DESK_BOOTSTRAP_STATES = new Set([
     "new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed",
     "open", "investigating", "awaiting_approval", "approved", "rejected", "expired", "superseded",
     "acknowledged", "draft", "review", "approved_for_handoff", "handed_off", "blocked", "guarded"
   ]);
   const OPERATIONS_DESK_BOOTSTRAP_LEVELS = new Set(["low", "normal", "medium", "high", "urgent", "critical", "guarded"]);
+  const OPERATIONS_DESK_BOOTSTRAP_STATES_BY_KIND = Object.freeze({
+    support_case: new Set(["new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed", "guarded"]),
+    operations_incident: new Set(["open", "investigating", "resolved", "closed", "guarded"]),
+    operations_approval: new Set(["awaiting_approval", "approved", "rejected", "expired", "superseded", "guarded"]),
+    reliability_followup: new Set(["open", "acknowledged", "resolved", "superseded", "guarded"]),
+    content_handoff: new Set(["draft", "review", "approved_for_handoff", "handed_off", "blocked", "guarded"])
+  });
+  const OPERATIONS_DESK_BOOTSTRAP_LEVELS_BY_KIND = Object.freeze({
+    support_case: { key: "priority", values: new Set(["low", "normal", "high", "urgent"]) },
+    operations_incident: { key: "severity", values: new Set(["low", "normal", "high", "critical"]) },
+    operations_approval: { key: "severity", values: new Set(["normal", "high", "critical"]) },
+    reliability_followup: { key: "severity", values: new Set(["low", "medium", "high", "critical"]) },
+    content_handoff: { key: "severity", values: new Set(["normal"]) }
+  });
   const OPERATIONS_DESK_BOOTSTRAP_AVAILABILITY = new Set(["available", "guarded", "unavailable"]);
   const OPERATIONS_DESK_BOOTSTRAP_VIEWS = new Set(["all", "attention"]);
   const OPERATIONS_DESK_BOOTSTRAP_READ_STATES = new Set(["loading", "ready", "failed", "guarded"]);
@@ -5172,47 +5189,59 @@
   const OPERATIONS_DESK_BOOTSTRAP_MAX_OFFSET = 10000;
 
   function operationsDeskBootstrapCount(value) {
-    const count = Number(value);
-    return Number.isInteger(count) && count >= 0 && count <= 1000000 ? count : null;
+    return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 1000000 ? value : null;
   }
 
   function normalizeOperationsDeskSummary(raw) {
-    const source = raw && typeof raw === "object" ? raw : {};
-    const seen = new Set();
-    const sources = (Array.isArray(source.sources) ? source.sources : []).reduce((items, entry) => {
-      const item = entry && typeof entry === "object" ? entry : {};
-      const kind = String(item.kind || "").trim();
-      const availability = String(item.availability || "").trim().toLowerCase();
-      if (!OPERATIONS_DESK_BOOTSTRAP_KINDS.has(kind) || seen.has(kind) || !OPERATIONS_DESK_BOOTSTRAP_AVAILABILITY.has(availability)) return items;
-      seen.add(kind);
-      // Never turn a guarded/unavailable source into a plausible zero.
-      items.push({ kind, availability, count: availability === "available" ? operationsDeskBootstrapCount(item.count) : null });
-      return items;
-    }, []).slice(0, OPERATIONS_DESK_BOOTSTRAP_KINDS.size);
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
+    const rawSources = source && Array.isArray(source.sources) ? source.sources : null;
+    if (!source || !rawSources || rawSources.length !== OPERATIONS_DESK_BOOTSTRAP_KIND_LIST.length || typeof source.partial !== "boolean") return null;
+    const sources = [];
+    for (let index = 0; index < rawSources.length; index += 1) {
+      const item = rawSources[index] && typeof rawSources[index] === "object" && !Array.isArray(rawSources[index]) ? rawSources[index] : null;
+      const kind = String(item && item.kind || "").trim();
+      const availability = String(item && item.availability || "").trim().toLowerCase();
+      if (!item || kind !== OPERATIONS_DESK_BOOTSTRAP_KIND_LIST[index] || !OPERATIONS_DESK_BOOTSTRAP_KINDS.has(kind)
+        || !OPERATIONS_DESK_BOOTSTRAP_AVAILABILITY.has(availability)) return null;
+      if (availability === "available") {
+        const count = operationsDeskBootstrapCount(item.count);
+        if (count === null) return null;
+        sources.push({ kind, availability, count });
+      } else {
+        // Never turn a guarded/unavailable source into a plausible zero.
+        if (item.count !== null) return null;
+        sources.push({ kind, availability, count: null });
+      }
+    }
+    const partial = sources.some((item) => item.availability !== "available");
+    if (source.partial !== partial) return null;
     return { sources, partial: source.partial === true };
   }
 
+  function operationsDeskBootstrapItemProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const kind = String(source && source.kind || "").trim();
+    const state = String(source && source.state || "").trim().toLowerCase();
+    const level = OPERATIONS_DESK_BOOTSTRAP_LEVELS_BY_KIND[kind];
+    const updatedAt = String(source && source.updated_at || "").trim();
+    if (!source || !OPERATIONS_DESK_BOOTSTRAP_KINDS.has(kind) || !level
+      || !OPERATIONS_DESK_BOOTSTRAP_STATES_BY_KIND[kind].has(state)
+      || !(updatedAt === "unavailable" || OPERATIONS_DESK_BOOTSTRAP_TIME.test(updatedAt))) return null;
+    const expectedKeys = new Set(["kind", "state", "updated_at", level.key]);
+    if (Object.keys(source).some((key) => !expectedKeys.has(key))) return null;
+    const valueForLevel = String(source[level.key] || "").trim().toLowerCase();
+    if (!level.values.has(valueForLevel)) return null;
+    // IDs, accounts, emails, titles, details, payloads, target routes and
+    // server action labels are intentionally not projected into context.
+    return level.key === "priority"
+      ? { kind, state, priority: valueForLevel, updated_at: updatedAt }
+      : { kind, state, severity: valueForLevel, updated_at: updatedAt };
+  }
+
   function normalizeOperationsDeskItems(raw) {
-    return (Array.isArray(raw) ? raw : []).reduce((items, entry) => {
-      const source = entry && typeof entry === "object" ? entry : {};
-      const kind = String(source.kind || "").trim();
-      const state = String(source.state || "").trim().toLowerCase();
-      if (!OPERATIONS_DESK_BOOTSTRAP_KINDS.has(kind) || !OPERATIONS_DESK_BOOTSTRAP_STATES.has(state)) return items;
-      const priority = String(source.priority || "").trim().toLowerCase();
-      const severity = String(source.severity || "").trim().toLowerCase();
-      const updatedAt = String(source.updated_at || "").trim();
-      const item = {
-        kind,
-        state,
-        updated_at: updatedAt === "unavailable" || OPERATIONS_DESK_BOOTSTRAP_TIME.test(updatedAt) ? updatedAt : "unavailable"
-      };
-      if (OPERATIONS_DESK_BOOTSTRAP_LEVELS.has(priority)) item.priority = priority;
-      else item.severity = OPERATIONS_DESK_BOOTSTRAP_LEVELS.has(severity) ? severity : "guarded";
-      // IDs, accounts, emails, titles, details, payloads, target routes and
-      // server action labels are intentionally not projected into context.
-      items.push(item);
-      return items;
-    }, []).slice(0, OPERATIONS_DESK_BOOTSTRAP_LIMIT);
+    if (!Array.isArray(raw) || raw.length > OPERATIONS_DESK_BOOTSTRAP_LIMIT) return null;
+    const items = raw.map((entry) => operationsDeskBootstrapItemProjection(entry));
+    return items.some((item) => !item) ? null : items;
   }
 
   function normalizeOperationsDeskFilter(raw) {
@@ -5230,29 +5259,30 @@
   }
 
   function normalizeOperationsDeskListing(raw, items) {
-    const source = raw && typeof raw === "object" ? raw : {};
-    const pagination = source.pagination && typeof source.pagination === "object" ? source.pagination : {};
-    const limit = Number(pagination.limit);
-    const offset = Number(pagination.offset);
-    const safeLimit = Number.isInteger(limit) && limit >= 1 && limit <= OPERATIONS_DESK_BOOTSTRAP_LIMIT ? limit : OPERATIONS_DESK_BOOTSTRAP_LIMIT;
-    const safeOffset = Number.isInteger(offset) && offset >= 0 && offset <= OPERATIONS_DESK_BOOTSTRAP_MAX_OFFSET ? offset : 0;
-    const rawNext = Number(pagination.next_offset);
-    const rawPrevious = Number(pagination.previous_offset);
-    const nextOffset = pagination.has_more === true && Number.isInteger(rawNext) && rawNext > safeOffset && rawNext <= OPERATIONS_DESK_BOOTSTRAP_MAX_OFFSET
-      ? rawNext : null;
-    const previousOffset = Number.isInteger(rawPrevious) && rawPrevious >= 0 && rawPrevious < safeOffset
-      ? rawPrevious : null;
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
+    const pagination = source && source.pagination && typeof source.pagination === "object" && !Array.isArray(source.pagination) ? source.pagination : null;
+    const safeItems = Array.isArray(items) ? items : null;
+    const limit = pagination && pagination.limit;
+    const offset = pagination && pagination.offset;
+    const returned = pagination && pagination.returned;
+    if (!source || !pagination || !safeItems || limit !== OPERATIONS_DESK_BOOTSTRAP_LIMIT
+      || !Number.isSafeInteger(offset) || offset < 0 || offset > OPERATIONS_DESK_BOOTSTRAP_MAX_OFFSET
+      || !Number.isSafeInteger(returned) || returned !== safeItems.length) return null;
+    const expectedPrevious = offset >= limit ? offset - limit : null;
+    if (pagination.previous_offset !== expectedPrevious || typeof pagination.has_more !== "boolean") return null;
+    const hasMore = pagination.has_more === true;
+    if ((hasMore && pagination.next_offset !== offset + limit) || (!hasMore && pagination.next_offset !== null)) return null;
     return {
       filter: normalizeOperationsDeskFilter(source.filter),
       pagination: {
-        limit: safeLimit,
-        offset: safeOffset,
+        limit,
+        offset,
         // The only trustworthy rendered count is the identifier-free item
         // projection that survived the allow-list above.
-        returned: Math.min(safeLimit, Array.isArray(items) ? items.length : 0),
-        has_more: nextOffset !== null,
-        next_offset: nextOffset,
-        previous_offset: previousOffset
+        returned,
+        has_more: hasMore,
+        next_offset: pagination.next_offset,
+        previous_offset: expectedPrevious
       }
     };
   }
@@ -6993,15 +7023,40 @@
     const freePromptGalleryListing = normalizeFreePromptGalleryListing(source.freePromptGalleryListing, freePromptGalleryCatalog);
     const freePromptGalleryDetail = normalizeFreePromptGalleryDetail(source.freePromptGalleryDetail);
     const freePromptGallerySaveResult = normalizeFreePromptGallerySaveResult(source.freePromptGallerySaveResult);
-    const operationsDeskSummary = normalizeOperationsDeskSummary(source.operationsDeskSummary);
-    const operationsDeskItems = normalizeOperationsDeskItems(source.operationsDeskItems);
+    const requestedOperationsDeskReadState = OPERATIONS_DESK_BOOTSTRAP_READ_STATES.has(String(source.operationsDeskReadState || ""))
+      ? String(source.operationsDeskReadState)
+      : "guarded";
+    const requiresOperationsDeskReceipt = requestedOperationsDeskReadState === "ready" || requestedOperationsDeskReadState === "guarded";
+    const receivedOperationsDeskSummary = normalizeOperationsDeskSummary(source.operationsDeskSummary);
+    const receivedOperationsDeskItems = normalizeOperationsDeskItems(source.operationsDeskItems);
     const operationsDeskFilter = normalizeOperationsDeskFilter(source.operationsDeskFilter);
-    const operationsDeskListing = normalizeOperationsDeskListing(
+    const receivedOperationsDeskListing = normalizeOperationsDeskListing(
       source.operationsDeskListing && typeof source.operationsDeskListing === "object"
         ? { ...source.operationsDeskListing, filter: operationsDeskFilter }
         : { filter: operationsDeskFilter },
-      operationsDeskItems
+      receivedOperationsDeskItems
     );
+    // A ready/partial Desk must have a complete, redacted receipt.  Do not
+    // silently filter one malformed source or row into a believable empty
+    // queue during a later render.  Loading/failed states intentionally carry
+    // no receipt; an initial guarded state remains a guarded access message.
+    const operationsDeskReceiptValid = !requiresOperationsDeskReceipt || Boolean(
+      receivedOperationsDeskSummary && receivedOperationsDeskItems && receivedOperationsDeskListing
+    );
+    const keepOperationsDeskReceipt = requiresOperationsDeskReceipt && operationsDeskReceiptValid;
+    const operationsDeskSummary = keepOperationsDeskReceipt
+      ? receivedOperationsDeskSummary
+      : { sources: [], partial: true };
+    const operationsDeskItems = keepOperationsDeskReceipt ? receivedOperationsDeskItems : [];
+    const operationsDeskListing = keepOperationsDeskReceipt
+      ? receivedOperationsDeskListing
+      : normalizeOperationsDeskListing({
+        filter: operationsDeskFilter,
+        pagination: { limit: OPERATIONS_DESK_BOOTSTRAP_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null }
+      }, []);
+    const operationsDeskReadState = requestedOperationsDeskReadState === "ready" && !operationsDeskReceiptValid
+      ? "failed"
+      : requestedOperationsDeskReadState;
     const notificationSummary = normalizeNotificationSummary(source.notificationSummary);
     const notificationPolicy = normalizeNotificationPolicy(source.notificationPolicy);
     const notificationItems = normalizeNotificationItems(source.notificationItems);
@@ -7835,9 +7890,7 @@
       operationsDeskItems,
       operationsDeskFilter,
       operationsDeskListing,
-      operationsDeskReadState: OPERATIONS_DESK_BOOTSTRAP_READ_STATES.has(String(source.operationsDeskReadState || ""))
-        ? String(source.operationsDeskReadState)
-        : "guarded",
+      operationsDeskReadState,
       reliabilityFollowupEnabled: source.reliabilityFollowupEnabled === true,
       reliabilitySummary: source.reliabilitySummary && typeof source.reliabilitySummary === "object" ? source.reliabilitySummary : {},
       reliabilityFollowups: Array.isArray(source.reliabilityFollowups) ? source.reliabilityFollowups.slice(0, 50) : [],
@@ -20310,12 +20363,18 @@
     const readState = String(context.operationsDeskReadState || "guarded");
     const enabled = Boolean(context.capabilities && context.capabilities["operations-desk-view"] === true);
     const loading = readState === "loading";
-    const hasProjection = readState === "ready" || readState === "guarded";
-    if (!hasProjection) {
-      return `<article class="portal-page portal-operations-desk">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh Operations Desk" : "Operations Desk đang được bảo vệ"}</h2><p>${loading ? "Máy chủ đang kiểm tra signed session và phạm vi staff trước khi trả metadata queue đã redaction." : "Chỉ Support role do máy chủ xác minh mới truy cập được Desk. Không có cache queue, role browser hay fallback Bot."}</p></div></div></section></article>`;
-    }
     const summary = context.operationsDeskSummary && typeof context.operationsDeskSummary === "object" ? context.operationsDeskSummary : {};
     const sources = Array.isArray(summary.sources) ? summary.sources : [];
+    // A guarded partial read has all five source receipts; a missing receipt
+    // must remain a recovery state rather than looking like a true empty Desk.
+    const hasProjection = (readState === "ready" || readState === "guarded")
+      && sources.length === Object.keys(OPERATIONS_DESK_TARGETS).length;
+    if (!hasProjection) {
+      const retry = !loading
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="operations-desk-refresh" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>Thử tải lại</button>`
+        : "";
+      return `<article class="portal-page portal-operations-desk">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh Operations Desk" : "Operations Desk đang được bảo vệ"}</h2><p>${loading ? "Máy chủ đang kiểm tra signed session và phạm vi staff trước khi trả metadata queue đã redaction." : "Máy chủ không thể xác minh receipt Operations Desk hiện tại. Không hiển thị queue cũ, role browser hay fallback Bot; bạn có thể yêu cầu một lần đọc mới."}</p></div></div><div class="portal-form-footer">${retry}<a class="portal-button portal-button--quiet" href="/admin">Quay lại Admin ERP</a></div></section></article>`;
+    }
     const items = Array.isArray(context.operationsDeskItems) ? context.operationsDeskItems : [];
     const filter = context.operationsDeskFilter && typeof context.operationsDeskFilter === "object" ? context.operationsDeskFilter : { kind: "all", state: "all", severity: "all", view: "all" };
     const view = filter.view === "attention" ? "attention" : "all";
@@ -20336,10 +20395,9 @@
       const kind = String(item && item.kind || "");
       const target = OPERATIONS_DESK_TARGETS[kind] || "";
       const level = item && (item.priority || item.severity);
-      const actions = Array.isArray(item && item.available_actions) ? item.available_actions.slice(0, 1).map((value) => String(value || "").slice(0, 100)).filter(Boolean) : [];
       const state = String(item && item.state || "guarded");
       const terminal = ["resolved", "closed", "handed_off", "completed"].includes(state);
-      return `<td><strong>${safeText(OPERATIONS_DESK_KIND_LABELS[kind] || "Nguồn đã bảo vệ")}</strong></td><td>${badge(terminal ? "completed" : "read_only")}<small class="portal-form-note">${safeText(operationsDeskLabel(state, "Đang bảo vệ"))}</small></td><td>${safeText(operationsDeskPriority(level))}</td><td>${safeText(supportCaseTimestamp(item && item.updated_at))}</td><td>${target ? `<a class="portal-button portal-button--quiet" href="${safeText(target)}">${safeText(actions[0] || "Mở nguồn")}</a>` : "—"}</td>`;
+      return `<td><strong>${safeText(OPERATIONS_DESK_KIND_LABELS[kind] || "Nguồn đã bảo vệ")}</strong></td><td>${badge(terminal ? "completed" : "read_only")}<small class="portal-form-note">${safeText(operationsDeskLabel(state, "Đang bảo vệ"))}</small></td><td>${safeText(operationsDeskPriority(level))}</td><td>${safeText(supportCaseTimestamp(item && item.updated_at))}</td><td>${target ? `<a class="portal-button portal-button--quiet" href="${safeText(target)}">Mở nguồn</a>` : "—"}</td>`;
     }, "Không có item phù hợp", "Không có item được suy đoán từ nguồn guarded/unavailable hoặc từ browser.");
     return `<article class="portal-page portal-operations-desk">
       ${renderHero(page, context)}

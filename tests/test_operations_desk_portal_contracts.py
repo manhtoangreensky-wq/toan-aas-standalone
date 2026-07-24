@@ -31,43 +31,46 @@ def test_operations_desk_is_a_server_authorized_read_only_admin_route() -> None:
 
 
 def test_operations_desk_client_projection_drops_identifier_and_route_fields() -> None:
-    projection = _between(INTEGRATION, "function operationsDeskItems", "function operationsDeskSummaryProjection")
+    projection = _between(INTEGRATION, "function operationsDeskItemProjection", "function operationsDeskItems")
 
-    assert "const item = { kind, state, updated_at:" in projection
+    assert "source.target_route !== OPERATIONS_DESK_TARGETS[kind]" in projection
+    assert "const actionValues = source && Array.isArray(source.available_actions)" in projection
+    assert "return level.key === \"priority\"" in projection
     assert "target_route:" not in projection
-    assert "available_actions" not in projection
+    assert "available_actions:" not in projection
     for forbidden in ("source.id", "source.account", "source.email", "source.title", "source.detail", "source.payload"):
         assert forbidden not in projection
-    assert "remote target_route, IDs, account fields, titles, details, payloads" in projection
+    assert "target routes, IDs, account fields, titles, details, payloads" in projection
 
 
 def test_operations_desk_bootstrap_normalizer_preserves_only_the_redacted_staff_projection() -> None:
     """A later portal render must not discard the already-authorized queue."""
 
-    summary = _between(PORTAL, "function normalizeOperationsDeskSummary", "function normalizeOperationsDeskItems")
-    items = _between(PORTAL, "function normalizeOperationsDeskItems", "function normalizeOperationsDeskFilter")
+    summary = _between(PORTAL, "function normalizeOperationsDeskSummary", "function operationsDeskBootstrapItemProjection")
+    items = _between(PORTAL, "function operationsDeskBootstrapItemProjection", "function normalizeOperationsDeskFilter")
     listing = _between(PORTAL, "function normalizeOperationsDeskListing", "function normalizeBootstrap")
     bootstrap = _between(PORTAL, "function normalizeBootstrap", "function getBootstrap")
 
-    assert 'availability === "available" ? operationsDeskBootstrapCount(item.count) : null' in summary
+    assert "rawSources.length !== OPERATIONS_DESK_BOOTSTRAP_KIND_LIST.length" in summary
+    assert "kind !== OPERATIONS_DESK_BOOTSTRAP_KIND_LIST[index]" in summary
+    assert "if (item.count !== null) return null;" in summary
     assert "Never turn a guarded/unavailable source into a plausible zero" in summary
-    assert "const item = {" in items
-    assert "kind," in items
-    assert "state," in items
-    assert "updated_at:" in items
-    assert "item.priority = priority" in items
-    assert "item.severity" in items
+    assert "OPERATIONS_DESK_BOOTSTRAP_STATES_BY_KIND[kind].has(state)" in items
+    assert 'const expectedKeys = new Set(["kind", "state", "updated_at", level.key]);' in items
+    assert "return level.key === \"priority\"" in items
     for forbidden in ("source.id", "source.account", "source.email", "source.title", "source.detail", "source.payload", "target_route", "available_actions"):
         assert forbidden not in items
-    assert "limit: safeLimit" in listing
-    assert "next_offset: nextOffset" in listing
-    assert "previous_offset: previousOffset" in listing
+    assert "returned !== safeItems.length" in listing
+    assert "pagination.previous_offset !== expectedPrevious" in listing
+    assert "pagination.next_offset !== offset + limit" in listing
+    assert "next_offset: pagination.next_offset" in listing
+    assert "previous_offset: expectedPrevious" in listing
     for field in (
         "operationsDeskSummary,",
         "operationsDeskItems,",
         "operationsDeskFilter,",
         "operationsDeskListing,",
-        "operationsDeskReadState:",
+        "operationsDeskReadState,",
     ):
         assert field in bootstrap
 
@@ -95,8 +98,12 @@ def test_operations_desk_reads_are_fenced_and_allow_only_guarded_partial_envelop
     for requirement in (
         'operationsDeskRead("/admin/operations-desk/summary")',
         "operationsDeskRead(operationsDeskListPath(filter, offset))",
+        "operationsDeskSummaryProjection(summaryResponse.data)",
+        "operationsDeskWorkItemsProjection(listResponse.data, filter, offset)",
+        "summary.partial !== list.partial",
+        'operationsDeskSummary: { sources: [], partial: true }',
         "operationsDeskSummary: { sources: summary.sources, partial }",
-        "operationsDeskItems: items",
+        "operationsDeskItems: list.items",
         'operationsDeskReadState: partial ? "guarded" : "ready"',
         'operationsDeskReadState: "failed"',
     ):
@@ -131,6 +138,7 @@ def test_operations_desk_filters_and_actions_are_read_only_allowlists() -> None:
     assert 'data-portal-action="operations-desk-page"' in pagination
     assert "OPERATIONS_DESK_TARGETS[kind]" in view
     assert "target_route" not in view
+    assert "available_actions" not in view
     assert "Không dùng số 0 thay cho nguồn guarded/unavailable" in view
     assert 'name="view"' in view
     assert 'value="attention"' in view

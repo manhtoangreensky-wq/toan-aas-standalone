@@ -10083,6 +10083,20 @@
     reliability_followup: "/admin/reliability",
     content_handoff: "/admin/content-handoffs"
   });
+  const OPERATIONS_DESK_STATES_BY_KIND = Object.freeze({
+    support_case: new Set(["new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed", "guarded"]),
+    operations_incident: new Set(["open", "investigating", "resolved", "closed", "guarded"]),
+    operations_approval: new Set(["awaiting_approval", "approved", "rejected", "expired", "superseded", "guarded"]),
+    reliability_followup: new Set(["open", "acknowledged", "resolved", "superseded", "guarded"]),
+    content_handoff: new Set(["draft", "review", "approved_for_handoff", "handed_off", "blocked", "guarded"])
+  });
+  const OPERATIONS_DESK_LEVELS_BY_KIND = Object.freeze({
+    support_case: { key: "priority", values: new Set(["low", "normal", "high", "urgent"]) },
+    operations_incident: { key: "severity", values: new Set(["low", "normal", "high", "critical"]) },
+    operations_approval: { key: "severity", values: new Set(["normal", "high", "critical"]) },
+    reliability_followup: { key: "severity", values: new Set(["low", "medium", "high", "critical"]) },
+    content_handoff: { key: "severity", values: new Set(["normal"]) }
+  });
   const OPERATIONS_DESK_LIST_LIMIT = 30;
   const OPERATIONS_DESK_MAX_OFFSET = 10000;
   const OPERATIONS_DESK_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
@@ -10119,24 +10133,39 @@
   }
 
   function operationsDeskCount(value) {
-    const count = Number(value);
-    return Number.isInteger(count) && count >= 0 && count <= 1000000 ? count : null;
+    return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 1000000 ? value : null;
   }
 
-  function operationsDeskSources(value) {
-    const raw = Array.isArray(value) ? value : [];
-    const seen = new Set();
-    return raw.reduce((items, entry) => {
-      const source = entry && typeof entry === "object" ? entry : {};
-      const kind = String(source.kind || "").trim();
-      const availability = String(source.availability || "").trim().toLowerCase();
-      if (!OPERATIONS_DESK_KINDS.has(kind) || seen.has(kind) || !OPERATIONS_DESK_AVAILABILITY.has(availability)) return items;
-      seen.add(kind);
-      // A non-available source must retain unknown count. Never normalize it
-      // to zero even if a malformed response happens to contain a number.
-      items.push({ kind, availability, count: availability === "available" ? operationsDeskCount(source.count) : null });
-      return items;
-    }, []);
+  function operationsDeskExpectedKinds(filter) {
+    const normalized = operationsDeskFilterPayload(filter);
+    return normalized.kind === "all" ? Array.from(OPERATIONS_DESK_KINDS) : [normalized.kind];
+  }
+
+  // Operations Desk intentionally has no row identity in its browser DTO.
+  // That makes schema validation particularly important: dropping a malformed
+  // row must not silently turn a staff queue into a verified empty queue.
+  function operationsDeskSources(value, expectedKinds) {
+    const raw = Array.isArray(value) ? value : null;
+    const expected = Array.isArray(expectedKinds) ? expectedKinds : [];
+    if (!raw || raw.length !== expected.length) return null;
+    const sources = [];
+    for (let index = 0; index < raw.length; index += 1) {
+      const source = raw[index] && typeof raw[index] === "object" && !Array.isArray(raw[index]) ? raw[index] : null;
+      const kind = String(source && source.kind || "").trim();
+      const availability = String(source && source.availability || "").trim().toLowerCase();
+      if (!source || kind !== expected[index] || !OPERATIONS_DESK_KINDS.has(kind) || !OPERATIONS_DESK_AVAILABILITY.has(availability)) return null;
+      if (availability === "available") {
+        const count = operationsDeskCount(source.count);
+        if (count === null) return null;
+        sources.push({ kind, availability, count });
+      } else {
+        // A guarded/unavailable source is unknown by definition. A numeric
+        // count would make the browser imply a healthy zero or aggregate.
+        if (source.count !== null) return null;
+        sources.push({ kind, availability, count: null });
+      }
+    }
+    return sources;
   }
 
   function operationsDeskUpdatedAt(value) {
@@ -10144,30 +10173,89 @@
     return timestamp === "unavailable" || OPERATIONS_DESK_TIME.test(timestamp) ? timestamp : "unavailable";
   }
 
-  function operationsDeskItems(value) {
-    const raw = Array.isArray(value) ? value : [];
-    return raw.reduce((items, entry) => {
-      const source = entry && typeof entry === "object" ? entry : {};
-      const kind = String(source.kind || "").trim();
-      const state = String(source.state || "").trim().toLowerCase();
-      if (!OPERATIONS_DESK_KINDS.has(kind) || !OPERATIONS_DESK_STATES.has(state)) return items;
-      const priority = String(source.priority || "").trim().toLowerCase();
-      const severity = String(source.severity || "").trim().toLowerCase();
-      // Keep only the reviewed presentation fields. In particular never keep
-      // remote target_route, IDs, account fields, titles, details, payloads
-      // or server-provided action text in portal state.
-      const item = { kind, state, updated_at: operationsDeskUpdatedAt(source.updated_at) };
-      if (OPERATIONS_DESK_SEVERITIES.has(priority)) item.priority = priority;
-      else if (OPERATIONS_DESK_SEVERITIES.has(severity)) item.severity = severity;
-      else item.severity = "guarded";
-      items.push(item);
-      return items;
-    }, []).slice(0, OPERATIONS_DESK_LIST_LIMIT);
+  function operationsDeskItemProjection(value, expectedKinds) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const kind = String(source && source.kind || "").trim();
+    const state = String(source && source.state || "").trim().toLowerCase();
+    const level = OPERATIONS_DESK_LEVELS_BY_KIND[kind];
+    const updatedAt = String(source && source.updated_at || "").trim();
+    const actionValues = source && Array.isArray(source.available_actions) ? source.available_actions : null;
+    if (!source || !Array.isArray(expectedKinds) || !expectedKinds.includes(kind) || !level
+      || !OPERATIONS_DESK_STATES_BY_KIND[kind].has(state) || source.target_route !== OPERATIONS_DESK_TARGETS[kind]
+      || !(updatedAt === "unavailable" || OPERATIONS_DESK_TIME.test(updatedAt))
+      || !actionValues || actionValues.length !== 1) return null;
+    const action = String(actionValues[0] || "").replace(/\s+/g, " ").trim();
+    const levelValue = String(source[level.key] || "").trim().toLowerCase();
+    if (!action || action.length > 100 || /[\u0000-\u001f\u007f]/.test(action) || !level.values.has(levelValue)) return null;
+    // Keep only the reviewed presentation fields. In particular never keep
+    // target routes, IDs, account fields, titles, details, payloads or action
+    // text in portal state after this receipt has been verified.
+    return level.key === "priority"
+      ? { kind, state, priority: levelValue, updated_at: operationsDeskUpdatedAt(updatedAt) }
+      : { kind, state, severity: levelValue, updated_at: operationsDeskUpdatedAt(updatedAt) };
+  }
+
+  function operationsDeskItems(value, expectedKinds) {
+    const raw = Array.isArray(value) ? value : null;
+    if (!raw || raw.length > OPERATIONS_DESK_LIST_LIMIT) return null;
+    const items = raw.map((entry) => operationsDeskItemProjection(entry, expectedKinds));
+    return items.some((item) => !item) ? null : items;
+  }
+
+  function operationsDeskAggregate(sources) {
+    const available = sources.filter((source) => source.availability === "available");
+    const availableTotal = available.length ? available.reduce((total, source) => total + Number(source.count), 0) : null;
+    const complete = available.length === sources.length;
+    return { complete, availableTotal, total: complete ? availableTotal : null };
+  }
+
+  function operationsDeskSummaryValuesAreSafe(summary, sources, aggregate) {
+    const source = summary && typeof summary === "object" && !Array.isArray(summary) ? summary : null;
+    const counts = source && source.counts_by_kind && typeof source.counts_by_kind === "object" && !Array.isArray(source.counts_by_kind)
+      ? source.counts_by_kind
+      : null;
+    if (!source || !counts || source.total !== aggregate.total || source.available_total !== aggregate.availableTotal) return false;
+    const expectedKinds = sources.map((entry) => entry.kind);
+    if (Object.keys(counts).length !== expectedKinds.length || Object.keys(counts).some((kind) => !expectedKinds.includes(kind))) return false;
+    return sources.every((entry) => counts[entry.kind] === entry.count);
   }
 
   function operationsDeskSummaryProjection(value) {
-    const source = value && typeof value === "object" ? value : {};
-    return { sources: operationsDeskSources(source.sources), partial: source.partial === true };
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const expectedKinds = operationsDeskExpectedKinds({ kind: "all", state: "all", severity: "all", view: "all" });
+    const sources = source ? operationsDeskSources(source.sources, expectedKinds) : null;
+    if (!source || !sources || typeof source.partial !== "boolean") return null;
+    const aggregate = operationsDeskAggregate(sources);
+    if (source.partial !== !aggregate.complete || !operationsDeskSummaryValuesAreSafe(source.summary, sources, aggregate)) return null;
+    return { sources, partial: source.partial };
+  }
+
+  function operationsDeskWorkItemsProjection(value, filter, offset) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const safeFilter = operationsDeskFilterPayload(filter);
+    const expectedKinds = operationsDeskExpectedKinds(safeFilter);
+    const currentOffset = operationsDeskOffset(offset);
+    const sources = source ? operationsDeskSources(source.sources, expectedKinds) : null;
+    if (!source || !sources || typeof source.partial !== "boolean" || source.limit !== OPERATIONS_DESK_LIST_LIMIT || source.offset !== currentOffset) return null;
+    const aggregate = operationsDeskAggregate(sources);
+    const items = operationsDeskItems(source.items, expectedKinds);
+    const returned = operationsDeskCount(source.returned);
+    if (!items || returned === null || returned !== items.length || source.partial !== !aggregate.complete
+      || source.available_total !== aggregate.availableTotal || source.total !== aggregate.total) return null;
+    if (!aggregate.complete) {
+      if (source.has_more !== null || source.next_offset !== null) return null;
+    } else {
+      const hasMore = currentOffset + items.length < Number(aggregate.total);
+      if (typeof source.has_more !== "boolean" || source.has_more !== hasMore
+        || (hasMore && source.next_offset !== currentOffset + OPERATIONS_DESK_LIST_LIMIT)
+        || (!hasMore && source.next_offset !== null)) return null;
+    }
+    return {
+      sources,
+      partial: source.partial,
+      items,
+      listing: operationsDeskListingProjection(safeFilter, currentOffset, source, items.length)
+    };
   }
 
   function operationsDeskListingProjection(filter, offset, source, returned) {
@@ -17488,27 +17576,43 @@
     const filter = operationsDeskFilterPayload(filterValue === undefined ? previous.filter : filterValue);
     const pagination = previous.pagination && typeof previous.pagination === "object" ? previous.pagination : {};
     const offset = operationsDeskOffset(offsetValue === undefined ? pagination.offset : offsetValue);
+    // This is a staff-only aggregate. Clear the prior route projection before
+    // a fresh signed request so an old queue cannot remain visible while a
+    // role, source availability or schema receipt is being checked.
+    merge({
+      operationsDeskSummary: { sources: [], partial: true },
+      operationsDeskItems: [],
+      operationsDeskFilter: filter,
+      operationsDeskListing: operationsDeskListingProjection(filter, offset, {}, 0),
+      operationsDeskReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), "/admin/work-queue": "loading" }
+    });
     try {
       const [summaryResponse, listResponse] = await Promise.all([
         operationsDeskRead("/admin/operations-desk/summary"),
         operationsDeskRead(operationsDeskListPath(filter, offset))
       ]);
       const summary = operationsDeskSummaryProjection(summaryResponse.data);
-      const listData = listResponse.data && typeof listResponse.data === "object" ? listResponse.data : {};
-      const items = operationsDeskItems(listData.items);
-      const partial = summary.partial === true || listData.partial === true || summaryResponse.status === "guarded" || listResponse.status === "guarded";
+      const list = operationsDeskWorkItemsProjection(listResponse.data, filter, offset);
+      if (!summary || !list
+        || (summaryResponse.status === "guarded") !== summary.partial
+        || (listResponse.status === "guarded") !== list.partial
+        || summary.partial !== list.partial) {
+        throw new Error("Phản hồi Operations Desk chưa được máy chủ xác minh.");
+      }
+      const partial = summary.partial === true || list.partial === true;
       if (!operationsDeskRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
       merge({
         // Summary is intentionally the sole source of displayed aggregate
         // counts. If it was malformed/empty, do not substitute list totals.
         operationsDeskSummary: { sources: summary.sources, partial },
-        operationsDeskItems: items,
+        operationsDeskItems: list.items,
         operationsDeskFilter: filter,
-        operationsDeskListing: operationsDeskListingProjection(filter, offset, listData, items.length),
+        operationsDeskListing: list.listing,
         operationsDeskReadState: partial ? "guarded" : "ready",
         pageStates: { ...(base().pageStates || {}), "/admin/work-queue": partial ? "guarded" : "read_only" }
       });
-      return { summary: { sources: summary.sources, partial }, items, listing: operationsDeskListingProjection(filter, offset, listData, items.length) };
+      return { summary: { sources: summary.sources, partial }, items: list.items, listing: list.listing };
     } catch (_) {
       if (!operationsDeskRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
       // Never keep an old staff aggregate visible after a failed signed read.
