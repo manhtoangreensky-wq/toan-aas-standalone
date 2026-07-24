@@ -11753,6 +11753,10 @@
       // Account Activity is a Web-owned, signed-session read. It has no
       // Core Bridge dependency and never exposes the raw audit record.
       "refresh-account-activity": Boolean(account),
+      // Dashboard refresh is a read-only Core Bridge projection. It needs a
+      // currently signed account plus the server-confirmed companion link,
+      // but it never grants wallet/payment/job/provider write authority.
+      "dashboard-refresh": Boolean(account && bridgeAvailable),
       "workspace-draft-save": Boolean(account && me.csrf_token),
       "workspace-draft-archive": Boolean(account && me.csrf_token),
       "workspace-draft-resume": Boolean(account),
@@ -12348,6 +12352,19 @@
       mfaEnrollment: {},
       mfaRecoveryCodes: [],
       bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable, featureExecutionFeatures: webFeatureExecutionFeatures },
+      // Dashboard canonical data belongs to the linked Core Bridge, while
+      // Projects/Drafts below are independently Web-owned. Clear only the
+      // canonical projection before each bootstrap so a session switch or a
+      // failed read cannot keep wallet/jobs/assets/tickets from an old account.
+      wallet: null,
+      walletHistory: [],
+      jobAssets: [],
+      jobs: [],
+      jobDetail: {},
+      assets: [],
+      tickets: [],
+      readiness: {},
+      dashboardReadState: account && bridgeAvailable ? "loading" : "guarded",
       // Campaigns are private signed-account planning data. Clear both the
       // list and selected approval plan before any new route hydration so a
       // logout/account switch cannot retain an earlier campaign in memory.
@@ -22651,6 +22668,45 @@
     }
   }
 
+  function dashboardCanonicalRecord(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function dashboardCanonicalRows(response) {
+    const data = response && dashboardCanonicalRecord(response.data) ? response.data : null;
+    if (!data || !Array.isArray(data.items)) return null;
+    // A 2xx envelope is not enough to call the dashboard canonical. Every
+    // visible row needs the minimal stable identity and lifecycle fields that
+    // the server-owned read model promises. Otherwise an adapter/schema drift
+    // could be counted as an honestly empty queue or delivered list.
+    return data.items.every((item) => dashboardCanonicalRecord(item)
+      && typeof item.id === "string" && Boolean(item.id.trim())
+      && typeof item.status === "string" && Boolean(item.status.trim()))
+      ? data.items
+      : null;
+  }
+
+  function dashboardCanonicalSnapshot(walletResponse, jobsResponse, assetsResponse, readinessResponse, ticketsResponse) {
+    const wallet = walletResponse && dashboardCanonicalRecord(walletResponse.data) ? walletResponse.data : null;
+    const jobs = dashboardCanonicalRows(jobsResponse);
+    const assets = dashboardCanonicalRows(assetsResponse);
+    const tickets = dashboardCanonicalRows(ticketsResponse);
+    const readiness = readinessResponse && dashboardCanonicalRecord(readinessResponse.data) ? readinessResponse.data : null;
+    // Xu fields are an exact integer ledger projection. Do not coerce strings,
+    // missing values, floats or a malformed wallet into a trusted zero. The
+    // Core Bridge also projects an explicit plan flag rather than leaving a
+    // browser to infer account tier from absent data.
+    const walletValid = wallet
+      && Number.isSafeInteger(wallet.balance_xu) && wallet.balance_xu >= 0
+      && Number.isSafeInteger(wallet.total_spent_xu) && wallet.total_spent_xu >= 0
+      && typeof wallet.is_vip === "boolean";
+    const readinessValid = readiness && dashboardCanonicalRecord(readiness.features);
+    if (!walletValid || !jobs || !assets || !tickets || !readinessValid) {
+      throw new Error("Dashboard canonical snapshot không đúng schema.");
+    }
+    return { wallet, jobs, assets, tickets, readiness };
+  }
+
   async function hydrateCanonicalData() {
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
@@ -22680,21 +22736,32 @@
     if (!isCurrent()) return null;
     try {
       if (path === "/dashboard") {
+        // The Dashboard is the one page that combines Web-native authoring
+        // with canonical read models. Blank the latter before every request:
+        // a loading/failure UI must never read as a valid zero balance, an
+        // empty job list or a delivered asset from a previous signed session.
+        merge({
+          wallet: null,
+          jobs: [],
+          assets: [],
+          tickets: [],
+          readiness: {},
+          dashboardReadState: "loading",
+          pageStates: { ...(base().pageStates || {}), [path]: "loading" }
+        });
         const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
-          api("/wallet"), api("/jobs"), api("/assets"), api("/features/status"),
-          // A read failure for the optional attention card must not hide the
-          // rest of the signed dashboard or turn an unknown ticket state into
-          // a browser-side alert.
-          api("/support/tickets").catch(() => ({ data: { items: [] } }))
+          api("/wallet"), api("/jobs"), api("/assets"), api("/features/status"), api("/support/tickets")
         ]);
         if (!isCurrent()) return null;
+        const snapshot = dashboardCanonicalSnapshot(wallet, jobs, assets, readiness, tickets);
         merge({
-          wallet: wallet.data || null,
-          jobs: jobs.data && jobs.data.items ? jobs.data.items : [],
-          assets: assets.data && assets.data.items ? assets.data.items : [],
-          tickets: tickets.data && tickets.data.items ? tickets.data.items : [],
-          readiness: readiness.data || {},
-          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
+          wallet: snapshot.wallet,
+          jobs: snapshot.jobs,
+          assets: snapshot.assets,
+          tickets: snapshot.tickets,
+          readiness: snapshot.readiness,
+          dashboardReadState: "ready",
+          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], snapshot.readiness, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
         });
       } else if (path === "/pricing") {
         const pricing = await api("/pricing");
@@ -22800,6 +22867,21 @@
     } catch (error) {
       // A guarded bridge is an expected state; do not manufacture data.
       if (!isCurrent()) return null;
+      if (path === "/dashboard") {
+        // Keep independent Web authoring lanes intact, but remove every
+        // canonical fact. A failed signed read is not an empty queue, zero
+        // balance, successful delivery or a browser-side ticket conclusion.
+        merge({
+          wallet: null,
+          jobs: [],
+          assets: [],
+          tickets: [],
+          readiness: {},
+          dashboardReadState: "failed",
+          pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
+        });
+        return null;
+      }
       if (error && error.payload && error.payload.message) toast(error.payload.message, "error");
     }
   }
@@ -31598,6 +31680,21 @@
         }
         await hydrateCampaignPlans();
         toast("Đã làm mới Campaign owner-scoped.");
+        return;
+      }
+      if (action === "dashboard-refresh") {
+        if (route !== "/dashboard" || currentPortalPath() !== "/dashboard" || !(base().capabilities && base().capabilities["dashboard-refresh"] === true)) {
+          throw new Error("Cần signed session và canonical integration đã xác minh để làm mới Workspace Command Center.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          await hydrateCanonicalData();
+          if (String(base().dashboardReadState || "") === "ready") {
+            toast("Đã làm mới dữ liệu canonical của Workspace.");
+          }
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "campaign-update") {

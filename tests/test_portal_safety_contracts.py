@@ -102,7 +102,14 @@ def test_problem_job_detail_can_create_only_a_safe_text_support_ticket() -> None
 def test_dashboard_hydrates_only_canonical_metadata() -> None:
     assert 'path === "/dashboard"' in INTEGRATION
     assert 'api("/wallet")' in INTEGRATION
-    assert 'api("/support/tickets").catch(() => ({ data: { items: [] } }))' in INTEGRATION
+    # Dashboard now fails closed as one canonical projection: a ticket reader
+    # failure must not be translated to an empty ticket count beside stale or
+    # otherwise unverified wallet/job/asset metadata.
+    assert 'api("/support/tickets")' in INTEGRATION
+    assert 'api("/support/tickets").catch(() => ({ data: { items: [] } }))' not in INTEGRATION
+    assert 'dashboardReadState: "loading"' in INTEGRATION
+    assert 'dashboardReadState: "ready"' in INTEGRATION
+    assert 'dashboardReadState: "failed"' in INTEGRATION
     assert "Tài sản gần đây" in PORTAL
     assert "Không đồng nghĩa delivery" in PORTAL
 
@@ -1455,7 +1462,7 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
 def test_dashboard_uses_an_application_workspace_shell_with_owner_scoped_drafts() -> None:
     assert "function renderDashboardWorkspaceSummary(context)" in PORTAL
     assert "function renderDashboardRecentDrafts(context)" in PORTAL
-    assert 'class="portal-page portal-dashboard-app"' in PORTAL
+    assert 'class="portal-page portal-dashboard-app portal-workspace-command-center"' in PORTAL
     assert 'class="portal-dashboard-overview"' in PORTAL
     assert 'class="portal-dashboard-draft-list"' in PORTAL
     assert 'class="portal-sidebar-create" href="/features"' in PORTAL

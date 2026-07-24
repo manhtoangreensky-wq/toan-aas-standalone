@@ -7101,6 +7101,13 @@
       capabilities,
       pageStates,
       featureFlows,
+      // Dashboard combines independent Web authoring records with a narrow,
+      // read-only canonical projection. Keep its lifecycle explicit so a
+      // failed bridge refresh can never render a prior account's wallet,
+      // jobs, assets or tickets as the current workspace state.
+      dashboardReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.dashboardReadState || ""))
+        ? String(source.dashboardReadState)
+        : "guarded",
       wallet: source.wallet && typeof source.wallet === "object" ? source.wallet : null,
       walletHistory: Array.isArray(source.walletHistory) ? source.walletHistory : [],
       jobAssets: Array.isArray(source.jobAssets) ? source.jobAssets : [],
@@ -16510,7 +16517,13 @@
       .slice(0, 100);
   }
 
+  function dashboardReadState(context) {
+    const candidate = String(context && context.dashboardReadState || "guarded");
+    return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
+  }
+
   function renderDashboardWorkspaceSummary(context) {
+    const readState = dashboardReadState(context);
     const name = displayName(context);
     const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
     const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
@@ -16519,11 +16532,19 @@
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
     const assets = Array.isArray(context.assets) ? context.assets : [];
-    const processing = jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length;
-    const deliveryReady = assets.filter((item) => item && item.delivery_ready === true && item.download_ready === true).length;
+    const canonicalReady = readState === "ready";
+    const processing = canonicalReady ? jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length : "—";
+    const deliveryReady = canonicalReady ? assets.filter((item) => item && item.delivery_ready === true && item.download_ready === true).length : "—";
+    const canonicalLabel = canonicalReady
+      ? "Canonical đã xác minh"
+      : readState === "loading"
+        ? "Đang kiểm tra"
+        : readState === "failed"
+          ? "Cần làm mới"
+          : "Chưa kết nối";
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
       <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">TOAN AAS / Workspace</span><h1 id="workspace-overview-title">Chào ${safeText(name)}</h1><p>Xây Project, tiếp tục brief và theo dõi công việc ở một nơi. Project và Studio Document hoạt động độc lập trên Web; Bot chỉ là integration tùy chọn cho các capability bạn chọn liên kết.</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects">Mở Project Center <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/features">Tạo workflow</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${safeText(setupActionLabel)}</a></div></div>
-      <dl class="portal-dashboard-overview-stats" aria-label="Tóm tắt workspace"><div><dt>Projects</dt><dd>${safeText(String(projects.length))}</dd><span>Web-owned</span></div><div><dt>Bản nháp</dt><dd>${safeText(String(drafts.length))}</dd><span>Web-owned</span></div><div><dt>Đang xử lý</dt><dd>${safeText(String(processing))}</dd><span>Integration</span></div><div><dt>Sẵn sàng tải</dt><dd>${safeText(String(deliveryReady))}</dd><span>Delivery đã kiểm tra</span></div></dl>
+      <dl class="portal-dashboard-overview-stats" aria-label="Tóm tắt workspace"><div><dt>Projects</dt><dd>${safeText(String(projects.length))}</dd><span>Web-owned</span></div><div><dt>Bản nháp</dt><dd>${safeText(String(drafts.length))}</dd><span>Web-owned</span></div><div><dt>Đang xử lý</dt><dd>${safeText(String(processing))}</dd><span>${safeText(canonicalLabel)}</span></div><div><dt>Sẵn sàng tải</dt><dd>${safeText(String(deliveryReady))}</dd><span>${safeText(canonicalLabel)}</span></div></dl>
     </section>`;
   }
 
@@ -16621,19 +16642,43 @@
     return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">First session</span><h2 id="dashboard-start-guide-title">Bắt đầu nhanh, không bị khóa vào Telegram</h2><p>Web Workspace có thể dùng độc lập ngay từ bước đầu. Mỗi bước đều mở trang đích rõ ràng và không tự tạo job, charge hoặc dữ liệu provider.</p></div><span class="portal-start-guide-note">3 bước · tự chọn</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
-  function renderDashboard(page, context) {
+  function renderDashboardAccountLane(context) {
+    const linked = telegramIdentityLinked(context);
+    const accountType = String(context.profile && context.profile.accountType || "Web account");
+    const linkLabel = linked ? "Telegram đã liên kết" : "Telegram là tùy chọn";
+    const linkBody = linked
+      ? "Bạn có thể đọc projection canonical theo signed session hiện tại. Việc liên kết không mở thêm quyền ghi từ browser."
+      : "Bạn vẫn dùng Project và Studio độc lập; chỉ liên kết khi cần xem dữ liệu canonical do Bot xác minh.";
+    return `<section class="portal-command-center-lane portal-command-center-lane--account" aria-labelledby="workspace-account-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Account & Security</span><h2 id="workspace-account-lane-title">Tài khoản, quyền và kết nối</h2><p>Mỗi đường dẫn kiểm tra lại signed session và quyền ở server; không nhận Telegram ID hay role từ browser.</p></div></div><dl class="portal-command-center-account-facts"><div><dt>Loại tài khoản</dt><dd>${safeText(accountType)}</dd></div><div><dt>Integration</dt><dd>${safeText(linkLabel)}</dd></div></dl><p class="portal-command-center-lane-note">${safeText(linkBody)}</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/account">Mở tài khoản</a><a class="portal-button portal-button--quiet" href="/account/security">Bảo mật</a><a class="portal-button portal-button--quiet" href="/onboarding">Liên kết khi cần</a></div></section>`;
+  }
+
+  function renderDashboardCanonicalLane(context, readState) {
+    const canRetry = Boolean(context.capabilities && context.capabilities["dashboard-refresh"] === true);
+    if (readState === "loading") {
+      return `<section class="portal-command-center-canonical" data-state="loading" aria-live="polite" aria-busy="true"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Đang kiểm tra dữ liệu vận hành</h2><p>Wallet, job, asset, ticket và feature readiness chỉ xuất hiện sau khi server xác minh lại signed session hiện tại. Không dùng dữ liệu cũ trong lúc chờ.</p></div>${badge("processing")}</div></section>`;
+    }
+    if (readState === "failed") {
+      return `<section class="portal-command-center-canonical" data-state="failed" aria-live="polite"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Chưa thể xác minh trạng thái vận hành</h2><p>Dashboard đã xóa projection canonical cũ. Bạn vẫn có thể làm việc với Project và bản nháp Web; hãy làm mới khi kết nối sẵn sàng để xem dữ liệu đã xác minh.</p><div class="portal-command-center-lane-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="dashboard-refresh" data-portal-route="/dashboard"${canRetry ? "" : " disabled"}>Thử lại</button><a class="portal-button portal-button--quiet" href="/account">Kiểm tra kết nối</a></div></div>${badge("failed")}</div></section>`;
+    }
+    if (readState !== "ready") {
+      return `<section class="portal-command-center-canonical" data-state="guarded"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Integration chưa sẵn sàng</h2><p>Phần Web-native vẫn hoạt động độc lập. Wallet, job, assets và ticket canonical chỉ mở sau khi signed account có kết nối do máy chủ xác nhận.</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/onboarding">Xem cách liên kết</a><a class="portal-button portal-button--quiet" href="/account/security">Mở Security Center</a></div></div>${badge("guarded")}</div></section>`;
+    }
+
     const jobs = Array.isArray(context.jobs) ? context.jobs.slice(0, 5) : [];
     const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
-    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : null;
-    const quickMetrics = wallet
-      ? `<section class="portal-admin-grid"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(String(wallet.balance_xu || 0))}</strong><em>Không tính lại ở browser</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))}</strong><em>Đọc từ ledger canonical</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`
-      : "";
-    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
-    // New accounts should see the next steps before the signed integration
-    // projection.  The cards remain read-only: they render only server-scoped
-    // status and never make provider, wallet, payment or job calls here.
-    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${renderWorkspaceActionCenter(context)}<details class="portal-dashboard-assurance"><summary>Trạng thái tích hợp và bảo mật</summary><p class="portal-form-note">Các capability ngoài Workspace chỉ hiển thị theo trạng thái do máy chủ xác nhận; Portal không tự tạo job, output, giao dịch hoặc quyền truy cập.</p></details>${quickMetrics}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div>${renderStudioLaunchpad(context)}${activity}</article>`;
+    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : {};
+    const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(String(wallet.balance_xu || 0))}</strong><em>Không tính lại ở browser</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))}</strong><em>Đọc từ ledger canonical</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`;
+    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
+    return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2 id="workspace-canonical-lane-title">Vận hành đã được xác minh</h2><p>Chỉ đọc dữ liệu Core Bridge thuộc signed session hiện tại. Dashboard không cộng Xu, tạo job, tạo delivery URL hay gọi provider.</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
+  }
+
+  function renderDashboard(page, context) {
+    const readState = dashboardReadState(context);
+    // The command center intentionally keeps Web-native work visible even
+    // when the separate canonical reader is loading, guarded or failed.
+    // It never substitutes zeroes, stale records or an invented success for
+    // wallet/job/asset/ticket data that the Core Bridge did not confirm.
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">Continue Web work</span><h2 id="workspace-work-lane-title">Project và bản nháp đang làm</h2><p>Hai thư viện này là dữ liệu Web-owned, owner-scoped và có luồng riêng; chúng không phụ thuộc vào canonical integration.</p></div></div><div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>Ranh giới dữ liệu và bảo mật</summary><p class="portal-form-note">Web-native authoring, canonical read models và account controls được hiển thị thành các lane riêng. Portal không biến trạng thái lỗi thành output, giao dịch hoặc quyền truy cập giả.</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
