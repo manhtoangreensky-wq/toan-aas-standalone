@@ -1030,6 +1030,29 @@
     });
   }
 
+  function setDeliveryReadStatus(route, message) {
+    const status = document.querySelector(`[data-delivery-read-status="${String(route || "")}"]`);
+    if (status) status.textContent = String(message || "");
+  }
+
+  function isSafeDeliveryReadRecord(item) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    const id = typeof item.id === "string" ? item.id.trim() : "";
+    const status = typeof item.status === "string" ? item.status.trim() : "";
+    // The Portal only accepts the same opaque route grammar that its renderer
+    // and API routes accept. Unknown-but-well-formed status tokens remain
+    // guarded by the renderer; malformed rows cannot replace a good view.
+    return /^[A-Za-z0-9._:-]{1,160}$/.test(id) && /^[A-Za-z0-9._:-]{1,64}$/.test(status);
+  }
+
+  function deliveryReadItemsOrThrow(result, label) {
+    const items = result && result.data && Array.isArray(result.data.items) ? result.data.items : null;
+    if (!items || items.length > 100 || !items.every(isSafeDeliveryReadRecord)) {
+      throw new Error(`Phản hồi ${String(label || "Delivery Center")} không hợp lệ.`);
+    }
+    return items;
+  }
+
   function setMusicDirectionPresetSubmissionStatus(message) {
     const form = document.querySelector('[data-portal-form][data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"]');
     const announcement = form && form.querySelector("[data-music-direction-selection]");
@@ -32847,7 +32870,7 @@
         return;
       }
       if (action === "filter-assets") {
-        const filter = ["all", "validated", "waiting", "completed", "failed"].includes(detail.assetFilter) ? detail.assetFilter : "all";
+        const filter = ["all", "validated", "waiting", "completed", "failed", "web_vault"].includes(detail.assetFilter) ? detail.assetFilter : "all";
         merge({ assetFilter: filter });
         return;
       }
@@ -32857,17 +32880,38 @@
         return;
       }
       if (action === "refresh-jobs") {
-        const result = await api("/jobs");
-        const items = result.data && result.data.items ? result.data.items : [];
-        merge({ jobs: items });
-        scheduleJobPolling("/jobs", items);
-        toast(result.message || "Đã làm mới danh sách job canonical.");
+        setActionBusy(action, route, true);
+        setDeliveryReadStatus("/jobs", "Đang kiểm tra job canonical thuộc signed session…");
+        try {
+          const result = await api("/jobs");
+          const items = deliveryReadItemsOrThrow(result, "Job Center");
+          merge({ jobs: items });
+          scheduleJobPolling("/jobs", items);
+          setDeliveryReadStatus("/jobs", `Đã nhận ${items.length} job canonical trong cửa sổ hiện tại.`);
+          toast(result.message || "Đã làm mới danh sách job canonical.");
+        } catch (error) {
+          setDeliveryReadStatus("/jobs", "Không thể làm mới Job Center. Danh sách hiện tại không được thay bằng dữ liệu suy đoán.");
+          throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "refresh-assets") {
-        const result = await api("/assets");
-        merge({ assets: result.data && result.data.items ? result.data.items : [] });
-        toast(result.message || "Đã làm mới metadata tài sản.");
+        setActionBusy(action, route, true);
+        setDeliveryReadStatus("/assets", "Đang kiểm tra metadata và delivery thuộc signed session…");
+        try {
+          const result = await api("/assets");
+          const items = deliveryReadItemsOrThrow(result, "Assets");
+          merge({ assets: items });
+          setDeliveryReadStatus("/assets", `Đã nhận ${items.length} record tài sản trong cửa sổ hiện tại.`);
+          toast(result.message || "Đã làm mới metadata tài sản.");
+        } catch (error) {
+          setDeliveryReadStatus("/assets", "Không thể làm mới Assets. Không có delivery hoặc file nào được suy đoán.");
+          throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "admin-audit-filter" || action === "admin-audit-filter-clear" || action === "admin-audit-page") {
