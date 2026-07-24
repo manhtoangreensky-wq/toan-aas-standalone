@@ -3394,8 +3394,27 @@
     return validMemoryRevision(value);
   }
 
+  // The Audio Production Hub is a visual route alias, not an API namespace or
+  // a second data authority. Keep the current validated visual prefix for
+  // navigation, while every read/write below continues to use the existing
+  // owner-scoped `/media-workspace/*` API contract.
+  function mediaWorkspaceVisualRoot(path) {
+    const route = String(path || "").split("?")[0].replace(/\/+$/, "") || "/";
+    return route === "/audio-hub" || route.startsWith("/audio-hub/") ? "/audio-hub" : "/media-workspace";
+  }
+
+  function mediaWorkspaceCollectionRoute(collectionId, path) {
+    const id = validMediaCollectionId(collectionId) ? String(collectionId) : "";
+    return id ? `${mediaWorkspaceVisualRoot(path)}/${encodeURIComponent(id)}` : "";
+  }
+
+  function isMediaWorkspaceListViewPath(path) {
+    const route = String(path || "").split("?")[0];
+    return ["/media-workspace", "/media-workspace/new", "/audio-hub", "/audio-hub/new"].includes(route);
+  }
+
   function mediaWorkspaceCollectionIdFromPath(path) {
-    const match = /^\/media-workspace\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const match = /^\/(?:media-workspace|audio-hub)\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
     return validMediaCollectionId(id) ? id : "";
   }
@@ -3408,7 +3427,7 @@
     // lifecycle verification server-side before it can inspect or transform.
     const normalizedCollectionId = validMediaCollectionId(collectionId) ? String(collectionId) : "";
     const normalizedItemId = validMediaCollectionId(itemId) ? String(itemId) : "";
-    const expectedRoute = normalizedCollectionId ? `/media-workspace/${encodeURIComponent(normalizedCollectionId)}` : "";
+    const expectedRoute = mediaWorkspaceCollectionRoute(normalizedCollectionId, route);
     if (!normalizedCollectionId || !normalizedItemId || route !== expectedRoute || currentPortalPath() !== expectedRoute) return null;
     const detail = suppliedDetail && typeof suppliedDetail === "object"
       ? suppliedDetail
@@ -3447,7 +3466,7 @@
 
   function isNativeMediaWorkspacePath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || isNativeSfxCueSheetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
+    return isMediaWorkspaceListViewPath(normalized) || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || isNativeSfxCueSheetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
   }
 
   function mediaWorkspaceSafetyError(...values) {
@@ -13240,8 +13259,8 @@
         sfxCueSheetDraft: {}, sfxCueSheetResult: {},
         pageStates: { ...(base().pageStates || {}), "/media-workspace/sfx-cue-sheet": "guarded" }
       });
-    } else if (account && mediaWorkspaceEnabled && ["/media-workspace", "/media-workspace/new"].includes(currentPath)) await hydrateMediaWorkspace();
-    else if (account && mediaWorkspaceEnabled && mediaWorkspaceCollectionIdFromPath(currentPath)) await hydrateMediaCollection(mediaWorkspaceCollectionIdFromPath(currentPath));
+    } else if (account && mediaWorkspaceEnabled && isMediaWorkspaceListViewPath(currentPath)) await hydrateMediaWorkspace();
+    else if (account && mediaWorkspaceEnabled && mediaWorkspaceCollectionIdFromPath(currentPath)) await hydrateMediaCollection(mediaWorkspaceCollectionIdFromPath(currentPath), currentPath);
     else if (isNativeMediaWorkspacePath(currentPath)) {
       // Never retain a previous account's audio metadata or fall back to the
       // Bot music bridge when the dedicated Web feature/session is guarded.
@@ -14550,7 +14569,7 @@
     const requestEpoch = ++mediaWorkspaceListHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (!isNativeMediaWorkspacePath(path) || isNativeMusicPromptComposerPath(path) || isNativeMusicDirectionPresetPath(path)) return { stale: true };
-    const listView = path === "/media-workspace" || path === "/media-workspace/new";
+    const listView = isMediaWorkspaceListViewPath(path);
     const priorListing = base().mediaWorkspaceListing && typeof base().mediaWorkspaceListing === "object"
       ? base().mediaWorkspaceListing
       : mediaWorkspaceListingProjection({ q: "", tag: "", prompt_mode: "", state: "all" }, 0, {}, 0);
@@ -14588,7 +14607,7 @@
         mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceFilter: filter, mediaWorkspaceListing: listing,
         mediaWorkspaceReadState: "ready",
-        pageStates: { ...(base().pageStates || {}), "/media-workspace": "ready", "/media-workspace/new": "ready" }
+        pageStates: { ...(base().pageStates || {}), "/media-workspace": "ready", "/media-workspace/new": "ready", "/audio-hub": "ready", "/audio-hub/new": "ready", [path]: "ready" }
       });
       return { collections, events, listing };
     } catch (_) {
@@ -14600,7 +14619,7 @@
         mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {},
         mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceEvents: [], mediaWorkspaceFilter: filter, mediaWorkspaceListing: emptyListing, mediaWorkspaceReadState: "failed",
-        pageStates: { ...(base().pageStates || {}), "/media-workspace": "guarded", "/media-workspace/new": "guarded" }
+        pageStates: { ...(base().pageStates || {}), "/media-workspace": "guarded", "/media-workspace/new": "guarded", "/audio-hub": "guarded", "/audio-hub/new": "guarded", [path]: "guarded" }
       });
       return { collections: [], events: [], listing: emptyListing };
     }
@@ -14638,9 +14657,9 @@
     }
   }
 
-  async function hydrateMediaCollection(collectionId) {
+  async function hydrateMediaCollection(collectionId, visualRoute) {
     if (!validMediaCollectionId(collectionId)) throw new Error("Mã Audio Collection không hợp lệ.");
-    const route = `/media-workspace/${encodeURIComponent(String(collectionId))}`;
+    const route = mediaWorkspaceCollectionRoute(collectionId, visualRoute || currentPortalPath());
     const requestEpoch = ++mediaWorkspaceDetailHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (currentPortalPath() !== route) return null;
@@ -23943,7 +23962,7 @@
       }
       if (action === "media-workspace-refresh") {
         const collectionId = mediaWorkspaceCollectionIdFromPath(route);
-        if (collectionId) await hydrateMediaCollection(collectionId);
+        if (collectionId) await hydrateMediaCollection(collectionId, route);
         else await hydrateMediaWorkspace();
         toast("Đã làm mới Audio Library & Briefing của Web account hiện tại.");
         return;
@@ -24020,7 +24039,7 @@
           await hydrateMediaWorkspace();
           toast(result.message || "Đã tạo Audio Library collection riêng tư.");
           if (collectionId) {
-            window.location.assign(`/media-workspace/${encodeURIComponent(collectionId)}`);
+            window.location.assign(mediaWorkspaceCollectionRoute(collectionId, route));
             return;
           }
         } catch (error) {
@@ -24050,7 +24069,7 @@
           });
           acknowledged = true;
           await hydrateMediaWorkspace();
-          await hydrateMediaCollection(collectionId);
+          await hydrateMediaCollection(collectionId, route);
           toast(result.message || "Đã lưu revision Audio Collection mới.");
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
@@ -24090,10 +24109,10 @@
           await hydrateMediaWorkspace();
           toast(result.message || "Đã cập nhật Audio Collection.");
           if (createdId) {
-            window.location.assign(`/media-workspace/${encodeURIComponent(createdId)}`);
+            window.location.assign(mediaWorkspaceCollectionRoute(createdId, route));
             return;
           }
-          await hydrateMediaCollection(collectionId);
+          await hydrateMediaCollection(collectionId, route);
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
           throw error;
@@ -24154,7 +24173,7 @@
           });
           acknowledged = true;
           await hydrateMediaWorkspace();
-          await hydrateMediaCollection(collectionId);
+          await hydrateMediaCollection(collectionId, route);
           toast(result.message || "Đã cập nhật audio reference riêng tư.");
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);

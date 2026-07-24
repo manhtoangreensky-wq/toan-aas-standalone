@@ -876,6 +876,18 @@
     layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
     notes: ["Không nhập URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán. Chỉ Asset Vault audio active thuộc account hiện tại có thể được gắn sau khi tạo collection.", "Duration là thông tin do bạn khai báo, không phải số liệu được parse, waveform hoặc promise render."]
   });
+  // Audio Production Hub is the app-first board for the same owner-scoped
+  // Media Workspace collections. It intentionally has no independent API,
+  // database, engine or browser persistence; the original Library routes stay
+  // available as a compatible collection editor.
+  customerPage("/audio-hub", "Audio Production Hub", "Bảng điều phối app-first cho audio brief, Asset Vault references và review route trên dữ liệu Media Workspace đã owner-check.", ICONS.music, {
+    layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
+    notes: ["Hub chỉ là projection của collection Media Workspace; không tạo database, API, player, waveform, provider catalog, generator, job, ví Xu, PayOS hay output mới.", "Mỗi công cụ tiếp theo mở độc lập. Hub không chuyển collection, asset, account data hoặc lệnh thực thi qua URL, query hoặc browser storage."]
+  });
+  customerPage("/audio-hub/new", "Audio Production Brief mới", "Tạo collection audio riêng tư từ Audio Production Hub với owner check, policy, revision và audit hiện có của Media Workspace.", ICONS.music, {
+    layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
+    notes: ["Form ghi vào collection Media Workspace canonical của Web App; không nhận URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán.", "Sau khi tạo, Hub chỉ mở detail cùng route visual. Audio reference vẫn được gắn riêng từ Asset Vault sau owner check của server."]
+  });
   // Music Prompt Composer keeps only the useful planning grammar from the
   // Bot. It intentionally sits outside the durable Audio Library collection:
   // a successful response is a short-lived, reviewable text receipt, never a
@@ -8042,6 +8054,16 @@
         notes: ["Template chỉ được nạp sau owner check ở server. Không có JSON seed/global path từ Bot, provider, job, Xu hoặc PayOS trong trang này.", "Preview thay variable đã khai báo theo dữ liệu bạn nhập; đó không phải AI execution hoặc output."]
       });
     }
+    if (/^\/audio-hub\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const collectionId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/audio-hub/:id", routePath: normalized, title: "Audio Production Board", icon: ICONS.music, section: "Audio Production Hub",
+        description: "Điều phối brief, Asset Vault references và review routes của một collection riêng tư trên Media Workspace đã owner-check.",
+        status: "processing", access: "member", layout: "audio-hub-detail", action: "none", actionLabel: "", fields: [],
+        recordId: collectionId,
+        notes: ["Board nạp collection sau owner check qua API Media Workspace có sẵn; nó không tạo state/API song song, player, waveform, provider, job, Xu, PayOS hay output.", "Mở Music Directions, SFX Cue Sheet hoặc Audio Operations là điều hướng tách biệt; không truyền collection, asset hay account data qua URL hoặc storage."]
+      });
+    }
     if (/^\/media-workspace\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
       const collectionId = normalized.split("/").pop();
       return Object.freeze({
@@ -8996,7 +9018,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "consultation-crm-intake", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "consultation-crm-intake", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "audio-hub", "audio-hub-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -10371,6 +10393,21 @@
     return match ? match[1] : "Reference";
   }
 
+  // Audio Production Hub is deliberately a route/UI projection over the
+  // authoritative Media Workspace data model. Keeping this decision in the
+  // renderer prevents a second browser-side collection vocabulary, and lets
+  // the long-standing Library route remain a compatible editing surface.
+  function isAudioHubRoute(value) {
+    const route = String(value || "").split("?")[0].replace(/\/+$/, "") || "/";
+    return route === "/audio-hub" || route.startsWith("/audio-hub/");
+  }
+
+  function mediaWorkspaceCollectionRoute(page, collectionId) {
+    const id = validMediaCollectionId(collectionId) ? String(collectionId) : "";
+    const root = isAudioHubRoute(page && (page.routePath || page.path)) ? "/audio-hub" : "/media-workspace";
+    return id ? `${root}/${encodeURIComponent(id)}` : root;
+  }
+
   function mediaWorkspaceFilterState(context) {
     const source = context && context.mediaWorkspaceFilter && typeof context.mediaWorkspaceFilter === "object" ? context.mediaWorkspaceFilter : {};
     const tidy = (value, maximum) => typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, maximum) : "";
@@ -10406,8 +10443,8 @@
     };
   }
 
-  function renderMediaWorkspacePagination(listing) {
-    return renderMemoryPagination(listing, "audio collection", "media-workspace-page", "/media-workspace", "data-media-collection-offset", "portal-media-pagination");
+  function renderMediaWorkspacePagination(listing, route) {
+    return renderMemoryPagination(listing, "audio collection", "media-workspace-page", route || "/media-workspace", "data-media-collection-offset", "portal-media-pagination");
   }
 
   function renderMediaAudioAssetPagination(listing, route) {
@@ -10472,13 +10509,14 @@
       .filter((item) => item && typeof item === "object" && validMediaCollectionId(item.id)).slice(0, 50);
   }
 
-  function renderMediaCollectionCards(items) {
+  function renderMediaCollectionCards(items, route) {
     if (!items.length) return renderEmpty("Chưa có audio collection", "Tạo collection đầu tiên để tổ chức brief, quyền sử dụng và các audio private đã có trong Asset Vault.", ICONS.music);
     return `<div class="portal-media-collection-grid">${items.map((item) => {
       const id = String(item.id || "");
       const policy = item.policy && typeof item.policy === "object" ? item.policy : {};
       const policyBadge = policy.status === "guarded" ? `<span class="portal-media-policy-flag">Brief cần chỉnh policy</span>` : "";
-      return `<article class="portal-card portal-card-pad portal-media-collection-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Audio Collection"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.description_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class="portal-media-card-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || "—"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Authoring-only · không có job, charge hoặc output.</span><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(id)}">Mở collection <span aria-hidden="true">→</span></a></div></article>`;
+      const target = mediaWorkspaceCollectionRoute({ routePath: route }, id);
+      return `<article class="portal-card portal-card-pad portal-media-collection-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Audio Collection"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.description_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class="portal-media-card-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || "—"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Authoring-only · không có job, charge hoặc output.</span><a class="portal-button portal-button--quiet" href="${safeText(target)}">Mở collection <span aria-hidden="true">→</span></a></div></article>`;
     }).join("")}</div>`;
   }
 
@@ -10489,10 +10527,28 @@
     return `<aside class="portal-card portal-card-pad portal-media-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới an toàn</span><h2 class="portal-card-title">Authoring sẵn sàng, engine vẫn được bảo vệ</h2><p class="portal-card-subtitle">Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment trong workspace này.</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${statements.length ? statements.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : "<li><strong>1.</strong><span>Chính sách đang được nạp an toàn từ server.</span></li>"}</ol>${guarded.length ? `<div class="portal-media-guarded-list"><span>Đang guarded</span>${guarded.map((item) => `<em>${safeText(String(item).replace(/_/g, " "))}</em>`).join("")}</div>` : ""}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><a class="portal-button portal-button--quiet" href="/projects">Mở Project Center</a></div></aside>`;
   }
 
+  function renderAudioHubOverview(summary) {
+    const collections = summary && summary.collections && typeof summary.collections === "object" ? summary.collections : {};
+    const items = summary && summary.items && typeof summary.items === "object" ? summary.items : {};
+    const lanes = [
+      { index: "01", label: "Brief & policy", value: String(Number(collections.active || 0)), note: "Collection active có revision và policy guard rõ ràng." },
+      { index: "02", label: "Asset Vault assembly", value: String(Number(items.total || 0)), note: "Reference private; không copy tệp, không player hoặc preview." },
+      { index: "03", label: "Direction review", value: "Text", note: "Music/SFX direction cần mở và xác nhận tại công cụ riêng." }
+    ];
+    return `<section class="portal-audio-hub-overview" aria-label="Tổng quan Audio Production Hub"><div class="portal-audio-hub-overview-copy"><span class="portal-section-kicker">Audio production board</span><h2>Điều phối brief, reference và review trong một không gian rõ ràng.</h2><p>Hub dùng collection Media Workspace đã có thay vì tạo thêm kho dữ liệu. Mỗi bước vẫn giữ owner check, CSRF, revision và trạng thái policy của Web App.</p></div><ol class="portal-audio-hub-lanes">${lanes.map((lane) => `<li><span class="portal-audio-hub-lane-index">${safeText(lane.index)}</span><div><strong>${safeText(lane.label)}</strong><b>${safeText(lane.value)}</b><small>${safeText(lane.note)}</small></div></li>`).join("")}</ol></section>`;
+  }
+
+  function renderAudioHubNextSteps() {
+    return `<section class="portal-card portal-card-pad portal-audio-hub-next-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">Handoff có chủ đích</span><h2 class="portal-card-title">Chọn công cụ tiếp theo, không truyền ngầm dữ liệu</h2><p class="portal-card-subtitle">Các route dưới đây mở như workspace riêng. Hub không prefill collection, Asset Vault reference, account data hoặc lệnh thực thi sang chúng.</p></div>${badge("read_only")}</div><div class="portal-audio-hub-next-grid"><a class="portal-audio-hub-next-card" href="/media-workspace/music-directions"><strong>Music Directions</strong><span>Lập direction text để review</span></a><a class="portal-audio-hub-next-card" href="/media-workspace/sfx-cue-sheet"><strong>SFX Cue Sheet</strong><span>Lập cue semantic theo ngữ cảnh</span></a><a class="portal-audio-hub-next-card" href="/audio/assets"><strong>Audio Operations</strong><span>Chọn audio private và xác nhận riêng</span></a></div></section>`;
+  }
+
   function renderMediaWorkspace(page, context) {
+    const route = String(page.routePath || page.path || "/media-workspace");
+    const audioHub = isAudioHubRoute(route);
     const canView = Boolean(context.capabilities && context.capabilities["media-workspace-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["media-workspace-create"] === true);
-    if (!canView) return `<article class="portal-page portal-media-workspace">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Audio Library đang được bảo vệ", "Đăng nhập bằng signed session để mở workspace audio riêng tư. Web không nhận Telegram ID thô và không hiển thị data music của Bot.", ICONS.music)}</section></article>`;
+    const workspaceLabel = audioHub ? "Audio Production Hub" : "Audio Library";
+    if (!canView) return `<article class="portal-page ${audioHub ? "portal-audio-hub" : "portal-media-workspace"}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(`${workspaceLabel} đang được bảo vệ`, "Đăng nhập bằng signed session để mở workspace audio riêng tư. Web không nhận Telegram ID thô và không hiển thị data music của Bot.", ICONS.music)}</section></article>`;
     const summary = context.mediaWorkspaceSummary && typeof context.mediaWorkspaceSummary === "object" ? context.mediaWorkspaceSummary : {};
     const collections = summary.collections && typeof summary.collections === "object" ? summary.collections : {};
     const items = summary.items && typeof summary.items === "object" ? summary.items : {};
@@ -10508,11 +10564,13 @@
     ];
     const events = Array.isArray(context.mediaWorkspaceEvents) ? context.mediaWorkspaceEvents.slice(0, 8) : [];
     const eventList = events.length ? `<div class="portal-media-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ lưu nhãn thao tác và revision; không hiển thị brief, attribution hoặc license note.", "○");
-    return `<article class="portal-page portal-media-workspace">${renderHero(page, context)}
-      <section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">Private Audio Library & Briefing</span><h2>Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo</h2><p>Tạo collection cho music/SFX brief, liên kết planning với Project và gắn audio đã nằm trong Asset Vault. Đây là workspace authoring; không phải generator, catalog provider hay trình phát audio.</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>Audio references</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>Đã đánh dấu</dd></div></dl></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Công cụ biên tập nhanh</span><h2 class="portal-card-title">Lập SFX theo ngữ cảnh trước khi chọn nguồn âm thanh</h2><p class="portal-card-subtitle">SFX Cue Sheet tạo ba vị trí semantic để review. Đây là công cụ Web độc lập: không mở catalog, preview, job, ví Xu hay thao tác Telegram.</p></div>${badge("ready")}</div><div class="portal-form-footer"><span class="portal-form-note">Chọn preset và viết brief mới trên trang riêng; không chuyển collection, file hoặc dữ liệu account sang công cụ này.</span><a class="portal-button portal-button--primary" href="/media-workspace/sfx-cue-sheet">Mở SFX Cue Sheet <span aria-hidden="true">→</span></a></div></section>
+    const overview = audioHub ? renderAudioHubOverview(summary) : `<section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">Private Audio Library & Briefing</span><h2>Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo</h2><p>Tạo collection cho music/SFX brief, liên kết planning với Project và gắn audio đã nằm trong Asset Vault. Đây là workspace authoring; không phải generator, catalog provider hay trình phát audio.</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>Audio references</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>Đã đánh dấu</dd></div></dl></section>`;
+    const nextSteps = audioHub ? renderAudioHubNextSteps() : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Công cụ biên tập nhanh</span><h2 class="portal-card-title">Lập SFX theo ngữ cảnh trước khi chọn nguồn âm thanh</h2><p class="portal-card-subtitle">SFX Cue Sheet tạo ba vị trí semantic để review. Đây là công cụ Web độc lập: không mở catalog, preview, job, ví Xu hay thao tác Telegram.</p></div>${badge("ready")}</div><div class="portal-form-footer"><span class="portal-form-note">Chọn preset và viết brief mới trên trang riêng; không chuyển collection, file hoặc dữ liệu account sang công cụ này.</span><a class="portal-button portal-button--primary" href="/media-workspace/sfx-cue-sheet">Mở SFX Cue Sheet <span aria-hidden="true">→</span></a></div></section>`;
+    return `<article class="portal-page ${audioHub ? "portal-audio-hub" : "portal-media-workspace"}">${renderHero(page, context)}
+      ${overview}
+      ${nextSteps}
       <div class="portal-media-workspace-layout"><section class="portal-card portal-card-pad portal-media-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo audio collection</h2><p class="portal-card-subtitle">Lưu creative brief riêng tư với owner check, CSRF, idempotency và version history. Chưa có AI request hoặc media output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(mediaCollectionFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Collection chỉ lưu authoring metadata. Audio được gắn riêng từ Asset Vault sau khi server owner-check.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo collection</button></div></form></section>${renderMediaPolicy(context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục collection</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại; nội dung đầy đủ chỉ nạp sau owner check khi mở collection.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="/media-workspace">Làm mới</button></div><form class="portal-media-filter" data-portal-form data-portal-no-transient data-portal-action="media-workspace-filter" data-portal-route="/media-workspace" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại, không lưu localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="/media-workspace">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm collection</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context))}${renderMediaWorkspacePagination(listing)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục collection</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại; nội dung đầy đủ chỉ nạp sau owner check khi mở collection.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div><form class="portal-media-filter" data-portal-form data-portal-no-transient data-portal-action="media-workspace-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại, không lưu localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm collection</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context), route)}${renderMediaWorkspacePagination(listing, route)}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không có raw brief, file path, URL hoặc data provider.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "ready"))} authoring · ${safeText(String(execution.generation || "guarded"))} generation</span></div>${eventList}</section>
     </article>`;
   }
@@ -10540,6 +10598,19 @@
     return { asset_id: assetId };
   }
 
+  function renderAudioHubCollectionBoard(collection, items) {
+    const roleLanes = MEDIA_ITEM_ROLES.map(([role, label], index) => {
+      const allReferences = items.filter((item) => item && String(item.role || "reference") === role);
+      const references = allReferences.slice(0, 3);
+      const labels = references.map((item) => {
+        const asset = item.asset && typeof item.asset === "object" ? item.asset : {};
+        return String(item.title_override || asset.display_name || asset.original_filename || "Audio reference");
+      });
+      return `<article class="portal-audio-hub-collection-lane"><span class="portal-audio-hub-lane-index">0${index + 1}</span><div><strong>${safeText(label)}</strong><b>${safeText(String(allReferences.length))} reference${allReferences.length === 1 ? "" : "s"}</b>${labels.length ? `<ul>${labels.map((labelValue) => `<li>${safeText(labelValue)}</li>`).join("")}</ul>` : "<p>Chưa có reference ở lane này.</p>"}</div></article>`;
+    }).join("");
+    return `<section class="portal-audio-hub-collection-board" aria-label="Audio Production Board của collection"><div class="portal-audio-hub-collection-heading"><div><span class="portal-section-kicker">Collection production board</span><h2>Kiểm tra assembly trước khi mở một công cụ chuyên dụng.</h2><p>Lane chỉ trình bày metadata reference đã nạp sau owner check. Không có player, waveform, raw URL, download state hay thao tác engine trong board này.</p></div><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(String(collection.id || ""))}">Mở Audio Library editor</a></div><div class="portal-audio-hub-collection-lanes">${roleLanes}</div><div class="portal-form-footer"><span class="portal-form-note">Mỗi công cụ kế tiếp mở độc lập; không nhận collection, asset hoặc account data từ đường dẫn này.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/media-workspace/music-directions">Music Directions</a><a class="portal-button portal-button--quiet" href="/media-workspace/sfx-cue-sheet">SFX Cue Sheet</a><a class="portal-button portal-button--quiet" href="/audio/assets">Audio Operations</a></div></div></section>`;
+  }
+
   function mediaItemEditor(item, collection, enabled, route, canOpenAudioOperations) {
     const itemId = String(item.id || "");
     const asset = item.asset && typeof item.asset === "object" ? item.asset : {};
@@ -10563,7 +10634,10 @@
     const detail = context.mediaCollectionDetail && typeof context.mediaCollectionDetail === "object" ? context.mediaCollectionDetail : {};
     const collection = detail.collection && typeof detail.collection === "object" && validMediaCollectionId(detail.collection.id) && String(detail.collection.id) === String(page.recordId || "") ? detail.collection : null;
     const canView = Boolean(context.capabilities && context.capabilities["media-workspace-view"] === true);
-    if (!canView || !collection) return `<article class="portal-page portal-media-workspace-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy audio collection", "Collection có thể không thuộc Web account hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được server xác minh.", ICONS.music)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/media-workspace">Về Audio Library</a></div></section></article>`;
+    const route = page.routePath || page.path;
+    const audioHub = isAudioHubRoute(route);
+    const collectionHome = audioHub ? "/audio-hub" : "/media-workspace";
+    if (!canView || !collection) return `<article class="portal-page ${audioHub ? "portal-audio-hub-detail" : "portal-media-workspace-detail"}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy audio collection", "Collection có thể không thuộc Web account hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được server xác minh.", ICONS.music)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${collectionHome}">Về ${audioHub ? "Audio Production Hub" : "Audio Library"}</a></div></section></article>`;
     const state = String(collection.state || "active");
     const writable = state === "active";
     const canUpdate = Boolean(context.capabilities && context.capabilities["media-workspace-update"] === true && writable);
@@ -10575,7 +10649,6 @@
     const canAttach = Boolean(context.capabilities && context.capabilities["media-workspace-item-attach"] === true && writable);
     const canItemUpdate = Boolean(context.capabilities && context.capabilities["media-workspace-item-update"] === true && writable);
     const canOpenAudioOperations = Boolean(context.capabilities && context.capabilities["audio-asset-operation-view"] === true);
-    const route = page.routePath || page.path;
     const values = mediaCollectionValues(collection);
     const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
     const items = Array.isArray(detail.items) ? detail.items.filter((item) => item && validMediaCollectionId(item.id)).slice(0, 250) : [];
@@ -10593,9 +10666,10 @@
       ? `<div class="portal-media-composer-result">${directions.map((direction) => `<article><span class="portal-section-kicker">${safeText(String(direction.title || "Hướng brief"))}</span><h3>${safeText(String(direction.intent || ""))}</h3><pre>${safeText(direction.prompt)}</pre></article>`).join("")}</div>`
       : "";
     const policyNotice = policy.status === "guarded" ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>Brief đang bị policy guard</strong><p>Hãy bỏ yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng cụ thể trước khi dùng composer. Web không đánh giá hoặc chứng nhận bản quyền.</p></div></div>` : "";
-    return `<article class="portal-page portal-media-workspace-detail">${renderHero(page, context)}
+    const audioHubBoard = audioHub ? renderAudioHubCollectionBoard(collection, items) : "";
+    return `<article class="portal-page ${audioHub ? "portal-audio-hub-detail" : "portal-media-workspace-detail"}">${renderHero(page, context)}
       <section class="portal-media-detail-summary"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(collection.prompt_mode))} · ${safeText(String(collection.use_context || "general"))}</span><h2>${safeText(String(collection.title || "Audio Collection"))}</h2><p>${safeText(String(collection.description_excerpt || "Collection authoring riêng tư của Web account hiện tại."))}</p>${renderMediaTags(collection.tags)}</div><dl><div><dt>Revision</dt><dd>v${safeText(String(collection.revision || 1))}</dd></div><div><dt>References</dt><dd>${safeText(String(Number(detail.item_count || items.length)))}/${safeText(String(Number(detail.item_limit || 250)))}</dd></div><div><dt>Trạng thái</dt><dd>${badge(mediaCollectionState(collection.state))}</dd></div></dl></section>
-      ${policyNotice}<div class="portal-media-detail-grid"><section class="portal-card portal-card-pad portal-media-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Collection editor</h2><p class="portal-card-subtitle">Mỗi lần lưu metadata tạo revision mới. Server kiểm tra owner, CSRF, idempotency, policy và optimistic revision trước khi ghi.</p></div>${badge(mediaCollectionState(collection.state))}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-update" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider call, job, Xu, PayOS hoặc media output khi lưu collection.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-duplicate" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản metadata</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form></section>
+      ${policyNotice}${audioHubBoard}<div class="portal-media-detail-grid"><section class="portal-card portal-card-pad portal-media-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Collection editor</h2><p class="portal-card-subtitle">Mỗi lần lưu metadata tạo revision mới. Server kiểm tra owner, CSRF, idempotency, policy và optimistic revision trước khi ghi.</p></div>${badge(mediaCollectionState(collection.state))}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-update" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider call, job, Xu, PayOS hoặc media output khi lưu collection.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-duplicate" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản metadata</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form></section>
         <aside class="portal-card portal-card-pad portal-media-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic draft</span><h2 class="portal-card-title">3 hướng brief cục bộ</h2><p class="portal-card-subtitle">Composer chỉ sắp xếp lại brief đã lưu thành text direction. Không chạy AI, tạo audio, job, charge hoặc gọi provider.</p></div>${badge(canCompose ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-compose" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate><div class="portal-form-footer"><span class="portal-form-note">Cần Music/SFX brief hợp lệ và không bị policy guard.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo hướng brief</button></div></form>${composerResult || "<p class=\"portal-form-note\">Kết quả chỉ tồn tại trong state phiên hiện tại, không tự lưu hoặc gửi tới engine.</p>"}</aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault references</span><h2 class="portal-card-title">Gắn audio private</h2><p class="portal-card-subtitle">Chỉ audio Asset Vault active thuộc account hiện tại. Không có URL, upload mới, player, waveform hay provider preview trong collection.</p></div>${badge(canAttach ? "ready" : "guarded")}</div>${audioPicker}<form class="portal-form portal-media-attach-form" data-portal-form data-portal-action="media-item-attach" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaAttachFields(context), canAttach, context, { role: "music", license_note: "Tôi chịu trách nhiệm kiểm tra license và quyền thương mại trước khi đăng." })}<div class="portal-form-footer"><span class="portal-form-note">Attachment chỉ tạo reference private; tệp gốc không bị copy, đổi state hoặc biến thành output. Với reference active, bạn có thể mở Audio Operations rồi tự xác nhận inspect, convert hoặc normalize.</span><button class="portal-button portal-button--primary" type="submit"${canAttach ? "" : " disabled"}>Gắn audio từ Asset Vault</button></div></form><div class="portal-media-item-grid">${items.length ? items.map((item) => mediaItemEditor(item, collection, canItemUpdate, route, canOpenAudioOperations)).join("") : renderEmpty("Chưa có audio reference", "Chọn một tệp audio đã vào Asset Vault để gắn vào collection này. Tệp không được tạo hoặc upload lại ở đây.", ICONS.assets)}</div></section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử metadata</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; audio references không bị tự động đảo theo version metadata.</p></div></div>${versionList}</section>
@@ -16491,7 +16565,7 @@
       { number: "02", icon: ICONS.image, title: "Visual & reference", text: "Tạo ảnh hoặc chuẩn bị image-to-image với asset được staging/ownership-check theo workflow riêng.", href: "/image/create", action: "Mở Image Studio" },
       { number: "03", icon: ICONS.video, title: "Video project", text: "Chọn video sản phẩm, quick video hoặc multiscene; estimate và số cảnh do Bot canonical xác nhận.", href: "/video/product", action: "Mở Video Studio" },
       { number: "04", icon: ICONS.voice, title: "Voice workspace", text: "Chuẩn bị TTS hoặc Voice Vault trong workflow có consent và policy riêng.", href: "/voice/tts", action: "Chuẩn bị voice" },
-      { number: "05", icon: ICONS.music, title: "Audio Library & Briefing", text: "Tổ chức music/SFX brief và audio Asset Vault riêng tư. Đây là authoring-only, không phải music generator hoặc player.", href: "/media-workspace", action: "Mở Audio Library" },
+      { number: "05", icon: ICONS.music, title: "Audio Production Hub", text: "Điều phối music/SFX brief và audio Asset Vault reference trong board app-first. Đây là authoring-only, không phải music generator hoặc player.", href: "/audio-hub", action: "Mở Audio Hub" },
       { number: "06", icon: ICONS.subtitle, title: "Subtitle & finalization", text: "Dùng subtitle/dubbing rồi mở finalization. Mux, watermark, export và delivery vẫn cần adapter Bot riêng.", href: "/video/add-ons", action: "Mở finalization" }
     ];
     const cards = steps.map((step) => `<article class="portal-finalization-card"><div class="portal-finalization-card-head"><span class="portal-finalization-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><h3>${safeText(step.title)}</h3><p>${safeText(step.text)}</p><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(step.action)} <span aria-hidden="true">→</span></a></article>`).join("");
@@ -23669,6 +23743,8 @@
       case "guide-center": return renderGuideCenter(page, context);
       case "media-workspace": return renderMediaWorkspace(page, context);
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
+      case "audio-hub": return renderMediaWorkspace(page, context);
+      case "audio-hub-detail": return renderMediaWorkspaceDetail(page, context);
       case "music-prompt-composer": return renderMusicPromptComposer(page, context);
       case "music-direction-presets": return renderMusicDirectionPresets(page, context);
       case "sfx-cue-sheet": return renderSfxCueSheet(page, context);

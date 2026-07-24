@@ -13,7 +13,9 @@ callbacks.
 
 ## Entry and target
 
-- Source route: `/media-workspace/{collection_id}`.
+- Source route: `/media-workspace/{collection_id}` or the app-first visual
+  projection `/audio-hub/{collection_id}`. Both read the same signed Media
+  Workspace collection detail; neither creates a second API or data model.
 - Target route: `/audio/assets`.
 - The control is shown only for an attached item returned by the signed
   collection-detail read when all of the following remain true:
