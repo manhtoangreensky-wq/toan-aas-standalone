@@ -6874,3 +6874,76 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-delivery-mobile-card,
   .portal-delivery-next-action { transition: none; }
 }
+
+/* Billing is an app workflow, not a sales landing.  These rules only change
+ * presentation: payment authority, ledger reads and the existing server-side
+ * controls remain untouched. */
+.portal-wallet-page .portal-button { min-height: 40px; }
+.portal-wallet-command { display: grid; align-content: start; gap: 14px; }
+.portal-wallet-command .portal-card-header { margin-bottom: 0; }
+.portal-wallet-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--portal-surface-strong);
+}
+.portal-wallet-facts > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 12px 13px; border-bottom: 1px solid var(--portal-border); }
+.portal-wallet-facts > div:last-child { border-bottom: 0; }
+.portal-wallet-facts dt { color: var(--portal-muted); font-size: 11px; font-weight: 760; }
+.portal-wallet-facts dd { min-width: 0; margin: 0; color: var(--portal-text); font-size: 13px; font-weight: 790; overflow-wrap: anywhere; text-align: right; }
+.portal-wallet-read-status { min-height: 2.9em; margin: 0; padding: 11px 12px; border: 1px solid rgba(131, 197, 255, .2); border-radius: 11px; background: rgba(16, 40, 56, .38); color: var(--portal-muted-strong); font-size: 12px; line-height: 1.52; }
+.portal-wallet-overview .portal-admin-grid { margin-top: 2px; }
+.portal-billing-journey {
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.3vw, 25px);
+  border: 1px solid rgba(45, 212, 191, .28);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-billing-journey-head { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.portal-billing-journey h2 { margin: 2px 0 0; color: var(--portal-text); font-size: clamp(18px, 2vw, 23px); letter-spacing: -.022em; }
+.portal-billing-journey p { max-width: 760px; margin: 7px 0 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.6; }
+.portal-billing-journey-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.portal-billing-journey-lanes li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; min-width: 0; padding: 13px; border: 1px solid var(--portal-border); border-radius: 12px; background: rgba(8, 22, 33, .48); }
+.portal-billing-journey-lanes li > span { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(45, 212, 191, .48); border-radius: 50%; color: var(--portal-accent); font-size: 11px; font-weight: 820; }
+.portal-billing-journey-lanes strong { display: block; color: var(--portal-text); font-size: 12px; line-height: 1.45; }
+.portal-billing-journey-lanes p { margin: 4px 0 0; color: var(--portal-muted); font-size: 11px; line-height: 1.52; }
+.portal-billing-entrypoints .portal-payment-entry-grid { gap: 12px; }
+.portal-billing-entrypoints .portal-payment-entry { min-height: 214px; padding: 16px; background: var(--portal-surface-strong); }
+.portal-billing-entrypoints .portal-payment-entry--manual { border-color: rgba(255, 211, 122, .3); }
+.portal-billing-entrypoints .portal-payment-entry h3 { font-size: 14px; }
+.portal-billing-entrypoints .portal-payment-entry p { min-height: 56px; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.55; }
+.portal-billing-entrypoints .portal-payment-entry-note { font-size: 11px; line-height: 1.5; }
+.portal-billing-entrypoints .portal-payment-entry-actions { gap: 8px; }
+.portal-billing-catalog-page { display: grid; gap: 18px; }
+.portal-billing-catalog-intro { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; padding: clamp(18px, 2.2vw, 26px); border: 1px solid var(--portal-border); border-radius: var(--portal-radius-lg); background: var(--portal-surface-strong); }
+.portal-billing-catalog-intro h2 { margin: 2px 0 0; color: var(--portal-text); font-size: clamp(19px, 2.2vw, 25px); letter-spacing: -.022em; }
+.portal-billing-catalog-intro p { max-width: 760px; margin: 7px 0 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.6; }
+.portal-billing-catalog-card { min-height: 184px; background: var(--portal-surface-strong); }
+.portal-billing-catalog-card[data-billing-catalog-status="guarded"] { border-style: dashed; }
+.portal-billing-catalog-family { display: block; margin-bottom: 7px; color: var(--portal-accent); font-size: 10px; font-weight: 820; letter-spacing: .06em; text-transform: uppercase; }
+.portal-billing-catalog-card .portal-module-card-footer { color: var(--portal-muted-strong); font-size: 11px; }
+.portal-billing-catalog-card .portal-module-card-footer > span:last-child { color: var(--portal-muted); font-weight: 700; text-align: right; }
+
+@media (max-width: 700px) {
+  .portal-wallet-page .portal-button { min-height: 44px; }
+  .portal-wallet-command .portal-inline-actions { width: 100%; }
+  .portal-wallet-command .portal-inline-actions .portal-button { flex: 1 1 100%; justify-content: center; }
+  .portal-billing-journey, .portal-billing-catalog-intro { padding: 17px; }
+  .portal-billing-journey-head, .portal-billing-catalog-intro { flex-direction: column; gap: 11px; }
+  .portal-billing-journey-lanes { grid-template-columns: 1fr; }
+  .portal-billing-entrypoints .portal-payment-entry { min-height: 0; padding: 15px; }
+  .portal-billing-entrypoints .portal-payment-entry p { min-height: 0; }
+  .portal-billing-entrypoints .portal-payment-entry-actions .portal-button { flex: 1 1 100%; justify-content: center; }
+  .portal-billing-catalog-card { min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-billing-journey,
+  .portal-billing-entrypoints .portal-payment-entry,
+  .portal-billing-catalog-card { transition: none; }
+}

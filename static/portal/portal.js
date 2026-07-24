@@ -7108,6 +7108,11 @@
       dashboardReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.dashboardReadState || ""))
         ? String(source.dashboardReadState)
         : "guarded",
+      // Wallet has its own canonical lifecycle.  A guarded/failed read must
+      // remain distinct from an actual zero Xu balance or an empty ledger.
+      walletReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.walletReadState || ""))
+        ? String(source.walletReadState)
+        : "guarded",
       wallet: source.wallet && typeof source.wallet === "object" ? source.wallet : null,
       walletHistory: Array.isArray(source.walletHistory) ? source.walletHistory : [],
       jobAssets: Array.isArray(source.jobAssets) ? source.jobAssets : [],
@@ -16666,8 +16671,8 @@
 
     const jobs = Array.isArray(context.jobs) ? context.jobs.slice(0, 5) : [];
     const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
-    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : {};
-    const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(String(wallet.balance_xu || 0))}</strong><em>Không tính lại ở browser</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))}</strong><em>Đọc từ ledger canonical</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`;
+    const wallet = canonicalWalletProjection(context.wallet);
+    const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(wallet ? String(wallet.balance_xu) : "—")}</strong><em>${wallet ? "Không tính lại ở browser" : "Chờ projection hợp lệ"}</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(wallet ? String(wallet.total_spent_xu) : "—")}</strong><em>${wallet ? "Đọc từ ledger canonical" : "Chờ projection hợp lệ"}</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`;
     const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
     return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2 id="workspace-canonical-lane-title">Vận hành đã được xác minh</h2><p>Chỉ đọc dữ liệu Core Bridge thuộc signed session hiện tại. Dashboard không cộng Xu, tạo job, tạo delivery URL hay gọi provider.</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
   }
@@ -16752,39 +16757,40 @@
   }
 
   function membershipCatalogEntries(context) {
-    const catalog = context.packageCatalog && typeof context.packageCatalog === "object" ? context.packageCatalog : {};
-    const sources = [catalog.monthly, catalog.combos, catalog.items, catalog.packages];
+    const catalog = canonicalPackageCatalog(context.packageCatalog);
+    if (!catalog) return [];
+    const sources = [catalog.monthly, catalog.combos];
     const seen = new Set();
     const entries = [];
     sources.forEach((source) => {
       if (!Array.isArray(source)) return;
       source.forEach((item) => {
         if (!item || typeof item !== "object") return;
-        const code = typeof item.code === "string" && item.code ? item.code : (typeof item.id === "string" ? item.id : "");
-        const label = typeof item.label === "string" && item.label ? item.label : (typeof item.title === "string" ? item.title : code);
+        const code = canonicalCatalogCode(item.code);
+        const label = canonicalShortText(item.label, 120) || code;
         if (!label || seen.has(`${code}:${label}`)) return;
         seen.add(`${code}:${label}`);
-        entries.push({ code, label, note: typeof item.note === "string" ? item.note : (typeof item.summary === "string" ? item.summary : "Quyền lợi do Bot canonical xác minh."), price: Number.isFinite(Number(item.price_vnd)) && Number(item.price_vnd) > 0 ? Number(item.price_vnd) : null, manual: item.manual === true });
+        entries.push({ code, label, note: canonicalShortText(item.note, 240) || "Quyền lợi do Bot canonical xác minh.", priceLabel: canonicalShortText(item.priceLabel, 80), status: item.status === "read_only" ? "read_only" : "guarded" });
       });
     });
     return entries.slice(0, 12);
   }
 
   function renderMembership(page, context) {
-    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : null;
+    const wallet = canonicalWalletProjection(context.wallet);
     const plan = wallet && wallet.plan && typeof wallet.plan === "object" ? wallet.plan : {};
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const catalog = context.packageCatalog && typeof context.packageCatalog === "object" ? context.packageCatalog : {};
+    const catalog = canonicalPackageCatalog(context.packageCatalog);
     const planName = String(plan.plan_name || plan.current_plan || plan.name || "Chưa có gói canonical");
     const planStatus = String(plan.plan_status || plan.status || "Chờ Core Bridge");
     const entries = membershipCatalogEntries(context);
     const current = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quyền lợi hiện tại</h2><p class="portal-card-subtitle">Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Gói hiện tại</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái gói</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Tài khoản Web</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu || 0))} Xu</span></div></div></section>`
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quyền lợi hiện tại</h2><p class="portal-card-subtitle">Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Gói hiện tại</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái gói</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Tài khoản Web</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
       : `<section class="portal-card portal-card-pad">${renderEmpty("Chờ quyền lợi canonical", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial.", "◇")}</section>`;
     const catalogCards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">◇</span>${badge("read_only")}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${item.manual ? "Bot/Admin quản lý" : (item.price ? `${safeText(item.price.toLocaleString("vi-VN"))}đ` : "Giá canonical chờ bridge")}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></article>`).join("")}</div>`
+      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chưa được Core Bridge cấp")}</span><span>${item.status === "read_only" ? "Catalog canonical" : "Chờ xác minh"}</span></span></article>`).join("")}</div>`
       : renderEmpty("Chờ catalog gói canonical", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi.", "◇");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Nguyên tắc quyền lợi</h2><p class="portal-card-subtitle">Bot là authority cho tier và mọi tác động Xu.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Gói được Bot công bố</h2><p class="portal-card-subtitle">Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.</p></div>${badge(catalog.available === true ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">Xem catalog đầy đủ</a><a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá</a><a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu canonical</a></div></section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Nguyên tắc quyền lợi</h2><p class="portal-card-subtitle">Bot là authority cho tier và mọi tác động Xu.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Gói được Bot công bố</h2><p class="portal-card-subtitle">Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">Xem catalog đầy đủ</a><a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá</a><a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu canonical</a></div></section></article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -16818,6 +16824,112 @@
     ];
     const cards = steps.map((step) => `<article class="portal-finalization-card"><div class="portal-finalization-card-head"><span class="portal-finalization-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><h3>${safeText(step.title)}</h3><p>${safeText(step.text)}</p><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(step.action)} <span aria-hidden="true">→</span></a></article>`).join("");
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-media-studio-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2>Điều phối workflow, không giả project</h2><p>Media Studio phản chiếu các bước media factory/creative flow của Bot bằng đường đi rõ ràng giữa các workspace Web đã đăng ký. Mỗi bước vẫn tự giữ input, quote, confirmation và quyền sở hữu riêng.</p><div class="portal-state-meta"><span>Không tạo job tại browser</span><span>Không suy đoán output</span><span>Không ghép file/URL tự do</span></div></div></div></section><section class="portal-finalization-grid" aria-label="Luồng Media Studio">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Sau khi xác nhận</h2><p class="portal-card-subtitle">Job Center và Assets là nơi duy nhất theo dõi status/delivery canonical sau khi một adapter Bot đã tạo job hợp lệ.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center</a><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản</a><a class="portal-button portal-button--primary" href="/features">Khám phá workflow</a></div></section></article>`;
+  }
+
+  function canonicalShortText(value, maximum) {
+    if (typeof value !== "string") return "";
+    const normalized = value.trim();
+    return normalized && normalized.length <= (maximum || 160) && !normalized.includes("\u0000") ? normalized : "";
+  }
+
+  function canonicalNonnegativeInteger(value) {
+    return Number.isSafeInteger(value) && value >= 0 ? value : null;
+  }
+
+  function canonicalCatalogCode(value) {
+    const code = canonicalShortText(value, 80);
+    return /^[A-Za-z0-9._:-]{1,80}$/.test(code) ? code : "";
+  }
+
+  function walletReadState(context) {
+    const candidate = String(context && context.walletReadState || "guarded");
+    return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
+  }
+
+  function canonicalWalletProjection(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const balance = canonicalNonnegativeInteger(value.balance_xu);
+    const spent = canonicalNonnegativeInteger(value.total_spent_xu);
+    if (balance === null || spent === null || typeof value.is_vip !== "boolean") return null;
+    const rawPlan = value.plan && typeof value.plan === "object" && !Array.isArray(value.plan) ? value.plan : null;
+    const plan = rawPlan ? {
+      plan_name: canonicalShortText(rawPlan.plan_name, 120),
+      current_plan: canonicalShortText(rawPlan.current_plan, 120),
+      plan_status: canonicalShortText(rawPlan.plan_status, 80)
+    } : null;
+    return { balance_xu: balance, total_spent_xu: spent, is_vip: value.is_vip, plan };
+  }
+
+  function canonicalWalletHistoryProjection(value) {
+    if (!Array.isArray(value) || value.length > 100) return null;
+    const rows = [];
+    for (const item of value) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const createdAt = canonicalShortText(item.created_at, 160);
+      const eventType = canonicalShortText(item.event_type, 160);
+      const delta = Number.isSafeInteger(item.delta_xu) ? item.delta_xu : null;
+      const balance = canonicalNonnegativeInteger(item.balance_after_xu);
+      if (!createdAt || !eventType || delta === null || balance === null) return null;
+      rows.push({ created_at: createdAt, event_type: eventType, delta_xu: delta, balance_after_xu: balance });
+    }
+    return rows;
+  }
+
+  function canonicalPricingCatalog(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value) || value.available !== true) return null;
+    const tierRows = (rows) => (Array.isArray(rows) ? rows.slice(0, 100) : []).flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+      const code = canonicalCatalogCode(item.code);
+      const cost = canonicalNonnegativeInteger(item.cost_xu);
+      if (!code || cost === null) return [];
+      return [{
+        code,
+        label: canonicalShortText(item.label, 120) || code,
+        note: canonicalShortText(item.note, 240) || "Tier canonical do Core Bridge cấp.",
+        priceLabel: `${cost} Xu`,
+        status: "read_only"
+      }];
+    });
+    const comboRows = (Array.isArray(value.video_combos) ? value.video_combos.slice(0, 100) : []).flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+      const code = canonicalCatalogCode(item.code);
+      if (!code) return [];
+      const displayPrice = canonicalShortText(item.display_price, 80);
+      const priceVnd = canonicalNonnegativeInteger(item.price_vnd);
+      const priceLabel = displayPrice || (priceVnd === null ? "" : `${priceVnd.toLocaleString("vi-VN")}đ`);
+      return [{
+        code,
+        label: canonicalShortText(item.label, 120) || code,
+        note: canonicalShortText(item.summary, 240) || "Combo canonical do Core Bridge cấp.",
+        priceLabel,
+        status: priceLabel ? "read_only" : "guarded"
+      }];
+    });
+    return {
+      image_tiers: tierRows(value.image_tiers),
+      video_tiers: tierRows(value.video_tiers),
+      video_combos: comboRows
+    };
+  }
+
+  function canonicalPackageCatalog(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value) || value.available !== true) return null;
+    const rows = (source) => (Array.isArray(source) ? source.slice(0, 100) : []).flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+      const code = canonicalCatalogCode(item.code);
+      if (!code) return [];
+      const manual = item.manual === true;
+      const priceVnd = canonicalNonnegativeInteger(item.price_vnd);
+      return [{
+        code,
+        label: canonicalShortText(item.label, 120) || code,
+        note: canonicalShortText(item.note, 240) || "Gói canonical do Core Bridge cấp.",
+        manual,
+        priceLabel: manual ? "Bot/Admin canonical" : (priceVnd === null ? "" : `${priceVnd.toLocaleString("vi-VN")}đ`),
+        status: manual || priceVnd !== null ? "read_only" : "guarded"
+      }];
+    });
+    return { monthly: rows(value.monthly), combos: rows(value.combos) };
   }
 
   function safePayosCheckout(value) {
@@ -16855,12 +16967,15 @@
       ? "Bridge đã công bố catalog nạp riêng cho Web. Bot vẫn là authority duy nhất cấp checkout URL đã ký."
       : "Mở Bot đã liên kết để kiểm tra và khởi tạo PayOS QR động canonical hiện tại. Bot có thể chuyển sang luồng thủ công theo trạng thái runtime; Web không suy đoán QR luôn sẵn sàng.";
     const manualActions = manualAvailable
-      ? "Cần nạp thủ công? Mở phần hướng dẫn bên dưới; chứng từ và đối soát vẫn chỉ ở Bot."
+      ? "Nạp thủ công có đối soát vẫn diễn ra trong Bot. Web chỉ mở đúng kênh đã liên kết và hiển thị số dư sau khi ledger canonical thay đổi."
       : "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công. Web không giữ số tài khoản, QR tĩnh, bill hoặc quyết định cộng Xu.";
     const payosActions = payosBotAvailable
       ? `<a class="portal-button portal-button--quiet" href="${safeText(payosUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(payosCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(payosCommand)}</code>`
       : `<span class="portal-payment-entry-note">Chưa có URL Bot hợp lệ để mở PayOS QR động.</span>`;
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical checkout</span><h2 class="portal-card-title">Nạp Xu qua PayOS</h2><p class="portal-card-subtitle">Chọn mệnh giá canonical, xem lại request rồi tiếp tục tại checkout do Bot/Core Bridge cấp. Web không tạo webhook thứ hai.</p></div>${badge(payosBotAvailable || manualAvailable ? "read_only" : "guarded")}</div><div class="portal-payment-entry-grid"><section class="portal-payment-entry"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span>${badge(payosWebReady ? "awaiting_confirm" : (payosBotAvailable ? "read_only" : "guarded"))}</div><h3>PayOS QR động</h3><p>${payosCopy}</p><div class="portal-payment-entry-actions">${payosActions}</div><span class="portal-payment-entry-note">Bot tạo QR động và xác nhận PayOS canonical.</span></section></div><p class="portal-form-note">${manualActions}</p></section>`;
+    const manualEntryActions = manualAvailable
+      ? `<a class="portal-button portal-button--quiet" href="#manual-topup">Xem quy trình</a><a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(manualCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(manualCommand)}</code>`
+      : `<span class="portal-payment-entry-note">Chờ URL Bot đã được máy chủ kiểm tra trước khi mở nạp thủ công.</span>`;
+    return `<section class="portal-card portal-card-pad portal-billing-entrypoints"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical billing</span><h2 class="portal-card-title">Chọn kênh nạp Xu</h2><p class="portal-card-subtitle">Chọn đúng một luồng. Checkout, webhook, chứng từ, đối soát và quyết định cộng Xu luôn do Bot/Core Bridge canonical quản lý.</p></div>${badge(payosBotAvailable || manualAvailable ? "read_only" : "guarded")}</div><div class="portal-payment-entry-grid"><section class="portal-payment-entry" data-billing-entrypoint="payos"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span>${badge(payosWebReady ? "awaiting_confirm" : (payosBotAvailable ? "read_only" : "guarded"))}</div><h3>PayOS QR động</h3><p>${payosCopy}</p><div class="portal-payment-entry-actions">${payosActions}</div><span class="portal-payment-entry-note">Bot tạo QR động và xác nhận PayOS canonical.</span></section><section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>${badge(manualAvailable ? "read_only" : "guarded")}</div><h3>Nạp thủ công có đối soát</h3><p>${manualActions}</p><div class="portal-payment-entry-actions">${manualEntryActions}</div><span class="portal-payment-entry-note">Không gửi bill, số tài khoản, QR, OTP hay TXID vào Web App.</span></section></div></section>`;
   }
 
   function renderManualTopupGuide(context) {
@@ -16880,7 +16995,7 @@
     const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đã gửi, đang chờ đối soát</small></span><span><code>pending_admin_review</code><small>Đội vận hành đang kiểm tra</small></span><span><code>approved</code><small>Chỉ lúc này wallet canonical mới là kết quả cuối</small></span><span><code>rejected</code><small>Xem lý do và xử lý lại trong Bot</small></span></div>`;
     return `<section class="portal-card portal-card-pad" id="manual-topup" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: tiếp tục trong Telegram</h2><p class="portal-card-subtitle">Bot canonical giữ toàn bộ state, chứng từ, đối soát và quyết định ghi Xu. Web chỉ hướng dẫn và hiển thị dữ liệu ví đã được xác minh.</p></div>${badge("read_only")}</div>
       ${routeGuide}<div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">1</span><div><strong>Mở bot và gửi <code>/thucong</code></strong><span>Chọn tiền tệ, mệnh giá và phương thức trong cuộc hội thoại Telegram đang được Bot kiểm soát.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">2</span><div><strong>Gửi chứng từ đúng nơi</strong><span>Nạp VND: gửi ảnh bill trong Bot. Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot. Không gửi số tài khoản, QR, bill, OTP hay TXID vào Web App.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">3</span><div><strong>Chờ admin đối soát</strong><span><code>pending</code> hoặc <code>pending_admin_review</code> đều đang chờ đối soát; chưa phải Xu đã được cộng.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">4</span><div><strong>Đối chiếu kết quả canonical</strong><span><code>approved</code> mới là đã duyệt; <code>rejected</code> là bị từ chối. Xu hiển thị trước đối soát là ước tính; số Xu trong wallet/ledger canonical sau duyệt mới là cuối cùng.</span></div></div></div>${stateGuide}
-      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span>${historyInBot ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(historyCommand)}">Sao chép ${safeText(historyCommand)}</button>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-wallet-after-bot"${refreshEnabled ? "" : " disabled title=\"Cần Core Bridge để làm mới ví canonical.\""}>Đã thao tác trong Bot — làm mới ví</button><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
+      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span>${historyInBot ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(historyCommand)}">Sao chép ${safeText(historyCommand)}</button>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-wallet-after-bot" data-portal-route="${safeText(String(context.path || "/wallet/topup"))}" aria-controls="wallet-canonical-read-status"${refreshEnabled ? "" : " disabled title=\"Cần Core Bridge để làm mới ví canonical.\""}>Đã thao tác trong Bot — làm mới ví</button><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
   }
 
   function renderPaymentRequestForm(page, context) {
@@ -16911,47 +17026,84 @@
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu thanh toán canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị response đã được bridge ký; không tự tạo link, finalize webhook hoặc cộng Xu.</p></div>${badge(status)}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || status)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã giao dịch</span><span class="portal-summary-value">${safeText(orderId || "Chưa được bridge cấp")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Giá trị</span><span class="portal-summary-value">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}${data.created_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Khởi tạo</span><span class="portal-summary-value">${safeText(data.created_at)}</span></div>` : ""}${data.paid_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Đã thanh toán</span><span class="portal-summary-value">${safeText(data.paid_at)}</span></div>` : ""}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(flow.message || "Đang chờ trạng thái canonical.")}${polling ? " Portal sẽ chỉ poll GET trạng thái canonical; không gọi PayOS trực tiếp." : ""}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer">Mở trang thanh toán</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}"${refreshEnabled ? "" : " disabled"}>Làm mới trạng thái</button>` : ""}</div></section>`;
   }
 
+  function renderBillingJourney() {
+    const lanes = [
+      { number: "01", title: "Chọn một kênh canonical", text: "PayOS QR động hoặc nạp thủ công. Không mở song song hai request cho cùng một giao dịch." },
+      { number: "02", title: "Xử lý tại authority", text: "Bot/Core Bridge quản lý checkout, webhook, chứng từ, đối soát và quyết định ledger." },
+      { number: "03", title: "Đối chiếu lại Ví Xu", text: "Web chỉ cập nhật số dư sau khi GET owner-scoped trả projection canonical hợp lệ." }
+    ];
+    return `<section class="portal-billing-journey" aria-label="Quy trình nạp Xu canonical"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">Billing flow</span><h2>Một giao dịch, một nguồn xác nhận</h2><p>Không có QR tĩnh, form chứng từ hoặc logic cộng Xu ở browser. Mỗi kênh đều dẫn về cùng authority canonical.</p></div>${badge("read_only")}</div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
+  }
+
   function renderWallet(page, context) {
     const topup = page.path === "/wallet/topup";
-    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : null;
-    const history = Array.isArray(context.walletHistory) ? context.walletHistory : [];
-    const walletCard = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical projection</span><h2 class="portal-card-title">Số dư & quyền lợi</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ Bot qua private bridge, không tính lại trong browser.</p></div>${badge("read_only")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu || 0))} Xu</strong><em>Canonical / lần đồng bộ gần nhất</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))} Xu</strong><em>Lịch sử canonical</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText((wallet.plan && (wallet.plan.plan_name || wallet.plan.current_plan)) || "—")}</strong><em>${safeText((wallet.plan && wallet.plan.plan_status) || "Không có gói")}</em></div></div><div class="portal-form-footer"><span class="portal-form-note">Nạp Xu, gói và bảng giá chỉ mở dữ liệu/luồng đã được Core Bridge cấp.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu</a><a class="portal-button portal-button--quiet" href="/packages">Xem gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></section>`
-      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Số dư canonical</h2><p class="portal-card-subtitle">Số dư không được cache hoặc tính lại tại browser.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ dữ liệu ví", "Core Bridge phải trả số dư và lịch sử đã xác minh cho signed session.", "◌")}</section>`;
+    const readState = walletReadState(context);
+    const wallet = canonicalWalletProjection(context.wallet);
+    const history = canonicalWalletHistoryProjection(context.walletHistory);
+    const refreshEnabled = Boolean(context.capabilities && context.capabilities["wallet-refresh"] === true);
+    const readBadge = readState === "ready" && wallet ? "read_only" : readState === "loading" ? "processing" : readState === "failed" ? "failed" : "guarded";
+    const plan = wallet && wallet.plan ? wallet.plan : {};
+    const planName = plan.plan_name || plan.current_plan || "Chưa có gói canonical";
+    const planStatus = plan.plan_status || "Bridge chưa cấp metadata gói";
+    const readStatusText = readState === "loading"
+      ? "Đang xác minh Ví Xu và lịch sử từ Core Bridge. Không hiển thị dữ liệu cũ trong lúc chờ."
+      : readState === "ready" && wallet
+        ? "Ví Xu và lịch sử đang là projection canonical của signed session hiện tại."
+        : readState === "failed"
+          ? "Chưa thể xác minh Ví Xu. Dữ liệu cũ đã được ẩn, không thay bằng số dư 0 hoặc lịch sử rỗng."
+          : "Ví Xu đang chờ signed session và Core Bridge để hiển thị projection canonical.";
+    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status"${refreshEnabled && readState !== "loading" ? "" : " disabled"}>${readState === "loading" ? "Đang kiểm tra…" : "Làm mới Ví Xu"}</button>`;
+    const walletCard = readState === "loading"
+      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>Đang xác minh Ví Xu</h2><p>Số dư, gói và lịch sử chỉ xuất hiện sau khi signed session hiện tại nhận được projection hợp lệ từ Core Bridge.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không tự tính Xu</span><span>Không có ledger fallback</span></div></div>${badge("processing")}</div></section>`
+      : readState === "ready" && wallet
+        ? `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical projection</span><h2 class="portal-card-title">Số dư & quyền lợi</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ Bot qua private bridge; browser không tính lại, không ghi ledger và không suy đoán gói.</p></div>${badge("read_only")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu))} Xu</strong><em>Canonical / signed session hiện tại</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu))} Xu</strong><em>Ledger do Bot xác nhận</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText(planName)}</strong><em>${safeText(planStatus)}</em></div></div><div class="portal-form-footer"><span class="portal-form-note">Nạp Xu, gói và bảng giá chỉ mở dữ liệu/luồng đã được Core Bridge cấp.</span><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu</a><a class="portal-button portal-button--quiet" href="/packages">Xem gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></section>`
+        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="${readState === "failed" ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>${readState === "failed" ? "Chưa thể xác minh Ví Xu" : "Ví Xu đang được bảo vệ"}</h2><p>${readStatusText}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/account">Kiểm tra kết nối</a></div></div></div>${badge(readState === "failed" ? "failed" : "guarded")}</div></section>`;
+    const manual = context.paymentOptions && context.paymentOptions.manual && typeof context.paymentOptions.manual === "object" ? context.paymentOptions.manual : {};
+    const manualGuideOpen = manual.available === true && Boolean(safeTelegramLink(manual.telegram_url)) ? " open" : "";
     const topupFlow = topup
-      ? `${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}<details class="portal-wallet-secondary"><summary>Đã có mã đơn PayOS?</summary>${renderPaymentLookup(context)}</details><details class="portal-wallet-secondary"><summary>Cần nạp thủ công?</summary>${renderManualTopupGuide(context)}</details>`
+      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}<details class="portal-wallet-secondary"><summary>Đã có mã đơn PayOS?</summary>${renderPaymentLookup(context)}</details><details class="portal-wallet-secondary"${manualGuideOpen}><summary>Nạp thủ công có đối soát</summary>${renderManualTopupGuide(context)}</details>`
       : walletCard;
     const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc thanh toán và đồng bộ</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(wallet ? "read_only" : "guarded")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></aside></div>${assurance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu</h2><p class="portal-card-subtitle">Đọc từ ledger của Bot canonical.</p></div>${badge("read_only")}</div>${renderRowsTable(["Thời gian", "Loại", "Thay đổi", "Số dư"], history, (item) => `<td>${safeText(item.created_at || "—")}</td><td>${safeText(item.event_type || "—")}</td><td>${safeText(String(item.delta_xu || 0))} Xu</td><td>${safeText(String(item.balance_after_xu || 0))} Xu</td>`, "Chưa có lịch sử được cấp", "Browser không tự dựng lịch sử giao dịch.")}</section></article>`;
+    const historyCard = readState === "loading"
+      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>Đang nạp lịch sử Xu</h2><p>Không hiển thị list cũ hoặc list rỗng trong lúc Core Bridge xác minh signed session.</p></div></div></section>`
+      : readState === "ready" && history
+        ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu</h2><p class="portal-card-subtitle">Dòng ledger chỉ hiển thị khi đủ thời gian, loại event, thay đổi Xu và số dư sau giao dịch.</p></div>${badge("read_only")}</div>${renderRowsTable(["Thời gian", "Loại", "Thay đổi", "Số dư"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td>${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có lịch sử được cấp", "Core Bridge chưa trả dòng ledger nào cho signed session hiện tại.")}</section>`
+        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu chưa sẵn sàng</h2><p class="portal-card-subtitle">${readState === "ready" ? "Projection lịch sử không đúng contract nên Web đã ẩn toàn bộ thay vì tự dựng dữ liệu." : readStatusText}</p></div>${badge(readState === "failed" ? "failed" : "guarded")}</div>${renderEmpty("Chờ lịch sử canonical", "Làm mới Ví Xu khi Core Bridge đã sẵn sàng; Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.", ICONS.wallet)}</section>`;
+    const asideFacts = wallet && readState === "ready"
+      ? `<dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>`
+      : `<p class="portal-form-note">${safeText(readStatusText)}</p>`;
+    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad portal-wallet-command"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(readBadge)}</div>${asideFacts}<p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(readStatusText)}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/wallet">Lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></aside></div>${assurance}${historyCard}</article>`;
   }
 
   function renderCatalog(page, context) {
-    const pricing = context.pricingCatalog && context.pricingCatalog.available ? context.pricingCatalog : null;
-    const packages = context.packageCatalog && context.packageCatalog.available ? context.packageCatalog : null;
+    const pricing = canonicalPricingCatalog(context.pricingCatalog);
+    const packages = canonicalPackageCatalog(context.packageCatalog);
+    const pricingPage = page.path === "/pricing";
     // Pricing/packages must never fall back to the feature registry: a list
     // of tools presented as prices would be misleading when the canonical bot
-    // bridge is unavailable.
-    let catalog = (page.path === "/pricing" || page.path === "/packages") ? [] : (context.catalog || []);
-    if (page.path === "/pricing" && pricing) {
-      catalog = [
-        ...(pricing.image_tiers || []).map((item) => ({ title: `Ảnh · ${item.label || item.code}`, description: item.note || "Tier ảnh canonical từ bot.", priceLabel: `${item.cost_xu || 0} Xu`, status: "completed" })),
-        ...(pricing.video_tiers || []).map((item) => ({ title: `Video · ${item.label || item.code}`, description: item.note || "Tier video canonical từ bot.", priceLabel: `${item.cost_xu || 0} Xu`, status: "completed" })),
-        ...(pricing.video_combos || []).map((item) => ({ title: item.label || item.code, description: item.summary || "Combo canonical từ bot.", priceLabel: item.display_price || (item.price_vnd ? `${item.price_vnd}đ` : "Liên hệ"), status: "completed" }))
-      ];
-    } else if (page.path === "/packages" && packages) {
-      catalog = [
-        ...(packages.monthly || []).map((item) => ({ title: item.label || item.code, description: item.note || "Gói tháng canonical từ bot.", priceLabel: item.manual ? "Admin quản lý" : (item.price_vnd ? `${item.price_vnd.toLocaleString("vi-VN")}đ` : "Chờ giá canonical"), status: "completed" })),
-        ...(packages.combos || []).map((item) => ({ title: item.label || item.code, description: item.note || "Combo canonical từ bot.", priceLabel: item.manual ? "Admin quản lý" : (item.price_vnd ? `${item.price_vnd.toLocaleString("vi-VN")}đ` : "Chờ giá canonical"), status: "completed" }))
-      ];
-    }
+    // bridge is unavailable or its catalog schema drifts.
+    const catalog = pricingPage && pricing
+      ? [
+        ...pricing.image_tiers.map((item) => ({ title: `Ảnh · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Tier ảnh" })),
+        ...pricing.video_tiers.map((item) => ({ title: `Video · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Tier video" })),
+        ...pricing.video_combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Combo video" }))
+      ]
+      : !pricingPage && packages
+        ? [
+          ...packages.monthly.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Gói tháng" })),
+          ...packages.combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Combo" }))
+        ]
+        : [];
+    const catalogReady = pricingPage ? Boolean(pricing) : Boolean(packages);
     const hasCatalog = catalog.length > 0;
-    const emptyTitle = page.path === "/pricing" ? "Chờ bảng giá canonical" : page.path === "/packages" ? "Chờ danh mục gói canonical" : "Catalog chưa được cấp";
-    const emptyText = page.path === "/pricing" ? "Bảng giá sẽ chỉ xuất hiện sau khi bot canonical trả dữ liệu đã ký qua Core Bridge." : page.path === "/packages" ? "Gói dịch vụ sẽ chỉ xuất hiện sau khi bot canonical xác nhận danh mục hiện hành." : "Giá, Xu và chính sách payment chỉ xuất hiện khi Core Bridge gửi catalog đã xác minh.";
-    const cards = hasCatalog ? catalog.map((entry) => {
-      const item = typeof entry === "string" ? { title: entry } : entry || {};
-      return `<section class="portal-module-card"><div class="portal-module-card-top"><span class="portal-module-icon">◇</span>${badge(item.status && ALLOWED_STATES.has(item.status) ? item.status : "guarded")}</div><div><h3>${safeText(item.title || item.name || "Gói dịch vụ")}</h3><p>${safeText(item.description || "Thông tin quyền lợi do server phát hành.")}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chờ Core Bridge")}</span><span class="portal-module-arrow">→</span></span></section>`;
-    }).join("") : renderEmpty(emptyTitle, emptyText, "◇");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.path === "/pricing" ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá hoặc khuyến mãi.</p></div>${badge(stateFor(page, context))}</div><div class="portal-module-grid">${cards}</div></section></article>`;
+    const emptyTitle = catalogReady
+      ? (pricingPage ? "Bảng giá hiện chưa có tier active" : "Danh mục hiện chưa có gói active")
+      : (pricingPage ? "Chờ bảng giá canonical" : "Chờ danh mục gói canonical");
+    const emptyText = catalogReady
+      ? "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."
+      : (pricingPage ? "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh." : "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành.");
+    const cards = hasCatalog ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chưa được Core Bridge cấp")}</span><span>${item.status === "read_only" ? "Catalog canonical" : "Chờ xác minh"}</span></span></section>`).join("") : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? "Pricing canonical" : "Package catalog canonical"}</span><h2>${pricingPage ? "Bảng giá đúng theo authority" : "Gói dịch vụ không suy đoán"}</h2><p>${pricingPage ? "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp." : "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical."}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Mở nạp Xu canonical</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([
