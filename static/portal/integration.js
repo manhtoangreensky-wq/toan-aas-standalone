@@ -12182,6 +12182,10 @@
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
+      // Wallet refresh is a signed, owner-scoped read only.  It never
+      // creates a payment, writes the ledger, reconciles a manual deposit or
+      // talks to PayOS from the browser.
+      "wallet-refresh": Boolean(bridgeAvailable),
       "refresh-wallet-after-bot": Boolean(bridgeAvailable),
       "payment-lookup": Boolean(bridgeAvailable),
       "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
@@ -12381,6 +12385,11 @@
       // failed read cannot keep wallet/jobs/assets/tickets from an old account.
       wallet: null,
       walletHistory: [],
+      // Unlike a zero balance, this explicit lifecycle lets the Portal say
+      // whether a canonical wallet read is still loading, failed, or ready.
+      // It is reset on every signed bootstrap to prevent a prior account's
+      // ledger projection surviving a session change.
+      walletReadState: "guarded",
       jobAssets: [],
       jobs: [],
       jobDetail: {},
@@ -22709,6 +22718,70 @@
       : null;
   }
 
+  function walletCanonicalText(value) {
+    return typeof value === "string"
+      && Boolean(value.trim())
+      && value.trim().length <= 160
+      && !value.includes("\u0000");
+  }
+
+  function walletCanonicalHistoryRows(response) {
+    const data = response && dashboardCanonicalRecord(response.data) ? response.data : null;
+    if (!data || !Array.isArray(data.items) || data.items.length > 100) return null;
+    // A ledger row is meaningful only when its time, canonical event type,
+    // signed delta and post-event balance are all present.  Reject a whole
+    // malformed projection rather than making absent values look like 0 Xu.
+    return data.items.every((item) => dashboardCanonicalRecord(item)
+      && walletCanonicalText(item.created_at)
+      && walletCanonicalText(item.event_type)
+      && Number.isSafeInteger(item.delta_xu)
+      && Number.isSafeInteger(item.balance_after_xu)
+      && item.balance_after_xu >= 0)
+      ? data.items
+      : null;
+  }
+
+  function walletCanonicalSnapshot(walletResponse, historyResponse) {
+    const wallet = walletResponse && dashboardCanonicalRecord(walletResponse.data) ? walletResponse.data : null;
+    const history = walletCanonicalHistoryRows(historyResponse);
+    // Xu is an integer ledger projection.  Do not coerce a missing/string/
+    // floating value into a browser-owned zero, and never infer VIP state.
+    const walletValid = wallet
+      && Number.isSafeInteger(wallet.balance_xu) && wallet.balance_xu >= 0
+      && Number.isSafeInteger(wallet.total_spent_xu) && wallet.total_spent_xu >= 0
+      && typeof wallet.is_vip === "boolean";
+    if (!walletValid || !history) {
+      throw new Error("Wallet canonical snapshot không đúng schema.");
+    }
+    return { wallet, history };
+  }
+
+  function setWalletReadStatus(route, message) {
+    const status = document.querySelector(`[data-wallet-read-status="${String(route || "")}"]`);
+    if (status) status.textContent = String(message || "");
+  }
+
+  async function refreshWalletCanonicalProjection(route, source) {
+    const sessionEpoch = canonicalSessionEpoch;
+    const isCurrent = () => sessionEpoch === canonicalSessionEpoch
+      && currentPortalPath() === route
+      && Boolean(base().session && base().session.authenticated === true);
+    setWalletReadStatus(route, "Đang xác minh số dư và lịch sử Xu từ Core Bridge…");
+    const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
+    if (!isCurrent()) return null;
+    const snapshot = walletCanonicalSnapshot(wallet, history);
+    merge({
+      wallet: snapshot.wallet,
+      walletHistory: snapshot.history,
+      walletReadState: "ready",
+      pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
+    });
+    setWalletReadStatus(route, source === "bot"
+      ? "Đã đồng bộ lại số dư và lịch sử Xu canonical sau thao tác trong Bot."
+      : "Đã xác minh lại số dư và lịch sử Xu canonical.");
+    return snapshot;
+  }
+
   function dashboardCanonicalSnapshot(walletResponse, jobsResponse, assetsResponse, readinessResponse, ticketsResponse) {
     const wallet = walletResponse && dashboardCanonicalRecord(walletResponse.data) ? walletResponse.data : null;
     const jobs = dashboardCanonicalRows(jobsResponse);
@@ -22804,9 +22877,24 @@
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
         });
       } else if (path === "/wallet" || path === "/wallet/topup") {
-        const [wallet, history, packages] = await Promise.all([api("/wallet"), api("/wallet/history"), api("/packages")]);
+        // Blank the signed wallet projection before every route read. A
+        // loading/error state must never look like a valid zero balance or an
+        // empty ledger from an earlier account/session.
+        merge({
+          wallet: null,
+          walletHistory: [],
+          walletReadState: "loading",
+          pageStates: { ...(base().pageStates || {}), [path]: "loading" }
+        });
+        const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
         if (!isCurrent()) return null;
-        merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [], packageCatalog: packages.data || {}, pageStates: path === "/wallet" ? { ...(base().pageStates || {}), [path]: "read_only" } : (base().pageStates || {}) });
+        const snapshot = walletCanonicalSnapshot(wallet, history);
+        merge({
+          wallet: snapshot.wallet,
+          walletHistory: snapshot.history,
+          walletReadState: "ready",
+          pageStates: { ...(base().pageStates || {}), [path]: "read_only" }
+        });
       } else if (path === "/jobs") {
         const jobs = await api("/jobs");
         if (!isCurrent()) return null;
@@ -22903,6 +22991,19 @@
           dashboardReadState: "failed",
           pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
         });
+        return null;
+      }
+      if (path === "/wallet" || path === "/wallet/topup") {
+        // Never turn a malformed/signed-out read into a browser-generated
+        // zero or stale ledger.  The user gets an explicit recovery state
+        // and can make a fresh signed GET when the bridge is available.
+        merge({
+          wallet: null,
+          walletHistory: [],
+          walletReadState: "failed",
+          pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
+        });
+        toast("Không thể xác minh số dư Xu canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
         return null;
       }
       if (error && error.payload && error.payload.message) toast(error.payload.message, "error");
@@ -33070,13 +33171,36 @@
         toast(result.message);
         return;
       }
+      if (action === "wallet-refresh") {
+        if (!['/wallet', '/wallet/topup'].includes(route) || currentPortalPath() !== route || !(base().capabilities && base().capabilities["wallet-refresh"] === true)) {
+          throw new Error("Chỉ có thể làm mới Ví Xu từ trang wallet hiện tại của signed session.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const snapshot = await refreshWalletCanonicalProjection(route, "web");
+          if (snapshot) toast("Đã xác minh lại số dư và lịch sử Xu canonical.");
+        } catch (error) {
+          setWalletReadStatus(route, "Chưa thể làm mới. Số dư/lịch sử đã xác minh trước đó vẫn được giữ nguyên.");
+          throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "refresh-wallet-after-bot") {
-        const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
-        merge({
-          wallet: wallet.data || null,
-          walletHistory: history.data && Array.isArray(history.data.items) ? history.data.items : []
-        });
-        toast("Đã làm mới số dư và lịch sử Xu canonical từ Bot.");
+        if (route !== "/wallet/topup" || currentPortalPath() !== route || !(base().capabilities && base().capabilities["wallet-refresh"] === true)) {
+          throw new Error("Chỉ có thể đồng bộ Ví Xu sau Bot từ trang nạp Xu hiện tại của signed session.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const snapshot = await refreshWalletCanonicalProjection(route, "bot");
+          if (snapshot) toast("Đã làm mới số dư và lịch sử Xu canonical từ Bot.");
+        } catch (error) {
+          setWalletReadStatus(route, "Chưa thể đồng bộ. Số dư/lịch sử đã xác minh trước đó vẫn được giữ nguyên.");
+          throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "create-ticket") {
