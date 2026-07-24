@@ -244,6 +244,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     # may expose only Web-local, redacted modules and never a Bot authority.
     assert set(groups) == {
         "web_private_crm",
+        "web_finance_operations_planning",
         "web_governance_documents",
         "web_internal_document_archive",
         "web_automation_monitor",
@@ -252,6 +253,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     }
     assert _module_ids(body) == {
         "partner_crm_manager",
+        "finance_operations_planning",
         "governance_documents",
         "internal_document_archive",
         "automation_monitor",
@@ -270,6 +272,17 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     assert module["authority"] == "web_local_admin"
     assert module["availability"] == "web_native"
     assert module["capability"] == "redacted_cross_account_pipeline_read_only"
+    finance_planning = groups["web_finance_operations_planning"]["modules"][0]
+    assert finance_planning == {
+        "id": "finance_operations_planning",
+        "title": "Kế hoạch chi phí vận hành",
+        "route": "/admin/finance/planning",
+        "authority": "web_local_admin",
+        "source": "web_native",
+        "availability": "web_native",
+        "capability": "web_owned_budget_cost_plan_revision_audit_without_ledger_or_payment",
+        "description": "Ngân sách và kế hoạch chi phí Web-native có revision/audit; không đọc hoặc thay đổi ledger, Xu, PayOS, payment, refund, revenue, tax/export hay Bot canonical.",
+    }
     governance = groups["web_governance_documents"]["modules"][0]
     assert governance["authority"] == "web_local_admin"
     assert governance["capability"] == "internal_document_lifecycle_review_version_audit"

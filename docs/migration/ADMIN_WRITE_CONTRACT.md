@@ -1,8 +1,10 @@
 # Guarded Admin ERP write contract
 
-The Web App exposes these controls only as a thin, feature-gated client of the
-canonical Bot. This file does not enable a production write adapter, change
-wallet/PayOS logic, or modify `bot.py`.
+The canonical controls below are thin, feature-gated clients of the canonical
+Bot. This file does not enable a production write adapter, change wallet/PayOS
+logic, or modify `bot.py`. The sole Web-native exception is Finance Operations
+Planning, documented separately below and in
+`ADMIN_FINANCE_OPERATIONS_PLANNING_CONTRACT.md`.
 
 ## Default posture
 
@@ -12,6 +14,17 @@ guarded response; they never contact the Bot. The portal renders disabled
 controls with an explicit explanation instead of pretending a write completed.
 `WEBAPP_ADMIN_ERP_ENABLED` is also required; when it is off, Web returns a
 guarded result before the live canonical-role re-check or any write bridge call.
+
+## Narrow Web-native Finance Planning exception
+
+`WEBAPP_FINANCE_PLANNING_ENABLED=true` (with
+`WEBAPP_ADMIN_ERP_ENABLED=true`) enables only signed local-admin planning
+records at `/api/v1/admin/finance-planning/*`: Web-owned budget/cost drafts
+and their reviewed lifecycle. Each mutation requires a local signed admin
+session, CSRF, explicit confirmation, server revision, idempotency and an
+audit event. It is not a canonical bridge action and it never reads or writes
+Bot finance, Xu/wallet, PayOS/payment/webhook, provider/job, tax, refund,
+reimbursement, accounting export or ledger state.
 
 ## Compatibility routes without a Bot adapter
 
@@ -27,7 +40,7 @@ metric, record, retry/refund/freeze control or browser-supplied identity. It
 becomes a real read/write Web module only after the Bot publishes a narrow
 adapter and the method/path/schema/role contract is tested.
 
-## Available write intents
+## Available canonical bridge write intents
 
 | Portal action | Web API | Canonical bridge target |
 | --- | --- | --- |

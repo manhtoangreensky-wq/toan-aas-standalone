@@ -9,6 +9,7 @@ Admin navigation is an ERP information architecture, not a browser-issued permis
 | Canonical Bot admin | Core Bridge canonical role | Read canonical users/jobs/payments/providers and request the existing guarded Bot actions. | Accept a browser `admin_id`, duplicate wallet/PayOS state, call a provider from the browser, or create a second webhook/ledger. |
 | Web Support Desk | Signed server-side staff role | Operate owner-scoped Web support cases, triage and review handoffs. | Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract. |
 | Web CRM manager | Signed server-side local admin role | Read redacted, Web-owned Partner & Lead CRM pipeline records. | Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data. |
+| Web Finance Operations Planning | Signed server-side local admin role plus `WEBAPP_ADMIN_ERP_ENABLED` and `WEBAPP_FINANCE_PLANNING_ENABLED` | Create, review, archive and restore only Web-owned operating-cost budgets and cost plans through a CSRF-confirmed, revisioned, idempotent and audited lifecycle. | Read/write Bot finance, Xu/wallet, PayOS/payment/webhook, provider/job, tax, refunds, reimbursements, accounting exports or a ledger. |
 
 Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk: apart from the nine exact Feedback entries that may only open a new signed `/support` form, the Browser must never replay a Bot ticket/lead/attachment identifier, feedback category, pending input, admin-preview or Telegram delivery state. The entry exception transfers no callback/category/state and is documented in `FEEDBACK_MENU_CALLBACK_CONTRACT.md`; see also `SUPPORT_TICKET_CALLBACK_CONTRACT.md`.
 
@@ -16,7 +17,7 @@ Bot Workboard/Task callbacks are separate from the Web Workboard: the Browser mu
 
 Bot Creative callbacks are separate from the Web Creative Studio: the Browser must never replay a Bot creative-variant identifier, selected state, production-job update, handoff instruction or Telegram-admin context. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.
 
-`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and `WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; the server still checks the signed role on every request.
+`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED`, `WEBAPP_PARTNER_CRM_ENABLED` and `WEBAPP_FINANCE_PLANNING_ENABLED` gate their respective Web-native modules. These flags do not create authority; the server still checks the signed role on every request.
 
 The following is a Bot command compatibility map. A target is a signed guarded Web surface or a canonical bridge projection; it is never proof that a browser may execute the Bot command directly.
 

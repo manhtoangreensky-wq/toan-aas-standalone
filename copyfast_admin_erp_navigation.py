@@ -74,6 +74,7 @@ _MODULE_DESCRIPTIONS = {
     "reliability": "Reliability follow-up metadata, không tự sửa code hay deploy.",
     "content_handoffs": "Hàng review bàn giao nội bộ Web-native; không có publish, delivery, provider, Xu hay PayOS.",
     "partner_crm_manager": "Directory CRM Web-native đã redaction, chỉ đọc; không có cross-account write hay dữ liệu liên hệ.",
+    "finance_operations_planning": "Ngân sách và kế hoạch chi phí Web-native có revision/audit; không đọc hoặc thay đổi ledger, Xu, PayOS, payment, refund, revenue, tax/export hay Bot canonical.",
     "governance_documents": "Kho tài liệu vận hành nội bộ Web-native có review/version/audit; không đọc tài liệu, file hay authority Telegram Bot.",
     "internal_document_archive": "Kho hồ sơ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
     "system_stewardship": "Hub điều hướng read-only cho System & Data Web-native; không đọc runtime Bot, không có deploy, repair, provider, payment hay ledger control.",
@@ -87,6 +88,7 @@ _GROUP_DESCRIPTIONS = {
     "governance": "Audit, reports và system read models canonical có redaction/authority riêng.",
     "support_operations": "Web-native CSKH và Operations metadata, không có financial/provider executor.",
     "web_private_crm": "Giám sát CRM Web-native đã redaction; tách biệt với canonical Bot Admin và financial authority.",
+    "web_finance_operations_planning": "Ngân sách và kế hoạch chi phí nội bộ do Web sở hữu; có confirmation, CSRF, idempotency, revision/audit nhưng không phải ledger, payment hay tax/export.",
     "web_governance_documents": "Kho tài liệu Governance Web-native, có lifecycle nội bộ nhưng không phải tư vấn pháp lý, file export hay Bot authority.",
     "web_internal_document_archive": "Kho hồ sơ nội bộ Web-native local-admin có file private và version bất biến; không phải Bot archive, Asset Vault khách hàng, ledger, PayOS hay provider action.",
     "web_security_access_posture": "Security và Access posture Web-native, chỉ đọc aggregate đã redaction; không gọi Bot/Core Bridge hoặc thực hiện session, MFA hay quyền control.",
@@ -368,7 +370,9 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
     Web-owned read-only scheduler receipt monitor. ``/admin/security`` and
     ``/admin/access`` share an identifier-free security/access posture read
     model. ``/admin/governance`` and ``/admin/internal-documents`` are
-    separately flagged Web-owned internal document surfaces. Keeping these in
+    separately flagged Web-owned internal document surfaces. Finance Operations
+    Planning is a separate Web-owned budget/cost-plan lifecycle; it is not a
+    ledger, PayOS, Xu, revenue, refund, tax or export view. Keeping these in
     distinct authority groups prevents a signed Web administrator from being
     visually or semantically promoted into a Bot/canonical administrator.
     """
@@ -384,6 +388,12 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
         "web_native"
         if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True)
         and _enabled("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", default=False)
+        else "guarded"
+    )
+    finance_planning_state = (
+        "web_native"
+        if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True)
+        and _enabled("WEBAPP_FINANCE_PLANNING_ENABLED", default=True)
         else "guarded"
     )
     automation_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
@@ -403,6 +413,22 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=crm_state,
                     capability="redacted_cross_account_pipeline_read_only",
+                ),
+            ],
+        ),
+        _group(
+            "web_finance_operations_planning",
+            "Finance Operations Planning",
+            authority="web_local_admin",
+            modules=[
+                _module(
+                    "finance_operations_planning",
+                    "Kế hoạch chi phí vận hành",
+                    "/admin/finance/planning",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=finance_planning_state,
+                    capability="web_owned_budget_cost_plan_revision_audit_without_ledger_or_payment",
                 ),
             ],
         ),

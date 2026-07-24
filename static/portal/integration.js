@@ -453,6 +453,12 @@
   // account switch, feature disablement, route change or newer filter read.
   let operationsDeskSessionEpoch = 0;
   let operationsDeskHydrationEpoch = 0;
+  // Finance Operations Planning is a separate, signed Web-admin planning
+  // projection. Its budget/cost-plan data must never survive a sign-out,
+  // role change, route navigation, disabled flag or a newer protected read.
+  // It does not share a fence with canonical finance, Bot, PayOS or wallet.
+  let financePlanningSessionEpoch = 0;
+  let financePlanningHydrationEpoch = 0;
   let notificationSessionEpoch = 0;
   let notificationInboxHydrationEpoch = 0;
   let notificationAutomationHydrationEpoch = 0;
@@ -827,6 +833,11 @@
     // request or hydrate a canonical finance record.
     if (isNativeAdminTaxReadinessPath(normalized)) {
       return { endpoint: "", module: "tax-readiness", requestedModule: "tax-readiness", recordId: "", supported: false };
+    }
+    // Keep Web-owned planning out of the canonical finance parser. A guessed
+    // route must never become a bridge finance read or a canonical action.
+    if (isNativeAdminFinancePlanningPath(normalized)) {
+      return { endpoint: "", module: "finance-planning", requestedModule: "finance-planning", recordId: "", supported: false };
     }
     if (ADMIN_DIRECT_ENDPOINTS[normalized]) {
       return { endpoint: ADMIN_DIRECT_ENDPOINTS[normalized], module: normalized === "/admin" ? "overview" : normalized.split("/").filter(Boolean).slice(-1)[0], supported: true };
@@ -2143,6 +2154,13 @@
   // export, profile or write adapter.
   function isNativeAdminTaxReadinessPath(path) {
     return String(path || "").split("?")[0] === "/admin/finance/tax-readiness";
+  }
+
+  // Finance Operations Planning is a separate Web-owned admin workspace.
+  // It may contain internal planning records, but never a Bot/Core Bridge
+  // finance projection, ledger, PayOS record, wallet balance or payment flow.
+  function isNativeAdminFinancePlanningPath(path) {
+    return String(path || "").split("?")[0] === "/admin/finance/planning";
   }
 
   // Postback Readiness is a static, canonical-admin-gated handoff guide.
@@ -11504,6 +11522,8 @@
     ++operationsSessionEpoch;
     ++operationsDeskSessionEpoch;
     ++operationsDeskHydrationEpoch;
+    ++financePlanningSessionEpoch;
+    ++financePlanningHydrationEpoch;
     ++notificationSessionEpoch;
     ++accountActivitySessionEpoch;
     ++accountSecuritySessionEpoch;
@@ -11849,6 +11869,12 @@
     // only a client visibility/read trigger; every Desk endpoint separately
     // checks the signed support role on the server.
     const operationsDeskEnabled = Boolean(status.flags && status.flags.admin_erp_enabled === true);
+    // Finance Planning is a separately flagged Web-admin planning surface.
+    // The client flag only starts a narrow signed request; it never grants
+    // payment, ledger, Xu, PayOS, Bot or canonical finance authority.
+    const financePlanningEnabled = Boolean(
+      status.flags && status.flags.admin_erp_enabled === true && status.flags.finance_planning_enabled === true
+    );
     // Automation Monitor follows the Admin ERP umbrella only. The browser
     // gets no authority from this boolean: the dedicated GET routes repeat a
     // signed local-admin check and return a guarded, empty projection when
@@ -12392,6 +12418,15 @@
       "operations-desk-refresh": Boolean(account && operationsDeskEnabled),
       "operations-desk-filter": Boolean(account && operationsDeskEnabled),
       "operations-desk-page": Boolean(account && operationsDeskEnabled),
+      // Finance Operations Planning stays Web-native. These booleans never
+      // decide an admin role: every read/write repeats signed admin, feature,
+      // CSRF, confirmation, revision and idempotency checks on the server.
+      "finance-planning-view": Boolean(account && financePlanningEnabled),
+      "finance-planning-refresh": Boolean(account && financePlanningEnabled),
+      "finance-planning-create-budget": Boolean(account && me.csrf_token && financePlanningEnabled),
+      "finance-planning-create-cost": Boolean(account && me.csrf_token && financePlanningEnabled),
+      "finance-planning-budget-state": Boolean(account && me.csrf_token && financePlanningEnabled),
+      "finance-planning-cost-state": Boolean(account && me.csrf_token && financePlanningEnabled),
       "admin-automation-monitor-view": Boolean(account && adminAutomationMonitorEnabled),
       "admin-automation-monitor-refresh": Boolean(account && adminAutomationMonitorEnabled),
       "admin-automation-monitor-page": Boolean(account && adminAutomationMonitorEnabled),
@@ -12553,6 +12588,8 @@
     ++adminSecurityAccessPostureHydrationEpoch;
     ++operationsDeskSessionEpoch;
     ++operationsDeskHydrationEpoch;
+    ++financePlanningSessionEpoch;
+    ++financePlanningHydrationEpoch;
     ++notificationSessionEpoch;
     ++notificationInboxHydrationEpoch;
     ++notificationAutomationHydrationEpoch;
@@ -12769,6 +12806,7 @@
       autopilotSafeRemediationEnabled,
       reliabilityFollowupEnabled,
       operationsDeskEnabled,
+      financePlanningEnabled,
       notificationCenterEnabled,
       notificationAutomationEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
@@ -13254,6 +13292,17 @@
       operationsDeskFilter: { kind: "all", state: "all", severity: "all", view: "all" },
       operationsDeskListing: operationsDeskListingProjection({ kind: "all", state: "all", severity: "all", view: "all" }, 0, {}, 0),
       operationsDeskReadState: account && operationsDeskEnabled ? "loading" : "guarded",
+      // Finance Planning is Web-owned internal planning. Clear every field
+      // before a signed read; never retain a prior admin's budget/cost-plan,
+      // never fall back to Bot finance and never infer a zero balance/ledger.
+      financePlanningPolicy: {},
+      financePlanningSummary: {},
+      financePlanningBudgets: [],
+      financePlanningCostPlans: [],
+      financePlanningView: financePlanningViewProjection({}, financePlanningDefaultPeriod(account && account.profile && account.profile.timezone)),
+      financePlanningBudgetListing: financePlanningListingEmpty(financePlanningDefaultPeriod(account && account.profile && account.profile.timezone), 0),
+      financePlanningCostPlanListing: financePlanningListingEmpty(financePlanningDefaultPeriod(account && account.profile && account.profile.timezone), 0),
+      financePlanningReadState: account && financePlanningEnabled ? "loading" : "guarded",
       // Durable in-app notification records are private account data. Clear
       // every projection before a signed read so another user's reminder
       // metadata or a prior session cannot remain visible after failure.
@@ -13320,6 +13369,7 @@
         "/admin/automation": "guarded",
         "/admin/system-stewardship": account ? "read_only" : "guarded",
         "/admin/finance/tax-readiness": account ? "read_only" : "guarded",
+        "/admin/finance/planning": account && financePlanningEnabled ? "processing" : "guarded",
         "/admin/growth/postback-readiness": account ? "read_only" : "guarded",
         "/admin/job-recovery-guide": account ? "read_only" : "guarded",
         "/calendar": account ? "read_only" : "guarded",
@@ -13877,6 +13927,13 @@
         pageStates: { ...(base().pageStates || {}), "/admin/work-queue": "guarded" }
       });
     }
+    if (account && financePlanningEnabled && isNativeAdminFinancePlanningPath(currentPath)) {
+      await hydrateFinancePlanning();
+    } else if (isNativeAdminFinancePlanningPath(currentPath)) {
+      // Planning never falls back to a generic canonical finance module,
+      // cached budget, wallet, PayOS/payment receipt or browser draft.
+      clearFinancePlanningProjection("guarded");
+    }
     if (account && adminAutomationMonitorEnabled && currentPath === "/admin/automation") {
       await hydrateAdminAutomationMonitor();
     } else if (isNativeAdminAutomationMonitorPath(currentPath)) {
@@ -14004,7 +14061,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -17625,6 +17682,452 @@
         pageStates: { ...(base().pageStates || {}), "/admin/work-queue": "guarded" }
       });
       return null;
+    }
+  }
+
+  // Finance Operations Planning deliberately uses a small, closed Web-owned
+  // DTO. It is not a generic `/admin/finance` or Bot/Core Bridge projection:
+  // accepting a broad object here could accidentally display ledger/payment
+  // data after a route change, so each response is allow-listed before merge.
+  const FINANCE_PLANNING_ROUTE = "/admin/finance/planning";
+  const FINANCE_PLANNING_CATEGORIES = new Set(["infrastructure", "provider_runtime", "software", "marketing", "operations", "other"]);
+  const FINANCE_PLANNING_BUDGET_STATES = new Set(["active", "archived"]);
+  const FINANCE_PLANNING_COST_STATES = new Set(["draft", "review", "approved", "archived"]);
+  const FINANCE_PLANNING_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const FINANCE_PLANNING_PERIOD = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+  const FINANCE_PLANNING_DATE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
+  const FINANCE_PLANNING_LIST_LIMIT = 50;
+  const FINANCE_PLANNING_MAX_OFFSET = 10000;
+  const FINANCE_PLANNING_RESYNC_ERROR_CODES = new Set([
+    "WEB_FINANCE_PLANNING_REVISION_CONFLICT",
+    "WEB_FINANCE_PLANNING_STATE_CONFLICT",
+    "WEB_FINANCE_PLANNING_BUDGET_EXISTS",
+    "WEB_FINANCE_PLANNING_BUDGET_NOT_FOUND",
+    "WEB_FINANCE_PLANNING_COST_NOT_FOUND"
+  ]);
+  const FINANCE_PLANNING_BOUNDARY_KEYS = Object.freeze([
+    "canonical_finance_read", "canonical_finance_write", "bot_called", "bridge_called", "provider_called", "job_created",
+    "wallet_mutated", "payment_started", "payment_finalized", "payos_webhook_created", "refund_created", "ledger_changed",
+    "tax_calculated", "report_exported", "notification_sent"
+  ]);
+
+  function financePlanningObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  }
+
+  function financePlanningOnlyKeys(value, keys) {
+    const source = financePlanningObject(value);
+    return Boolean(source) && Object.keys(source).every((key) => keys.has(key));
+  }
+
+  function financePlanningInteger(value, minimum, maximum) {
+    return Number.isSafeInteger(value) && value >= minimum && value <= maximum ? value : null;
+  }
+
+  function financePlanningText(value, maximum, allowEmpty) {
+    if (typeof value !== "string") return null;
+    const normalized = value.replace(/\r\n?/g, "\n").trim();
+    if ((!allowEmpty && !normalized) || normalized.length > maximum || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(normalized)) return null;
+    return normalized;
+  }
+
+  function financePlanningTimestamp(value, optional) {
+    if (value === null && optional) return null;
+    if (typeof value !== "string" || value.length < 10 || value.length > 48 || Number.isNaN(Date.parse(value))) return null;
+    return value;
+  }
+
+  function financePlanningPeriod(value) {
+    const period = String(value || "").trim();
+    return FINANCE_PLANNING_PERIOD.test(period) ? period : "";
+  }
+
+  function financePlanningOffset(value) {
+    const offset = Number(value);
+    return Number.isSafeInteger(offset) && offset >= 0 && offset <= FINANCE_PLANNING_MAX_OFFSET ? offset : 0;
+  }
+
+  function financePlanningRequestedOffset(value) {
+    const raw = String(value === undefined || value === null ? "" : value).trim();
+    if (!/^(?:0|[1-9]\d{0,4})$/.test(raw)) return null;
+    const offset = Number(raw);
+    return Number.isSafeInteger(offset) && offset >= 0 && offset <= FINANCE_PLANNING_MAX_OFFSET ? offset : null;
+  }
+
+  function financePlanningAccountTimezone() {
+    const profile = base().profile && typeof base().profile === "object" ? base().profile : {};
+    const candidate = String(profile.timezone || "").trim();
+    return candidate && candidate.length <= 128 && /^[A-Za-z_+/-]+$/.test(candidate)
+      ? candidate
+      : "Asia/Ho_Chi_Minh";
+  }
+
+  function financePlanningDefaultPeriod(timezone) {
+    try {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: String(timezone || "Asia/Ho_Chi_Minh"),
+        year: "numeric",
+        month: "2-digit"
+      }).formatToParts(new Date());
+      const year = parts.find((part) => part.type === "year");
+      const month = parts.find((part) => part.type === "month");
+      const period = year && month ? year.value + "-" + month.value : "";
+      if (financePlanningPeriod(period)) return period;
+    } catch (_) {
+      // Fall through to the canonical product timezone below.
+    }
+    // Finance Planning is a Vietnam workspace. This fallback avoids an UTC
+    // month flip at local midnight if an older browser lacks time-zone Intl.
+    return financePlanningPeriod(new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 7));
+  }
+
+  function financePlanningViewProjection(value, fallbackPeriod) {
+    const source = financePlanningObject(value) || {};
+    const fallback = financePlanningPeriod(fallbackPeriod) || financePlanningDefaultPeriod(financePlanningAccountTimezone());
+    return {
+      period: financePlanningPeriod(source.period) || fallback,
+      budgetOffset: financePlanningOffset(source.budgetOffset),
+      costPlanOffset: financePlanningOffset(source.costPlanOffset)
+    };
+  }
+
+  function financePlanningListingEmpty(period, offset) {
+    const safeOffset = financePlanningOffset(offset);
+    return {
+      period: financePlanningPeriod(period),
+      limit: FINANCE_PLANNING_LIST_LIMIT,
+      offset: safeOffset,
+      total: 0,
+      returned: 0,
+      has_more: false,
+      next_offset: null,
+      previous_offset: safeOffset >= FINANCE_PLANNING_LIST_LIMIT ? safeOffset - FINANCE_PLANNING_LIST_LIMIT : null
+    };
+  }
+
+  function financePlanningCurrentView() {
+    return financePlanningViewProjection(base().financePlanningView, financePlanningDefaultPeriod(financePlanningAccountTimezone()));
+  }
+
+  function financePlanningPositiveAmount(value) {
+    const raw = String(value === undefined || value === null ? "" : value).trim();
+    if (!/^[1-9]\d{0,14}$/.test(raw)) return null;
+    const number = Number(raw);
+    return Number.isSafeInteger(number) && number <= 1000000000000 ? number : null;
+  }
+
+  function financePlanningBoundary(source, persisted) {
+    if (!financePlanningObject(source)
+      || source.execution !== "web_native_finance_operations_planning"
+      || source.planning_persisted !== persisted) return false;
+    return FINANCE_PLANNING_BOUNDARY_KEYS.every((key) => source[key] === false);
+  }
+
+  function financePlanningBudgetProjection(value) {
+    const source = financePlanningObject(value);
+    const allowed = new Set(["id", "period", "category", "category_label", "planned_vnd", "note", "state", "revision", "created_at", "updated_at", "archived_at", "execution"]);
+    if (!financePlanningOnlyKeys(source, allowed)
+      || !source || !FINANCE_PLANNING_UUID.test(String(source.id || ""))
+      || !financePlanningPeriod(source.period)
+      || !FINANCE_PLANNING_CATEGORIES.has(String(source.category || ""))
+      || !FINANCE_PLANNING_BUDGET_STATES.has(String(source.state || ""))
+      || source.execution !== "web_native_finance_budget_plan") return null;
+    const categoryLabel = financePlanningText(source.category_label, 80, false);
+    const note = financePlanningText(source.note, 500, true);
+    const planned = financePlanningInteger(source.planned_vnd, 1, 1000000000000);
+    const revision = financePlanningInteger(source.revision, 1, 1000000000);
+    const created = financePlanningTimestamp(source.created_at, false);
+    const updated = financePlanningTimestamp(source.updated_at, false);
+    const archived = financePlanningTimestamp(source.archived_at, true);
+    if (categoryLabel === null || note === null || planned === null || revision === null || created === null || updated === null
+      || (String(source.state) === "archived" && archived === null) || (String(source.state) === "active" && archived !== null)) return null;
+    return { id: String(source.id).toLowerCase(), period: String(source.period), category: String(source.category), category_label: categoryLabel, planned_vnd: planned, note, state: String(source.state), revision, created_at: created, updated_at: updated, archived_at: archived };
+  }
+
+  function financePlanningCostProjection(value) {
+    const source = financePlanningObject(value);
+    const allowed = new Set(["id", "period", "planned_for", "category", "category_label", "planned_vnd", "vendor_label", "purpose", "state", "revision", "created_at", "updated_at", "archived_at", "execution"]);
+    if (!financePlanningOnlyKeys(source, allowed)
+      || !source || !FINANCE_PLANNING_UUID.test(String(source.id || ""))
+      || !financePlanningPeriod(source.period)
+      || !FINANCE_PLANNING_DATE.test(String(source.planned_for || ""))
+      || !String(source.planned_for).startsWith(`${source.period}-`)
+      || !FINANCE_PLANNING_CATEGORIES.has(String(source.category || ""))
+      || !FINANCE_PLANNING_COST_STATES.has(String(source.state || ""))
+      || source.execution !== "web_native_finance_cost_plan") return null;
+    const categoryLabel = financePlanningText(source.category_label, 80, false);
+    const vendor = financePlanningText(source.vendor_label, 120, true);
+    const purpose = financePlanningText(source.purpose, 700, false);
+    const planned = financePlanningInteger(source.planned_vnd, 1, 1000000000000);
+    const revision = financePlanningInteger(source.revision, 1, 1000000000);
+    const created = financePlanningTimestamp(source.created_at, false);
+    const updated = financePlanningTimestamp(source.updated_at, false);
+    const archived = financePlanningTimestamp(source.archived_at, true);
+    if (categoryLabel === null || vendor === null || purpose === null || planned === null || revision === null || created === null || updated === null
+      || (String(source.state) === "archived" && archived === null) || (String(source.state) !== "archived" && archived !== null)) return null;
+    return { id: String(source.id).toLowerCase(), period: String(source.period), planned_for: String(source.planned_for), category: String(source.category), category_label: categoryLabel, planned_vnd: planned, vendor_label: vendor, purpose, state: String(source.state), revision, created_at: created, updated_at: updated, archived_at: archived };
+  }
+
+  function financePlanningPolicyProjection(value) {
+    const source = financePlanningObject(value);
+    const allowed = new Set(["categories", "budget_states", "budget_transitions", "cost_states", "cost_transitions", "amount_currency", "manual_payment_evidence_accepted", "execution", "planning_persisted", ...FINANCE_PLANNING_BOUNDARY_KEYS]);
+    if (!financePlanningOnlyKeys(source, allowed) || !source || !financePlanningBoundary(source, false)
+      || source.amount_currency !== "VND" || source.manual_payment_evidence_accepted !== false
+      || !Array.isArray(source.categories) || source.categories.length !== FINANCE_PLANNING_CATEGORIES.size
+      || !Array.isArray(source.budget_states) || !Array.isArray(source.cost_states)) return null;
+    const seen = new Set();
+    const categories = source.categories.map((item) => {
+      const row = financePlanningObject(item);
+      const id = String(row && row.id || "");
+      const label = financePlanningText(row && row.label, 80, false);
+      if (!row || !financePlanningOnlyKeys(row, new Set(["id", "label"])) || !FINANCE_PLANNING_CATEGORIES.has(id) || seen.has(id) || label === null) return null;
+      seen.add(id);
+      return { id, label };
+    });
+    if (categories.some((item) => !item) || seen.size !== FINANCE_PLANNING_CATEGORIES.size
+      || source.budget_states.some((item) => !FINANCE_PLANNING_BUDGET_STATES.has(String(item)))
+      || source.cost_states.some((item) => !FINANCE_PLANNING_COST_STATES.has(String(item)))) return null;
+    return { categories, budget_transitions: financePlanningObject(source.budget_transitions) || {}, cost_transitions: financePlanningObject(source.cost_transitions) || {}, amount_currency: "VND" };
+  }
+
+  function financePlanningSummaryProjection(value) {
+    const source = financePlanningObject(value);
+    const allowed = new Set(["summary", "execution", "planning_persisted", ...FINANCE_PLANNING_BOUNDARY_KEYS]);
+    const summary = source && financePlanningObject(source.summary);
+    const summaryKeys = new Set(["period", "budget_vnd", "planned_vnd", "remaining_vnd", "cost_plan_count", "review_vnd", "review_count", "categories"]);
+    if (!financePlanningOnlyKeys(source, allowed) || !source || !financePlanningBoundary(source, false)
+      || !summary || !financePlanningOnlyKeys(summary, summaryKeys) || !financePlanningPeriod(summary.period)
+      || !Array.isArray(summary.categories) || summary.categories.length !== FINANCE_PLANNING_CATEGORIES.size) return null;
+    const totals = ["budget_vnd", "planned_vnd", "remaining_vnd", "cost_plan_count", "review_vnd", "review_count"];
+    if (totals.some((key) => financePlanningInteger(summary[key], key === "remaining_vnd" ? -1000000000000000 : 0, 1000000000000000) === null)) return null;
+    const seen = new Set();
+    const categories = summary.categories.map((item) => {
+      const row = financePlanningObject(item);
+      const keys = new Set(["category", "category_label", "budget_vnd", "planned_vnd", "remaining_vnd", "cost_plan_count", "review_vnd", "review_count"]);
+      if (!row || !financePlanningOnlyKeys(row, keys) || !FINANCE_PLANNING_CATEGORIES.has(String(row.category || "")) || seen.has(String(row.category || ""))) return null;
+      const label = financePlanningText(row.category_label, 80, false);
+      if (label === null || ["budget_vnd", "planned_vnd", "review_vnd", "cost_plan_count", "review_count"].some((key) => financePlanningInteger(row[key], 0, 1000000000000000) === null)
+        || financePlanningInteger(row.remaining_vnd, -1000000000000000, 1000000000000000) === null) return null;
+      seen.add(String(row.category));
+      return { category: String(row.category), category_label: label, budget_vnd: row.budget_vnd, planned_vnd: row.planned_vnd, remaining_vnd: row.remaining_vnd, cost_plan_count: row.cost_plan_count, review_vnd: row.review_vnd, review_count: row.review_count };
+    });
+    if (categories.some((item) => !item) || seen.size !== FINANCE_PLANNING_CATEGORIES.size) return null;
+    return { period: String(summary.period), budget_vnd: summary.budget_vnd, planned_vnd: summary.planned_vnd, remaining_vnd: summary.remaining_vnd, cost_plan_count: summary.cost_plan_count, review_vnd: summary.review_vnd, review_count: summary.review_count, categories };
+  }
+
+  function financePlanningListingProjection(value, kind, expectedPeriod) {
+    const source = financePlanningObject(value);
+    const allowed = new Set(["items", "period", "state", "category", "limit", "offset", "total", "has_more", "next_offset", "execution", "planning_persisted", ...FINANCE_PLANNING_BOUNDARY_KEYS]);
+    const states = kind === "budget" ? FINANCE_PLANNING_BUDGET_STATES : FINANCE_PLANNING_COST_STATES;
+    if (!financePlanningOnlyKeys(source, allowed) || !source || !financePlanningBoundary(source, false)
+      || !Array.isArray(source.items) || source.items.length > 100 || !financePlanningPeriod(source.period)
+      || String(source.period) !== expectedPeriod || financePlanningInteger(source.limit, 1, 100) === null
+      || financePlanningInteger(source.offset, 0, FINANCE_PLANNING_MAX_OFFSET) === null || financePlanningInteger(source.total, 0, 100000) === null
+      || !("all" === String(source.state || "") || states.has(String(source.state || "")))
+      || (kind === "cost" && !("all" === String(source.category || "") || FINANCE_PLANNING_CATEGORIES.has(String(source.category || ""))))
+      || typeof source.has_more !== "boolean" || !(source.next_offset === null || financePlanningInteger(source.next_offset, 0, FINANCE_PLANNING_MAX_OFFSET) !== null)) return null;
+    const project = kind === "budget" ? financePlanningBudgetProjection : financePlanningCostProjection;
+    const items = source.items.map(project);
+    if (items.some((item) => !item)) return null;
+    const offset = source.offset;
+    const limit = source.limit;
+    const total = source.total;
+    const hasMore = source.has_more === true;
+    const nextOffset = source.next_offset;
+    if (items.length > limit || (items.length > 0 && total < offset + items.length)
+      || (hasMore && (!Number.isSafeInteger(nextOffset) || nextOffset <= offset || nextOffset > FINANCE_PLANNING_MAX_OFFSET))
+      || (!hasMore && nextOffset !== null)) return null;
+    return {
+      items,
+      listing: {
+        period: String(source.period),
+        limit,
+        offset,
+        total,
+        returned: items.length,
+        has_more: hasMore,
+        next_offset: hasMore ? nextOffset : null,
+        previous_offset: offset >= limit ? offset - limit : null
+      }
+    };
+  }
+
+  function financePlanningWriteProjection(value, kind) {
+    const source = financePlanningObject(value);
+    const key = kind === "budget" ? "budget" : "cost_plan";
+    const allowed = new Set([key, "execution", "planning_persisted", ...FINANCE_PLANNING_BOUNDARY_KEYS]);
+    if (!financePlanningOnlyKeys(source, allowed) || !source || !financePlanningBoundary(source, true)) return null;
+    return kind === "budget" ? financePlanningBudgetProjection(source.budget) : financePlanningCostProjection(source.cost_plan);
+  }
+
+  function financePlanningReplayProjection(value, kind) {
+    // A lost browser response can be retried with the same idempotency key.
+    // The server intentionally returns only this content-free receipt on a
+    // replay, so accept it narrowly and always re-read the signed projection.
+    const source = financePlanningObject(value);
+    const key = kind === "budget" ? "budget" : "cost_plan";
+    const allowed = new Set([key, "execution", "planning_persisted", ...FINANCE_PLANNING_BOUNDARY_KEYS]);
+    const item = source && financePlanningObject(source[key]);
+    const states = kind === "budget" ? FINANCE_PLANNING_BUDGET_STATES : FINANCE_PLANNING_COST_STATES;
+    if (!financePlanningOnlyKeys(source, allowed) || !source || !financePlanningBoundary(source, false) || !item
+      || !financePlanningOnlyKeys(item, new Set(["id", "state", "revision"]))
+      || !FINANCE_PLANNING_UUID.test(String(item.id || "")) || !states.has(String(item.state || ""))
+      || financePlanningInteger(item.revision, 1, 1000000000) === null) return null;
+    return { id: String(item.id).toLowerCase(), state: String(item.state), revision: item.revision };
+  }
+
+  function financePlanningViewMatches(expectedView) {
+    const current = financePlanningCurrentView();
+    return current.period === expectedView.period
+      && current.budgetOffset === expectedView.budgetOffset
+      && current.costPlanOffset === expectedView.costPlanOffset;
+  }
+
+  function financePlanningRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, expectedView) {
+    return requestEpoch === financePlanningHydrationEpoch
+      && sessionEpoch === financePlanningSessionEpoch
+      && expectedPath === FINANCE_PLANNING_ROUTE
+      && currentPortalPath() === expectedPath
+      && base().financePlanningEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && (!expectedView || financePlanningViewMatches(expectedView));
+  }
+
+  function clearFinancePlanningProjection(readState, requestedView) {
+    const view = financePlanningViewProjection(requestedView || base().financePlanningView, financePlanningDefaultPeriod(financePlanningAccountTimezone()));
+    merge({
+      financePlanningPolicy: {}, financePlanningSummary: {}, financePlanningBudgets: [], financePlanningCostPlans: [],
+      financePlanningView: view,
+      financePlanningBudgetListing: financePlanningListingEmpty(view.period, view.budgetOffset),
+      financePlanningCostPlanListing: financePlanningListingEmpty(view.period, view.costPlanOffset),
+      financePlanningReadState: readState,
+      pageStates: { ...(base().pageStates || {}), [FINANCE_PLANNING_ROUTE]: readState === "ready" ? "read_only" : (readState === "loading" ? "processing" : "guarded") }
+    });
+  }
+
+  // Finance Planning write forms put their action on the <form>, not the
+  // submit button. A disabled form has no native HTML effect, so lock each
+  // mutable descendant and remember its prior disabled state. This remains
+  // deliberately local to Finance Planning rather than changing the busy
+  // semantics of every legacy portal form.
+  function setFinancePlanningActionBusy(action, route, busy) {
+    const isBusy = Boolean(busy);
+    document.querySelectorAll("[data-portal-action]").forEach((control) => {
+      const matches = control.getAttribute("data-portal-action") === action
+        && (control.getAttribute("data-portal-route") || window.location.pathname) === route;
+      if (!matches) return;
+      control.setAttribute("aria-busy", String(isBusy));
+      if (control instanceof HTMLFormElement) {
+        control.setAttribute("data-finance-planning-busy", String(isBusy));
+        control.querySelectorAll("button, input, select, textarea").forEach((field) => {
+          if (isBusy) {
+            if (!field.hasAttribute("data-finance-planning-disabled-before-busy")) {
+              field.setAttribute("data-finance-planning-disabled-before-busy", field.disabled ? "true" : "false");
+            }
+            field.disabled = true;
+          } else if (field.hasAttribute("data-finance-planning-disabled-before-busy")) {
+            field.disabled = field.getAttribute("data-finance-planning-disabled-before-busy") === "true";
+            field.removeAttribute("data-finance-planning-disabled-before-busy");
+          }
+        });
+        return;
+      }
+      if ("disabled" in control) control.disabled = isBusy;
+    });
+  }
+
+  function acquireFinancePlanningSubmission(scope, fingerprint) {
+    // A changed payload must not create a second concurrent write while the
+    // first request for this record/form is unresolved. The existing
+    // idempotency entry is released only after the request finishes.
+    const existing = submissions.get(scope);
+    if (existing && existing.inFlight) return null;
+    return acquireSubmission(scope, fingerprint);
+  }
+
+  async function hydrateFinancePlanning(requestedView) {
+    const requestEpoch = ++financePlanningHydrationEpoch;
+    const sessionEpoch = financePlanningSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (expectedPath !== FINANCE_PLANNING_ROUTE) return { stale: true };
+    const view = financePlanningViewProjection(requestedView || base().financePlanningView, financePlanningDefaultPeriod(financePlanningAccountTimezone()));
+    const period = view.period;
+    if (!period) return { stale: true };
+    clearFinancePlanningProjection("loading", view);
+    try {
+      const query = "?period=" + encodeURIComponent(period);
+      const budgetListQuery = "&state=all&limit=" + encodeURIComponent(String(FINANCE_PLANNING_LIST_LIMIT))
+        + "&offset=" + encodeURIComponent(String(view.budgetOffset));
+      const costPlanListQuery = "&state=all&limit=" + encodeURIComponent(String(FINANCE_PLANNING_LIST_LIMIT))
+        + "&offset=" + encodeURIComponent(String(view.costPlanOffset));
+      const [policyResponse, summaryResponse, budgetsResponse, costPlansResponse] = await Promise.all([
+        api("/admin/finance-planning/policy"),
+        api("/admin/finance-planning/summary" + query),
+        api("/admin/finance-planning/budgets" + query + budgetListQuery),
+        api("/admin/finance-planning/cost-plans" + query + costPlanListQuery)
+      ]);
+      const policy = financePlanningPolicyProjection(policyResponse && policyResponse.data);
+      const summary = financePlanningSummaryProjection(summaryResponse && summaryResponse.data);
+      const budgets = financePlanningListingProjection(budgetsResponse && budgetsResponse.data, "budget", period);
+      const costPlans = financePlanningListingProjection(costPlansResponse && costPlansResponse.data, "cost", period);
+      if (!policy || !summary || !budgets || !costPlans || summary.period !== period) throw new Error("Phản hồi Finance Operations Planning chưa đúng boundary an toàn.");
+      if (!financePlanningRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, view)) return { stale: true };
+      merge({
+        financePlanningPolicy: policy,
+        financePlanningSummary: summary,
+        financePlanningBudgets: budgets.items,
+        financePlanningCostPlans: costPlans.items,
+        financePlanningView: view,
+        financePlanningBudgetListing: budgets.listing,
+        financePlanningCostPlanListing: costPlans.listing,
+        financePlanningReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [FINANCE_PLANNING_ROUTE]: "read_only" }
+      });
+      return { policy, summary, budgets: budgets.items, costPlans: costPlans.items, view };
+    } catch (_) {
+      if (!financePlanningRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, view)) return { stale: true };
+      clearFinancePlanningProjection("failed", view);
+      return null;
+    }
+  }
+
+  async function submitFinancePlanningWrite({ action, route, capability, scope, fingerprint, path, payload, kind }) {
+    if (route !== FINANCE_PLANNING_ROUTE || currentPortalPath() !== FINANCE_PLANNING_ROUTE) throw new Error("Thao tác chỉ hợp lệ tại Finance Operations Planning đang mở.");
+    if (!(base().capabilities && base().capabilities[capability] === true)) throw new Error("Cần signed Web-admin session, CSRF và Finance Planning đang bật.");
+    const submission = acquireFinancePlanningSubmission(scope, fingerprint);
+    if (!submission) {
+      toast("Thao tác kế hoạch đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setFinancePlanningActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (!financePlanningWriteProjection(result && result.data, kind) && !financePlanningReplayProjection(result && result.data, kind)) {
+        throw new Error("Máy chủ chưa trả receipt Finance Planning an toàn.");
+      }
+      const refreshed = await hydrateFinancePlanning();
+      if (!refreshed && currentPortalPath() === FINANCE_PLANNING_ROUTE) throw new Error("Đã nhận receipt nhưng chưa thể tải lại kế hoạch an toàn.");
+      return result;
+    } catch (error) {
+      acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      const errorCode = String(error && error.payload && error.payload.error_code || "");
+      if (FINANCE_PLANNING_RESYNC_ERROR_CODES.has(errorCode) && currentPortalPath() === FINANCE_PLANNING_ROUTE) {
+        // A conflict means the page's revision is stale. Re-read the signed
+        // projection before surfacing the error so the next deliberate action
+        // starts from current lifecycle state instead of immediately failing.
+        await hydrateFinancePlanning(financePlanningCurrentView());
+      }
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setFinancePlanningActionBusy(action, route, false);
     }
   }
 
@@ -22919,6 +23422,7 @@
       && expectedPath !== "/admin/audit"
       && !isNativeAdminSystemStewardshipPath(expectedPath)
       && !isNativeAdminTaxReadinessPath(expectedPath)
+      && !isNativeAdminFinancePlanningPath(expectedPath)
       && !isNativeAdminPostbackReadinessPath(expectedPath)
       && !isNativeAdminJobRecoveryGuidePath(expectedPath)
       && !isNativeAdminSecurityAccessPosturePath(expectedPath)
@@ -22928,7 +23432,7 @@
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminFinancePlanningPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -23216,7 +23720,7 @@
         // asking the generic Bot bridge to expose a raw audit payload.
         await hydrateAdminAudit();
         if (!isCurrent()) return null;
-      } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
+      } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminFinancePlanningPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
         // The security/admin access routes are hydrated only by their narrow
         // Web-native aggregate or navigation manifest. Never attempt a
         // generic bridge fallback here.
@@ -23921,6 +24425,106 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "finance-planning-view") {
+        if (route !== FINANCE_PLANNING_ROUTE || currentPortalPath() !== FINANCE_PLANNING_ROUTE) throw new Error("Chỉ có thể đổi kỳ tại Finance Operations Planning đang mở.");
+        if (!(base().capabilities && base().capabilities["finance-planning-view"] === true)) throw new Error("Cần signed Web-admin session để xem Finance Operations Planning.");
+        const period = financePlanningPeriod(fields.period);
+        if (!period) throw new Error("Hãy chọn một kỳ kế hoạch hợp lệ.");
+        setFinancePlanningActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFinancePlanning({ period, budgetOffset: 0, costPlanOffset: 0 });
+          if (!refreshed && currentPortalPath() === FINANCE_PLANNING_ROUTE) throw new Error("Không thể tải kỳ kế hoạch đã chọn an toàn. Hãy thử lại.");
+          if (refreshed) toast("Đã chuyển sang kỳ kế hoạch " + period + ".");
+        } finally {
+          setFinancePlanningActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "finance-planning-budget-page" || action === "finance-planning-cost-page") {
+        if (route !== FINANCE_PLANNING_ROUTE || currentPortalPath() !== FINANCE_PLANNING_ROUTE) throw new Error("Chỉ có thể chuyển trang tại Finance Operations Planning đang mở.");
+        if (!(base().capabilities && base().capabilities["finance-planning-view"] === true)) throw new Error("Cần signed Web-admin session để xem Finance Operations Planning.");
+        const requestedPeriod = financePlanningPeriod(fields.__financePlanningPeriod);
+        const requestedOffset = financePlanningRequestedOffset(fields.__financePlanningOffset);
+        const view = financePlanningCurrentView();
+        if (!requestedPeriod || requestedPeriod !== view.period || requestedOffset === null) throw new Error("Trang kế hoạch không còn hợp lệ. Hãy tải lại kỳ hiện tại.");
+        const nextView = action === "finance-planning-budget-page"
+          ? { ...view, budgetOffset: requestedOffset }
+          : { ...view, costPlanOffset: requestedOffset };
+        setFinancePlanningActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFinancePlanning(nextView);
+          if (!refreshed && currentPortalPath() === FINANCE_PLANNING_ROUTE) throw new Error("Không thể tải trang kế hoạch an toàn. Hãy thử lại.");
+        } finally {
+          setFinancePlanningActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "finance-planning-refresh") {
+        if (route !== FINANCE_PLANNING_ROUTE || currentPortalPath() !== FINANCE_PLANNING_ROUTE) throw new Error("Chỉ có thể làm mới Finance Operations Planning tại trang đang mở.");
+        if (!(base().capabilities && base().capabilities["finance-planning-refresh"] === true)) throw new Error("Cần signed Web-admin session để xem Finance Operations Planning.");
+        setFinancePlanningActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFinancePlanning(financePlanningCurrentView());
+          if (!refreshed && currentPortalPath() === FINANCE_PLANNING_ROUTE) throw new Error("Không thể tải kế hoạch vận hành Web an toàn. Hãy thử lại.");
+          if (refreshed) toast("Đã tải lại Finance Operations Planning từ Web-owned API.");
+        } finally {
+          setFinancePlanningActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "finance-planning-create-budget") {
+        // `submitFinancePlanningWrite` adds a fresh idempotency_key and the
+        // server repeats CSRF/confirmation/revision policy before persistence.
+        const period = financePlanningPeriod(fields.period);
+        const view = financePlanningCurrentView();
+        const category = String(fields.category || "").trim();
+        const planned = financePlanningPositiveAmount(fields.planned_vnd);
+        const note = typeof fields.note === "string" ? fields.note.trim() : "";
+        if (!period || period !== view.period || !FINANCE_PLANNING_CATEGORIES.has(category) || planned === null || note.length > 500) throw new Error("Hãy dùng đúng kỳ đang xem và kiểm tra nhóm, giá trị, ghi chú ngân sách trước khi lưu.");
+        const payload = { period, category, planned_vnd: planned, note, confirm_budget: true };
+        const result = await submitFinancePlanningWrite({
+          action, route, capability: "finance-planning-create-budget", scope: `finance-planning:budget:create:${period}:${category}`,
+          fingerprint: JSON.stringify(payload), path: "/admin/finance-planning/budgets", payload, kind: "budget"
+        });
+        if (result) toast(result.message || "Đã tạo ngân sách kế hoạch Web.");
+        return;
+      }
+      if (action === "finance-planning-create-cost") {
+        const period = financePlanningPeriod(fields.period);
+        const view = financePlanningCurrentView();
+        const plannedFor = String(fields.planned_for || "").trim();
+        const category = String(fields.category || "").trim();
+        const planned = financePlanningPositiveAmount(fields.planned_vnd);
+        const vendor = typeof fields.vendor_label === "string" ? fields.vendor_label.trim() : "";
+        const purpose = typeof fields.purpose === "string" ? fields.purpose.trim() : "";
+        if (!period || period !== view.period || !FINANCE_PLANNING_DATE.test(plannedFor) || !plannedFor.startsWith(`${period}-`) || !FINANCE_PLANNING_CATEGORIES.has(category)
+          || planned === null || vendor.length > 120 || purpose.length < 4 || purpose.length > 700) {
+          throw new Error("Hãy dùng đúng kỳ đang xem và kiểm tra ngày, nhóm, giá trị, mục đích kế hoạch chi phí trước khi lưu.");
+        }
+        const payload = { period, planned_for: plannedFor, category, planned_vnd: planned, vendor_label: vendor, purpose, confirm_plan: true };
+        const result = await submitFinancePlanningWrite({
+          action, route, capability: "finance-planning-create-cost", scope: `finance-planning:cost:create:${period}:${plannedFor}:${category}`,
+          fingerprint: JSON.stringify(payload), path: "/admin/finance-planning/cost-plans", payload, kind: "cost"
+        });
+        if (result) toast(result.message || "Đã tạo kế hoạch chi phí Web ở trạng thái draft.");
+        return;
+      }
+      if (action === "finance-planning-budget-state" || action === "finance-planning-cost-state") {
+        const kind = action === "finance-planning-budget-state" ? "budget" : "cost";
+        const recordId = String(fields.__financePlanningId || "").trim().toLowerCase();
+        const state = String(fields.__financePlanningState || "").trim().toLowerCase();
+        const revision = Number(String(fields.__financePlanningRevision || "").trim());
+        const allowedStates = kind === "budget" ? FINANCE_PLANNING_BUDGET_STATES : FINANCE_PLANNING_COST_STATES;
+        if (!FINANCE_PLANNING_UUID.test(recordId) || !allowedStates.has(state) || !Number.isSafeInteger(revision) || revision < 1) throw new Error("Bản ghi hoặc revision kế hoạch không hợp lệ. Hãy tải lại trước khi đổi trạng thái.");
+        const payload = { state, expected_revision: revision, confirm_change: true };
+        const result = await submitFinancePlanningWrite({
+          action, route, capability: kind === "budget" ? "finance-planning-budget-state" : "finance-planning-cost-state",
+          scope: `finance-planning:${kind}:${recordId}:state`, fingerprint: JSON.stringify(payload),
+          path: `/admin/finance-planning/${kind === "budget" ? "budgets" : "cost-plans"}/${encodeURIComponent(recordId)}/state`, payload, kind
+        });
+        if (result) toast(result.message || "Đã cập nhật trạng thái kế hoạch Web.");
+        return;
+      }
       if (action === "starter-kits-refresh") {
         if (!isNativeStarterKitsPath(route) || currentPortalPath() !== route) {
           throw new Error("Chỉ có thể tải lại Starter Kits từ trang đang mở.");
@@ -33289,9 +33893,11 @@
           toast("Đã làm mới Audit Explorer Web-native đã redaction.");
           return;
         }
-        if (isNativeAdminSecurityAccessPosturePath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path)) {
+        if (isNativeAdminSecurityAccessPosturePath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminFinancePlanningPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path)) {
           throw new Error(isNativeAdminTaxReadinessPath(path)
             ? "Tax Readiness chỉ là hướng dẫn read-only; không có làm mới, tính thuế, export hay control action trong browser."
+            : isNativeAdminFinancePlanningPath(path)
+              ? "Finance Operations Planning dùng nút làm mới và workflow Web-native riêng; không gọi canonical finance, ledger, PayOS hay payment action."
             : isNativeAdminPostbackReadinessPath(path)
               ? "Postback Readiness chỉ là hướng dẫn read-only; không có làm mới, cấu hình, gửi/nhận sự kiện hay control action trong browser."
             : isNativeAdminJobRecoveryGuidePath(path)
