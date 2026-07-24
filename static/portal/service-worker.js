@@ -20,7 +20,7 @@
    /api/v1/document-workspace, /api/v1/chat-workspace, /api/v1/analytics-workspace, /api/v1/workboard,
     /api/v1/workspace/setup, /api/v1/workspace/starter-kits,
     /api/v1/operations, /internal/v1/operations, /api/v1/inbox, /internal/v1/notifications,
-    private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/motion-guide`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/*`, private `/audio-hub/*`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
+    private `/image-studio/*` routes and private `/image-hub/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/motion-guide`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/*`, private `/audio-hub/*`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
      private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/guides` and `/api/v1/guides`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
      private `/content/handoffs/*`, private `/crm/*`, private `/operations/*`, private `/admin/operations/*`, private `/admin/reliability/*`, private `/inbox/*`, private `/automation/*` and private `/workspace-menu` routes and private delivery URLs are
     private `/starter-kits/*` routes and private delivery URLs are intentionally
@@ -142,6 +142,10 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/media-workspace/music-prompt-composer",
   "/media-workspace/music-directions",
   "/media-workspace/sfx-cue-sheet",
+  // Image Operations Hub is a private visual projection over signed Image
+  // Studio data. Its artboard metadata must never be reachable through a
+  // public shell/offline fallback after sign-out or account switching.
+  "/image-hub",
   "/image/prompt-composer",
   "/" + "api/v1/voice-studio",
   "/voice-studio/direction-composer",

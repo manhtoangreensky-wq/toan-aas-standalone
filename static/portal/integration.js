@@ -8423,14 +8423,27 @@
   function validImageStudioArtboardId(value) { return validProjectId(value); }
   function validImageStudioDirectionId(value) { return validProjectId(value); }
   function validImageStudioRevision(value) { return validMemoryRevision(value); }
+  function imageStudioVisualRoot(path) {
+    const route = String(path || "").split("?")[0].replace(/\/+$/, "") || "/";
+    return route === "/image-hub" || route.startsWith("/image-hub/") ? "/image-hub" : "/image-studio";
+  }
+  function imageStudioArtboardRoute(artboardId, path) {
+    const id = validImageStudioArtboardId(artboardId) ? String(artboardId) : "";
+    const root = imageStudioVisualRoot(path);
+    return id ? `${root}/${encodeURIComponent(id)}` : root;
+  }
+  function isImageStudioListViewPath(path) {
+    const route = String(path || "").split("?")[0];
+    return ["/image-studio", "/image-studio/new", "/image-hub", "/image-hub/new"].includes(route);
+  }
   function imageArtboardIdFromPath(path) {
-    const match = /^\/image-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const match = /^\/(?:image-studio|image-hub)\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
     return validImageStudioArtboardId(id) ? id : "";
   }
   function isNativeImageStudioPath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/image-studio" || normalized === "/image-studio/new" || Boolean(imageArtboardIdFromPath(normalized));
+    return isImageStudioListViewPath(normalized) || Boolean(imageArtboardIdFromPath(normalized));
   }
   function imageStudioRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, expectedPath) {
     return requestEpoch === currentEpoch
@@ -13392,8 +13405,8 @@
         videoStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
-    if (account && imageStudioEnabled && ["/image-studio", "/image-studio/new"].includes(currentPath)) await hydrateImageStudio();
-    else if (account && imageStudioEnabled && imageArtboardIdFromPath(currentPath)) await hydrateImageArtboard(imageArtboardIdFromPath(currentPath));
+    if (account && imageStudioEnabled && isImageStudioListViewPath(currentPath)) await hydrateImageStudio();
+    else if (account && imageStudioEnabled && imageArtboardIdFromPath(currentPath)) await hydrateImageArtboard(imageArtboardIdFromPath(currentPath), currentPath);
     else if (isNativeImageStudioPath(currentPath)) {
       // Never use legacy `/image/*` operation history or an untrusted browser
       // cache as a substitute for a server-enabled, owner-scoped artboard.
@@ -15815,7 +15828,7 @@
         imageStudioSummary: summary, imageArtboards: artboards, imageStudioEvents: events, imageStudioReferences: references, imageStudioPolicy: policy,
         imageStudioFilter: filter, imageStudioListing: imageStudioListingProjection(filter, offset, artboardData, artboards.length),
         imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReadState: "ready",
-        pageStates: { ...(base().pageStates || {}), "/image-studio": "ready", "/image-studio/new": "ready" }
+        pageStates: { ...(base().pageStates || {}), "/image-studio": "ready", "/image-studio/new": "ready", "/image-hub": "ready", "/image-hub/new": "ready", [expectedPath]: "ready" }
       });
       return { artboards, events };
     } catch (_) {
@@ -15823,7 +15836,7 @@
       merge({
         imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
         imageStudioFilter: filter, imageStudioListing: imageStudioListingProjection(filter, offset, {}, 0),
-        imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), "/image-studio": "guarded", "/image-studio/new": "guarded" }
+        imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), "/image-studio": "guarded", "/image-studio/new": "guarded", "/image-hub": "guarded", "/image-hub/new": "guarded", [expectedPath]: "guarded" }
       });
       return { artboards: [], events: [] };
     }
@@ -15860,9 +15873,9 @@
     }
   }
 
-  async function hydrateImageArtboard(artboardId) {
+  async function hydrateImageArtboard(artboardId, visualRoute) {
     if (!validImageStudioArtboardId(artboardId)) throw new Error("Mã artboard Image Studio không hợp lệ.");
-    const route = "/image-studio/" + encodeURIComponent(String(artboardId));
+    const route = imageStudioArtboardRoute(artboardId, visualRoute || currentPortalPath());
     const requestEpoch = ++imageStudioDetailHydrationEpoch;
     const sessionEpoch = imageStudioSessionEpoch;
     if (currentPortalPath() !== route) return null;
@@ -27847,7 +27860,7 @@
       }
       if (action === "image-studio-refresh") {
         const artboardId = imageArtboardIdFromPath(route);
-        if (artboardId) await hydrateImageArtboard(artboardId);
+        if (artboardId) await hydrateImageArtboard(artboardId, route);
         else await hydrateImageStudio();
         toast("Đã làm mới Image Creative Studio của Web account hiện tại.");
         return;
@@ -27863,9 +27876,9 @@
             if (!imageStudioBoundaryIsSafe(data) || !artboardId || !validImageStudioRevision(receipt.revision)) {
               throw new Error("Máy chủ chưa trả receipt artboard Web-native hợp lệ.");
             }
-            await hydrateImageStudio();
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
             toast(result.message || "Đã tạo artboard riêng tư.");
-            window.location.assign(`/image-studio/${encodeURIComponent(artboardId)}`);
+            window.location.assign(imageStudioArtboardRoute(artboardId, route));
           }
         });
         return;
@@ -27880,8 +27893,8 @@
           path: `/image-studio/artboards/${encodeURIComponent(artboardId)}`, payload,
           onSuccess: async (result) => {
             if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision artboard an toàn.");
-            await hydrateImageStudio();
-            await hydrateImageArtboard(artboardId);
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã lưu revision artboard mới.");
           }
         });
@@ -27902,8 +27915,8 @@
           onSuccess: async (result) => {
             const receipt = result.data && result.data.artboard && typeof result.data.artboard === "object" ? result.data.artboard : null;
             if (!imageStudioBoundaryIsSafe(result.data) || !receipt || !validImageStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái artboard an toàn.");
-            await hydrateImageStudio();
-            await hydrateImageArtboard(artboardId);
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã cập nhật trạng thái self-review.");
           }
         });
@@ -27919,8 +27932,8 @@
           path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
           onSuccess: async (result) => {
             if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version artboard an toàn.");
-            await hydrateImageStudio();
-            await hydrateImageArtboard(artboardId);
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã khôi phục version artboard thành revision mới.");
           }
         });
@@ -27939,8 +27952,8 @@
             if (!imageStudioBoundaryIsSafe(result.data) || !receipt || !validImageStudioDirectionId(receipt.id) || String(receipt.artboard_id || "") !== artboardId) {
               throw new Error("Máy chủ chưa trả receipt biến thể direction hợp lệ.");
             }
-            await hydrateImageStudio();
-            await hydrateImageArtboard(artboardId);
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã thêm biến thể direction riêng tư.");
           }
         });
@@ -27957,7 +27970,7 @@
           path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}`, payload,
           onSuccess: async (result) => {
             if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision biến thể direction an toàn.");
-            await hydrateImageArtboard(artboardId);
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã lưu revision biến thể direction mới.");
           }
         });
@@ -27975,8 +27988,8 @@
           payload: { expected_revision: expectedRevision },
           onSuccess: async (result) => {
             if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái biến thể direction an toàn.");
-            await hydrateImageStudio();
-            await hydrateImageArtboard(artboardId);
+            if (isImageStudioListViewPath(route)) await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã cập nhật biến thể direction.");
           }
         });
@@ -27994,7 +28007,7 @@
           payload: { expected_revision: expectedRevision, target_revision: targetRevision },
           onSuccess: async (result) => {
             if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version biến thể direction an toàn.");
-            await hydrateImageArtboard(artboardId);
+            await hydrateImageArtboard(artboardId, route);
             toast(result.message || "Đã khôi phục version biến thể direction thành revision mới.");
           }
         });
