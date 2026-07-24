@@ -7832,6 +7832,9 @@
       // it is neither an Asset Vault source blob nor a Bot delivery/job.
       documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, OPERATION_HISTORY_LIST_LIMIT) : [],
       documentOperationListing: normalizeOperationHistoryListing(source.documentOperationListing, DOCUMENT_OPERATION_HISTORY_KINDS, ""),
+      documentOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.documentOperationsReadState || ""))
+        ? String(source.documentOperationsReadState)
+        : "guarded",
       documentOperationsEnabled: source.documentOperationsEnabled === true,
       imageToPdfEnabled: source.imageToPdfEnabled === true,
       pdfToImagesEnabled: source.pdfToImagesEnabled === true,
@@ -18203,22 +18206,50 @@
   }
 
   function renderDocumentHub(page, context) {
-    const privateReady = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
+    const readState = String(context.documentOperationsReadState || "guarded");
+    const activePath = normalizePath(context && context.path || "/documents") === "/documents/pdf" ? "/documents/pdf" : "/documents";
+    if (!canView) {
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>Document Studio chỉ hiển thị lịch sử khi signed session, Asset Vault và storage Document Operations được máy chủ xác minh. Web không thay thế bằng Asset Vault, Bot job, provider hay output mô phỏng.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
+    }
+    if (readState === "loading") {
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử tài liệu private</h2><p>Web Workspace đang tải metadata Document Operations thuộc signed account hiện tại. Không hiển thị route trước, PWA cache, Asset Vault hay danh sách Bot trong khi chờ dữ liệu owner-scoped.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+    }
+    if (readState !== "ready") {
+      const retry = canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="document-operation-refresh" data-portal-route="${safeText(activePath)}">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải lịch sử tài liệu private</h2><p>Projection owner-scoped chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không thay bằng Asset Vault, Bot, provider, file preview hay URL công khai.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
+    }
     const cards = [
-      { href: "/documents/pdf-to-images", icon: "PNG", title: "PDF sang ảnh", text: "Render toàn bộ trang PDF ở 2×. Một trang trả PNG, nhiều trang trả ZIP private đã kiểm tra.", ready: Boolean(context.pdfToImagesEnabled) },
-      { href: "/documents/split", icon: "PDF", title: "Tách PDF", text: "Tạo một PDF mới từ một trang hoặc dải liên tiếp trong Asset Vault.", ready: true },
-      { href: "/documents/merge", icon: "PDF", title: "Gộp PDF", text: "Gộp tối đa 8 PDF private theo đúng thứ tự đã chọn.", ready: true },
-      { href: "/documents/compress", icon: "PDF", title: "Tối ưu PDF", text: "Chỉ phát một bản lossless khi kết quả nhỏ hơn đủ ý nghĩa.", ready: true },
-      { href: "/documents/image-to-pdf", icon: "ẢNH", title: "Ảnh sang PDF", text: "Tạo PDF từ JPEG/PNG/WebP private theo thứ tự trang có chủ đích.", ready: Boolean(context.imageToPdfEnabled) },
-      { href: "/documents/pdf-to-word", icon: "DOCX", title: "PDF có text → Word", text: "Trích xuất text có thể chọn thành DOCX; không OCR hoặc sao chép layout giả.", ready: Boolean(context.pdfToWordEnabled) },
-      { href: "/documents/ocr", icon: "OCR", title: "OCR ảnh", text: "Đọc text từ một ảnh Asset Vault và chỉ phát TXT private sau khi server xác minh output.", ready: Boolean(context.imageOcrEnabled) },
-      { href: "/documents/pdf-ocr", icon: "OCR", title: "OCR PDF", text: "Đọc text từ PDF private trong giới hạn tài nguyên an toàn của server và chỉ phát TXT đã xác minh.", ready: Boolean(context.pdfOcrEnabled) },
-      { href: "/documents/pdf-ocr-to-word", icon: "DOCX", title: "OCR PDF → Word", text: "Đọc PDF scan private bằng OCR server-side và chỉ phát DOCX đã xác minh; không có preview text.", ready: Boolean(context.pdfOcrWordEnabled) }
+      { group: "pdf", href: "/documents/split", icon: "PDF", title: "Tách PDF", text: "Tạo một PDF mới từ một trang hoặc dải liên tiếp trong Asset Vault.", ready: true },
+      { group: "pdf", href: "/documents/merge", icon: "PDF", title: "Gộp PDF", text: "Gộp tối đa 8 PDF private theo đúng thứ tự đã chọn.", ready: true },
+      { group: "pdf", href: "/documents/compress", icon: "PDF", title: "Tối ưu PDF", text: "Chỉ phát một bản lossless khi kết quả nhỏ hơn đủ ý nghĩa.", ready: true },
+      { group: "convert", href: "/documents/pdf-to-images", icon: "PNG", title: "PDF sang ảnh", text: "Render toàn bộ trang PDF ở 2×. Một trang trả PNG, nhiều trang trả ZIP private đã kiểm tra.", ready: Boolean(context.pdfToImagesEnabled) },
+      { group: "convert", href: "/documents/image-to-pdf", icon: "ẢNH", title: "Ảnh sang PDF", text: "Tạo PDF từ JPEG/PNG/WebP private theo thứ tự trang có chủ đích.", ready: Boolean(context.imageToPdfEnabled) },
+      { group: "convert", href: "/documents/pdf-to-word", icon: "DOCX", title: "PDF có text → Word", text: "Trích xuất text có thể chọn thành DOCX; không OCR hoặc sao chép layout giả.", ready: Boolean(context.pdfToWordEnabled) },
+      { group: "ocr", href: "/documents/ocr", icon: "OCR", title: "OCR ảnh", text: "Đọc text từ một ảnh Asset Vault và chỉ phát TXT private sau khi server xác minh output.", ready: Boolean(context.imageOcrEnabled) },
+      { group: "ocr", href: "/documents/pdf-ocr", icon: "OCR", title: "OCR PDF", text: "Đọc text từ PDF private trong giới hạn tài nguyên an toàn của server và chỉ phát TXT đã xác minh.", ready: Boolean(context.pdfOcrEnabled) },
+      { group: "ocr", href: "/documents/pdf-ocr-to-word", icon: "DOCX", title: "OCR PDF → Word", text: "Đọc PDF scan private bằng OCR server-side và chỉ phát DOCX đã xác minh; không có preview text.", ready: Boolean(context.pdfOcrWordEnabled) }
     ];
+    const workflowGroups = [
+      { key: "pdf", title: "PDF cơ bản", text: "Tách, gộp hoặc tối ưu một bản sao private đã được kiểm tra." },
+      { key: "convert", title: "Chuyển đổi", text: "Đổi định dạng khi server có pipeline và output phù hợp." },
+      { key: "ocr", title: "OCR & scan", text: "Đọc text bằng runtime local; chỉ phát output khi có kết quả thật." }
+    ];
+    const operations = documentOperationItems(context, "");
+    const listing = documentOperationHistoryListing(context);
+    const returned = Number(listing.pagination && listing.pagination.returned) || operations.length;
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    const activeCount = operations.filter((item) => ["queued", "processing"].includes(documentOperationState(item))).length;
+    const readyWorkflowCount = cards.filter((item) => item.ready).length;
     return `<article class="portal-page portal-document-hub">${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Document Studio</span><h2>Công cụ PDF có output thật, không form generic</h2><p>Chọn workflow phù hợp cho PDF của bạn. Mỗi công cụ chỉ đọc Asset Vault của signed account, xử lý trong storage cô lập và chỉ cho tải attachment sau khi server xác minh dữ liệu đầu ra.</p></div><dl><div><dt>${safeText(String(cards.filter((item) => item.ready && privateReady).length))}</dt><dd>Tiện ích private sẵn sàng</dd></div><div><dt>0</dt><dd>Bot job / provider call</dd></div></dl></section>
-      <section class="portal-module-grid">${cards.map((item) => `<a class="portal-module-card" href="${safeText(item.href)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(item.icon)}</div><div class="portal-module-copy"><div class="portal-module-heading"><h2>${safeText(item.title)}</h2>${badge(privateReady && item.ready ? "ready" : "guarded")}</div><p>${safeText(item.text)}</p><span class="portal-module-link">Mở workflow <b aria-hidden="true">→</b></span></div></a>`).join("")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có URL công khai, PWA cache, raw path browser, provider payload, Bot job, ví Xu, PayOS order hay webhook mới trong các tiện ích này. Nếu một runtime chưa bật, card giữ guarded thay vì tạo kết quả giả.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-document-operation-intro portal-document-board-summary" data-document-operations-board><div><span class="portal-section-kicker">Private Document Operations</span><h2>Bảng vận hành tài liệu, rõ nguồn và rõ kết quả</h2><p>Chọn workflow phù hợp, bắt đầu từ tài liệu private trong Asset Vault và theo dõi các artifact đã được server xác minh. Mỗi hàng chỉ thuộc signed account hiện tại; Web không tự suy diễn output, không hiển thị file cache hay thay thế bằng Bot job.</p></div><dl><div><dt>${safeText(String(readyWorkflowCount))}</dt><dd>Workflow private có contract</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>Artifact sẵn sàng tải</dd></div><div><dt>${safeText(String(activeCount || returned))}</dt><dd>${activeCount ? "Đang chờ xử lý an toàn" : "Lịch sử ở trang hiện tại"}</dd></div></dl></section>
+      <section class="portal-document-board-actions" aria-label="Bắt đầu Document Operations"><div class="portal-card-header"><div><h2 class="portal-card-title">Bắt đầu đúng nơi</h2><p class="portal-card-subtitle">Các liên kết này chỉ mở một workspace mới; chúng không chọn sẵn file, truyền trạng thái, query hoặc tự chạy thao tác.</p></div>${badge("read_only")}</div><div class="portal-document-board-action-grid"><a class="portal-document-board-action portal-document-board-action--primary" href="/asset-vault"><strong>Chuẩn bị nguồn private</strong><span>Lưu hoặc kiểm tra PDF, ảnh trong Asset Vault trước khi chọn một công cụ.</span><b aria-hidden="true">→</b></a><a class="portal-document-board-action" href="/document-workspace"><strong>Soạn và rà soát tài liệu</strong><span>Mở Document Workspace độc lập để viết, tổ chức và review nội dung trước khi xử lý.</span><b aria-hidden="true">→</b></a></div></section>
+      <section class="portal-card portal-card-pad portal-document-board-history" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Metadata đã được server giới hạn và owner-scope. Download chỉ xuất hiện khi output, integrity và ownership vẫn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="${safeText(activePath)}"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có thao tác tài liệu", "Khi một workflow tạo output private đã được server kiểm tra, metadata sẽ xuất hiện tại đây. Không có artifact, trạng thái hay download mô phỏng.")}${renderDocumentOperationHistoryPagination(context, canView, activePath)}</section>
+      <section class="portal-document-board-workflows"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn workflow</h2><p class="portal-card-subtitle">Mỗi workflow giữ input/output, giới hạn xử lý và delivery riêng. Trạng thái guarded không thể tạo kết quả thay thế.</p></div></div><div class="portal-document-board-workflow-groups">${workflowGroups.map((group) => { const items = cards.filter((item) => item.group === group.key); return `<section class="portal-document-board-workflow-group" aria-labelledby="document-workflow-${safeText(group.key)}"><div class="portal-document-board-workflow-heading"><div><h2 id="document-workflow-${safeText(group.key)}">${safeText(group.title)}</h2><p>${safeText(group.text)}</p></div><span>${safeText(String(items.filter((item) => item.ready).length))} workflow</span></div><div class="portal-module-grid">${items.map((item) => { const state = item.ready ? "ready" : "guarded"; return `<a class="portal-module-card" data-document-tool-state="${state}" href="${safeText(item.href)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(item.icon)}</div><div class="portal-module-copy"><div class="portal-module-heading"><h3>${safeText(item.title)}</h3>${badge(state)}</div><p>${safeText(item.text)}</p><span class="portal-module-link">${state === "ready" ? "Mở workflow" : "Xem điều kiện"} <b aria-hidden="true">→</b></span></div></a>`; }).join("")}</div></section>`; }).join("")}</div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có URL công khai, PWA cache, raw path browser, provider payload, Bot job, ví Xu, PayOS order hay webhook mới trong các tiện ích này. Nếu một runtime chưa bật, workflow giữ guarded thay vì tạo kết quả giả.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 

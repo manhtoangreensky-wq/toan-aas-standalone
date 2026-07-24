@@ -98,11 +98,17 @@ def image_bytes() -> bytes:
         image.close()
 
 
-def upload_pdf(client: TestClient, csrf: str) -> dict:
+def upload_pdf(
+    client: TestClient,
+    csrf: str,
+    *,
+    key: str = "history-pdf-source-0001",
+    display_name: str = "PDF pagination private",
+) -> dict:
     response = client.post(
         "/api/v1/asset-vault/upload",
-        headers={"X-CSRF-Token": csrf, "Idempotency-Key": "history-pdf-source-0001"},
-        data={"display_name": "PDF pagination private"},
+        headers={"X-CSRF-Token": csrf, "Idempotency-Key": key},
+        data={"display_name": display_name},
         files={"file": ("source.pdf", pdf_bytes(), "application/pdf")},
     )
     assert response.status_code == 200
@@ -125,6 +131,16 @@ def split_pdf(client: TestClient, csrf: str, asset_id: str, page: int) -> dict:
         "/api/v1/document-operations/pdf-split",
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_id": asset_id, "page_range": str(page), "idempotency_key": f"history-pdf-split-{page:04d}"},
+    )
+    assert response.status_code == 200
+    return response.json()["data"]["operation"]
+
+
+def merge_pdfs(client: TestClient, csrf: str, asset_ids: list[str]) -> dict:
+    response = client.post(
+        "/api/v1/document-operations/pdf-merge",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_ids": asset_ids, "idempotency_key": "history-pdf-merge-0001"},
     )
     assert response.status_code == 200
     return response.json()["data"]["operation"]
@@ -231,10 +247,33 @@ def test_document_operation_history_paginates_owner_scoped_redacted_rows(tmp_pat
         for offset in ("-1", "10001", "not-an-offset"):
             assert client.get(f"/api/v1/document-operations?kind=pdf_split&limit=2&offset={offset}").status_code == 422
 
+        # The canonical Document Operations Board intentionally omits `kind`.
+        # It must receive a newest-first, owner-scoped combined list without
+        # exposing internal failure metadata or a different account's rows.
+        second_source = upload_pdf(
+            client,
+            csrf,
+            key="history-pdf-source-0002",
+            display_name="PDF merge pagination private",
+        )
+        merge_operation = merge_pdfs(client, csrf, [source["id"], second_source["id"]])
+        make_listing_order(db_path, "web_document_operations", [*operations, merge_operation], secret)
+        combined = client.get("/api/v1/document-operations?limit=4&offset=0")
+        data = assert_paged_response(
+            combined,
+            [merge_operation["id"], operations[2]["id"], operations[1]["id"], operations[0]["id"]],
+            has_more=False,
+            next_offset=None,
+            secret=secret,
+        )
+        assert {item["kind"] for item in data["items"]} == {"pdf_split", "pdf_merge"}
+
     with make_client(tmp_path, monkeypatch) as other:
         register_and_login(other, "document-history-other@example.com")
         hidden = other.get("/api/v1/document-operations?kind=pdf_split&limit=2&offset=0")
         assert_paged_response(hidden, [], has_more=False, next_offset=None, secret=secret)
+        combined_hidden = other.get("/api/v1/document-operations?limit=4&offset=0")
+        assert_paged_response(combined_hidden, [], has_more=False, next_offset=None, secret=secret)
 
 
 def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross_owner_leaks(tmp_path, monkeypatch) -> None:

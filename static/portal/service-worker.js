@@ -84,6 +84,10 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/asset-vault",
   "/video/preview",
   "/" + "api/v1/document-operations",
+  // Document Studio now includes an owner-scoped combined operation history.
+  // Keep the entire route family explicit so a future shell expansion cannot
+  // replay a prior account's operation metadata after sign-out or switching.
+  "/documents",
   "/documents/ocr",
   "/documents/pdf-ocr",
   "/documents/pdf-ocr-to-word",
