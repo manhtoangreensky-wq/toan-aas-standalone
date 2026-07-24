@@ -10739,9 +10739,12 @@
   function renderContentStudioPagination(listing) {
     return renderMemoryPagination(listing, "content brief", "content-studio-page", "/content-studio", "data-content-studio-offset", "portal-content-studio-pagination");
   }
-  function contentStudioKindFromQuery() {
+  function contentStudioQueryKind() {
     const raw = String(new URLSearchParams(window.location.search || "").get("kind") || "").trim().toLowerCase();
-    return CONTENT_STUDIO_KINDS.some(([key]) => key === raw) ? raw : "caption_hashtag";
+    return CONTENT_STUDIO_KINDS.some(([key]) => key === raw) ? raw : "";
+  }
+  function contentStudioKindFromQuery() {
+    return contentStudioQueryKind() || "caption_hashtag";
   }
   function contentStudioReferenceOptions(context, key) {
     const refs = context && context.contentStudioReferences && typeof context.contentStudioReferences === "object" ? context.contentStudioReferences : {};
@@ -10807,27 +10810,110 @@
       .filter((item) => item && validContentBriefId(item.id))
       .slice(0, 50);
   }
+
+  function contentStudioEventLabel(value) {
+    return ({
+      brief_created: "Đã tạo brief",
+      brief_updated: "Đã lưu revision brief",
+      brief_archived: "Đã archive brief",
+      brief_restored: "Đã khôi phục brief",
+      brief_duplicated: "Đã nhân bản brief",
+      brief_version_restored: "Đã khôi phục revision brief",
+      brief_composed_local: "Đã tạo khung nháp cục bộ",
+      variant_created: "Đã thêm content piece",
+      variant_updated: "Đã lưu content piece",
+      variant_archived: "Đã archive content piece",
+      variant_restored: "Đã khôi phục content piece",
+      variant_duplicated: "Đã nhân bản content piece",
+      variant_version_restored: "Đã khôi phục revision piece",
+      variant_composed_local: "Đã tạo piece nháp cục bộ",
+      variant_selected: "Đã chọn content piece",
+      variant_selected_without_snapshot: "Đã chọn content piece"
+    })[String(value || "")] || "Đã cập nhật Content Studio";
+  }
+
+  function contentStudioBoardEvents(context) {
+    return (Array.isArray(context && context.contentStudioEvents) ? context.contentStudioEvents : [])
+      .filter((item) => item && typeof item === "object" && validContentBriefId(item.brief_id))
+      .slice(0, 8);
+  }
+
+  function renderContentStudioBoardActivity(items) {
+    if (!items.length) {
+      return renderEmpty(
+        "Chưa có hoạt động Content Studio",
+        "Khi một brief hoặc content piece được server xác nhận, timeline chỉ hiển thị nhãn thao tác, revision và thời điểm. Không có text brief, reference, Bot state hoặc provider payload.",
+        "○"
+      );
+    }
+    return `<ol class="portal-content-operations-activity" aria-label="Hoạt động Content Studio gần đây">${items.map((item) => `<li><span aria-hidden="true"></span><div><strong>${safeText(contentStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></div></li>`).join("")}</ol>`;
+  }
+
+  function renderContentStudioKindBoard(canCreate) {
+    const cards = CONTENT_STUDIO_KINDS.map(([kind, label], index) => {
+      const content = `<span>${safeText(String(index + 1).padStart(2, "0"))}</span><strong>${safeText(label)}</strong><small>${canCreate ? "Tạo brief mới" : "Cần quyền tạo brief"}</small>`;
+      return canCreate
+        ? `<a class="portal-content-operations-kind-card" data-content-kind="${safeText(kind)}" href="/content-studio/new?kind=${encodeURIComponent(kind)}">${content}</a>`
+        : `<div class="portal-content-operations-kind-card portal-content-operations-kind-card--guarded" data-content-kind="${safeText(kind)}">${content}</div>`;
+    }).join("");
+    return `<section class="portal-content-operations-kinds" aria-labelledby="content-operations-kinds-title"><div class="portal-card-header"><div><span class="portal-section-kicker">Bắt đầu có chủ đích</span><h2 class="portal-card-title" id="content-operations-kinds-title">Chọn loại brief trước khi viết</h2><p class="portal-card-subtitle">${canCreate ? "Mỗi lựa chọn chỉ mở form Content Brief mới với một loại allowlist. Không có text, brief ID, state Bot hay lệnh publish được truyền sang route mới." : "Bạn đang có quyền xem Content Studio. Các loại brief vẫn được giải thích rõ, nhưng không được giả là thao tác có thể tạo khi signed session chưa có quyền write."}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><div class="portal-content-operations-kind-grid">${cards}</div></section>`;
+  }
+
+  function renderContentStudioAuthoring(page, context, canCreate) {
+    const route = String(page.routePath || page.path || "/content-studio/new");
+    const draft = transientFormValues(route);
+    // An explicit allowlisted card choice must win over an in-memory draft.
+    // This prevents a prior Caption draft from silently turning a new
+    // Storyboard brief into the wrong kind. Invalid/missing query values still
+    // retain the current draft kind or use the canonical safe default.
+    const requestedKind = contentStudioQueryKind();
+    const values = contentStudioValues({ ...draft, content_kind: requestedKind || draft.content_kind || contentStudioKindFromQuery() });
+    return `<article class="portal-page portal-content-studio portal-content-studio-authoring">${renderHero(page, context)}
+      <section class="portal-content-operations-authoring-intro"><div><span class="portal-section-kicker">New private brief</span><h2>Một brief rõ ý định, dễ review và có lịch sử riêng.</h2><p>Form này chỉ tạo authoring record thuộc signed Web account hiện tại. Sau khi server kiểm tra CSRF, ownership, policy, idempotency và revision, bạn sẽ tiếp tục tại brief detail riêng tư.</p></div><div class="portal-content-operations-authoring-actions"><a class="portal-button portal-button--quiet" href="/content-studio">Về Content Operations Board</a><span>Không có AI request, job, charge, publish hoặc delivery.</span></div></section>
+      <div class="portal-content-operations-authoring-layout"><section class="portal-card portal-card-pad portal-content-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo Content Brief</h2><p class="portal-card-subtitle">Lưu ngữ cảnh, ràng buộc và reference owner-scoped. Chọn loại brief trước, sau đó điền nội dung nguyên bản cần review.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(contentStudioFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập token, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách. Một lần lưu tạo một brief riêng tư, không tạo output hay publish.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo brief riêng tư</button></div></form></section>${renderContentStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Đường đi của dữ liệu được giữ riêng</strong><p>Reference chỉ được chọn từ danh sách server-side thuộc account hiện tại. Browser không tự mang dữ liệu qua Bot, provider, ví Xu, PayOS, webhook, URL công khai hoặc PWA cache.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderContentStudio(page, context) {
+    const route = String(page.routePath || page.path || "/content-studio");
+    const authoringRoute = route === "/content-studio/new";
+    const pageClass = authoringRoute ? "portal-content-studio-authoring" : "portal-content-operations-board";
     const canView = Boolean(context.capabilities && context.capabilities["content-studio-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["content-studio-create"] === true);
-    if (!canView) return `<article class="portal-page portal-content-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Content Studio đang được bảo vệ", "Đăng nhập bằng signed session để mở workspace authoring riêng tư.", ICONS.prompt)}</section></article>`;
+    const canRefresh = Boolean(context.capabilities && context.capabilities["content-studio-refresh"] === true);
+    const readState = String(context.contentStudioReadState || "guarded");
+    if (!canView) return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><div><h2>Content Studio đang được bảo vệ</h2><p>Chỉ signed Web session mới có thể mở brief, reference, history hoặc activity thuộc account hiện tại. Web không thay bằng dữ liệu Telegram, Bot, provider hay browser cache.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh Content Studio riêng tư</h2><p>Web Workspace đang tải summary, policy, reference, brief và activity owner-scoped của signed account. Không hiển thị dữ liệu cũ, list Bot hoặc fallback browser trong khi chờ máy chủ.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không có Bot fallback</span><span>Policy server-side</span></div></div></div></section></article>`;
+    if (readState !== "ready") {
+      const retry = canRefresh ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="content-studio-refresh" data-portal-route="${safeText(route)}">Thử lại dữ liệu private</button></div>` : "";
+      return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải Content Studio riêng tư</h2><p>Máy chủ chưa trả projection owner-scoped an toàn nên Web đã xóa state cũ. Không thay dữ liệu bằng prompt, brief, activity, callback Telegram, provider hay output mô phỏng.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có bridge fallback</span><span>Không có publish giả</span></div>${retry}</div></div></section></article>`;
+    }
+    if (authoringRoute) return renderContentStudioAuthoring(page, context, canCreate);
     const summary = context.contentStudioSummary && typeof context.contentStudioSummary === "object" ? context.contentStudioSummary : {};
     const briefs = summary.briefs && typeof summary.briefs === "object" ? summary.briefs : {};
     const variants = summary.variants && typeof summary.variants === "object" ? summary.variants : {};
-    const draft = transientFormValues(page.routePath || page.path);
-    const values = contentStudioValues({ ...draft, content_kind: draft.content_kind || contentStudioKindFromQuery() });
     const listing = contentStudioListing(context);
     const filter = listing.filters;
+    const items = contentBriefItems(context);
+    const events = contentStudioBoardEvents(context);
+    const returned = Number(listing.pagination && listing.pagination.returned) || items.length;
+    const startAction = canCreate
+      ? `<a class="portal-button portal-button--primary" href="/content-studio/new">Tạo Content Brief</a>`
+      : `<div class="portal-content-operations-create-guard" role="status"><strong>Chỉ có quyền xem</strong><span>Signed session hiện tại chưa có quyền tạo brief. Các thao tác tạo được giữ không thể bấm thay vì mở một form bị vô hiệu.</span></div>`;
     const filterFields = [
       { name: "q", label: "Tìm brief", placeholder: "Tên, chủ đề hoặc brief…", maxLength: 100, wide: true },
       { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
       { name: "content_kind", label: "Loại", control: "select", options: CONTENT_STUDIO_KINDS, emptyLabel: "Tất cả loại" },
       { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
     ];
-    return `<article class="portal-page portal-content-studio">${renderHero(page, context)}
-      <section class="portal-content-studio-intro"><div><span class="portal-section-kicker">Creative Content Workspace</span><h2>Biến brief thành content có cấu trúc, dễ review và dễ tiếp tục</h2><p>Quản lý caption, hook, script, storyboard và content pack trong workspace riêng tư có version history. Mọi khung nháp cần được biên tập và xác minh trước khi dùng bên ngoài.</p></div><dl><div><dt>${safeText(String(Number(briefs.active || 0)))}</dt><dd>Brief đang hoạt động</dd></div><div><dt>${safeText(String(Number(variants.active || 0)))}</dt><dd>Content pieces</dd></div><div><dt>${safeText(String(Number(briefs.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
-      <div class="portal-content-studio-layout"><section class="portal-card portal-card-pad portal-content-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo content brief</h2><p class="portal-card-subtitle">Lưu ngữ cảnh, ràng buộc và reference theo signed account. Không có AI request, job hoặc publish.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(contentStudioFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Nhập nội dung nguyên bản; không nhập token, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo brief</button></div></form></section>${renderContentStudioPolicy(context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục brief</h2><p class="portal-card-subtitle">List chỉ chứa metadata/excerpt riêng tư; nội dung đầy đủ chỉ nạp khi owner mở brief.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-refresh" data-portal-route="/content-studio">Làm mới</button></div><form class="portal-content-studio-filter" data-portal-form data-portal-no-transient data-portal-action="content-studio-filter" data-portal-route="/content-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-filter-clear" data-portal-route="/content-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm brief</button></div></div></form>${renderContentBriefCards(contentBriefItems(context))}${renderContentStudioPagination(listing)}</section>
+    return `<article class="portal-page portal-content-studio portal-content-operations-board">${renderHero(page, context)}
+      <section class="portal-content-operations-summary" data-content-operations-board><div><span class="portal-section-kicker">Private content operations</span><h2>Giữ brief, review và phiên bản đi đúng luồng.</h2><p>Content Operations Board dùng Content Studio canonical đã có để điều phối authoring của account hiện tại. Mọi nội dung đầy đủ chỉ mở trong brief detail sau khi server owner-check; board không chạy AI, job, payment, publish hay delivery.</p></div><dl><div><dt>${safeText(String(Number(briefs.active || 0)))}</dt><dd>Brief đang hoạt động</dd></div><div><dt>${safeText(String(Number(variants.active || 0)))}</dt><dd>Content pieces active</dd></div><div><dt>${safeText(String(returned))}</dt><dd>Brief ở trang hiện tại</dd></div></dl></section>
+      <section class="portal-content-operations-primary"><div><span class="portal-section-kicker">Tạo mới</span><h2>Bắt đầu từ brief, không từ một form chung.</h2><p>Chọn loại nội dung, mở form riêng và để server thiết lập lifecycle authoring. Route mới không nhận ID, text hay trạng thái từ board.</p></div>${startAction}</section>
+      ${renderContentStudioKindBoard(canCreate)}
+      <div class="portal-content-operations-workspace"><section class="portal-card portal-card-pad portal-content-operations-briefs"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped library</span><h2 class="portal-card-title">Tìm và tiếp tục brief</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata và excerpt được server giới hạn. Mở brief để máy chủ kiểm tra lại owner, revision và history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-refresh" data-portal-route="/content-studio"${canRefresh ? "" : " disabled"}>Làm mới</button></div><form class="portal-content-studio-filter" data-portal-form data-portal-no-transient data-portal-action="content-studio-filter" data-portal-route="/content-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại; không được đưa vào URL, Telegram hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-filter-clear" data-portal-route="/content-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm brief</button></div></div></form>${renderContentBriefCards(items)}${renderContentStudioPagination(listing)}</section>
+        <section class="portal-card portal-card-pad portal-content-operations-activity-card" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe activity</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không đưa nội dung brief, reference hay payload vào timeline.</p></div></div>${renderContentStudioBoardActivity(events)}</section></div>
+      <div class="portal-content-operations-boundary-grid">${renderContentStudioPolicy(context)}<section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có callback Telegram, Bot creative state, provider request, Xu ledger, PayOS order, webhook, publish hay output giả trong board này. Mỗi công cụ liên quan vẫn có route và contract riêng.</p></div></div>${renderNotes(page)}</section></div>
     </article>`;
   }
   function renderContentStudioDetail(page, context) {

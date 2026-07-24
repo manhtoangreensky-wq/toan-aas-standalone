@@ -42,6 +42,7 @@ def test_content_studio_hydrates_and_mutates_only_via_owner_scoped_api() -> None
         "contentStudioListOffset",
         "contentStudioListPath",
         "contentStudioListingProjection",
+        "hydrateContentStudioAuthoring",
         "hydrateContentStudio",
         "hydrateContentBrief",
         "hydrateContentVariantHistory",
@@ -116,6 +117,9 @@ def test_content_studio_keeps_private_authoring_out_of_bot_and_pwa_paths() -> No
     assert "charge_started\": False" in ROUTER
 
     assert "/api/v1/content-studio" in SERVICE_WORKER
+    private_prefixes = SERVICE_WORKER.split("const PRIVATE_PATH_PREFIXES = Object.freeze([", 1)[1].split("]);", 1)[0]
+    assert '"/content-studio"' in private_prefixes
+    assert '"/" + "api/v1/content-studio"' in private_prefixes
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/content-studio" not in shell
     assert '"/content-studio"' not in shell
@@ -162,6 +166,7 @@ def test_content_studio_private_reads_ignore_stale_session_route_and_variant_res
     for epoch in (
         "contentStudioSessionEpoch",
         "contentStudioListHydrationEpoch",
+        "contentStudioAuthoringHydrationEpoch",
         "contentStudioDetailHydrationEpoch",
         "contentStudioVariantHistoryHydrationEpoch",
     ):

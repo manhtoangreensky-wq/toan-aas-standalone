@@ -340,6 +340,7 @@
   // signed account, a newer record or a route change.
   let contentStudioSessionEpoch = 0;
   let contentStudioListHydrationEpoch = 0;
+  let contentStudioAuthoringHydrationEpoch = 0;
   let contentStudioDetailHydrationEpoch = 0;
   let contentStudioVariantHistoryHydrationEpoch = 0;
   // Audio Library collections, Asset Vault audio metadata and authored
@@ -12240,6 +12241,7 @@
     consultationCrmConfirmInFlight = false;
     ++contentStudioSessionEpoch;
     ++contentStudioListHydrationEpoch;
+    ++contentStudioAuthoringHydrationEpoch;
     ++contentStudioDetailHydrationEpoch;
     ++contentStudioVariantHistoryHydrationEpoch;
     ++mediaWorkspaceSessionEpoch;
@@ -13291,7 +13293,8 @@
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
-    if (account && contentStudioEnabled && ["/content-studio", "/content-studio/new"].includes(currentPath)) await hydrateContentStudio();
+    if (account && contentStudioEnabled && currentPath === "/content-studio") await hydrateContentStudio();
+    else if (account && contentStudioEnabled && currentPath === "/content-studio/new") await hydrateContentStudioAuthoring();
     else if (account && contentStudioEnabled && contentBriefIdFromPath(currentPath)) await hydrateContentBrief(contentBriefIdFromPath(currentPath));
     else if (isNativeContentStudioPath(currentPath)) {
       merge({
@@ -14744,20 +14747,58 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  async function hydrateContentStudioAuthoring() {
+    // `/content-studio/new` needs the signed policy/reference selectors to
+    // create a brief. It deliberately does not wait for the board's summary,
+    // list or activity feeds: an optional timeline failure must not make a
+    // healthy owner-scoped authoring contract look unavailable.
+    const route = "/content-studio/new";
+    const requestEpoch = ++contentStudioAuthoringHydrationEpoch;
+    const sessionEpoch = contentStudioSessionEpoch;
+    if (currentPortalPath() !== route) return { stale: true };
+    const emptyListing = contentStudioListingProjection({ q: "", tag: "", content_kind: "", state: "all" }, 0, {}, 0);
+    try {
+      const [policyResult, referencesResult] = await Promise.all([
+        api("/content-studio/policy"),
+        api("/content-studio/references")
+      ]);
+      if (!contentStudioRequestIsCurrent(requestEpoch, contentStudioAuthoringHydrationEpoch, sessionEpoch, route)) return { stale: true };
+      const policy = policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {};
+      const references = referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {};
+      merge({
+        contentStudioSummary: {}, contentBriefs: [], contentBriefDetail: {}, contentVariantHistory: {}, contentStudioComposer: {},
+        contentStudioEvents: [], contentStudioFilter: { q: "", tag: "", content_kind: "", state: "all" }, contentStudioListing: emptyListing,
+        contentStudioPolicy: policy,
+        contentStudioReferences: references,
+        contentStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/content-studio": "guarded", [route]: "ready" }
+      });
+      return { policy, references };
+    } catch (_) {
+      if (!contentStudioRequestIsCurrent(requestEpoch, contentStudioAuthoringHydrationEpoch, sessionEpoch, route)) return { stale: true };
+      merge({
+        contentStudioSummary: {}, contentBriefs: [], contentBriefDetail: {}, contentVariantHistory: {}, contentStudioComposer: {},
+        contentStudioReferences: {}, contentStudioEvents: [], contentStudioPolicy: {}, contentStudioFilter: { q: "", tag: "", content_kind: "", state: "all" },
+        contentStudioListing: emptyListing, contentStudioReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/content-studio": "guarded", [route]: "guarded" }
+      });
+      return { policy: {}, references: {} };
+    }
+  }
+
   async function hydrateContentStudio(filterValue, offsetValue) {
     const path = currentPortalPath();
     const requestEpoch = ++contentStudioListHydrationEpoch;
     const sessionEpoch = contentStudioSessionEpoch;
-    const listView = path === "/content-studio" || path === "/content-studio/new";
-    if (!listView) return { stale: true };
+    if (path !== "/content-studio") return { stale: true };
     const priorListing = base().contentStudioListing && typeof base().contentStudioListing === "object"
       ? base().contentStudioListing
       : contentStudioListingProjection({ q: "", tag: "", content_kind: "", state: "all" }, 0, {}, 0);
     const priorPagination = priorListing.pagination && typeof priorListing.pagination === "object" ? priorListing.pagination : {};
     const filter = contentStudioFilterPayload(filterValue === undefined
-      ? (listView ? (priorListing.filters || base().contentStudioFilter) : { q: "", tag: "", content_kind: "", state: "all" })
+      ? (priorListing.filters || base().contentStudioFilter)
       : filterValue);
-    const offset = contentStudioListOffset(offsetValue === undefined ? (listView ? priorPagination.offset : 0) : offsetValue);
+    const offset = contentStudioListOffset(offsetValue === undefined ? priorPagination.offset : offsetValue);
     try {
       const [summaryResult, policyResult, briefsResult, eventsResult, referencesResult] = await Promise.all([
         api("/content-studio/summary"),
@@ -25468,6 +25509,7 @@
       if (action === "content-studio-refresh") {
         const briefId = contentBriefIdFromPath(route);
         if (briefId) await hydrateContentBrief(briefId);
+        else if (route === "/content-studio/new") await hydrateContentStudioAuthoring();
         else await hydrateContentStudio();
         toast("Đã làm mới Creative Content Studio của Web account hiện tại.");
         return;
@@ -25481,7 +25523,7 @@
             const receipt = result.data && result.data.brief && typeof result.data.brief === "object" ? result.data.brief : null;
             const briefId = receipt && validContentBriefId(receipt.id) ? String(receipt.id) : "";
             if (!briefId || !validContentStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt Content Studio brief hợp lệ.");
-            await hydrateContentStudio();
+            await hydrateContentStudioAuthoring();
             toast(result.message || "Đã tạo Content Studio brief riêng tư.");
             window.location.assign(`/content-studio/${encodeURIComponent(briefId)}`);
           }

@@ -108,7 +108,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // prior account's snapshot in Cache Storage, even though it is read-only.
   "/" + "api/v1/guides",
   "/guides",
+  // Content Operations Board projects signed-account summary, activity,
+  // references and brief metadata. Keep the canonical page family explicit so
+  // a future public-shell expansion cannot replay a prior account's content.
   "/" + "api/v1/content-studio",
+  "/content-studio",
   "/" + "api/v1/channel-strategy",
   "/content/channel-strategy",
   "/" + "api/v1/content-handoffs",
