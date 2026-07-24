@@ -886,6 +886,20 @@ class ComposeRequest(BaseModel):
     expected_revision: int = Field(ge=1, le=1_000_000)
 
 
+class CollectionReviewPackRequest(BaseModel):
+    """Read-like request for a deterministic, non-persistent review pack.
+
+    The server already owns the collection brief, policy marker and attached
+    reference metadata.  The browser therefore supplies only the revision it
+    currently sees; it cannot smuggle a new brief, a Bot callback, a source
+    URL, a provider selection or a faux approval into this endpoint.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: StrictInt = Field(ge=1, le=1_000_000)
+
+
 class MediaItemPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -1030,6 +1044,169 @@ def _composer_directions(snapshot: dict[str, Any]) -> list[dict[str, str]]:
         )
         output.append({"title": title, "intent": intent, "prompt": prompt[:2_400]})
     return output
+
+
+COLLECTION_REVIEW_PACK_SECTION_IDS = (
+    "brief_originality",
+    "reference_metadata",
+    "mix_accessibility",
+    "release_handoff",
+)
+
+
+def _collection_review_pack_boundary() -> dict[str, bool | str]:
+    """State the exact no-execution boundary of the collection review pack.
+
+    This is a deterministic, owner-scoped inspection of already stored Web
+    metadata.  It is deliberately not a player, license clearance, provider
+    quote, job, delivery or Bot compatibility layer.  Keeping every boundary
+    literal lets the Portal reject a malformed response rather than presenting
+    a planning receipt as a completed audio operation.
+    """
+
+    return {
+        "execution": "web_native_collection_review_only",
+        "collection_mutated": False,
+        "review_pack_persisted": False,
+        "approval_recorded": False,
+        "input_persisted": False,
+        "source_audio_inspected": False,
+        "source_video_inspected": False,
+        "provider_called": False,
+        "catalog_searched": False,
+        "player_opened": False,
+        "preview_created": False,
+        "audio_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "delivery_created": False,
+        "bot_called": False,
+        "telegram_called": False,
+        "rights_verified": False,
+        "release_approved": False,
+    }
+
+
+def _collection_review_pack_guard(*, message: str, error_code: str) -> dict[str, Any]:
+    """Return a bounded guard with no source/rights text echoed back."""
+
+    return envelope(
+        False,
+        message,
+        data=_collection_review_pack_boundary(),
+        status_name="guarded",
+        error_code=error_code,
+    )
+
+
+def _collection_review_reference_summary(
+    conn: Any,
+    *,
+    collection_id: str,
+    account_id: str,
+    rights_note_declared: bool,
+) -> dict[str, int | bool]:
+    """Return only counts/flags for an owner's attached references.
+
+    A review receipt must never leak filenames, asset IDs, raw licenses,
+    attribution, paths, URLs, digests or collection brief text.  The query is
+    intentionally narrower than ``_collection_detail`` for that reason.
+    """
+
+    rows = conn.execute(
+        """SELECT i.role, i.favorite, i.user_declared_duration_seconds,
+                  i.attribution, i.license_note,
+                  a.id, a.state, a.extension, a.content_type
+           FROM web_media_items AS i
+           LEFT JOIN web_asset_files AS a
+             ON a.id=i.asset_id AND a.account_id=i.account_id
+           WHERE i.collection_id=? AND i.account_id=?""",
+        (collection_id, account_id),
+    ).fetchall()
+    role_counts = {"music": 0, "sfx": 0, "reference": 0}
+    favorite = duration_declared = attribution_missing = license_missing = unavailable = 0
+    for row in rows:
+        role = str(row[0] or "")
+        if role in role_counts:
+            role_counts[role] += 1
+        favorite += int(bool(row[1]))
+        duration_declared += int(row[2] is not None)
+        attribution_missing += int(not str(row[3] or "").strip())
+        license_missing += int(not str(row[4] or "").strip())
+        asset_active = bool(row[5]) and str(row[6] or "") == "active" and _is_audio_asset(row[7], row[8])
+        unavailable += int(not asset_active)
+    return {
+        "total": len(rows),
+        **role_counts,
+        "favorite": favorite,
+        "duration_declared": duration_declared,
+        "attribution_missing": attribution_missing,
+        "license_missing": license_missing,
+        "unavailable": unavailable,
+        "collection_rights_note_declared": rights_note_declared,
+    }
+
+
+def _collection_review_pack(snapshot: dict[str, Any], summary: dict[str, int | bool]) -> dict[str, Any]:
+    """Build a finite review checklist without exposing the saved source.
+
+    The result deliberately uses only state/count signals.  It does not infer
+    whether a right is valid, a reference is licensed, audio has been heard or
+    a release has been approved; those require a real human and a separately
+    authorized delivery workflow.
+    """
+
+    has_brief = bool(str(snapshot.get("creative_brief") or "").strip())
+    metadata_gap = (
+        int(summary["total"]) < 1
+        or int(summary["attribution_missing"]) > 0
+        or int(summary["license_missing"]) > 0
+        or int(summary["unavailable"]) > 0
+        or not bool(summary["collection_rights_note_declared"])
+    )
+    review_state = "needs_brief" if not has_brief else "needs_reference_metadata" if metadata_gap else "human_review_required"
+    checks = [
+        {
+            "id": "brief_originality",
+            "state": "needs_human_review" if has_brief else "needs_input",
+            "label": "Brief và tính nguyên bản",
+            "note": "Kiểm tra brief mô tả ý định gốc, không mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng cụ thể.",
+        },
+        {
+            "id": "reference_metadata",
+            "state": "needs_human_review" if not metadata_gap else "needs_metadata",
+            "label": "Reference và metadata",
+            "note": "Rà soát attribution, license, trạng thái tệp và bối cảnh dùng cho từng reference trước khi chọn nguồn âm thanh.",
+        },
+        {
+            "id": "mix_accessibility",
+            "state": "needs_human_review",
+            "label": "Mix và khả năng tiếp cận",
+            "note": "Người biên tập cần kiểm tra nhạc không che lời đọc, CTA, phụ đề, cảnh báo hoặc thông tin pháp lý trên media thật.",
+        },
+        {
+            "id": "release_handoff",
+            "state": "needs_human_review",
+            "label": "Bàn giao phát hành",
+            "note": "Xác nhận quyền, thương hiệu, consent và yêu cầu phát hành tại workflow được cấp riêng; review này không phê duyệt hay bàn giao output.",
+        },
+    ]
+    if [item["id"] for item in checks] != list(COLLECTION_REVIEW_PACK_SECTION_IDS):
+        raise RuntimeError("Collection review checklist không nhất quán")
+    return {
+        "review_state": review_state,
+        "policy": {"status": "clear", "marker": None},
+        "reference_summary": summary,
+        "checks": checks,
+        "cautions": [
+            "Gói review chỉ tổng hợp metadata Web theo collection hiện tại; nó không phát, phân tích hoặc xác minh bất kỳ tệp audio nào.",
+            "Attribution, license và ghi chú quyền là thông tin tự khai báo. Không trạng thái nào trong gói này là xác nhận quyền thương mại hoặc clearance.",
+            "Không có provider, catalog, preview, audio output, job, ví Xu, thanh toán, Bot hoặc Telegram delivery trong thao tác review này.",
+        ],
+    }
 
 
 def _music_prompt_composer_line(
@@ -2675,6 +2852,63 @@ async def compose_collection_brief(collection_id: str, payload: ComposeRequest, 
             "execution": "local_deterministic_draft_only",
             "provider_called": False,
             "charge_started": False,
+        },
+        status_name="draft",
+    )
+
+
+@router.post("/collections/{collection_id}/review-pack")
+async def review_collection_pack(
+    collection_id: str,
+    payload: CollectionReviewPackRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Build one transient, collection-scoped review checklist.
+
+    Apart from the normal signed-session ``last_seen`` touch performed by the
+    authentication dependency before this handler, this intentionally makes no
+    review/domain write—not even an idempotency/event/audit record—because a
+    new review receipt is never an approval, delivery or durable state
+    transition.  The handler reads only the signed owner's collection and
+    attached-reference metadata, returns counts/finite text, and never sends
+    the saved brief, rights note, license note, Asset Vault identifier, file
+    name, URL or storage data back to the browser.
+    """
+
+    _require_enabled()
+    collection_id = _uuid(collection_id, label="Collection ID")
+    account_id = str(account["id"])
+    with read_transaction() as conn:
+        row = _collection_row(conn, collection_id=collection_id, account_id=account_id)
+        if not row:
+            return _collection_not_found()
+        if int(row[11]) != payload.expected_revision:
+            return _revision_conflict()
+        if str(row[10]) != "active":
+            return _collection_review_pack_guard(
+                message="Collection đã archive. Hãy khôi phục trước khi lập gói review.",
+                error_code="WEB_MEDIA_COLLECTION_ARCHIVED",
+            )
+        snapshot = _snapshot_from_row(row)
+        if str(snapshot.get("policy_marker") or "") or _music_prompt_composer_marker(snapshot.get("creative_brief")):
+            return _collection_review_pack_guard(
+                message="Brief cần được chỉnh theo hướng nguyên bản trước khi lập gói review. Web không xác nhận mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng.",
+                error_code="WEB_AUDIO_REVIEW_PACK_POLICY_GUARD",
+            )
+        summary = _collection_review_reference_summary(
+            conn,
+            collection_id=collection_id,
+            account_id=account_id,
+            rights_note_declared=bool(str(snapshot.get("rights_note") or "").strip()),
+        )
+    return envelope(
+        True,
+        "Đã lập gói review theo collection hiện tại. Gói này chỉ là checklist Web-native, không tạo audio, approval hoặc delivery.",
+        data={
+            "collection_id": collection_id,
+            "revision": int(row[11]),
+            "review_pack": _collection_review_pack(snapshot, summary),
+            **_collection_review_pack_boundary(),
         },
         status_name="draft",
     )

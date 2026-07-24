@@ -43,6 +43,11 @@ The board renders three auditable lanes:
    and Audio Operations. These links do not prefill or carry collection,
    asset or account data through URL/query, browser storage or an implicit
    operation.
+4. **Collection review pack** — an explicit, revision-bound metadata
+   checklist available only on `/audio-hub/{collection_id}`. It calls the
+   existing Media Workspace namespace and returns no approval, source-audio
+   inspection, provider/catalog/player/preview/job/payment/output/delivery or
+   Telegram result.
 
 ## Security and lifecycle guarantees
 
@@ -59,6 +64,10 @@ The board renders three auditable lanes:
 - The board never claims that music/SFX was generated, previewed, delivered,
   rendered, charged or completed. Provider, Bot, Key4U, Suno, PayOS, wallet/Xu
   and job state stay outside this module.
+- The review pack is a transient read-like POST with CSRF and exact revision
+  checking. It records no collection mutation, history, idempotency/event/audit
+  receipt or new Audio Hub data authority; it exposes counts/checks only and
+  never echoes a brief, rights/license text, asset ID, filename, path or URL.
 
 ## Focused acceptance checks
 
@@ -70,5 +79,9 @@ The board renders three auditable lanes:
   Media Workspace route remains functional.
 - No player, media preview, provider/catalog request, raw source URL, query
   handoff, browser persistence or fake output exists in the Hub renderer.
+- A review-pack response is accepted only for its signed collection, current
+  revision and Audio Hub visual route, then is cleared on hydration/session
+  change; all boundary flags remain false and no clearance/release claim is
+  rendered.
 - PWA and audio-operation handoff contracts cover the alias in addition to the
   original Audio Library route.

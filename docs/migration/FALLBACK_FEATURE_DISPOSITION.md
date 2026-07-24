@@ -30,4 +30,11 @@ Concrete callbacks below were previously able to fall through to dashboard/catch
 | P1 | tr_transcribe | 1 | CORE_CANONICAL_ASR_GUARDED | Canonical Bot ASR/provider/job boundary | CANONICAL_ASR_PROVIDER_OR_CORE_GUARD, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM | Bot `tr_transcribe` requires recent Telegram audio/video input and delegates to Bot transcription logic; it is not an existing Web ASR execution claim. | Require a verified owner-scoped source asset plus a dedicated canonical ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot or manual Subtitle Studio intake. |
 | P1 | translation_transcript | 1 | BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN | Known-broken Bot pending-source branch; no Web runtime parity claim | BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT, BOT_PENDING_TEXT_OR_MEDIA_STATE, NO_RUNTIME_CLAIM | The frozen Bot stores `transcript` pending state, but its translation callback accepts only voice/file/text and returns unsupported source for transcript. | Do not map this Bot menu action to a working Web translation runtime. Keep manual transcript authoring independently available only through the signed Subtitle Studio until a separately reviewed translation contract exists. |
 
+The independent Web Audio Hub Collection Review Pack is intentionally not a
+disposition for the P0 `audio_hub` callback family above. It reads only a fresh
+signed Web collection/revision, produces no persistent review record or runtime
+action, and does not accept/replay a Bot callback, pending value, cache,
+profile, provider/catalog, wallet/payment, job or Telegram delivery state.
+The P0 source-review count therefore remains unchanged.
+
 Before a row leaves this backlog, preserve the source evidence and add focused tests for signed authorization, CSRF where a Web write exists, canonical ownership, idempotency where relevant, safe guarded state, and validated private delivery for any output.

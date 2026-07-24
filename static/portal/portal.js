@@ -7600,6 +7600,10 @@
       mediaCollections: Array.isArray(source.mediaCollections) ? source.mediaCollections.slice(0, 50) : [],
       mediaCollectionDetail: source.mediaCollectionDetail && typeof source.mediaCollectionDetail === "object" ? source.mediaCollectionDetail : {},
       mediaComposer: source.mediaComposer && typeof source.mediaComposer === "object" ? source.mediaComposer : {},
+      // Review Pack is an in-memory, server-validated receipt for the exact
+      // signed Audio Hub collection/revision. It is never recovered from a
+      // Bot response, a collection write, local storage or PWA cache.
+      audioHubReviewPack: source.audioHubReviewPack && typeof source.audioHubReviewPack === "object" ? source.audioHubReviewPack : {},
       mediaAudioAssets: Array.isArray(source.mediaAudioAssets) ? source.mediaAudioAssets.slice(0, 50) : [],
       mediaAudioAssetFilter: {
         q: source.mediaAudioAssetFilter && typeof source.mediaAudioAssetFilter.q === "string" ? source.mediaAudioAssetFilter.q.replace(/\s+/g, " ").trim().slice(0, 100) : ""
@@ -10963,7 +10967,30 @@
     return { asset_id: assetId };
   }
 
-  function renderAudioHubCollectionBoard(collection, items) {
+  function renderAudioHubReviewPack(collection, context, route) {
+    const capability = Boolean(context.capabilities && context.capabilities["audio-hub-review-pack-compose"] === true);
+    const policy = collection.policy && typeof collection.policy === "object" ? collection.policy : {};
+    const canCompose = capability && String(collection.state || "") === "active" && String(policy.status || "clear") !== "guarded";
+    const raw = context.audioHubReviewPack && typeof context.audioHubReviewPack === "object" ? context.audioHubReviewPack : {};
+    const receipt = String(raw.collection_id || "") === String(collection.id || "") && Number(raw.revision || 0) === Number(collection.revision || 0)
+      && raw.review_pack && typeof raw.review_pack === "object" ? raw : null;
+    const pack = receipt ? raw.review_pack : {};
+    const summary = pack.reference_summary && typeof pack.reference_summary === "object" ? pack.reference_summary : {};
+    const checks = Array.isArray(pack.checks) ? pack.checks : [];
+    const cautions = Array.isArray(pack.cautions) ? pack.cautions : [];
+    const reviewState = String(pack.review_state || "");
+    const stateLabel = ({
+      needs_brief: "Cần bổ sung brief",
+      needs_reference_metadata: "Cần hoàn thiện metadata",
+      human_review_required: "Cần review thủ công"
+    })[reviewState] || "Chưa có receipt";
+    const result = receipt
+      ? `<div class="portal-media-card-meta"><span>${safeText(stateLabel)}</span><span>${safeText(String(Number(summary.total || 0)))} references</span><span>${safeText(String(Number(summary.attribution_missing || 0)))} thiếu attribution</span><span>${safeText(String(Number(summary.unavailable || 0)))} cần kiểm tra lại</span></div><ol class="portal-project-steps">${checks.map((check, index) => `<li><strong>${index + 1}.</strong><span><b>${safeText(String(check.label || "Review"))}</b><small>${safeText(String(check.note || ""))}</small></span></li>`).join("")}</ol><section class="portal-media-policy"><strong>Lưu ý trước khi bàn giao</strong><ul>${cautions.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("")}</ul></section>`
+      : `<p class="portal-form-note">Chưa có gói review cho revision này. Nút dưới chỉ gửi revision đang mở để server tổng hợp checklist metadata; không gửi brief, file, URL hoặc source media mới từ browser.</p>`;
+    return `<section class="portal-card portal-card-pad portal-audio-hub-review-pack" data-audio-hub-review-pack-status data-media-collection-id="${safeText(String(collection.id || ""))}" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"><div class="portal-card-header"><div><span class="portal-section-kicker">Collection review · session only</span><h2 class="portal-card-title">Kiểm tra readiness trước khi chuyển sang workflow chuyên dụng</h2><p class="portal-card-subtitle">Review tổng hợp brief, reference và metadata của collection đã qua owner check. Nó không nghe audio, xác minh license, tạo approval, player, preview, output, job hoặc delivery.</p></div>${badge(receipt ? "read_only" : canCompose ? "ready" : "guarded")}</div>${result}<div class="portal-form-footer"><span class="portal-form-note">Không có ghi nhận review nghiệp vụ, idempotency, event hay audit record cho thao tác này. Mọi quyền và release vẫn cần người chịu trách nhiệm review riêng.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="audio-hub-review-pack-compose" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id || ""))}" data-media-collection-revision="${safeText(String(collection.revision || ""))}"${canCompose ? "" : " disabled"}>Lập gói review</button></div></section>`;
+  }
+
+  function renderAudioHubCollectionBoard(collection, items, context, route) {
     const roleLanes = MEDIA_ITEM_ROLES.map(([role, label], index) => {
       const allReferences = items.filter((item) => item && String(item.role || "reference") === role);
       const references = allReferences.slice(0, 3);
@@ -10973,7 +11000,7 @@
       });
       return `<article class="portal-audio-hub-collection-lane"><span class="portal-audio-hub-lane-index">0${index + 1}</span><div><strong>${safeText(label)}</strong><b>${safeText(String(allReferences.length))} reference${allReferences.length === 1 ? "" : "s"}</b>${labels.length ? `<ul>${labels.map((labelValue) => `<li>${safeText(labelValue)}</li>`).join("")}</ul>` : "<p>Chưa có reference ở lane này.</p>"}</div></article>`;
     }).join("");
-    return `<section class="portal-audio-hub-collection-board" aria-label="Audio Production Board của collection"><div class="portal-audio-hub-collection-heading"><div><span class="portal-section-kicker">Collection production board</span><h2>Kiểm tra assembly trước khi mở một công cụ chuyên dụng.</h2><p>Lane chỉ trình bày metadata reference đã nạp sau owner check. Không có player, waveform, raw URL, download state hay thao tác engine trong board này.</p></div><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(String(collection.id || ""))}">Mở Audio Library editor</a></div><div class="portal-audio-hub-collection-lanes">${roleLanes}</div><div class="portal-form-footer"><span class="portal-form-note">Mỗi công cụ kế tiếp mở độc lập; không nhận collection, asset hoặc account data từ đường dẫn này.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/media-workspace/music-directions">Music Directions</a><a class="portal-button portal-button--quiet" href="/media-workspace/sfx-cue-sheet">SFX Cue Sheet</a><a class="portal-button portal-button--quiet" href="/audio/assets">Audio Operations</a></div></div></section>`;
+    return `<section class="portal-audio-hub-collection-board" aria-label="Audio Production Board của collection"><div class="portal-audio-hub-collection-heading"><div><span class="portal-section-kicker">Collection production board</span><h2>Kiểm tra assembly trước khi mở một công cụ chuyên dụng.</h2><p>Lane chỉ trình bày metadata reference đã nạp sau owner check. Không có player, waveform, raw URL, download state hay thao tác engine trong board này.</p></div><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(String(collection.id || ""))}">Mở Audio Library editor</a></div><div class="portal-audio-hub-collection-lanes">${roleLanes}</div>${renderAudioHubReviewPack(collection, context, route)}<div class="portal-form-footer"><span class="portal-form-note">Mỗi công cụ kế tiếp mở độc lập; không nhận collection, asset hoặc account data từ đường dẫn này.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/media-workspace/music-directions">Music Directions</a><a class="portal-button portal-button--quiet" href="/media-workspace/sfx-cue-sheet">SFX Cue Sheet</a><a class="portal-button portal-button--quiet" href="/audio/assets">Audio Operations</a></div></div></section>`;
   }
 
   function mediaItemEditor(item, collection, enabled, route, canOpenAudioOperations) {
@@ -11031,7 +11058,7 @@
       ? `<div class="portal-media-composer-result">${directions.map((direction) => `<article><span class="portal-section-kicker">${safeText(String(direction.title || "Hướng brief"))}</span><h3>${safeText(String(direction.intent || ""))}</h3><pre>${safeText(direction.prompt)}</pre></article>`).join("")}</div>`
       : "";
     const policyNotice = policy.status === "guarded" ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>Brief đang bị policy guard</strong><p>Hãy bỏ yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng cụ thể trước khi dùng composer. Web không đánh giá hoặc chứng nhận bản quyền.</p></div></div>` : "";
-    const audioHubBoard = audioHub ? renderAudioHubCollectionBoard(collection, items) : "";
+    const audioHubBoard = audioHub ? renderAudioHubCollectionBoard(collection, items, context, route) : "";
     return `<article class="portal-page ${audioHub ? "portal-audio-hub-detail" : "portal-media-workspace-detail"}">${renderHero(page, context)}
       <section class="portal-media-detail-summary"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(collection.prompt_mode))} · ${safeText(String(collection.use_context || "general"))}</span><h2>${safeText(String(collection.title || "Audio Collection"))}</h2><p>${safeText(String(collection.description_excerpt || "Collection authoring riêng tư của Web account hiện tại."))}</p>${renderMediaTags(collection.tags)}</div><dl><div><dt>Revision</dt><dd>v${safeText(String(collection.revision || 1))}</dd></div><div><dt>References</dt><dd>${safeText(String(Number(detail.item_count || items.length)))}/${safeText(String(Number(detail.item_limit || 250)))}</dd></div><div><dt>Trạng thái</dt><dd>${badge(mediaCollectionState(collection.state))}</dd></div></dl></section>
       ${policyNotice}${audioHubBoard}<div class="portal-media-detail-grid"><section class="portal-card portal-card-pad portal-media-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Collection editor</h2><p class="portal-card-subtitle">Mỗi lần lưu metadata tạo revision mới. Server kiểm tra owner, CSRF, idempotency, policy và optimistic revision trước khi ghi.</p></div>${badge(mediaCollectionState(collection.state))}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-update" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider call, job, Xu, PayOS hoặc media output khi lưu collection.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-duplicate" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản metadata</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form></section>
@@ -26696,6 +26723,16 @@
     const active = document.activeElement;
     if (!active || !active.matches) return null;
     if (active.matches("[data-finance-planning-status]")) return { kind: "finance-planning-status" };
+    if (active.matches("[data-audio-hub-review-pack-status]")) return { kind: "audio-hub-review-pack-status" };
+    const audioHubReviewAction = active.closest && active.closest('[data-portal-action="audio-hub-review-pack-compose"]');
+    if (audioHubReviewAction) {
+      return {
+        kind: "audio-hub-review-pack-action",
+        route: audioHubReviewAction.getAttribute("data-portal-route") || "",
+        id: audioHubReviewAction.getAttribute("data-media-collection-id") || "",
+        revision: audioHubReviewAction.getAttribute("data-media-collection-revision") || ""
+      };
+    }
     const financeAction = active.closest && active.closest('[data-portal-action^="finance-planning-"]');
     if (financeAction) {
       const snapshot = {
@@ -26731,6 +26768,19 @@
     if (snapshot.kind === "finance-planning-status") {
       const status = document.querySelector("[data-finance-planning-status]");
       if (status && typeof status.focus === "function") status.focus({ preventScroll: true });
+      return;
+    }
+    if (snapshot.kind === "audio-hub-review-pack-status") {
+      const status = document.querySelector("[data-audio-hub-review-pack-status]");
+      if (status && typeof status.focus === "function") status.focus({ preventScroll: true });
+      return;
+    }
+    if (snapshot.kind === "audio-hub-review-pack-action") {
+      const actions = Array.from(document.querySelectorAll('[data-portal-action="audio-hub-review-pack-compose"]'));
+      const target = actions.find((item) => (item.getAttribute("data-portal-route") || "") === snapshot.route
+        && (item.getAttribute("data-media-collection-id") || "") === snapshot.id
+        && (item.getAttribute("data-media-collection-revision") || "") === snapshot.revision);
+      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
       return;
     }
     if (snapshot.kind === "finance-planning-action" || snapshot.kind === "finance-planning-field") {
