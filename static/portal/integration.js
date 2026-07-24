@@ -7,6 +7,7 @@
   "use strict";
 
   const API = "/api/v1";
+  const PROJECT_CREATE_ROUTE = "/projects/new";
   const IMAGE_OCR_ROUTE = "/documents/ocr";
   const PDF_OCR_ROUTE = "/documents/pdf-ocr";
   const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";
@@ -674,6 +675,7 @@
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_WORD_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(SFX_CUE_SHEET_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(PROJECT_CREATE_ROUTE);
     }
   }
 
@@ -12361,6 +12363,7 @@
       projectDocuments: [],
       studioDocumentDetail: {},
       projectListing: projectListingProjection({ q: "", state: "all" }, 0, {}, 0),
+      projectCenterReadState: account ? "loading" : "guarded",
       // Account history and Workspace Drafts are private Web-only state,
       // never a bridge fallback. Clear both before their signed reads start.
       accountActivity: [],
@@ -14136,6 +14139,18 @@
     const retainListView = projectRouteUsesListView();
     const filter = projectFilterPayload(filterValue === undefined ? (retainListView ? previousFilters : {}) : filterValue);
     const offset = projectListOffset(offsetValue === undefined ? (retainListView ? previousPagination.offset : 0) : offsetValue);
+    // The canonical `/projects` Board must fail closed while a fresh signed
+    // read is in flight. Do not leave a prior filter/page actionable during a
+    // refresh, because it may belong to an older account/session projection.
+    // Other project-reference consumers retain their own rendering contracts.
+    if (expectedPath === "/projects" && projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) {
+      merge({
+        projects: [],
+        projectListing: projectListingProjection(filter, offset, {}, 0),
+        projectCenterReadState: "loading",
+        pageStates: { ...(base().pageStates || {}), "/projects": "read_only" }
+      });
+    }
     try {
       const result = await api(projectListPath(filter, offset));
       if (!projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) return [];
@@ -14146,6 +14161,7 @@
       merge({
         projects: items,
         projectListing: projectListingProjection(filter, offset, result.data, items.length),
+        projectCenterReadState: "ready",
         // The GET projection itself is read-only, but Project Center has
         // independently capability-gated CSRF writes. Keep the page ready
         // rather than presenting an editable Web Workspace as read-only.
@@ -14159,6 +14175,7 @@
       merge({
         projects: [],
         projectListing: projectListingProjection(filter, offset, {}, 0),
+        projectCenterReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/projects": "guarded" }
       });
       return [];

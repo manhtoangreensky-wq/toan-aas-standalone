@@ -6165,3 +6165,157 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-content-operations-board .portal-content-studio-card { transition: none; }
   .portal-content-operations-board .portal-content-studio-card:hover { transform: none; }
 }
+
+/* Project Operations Board is the canonical /projects view. The root stays
+ * dense and operational; focused authoring moves to /projects/new so the
+ * library and its truthful state never compete with a large create form. */
+.portal-project-operations-board,
+.portal-project-center-authoring { display: grid; gap: 18px; min-width: 0; }
+.portal-project-operations-summary,
+.portal-project-operations-authoring-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+  gap: 18px;
+  align-items: center;
+  padding: clamp(20px, 2.7vw, 30px);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-project-operations-summary h2,
+.portal-project-operations-authoring-intro h2 {
+  max-width: 760px;
+  margin: 7px 0 8px;
+  color: var(--portal-text);
+  font-size: clamp(25px, 3vw, 38px);
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+.portal-project-operations-summary p,
+.portal-project-operations-authoring-intro p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--portal-muted-strong);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.portal-project-operations-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+.portal-project-operations-summary dl > div {
+  min-width: 0;
+  min-height: 104px;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface);
+}
+.portal-project-operations-summary dt {
+  color: var(--portal-accent);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 820;
+  letter-spacing: -.045em;
+}
+.portal-project-operations-summary dd {
+  margin: 7px 0 0;
+  color: var(--portal-muted-strong);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.portal-project-operations-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface);
+}
+.portal-project-operations-primary > div { min-width: 0; }
+.portal-project-operations-primary h2 { margin: 6px 0; color: var(--portal-text); font-size: 18px; letter-spacing: -.02em; }
+.portal-project-operations-primary p { max-width: 700px; margin: 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.55; }
+.portal-project-operations-primary .portal-button { flex: 0 0 auto; min-height: 40px; }
+.portal-project-operations-create-guard {
+  display: grid;
+  flex: 0 0 min(290px, 100%);
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-strong);
+}
+.portal-project-operations-create-guard strong { color: var(--portal-text); font-size: 13px; }
+.portal-project-operations-create-guard span { color: var(--portal-muted-strong); font-size: 12px; line-height: 1.45; }
+
+.portal-project-operations-workspace,
+.portal-project-operations-authoring-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 16px;
+  align-items: start;
+}
+.portal-project-operations-library,
+.portal-project-operations-boundary,
+.portal-project-center-authoring .portal-project-operations-create {
+  border-color: var(--portal-border);
+  background: var(--portal-surface);
+}
+.portal-project-operations-library .portal-card-header,
+.portal-project-operations-boundary .portal-card-header { align-items: flex-start; }
+.portal-project-operations-board .portal-project-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+}
+.portal-project-operations-board .portal-project-card {
+  min-height: 218px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+}
+.portal-project-operations-board .portal-project-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+.portal-project-operations-board .portal-project-card .portal-card-title,
+.portal-project-center-authoring .portal-card-title { color: var(--portal-text); }
+.portal-project-operations-board .portal-project-card .portal-card-subtitle,
+.portal-project-operations-board .portal-project-card .portal-summary-key,
+.portal-project-operations-board .portal-project-card .portal-summary-value,
+.portal-project-operations-board .portal-project-pagination,
+.portal-project-center-authoring .portal-card-subtitle,
+.portal-project-center-authoring .portal-form-note { color: var(--portal-muted-strong); }
+.portal-project-operations-authoring-actions { display: grid; gap: 12px; justify-items: start; }
+.portal-project-operations-authoring-actions > span { color: var(--portal-muted-strong); font-size: 12px; line-height: 1.5; }
+
+@media (max-width: 1040px) {
+  .portal-project-operations-workspace,
+  .portal-project-operations-authoring-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .portal-project-operations-summary,
+  .portal-project-operations-authoring-intro { grid-template-columns: 1fr; gap: 16px; padding: 20px; border-radius: 18px; }
+  .portal-project-operations-summary dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .portal-project-operations-summary dl > div { min-height: 86px; padding: 11px; }
+  .portal-project-operations-primary { align-items: flex-start; flex-direction: column; padding: 16px; border-radius: 16px; }
+  .portal-project-operations-primary .portal-button { width: 100%; min-height: 44px; }
+  .portal-project-operations-create-guard { width: 100%; box-sizing: border-box; }
+  .portal-project-operations-board .portal-button,
+  .portal-project-operations-board .portal-input,
+  .portal-project-operations-board .portal-select,
+  .portal-project-center-authoring .portal-button,
+  .portal-project-center-authoring .portal-input,
+  .portal-project-center-authoring .portal-select { min-height: 44px; }
+}
+
+@media (max-width: 460px) {
+  .portal-project-operations-summary dl { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-project-operations-board .portal-project-card { transition: none; }
+  .portal-project-operations-board .portal-project-card:hover { transform: none; }
+}

@@ -113,6 +113,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // a future public-shell expansion cannot replay a prior account's content.
   "/" + "api/v1/content-studio",
   "/content-studio",
+  // Projects carry signed owner-scoped authoring metadata and are also used
+  // as reference pickers. Keep root, `/new` and detail descendants outside
+  // public shell/offline caching across sign-out or account switching.
+  "/" + "api/v1/projects",
+  "/projects",
   "/" + "api/v1/channel-strategy",
   "/content/channel-strategy",
   "/" + "api/v1/content-handoffs",
