@@ -1134,6 +1134,18 @@ a { color: inherit; text-decoration: none; }
 .portal-support-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
 .portal-support-metrics .portal-metric { min-height: 128px; border-color: rgba(132, 159, 255, .16); background: linear-gradient(145deg, rgba(24, 42, 76, .88), rgba(10, 21, 42, .9)); }
 .portal-support-layout, .portal-support-detail-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(270px, .85fr); gap: 18px; align-items: start; }
+.portal-support-recovery { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; border-color: rgba(93, 211, 190, .28); background: rgba(10, 38, 47, .72); }
+.portal-support-recovery[data-support-state="waiting_user"] { border-color: rgba(241, 194, 101, .36); background: rgba(55, 42, 17, .5); }
+.portal-support-recovery[data-support-state="refund_pending"] { border-color: rgba(241, 194, 101, .34); background: rgba(54, 42, 18, .46); }
+.portal-support-recovery[data-support-state="closed"] { border-color: rgba(145, 162, 183, .28); background: rgba(18, 29, 42, .72); }
+.portal-support-recovery-copy { min-width: 0; }
+.portal-support-recovery-copy .portal-card-title { margin: 6px 0 8px; }
+.portal-support-recovery-copy p { max-width: 760px; margin: 0; color: #b9c9d5; font-size: 13px; line-height: 1.62; }
+.portal-support-recovery-copy p + p { margin-top: 8px; color: #d3e2ea; }
+.portal-support-recovery-copy strong { color: #eff8f8; }
+.portal-support-recovery-actions { display: flex; flex-wrap: wrap; gap: 9px; justify-content: flex-end; }
+.portal-support-recovery-actions .portal-button { min-height: 44px; white-space: nowrap; }
+#support-case-reply { scroll-margin-top: 20px; }
 .portal-support-intake { background: linear-gradient(152deg, rgba(23, 34, 71, .96), rgba(8, 18, 34, .99)); }
 .portal-support-boundary { background: linear-gradient(155deg, rgba(28, 30, 64, .79), rgba(11, 18, 37, .96)); }
 .portal-support-advisor { display: grid; gap: 15px; border-color: rgba(125, 210, 201, .24); background: linear-gradient(145deg, rgba(10, 45, 50, .72), rgba(10, 24, 42, .94)); }
@@ -2521,7 +2533,8 @@ a { color: inherit; text-decoration: none; }
   .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid, .portal-subtitle-format-lab-intro, .portal-subtitle-format-lab-layout, .portal-subtitle-assets-intro, .portal-subtitle-assets-layout { grid-template-columns: 1fr; }
   .portal-media-workspace-intro, .portal-media-detail-summary, .portal-media-workspace-layout, .portal-media-detail-grid { grid-template-columns: 1fr; }
   .portal-media-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-layout, .portal-support-detail-layout { grid-template-columns: 1fr; }
+  .portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-layout, .portal-support-detail-layout, .portal-support-recovery { grid-template-columns: 1fr; }
+  .portal-support-recovery-actions { justify-content: flex-start; }
   .portal-support-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portal-support-admin-forms { grid-template-columns: 1fr; }
   .portal-project-package-actions { align-items: flex-start; flex-direction: column; }
@@ -2700,6 +2713,8 @@ a { color: inherit; text-decoration: none; }
   .portal-support-filter { grid-template-columns: 1fr; }
   .portal-support-filter .portal-form-footer { grid-column: auto; }
   .portal-support-pagination { align-items: flex-start; flex-direction: column; }
+  .portal-support-recovery-actions { width: 100%; }
+  .portal-support-recovery-actions .portal-button { flex: 1 1 180px; }
   .portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero { padding: 20px; border-radius: 18px; }
   .portal-support-intro dl, .portal-support-admin-intro dl, .portal-support-case-hero dl { grid-template-columns: 1fr; }
   .portal-support-case-card { min-height: 0; }

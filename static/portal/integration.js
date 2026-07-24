@@ -1563,6 +1563,140 @@
     return { items: data.items, readState: "ready" };
   }
 
+  // Support Desk data is private account data. Treat a successful HTTP
+  // envelope as untrusted until every field needed by the customer view is
+  // structurally safe. In particular, do not render a malformed 2xx receipt
+  // as an empty case list: that could look like a genuine “no requests” state.
+  function supportReadLine(value, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (!text && allowEmpty === true) return "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportReadText(value, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    if (!text && allowEmpty === true) return "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function supportReadTimestamp(value, allowEmpty) {
+    const text = String(value || "").trim();
+    if (!text && allowEmpty === true) return "";
+    return text.length > 0 && text.length <= 80 && !/[\u0000-\u001f\u007f]/.test(text) && !Number.isNaN(Date.parse(text)) ? text : "";
+  }
+
+  function supportReadPositiveInteger(value) {
+    return typeof value === "number" && Number.isSafeInteger(value) && value >= 1 ? value : null;
+  }
+
+  function supportReadNonNegativeInteger(value) {
+    return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+  }
+
+  function supportCasePublicProjection(value, includeDetail) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!item) return null;
+    const id = validSupportCaseId(item.id) ? String(item.id) : "";
+    const category = String(item.category || "").trim().toLowerCase();
+    const priority = String(item.priority || "").trim().toLowerCase();
+    const state = String(item.state || "").trim().toLowerCase();
+    const subject = supportReadLine(item.subject, 3, 180, false);
+    const excerpt = supportReadLine(item.excerpt, 0, 200, true);
+    const revision = supportReadPositiveInteger(item.revision);
+    const createdAt = supportReadTimestamp(item.created_at, false);
+    const updatedAt = supportReadTimestamp(item.updated_at, false);
+    const lastPublicMessageAt = supportReadTimestamp(item.last_public_message_at, false);
+    const resolvedAt = supportReadTimestamp(item.resolved_at, true);
+    const closedAt = supportReadTimestamp(item.closed_at, true);
+    const detail = includeDetail === true ? supportReadText(item.detail, 3, 4000, false) : "";
+    if (!id || !SUPPORT_CASE_CATEGORIES.has(category) || !SUPPORT_CASE_PRIORITIES.has(priority)
+      || !SUPPORT_CASE_STATES.has(state) || !subject || revision === null || !createdAt || !updatedAt || !lastPublicMessageAt
+      || (includeDetail === true && !detail)) return null;
+    return {
+      id, category, priority, subject, state, revision,
+      created_at: createdAt, updated_at: updatedAt, last_public_message_at: lastPublicMessageAt,
+      resolved_at: resolvedAt || null, closed_at: closedAt || null, excerpt,
+      ...(includeDetail === true ? { detail } : {})
+    };
+  }
+
+  function supportSummaryProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    const states = data && data.states && typeof data.states === "object" && !Array.isArray(data.states)
+      ? data.states
+      : null;
+    if (!data || data.delivery !== "web_view_only" || !states) return null;
+    const projectedStates = {};
+    for (const state of SUPPORT_CASE_STATES) {
+      const count = supportReadNonNegativeInteger(states[state]);
+      if (count === null) return null;
+      projectedStates[state] = count;
+    }
+    if (Object.keys(states).some((state) => !SUPPORT_CASE_STATES.has(state))) return null;
+    const active = supportReadNonNegativeInteger(data.active);
+    const expectedActive = projectedStates.new + projectedStates.reviewing + projectedStates.waiting_user
+      + projectedStates.waiting_provider + projectedStates.refund_pending;
+    if (active === null || active !== expectedActive) return null;
+    return { states: projectedStates, active, delivery: "web_view_only" };
+  }
+
+  function supportCustomerCaseListProjection(result, filter, offset) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    if (!data || data.delivery !== "web_view_only" || !Array.isArray(data.items) || data.items.length > SUPPORT_CASE_LIST_LIMIT
+      || typeof data.has_more !== "boolean") return null;
+    const items = data.items.map((item) => supportCasePublicProjection(item, false));
+    if (items.some((item) => !item) || new Set(items.map((item) => item.id)).size !== items.length) return null;
+    const currentOffset = supportCaseListOffset(offset);
+    const expectedNextOffset = currentOffset + SUPPORT_CASE_LIST_LIMIT;
+    const rawNextOffset = data.next_offset;
+    if ((data.has_more === true && rawNextOffset !== expectedNextOffset)
+      || (data.has_more === false && rawNextOffset !== null)) return null;
+    return {
+      items,
+      listing: supportCaseListingProjection(filter, currentOffset, data, items.length)
+    };
+  }
+
+  function supportCustomerMessageProjection(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!item) return null;
+    const id = validSupportCaseId(item.id) ? String(item.id) : "";
+    const authorRole = String(item.author_role || "").trim().toLowerCase();
+    const visibility = String(item.visibility || "").trim().toLowerCase();
+    const body = supportReadText(item.body, 1, 4000, false);
+    const createdAt = supportReadTimestamp(item.created_at, false);
+    if (!id || !["customer", "operator"].includes(authorRole) || visibility !== "public" || !body || !createdAt) return null;
+    return { id, author_role: authorRole, visibility, body, created_at: createdAt };
+  }
+
+  function supportEvidenceProjection(value) {
+    if (!Array.isArray(value) || value.length > 3
+      || !value.every((item) => supportReadTimestamp(item && item.created_at, false))) return null;
+    const items = supportEvidenceItems(value);
+    if (items.length !== value.length || new Set(items.map((item) => item.id)).size !== items.length) return null;
+    return items;
+  }
+
+  function supportCustomerCaseDetailProjection(result, expectedCaseId) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    if (!data || data.delivery !== "web_view_only" || !Array.isArray(data.messages) || !Array.isArray(data.events)) return null;
+    const caseItem = supportCasePublicProjection(data.case, true);
+    const messages = data.messages.map(supportCustomerMessageProjection);
+    const attachments = supportEvidenceProjection(data.attachments);
+    if (!caseItem || caseItem.id !== String(expectedCaseId) || data.messages.length > 500 || data.events.length > 300
+      || messages.some((item) => !item) || !data.events.every(supportEventIsSafe) || !attachments) return null;
+    return {
+      detail: { case: caseItem, messages, events: data.events, attachments, delivery: "web_view_only" },
+      attachments
+    };
+  }
+
   // Advisor content is server-owned but still treated as untrusted at the
   // browser boundary.  Only one closed Web category, a bounded checklist and
   // explicit false external-boundary flags may be displayed or used for the
@@ -17090,6 +17224,15 @@
     const retainListView = supportCustomerListRoute();
     const filter = supportCaseFilterPayload(filterValue === undefined ? (retainListView ? previousFilters : {}) : filterValue);
     const offset = supportCaseListOffset(offsetValue === undefined ? (retainListView ? previousPagination.offset : 0) : offsetValue);
+    // A new signed read must never leave an old account's cases on screen
+    // while the route is loading. The Advisor and consultation panels own
+    // independent request epochs and therefore remain outside this reset.
+    merge({
+      supportSummary: {}, supportCases: [], supportEvents: [], supportEventsReadState: "loading",
+      supportCaseFilter: filter, supportCaseListing: supportCaseListingProjection(filter, offset, {}, 0),
+      supportReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "loading", "/support": "loading", "/tickets": "loading" }
+    });
     try {
       const [summaryResult, casesResult, eventsResult] = await Promise.all([
         api("/support/summary"),
@@ -17101,22 +17244,22 @@
         api("/support/events?limit=40").catch(() => null)
       ]);
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerListHydrationEpoch, sessionEpoch, currentPath)) return { stale: true };
-      const cases = casesResult.data && Array.isArray(casesResult.data.items)
-        ? casesResult.data.items.filter((item) => item && validSupportCaseId(item.id)).slice(0, 100)
-        : [];
+      const summary = supportSummaryProjection(summaryResult);
+      const caseProjection = supportCustomerCaseListProjection(casesResult, filter, offset);
+      if (!summary || !caseProjection) throw new Error("Phản hồi Support Desk chưa được máy chủ xác minh.");
       const eventProjection = supportEventsProjection(eventsResult);
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerListHydrationEpoch, sessionEpoch, currentPath)) return { stale: true };
       merge({
-        supportSummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
-        supportCases: cases,
+        supportSummary: summary,
+        supportCases: caseProjection.items,
         supportEvents: eventProjection.items,
         supportEventsReadState: eventProjection.readState,
         supportCaseFilter: filter,
-        supportCaseListing: supportCaseListingProjection(filter, offset, casesResult.data, cases.length),
+        supportCaseListing: caseProjection.listing,
         supportReadState: "ready",
         pageStates: { ...(base().pageStates || {}), [currentPath]: "read_only", "/support": "ready", "/tickets": "read_only" }
       });
-      return { cases, events: eventProjection.items, eventsReadState: eventProjection.readState };
+      return { cases: caseProjection.items, events: eventProjection.items, eventsReadState: eventProjection.readState };
     } catch (_) {
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerListHydrationEpoch, sessionEpoch, currentPath)) return { stale: true };
       // Never retain an old account's support content after a failed scoped
@@ -17139,6 +17282,12 @@
     const requestEpoch = ++supportCustomerDetailHydrationEpoch;
     const sessionEpoch = supportSessionEpoch;
     if (currentPortalPath() !== route) return null;
+    // Clear the prior detail before a fresh owner-scoped read. A case ID in
+    // the URL is not proof of ownership and cannot authorize stale content.
+    merge({
+      supportCaseDetail: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [route]: "loading" }
+    });
     try {
       const canReadEvidenceAssets = base().assetVaultEnabled === true;
       const [result, evidenceAssetsResult] = await Promise.all([
@@ -17148,12 +17297,13 @@
           : Promise.resolve(null)
       ]);
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerDetailHydrationEpoch, sessionEpoch, route)) return null;
-      const detail = result.data && typeof result.data === "object" ? result.data : {};
-      const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
-      if (!caseItem || !validSupportCaseId(caseItem.id) || String(caseItem.id) !== String(caseId)) throw new Error("Yêu cầu không còn thuộc Web account hiện tại.");
-      const messages = Array.isArray(detail.messages) ? detail.messages.filter((item) => item && typeof item === "object").slice(0, 500) : [];
-      const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 300) : [];
-      const attachments = supportEvidenceItems(detail.attachments);
+      const detailProjection = supportCustomerCaseDetailProjection(result, caseId);
+      if (!detailProjection) throw new Error("Yêu cầu Support Desk chưa được máy chủ xác minh.");
+      const detail = detailProjection.detail;
+      const caseItem = detail.case;
+      const messages = detail.messages;
+      const events = detail.events;
+      const attachments = detailProjection.attachments;
       const evidenceAssets = evidenceAssetsResult && evidenceAssetsResult.data
         ? supportEvidenceAssetCandidates(evidenceAssetsResult.data)
         : [];
@@ -17168,7 +17318,7 @@
         : {};
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        supportCaseDetail: { case: caseItem, messages, events, attachments, delivery: String(detail.delivery || "web_view_only") },
+        supportCaseDetail: detail,
         supportAttachmentAssets: evidenceAssets,
         supportCaseTriage: triage,
         supportReadState: "ready",
