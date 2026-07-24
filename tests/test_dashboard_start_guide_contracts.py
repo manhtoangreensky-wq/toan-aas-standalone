@@ -36,16 +36,19 @@ def test_telegram_link_entrypoint_is_explicitly_optional() -> None:
 def test_dashboard_places_the_guide_before_private_integration_summaries() -> None:
     dashboard = _section("function renderDashboard(page, context)", "function renderWorkspaceActionCenter(context)")
 
-    assert '${renderDashboardStartGuide(context)}<div class="portal-status-grid' in dashboard
+    assert dashboard.index("${renderDashboardStartGuide(context)}") < dashboard.index("${renderDashboardCanonicalLane(context, readState)}")
 
 
 def test_dashboard_hides_an_empty_work_queue_and_keeps_the_first_action_first() -> None:
     dashboard = _section("function renderDashboard(page, context)", "function renderWorkspaceActionCenter(context)")
+    canonical = _section("function renderDashboardCanonicalLane(context, readState)", "function renderDashboard(page, context)")
     action_center = _section("function renderWorkspaceActionCenter(context)", "function renderStudioLaunchpad(context)")
 
     assert dashboard.index("${renderDashboardWorkspaceSummary(context)}") < dashboard.index("${renderDashboardStartGuide(context)}")
-    assert dashboard.index("${renderDashboardStartGuide(context)}") < dashboard.index('<div class="portal-status-grid">')
-    assert dashboard.index('<div class="portal-status-grid">') < dashboard.index("${renderWorkspaceActionCenter(context)}")
+    assert dashboard.index("${renderDashboardStartGuide(context)}") < dashboard.index('<div class="portal-command-center-lanes">')
+    assert dashboard.index('<div class="portal-command-center-lanes">') < dashboard.index("${renderDashboardCanonicalLane(context, readState)}")
+    assert 'if (readState !== "ready")' in canonical
+    assert "${renderWorkspaceActionCenter(context)}" in canonical
     assert "const actionableCount = processing + deliveryReady + needsReview + waitingUser;" in action_center
     assert 'if (!actionableCount) return "";' in action_center
 

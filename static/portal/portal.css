@@ -6407,3 +6407,145 @@ button, a, input, select, textarea { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
   .portal-campaign-operations-quick-links a { transition: none; }
 }
+
+/* Workspace Command Center keeps `/dashboard` app-first and explicit about
+   authority. The final scoped layer intentionally replaces the legacy hero
+   treatment with token-driven surfaces, not a marketing/landing composition. */
+.portal-workspace-command-center { display: grid; gap: 18px; min-width: 0; }
+.portal-workspace-command-center .portal-dashboard-overview {
+  gap: 22px;
+  align-items: end;
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-strong);
+  box-shadow: none;
+}
+.portal-workspace-command-center .portal-dashboard-overview h1 { color: var(--portal-text); }
+.portal-workspace-command-center .portal-dashboard-overview p { color: var(--portal-muted-strong); }
+.portal-workspace-command-center .portal-dashboard-overview-stats > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface);
+}
+.portal-workspace-command-center .portal-dashboard-overview-stats dt,
+.portal-workspace-command-center .portal-dashboard-overview-stats span { color: var(--portal-muted); }
+.portal-workspace-command-center .portal-dashboard-overview-stats dd { color: var(--portal-text); }
+
+.portal-command-center-lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.34fr) minmax(260px, .66fr);
+  gap: 16px;
+  align-items: start;
+}
+.portal-command-center-lane,
+.portal-command-center-canonical {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface);
+}
+.portal-command-center-lane--account { background: var(--portal-surface-strong); }
+.portal-command-center-lane-heading,
+.portal-command-center-state {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+.portal-command-center-lane-heading .portal-module-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-accent);
+}
+.portal-command-center-lane-heading h2,
+.portal-command-center-state h2 {
+  margin: 4px 0 5px;
+  color: var(--portal-text);
+  font-size: clamp(19px, 2.2vw, 26px);
+  letter-spacing: -.03em;
+}
+.portal-command-center-lane-heading p,
+.portal-command-center-state p,
+.portal-command-center-lane-note {
+  max-width: 760px;
+  margin: 0;
+  color: var(--portal-muted-strong);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.portal-command-center-lane--work .portal-dashboard-library-grid { gap: 14px; }
+.portal-command-center-lane--work .portal-dashboard-drafts { border-color: var(--portal-border); background: var(--portal-surface-strong); }
+.portal-command-center-lane--work .portal-dashboard-draft { border-color: var(--portal-border); background: var(--portal-surface); }
+.portal-command-center-lane--work .portal-dashboard-draft:hover,
+.portal-command-center-lane--work .portal-dashboard-draft:focus-visible { border-color: var(--portal-border-strong); background: var(--portal-surface-soft); }
+
+.portal-command-center-account-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.portal-command-center-account-facts > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface);
+}
+.portal-command-center-account-facts dt { color: var(--portal-muted); font-size: 11px; font-weight: 740; }
+.portal-command-center-account-facts dd { margin: 6px 0 0; color: var(--portal-text); font-size: 13px; font-weight: 740; overflow-wrap: anywhere; }
+.portal-command-center-lane-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.portal-command-center-lane-actions .portal-button { min-height: 40px; }
+
+.portal-command-center-canonical { gap: 18px; }
+.portal-command-center-canonical[data-state="ready"] { border-color: var(--portal-border-strong); }
+.portal-command-center-canonical[data-state="loading"],
+.portal-command-center-canonical[data-state="failed"],
+.portal-command-center-canonical[data-state="guarded"] { background: var(--portal-surface-strong); }
+.portal-command-center-state { grid-template-columns: auto minmax(0, 1fr) auto; }
+.portal-command-center-state .portal-state-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-accent);
+}
+.portal-command-center-state > div { min-width: 0; }
+.portal-command-center-state .portal-command-center-lane-actions { margin-top: 14px; }
+.portal-command-center-metrics { margin: 0; }
+.portal-command-center-canonical .portal-work-grid { margin: 0; }
+.portal-command-center-canonical .portal-card { border-color: var(--portal-border); background: var(--portal-surface-strong); }
+.portal-command-center-canonical .portal-data-table-wrap { border-color: var(--portal-border); }
+
+@media (max-width: 1040px) {
+  .portal-command-center-lanes { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .portal-workspace-command-center .portal-dashboard-overview,
+  .portal-command-center-lane,
+  .portal-command-center-canonical { padding: 18px; border-radius: 18px; }
+  .portal-command-center-lane-heading,
+  .portal-command-center-state { grid-template-columns: auto minmax(0, 1fr); }
+  .portal-command-center-lane-heading > .portal-badge,
+  .portal-command-center-state > .portal-badge { grid-column: 2; justify-self: start; }
+  .portal-command-center-lane--work .portal-dashboard-library-grid,
+  .portal-command-center-account-facts { grid-template-columns: 1fr; }
+  .portal-command-center-lane-actions { width: 100%; }
+  .portal-command-center-lane-actions .portal-button { flex: 1 1 150px; min-height: 44px; justify-content: center; }
+  .portal-workspace-command-center .portal-dashboard-overview-actions .portal-button { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-command-center-lane--work .portal-dashboard-draft { transition: none; }
+  .portal-command-center-lane--work .portal-dashboard-draft:hover { transform: none; }
+}

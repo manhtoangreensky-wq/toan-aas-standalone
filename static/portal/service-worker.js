@@ -189,6 +189,10 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // session still make it account-private. Keep it explicit so a future PWA
   // cache expansion cannot turn it into a public offline destination.
   "/workspace-menu",
+  // Dashboard combines signed Web workspace metadata with canonical bridge
+  // reads. It must never become a public shell/offline fallback after logout,
+  // account switching or a failed canonical refresh.
+  "/dashboard",
   // Starter Kits expose owner-scoped setup revisions and install receipts.
   // Keep the catalog/API and every fixed detail page out of Cache Storage.
   "/" + "api/v1/workspace/starter-kits",
