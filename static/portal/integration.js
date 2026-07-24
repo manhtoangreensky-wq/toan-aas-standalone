@@ -7,6 +7,7 @@
   "use strict";
 
   const API = "/api/v1";
+  const CAMPAIGN_CREATE_ROUTE = "/campaigns/new";
   const PROJECT_CREATE_ROUTE = "/projects/new";
   const IMAGE_OCR_ROUTE = "/documents/ocr";
   const PDF_OCR_ROUTE = "/documents/pdf-ocr";
@@ -675,6 +676,7 @@
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_WORD_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(SFX_CUE_SHEET_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(CAMPAIGN_CREATE_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PROJECT_CREATE_ROUTE);
     }
   }
@@ -11730,6 +11732,7 @@
       // Web-owned Campaign Planner writes require only a signed Web session
       // and CSRF. They do not imply that a Telegram/Core Bridge/provider
       // adapter is available and never publish or create canonical state.
+      "campaigns-refresh": Boolean(account),
       "campaign-create": Boolean(account && me.csrf_token),
       "campaign-update": Boolean(account && me.csrf_token),
       "campaign-update-status": Boolean(account && me.csrf_token),
@@ -12350,6 +12353,7 @@
       // logout/account switch cannot retain an earlier campaign in memory.
       campaignPlans: [],
       campaignPlanDetail: {},
+      campaignPlannerReadState: account ? "loading" : "guarded",
       // Calendar receives an independent, narrow month projection. Clear it
       // alongside Planner data; a failed window read must never retain a
       // previous account's agenda or selected filters.
@@ -13992,7 +13996,7 @@
   }
 
   function isCampaignWorkspacePath(path) {
-    return ["/campaigns", "/calendar", "/approvals"].includes(path)
+    return ["/campaigns", CAMPAIGN_CREATE_ROUTE, "/calendar", "/approvals"].includes(path)
       || Boolean(campaignPlanIdFromPath(path))
       || isNativeContentHandoffPath(path);
   }
@@ -14009,18 +14013,41 @@
     const requestEpoch = ++campaignListHydrationEpoch;
     const sessionEpoch = campaignSessionEpoch;
     const expectedPath = currentPortalPath();
+    const rootBoard = expectedPath === "/campaigns";
+    // The canonical root Board fails closed while a fresh signed read is in
+    // flight. A prior account/list must not remain actionable during refresh.
+    // Calendar, approvals and detail retain their independent read contracts.
+    if (rootBoard && campaignRequestIsCurrent(requestEpoch, campaignListHydrationEpoch, sessionEpoch, expectedPath)) {
+      merge({
+        campaignPlans: [],
+        campaignPlannerReadState: "loading",
+        pageStates: { ...(base().pageStates || {}), "/campaigns": "read_only" }
+      });
+    }
     try {
       const result = await api("/campaigns");
       if (!campaignRequestIsCurrent(requestEpoch, campaignListHydrationEpoch, sessionEpoch, expectedPath)) return [];
       const items = result.data && Array.isArray(result.data.items) ? result.data.items : [];
       if (!campaignRequestIsCurrent(requestEpoch, campaignListHydrationEpoch, sessionEpoch, expectedPath)) return [];
-      merge({ campaignPlans: items.slice(0, 100) });
+      merge({
+        campaignPlans: items.slice(0, 100),
+        ...(rootBoard ? {
+          campaignPlannerReadState: "ready",
+          pageStates: { ...(base().pageStates || {}), "/campaigns": "ready" }
+        } : {})
+      });
       return items;
     } catch (_) {
       // A failed read must not make a browser-side plan, calendar, approval
       // or publication state appear. The existing empty board remains honest.
       if (!campaignRequestIsCurrent(requestEpoch, campaignListHydrationEpoch, sessionEpoch, expectedPath)) return [];
-      merge({ campaignPlans: [] });
+      merge({
+        campaignPlans: [],
+        ...(rootBoard ? {
+          campaignPlannerReadState: "failed",
+          pageStates: { ...(base().pageStates || {}), "/campaigns": "guarded" }
+        } : {})
+      });
       return [];
     }
   }
@@ -31551,12 +31578,26 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...campaign, idempotency_key: submission.key })
           });
-          mergeCampaignPlan(result.data && result.data.item);
+          const item = result.data && result.data.item && typeof result.data.item === "object" ? result.data.item : null;
+          if (!item || !validCampaignPlanId(item.id)) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
+          mergeCampaignPlan(item);
+          if (window.TOANAASPortal && typeof window.TOANAASPortal.clearTransientFormDraft === "function") {
+            window.TOANAASPortal.clearTransientFormDraft(CAMPAIGN_CREATE_ROUTE);
+          }
           toast(result.message || "Đã lưu kế hoạch Web.");
+          window.location.assign(`/campaigns/${encodeURIComponent(String(item.id))}`);
         } finally {
           releaseSubmission(submission);
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "campaigns-refresh") {
+        if (!(base().capabilities && base().capabilities["campaigns-refresh"] === true)) {
+          throw new Error("Cần signed Web session để làm mới Campaign Operations Board.");
+        }
+        await hydrateCampaignPlans();
+        toast("Đã làm mới Campaign owner-scoped.");
         return;
       }
       if (action === "campaign-update") {

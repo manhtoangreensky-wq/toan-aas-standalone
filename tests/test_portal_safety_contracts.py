@@ -1500,6 +1500,8 @@ def test_video_finalization_maps_bot_navigation_without_faking_mux_or_delivery()
 
 def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_automation() -> None:
     assert 'customerPage("/campaigns", "Campaign Planner"' in PORTAL
+    assert 'layout: "campaign-planner", action: "none"' in PORTAL
+    assert 'customerPage("/campaigns/new", "Campaign mới"' in PORTAL
     assert 'layout: "campaign-planner", action: "campaign-create"' in PORTAL
     assert 'case "campaign-planner": return renderCampaignPlanner(page, context);' in PORTAL
     assert 'case "campaign-detail": return renderCampaignDetail(page, context);' in PORTAL

@@ -114,6 +114,7 @@ def test_project_operations_board_uses_existing_signed_reader_and_clears_failure
     for forbidden in ("bridge_request", "CORE_BRIDGE", "payos", "wallet", "provider"):
         assert forbidden.lower() not in hydration.lower()
     assert 'projectCenterReadState: account ? "loading" : "guarded"' in INTEGRATION
+    assert 'projectCenterReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.projectCenterReadState || ""))' in PORTAL
     assert "function projectRouteUsesListView()" in INTEGRATION
     assert 'return currentPortalPath() === "/projects";' in INTEGRATION
     root = root_renderer()
