@@ -328,3 +328,58 @@ def test_audio_transform_rechecks_private_output_before_download_and_after_tampe
         assert blocked.json()["error_code"] == "WEB_AUDIO_ASSET_OUTPUT_UNAVAILABLE"
         final_detail = client.get(f"/api/v1/audio-asset-operations/{operation['id']}")
         assert final_detail.json()["data"]["operation"]["state"] == "unavailable"
+
+
+def test_audio_transform_fails_closed_when_source_archives_after_claim(tmp_path, monkeypatch):
+    """A source lifecycle change after copy/probe must never publish output."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "audio-source-race@example.com")
+        source = upload_mp3(client, csrf, key="audio-source-race-source-0001")
+        module, render_calls = activate_audio_runtime(monkeypatch)
+        original_probe = module._probe_audio
+        database = tmp_path / "copyfast-audio-asset-test.db"
+        archive_changes: list[int] = []
+
+        def archive_source_after_claim(ffprobe: str, path: Path) -> dict[str, object]:
+            # `_claim_operation` already committed and `_copy_verified_source`
+            # has already descriptor-pinned/rehashed the source. Simulate a
+            # legitimate Asset Vault lifecycle change immediately before the
+            # final source-current check. `_probe_audio` is also used by the
+            # output verifier later, so mutate only the first source probe.
+            if not archive_changes:
+                with sqlite3.connect(database) as conn:
+                    changed = conn.execute(
+                        """UPDATE web_asset_files
+                               SET state='archived', lifecycle_revision=lifecycle_revision + 1
+                             WHERE id=? AND state='active'""",
+                        (source["id"],),
+                    ).rowcount
+                    conn.commit()
+                archive_changes.append(changed)
+            return original_probe(ffprobe, path)
+
+        monkeypatch.setattr(module, "_probe_audio", archive_source_after_claim)
+        response = convert(
+            client,
+            csrf,
+            asset_id=source["id"],
+            target_format="mp3",
+            key="audio-source-race-convert-0001",
+        )
+        assert response.status_code == 200
+        operation = response.json()["data"]["operation"]
+        assert operation["state"] == "failed"
+        assert operation["output_available"] is False
+        assert operation["filename"] is None
+        assert render_calls == [{"target_format": "mp3", "normalize": False}]
+        assert archive_changes == [1]
+
+        with sqlite3.connect(database) as conn:
+            row = conn.execute(
+                "SELECT state, failure_code, storage_key FROM web_audio_asset_operations WHERE id=?",
+                (operation["id"],),
+            ).fetchone()
+        assert row == ("failed", "AUDIO_SOURCE_CHANGED", None)
+        output_directory = tmp_path / "private-audio-outputs" / "outputs"
+        assert not output_directory.exists() or not list(output_directory.iterdir())
