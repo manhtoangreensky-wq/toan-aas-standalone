@@ -182,7 +182,9 @@ def test_write_keeps_idempotency_key_when_receipt_or_private_refresh_is_ambiguou
     assert "same idempotency key will be reused" not in actions  # Vietnamese public copy must remain localized.
     assert "cùng idempotency key sẽ được tái sử dụng" in actions
     assert "receiptAndRefreshConfirmed = true;" in actions
-    assert "if (receiptAndRefreshConfirmed) discardSubmission(intent.scope, submission);" in actions
+    assert "receiptConfirmedAwayFromView = true;" in actions
+    assert "audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)" in actions
+    assert "if (receiptAndRefreshConfirmed || receiptConfirmedAwayFromView) discardSubmission(intent.scope, submission);" in actions
     assert "acknowledged" not in actions
 
 

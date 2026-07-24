@@ -195,6 +195,14 @@
   let assetVaultLifecycleHydrationEpoch = 0;
   let subtitleAssetOperationsHydrationEpoch = 0;
   let audioAssetOperationsHydrationEpoch = 0;
+  // This view epoch belongs to the Audio Asset Operations screen itself. It
+  // prevents a completed write from an older screen instance from replacing a
+  // newer explicit source handoff or source-page selection in the same tab.
+  let audioAssetOperationsViewEpoch = 0;
+  // Collection-to-audio handoff is an async signed revalidation read. Keep a
+  // separate request generation so only its latest active collection detail
+  // may navigate into Audio Asset Operations.
+  let mediaAudioOperationHandoffEpoch = 0;
   let videoTransformOperationsHydrationEpoch = 0;
   let videoTransformOperationDetailHydrationEpoch = 0;
   let frameVideoOperationsHydrationEpoch = 0;
@@ -3390,6 +3398,39 @@
     const match = /^\/media-workspace\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
     return validMediaCollectionId(id) ? id : "";
+  }
+
+  function mediaAudioOperationHandoffSource(collectionId, itemId, route, suppliedDetail) {
+    // This is an explicit, in-tab navigation helper, not a collection/asset
+    // authorization mechanism. The source stays eligible only when the
+    // currently rendered signed detail still contains the same active typed
+    // Asset Vault attachment. Audio Asset Operations repeats all owner and
+    // lifecycle verification server-side before it can inspect or transform.
+    const normalizedCollectionId = validMediaCollectionId(collectionId) ? String(collectionId) : "";
+    const normalizedItemId = validMediaCollectionId(itemId) ? String(itemId) : "";
+    const expectedRoute = normalizedCollectionId ? `/media-workspace/${encodeURIComponent(normalizedCollectionId)}` : "";
+    if (!normalizedCollectionId || !normalizedItemId || route !== expectedRoute || currentPortalPath() !== expectedRoute) return null;
+    const detail = suppliedDetail && typeof suppliedDetail === "object"
+      ? suppliedDetail
+      : (base().mediaCollectionDetail && typeof base().mediaCollectionDetail === "object" ? base().mediaCollectionDetail : {});
+    const collection = detail.collection && typeof detail.collection === "object" ? detail.collection : null;
+    if (!collection || String(collection.id || "") !== normalizedCollectionId || String(collection.state || "") !== "active") return null;
+    const items = Array.isArray(detail.items) ? detail.items : [];
+    const item = items.find((candidate) => candidate && String(candidate.id || "") === normalizedItemId);
+    const asset = item && item.asset && typeof item.asset === "object" ? item.asset : null;
+    if (!item || !asset || !validVaultAssetId(item.asset_id) || String(item.delivery || "") !== "asset_vault_attachment_only"
+      || asset.download_available !== true) return null;
+    const source = audioAssetReferenceItem(asset);
+    if (!source || source.id !== String(item.asset_id)) return null;
+    return { asset_id: source.id };
+  }
+
+  function mediaAudioOperationHandoffRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === mediaAudioOperationHandoffEpoch
+      && sessionEpoch === mediaWorkspaceSessionEpoch
+      && currentPortalPath() === expectedPath
+      && Boolean(base().session && base().session.authenticated === true)
+      && base().mediaWorkspaceEnabled === true;
   }
 
   function isNativeMusicPromptComposerPath(path) {
@@ -11105,6 +11146,8 @@
     ++assetVaultLifecycleHydrationEpoch;
     ++subtitleAssetOperationsHydrationEpoch;
     ++audioAssetOperationsHydrationEpoch;
+    ++audioAssetOperationsViewEpoch;
+    ++mediaAudioOperationHandoffEpoch;
     ++videoTransformOperationsHydrationEpoch;
     ++videoTransformOperationDetailHydrationEpoch;
     ++frameVideoOperationsHydrationEpoch;
@@ -18467,6 +18510,18 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function audioAssetOperationsViewIsCurrent(viewEpoch, expectedPath) {
+    // A completed write belongs to the exact Audio Asset Operations view that
+    // submitted it. A newer explicit handoff, source-page selection, route
+    // change or session bootstrap must win over an older response.
+    return viewEpoch === audioAssetOperationsViewEpoch
+      && currentPortalPath() === expectedPath
+      && audioAssetOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true
+      && base().audioAssetOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
   function clearAudioAssetOperationsProjection(readState) {
     const normalizedReadState = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
     merge({
@@ -23893,6 +23948,57 @@
         toast("Đã làm mới Audio Library & Briefing của Web account hiện tại.");
         return;
       }
+      if (action === "media-audio-operation-handoff") {
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-view"] === true)) {
+          throw new Error("Audio Asset Operations chưa sẵn sàng cho signed Web session này.");
+        }
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const itemId = String(detail.mediaItemId || "").trim();
+        const localSource = mediaAudioOperationHandoffSource(collectionId, itemId, route);
+        if (!localSource) {
+          throw new Error("Audio reference không còn active trong collection hiện tại. Hãy làm mới rồi chọn lại.");
+        }
+        const requestEpoch = ++mediaAudioOperationHandoffEpoch;
+        const sessionEpoch = mediaWorkspaceSessionEpoch;
+        setActionBusy(action, route, true);
+        try {
+          // Re-read the exact collection immediately before routing. The
+          // rendered detail is only a preflight; a detached/archived item
+          // must never carry an Asset Vault UUID into the next screen.
+          const verified = await api("/media-workspace/collections/" + encodeURIComponent(collectionId), { cache: "no-store" });
+          if (!mediaAudioOperationHandoffRequestIsCurrent(requestEpoch, sessionEpoch, route)) return;
+          const freshDetail = verified.data && typeof verified.data === "object" ? verified.data : {};
+          const source = mediaAudioOperationHandoffSource(collectionId, itemId, route, freshDetail);
+          if (!source) {
+            throw new Error("Audio reference vừa thay đổi, bị gỡ hoặc không còn active. Hãy làm mới collection rồi chọn lại.");
+          }
+          // Clear any prior owner-scoped projection before moving routes. The
+          // only carried value is this opaque UUID in the immediate call
+          // below; it is never placed in a URL, storage, draft, Bot state or
+          // write request, and it never starts an operation automatically.
+          ++audioAssetOperationsViewEpoch;
+          clearAudioAssetOperationsProjection("loading");
+          window.history.pushState({}, "", AUDIO_ASSET_OPERATIONS_ROUTE);
+          merge({ path: AUDIO_ASSET_OPERATIONS_ROUTE, title: "TOAN AAS" });
+          const refreshed = await hydrateAudioAssetOperations({ selectedId: source.asset_id });
+          if (!refreshed) {
+            throw new Error("Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.");
+          }
+          const selected = refreshed.references && refreshed.references.selected;
+          const sourceControl = document.getElementById("audio-asset-source");
+          if (sourceControl && !sourceControl.disabled && typeof sourceControl.focus === "function") {
+            sourceControl.focus({ preventScroll: true });
+          }
+          if (selected && selected.id === source.asset_id) {
+            toast("Đã mở Audio Operations với audio private đã được xác minh lại. Chọn thao tác và xác nhận riêng để tiếp tục.");
+          } else {
+            toast("Audio nguồn không có trên trang nguồn owner-scoped vừa xác minh. Hãy chọn lại hoặc chuyển trang trước khi thao tác; Web không tự dùng nguồn cũ.", "warning");
+          }
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "media-collection-create") {
         const payload = mediaCollectionPayload(fields);
         const scope = "media-workspace:collection:create";
@@ -28044,6 +28150,7 @@
         }
         setActionBusy(action, route, true);
         try {
+          ++audioAssetOperationsViewEpoch;
           const refreshed = await hydrateAudioAssetOperations();
           if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
             throw new Error("Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.");
@@ -28067,6 +28174,7 @@
         if (selectedId && !validVaultAssetId(selectedId)) throw new Error("Nguồn audio đang chọn không hợp lệ.");
         setActionBusy(action, route, true);
         try {
+          ++audioAssetOperationsViewEpoch;
           const refreshed = await hydrateAudioAssetOperations({ offset, selectedId });
           if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
             throw new Error("Không thể tải trang nguồn audio owner-scoped an toàn. Hãy thử lại.");
@@ -28091,6 +28199,9 @@
           return;
         }
         let receiptAndRefreshConfirmed = false;
+        let receiptConfirmedAwayFromView = false;
+        const submissionViewEpoch = audioAssetOperationsViewEpoch;
+        const submissionPath = AUDIO_ASSET_OPERATIONS_ROUTE;
         setActionBusy(action, route, true);
         try {
           // A pending metadata read must never replace the receipt from this
@@ -28103,6 +28214,12 @@
             body: JSON.stringify({ ...intent.payload, idempotency_key: submission.key })
           });
           audioAssetOperationReceipt(result, intent.expectedKind);
+          // The server receipt is real, but it must not force an old source
+          // selection or an old operation feed back onto a newer view.
+          if (!audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+            receiptConfirmedAwayFromView = true;
+            return;
+          }
           const refreshed = await hydrateAudioAssetOperations({ selectedId: intent.payload.source_asset_id });
           // Do not discard this key when a confirmed write cannot be followed
           // by a fresh private projection. Retrying this exact intent must
@@ -28117,7 +28234,7 @@
           toast(result.message || fallback);
         } finally {
           releaseSubmission(submission);
-          if (receiptAndRefreshConfirmed) discardSubmission(intent.scope, submission);
+          if (receiptAndRefreshConfirmed || receiptConfirmedAwayFromView) discardSubmission(intent.scope, submission);
           setActionBusy(action, route, false);
         }
         return;
