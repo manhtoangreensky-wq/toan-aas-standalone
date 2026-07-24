@@ -19670,6 +19670,65 @@
     return `<section class="portal-support-metrics" aria-label="Tóm tắt Web Support Desk"><div class="portal-metric"><span>Tổng yêu cầu</span><strong>${safeText(String(total))}</strong><em>Chỉ case Web của bạn</em></div><div class="portal-metric"><span>Đang xử lý</span><strong>${safeText(String(count("new") + count("reviewing") + count("waiting_provider") + count("refund_pending")))}</strong><em>Không phải trạng thái provider tự động</em></div><div class="portal-metric"><span>Chờ phản hồi</span><strong>${safeText(String(count("waiting_user")))}</strong><em>Chỉ hiển thị trong Web</em></div><div class="portal-metric"><span>Đã xử lý</span><strong>${safeText(String(count("resolved") + count("closed")))}</strong><em>Có thể mở lại khi cần</em></div></section>`;
   }
 
+  // A case state alone is not an instruction. Keep a small, deterministic
+  // customer recovery panel next to the actual case: it offers the next safe
+  // Web action without pretending to know a provider, payment, refund or
+  // external-notification result.
+  function renderSupportRecoveryPlan(context, caseItem) {
+    const state = supportCaseState(caseItem && caseItem.state);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["support-case-refresh"] === true);
+    const canReply = Boolean(context.capabilities && context.capabilities["support-case-reply"] === true && state !== "closed");
+    const route = pagePathForSupportCase(caseItem && caseItem.id);
+    const plans = {
+      new: {
+        title: "Đã ghi nhận, đang vào hàng đợi Web",
+        body: "Bạn chưa cần gửi lại yêu cầu. Hãy giữ case này làm một nguồn trao đổi và chỉ bổ sung thông tin khi cần.",
+        next: "Nếu có chi tiết mới, bạn có thể thêm phản hồi trong case này."
+      },
+      reviewing: {
+        title: "Đội ngũ Web đang rà soát",
+        body: "Trạng thái này không xác nhận engine, provider hay tác vụ bên ngoài. Case vẫn là nơi cập nhật duy nhất của bạn.",
+        next: "Bạn có thể bổ sung bối cảnh để việc rà soát rõ hơn."
+      },
+      waiting_user: {
+        title: "Cần thêm phản hồi từ bạn",
+        body: "Support Desk đang chờ thông tin trong case. Không cần tạo yêu cầu trùng lặp hoặc gửi proof thanh toán.",
+        next: "Mở phần phản hồi bên dưới và gửi chi tiết an toàn, không có secret hoặc dữ liệu thanh toán."
+      },
+      waiting_provider: {
+        title: "Đang chờ xác minh nội bộ",
+        body: "Web không hiển thị hoặc suy đoán trạng thái provider. Việc gửi lại tác vụ hoặc tạo case mới sẽ không làm nhanh hơn bước này.",
+        next: "Theo dõi case này và làm mới trạng thái khi bạn quay lại."
+      },
+      refund_pending: {
+        title: "Đề nghị đang được xem xét",
+        body: "Case không tự tạo hoàn tiền, thay đổi Xu hoặc đối soát PayOS. Mọi quyết định tài chính chỉ xuất hiện khi nguồn canonical xác nhận.",
+        next: "Giữ trao đổi trong case này; không gửi OTP, bill, TXID, QR hoặc thông tin thẻ."
+      },
+      resolved: {
+        title: "Đã đánh dấu xử lý xong",
+        body: "Hãy kiểm tra kết quả theo nội dung phản hồi public trong case. Trạng thái này không phải thông báo ngoài Web.",
+        next: "Nếu vấn đề vẫn còn, dùng nút Mở lại yêu cầu trong phần thông tin case."
+      },
+      closed: {
+        title: "Yêu cầu đã đóng",
+        body: "Case được lưu trong Web để bạn xem lại. Không thể gửi phản hồi mới khi nó đang đóng.",
+        next: "Nếu cần rà soát tiếp, mở lại chính case này thay vì tạo yêu cầu trùng lặp."
+      },
+      guarded: {
+        title: "Trạng thái đang được bảo vệ",
+        body: "Web không thể xác minh bước tiếp theo cho case này.",
+        next: "Hãy làm mới case hoặc quay lại danh sách yêu cầu của bạn."
+      }
+    };
+    const plan = plans[state] || plans.guarded;
+    const refresh = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="${safeText(route)}"${canRefresh ? "" : " disabled"}>Làm mới trạng thái</button>`;
+    const reply = state === "waiting_user" && canReply
+      ? '<a class="portal-button portal-button--primary" href="#support-case-reply">Thêm phản hồi</a>'
+      : "";
+    return `<section class="portal-card portal-card-pad portal-support-recovery" data-support-state="${safeText(state)}" aria-labelledby="support-recovery-title"><div class="portal-support-recovery-copy" role="status" aria-live="polite"><span class="portal-section-kicker">Bước tiếp theo</span><h2 class="portal-card-title" id="support-recovery-title">${safeText(plan.title)}</h2><p>${safeText(plan.body)}</p><p><strong>Việc bạn có thể làm:</strong> ${safeText(plan.next)}</p></div><div class="portal-support-recovery-actions">${refresh}${reply}</div></section>`;
+  }
+
   function renderSupportCaseCards(items, admin) {
     if (!items.length) return renderEmpty("Chưa có yêu cầu Web", admin ? "Chưa có case nào cần xử lý theo bộ lọc hiện tại." : "Tạo yêu cầu đầu tiên để trao đổi ngay trong Web Support Desk.", ICONS.ticket);
     return `<div class="portal-support-case-grid">${items.map((item) => {
@@ -19774,18 +19833,22 @@
     const revision = caseItem ? Number(caseItem.revision || 0) : 0;
     if (!caseItem) {
       const loading = context.supportReadState === "loading";
-      return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${loading ? "Đang nạp yêu cầu riêng" : "Yêu cầu không khả dụng"}</h2><p>${loading ? "Máy chủ đang kiểm tra ownership của Web case này." : "Case không tồn tại, không thuộc account hiện tại hoặc Support Desk đang bị bảo vệ."}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Quay lại yêu cầu của tôi</a></div></section></article>`;
+      const canRefresh = Boolean(context.capabilities && context.capabilities["support-case-refresh"] === true);
+      const retry = !loading
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="support-cases-refresh" data-portal-route="${safeText(page.routePath || page.path || "/tickets")}"${canRefresh ? "" : " disabled"}>Thử tải lại</button>`
+        : "";
+      return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${loading ? "Đang nạp yêu cầu riêng" : "Yêu cầu không khả dụng"}</h2><p>${loading ? "Máy chủ đang kiểm tra ownership của Web case này." : "Case không tồn tại, không thuộc account hiện tại hoặc phản hồi chưa được Support Desk xác minh."}</p></div></div><div class="portal-form-footer">${retry}<a class="portal-button portal-button--quiet" href="/tickets">Quay lại yêu cầu của tôi</a></div></section></article>`;
     }
     const state = supportCaseState(caseItem.state);
     const disabledReply = canReply ? "" : " disabled";
     const replyForm = state === "closed"
       ? `<section class="portal-card portal-card-pad"><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Yêu cầu đã đóng</strong><p>Mở lại yêu cầu trước khi gửi phản hồi mới. Thao tác sẽ được máy chủ kiểm tra revision và ownership.</p></div></div></section>`
-      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm phản hồi</h2><p class="portal-card-subtitle">Phản hồi sẽ xuất hiện trong timeline Web của case này; không gửi Telegram, email hay thông báo bên ngoài.</p></div>${badge(canReply ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="support-case-reply" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" novalidate><label class="portal-field"><span class="portal-label">Phản hồi <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" name="body" minlength="1" maxlength="4000" required placeholder="Viết thông tin bổ sung hoặc xác nhận của bạn…"${disabledReply}></textarea><span class="portal-field-help">Không gửi secret, OTP/CVV, số thẻ, bill, TXID, số tài khoản hoặc QR thanh toán.</span></label><div class="portal-form-footer"><span class="portal-form-note">${canReply ? "Server sẽ kiểm tra version trước khi lưu để không ghi đè cập nhật mới." : "CSRF hoặc quyền gửi phản hồi chưa sẵn sàng."}</span><button class="portal-button portal-button--primary" type="submit"${disabledReply}>Gửi phản hồi</button></div></form></section>`;
+      : `<section class="portal-card portal-card-pad" id="support-case-reply"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm phản hồi</h2><p class="portal-card-subtitle">Phản hồi sẽ xuất hiện trong timeline Web của case này; không gửi Telegram, email hay thông báo bên ngoài.</p></div>${badge(canReply ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="support-case-reply" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" novalidate><label class="portal-field"><span class="portal-label">Phản hồi <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" name="body" minlength="1" maxlength="4000" required placeholder="Viết thông tin bổ sung hoặc xác nhận của bạn…"${disabledReply}></textarea><span class="portal-field-help">Không gửi secret, OTP/CVV, số thẻ, bill, TXID, số tài khoản hoặc QR thanh toán.</span></label><div class="portal-form-footer"><span class="portal-form-note">${canReply ? "Server sẽ kiểm tra version trước khi lưu để không ghi đè cập nhật mới." : "CSRF hoặc quyền gửi phản hồi chưa sẵn sàng."}</span><button class="portal-button portal-button--primary" type="submit"${disabledReply}>Gửi phản hồi</button></div></form></section>`;
     const transition = state === "closed" || state === "resolved"
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-reopen" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Mở lại yêu cầu này để Web Support Desk tiếp tục rà soát? Không có Telegram, email hay thay đổi payment nào được gửi."${canTransition ? "" : " disabled"}>Mở lại yêu cầu</button>`
       : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-close" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Đóng yêu cầu Web này? Bạn có thể mở lại sau; thao tác không gửi Telegram, email hay thay đổi payment."${canTransition ? "" : " disabled"}>Đóng yêu cầu</button>`;
     const messageTimeline = messages.length ? `<ol class="portal-support-thread">${messages.map((message) => `<li class="portal-support-message portal-support-message--${safeText(String(message.author_role || "customer"))}"><div class="portal-support-message-meta"><strong>${message.author_role === "operator" ? "Web Support Desk" : "Bạn"}</strong><span>${safeText(supportCaseTimestamp(message.created_at))}</span></div><p>${safeText(String(message.body || ""))}</p></li>`).join("")}</ol>` : renderEmpty("Chưa có nội dung hiển thị", "Case này chưa có phản hồi an toàn để hiển thị.", "·");
-    return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(caseItem.updated_at || caseItem.created_at))}</dd></div><div><dt>Phiên bản</dt><dd>${safeText(String(revision))}</dd></div></dl></section><div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trao đổi</h2><p class="portal-card-subtitle">Chỉ hiển thị các phản hồi public của Web Support Desk.</p></div>${badge("read_only")}</div>${messageTimeline}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin case</h2><p class="portal-card-subtitle">Mọi trạng thái được server cập nhật theo revision.</p></div></div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Phản hồi public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Case ID</dt><dd><code>${safeText(String(caseItem.id).slice(0, 8))}</code></dd></div></dl><div class="portal-form-footer">${transition}<a class="portal-button portal-button--quiet" href="/tickets">Danh sách yêu cầu</a></div></aside></div>${renderSupportCaseTriage(context, caseItem)}${renderSupportEvidence(detail, context, caseItem, revision, false)}${replyForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline trạng thái</h2><p class="portal-card-subtitle">Timeline không hiển thị nội dung audit riêng tư hoặc hoạt động ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
+    return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(caseItem.updated_at || caseItem.created_at))}</dd></div><div><dt>Phiên bản</dt><dd>${safeText(String(revision))}</dd></div></dl></section>${renderSupportRecoveryPlan(context, caseItem)}<div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trao đổi</h2><p class="portal-card-subtitle">Chỉ hiển thị các phản hồi public của Web Support Desk.</p></div>${badge("read_only")}</div>${messageTimeline}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin case</h2><p class="portal-card-subtitle">Mọi trạng thái được server cập nhật theo revision.</p></div></div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Phản hồi public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Case ID</dt><dd><code>${safeText(String(caseItem.id).slice(0, 8))}</code></dd></div></dl><div class="portal-form-footer">${transition}<a class="portal-button portal-button--quiet" href="/tickets">Danh sách yêu cầu</a></div></aside></div>${renderSupportCaseTriage(context, caseItem)}${renderSupportEvidence(detail, context, caseItem, revision, false)}${replyForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline trạng thái</h2><p class="portal-card-subtitle">Timeline không hiển thị nội dung audit riêng tư hoặc hoạt động ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
   }
 
   function operationsDisplayState(value, type) {

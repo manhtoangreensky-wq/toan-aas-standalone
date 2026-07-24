@@ -67,7 +67,8 @@ def test_support_hydrates_owner_scoped_native_routes_with_no_bridge_fallback() -
 
     assert 'return `${admin ? "/support/admin/cases" : "/support/cases"}' in INTEGRATION
     assert 'api(supportCustomerCasesPath(filter, offset))' in INTEGRATION
-    assert 'supportCaseListing: supportCaseListingProjection(filter, offset, casesResult.data, cases.length)' in INTEGRATION
+    assert "supportCustomerCaseListProjection(casesResult, filter, offset)" in INTEGRATION
+    assert "supportCaseListing: caseProjection.listing" in INTEGRATION
     assert 'api("/support/summary")' in INTEGRATION
     assert 'api("/support/events?limit=40")' in INTEGRATION
     assert 'api("/support/events?limit=40").catch(() => null)' in INTEGRATION
