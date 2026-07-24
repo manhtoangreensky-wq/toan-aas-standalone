@@ -11616,6 +11616,8 @@
     // This native page must never display the static catalog's `ready` badge
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
+      "/documents": account && assetVaultEnabled && documentOperationsEnabled ? "processing" : "guarded",
+      "/documents/pdf": account && assetVaultEnabled && documentOperationsEnabled ? "processing" : "guarded",
       "/documents/image-to-pdf": account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled ? "ready" : "guarded",
       "/documents/pdf-to-images": account && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled ? "ready" : "guarded",
       "/documents/pdf-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled ? "ready" : "guarded",
@@ -13004,6 +13006,7 @@
       imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection("", 0, {}, 0),
+      documentOperationsReadState: account && assetVaultEnabled && documentOperationsEnabled ? "loading" : "guarded",
       imageOperations: [],
       imageOperationListing: operationHistoryListingProjection("image_resize", 0, {}, 0),
       // Do not retain a previous signed projection while the new owner-scoped
@@ -13160,12 +13163,15 @@
       assetVaultLifecycle: emptyAssetVaultLifecycle("guarded"),
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
+    const documentOperationsBoardRoute = currentPath === "/documents" || currentPath === "/documents/pdf";
     const documentReferenceKind = documentAssetReferenceKindForPath(currentPath);
-    if (account && assetVaultEnabled && documentOperationsEnabled && documentReferenceKind) {
-      await Promise.all([hydrateDocumentOperations(), hydrateDocumentAssetReferences(documentReferenceKind)]);
-    } else if (account && documentReferenceKind) merge({
+    if (account && assetVaultEnabled && documentOperationsEnabled && (documentOperationsBoardRoute || documentReferenceKind)) {
+      if (documentOperationsBoardRoute) await hydrateDocumentOperations();
+      else await Promise.all([hydrateDocumentOperations(), hydrateDocumentAssetReferences(documentReferenceKind)]);
+    } else if (account && (documentOperationsBoardRoute || documentReferenceKind)) merge({
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection(documentOperationKindForCurrentRoute(), 0, {}, 0),
+      documentOperationsReadState: "guarded",
       documentAssetReferences: emptyDocumentAssetReferences(),
       documentAssetReferenceReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
@@ -20193,8 +20199,11 @@
       merge({
         documentOperations: items,
         documentOperationListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        documentOperationsReadState: "ready",
         pageStates: {
           ...(base().pageStates || {}),
+          "/documents": "ready",
+          "/documents/pdf": "ready",
           "/documents/split": "ready",
           "/documents/merge": "ready",
           "/documents/compress": "ready",
@@ -20215,8 +20224,11 @@
       merge({
         documentOperations: [],
         documentOperationListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        documentOperationsReadState: "failed",
         pageStates: {
           ...(base().pageStates || {}),
+          "/documents": "guarded",
+          "/documents/pdf": "guarded",
           "/documents/split": "guarded",
           "/documents/merge": "guarded",
           "/documents/compress": "guarded",
@@ -31195,11 +31207,25 @@
         return;
       }
       if (action === "document-operation-refresh") {
-        await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+        const documentPath = currentPortalPath();
+        const isDocumentBoard = documentPath === "/documents" || documentPath === "/documents/pdf";
+        if (route !== documentPath || (!isDocumentBoard && !documentOperationKindForCurrentRoute())) {
+          throw new Error("Chỉ có thể làm mới Document Operations từ workspace tài liệu đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["document-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và Document Operations để làm mới dữ liệu private.");
+        }
+        if (isDocumentBoard) await hydrateDocumentOperations();
+        else await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Document Operations.");
         return;
       }
       if (action === "document-operation-page") {
+        const documentPath = currentPortalPath();
+        const isDocumentBoard = documentPath === "/documents" || documentPath === "/documents/pdf";
+        if (route !== documentPath || (!isDocumentBoard && !documentOperationKindForCurrentRoute())) {
+          throw new Error("Chỉ có thể đổi trang lịch sử từ workspace tài liệu đang mở.");
+        }
         if (!(base().capabilities && base().capabilities["document-operation-view"] === true)) {
           throw new Error("Bạn không có quyền xem lịch sử Document Operations.");
         }
