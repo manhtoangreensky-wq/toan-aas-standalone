@@ -542,3 +542,112 @@ def test_media_workspace_blocks_imitation_and_never_claims_generation_or_deliver
         )
         assert blocked_compose.status_code == 200
         assert blocked_compose.json()["error_code"] == "WEB_MEDIA_COLLECTION_ARCHIVED"
+
+
+def test_collection_review_pack_is_owner_scoped_revision_bound_and_never_persists(tmp_path, monkeypatch):
+    """A review receipt may reveal readiness counts, never a faux clearance."""
+    db_path = tmp_path / "copyfast-media-workspace-test.db"
+    with make_client(tmp_path, monkeypatch) as owner:
+        endpoint = "/api/v1/media-workspace/collections/00000000-0000-4000-8000-000000000001/review-pack"
+        assert owner.post(endpoint, json={"expected_revision": 1}).status_code == 401
+
+        csrf = register_and_login(owner, "media-review-owner@example.com")
+        collection = create_collection(owner, csrf, "media-review-create-0001")
+        endpoint = f"/api/v1/media-workspace/collections/{collection['id']}/review-pack"
+
+        denied = owner.post(endpoint, json={"expected_revision": 1})
+        assert denied.status_code == 403
+        assert owner.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": 1, "extra": True}).status_code == 422
+
+        audio = upload_asset(
+            owner,
+            csrf,
+            key="media-review-audio-upload-0001",
+            name="review-private.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(audio["id"], 1, "media-review-attach-0001", attribution=""),
+        )
+        assert attached.status_code == 200
+        assert attached.json()["data"]["revision"] == 2
+
+        def table_counts() -> dict[str, int]:
+            with sqlite3.connect(db_path) as conn:
+                return {
+                    table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                    for table in ("web_media_collections", "web_media_items", "web_media_events", "web_idempotency", "web_audit_events")
+                }
+
+        before = table_counts()
+        review = owner.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": 2})
+        assert review.status_code == 200
+        body = review.json()
+        assert body["ok"] is True
+        assert body["status"] == "draft"
+        data = body["data"]
+        pack = data["review_pack"]
+        assert data["collection_id"] == collection["id"]
+        assert data["revision"] == 2
+        assert pack["review_state"] == "needs_reference_metadata"
+        assert pack["reference_summary"] == {
+            "total": 1,
+            "music": 1,
+            "sfx": 0,
+            "reference": 0,
+            "favorite": 1,
+            "duration_declared": 1,
+            "attribution_missing": 1,
+            "license_missing": 0,
+            "unavailable": 0,
+            "collection_rights_note_declared": True,
+        }
+        assert [check["id"] for check in pack["checks"]] == [
+            "brief_originality", "reference_metadata", "mix_accessibility", "release_handoff",
+        ]
+        for key in (
+            "collection_mutated", "review_pack_persisted", "approval_recorded", "input_persisted",
+            "source_audio_inspected", "source_video_inspected", "provider_called", "catalog_searched", "player_opened",
+            "preview_created", "audio_created", "output_created", "job_created", "wallet_mutated", "payment_started",
+            "asset_saved", "delivery_created", "bot_called", "telegram_called", "rights_verified", "release_approved",
+        ):
+            assert data[key] is False
+        assert data["execution"] == "web_native_collection_review_only"
+        for private_value in (
+            collection_payload("unused")["creative_brief"],
+            collection_payload("unused")["rights_note"],
+            audio["id"],
+            "review-private.wav",
+            "private-web-assets",
+        ):
+            assert private_value not in review.text
+        assert table_counts() == before
+
+        replay = owner.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": 2})
+        assert replay.status_code == 200
+        assert replay.json() == body
+        assert table_counts() == before
+
+        stale = owner.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": 1})
+        assert stale.status_code == 200
+        assert stale.json()["error_code"] == "WEB_MEDIA_REVISION_CONFLICT"
+
+        with make_client(tmp_path, monkeypatch) as other:
+            csrf_other = register_and_login(other, "media-review-other@example.com")
+            foreign = other.post(endpoint, headers={"X-CSRF-Token": csrf_other}, json={"expected_revision": 2})
+            assert foreign.status_code == 200
+            assert foreign.json()["error_code"] == "WEB_MEDIA_COLLECTION_NOT_FOUND"
+            assert collection_payload("unused")["creative_brief"] not in foreign.text
+
+        archived = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 2, "idempotency_key": "media-review-archive-0001"},
+        )
+        assert archived.status_code == 200
+        blocked = owner.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": 3})
+        assert blocked.status_code == 200
+        assert blocked.json()["error_code"] == "WEB_MEDIA_COLLECTION_ARCHIVED"

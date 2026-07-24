@@ -61,6 +61,7 @@ POST  /api/v1/media-workspace/collections/{collection_id}/restore
 POST  /api/v1/media-workspace/collections/{collection_id}/duplicate
 POST  /api/v1/media-workspace/collections/{collection_id}/restore-version
 POST  /api/v1/media-workspace/collections/{collection_id}/compose
+POST  /api/v1/media-workspace/collections/{collection_id}/review-pack
 POST  /api/v1/media-workspace/collections/{collection_id}/items
 PATCH /api/v1/media-workspace/collections/{collection_id}/items/{item_id}
 POST  /api/v1/media-workspace/collections/{collection_id}/items/{item_id}/detach
@@ -72,6 +73,14 @@ owner-scoped idempotency and optimistic `expected_revision`. Successful
 mutations use `status=draft`, never `completed`, and include
 `execution=authoring_only`. Attach/update/detach additionally identify the
 only delivery boundary as `asset_vault_attachment_only`.
+
+`review-pack` is also deterministic but is deliberately **non-persistent**:
+it requires signed ownership, CSRF and the exact active revision, then returns
+only count-level reference readiness and fixed review checklist text. It does
+not create an idempotency/event/audit receipt, change collection state, inspect
+audio, verify rights, approve release, call a provider, create a job or start
+wallet/payment/delivery activity. The response does not echo the brief,
+rights/license metadata or Asset Vault identifiers.
 
 ## Security and privacy
 

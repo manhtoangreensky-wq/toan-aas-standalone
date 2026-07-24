@@ -352,6 +352,10 @@
   let mediaWorkspaceListHydrationEpoch = 0;
   let mediaWorkspaceAudioHydrationEpoch = 0;
   let mediaWorkspaceDetailHydrationEpoch = 0;
+  // Collection review receipts are transient, signed-tab projections. A
+  // collection refresh, route change or account bootstrap must fence a late
+  // response before it can replace the current owner's review state.
+  let mediaWorkspaceReviewPackRequestEpoch = 0;
   // Music Directions is a transient, signed-tab text receipt. A later edit,
   // route change or signed bootstrap invalidates any older explicit request.
   let musicDirectionPresetComposeRequestEpoch = 0;
@@ -3930,6 +3934,95 @@
     return Boolean(sfxCueSheetResultIsSafe(result)
       && cueSheet.description === payload.description && cueSheet.language === payload.language
       && cueSheet.web_sfx_preset_id === payload.web_sfx_preset_id);
+  }
+
+  // Audio Hub review is deliberately a collection-scoped, no-input receipt.
+  // Keeping an exact browser schema means a malformed response cannot turn an
+  // advisory metadata check into an implied clearance, output or delivery.
+  const AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS = Object.freeze([
+    "execution", "collection_mutated", "review_pack_persisted", "approval_recorded", "input_persisted",
+    "source_audio_inspected", "source_video_inspected", "provider_called", "catalog_searched", "player_opened",
+    "preview_created", "audio_created", "output_created", "job_created", "wallet_mutated", "payment_started",
+    "asset_saved", "delivery_created", "bot_called", "telegram_called", "rights_verified", "release_approved"
+  ]);
+  const AUDIO_HUB_REVIEW_PACK_RESULT_KEYS = Object.freeze([
+    "collection_id", "revision", "review_pack", ...AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS
+  ]);
+  const AUDIO_HUB_REVIEW_PACK_KEYS = Object.freeze(["review_state", "policy", "reference_summary", "checks", "cautions"]);
+  const AUDIO_HUB_REVIEW_PACK_SUMMARY_KEYS = Object.freeze([
+    "total", "music", "sfx", "reference", "favorite", "duration_declared", "attribution_missing",
+    "license_missing", "unavailable", "collection_rights_note_declared"
+  ]);
+  const AUDIO_HUB_REVIEW_PACK_CHECK_IDS = Object.freeze([
+    "brief_originality", "reference_metadata", "mix_accessibility", "release_handoff"
+  ]);
+  const AUDIO_HUB_REVIEW_PACK_CHECK_KEYS = Object.freeze(["id", "state", "label", "note"]);
+
+  function audioHubReviewPackBoundaryIsSafe(value) {
+    return musicPromptComposerExactKeys(value, AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS)
+      && value.execution === "web_native_collection_review_only"
+      && AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS.filter((key) => key !== "execution").every((key) => value[key] === false);
+  }
+
+  function audioHubReviewPackCount(value, maximum) {
+    return Number.isSafeInteger(value) && value >= 0 && value <= maximum;
+  }
+
+  function audioHubReviewPackText(value, maximum) {
+    return Boolean(musicPromptComposerText(value, 2, maximum, false));
+  }
+
+  function audioHubReviewPackResultIsSafe(value, collectionId, revision) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (!musicPromptComposerExactKeys(data, AUDIO_HUB_REVIEW_PACK_RESULT_KEYS)
+      || !validMediaCollectionId(data.collection_id)
+      || String(data.collection_id) !== String(collectionId)
+      || !validMediaRevision(data.revision)
+      || Number(data.revision) !== Number(revision)) return false;
+    const boundary = {};
+    AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS.forEach((key) => { boundary[key] = data[key]; });
+    if (!audioHubReviewPackBoundaryIsSafe(boundary)) return false;
+    const pack = data.review_pack && typeof data.review_pack === "object" && !Array.isArray(data.review_pack) ? data.review_pack : {};
+    if (!musicPromptComposerExactKeys(pack, AUDIO_HUB_REVIEW_PACK_KEYS)) return false;
+    const policy = pack.policy && typeof pack.policy === "object" && !Array.isArray(pack.policy) ? pack.policy : {};
+    if (!musicPromptComposerExactKeys(policy, ["status", "marker"]) || policy.status !== "clear" || policy.marker !== null) return false;
+    const summary = pack.reference_summary && typeof pack.reference_summary === "object" && !Array.isArray(pack.reference_summary) ? pack.reference_summary : {};
+    if (!musicPromptComposerExactKeys(summary, AUDIO_HUB_REVIEW_PACK_SUMMARY_KEYS)) return false;
+    if (!AUDIO_HUB_REVIEW_PACK_SUMMARY_KEYS.filter((key) => key !== "collection_rights_note_declared").every((key) => audioHubReviewPackCount(summary[key], 3000))
+      || typeof summary.collection_rights_note_declared !== "boolean"
+      || summary.total !== summary.music + summary.sfx + summary.reference
+      || summary.favorite > summary.total || summary.duration_declared > summary.total
+      || summary.attribution_missing > summary.total || summary.license_missing > summary.total || summary.unavailable > summary.total) return false;
+    const checks = Array.isArray(pack.checks) ? pack.checks : [];
+    if (checks.length !== AUDIO_HUB_REVIEW_PACK_CHECK_IDS.length || !checks.every((check, index) => {
+      const item = check && typeof check === "object" && !Array.isArray(check) ? check : {};
+      return musicPromptComposerExactKeys(item, AUDIO_HUB_REVIEW_PACK_CHECK_KEYS)
+        && item.id === AUDIO_HUB_REVIEW_PACK_CHECK_IDS[index]
+        && ["needs_human_review", "needs_input", "needs_metadata"].includes(item.state)
+        && audioHubReviewPackText(item.label, 180) && audioHubReviewPackText(item.note, 1200);
+    })) return false;
+    const cautions = Array.isArray(pack.cautions) ? pack.cautions : [];
+    const safety = mediaWorkspaceSafetyError(
+      ...checks.flatMap((item) => [item && item.label, item && item.note]),
+      ...cautions
+    );
+    return ["needs_brief", "needs_reference_metadata", "human_review_required"].includes(pack.review_state)
+      && cautions.length === 3 && cautions.every((item) => audioHubReviewPackText(item, 1200)) && !safety;
+  }
+
+  function audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, revision) {
+    const detail = base().mediaCollectionDetail && typeof base().mediaCollectionDetail === "object" ? base().mediaCollectionDetail : {};
+    const collection = detail.collection && typeof detail.collection === "object" ? detail.collection : {};
+    return requestEpoch === mediaWorkspaceReviewPackRequestEpoch
+      && sessionEpoch === mediaWorkspaceSessionEpoch
+      && mediaWorkspaceVisualRoot(route) === "/audio-hub"
+      && route === mediaWorkspaceCollectionRoute(collectionId, route)
+      && currentPortalPath() === route
+      && String(collection.id || "") === String(collectionId)
+      && Number(collection.revision || 0) === Number(revision)
+      && String(collection.state || "") === "active"
+      && base().mediaWorkspaceEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
   }
 
   // Saving is a separate, explicit Web-owned handoff. Retain only the
@@ -11489,6 +11582,7 @@
     consultationCrmConfirmInFlight = false;
     ++contentStudioSessionEpoch;
     ++mediaWorkspaceSessionEpoch;
+    ++mediaWorkspaceReviewPackRequestEpoch;
     ++musicDirectionPresetComposeRequestEpoch;
     musicDirectionPresetComposePendingRequestEpoch = 0;
     ++sfxCueSheetComposeRequestEpoch;
@@ -12128,6 +12222,7 @@
       "media-workspace-duplicate": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-restore-version": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-compose": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "audio-hub-review-pack-compose": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-item-attach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-item-update": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-item-detach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
@@ -12541,6 +12636,7 @@
     ++mediaWorkspaceListHydrationEpoch;
     ++mediaWorkspaceAudioHydrationEpoch;
     ++mediaWorkspaceDetailHydrationEpoch;
+    ++mediaWorkspaceReviewPackRequestEpoch;
     ++voiceStudioSessionEpoch;
     ++voiceStudioListHydrationEpoch;
     ++voiceStudioDetailHydrationEpoch;
@@ -12857,6 +12953,7 @@
       mediaCollections: [],
       mediaCollectionDetail: {},
       mediaComposer: {},
+      audioHubReviewPack: {},
       mediaAudioAssets: [],
       mediaAudioAssetFilter: { q: "" },
       mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
@@ -13614,7 +13711,7 @@
       // Never retain a previous account's audio metadata or fall back to the
       // Bot music bridge when the dedicated Web feature/session is guarded.
       merge({
-        mediaWorkspaceSummary: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, mediaAudioAssets: [],
+        mediaWorkspaceSummary: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, mediaAudioAssets: [],
         mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceEvents: [], mediaWorkspacePolicy: {}, mediaWorkspaceFilter: { q: "", tag: "", prompt_mode: "", state: "all" },
         mediaWorkspaceListing: mediaWorkspaceListingProjection({ q: "", tag: "", prompt_mode: "", state: "all" }, 0, {}, 0), mediaWorkspaceReadState: "guarded",
@@ -14961,6 +15058,7 @@
     // legacy `/music*` paths or a generic bridge hydration as a fallback.
     const path = currentPortalPath();
     const requestEpoch = ++mediaWorkspaceListHydrationEpoch;
+    ++mediaWorkspaceReviewPackRequestEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (!isNativeMediaWorkspacePath(path) || isNativeMusicPromptComposerPath(path) || isNativeMusicDirectionPresetPath(path)) return { stale: true };
     const listView = isMediaWorkspaceListViewPath(path);
@@ -14996,6 +15094,7 @@
         mediaWorkspaceEvents: events,
         mediaCollectionDetail: {},
         mediaComposer: {},
+        audioHubReviewPack: {},
         mediaAudioAssets: [],
         mediaAudioAssetFilter: { q: "" },
         mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
@@ -15010,7 +15109,7 @@
       // survive a signed read failure or a changed account session.
       const emptyListing = mediaWorkspaceListingProjection(filter, offset, {}, 0);
       merge({
-        mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {},
+        mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {},
         mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceEvents: [], mediaWorkspaceFilter: filter, mediaWorkspaceListing: emptyListing, mediaWorkspaceReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/media-workspace": "guarded", "/media-workspace/new": "guarded", "/audio-hub": "guarded", "/audio-hub/new": "guarded", [path]: "guarded" }
@@ -15055,6 +15154,7 @@
     if (!validMediaCollectionId(collectionId)) throw new Error("Mã Audio Collection không hợp lệ.");
     const route = mediaWorkspaceCollectionRoute(collectionId, visualRoute || currentPortalPath());
     const requestEpoch = ++mediaWorkspaceDetailHydrationEpoch;
+    ++mediaWorkspaceReviewPackRequestEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (currentPortalPath() !== route) return null;
     const priorAudioListing = base().mediaAudioAssetListing && typeof base().mediaAudioAssetListing === "object"
@@ -15092,6 +15192,7 @@
         mediaWorkspacePolicy: policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {},
         mediaAudioAssets: audioAssets, mediaAudioAssetFilter: audioFilter, mediaAudioAssetListing: audioListing,
         mediaComposer: {},
+        audioHubReviewPack: {},
         mediaWorkspaceReadState: "ready",
         pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
       });
@@ -15102,7 +15203,7 @@
         // Fail closed: a failed detail request must not leave a previous
         // account's collection list, summary, or event projection visible.
         mediaWorkspaceSummary: {}, mediaCollections: [], mediaWorkspaceEvents: [],
-        mediaCollectionDetail: {}, mediaComposer: {}, mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
+        mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspacePolicy: {}, mediaWorkspaceReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
@@ -25294,6 +25395,57 @@
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-hub-review-pack-compose") {
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const expectedRevision = validMediaRevision(detail.mediaCollectionRevision);
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        const expectedRoute = validMediaCollectionId(collectionId) ? mediaWorkspaceCollectionRoute(collectionId, route) : "";
+        const currentDetail = base().mediaCollectionDetail && typeof base().mediaCollectionDetail === "object" ? base().mediaCollectionDetail : {};
+        const currentCollection = currentDetail.collection && typeof currentDetail.collection === "object" ? currentDetail.collection : {};
+        const policy = currentCollection.policy && typeof currentCollection.policy === "object" ? currentCollection.policy : {};
+        if (!validMediaCollectionId(collectionId) || !expectedRevision || !expectedRoute || route !== expectedRoute || currentPortalPath() !== expectedRoute || mediaWorkspaceVisualRoot(route) !== "/audio-hub") {
+          throw new Error("Gói review chỉ có thể được lập tại Audio Production Hub collection đang mở.");
+        }
+        if (capabilities["audio-hub-review-pack-compose"] !== true || String(currentCollection.id || "") !== collectionId || Number(currentCollection.revision || 0) !== expectedRevision || String(currentCollection.state || "") !== "active" || String(policy.status || "clear") === "guarded") {
+          throw new Error("Collection hiện tại chưa đủ điều kiện signed session, CSRF, policy và revision để lập gói review.");
+        }
+        const requestEpoch = ++mediaWorkspaceReviewPackRequestEpoch;
+        const sessionEpoch = mediaWorkspaceSessionEpoch;
+        // A review is transient and recomputable. It creates no idempotency
+        // receipt, collection event, audit event, browser storage or durable
+        // approval state, so clear only the visible in-tab projection.
+        merge({ audioHubReviewPack: {} });
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/media-workspace/collections/${encodeURIComponent(collectionId)}/review-pack`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ expected_revision: expectedRevision })
+          });
+          if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;
+          const output = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status === "guarded") {
+            if (!audioHubReviewPackBoundaryIsSafe(output)) throw new Error("Máy chủ chưa trả ranh giới Audio Hub review an toàn.");
+            toast(result.message || "Collection cần được chỉnh trước khi lập gói review.", "warning");
+            return;
+          }
+          if (result.status !== "draft" || !audioHubReviewPackResultIsSafe(output, collectionId, expectedRevision)) {
+            throw new Error("Máy chủ chưa trả gói review Audio Hub an toàn cho collection hiện tại.");
+          }
+          merge({ audioHubReviewPack: output });
+          toast(result.message || "Đã lập gói review collection trong phiên hiện tại.");
+          window.requestAnimationFrame(() => {
+            if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;
+            const status = document.querySelector(`[data-audio-hub-review-pack-status][data-media-collection-id="${collectionId}"]`);
+            if (status && typeof status.focus === "function") status.focus({ preventScroll: true });
+          });
+        } finally {
+          if (audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }
