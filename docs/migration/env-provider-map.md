@@ -416,3 +416,9 @@ FFmpeg/ffprobe runtime.
 - `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` (default `false`) permits same-origin inline preview only for an active audio Asset Vault file already attached to the requesting account's active collection.
 
 The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.
+
+## Web-native Finance Operations Planning environment
+
+- `WEBAPP_FINANCE_PLANNING_ENABLED` (default `true`) gates only the signed Admin ERP planning workspace at `/admin/finance/planning`.
+
+It never enables, replaces, or writes Bot canonical finance; Xu/wallet, PayOS/payment/webhook, provider/job, tax calculation, reimbursement execution, accounting export, and production credentials all remain outside this flag.

@@ -58,6 +58,7 @@ import copyfast_mfa
 import copyfast_music_media
 import copyfast_notification_center
 import copyfast_operations_desk
+import copyfast_finance_planning
 import copyfast_partner_crm
 import copyfast_prompt_library
 import copyfast_prompt_studio
@@ -400,6 +401,11 @@ DATA_CONTROLS_BODY_MAX_BYTES = 8 * 1024
 # before Pydantic/SQLite sees it. This is not a file import, Bot document, or
 # generic Admin write transport.
 GOVERNANCE_BODY_MAX_BYTES = 96 * 1024
+# Finance Operations Planning accepts only compact confirmed budget/cost-plan
+# JSON. Count the raw stream before FastAPI/Pydantic/SQLite handling so a
+# signed-admin endpoint cannot become an oversized-body sink or a finance
+# evidence intake channel.
+FINANCE_PLANNING_BODY_MAX_BYTES = 16 * 1024
 # A private archive payload may contain one validated 25 MiB file plus bounded
 # multipart metadata.  Count the raw ASGI stream before multipart parsing so
 # a chunked upload cannot bypass either the file contract or process memory.
@@ -469,6 +475,7 @@ class PromptLibraryBodyLimitMiddleware:
         inbox_mutation_max_bytes: int = INBOX_MUTATION_BODY_MAX_BYTES,
         data_controls_max_bytes: int = DATA_CONTROLS_BODY_MAX_BYTES,
         governance_max_bytes: int = GOVERNANCE_BODY_MAX_BYTES,
+        finance_planning_max_bytes: int = FINANCE_PLANNING_BODY_MAX_BYTES,
         admin_document_archive_upload_max_bytes: int = ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
         auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
         interface_locale_max_bytes: int = INTERFACE_LOCALE_BODY_MAX_BYTES,
@@ -508,6 +515,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.inbox_mutation_max_bytes = int(inbox_mutation_max_bytes)
         self.data_controls_max_bytes = int(data_controls_max_bytes)
         self.governance_max_bytes = int(governance_max_bytes)
+        self.finance_planning_max_bytes = int(finance_planning_max_bytes)
         self.admin_document_archive_upload_max_bytes = int(admin_document_archive_upload_max_bytes)
         self.auth_credential_max_bytes = int(auth_credential_max_bytes)
         self.interface_locale_max_bytes = int(interface_locale_max_bytes)
@@ -565,6 +573,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/inbox/items/")
                 or path.startswith("/api/v1/account/data-controls/")
                 or path.startswith("/api/v1/admin/governance/")
+                or path.startswith("/api/v1/admin/finance-planning/")
                 or PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(path)
                 or path == INTERFACE_LOCALE_API_PATH
                 or path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
@@ -651,6 +660,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.data_controls_max_bytes
         if path.startswith("/api/v1/admin/governance/"):
             return self.governance_max_bytes
+        if path.startswith("/api/v1/admin/finance-planning/"):
+            return self.finance_planning_max_bytes
         if path == INTERFACE_LOCALE_API_PATH:
             return self.interface_locale_max_bytes
         if path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS:
@@ -709,6 +720,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_inbox_mutation = path.startswith("/api/v1/inbox/items/")
         is_data_controls = path.startswith("/api/v1/account/data-controls/")
         is_governance = path.startswith("/api/v1/admin/governance/")
+        is_finance_planning = path.startswith("/api/v1/admin/finance-planning/")
         is_admin_document_archive_upload = self._is_admin_document_archive_upload_path(path)
         is_interface_locale = path == INTERFACE_LOCALE_API_PATH
         is_support_consultation_brief = path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
@@ -774,6 +786,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_admin_document_archive_upload
             else copyfast_governance._boundary()
             if is_governance
+            else copyfast_finance_planning._boundary(persisted=False)
+            if is_finance_planning
             else copyfast_media_factory._boundary()
             if is_media_factory
             else copyfast_quick_image_planner._boundary()
@@ -856,6 +870,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_admin_document_archive_upload
                     else "Dữ liệu Governance Documents vượt giới hạn kích thước an toàn."
                     if is_governance
+                    else "Dữ liệu Finance Operations Planning vượt giới hạn kích thước an toàn."
+                    if is_finance_planning
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
@@ -935,6 +951,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_admin_document_archive_upload
                     else "WEB_GOVERNANCE_BODY_TOO_LARGE"
                     if is_governance
+                    else "WEB_FINANCE_PLANNING_BODY_TOO_LARGE"
+                    if is_finance_planning
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -957,12 +975,11 @@ class PromptLibraryBodyLimitMiddleware:
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        elif is_admin_document_archive_upload or is_audio_asset_operation or is_video_operation or is_frame_video_operation or is_video_transform_operation:
-            # An oversized private archive upload must receive the same
-            # cross-origin boundary as a normal archive response. Audio and
-            # Video processor requests likewise identify private Asset Vault
-            # work, and this raw-body guard bypasses the normal post-route
-            # middleware.
+        elif is_admin_document_archive_upload or is_audio_asset_operation or is_video_operation or is_frame_video_operation or is_video_transform_operation or is_finance_planning:
+            # An oversized private archive upload, Asset Vault processor
+            # request or Finance Planning write must receive the same
+            # cross-origin boundary as its normal private response. This
+            # raw-body guard bypasses the normal post-route middleware.
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         await response(scope, receive, send)
 
@@ -1067,6 +1084,7 @@ app.add_middleware(
     inbox_mutation_max_bytes=INBOX_MUTATION_BODY_MAX_BYTES,
     data_controls_max_bytes=DATA_CONTROLS_BODY_MAX_BYTES,
     governance_max_bytes=GOVERNANCE_BODY_MAX_BYTES,
+    finance_planning_max_bytes=FINANCE_PLANNING_BODY_MAX_BYTES,
     admin_document_archive_upload_max_bytes=ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
     auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
     interface_locale_max_bytes=INTERFACE_LOCALE_BODY_MAX_BYTES,
@@ -1477,6 +1495,18 @@ async def security_headers(request: Request, call_next):
     # bridge, wallet, payment, provider, job, publication or notification.
     governance_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/admin/governance/")
     governance_read = request.method == "GET" and request.url.path.startswith("/api/v1/admin/governance/")
+    # Finance Operations Planning is a signed Web-admin-only planning store.
+    # Keep fixed family buckets ahead of session/CSRF/Pydantic/SQLite work so
+    # arbitrary UUID suffixes and reads cannot bypass the in-process gate. It
+    # never grants any Bot, ledger, PayOS, provider or payment capability.
+    finance_planning_write = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/admin/finance-planning/")
+    )
+    finance_planning_read = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/admin/finance-planning/")
+    )
     # Internal Document Archive is an independent Web-local admin service. Its
     # file writes have a distinctly tighter bucket than metadata transitions;
     # every route still repeats signed-session, CSRF, revision, confirmation,
@@ -1686,6 +1716,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if governance_read:
         rate_limit = 120
+    if finance_planning_write:
+        rate_limit = 20
+    if finance_planning_read:
+        rate_limit = 120
     if admin_document_archive_write:
         rate_limit = 30
     if admin_document_archive_upload:
@@ -1782,6 +1816,8 @@ async def security_headers(request: Request, call_next):
             else "admin-document-archive-read" if admin_document_archive_read
             else "governance-write" if governance_write
             else "governance-read" if governance_read
+            else "finance-planning-write" if finance_planning_write
+            else "finance-planning-read" if finance_planning_read
             else "workboard-write" if workboard_write
             else "workboard-read" if workboard_read
             else "workspace-setup-write" if workspace_setup_write
@@ -1832,6 +1868,7 @@ async def security_headers(request: Request, call_next):
             is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
             is_data_controls_request = data_controls_write or data_controls_read
             is_governance_request = governance_write or governance_read
+            is_finance_planning_request = finance_planning_write or finance_planning_read
             is_admin_document_archive_request = (
                 admin_document_archive_write
                 or admin_document_archive_read
@@ -1867,6 +1904,8 @@ async def security_headers(request: Request, call_next):
                         if is_admin_document_archive_request
                         else copyfast_governance._boundary()
                         if is_governance_request
+                        else copyfast_finance_planning._boundary(persisted=False)
+                        if is_finance_planning_request
                         else copyfast_workboard._boundary()
                         if is_workboard_request
                         else copyfast_workspace_setup._boundary(profile_persisted=False)
@@ -2350,6 +2389,7 @@ app.include_router(copyfast_support.router)
 app.include_router(copyfast_autopilot.router)
 app.include_router(copyfast_reliability.router)
 app.include_router(copyfast_operations_desk.router)
+app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
 
 
@@ -2455,6 +2495,13 @@ async def page(page_path: str, request: Request):
     # Web admin role.  No Bot bridge call is appropriate for this one
     # Web-native, read-only view.
     elif normalized == "/admin/crm/leads":
+        copyfast_auth.require_admin(request)
+    # Finance Operations Planning is a separate Web-owned internal planning
+    # surface. It must not inherit the generic canonical Bot-admin `/admin/*`
+    # path: its API has a distinct signed-Web-admin, CSRF, idempotency,
+    # revision and audit contract, and never reads or mutates Bot/PayOS/Xu
+    # finance state.
+    elif normalized == "/admin/finance/planning":
         copyfast_auth.require_admin(request)
     # Automation Monitor is a local Web-admin, read-only projection of the
     # Web-owned Inbox scheduler receipt table. It deliberately does not

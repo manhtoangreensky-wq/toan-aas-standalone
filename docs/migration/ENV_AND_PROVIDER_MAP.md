@@ -390,3 +390,8 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` defaults to `true` for signed Web-owned collections.
 - `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` defaults to `false`; when enabled it permits only verified, owner-scoped, same-origin inline preview of an attached active Asset Vault audio file.
 - This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.
+
+## Web-native Finance Operations Planning
+
+- `WEBAPP_FINANCE_PLANNING_ENABLED` defaults to `true` and gates only the signed Admin ERP planning workspace at `/admin/finance/planning`.
+- It does not enable, replace, or write Bot canonical finance; Xu/wallet, PayOS/payment/webhook, provider/job, tax calculation, reimbursement execution, accounting export, or any production credential remain outside this flag.

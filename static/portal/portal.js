@@ -1740,6 +1740,13 @@
     ]
   });
   adminPage("/admin/finance", "Finance & Revenue", "Không gian điều phối tài chính chỉ đọc cho payment, topup, revenue, refund, giá và package; Bot/PayOS vẫn là writer canonical.", ICONS.payments, { layout: "admin-domain" }, ["/admin/financials", "/admin/accounting"]);
+  adminPage("/admin/finance/planning", "Finance Operations Planning", "Ngân sách và kế hoạch chi phí vận hành Web-native có confirmation, revision và audit; không phải ledger, Xu, PayOS, payment, refund, revenue, tax hay export của Bot.", ICONS.payments, {
+    layout: "admin-finance-planning", action: "none", status: "processing",
+    notes: [
+      "Chỉ lưu kế hoạch nội bộ do Web sở hữu. Mọi record được kiểm tra signed local-admin, feature flag, CSRF, confirmation, idempotency, revision và audit tại server.",
+      "Không đọc hoặc thay đổi ví Xu, ledger, payment, top-up, PayOS, refund, doanh thu, thuế, export, provider, job, Bot/Core Bridge hay webhook. Không nhập bill, QR, TXID, số tài khoản, secret hoặc OTP."
+    ]
+  });
   adminPage("/admin/finance/tax-readiness", "Tax Readiness & Accounting Guidance", "Checklist chuẩn bị hồ sơ và handoff accounting dành cho canonical admin; trang không tính thuế, không đọc ledger, không xuất file hay thay đổi dữ liệu tài chính.", ICONS.document, {
     layout: "admin-tax-readiness", action: "none", status: "read_only",
     notes: ["Đây là hướng dẫn vận hành nội bộ, không phải tư vấn thuế/pháp lý và không thay thế người có chuyên môn được ủy quyền.", "Trang không đọc transaction, hồ sơ thuế, kỳ kê khai, số tiền, payment reference hay dữ liệu tài chính khác từ Bot/Core Bridge."]
@@ -7008,6 +7015,201 @@
     return { runs: stateFor("runs"), incidents: stateFor("incidents"), approvals: stateFor("approvals") };
   }
 
+  // Finance Operations Planning data has already crossed a dedicated signed
+  // Web-admin API boundary in integration.js.  The renderer still projects it
+  // again so a malformed browser/global value cannot become a believable
+  // budget, ledger-like amount, payment record or stale administrator view.
+  const FINANCE_PLANNING_PORTAL_CATEGORIES = new Set(["infrastructure", "provider_runtime", "software", "marketing", "operations", "other"]);
+  const FINANCE_PLANNING_PORTAL_BUDGET_STATES = new Set(["active", "archived"]);
+  const FINANCE_PLANNING_PORTAL_COST_STATES = new Set(["draft", "review", "approved", "archived"]);
+  const FINANCE_PLANNING_PORTAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const FINANCE_PLANNING_PORTAL_PERIOD = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+  const FINANCE_PLANNING_PORTAL_DATE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
+  const FINANCE_PLANNING_PORTAL_LIST_LIMIT = 50;
+  const FINANCE_PLANNING_PORTAL_MAX_OFFSET = 10000;
+
+  function financePlanningPortalObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  }
+
+  function financePlanningPortalInteger(value, minimum, maximum) {
+    return Number.isSafeInteger(value) && value >= minimum && value <= maximum ? value : null;
+  }
+
+  function financePlanningPortalText(value, maximum, allowEmpty) {
+    if (typeof value !== "string") return null;
+    const text = value.replace(/\r\n?/g, "\n").trim();
+    if ((!allowEmpty && !text) || text.length > maximum || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return null;
+    return text;
+  }
+
+  function financePlanningPortalView(value) {
+    const source = financePlanningPortalObject(value);
+    if (!source || Object.keys(source).some((key) => !["period", "budgetOffset", "costPlanOffset"].includes(key))) return null;
+    const period = String(source.period || "");
+    const budgetOffset = financePlanningPortalInteger(source.budgetOffset, 0, FINANCE_PLANNING_PORTAL_MAX_OFFSET);
+    const costPlanOffset = financePlanningPortalInteger(source.costPlanOffset, 0, FINANCE_PLANNING_PORTAL_MAX_OFFSET);
+    if (!FINANCE_PLANNING_PORTAL_PERIOD.test(period) || budgetOffset === null || costPlanOffset === null) return null;
+    return { period, budgetOffset, costPlanOffset };
+  }
+
+  function financePlanningPortalEmptyListing(period, offset) {
+    const safeOffset = financePlanningPortalInteger(offset, 0, FINANCE_PLANNING_PORTAL_MAX_OFFSET) || 0;
+    return {
+      period: FINANCE_PLANNING_PORTAL_PERIOD.test(String(period || "")) ? String(period) : "",
+      limit: FINANCE_PLANNING_PORTAL_LIST_LIMIT,
+      offset: safeOffset,
+      total: 0,
+      returned: 0,
+      has_more: false,
+      next_offset: null,
+      previous_offset: safeOffset >= FINANCE_PLANNING_PORTAL_LIST_LIMIT ? safeOffset - FINANCE_PLANNING_PORTAL_LIST_LIMIT : null
+    };
+  }
+
+  function financePlanningPortalListing(value, expectedPeriod, expectedOffset, itemCount) {
+    const source = financePlanningPortalObject(value);
+    const keys = new Set(["period", "limit", "offset", "total", "returned", "has_more", "next_offset", "previous_offset"]);
+    if (!source || Object.keys(source).some((key) => !keys.has(key))
+      || String(source.period || "") !== expectedPeriod
+      || financePlanningPortalInteger(source.limit, 1, 100) === null
+      || financePlanningPortalInteger(source.offset, 0, FINANCE_PLANNING_PORTAL_MAX_OFFSET) !== expectedOffset
+      || financePlanningPortalInteger(source.total, 0, 100000) === null
+      || financePlanningPortalInteger(source.returned, 0, 100) !== itemCount
+      || typeof source.has_more !== "boolean") return null;
+    const limit = source.limit;
+    const offset = source.offset;
+    const total = source.total;
+    const hasMore = source.has_more === true;
+    const nextOffset = source.next_offset;
+    const previousOffset = source.previous_offset;
+    if ((itemCount > limit) || (itemCount > 0 && total < offset + itemCount)
+      || (hasMore && (!Number.isSafeInteger(nextOffset) || nextOffset <= offset || nextOffset > FINANCE_PLANNING_PORTAL_MAX_OFFSET))
+      || (!hasMore && nextOffset !== null)
+      || previousOffset !== (offset >= limit ? offset - limit : null)) return null;
+    return {
+      period: expectedPeriod,
+      limit,
+      offset,
+      total,
+      returned: itemCount,
+      has_more: hasMore,
+      next_offset: hasMore ? nextOffset : null,
+      previous_offset: previousOffset
+    };
+  }
+
+  function financePlanningPortalTransitions(value, states) {
+    const source = financePlanningPortalObject(value);
+    if (!source || Object.keys(source).some((key) => !states.has(key))) return null;
+    const output = {};
+    for (const state of states) {
+      const next = source[state];
+      if (!Array.isArray(next) || next.some((item) => !states.has(String(item)))) return null;
+      output[state] = [...new Set(next.map((item) => String(item)))];
+    }
+    return output;
+  }
+
+  function financePlanningPortalBudget(value) {
+    const source = financePlanningPortalObject(value);
+    if (!source || !FINANCE_PLANNING_PORTAL_UUID.test(String(source.id || ""))
+      || !FINANCE_PLANNING_PORTAL_PERIOD.test(String(source.period || ""))
+      || !FINANCE_PLANNING_PORTAL_CATEGORIES.has(String(source.category || ""))
+      || !FINANCE_PLANNING_PORTAL_BUDGET_STATES.has(String(source.state || ""))) return null;
+    const categoryLabel = financePlanningPortalText(source.category_label, 80, false);
+    const note = financePlanningPortalText(source.note, 500, true);
+    const planned = financePlanningPortalInteger(source.planned_vnd, 1, 1000000000000);
+    const revision = financePlanningPortalInteger(source.revision, 1, 1000000000);
+    if (categoryLabel === null || note === null || planned === null || revision === null) return null;
+    return { id: String(source.id).toLowerCase(), period: String(source.period), category: String(source.category), category_label: categoryLabel, planned_vnd: planned, note, state: String(source.state), revision };
+  }
+
+  function financePlanningPortalCost(value) {
+    const source = financePlanningPortalObject(value);
+    if (!source || !FINANCE_PLANNING_PORTAL_UUID.test(String(source.id || ""))
+      || !FINANCE_PLANNING_PORTAL_PERIOD.test(String(source.period || ""))
+      || !FINANCE_PLANNING_PORTAL_DATE.test(String(source.planned_for || ""))
+      || !String(source.planned_for).startsWith(`${source.period}-`)
+      || !FINANCE_PLANNING_PORTAL_CATEGORIES.has(String(source.category || ""))
+      || !FINANCE_PLANNING_PORTAL_COST_STATES.has(String(source.state || ""))) return null;
+    const categoryLabel = financePlanningPortalText(source.category_label, 80, false);
+    const vendor = financePlanningPortalText(source.vendor_label, 120, true);
+    const purpose = financePlanningPortalText(source.purpose, 700, false);
+    const planned = financePlanningPortalInteger(source.planned_vnd, 1, 1000000000000);
+    const revision = financePlanningPortalInteger(source.revision, 1, 1000000000);
+    if (categoryLabel === null || vendor === null || purpose === null || planned === null || revision === null) return null;
+    return { id: String(source.id).toLowerCase(), period: String(source.period), planned_for: String(source.planned_for), category: String(source.category), category_label: categoryLabel, planned_vnd: planned, vendor_label: vendor, purpose, state: String(source.state), revision };
+  }
+
+  function normalizeFinancePlanningBootstrap(raw) {
+    const source = financePlanningPortalObject(raw) || {};
+    const requestedState = ["loading", "ready", "failed", "guarded"].includes(String(source.readState || "")) ? String(source.readState) : "guarded";
+    const view = financePlanningPortalView(source.view);
+    const policySource = financePlanningPortalObject(source.policy);
+    const categories = policySource && Array.isArray(policySource.categories) ? policySource.categories.map((item) => {
+      const row = financePlanningPortalObject(item);
+      const id = String(row && row.id || "");
+      const label = financePlanningPortalText(row && row.label, 80, false);
+      return FINANCE_PLANNING_PORTAL_CATEGORIES.has(id) && label !== null ? { id, label } : null;
+    }) : [];
+    const uniqueCategories = new Set(categories.filter(Boolean).map((item) => item.id));
+    const policy = policySource && policySource.amount_currency === "VND" && categories.length === FINANCE_PLANNING_PORTAL_CATEGORIES.size && uniqueCategories.size === FINANCE_PLANNING_PORTAL_CATEGORIES.size
+      ? { categories, budget_transitions: financePlanningPortalTransitions(policySource.budget_transitions, FINANCE_PLANNING_PORTAL_BUDGET_STATES), cost_transitions: financePlanningPortalTransitions(policySource.cost_transitions, FINANCE_PLANNING_PORTAL_COST_STATES), amount_currency: "VND" }
+      : null;
+    if (policy && (!policy.budget_transitions || !policy.cost_transitions)) {
+      return {
+        enabled: source.enabled === true,
+        view: view || { period: "", budgetOffset: 0, costPlanOffset: 0 },
+        policy: {}, summary: {}, budgets: [], costPlans: [],
+        budgetListing: financePlanningPortalEmptyListing(view && view.period, view && view.budgetOffset),
+        costPlanListing: financePlanningPortalEmptyListing(view && view.period, view && view.costPlanOffset),
+        readState: "failed"
+      };
+    }
+    const summarySource = financePlanningPortalObject(source.summary);
+    const summaryCategories = summarySource && Array.isArray(summarySource.categories) ? summarySource.categories.map((item) => {
+      const row = financePlanningPortalObject(item);
+      const category = String(row && row.category || "");
+      const label = financePlanningPortalText(row && row.category_label, 80, false);
+      const keys = ["budget_vnd", "planned_vnd", "review_vnd", "cost_plan_count", "review_count"];
+      if (!row || !FINANCE_PLANNING_PORTAL_CATEGORIES.has(category) || label === null
+        || keys.some((key) => financePlanningPortalInteger(row[key], 0, 1000000000000000) === null)
+        || financePlanningPortalInteger(row.remaining_vnd, -1000000000000000, 1000000000000000) === null) return null;
+      return { category, category_label: label, budget_vnd: row.budget_vnd, planned_vnd: row.planned_vnd, remaining_vnd: row.remaining_vnd, cost_plan_count: row.cost_plan_count, review_vnd: row.review_vnd, review_count: row.review_count };
+    }) : [];
+    const summaryCategorySet = new Set(summaryCategories.filter(Boolean).map((item) => item.category));
+    const totalKeys = ["budget_vnd", "planned_vnd", "review_vnd", "cost_plan_count", "review_count"];
+    const summary = summarySource && FINANCE_PLANNING_PORTAL_PERIOD.test(String(summarySource.period || ""))
+      && summaryCategories.length === FINANCE_PLANNING_PORTAL_CATEGORIES.size && summaryCategorySet.size === FINANCE_PLANNING_PORTAL_CATEGORIES.size
+      && totalKeys.every((key) => financePlanningPortalInteger(summarySource[key], 0, 1000000000000000) !== null)
+      && financePlanningPortalInteger(summarySource.remaining_vnd, -1000000000000000, 1000000000000000) !== null
+      ? { period: String(summarySource.period), budget_vnd: summarySource.budget_vnd, planned_vnd: summarySource.planned_vnd, remaining_vnd: summarySource.remaining_vnd, cost_plan_count: summarySource.cost_plan_count, review_vnd: summarySource.review_vnd, review_count: summarySource.review_count, categories: summaryCategories }
+      : null;
+    const budgets = Array.isArray(source.budgets) && source.budgets.length <= 100 ? source.budgets.map(financePlanningPortalBudget) : null;
+    const costPlans = Array.isArray(source.costPlans) && source.costPlans.length <= 100 ? source.costPlans.map(financePlanningPortalCost) : null;
+    const budgetListing = view && budgets && !budgets.some((item) => !item)
+      ? financePlanningPortalListing(source.budgetListing, view.period, view.budgetOffset, budgets.length)
+      : null;
+    const costPlanListing = view && costPlans && !costPlans.some((item) => !item)
+      ? financePlanningPortalListing(source.costPlanListing, view.period, view.costPlanOffset, costPlans.length)
+      : null;
+    const valid = Boolean(policy && summary && view && summary.period === view.period && budgets && costPlans
+      && budgetListing && costPlanListing && !budgets.some((item) => !item) && !costPlans.some((item) => !item));
+    const readState = requestedState === "ready" && !valid ? "failed" : requestedState;
+    return {
+      enabled: source.enabled === true,
+      view: valid ? view : (view || { period: "", budgetOffset: 0, costPlanOffset: 0 }),
+      policy: valid ? policy : {},
+      summary: valid ? summary : {},
+      budgets: valid ? budgets : [],
+      costPlans: valid ? costPlans : [],
+      budgetListing: valid ? budgetListing : financePlanningPortalEmptyListing(view && view.period, view && view.budgetOffset),
+      costPlanListing: valid ? costPlanListing : financePlanningPortalEmptyListing(view && view.period, view && view.costPlanOffset),
+      readState
+    };
+  }
+
   function normalizeBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const session = source.session && typeof source.session === "object" ? source.session : {};
@@ -7057,6 +7259,17 @@
     const operationsDeskReadState = requestedOperationsDeskReadState === "ready" && !operationsDeskReceiptValid
       ? "failed"
       : requestedOperationsDeskReadState;
+    const financePlanning = normalizeFinancePlanningBootstrap({
+      enabled: source.financePlanningEnabled === true,
+      policy: source.financePlanningPolicy,
+      summary: source.financePlanningSummary,
+      budgets: source.financePlanningBudgets,
+      costPlans: source.financePlanningCostPlans,
+      view: source.financePlanningView,
+      budgetListing: source.financePlanningBudgetListing,
+      costPlanListing: source.financePlanningCostPlanListing,
+      readState: source.financePlanningReadState
+    });
     const notificationSummary = normalizeNotificationSummary(source.notificationSummary);
     const notificationPolicy = normalizeNotificationPolicy(source.notificationPolicy);
     const notificationItems = normalizeNotificationItems(source.notificationItems);
@@ -7891,6 +8104,17 @@
       operationsDeskFilter,
       operationsDeskListing,
       operationsDeskReadState,
+      // Finance Planning is an internal Web-owned lifecycle, not an admin
+      // finance bridge model. It remains empty on any malformed/failed read.
+      financePlanningEnabled: financePlanning.enabled,
+      financePlanningView: financePlanning.view,
+      financePlanningPolicy: financePlanning.policy,
+      financePlanningSummary: financePlanning.summary,
+      financePlanningBudgets: financePlanning.budgets,
+      financePlanningCostPlans: financePlanning.costPlans,
+      financePlanningBudgetListing: financePlanning.budgetListing,
+      financePlanningCostPlanListing: financePlanning.costPlanListing,
+      financePlanningReadState: financePlanning.readState,
       reliabilityFollowupEnabled: source.reliabilityFollowupEnabled === true,
       reliabilitySummary: source.reliabilitySummary && typeof source.reliabilitySummary === "object" ? source.reliabilitySummary : {},
       reliabilityFollowups: Array.isArray(source.reliabilityFollowups) ? source.reliabilityFollowups.slice(0, 50) : [],
@@ -22655,7 +22879,7 @@
 
   function adminDirectoryGroup(path) {
     if (["/admin", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
-    if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/tax-readiness"].includes(path)) return "finance";
+    if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/planning", "/admin/finance/tax-readiness"].includes(path)) return "finance";
     if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/growth/postback-readiness", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
     if (["/admin/jobs", "/admin/jobs/failed", "/admin/job-recovery-guide", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
@@ -22791,6 +23015,131 @@
       <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="tax-readiness-checklist-title">Ba điểm kiểm tra trước khi handoff</h2><p>Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính.</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
       <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Chuẩn bị phạm vi review</strong><span>Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ.</span></li><li><strong>Xác thực ở hệ thống được phê duyệt</strong><span>Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép.</span></li><li><strong>Ghi nhận handoff có kiểm soát</strong><span>Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm.</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
       <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function financePlanningMoney(value) {
+    const amount = Number.isSafeInteger(value) ? value : 0;
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(amount)} VND`;
+  }
+
+  function financePlanningStateLabel(value) {
+    return ({ active: "Đang hoạt động", archived: "Đã lưu trữ", draft: "Nháp", review: "Chờ review", approved: "Đã duyệt" })[String(value || "")] || "Đang bảo vệ";
+  }
+
+  function financePlanningStateActions(kind, item, transitions, enabled) {
+    const state = String(item && item.state || "");
+    const next = transitions && Array.isArray(transitions[state]) ? transitions[state] : [];
+    const actionAttribute = kind === "budget"
+      ? 'data-portal-action="finance-planning-budget-state"'
+      : 'data-portal-action="finance-planning-cost-state"';
+    const noun = kind === "budget" ? "ngân sách" : "kế hoạch chi phí";
+    if (!next.length) return '<span class="portal-form-note">Không có chuyển trạng thái</span>';
+    return `<div class="portal-inline-actions">${next.map((target) => `<button class="portal-button portal-button--quiet" type="button" ${actionAttribute} data-portal-route="/admin/finance/planning" data-finance-planning-id="${safeText(item.id)}" data-finance-planning-revision="${safeText(String(item.revision))}" data-finance-planning-state="${safeText(target)}" data-portal-confirm="Xác nhận chuyển ${safeText(noun)} sang ‘${safeText(financePlanningStateLabel(target))}’? Thao tác chỉ thay lifecycle kế hoạch Web, không tạo payment, ledger hay PayOS action."${enabled ? "" : " disabled"}>${safeText(financePlanningStateLabel(target))}</button>`).join("")}</div>`;
+  }
+
+  function financePlanningPeriodControl(period, enabled) {
+    const disabled = enabled ? "" : " disabled";
+    return '<section class="portal-card portal-card-pad">'
+      + '<form class="portal-inline-form" data-portal-form data-portal-no-transient data-portal-action="finance-planning-view" data-portal-route="/admin/finance/planning" novalidate>'
+      + '<label class="portal-field"><span>Kỳ đang xem</span><input class="portal-input" name="period" type="month" value="' + safeText(period) + '" required' + disabled + '></label>'
+      + '<div class="portal-form-footer"><span class="portal-form-note">Chọn kỳ trước khi tạo hoặc review kế hoạch. Danh sách và tổng hợp cùng tải lại theo kỳ này.</span>'
+      + '<button class="portal-button portal-button--primary" type="submit"' + disabled + '>Xem kỳ</button></div></form></section>';
+  }
+
+  function financePlanningPagination(kind, listing, enabled) {
+    const source = listing && typeof listing === "object" ? listing : financePlanningPortalEmptyListing("", 0);
+    const total = Number.isSafeInteger(source.total) ? source.total : 0;
+    const offset = Number.isSafeInteger(source.offset) ? source.offset : 0;
+    const returned = Number.isSafeInteger(source.returned) ? source.returned : 0;
+    const start = total > 0 ? Math.min(offset + 1, total) : 0;
+    const end = total > 0 ? Math.min(offset + returned, total) : 0;
+    const action = kind === "budget" ? "finance-planning-budget-page" : "finance-planning-cost-page";
+    const label = kind === "budget" ? "ngân sách" : "kế hoạch chi phí";
+    const disabled = enabled ? "" : " disabled";
+    const previous = source.previous_offset;
+    const next = source.next_offset;
+    const previousButton = Number.isSafeInteger(previous)
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + action + '" data-portal-route="/admin/finance/planning" data-finance-planning-period="' + safeText(source.period || "") + '" data-finance-planning-offset="' + safeText(String(previous)) + '"' + disabled + '>Trang trước</button>'
+      : '<button class="portal-button portal-button--quiet" type="button" disabled>Trang trước</button>';
+    const nextButton = source.has_more === true && Number.isSafeInteger(next)
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + action + '" data-portal-route="/admin/finance/planning" data-finance-planning-period="' + safeText(source.period || "") + '" data-finance-planning-offset="' + safeText(String(next)) + '"' + disabled + '>Trang sau</button>'
+      : '<button class="portal-button portal-button--quiet" type="button" disabled>Trang sau</button>';
+    return '<nav class="portal-form-footer" aria-label="Phân trang ' + safeText(label) + '">'
+      + '<span class="portal-form-note" role="status">Hiển thị ' + safeText(String(start)) + '–' + safeText(String(end)) + ' / ' + safeText(String(total)) + ' ' + safeText(label) + '.</span>'
+      + '<div class="portal-inline-actions">' + previousButton + nextButton + '</div></nav>';
+  }
+
+  function financePlanningLiveStatus(readState, period, budgetListing, costPlanListing) {
+    const normalizedPeriod = FINANCE_PLANNING_PORTAL_PERIOD.test(String(period || "")) ? String(period) : "kỳ đã chọn";
+    let message = "Finance Operations Planning đang được bảo vệ.";
+    if (readState === "loading") message = "Đang tải Finance Operations Planning cho " + normalizedPeriod + ".";
+    if (readState === "ready") {
+      const budgets = Number.isSafeInteger(budgetListing && budgetListing.total) ? budgetListing.total : 0;
+      const costs = Number.isSafeInteger(costPlanListing && costPlanListing.total) ? costPlanListing.total : 0;
+      message = "Đã tải " + normalizedPeriod + ": " + budgets + " ngân sách và " + costs + " kế hoạch chi phí.";
+    }
+    if (readState === "failed") message = "Không thể tải Finance Operations Planning an toàn. Dữ liệu cũ đã được xóa.";
+    return '<p class="portal-form-note" data-finance-planning-status role="status" aria-live="polite" aria-atomic="true" tabindex="-1">' + safeText(message) + '</p>';
+  }
+
+  function renderAdminFinancePlanning(page, context) {
+    const readState = String(context.financePlanningReadState || "guarded");
+    const capabilities = context.capabilities && typeof context.capabilities === "object" ? context.capabilities : {};
+    // A client capability only controls the affordance. The signed server
+    // navigation grant remains a second presentation fence, and each API
+    // separately checks local-admin authority again.
+    const serverAuthorized = serverAuthorizesAdminRoute(context, "/admin/finance/planning");
+    const canView = serverAuthorized && capabilities["finance-planning-view"] === true;
+    const canCreateBudget = serverAuthorized && capabilities["finance-planning-create-budget"] === true;
+    const canCreateCost = serverAuthorized && capabilities["finance-planning-create-cost"] === true;
+    const canBudgetState = serverAuthorized && capabilities["finance-planning-budget-state"] === true;
+    const canCostState = serverAuthorized && capabilities["finance-planning-cost-state"] === true;
+    const policy = context.financePlanningPolicy && typeof context.financePlanningPolicy === "object" ? context.financePlanningPolicy : {};
+    const summary = context.financePlanningSummary && typeof context.financePlanningSummary === "object" ? context.financePlanningSummary : {};
+    const view = financePlanningPortalView(context.financePlanningView);
+    const budgetListing = financePlanningPortalListing(context.financePlanningBudgetListing, view && view.period, view && view.budgetOffset, Array.isArray(context.financePlanningBudgets) ? context.financePlanningBudgets.length : 0);
+    const costPlanListing = financePlanningPortalListing(context.financePlanningCostPlanListing, view && view.period, view && view.costPlanOffset, Array.isArray(context.financePlanningCostPlans) ? context.financePlanningCostPlans.length : 0);
+    const hasProjection = readState === "ready" && policy && summary && view && budgetListing && costPlanListing
+      && summary.period === view.period && Array.isArray(policy.categories) && policy.categories.length === FINANCE_PLANNING_PORTAL_CATEGORIES.size;
+    if (!hasProjection) {
+      const loading = readState === "loading";
+      const retry = !loading ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="finance-planning-refresh" data-portal-route="/admin/finance/planning"${canView ? "" : " disabled"}>Thử tải lại</button>` : "";
+      const status = financePlanningLiveStatus(readState, view && view.period, budgetListing, costPlanListing);
+      return `<article class="portal-page portal-finance-planning">${renderHero(page, context)}${status}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh Finance Operations Planning" : "Finance Operations Planning đang được bảo vệ"}</h2><p>${loading ? "Máy chủ đang kiểm tra signed Web-admin session, ERP flag và boundary của planning store trước khi trả dữ liệu." : "Không có projection kế hoạch hợp lệ cho phiên hiện tại. Web đã xóa state cũ và không thay bằng finance Bot, ledger, ví Xu, PayOS, payment hay dữ liệu browser."}</p></div></div><div class="portal-form-footer">${retry}<a class="portal-button portal-button--quiet" href="/admin/finance">Về Finance &amp; Revenue</a></div></section></article>`;
+    }
+    const period = view.period;
+    const categories = policy.categories;
+    const categoryOptions = categories.map((item) => `<option value="${safeText(item.id)}">${safeText(item.label)}</option>`).join("");
+    const budgets = Array.isArray(context.financePlanningBudgets) ? context.financePlanningBudgets : [];
+    const costPlans = Array.isArray(context.financePlanningCostPlans) ? context.financePlanningCostPlans : [];
+    const budgetTransitions = policy.budget_transitions && typeof policy.budget_transitions === "object" ? policy.budget_transitions : {};
+    const costTransitions = policy.cost_transitions && typeof policy.cost_transitions === "object" ? policy.cost_transitions : {};
+    const metrics = [
+      ["Ngân sách active", financePlanningMoney(summary.budget_vnd), "Theo kỳ kế hoạch Web"],
+      ["Đã lên kế hoạch", financePlanningMoney(summary.planned_vnd), `${safeText(String(summary.cost_plan_count || 0))} bản ghi không archive`],
+      ["Còn lại", financePlanningMoney(summary.remaining_vnd), "Ngân sách trừ kế hoạch nội bộ"],
+      ["Chờ review", financePlanningMoney(summary.review_vnd), `${safeText(String(summary.review_count || 0))} bản ghi cần quyết định`]
+    ];
+    const categoryRows = renderRowsTable(["Nhóm", "Ngân sách", "Kế hoạch", "Còn lại", "Review"], Array.isArray(summary.categories) ? summary.categories : [], (item) => `<td><strong>${safeText(item.category_label)}</strong></td><td>${safeText(financePlanningMoney(item.budget_vnd))}</td><td>${safeText(financePlanningMoney(item.planned_vnd))}</td><td>${safeText(financePlanningMoney(item.remaining_vnd))}</td><td>${safeText(financePlanningMoney(item.review_vnd))} · ${safeText(String(item.review_count))}</td>`, "Chưa có tổng hợp theo nhóm", "Máy chủ chưa trả summary kế hoạch đã được kiểm tra.");
+    const budgetRows = renderRowsTable(["Nhóm", "Ngân sách", "Ghi chú", "Trạng thái", "Lifecycle"], budgets, (item) => `<td><strong>${safeText(item.category_label)}</strong><small>${safeText(item.period)}</small></td><td>${safeText(financePlanningMoney(item.planned_vnd))}</td><td>${safeText(item.note || "—")}</td><td>${badge(item.state === "active" ? "ready" : "read_only")}<small class="portal-form-note">${safeText(financePlanningStateLabel(item.state))} · v${safeText(String(item.revision))}</small></td><td>${financePlanningStateActions("budget", item, budgetTransitions, canBudgetState)}</td>`, "Chưa có ngân sách kế hoạch", "Tạo ngân sách theo nhóm trước khi review kế hoạch chi phí. Đây không phải số dư hay ledger.");
+    const costRows = renderRowsTable(["Ngày", "Nhóm & mục đích", "Giá trị", "Trạng thái", "Lifecycle"], costPlans, (item) => `<td><strong>${safeText(item.planned_for)}</strong><small>${safeText(item.vendor_label || "Không gắn đối tác")}</small></td><td><strong>${safeText(item.category_label)}</strong><small>${safeText(item.purpose)}</small></td><td>${safeText(financePlanningMoney(item.planned_vnd))}</td><td>${badge(item.state === "approved" ? "ready" : item.state === "review" ? "processing" : item.state === "archived" ? "read_only" : "draft")}<small class="portal-form-note">${safeText(financePlanningStateLabel(item.state))} · v${safeText(String(item.revision))}</small></td><td>${financePlanningStateActions("cost", item, costTransitions, canCostState)}</td>`, "Chưa có kế hoạch chi phí", "Tạo một kế hoạch draft, sau đó chuyển review/approved theo policy Web. Không tạo provider job hoặc thanh toán.");
+    const periodControl = financePlanningPeriodControl(period, canView);
+    const status = financePlanningLiveStatus(readState, period, budgetListing, costPlanListing);
+    const budgetPagination = financePlanningPagination("budget", budgetListing, canView);
+    const costPlanPagination = financePlanningPagination("cost", costPlanListing, canView);
+    return `<article class="portal-page portal-finance-planning">
+      ${renderHero(page, context)}
+      ${status}
+      ${periodControl}
+      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">Web-native Finance Operations</span><h2>Kế hoạch chi phí nội bộ, tách hẳn payment và ledger</h2><p>Quản lý ngân sách/kế hoạch vận hành theo kỳ với lifecycle, revision và audit. Đây chỉ là lớp kế hoạch Web; nó không thực hiện chi trả, đối soát, accounting, thuế hay bất kỳ workflow Bot/PayOS nào.</p></div><dl><div><dt>Signed admin</dt><dd>Server kiểm tra ở mọi API</dd></div><div><dt>Web-owned</dt><dd>Không có bridge/ledger fallback</dd></div></dl></section>
+      <section class="portal-operations-metrics" aria-label="Tổng quan Finance Planning">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Kỳ ${safeText(period)}</span><h2 class="portal-card-title">Tổng hợp theo nhóm</h2><p class="portal-card-subtitle">Số liệu là kế hoạch Web nội bộ, không phải payment, revenue, tax calculation hay số dư Xu.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="finance-planning-refresh" data-portal-route="/admin/finance/planning"${canView ? "" : " disabled"}>Làm mới</button></div>${categoryRows}</section>
+      <section class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo ngân sách theo nhóm</h2><p class="portal-card-subtitle">Mỗi nhóm/kỳ chỉ có một ngân sách active. Archive bản cũ trước khi thay thế.</p></div>${badge(canCreateBudget ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="finance-planning-create-budget" data-portal-route="/admin/finance/planning" data-portal-confirm="Xác nhận lưu ngân sách kế hoạch Web? Thao tác không tạo payment, ledger, PayOS hay thay đổi Xu." novalidate><label class="portal-field"><span>Kỳ kế hoạch</span><input class="portal-input" name="period" type="month" value="${safeText(period)}" required${canCreateBudget ? "" : " disabled"}></label><label class="portal-field"><span>Nhóm</span><select class="portal-select" name="category" required${canCreateBudget ? "" : " disabled"}>${categoryOptions}</select></label><label class="portal-field"><span>Ngân sách VND</span><input class="portal-input" name="planned_vnd" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" required${canCreateBudget ? "" : " disabled"}></label><label class="portal-field"><span>Ghi chú (tuỳ chọn)</span><textarea class="portal-textarea" name="note" maxlength="500" placeholder="Mô tả phạm vi nội bộ; không nhập bill, QR, TXID, tài khoản, token, password hoặc OTP."${canCreateBudget ? "" : " disabled"}></textarea></label><div class="portal-form-footer"><span class="portal-form-note">Server lặp lại DLP, confirmation, CSRF, idempotency, revision và audit. Không có manual top-up hoặc chứng từ thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${canCreateBudget ? "" : " disabled"}>Lưu ngân sách</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo kế hoạch chi phí</h2><p class="portal-card-subtitle">Bắt đầu ở draft, sau đó review/approved theo lifecycle server-side.</p></div>${badge(canCreateCost ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="finance-planning-create-cost" data-portal-route="/admin/finance/planning" data-portal-confirm="Xác nhận tạo kế hoạch chi phí Web ở trạng thái draft? Thao tác không tạo payment, job, provider call hay delivery." novalidate><label class="portal-field"><span>Kỳ kế hoạch</span><input class="portal-input" name="period" type="month" value="${safeText(period)}" required${canCreateCost ? "" : " disabled"}></label><label class="portal-field"><span>Ngày dự kiến</span><input class="portal-input" name="planned_for" type="date" value="${safeText(`${period}-01`)}" required${canCreateCost ? "" : " disabled"}></label><label class="portal-field"><span>Nhóm</span><select class="portal-select" name="category" required${canCreateCost ? "" : " disabled"}>${categoryOptions}</select></label><label class="portal-field"><span>Giá trị VND</span><input class="portal-input" name="planned_vnd" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" required${canCreateCost ? "" : " disabled"}></label><label class="portal-field"><span>Nhãn đối tác (tuỳ chọn)</span><input class="portal-input" name="vendor_label" maxlength="120" autocomplete="off" placeholder="Ví dụ: công cụ nội bộ"${canCreateCost ? "" : " disabled"}></label><label class="portal-field"><span>Mục đích</span><textarea class="portal-textarea" name="purpose" minlength="4" maxlength="700" required placeholder="Mô tả mục tiêu vận hành, không chứa thông tin thanh toán hoặc credential."${canCreateCost ? "" : " disabled"}></textarea></label><div class="portal-form-footer"><span class="portal-form-note">Approved chỉ là lifecycle kế hoạch Web, không phải lệnh chi/hoàn/charge hay cam kết với provider.</span><button class="portal-button portal-button--primary" type="submit"${canCreateCost ? "" : " disabled"}>Tạo draft</button></div></form></section></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ngân sách kế hoạch</h2><p class="portal-card-subtitle">Archive/restore luôn cần confirmation, optimistic revision và audit. Không có delete âm thầm.</p></div>${badge("read_only")}</div>${budgetRows}${budgetPagination}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kế hoạch chi phí</h2><p class="portal-card-subtitle">Các chuyển trạng thái được server kiểm tra lại; browser không tự đánh dấu approved hay tạo output.</p></div>${badge("read_only")}</div>${costRows}${costPlanPagination}</section>
+      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới cố ý</h2><p>Finance Planning là workbench nội bộ, không phải financial control plane.</p></div>${badge("guarded")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, job, delivery, wallet, Xu, ledger, PayOS, webhook, top-up, refund, revenue, tax hay export.</li><li>Không nhận bill, TXID, QR, số tài khoản, IBAN, SWIFT/BIC, token, password hoặc OTP trong biểu mẫu.</li><li>Không có số liệu tài chính canonical hoặc payment result được giả lập khi route/API bị guarded.</li></ul></section>
     </article>`;
   }
 
@@ -23019,6 +23368,7 @@
         { title: "Revenue", text: "Mở revenue projection đã redaction và không tính toán thay backend.", route: "/admin/revenue", icon: ICONS.reports },
         { title: "Refunds", text: "Review refund canonical; write chỉ mở khi có approval/idempotency/audit adapter.", route: "/admin/refunds", icon: ICONS.payments },
         { title: "Giá & packages", text: "Đi tới catalog pricing/package để review chứ không thay rate ở client.", route: "/admin/pricing", icon: ICONS.pricing },
+        { title: "Finance planning", text: "Lập ngân sách và kế hoạch chi phí vận hành Web-native có revision/audit; không phải ledger hay payment.", route: "/admin/finance/planning", icon: ICONS.payments },
         { title: "Tax readiness", text: "Mở checklist và handoff accounting chỉ đọc; không tính thuế, xuất file hay đọc ledger.", route: "/admin/finance/tax-readiness", icon: ICONS.document }
       ],
       boundaries: ["Không cộng/trừ Xu, finalize PayOS hoặc đối soát thanh toán từ browser.", "Không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thủ công ở shell này.", "Mọi write tài chính cần canonical role, CSRF, confirmation, idempotency và audit."]
@@ -24597,6 +24947,7 @@
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
       case "admin-system-stewardship": return renderAdminSystemStewardship(page, context);
       case "admin-tax-readiness": return renderAdminTaxReadiness(page, context);
+      case "admin-finance-planning": return renderAdminFinancePlanning(page, context);
       case "admin-postback-readiness": return renderAdminPostbackReadiness(page, context);
       case "admin-job-recovery-guide": return renderAdminJobRecoveryGuide(page, context);
       case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
@@ -25997,6 +26348,15 @@
     if (String(action || "").startsWith("operations-desk-")) {
       Object.assign(fields, { __operationsDeskOffset: source.getAttribute("data-operations-desk-offset") || "" });
     }
+    if (String(action || "").startsWith("finance-planning-")) {
+      Object.assign(fields, {
+        __financePlanningId: source.getAttribute("data-finance-planning-id") || "",
+        __financePlanningRevision: source.getAttribute("data-finance-planning-revision") || "",
+        __financePlanningState: source.getAttribute("data-finance-planning-state") || "",
+        __financePlanningPeriod: source.getAttribute("data-finance-planning-period") || "",
+        __financePlanningOffset: source.getAttribute("data-finance-planning-offset") || ""
+      });
+    }
     if (String(action || "").startsWith("admin-automation-monitor-")) {
       Object.assign(fields, { __adminAutomationMonitorOffset: source.getAttribute("data-admin-automation-offset") || "" });
     }
@@ -26334,7 +26694,30 @@
 
   function focusSnapshot() {
     const active = document.activeElement;
-    if (!active || !active.matches || !active.matches("input, textarea, select")) return null;
+    if (!active || !active.matches) return null;
+    if (active.matches("[data-finance-planning-status]")) return { kind: "finance-planning-status" };
+    const financeAction = active.closest && active.closest('[data-portal-action^="finance-planning-"]');
+    if (financeAction) {
+      const snapshot = {
+        kind: active.matches("input, textarea, select") ? "finance-planning-field" : "finance-planning-action",
+        action: financeAction.getAttribute("data-portal-action") || "",
+        route: financeAction.getAttribute("data-portal-route") || "",
+        id: financeAction.getAttribute("data-finance-planning-id") || "",
+        revision: financeAction.getAttribute("data-finance-planning-revision") || "",
+        state: financeAction.getAttribute("data-finance-planning-state") || "",
+        period: financeAction.getAttribute("data-finance-planning-period") || "",
+        offset: financeAction.getAttribute("data-finance-planning-offset") || "",
+        name: active.name || "",
+        selectionStart: null,
+        selectionEnd: null
+      };
+      if (typeof active.selectionStart === "number") {
+        snapshot.selectionStart = active.selectionStart;
+        snapshot.selectionEnd = active.selectionEnd;
+      }
+      return snapshot;
+    }
+    if (!active.matches("input, textarea, select")) return null;
     const snapshot = { id: active.id || "", name: active.name || "", selectionStart: null, selectionEnd: null };
     if (typeof active.selectionStart === "number") {
       snapshot.selectionStart = active.selectionStart;
@@ -26345,6 +26728,36 @@
 
   function restoreFocus(snapshot) {
     if (!snapshot) return;
+    if (snapshot.kind === "finance-planning-status") {
+      const status = document.querySelector("[data-finance-planning-status]");
+      if (status && typeof status.focus === "function") status.focus({ preventScroll: true });
+      return;
+    }
+    if (snapshot.kind === "finance-planning-action" || snapshot.kind === "finance-planning-field") {
+      const actions = Array.from(document.querySelectorAll('[data-portal-action^="finance-planning-"]'));
+      const source = actions.find((item) => (item.getAttribute("data-portal-action") || "") === snapshot.action
+        && (item.getAttribute("data-portal-route") || "") === snapshot.route
+        && (item.getAttribute("data-finance-planning-id") || "") === snapshot.id
+        && (item.getAttribute("data-finance-planning-revision") || "") === snapshot.revision
+        && (item.getAttribute("data-finance-planning-state") || "") === snapshot.state
+        && (item.getAttribute("data-finance-planning-period") || "") === snapshot.period
+        && (item.getAttribute("data-finance-planning-offset") || "") === snapshot.offset);
+      let target = source;
+      if (snapshot.kind === "finance-planning-field" && source) {
+        target = Array.from(source.querySelectorAll("input, textarea, select")).find((item) => item.name === snapshot.name) || source;
+      } else if (source && source.matches("form")) {
+        target = source.querySelector('button[type="submit"]:not([disabled])') || source;
+      }
+      if (!target || typeof target.focus !== "function") {
+        target = document.querySelector("[data-finance-planning-status]");
+      }
+      if (!target || typeof target.focus !== "function") return;
+      target.focus({ preventScroll: true });
+      if (snapshot.selectionStart !== null && typeof target.setSelectionRange === "function") {
+        try { target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd); } catch (_) { /* non-text controls */ }
+      }
+      return;
+    }
     const target = snapshot.id ? document.getElementById(snapshot.id) : document.querySelector(`[name="${snapshot.name.replace(/"/g, "\\\"")}"]`);
     if (!target || typeof target.focus !== "function") return;
     target.focus({ preventScroll: true });
