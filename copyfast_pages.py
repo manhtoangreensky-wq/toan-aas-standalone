@@ -29,6 +29,7 @@ VOICE_STUDIO_PATH = re.compile(r"^/voice-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-
 VIDEO_STUDIO_PATH = re.compile(r"^/video-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 SUBTITLE_STUDIO_PATH = re.compile(r"^/subtitle-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 IMAGE_STUDIO_PATH = re.compile(r"^/image-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+IMAGE_HUB_PATH = re.compile(r"^/image-hub/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 DOCUMENT_WORKSPACE_PATH = re.compile(r"^/document-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CHAT_WORKSPACE_PATH = re.compile(r"^/chat/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ANALYTICS_WORKSPACE_PATH = re.compile(r"^/analytics/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -96,6 +97,21 @@ _PORTAL_SHELL_TITLES = {
     "/": {"vi": "TOAN AAS", "en": "TOAN AAS", "zh": "TOAN AAS"},
     "/app": {"vi": "TOAN AAS Workspace", "en": "TOAN AAS Workspace", "zh": "TOAN AAS 工作台"},
     "/dashboard": {"vi": "Tổng quan · TOAN AAS", "en": "Overview · TOAN AAS", "zh": "概览 · TOAN AAS"},
+    "/features": {"vi": "Tất cả công cụ · TOAN AAS", "en": "All tools · TOAN AAS", "zh": "全部工具 · TOAN AAS"},
+    "/membership": {"vi": "Gói thành viên · TOAN AAS", "en": "Membership · TOAN AAS", "zh": "会员方案 · TOAN AAS"},
+    "/status": {"vi": "Trạng thái dịch vụ · TOAN AAS", "en": "Service status · TOAN AAS", "zh": "服务状态 · TOAN AAS"},
+    "/tools": {"vi": "Công cụ & models · TOAN AAS", "en": "Tools & models · TOAN AAS", "zh": "工具与模型 · TOAN AAS"},
+    "/studio": {"vi": "Media Studio · TOAN AAS", "en": "Media Studio · TOAN AAS", "zh": "媒体工作室 · TOAN AAS"},
+    "/growth/ai": {"vi": "Growth Review · TOAN AAS", "en": "Growth Review · TOAN AAS", "zh": "增长复盘 · TOAN AAS"},
+    "/campaign/report": {"vi": "Báo cáo campaign · TOAN AAS", "en": "Campaign report · TOAN AAS", "zh": "活动报告 · TOAN AAS"},
+    "/features/content": {"vi": "Content & Chat · TOAN AAS", "en": "Content & Chat · TOAN AAS", "zh": "内容与对话 · TOAN AAS"},
+    "/features/image": {"vi": "Image Studio · TOAN AAS", "en": "Image Studio · TOAN AAS", "zh": "图像工作室 · TOAN AAS"},
+    "/features/video": {"vi": "Video Studio · TOAN AAS", "en": "Video Studio · TOAN AAS", "zh": "视频工作室 · TOAN AAS"},
+    "/features/voice": {"vi": "Voice Studio · TOAN AAS", "en": "Voice Studio · TOAN AAS", "zh": "语音工作室 · TOAN AAS"},
+    "/features/music": {"vi": "Music & SFX · TOAN AAS", "en": "Music & SFX · TOAN AAS", "zh": "音乐与音效 · TOAN AAS"},
+    "/features/subtitle": {"vi": "Phụ đề & ngôn ngữ · TOAN AAS", "en": "Subtitles & language · TOAN AAS", "zh": "字幕与语言 · TOAN AAS"},
+    "/features/documents": {"vi": "Documents & PDF · TOAN AAS", "en": "Documents & PDF · TOAN AAS", "zh": "文档与 PDF · TOAN AAS"},
+    "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},
     "/login": {"vi": "Đăng nhập · TOAN AAS", "en": "Sign in · TOAN AAS", "zh": "登录 · TOAN AAS"},
     "/register": {"vi": "Tạo tài khoản · TOAN AAS", "en": "Create account · TOAN AAS", "zh": "创建账户 · TOAN AAS"},
     "/onboarding": {"vi": "Bắt đầu với TOAN AAS", "en": "Get started with TOAN AAS", "zh": "开始使用 TOAN AAS"},
@@ -106,6 +122,8 @@ _PORTAL_SHELL_TITLES = {
     "/starter-kits": {"vi": "Starter Kits · TOAN AAS", "en": "Starter Kits · TOAN AAS", "zh": "入门套件 · TOAN AAS"},
     "/audio-hub": {"vi": "Audio Production Hub · TOAN AAS", "en": "Audio Production Hub · TOAN AAS", "zh": "音频制作中心 · TOAN AAS"},
     "/audio-hub/new": {"vi": "Audio Production Brief mới · TOAN AAS", "en": "New Audio Production Brief · TOAN AAS", "zh": "新建音频制作简报 · TOAN AAS"},
+    "/image-hub": {"vi": "Image Operations Hub · TOAN AAS", "en": "Image Operations Hub · TOAN AAS", "zh": "图像运营中心 · TOAN AAS"},
+    "/image-hub/new": {"vi": "Image Direction mới · TOAN AAS", "en": "New Image Direction · TOAN AAS", "zh": "新建图像创意方向 · TOAN AAS"},
 }
 
 
@@ -194,6 +212,8 @@ def _title_for(path: str) -> str:
         return "Transcript project mới"
     if normalized == "/image-studio/new":
         return "Artboard mới"
+    if normalized == "/image-hub/new":
+        return "Image Direction mới"
     if normalized == "/document-workspace/new":
         return "Document brief mới"
     if normalized == "/chat/new":
@@ -227,6 +247,8 @@ def _title_for(path: str) -> str:
         return "Subtitle & Transcript Workspace"
     if IMAGE_STUDIO_PATH.fullmatch(normalized):
         return "Image Creative Studio"
+    if IMAGE_HUB_PATH.fullmatch(normalized):
+        return "Image Operations Hub"
     if DOCUMENT_WORKSPACE_PATH.fullmatch(normalized):
         return "Document & PDF Workspace"
     if CHAT_WORKSPACE_PATH.fullmatch(normalized):
@@ -285,6 +307,12 @@ def _shell_title_for(path: str, locale: str) -> str:
             "en": "Audio Production Board · TOAN AAS",
             "zh": "音频制作看板 · TOAN AAS",
         }[locale]
+    if IMAGE_HUB_PATH.fullmatch(normalized):
+        return {
+            "vi": "Image Operations Board · TOAN AAS",
+            "en": "Image Operations Board · TOAN AAS",
+            "zh": "图像运营看板 · TOAN AAS",
+        }[locale]
     # Do not present a Vietnamese route title as if it were reviewed English
     # or Simplified Chinese. The browser catalog upgrades individual workspace
     # titles as those renderers opt in; the first paint stays truthful now.
@@ -300,8 +328,13 @@ def _fallback_template() -> str:
 def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResponse:
     normalized = ("/" + path.lstrip("/")) if path else "/"
     normalized = normalized.rstrip("/") or "/"
+    # `/image` is a broad legacy route family. Keep the Image Hub's narrow
+    # public surface strict before that family can absorb an invalid child
+    # such as `/image-hub/not-a-uuid`.
+    if normalized.startswith("/image-hub/") and normalized != "/image-hub/new" and not IMAGE_HUB_PATH.fullmatch(normalized):
+        raise HTTPException(status_code=404, detail="Trang không tồn tại")
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/starter-kits"} and not is_starter_kit_detail and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", "/starter-kits"} and not is_starter_kit_detail and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     locale = _interface_locale(interface_locale)
     shell_copy = _PORTAL_SHELL_COPY[locale]
