@@ -78,6 +78,173 @@ OTP_PATTERN = re.compile(
     r"verification\s+(?:code|token)|one[ -]?time(?:\s+(?:pass(?:word|code)?|code))?)\b",
     re.IGNORECASE,
 )
+# Consultation requests deliberately use a closed catalog owned by this
+# router.  It mirrors the useful Web-facing topics of Support's Consultation
+# Brief, but does not import Support or create an implicit path from a
+# non-persistent brief to CRM.  Keep these records distinct so a future
+# Support change cannot silently widen this persistent CRM contract.
+CONSULTATION_CRM_CATALOG_VERSION = "2026-07-24"
+CONSULTATION_CRM_STORAGE_SCOPE = "crm_draft_storage_only"
+CONSULTATION_CRM_CONSENT_NOTE = (
+    "Khách đã xác nhận chỉ lưu lead draft CRM trong Web; không phải consent liên hệ."
+)
+CONSULTATION_CRM_GROUPS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "premium",
+        "title": "Gói cao cấp",
+        "summary": "Làm rõ phạm vi sử dụng và mức hỗ trợ cần trao đổi trước khi tạo lead draft riêng tư.",
+        "services": (
+            {
+                "id": "web-premium-creator",
+                "category": "premium_lead",
+                "title": "Cá nhân / Creator",
+                "summary": "Tư vấn cách tổ chức công việc sáng tạo cá nhân trong Web App.",
+                "prompt": "Nêu loại nội dung và nhịp làm việc bạn muốn tối ưu.",
+            },
+            {
+                "id": "web-premium-shop",
+                "category": "premium_lead",
+                "title": "Shop / Affiliate",
+                "summary": "Làm rõ nhu cầu nội dung, vận hành hoặc báo cáo cho hoạt động bán hàng.",
+                "prompt": "Nêu quy trình bán hàng hoặc kênh nội dung cần được trao đổi.",
+            },
+            {
+                "id": "web-premium-business",
+                "category": "premium_lead",
+                "title": "Doanh nghiệp",
+                "summary": "Chuẩn bị bối cảnh đội nhóm và yêu cầu vận hành ở mức không nhạy cảm.",
+                "prompt": "Nêu quy mô công việc, vai trò sử dụng và ràng buộc cần cân nhắc.",
+            },
+            {
+                "id": "web-premium-private",
+                "category": "premium_lead",
+                "title": "Trao đổi riêng về nhu cầu",
+                "summary": "Đặt câu hỏi về phạm vi phù hợp mà không tạo báo giá hoặc cam kết dịch vụ.",
+                "prompt": "Nêu vấn đề cần làm rõ và tiêu chí bạn muốn dùng để đánh giá.",
+            },
+        ),
+    },
+    {
+        "id": "custom_bot",
+        "title": "Giải pháp tùy chỉnh",
+        "summary": "Mô tả bài toán Web ở mức tổng quát; yêu cầu này không tạo Bot, kết nối hay cấu hình mới.",
+        "services": (
+            {
+                "id": "web-custom-shop",
+                "category": "custom_bot_lead",
+                "title": "Quy trình cho shop",
+                "summary": "Trao đổi về luồng hỗ trợ hoạt động bán hàng hoặc vận hành shop.",
+                "prompt": "Nêu các bước thủ công hiện tại và điểm cần được cải thiện.",
+            },
+            {
+                "id": "web-custom-content",
+                "category": "custom_bot_lead",
+                "title": "Quy trình nội dung",
+                "summary": "Làm rõ nhu cầu biên tập, phê duyệt hoặc tổ chức nội dung.",
+                "prompt": "Nêu loại nội dung, các bước review và kết quả cần có.",
+            },
+            {
+                "id": "web-custom-support",
+                "category": "custom_bot_lead",
+                "title": "Quy trình hỗ trợ khách hàng",
+                "summary": "Xác định bối cảnh hỗ trợ và thông tin cần tổ chức trong Web.",
+                "prompt": "Nêu các nhóm câu hỏi hoặc bước chăm sóc cần được làm rõ.",
+            },
+            {
+                "id": "web-custom-internal",
+                "category": "custom_bot_lead",
+                "title": "Vận hành nội bộ",
+                "summary": "Trao đổi nhu cầu phối hợp, theo dõi hoặc chuẩn hóa công việc nội bộ.",
+                "prompt": "Nêu vai trò tham gia, quy trình hiện có và điểm đang bị gián đoạn.",
+            },
+            {
+                "id": "web-custom-custom",
+                "category": "custom_bot_lead",
+                "title": "Bài toán khác",
+                "summary": "Bắt đầu từ vấn đề cụ thể trước khi đánh giá phạm vi phù hợp.",
+                "prompt": "Nêu vấn đề cốt lõi và kết quả tối thiểu bạn muốn đạt được.",
+            },
+        ),
+    },
+    {
+        "id": "service",
+        "title": "Tư vấn dịch vụ",
+        "summary": "Chọn loại công việc để chuẩn bị yêu cầu rõ ràng; không kích hoạt engine, báo giá hoặc output.",
+        "services": (
+            {
+                "id": "web-service-image",
+                "category": "service_consulting",
+                "title": "Ảnh / thiết kế",
+                "summary": "Tìm hiểu loại đầu ra hình ảnh hoặc quy trình thiết kế phù hợp.",
+                "prompt": "Nêu loại ảnh, mục đích sử dụng và tiêu chí đầu ra cần làm rõ.",
+            },
+            {
+                "id": "web-service-video",
+                "category": "service_consulting",
+                "title": "Video",
+                "summary": "Làm rõ nhu cầu video, cấu trúc nội dung và cách review trong Web.",
+                "prompt": "Nêu mục tiêu video, định dạng dự kiến và các bước bạn muốn trao đổi.",
+            },
+            {
+                "id": "web-service-frame-video",
+                "category": "service_consulting",
+                "title": "Ảnh thành video",
+                "summary": "Chuẩn bị câu hỏi về biến đổi hình ảnh thành chuyển động hoặc storyboard.",
+                "prompt": "Nêu loại tư liệu đầu vào và phong cách chuyển động muốn tìm hiểu.",
+            },
+            {
+                "id": "web-service-document",
+                "category": "service_consulting",
+                "title": "Tài liệu / PDF",
+                "summary": "Trao đổi nhu cầu xử lý, tổ chức hoặc xuất tài liệu trong luồng phù hợp.",
+                "prompt": "Nêu loại tài liệu và thao tác hoặc kết quả cần được tư vấn.",
+            },
+            {
+                "id": "web-service-voice",
+                "category": "service_consulting",
+                "title": "Giọng nói / âm thanh",
+                "summary": "Làm rõ use case audio, lời đọc hoặc nội dung cần chuẩn bị.",
+                "prompt": "Nêu mục đích sử dụng âm thanh và yêu cầu nội dung ở mức tổng quát.",
+            },
+            {
+                "id": "web-service-package",
+                "category": "service_consulting",
+                "title": "Gói và khả năng sử dụng",
+                "summary": "Đặt câu hỏi về khả năng phù hợp, không tạo đơn hoặc thay đổi giá/quyền.",
+                "prompt": "Nêu cách bạn dự định sử dụng và điều cần được làm rõ trước khi quyết định.",
+            },
+        ),
+    },
+)
+CONSULTATION_CRM_SERVICES = {
+    str(service["id"]): {**service, "group_id": str(group["id"])}
+    for group in CONSULTATION_CRM_GROUPS
+    for service in group["services"]
+}
+EMAIL_ADDRESS_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})+(?![A-Za-z0-9.-])",
+    re.IGNORECASE,
+)
+PHONE_NUMBER_PATTERN = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s().-]*\d){8,10}(?!\d)")
+CONTACT_LABEL_PATTERN = re.compile(
+    r"\b(?:email|e-mail|zalo|telegram|phone|số\s*điện\s*thoại|so\s*dien\s*thoai|sđt|sdt)\s*(?:[:=]|là|la)\s*\S+",
+    re.IGNORECASE,
+)
+TELEGRAM_HANDLE_PATTERN = re.compile(r"(?<![A-Za-z0-9._])@[A-Za-z][A-Za-z0-9_]{4,31}\b")
+# This intake is not a manual-payment or receipt-review surface.  Rejecting
+# these markers server-side keeps a direct API caller from storing payment
+# evidence in an otherwise private CRM narrative just because the Portal has
+# already hidden that flow.
+CONSULTATION_PAYMENT_PROOF_PATTERN = re.compile(
+    r"\b(?:tx(?:id|n)?|transaction\s+(?:hash|id|reference|no\.?|number)|"
+    r"mã\s*(?:(?:giao\s*)?(?:dịch|gd)|tham\s*chiếu|thanh\s*toán)|"
+    r"ma\s*(?:(?:giao\s*)?(?:dich|gd)|tham\s*chieu|thanh\s*toan)|"
+    r"biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|số\s*tài\s*khoản|"
+    r"so\s*tai\s*khoan|stk|tài\s*khoản\s*(?:ngân\s*hàng|bank)|"
+    r"tai\s*khoan\s*(?:ngan\s*hang|bank)|bank\s+account|account\s+(?:number|no|id)|"
+    r"qr\s*(?:code|thanh\s*toán|thanh\s*toan)?)\b",
+    re.IGNORECASE,
+)
 
 
 def partner_crm_enabled() -> bool:
@@ -194,6 +361,45 @@ def _text(
     return normalized
 
 
+def _contains_consultation_contact(value: str) -> bool:
+    """Reject direct contact data from the signed-account intake narrative.
+
+    The signed Web account owns the new CRM record.  Letting a browser put an
+    email, phone number, Zalo reference or Telegram handle into its free text
+    would turn a storage-only consent into an ambiguous contact instruction.
+    """
+
+    text = str(value or "")
+    return bool(
+        EMAIL_ADDRESS_PATTERN.search(text)
+        or PHONE_NUMBER_PATTERN.search(text)
+        or CONTACT_LABEL_PATTERN.search(text)
+        or TELEGRAM_HANDLE_PATTERN.search(text)
+    )
+
+
+def _consultation_line(value: Any, *, label: str, minimum: int, maximum: int) -> str:
+    normalized = _text(value, label=label, minimum=minimum, maximum=maximum)
+    if _contains_consultation_contact(normalized):
+        raise ValueError(
+            "Yêu cầu tư vấn dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung"
+        )
+    if CONSULTATION_PAYMENT_PROOF_PATTERN.search(normalized):
+        raise ValueError("Yêu cầu tư vấn không nhận bill, TXID, số tài khoản, QR hoặc thông tin thanh toán")
+    return normalized
+
+
+def _consultation_text(value: Any, *, label: str, minimum: int, maximum: int) -> str:
+    normalized = _text(value, label=label, minimum=minimum, maximum=maximum, multiline=True)
+    if _contains_consultation_contact(normalized):
+        raise ValueError(
+            "Yêu cầu tư vấn dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung"
+        )
+    if CONSULTATION_PAYMENT_PROOF_PATTERN.search(normalized):
+        raise ValueError("Yêu cầu tư vấn không nhận bill, TXID, số tài khoản, QR hoặc thông tin thanh toán")
+    return normalized
+
+
 def _code(value: Any, *, label: str, allowed: frozenset[str]) -> str:
     normalized = _text(value, label=label, minimum=1, maximum=32).lower()
     if normalized not in allowed:
@@ -206,6 +412,38 @@ def _email(value: Any) -> str:
     if normalized and not EMAIL_PATTERN.fullmatch(normalized):
         raise ValueError("Email liên hệ không hợp lệ")
     return normalized
+
+
+def _consultation_service_id(value: Any) -> str:
+    normalized = _text(value, label="Loại tư vấn Web", minimum=3, maximum=64).lower()
+    if normalized not in CONSULTATION_CRM_SERVICES:
+        raise ValueError("Loại tư vấn Web không hợp lệ")
+    return normalized
+
+
+def _consultation_service_public(service: dict[str, Any]) -> dict[str, str]:
+    """Project one immutable catalog entry; no prices or contact controls."""
+
+    return {
+        "id": str(service["id"]),
+        "group_id": str(service["group_id"]),
+        "category": str(service["category"]),
+        "title": str(service["title"]),
+        "summary": str(service["summary"]),
+        "prompt": str(service["prompt"]),
+    }
+
+
+def _consultation_catalog_public() -> list[dict[str, Any]]:
+    return [
+        {
+            "id": str(group["id"]),
+            "title": str(group["title"]),
+            "summary": str(group["summary"]),
+            "services": [_consultation_service_public(CONSULTATION_CRM_SERVICES[str(service["id"])]) for service in group["services"]],
+        }
+        for group in CONSULTATION_CRM_GROUPS
+    ]
 
 
 def _tags(value: Any) -> list[str]:
@@ -332,6 +570,57 @@ class LeadCreateRequest(LeadFields):
         return _idempotency_key(value)
 
 
+class ConsultationRequestFields(BaseModel):
+    """The deliberately narrow customer consultation contract.
+
+    It is not a variant of ``LeadFields``.  In particular the browser cannot
+    choose a source, stage, consent state, tag, contact address or lead kind.
+    The server pins those values only after an explicit storage confirmation.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, strict=True)
+
+    service_id: StrictStr
+    request_title: StrictStr
+    need_summary: StrictStr
+
+    @field_validator("service_id")
+    @classmethod
+    def validate_service_id(cls, value: str) -> str:
+        return _consultation_service_id(value)
+
+    @field_validator("request_title")
+    @classmethod
+    def validate_request_title(cls, value: str) -> str:
+        return _consultation_line(value, label="Tiêu đề yêu cầu", minimum=4, maximum=120)
+
+    @field_validator("need_summary")
+    @classmethod
+    def validate_need_summary(cls, value: str) -> str:
+        return _consultation_text(value, label="Nhu cầu cần tư vấn", minimum=12, maximum=1_000)
+
+
+class ConsultationPreviewRequest(ConsultationRequestFields):
+    """Validated but intentionally non-persistent first stage."""
+
+
+class ConsultationConfirmRequest(ConsultationRequestFields):
+    consent_to_store: StrictBool
+    confirm_create: StrictBool
+    idempotency_key: StrictStr
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.consent_to_store is not True:
+            raise ValueError("Bạn cần xác nhận consent chỉ để lưu lead draft CRM trong Web")
+        if self.confirm_create is not True:
+            raise ValueError("Bạn cần xác nhận tạo lead draft CRM trước khi tiếp tục")
+
+
 class LeadUpdateRequest(LeadFields):
     expected_revision: StrictInt = Field(ge=1)
     idempotency_key: StrictStr
@@ -444,6 +733,31 @@ def _snapshot(payload: LeadFields, *, stage: str) -> dict[str, Any]:
         "consent_note": payload.consent_note,
         "stage": stage,
     }
+
+
+def _consultation_snapshot(payload: ConsultationRequestFields) -> tuple[dict[str, Any], dict[str, str]]:
+    """Build the only CRM projection allowed for a customer consultation.
+
+    This function intentionally owns every generic CRM field.  A caller can
+    pass only the closed service identifier and two safe narrative fields;
+    no browser-provided CRM metadata reaches ``LeadFields``.
+    """
+
+    service = CONSULTATION_CRM_SERVICES[payload.service_id]
+    selection = _consultation_service_public(service)
+    lead_fields = LeadFields(
+        lead_name=payload.request_title,
+        organization="",
+        contact_email="",
+        lead_kind="customer",
+        opportunity_summary=payload.need_summary,
+        source_kind="inbound",
+        source_label=f"Yêu cầu tư vấn Web · {selection['title']}",
+        tags=["web-consultation", payload.service_id],
+        consent_status="documented",
+        consent_note=CONSULTATION_CRM_CONSENT_NOTE,
+    )
+    return _snapshot(lead_fields, stage="draft"), selection
 
 
 LEAD_COLUMN_NAMES = (
@@ -582,6 +896,21 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
     note = source.get("note") if isinstance(source.get("note"), dict) else {}
     if isinstance(note.get("id"), str):
         data["note"] = {"id": note["id"], "created_at": str(note.get("created_at") or "")}
+    # Consultation confirmations are replayable, but never retain customer
+    # title/summary (or any generic CRM narrative) in the idempotency table.
+    # Preserve only server-owned selection and the exact, narrow consent
+    # interpretation so a replay cannot look like an outbound-contact grant.
+    consultation = source.get("consultation") if isinstance(source.get("consultation"), dict) else {}
+    service_id = consultation.get("service_id")
+    if isinstance(service_id, str) and service_id in CONSULTATION_CRM_SERVICES:
+        data["consultation"] = {
+            "service_id": service_id,
+            "catalog_version": CONSULTATION_CRM_CATALOG_VERSION,
+        }
+    if source.get("intake_consent_scope") == CONSULTATION_CRM_STORAGE_SCOPE:
+        data["intake_consent_scope"] = CONSULTATION_CRM_STORAGE_SCOPE
+    if source.get("outbound_contact_authorized") is False:
+        data["outbound_contact_authorized"] = False
     for field in _boundary(lead_persisted=False):
         if field in source:
             data[field] = source[field]
@@ -766,6 +1095,146 @@ async def partner_crm_policy(account: dict = Depends(require_account)):
             **_boundary(lead_persisted=False),
         },
         status_name="read_only",
+    )
+
+
+@router.get("/consultations/catalog")
+async def consultation_catalog(_account: dict = Depends(require_account)):
+    """List a closed, account-gated consultation catalog without a write.
+
+    This is a customer intake, not a generic CRM form.  It is not
+    personalized from Bot state, does not quote a price, collect contact data,
+    create a support case, or start a provider/payment/job flow.
+    """
+
+    _require_enabled()
+    boundaries = _boundary(lead_persisted=False)
+    return envelope(
+        True,
+        "Chọn loại tư vấn để chuẩn bị yêu cầu trong Web; chưa có lead hoặc liên hệ nào được tạo.",
+        data={
+            "catalog_version": CONSULTATION_CRM_CATALOG_VERSION,
+            "groups": _consultation_catalog_public(),
+            "boundaries": boundaries,
+            "delivery": "web_native_partner_lead_crm_only",
+            "persistence": "none",
+            "automation": "none",
+            "contact_collection": False,
+            "outbound_contact_authorized": False,
+            **boundaries,
+        },
+        status_name="read_only",
+    )
+
+
+@router.post("/consultations/preview")
+async def preview_consultation(
+    payload: ConsultationPreviewRequest,
+    _account: dict = Depends(require_csrf),
+):
+    """Validate a consultation request without inserting any CRM record."""
+
+    _require_enabled()
+    _, selection = _consultation_snapshot(payload)
+    boundaries = _boundary(lead_persisted=False)
+    return envelope(
+        True,
+        "Đã kiểm tra yêu cầu. Chưa có lead được tạo; hãy đọc lại và xác nhận lưu draft nếu bạn muốn tiếp tục.",
+        data={
+            "catalog_version": CONSULTATION_CRM_CATALOG_VERSION,
+            "selection": selection,
+            "request": {
+                "service_id": payload.service_id,
+                "request_title": payload.request_title,
+                "need_summary": payload.need_summary,
+            },
+            "stage": "draft",
+            "record_created": False,
+            "input_persisted": False,
+            "intake_consent_scope": CONSULTATION_CRM_STORAGE_SCOPE,
+            "outbound_contact_authorized": False,
+            "boundaries": boundaries,
+            **boundaries,
+        },
+        status_name="awaiting_confirm",
+    )
+
+
+@router.post("/consultations")
+async def confirm_consultation(
+    payload: ConsultationConfirmRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist one owner-scoped CRM draft after explicit storage consent.
+
+    The confirmation does not authorize an email, Telegram, Zalo, phone,
+    marketing or sales contact.  It merely documents the signed account's
+    affirmative choice to store its own request as a private Web CRM draft.
+    """
+
+    _require_enabled()
+    account_id = str(account["id"])
+    snapshot, selection = _consultation_snapshot(payload)
+    fingerprint = _fingerprint(
+        {
+            "action": "consultation_confirm",
+            "catalog_version": CONSULTATION_CRM_CATALOG_VERSION,
+            "service_id": payload.service_id,
+            "request_title": payload.request_title,
+            "need_summary": payload.need_summary,
+            "intake_consent_scope": CONSULTATION_CRM_STORAGE_SCOPE,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_partner_crm_leads WHERE account_id=? AND stage!='archived'",
+            (account_id,),
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_ACTIVE_LEADS:
+            return envelope(
+                False,
+                "Đã đạt giới hạn lead chưa archive. Hãy archive lead cũ trước khi tạo yêu cầu tư vấn mới.",
+                data=_boundary(lead_persisted=False),
+                status_name="guarded",
+                error_code="WEB_PARTNER_CRM_LEAD_LIMIT",
+            )
+        lead_id = str(uuid.uuid4())
+        now = utc_now()
+        _insert_lead(conn, lead_id=lead_id, account_id=account_id, snapshot=snapshot, revision=1, now=now)
+        _event(conn, lead_id=lead_id, account_id=account_id, action="consultation_lead_confirmed", stage="draft", revision=1)
+        _audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.partner_crm.consultation.create",
+            target=lead_id,
+            detail=f"service={payload.service_id};scope={CONSULTATION_CRM_STORAGE_SCOPE};stage=draft",
+        )
+        created = _lead_row(conn, lead_id=lead_id, account_id=account_id)
+        return envelope(
+            True,
+            "Đã tạo lead draft riêng tư từ yêu cầu tư vấn. Không có liên hệ, notification, báo giá hoặc job nào được tạo.",
+            data={
+                "lead": _lead_public(created),
+                "consultation": {
+                    "service_id": selection["id"],
+                    "catalog_version": CONSULTATION_CRM_CATALOG_VERSION,
+                },
+                "intake_consent_scope": CONSULTATION_CRM_STORAGE_SCOPE,
+                "outbound_contact_authorized": False,
+                **_boundary(lead_persisted=True),
+            },
+            status_name="draft",
+        )
+
+    return _idempotent(
+        f"web-partner-crm:{account_id}:consultation:create",
+        account_id,
+        payload.idempotency_key,
+        fingerprint,
+        operation,
     )
 
 

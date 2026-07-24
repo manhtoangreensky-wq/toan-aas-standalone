@@ -1541,6 +1541,18 @@ async def security_headers(request: Request, call_next):
         "/api/v1/support/consultation-brief/compose",
         "/api/v1/support/consultation-brief/compose/",
     }
+    # Consultation CRM has a deliberately narrower contract than generic
+    # Partner CRM lead writes.  Keep preview and confirmed storage in fixed,
+    # separate buckets so a trailing slash or arbitrary suffix never creates
+    # an unbounded in-memory rate key before CSRF/Pydantic/SQLite work.
+    partner_crm_consultation_preview = request.method == "POST" and request.url.path in {
+        "/api/v1/partner-crm/consultations/preview",
+        "/api/v1/partner-crm/consultations/preview/",
+    }
+    partner_crm_consultation_confirm = request.method == "POST" and request.url.path in {
+        "/api/v1/partner-crm/consultations",
+        "/api/v1/partner-crm/consultations/",
+    }
     operations_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/approvals/")
     reliability_followup_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/followups/")
     reliability_followup_read = request.method == "GET" and (
@@ -1704,6 +1716,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 30
     if support_consultation_compose:
         rate_limit = 30
+    if partner_crm_consultation_preview:
+        rate_limit = 30
+    if partner_crm_consultation_confirm:
+        rate_limit = 20
     if operations_admin_write:
         rate_limit = 20
     if reliability_followup_write:
@@ -1795,6 +1811,8 @@ async def security_headers(request: Request, call_next):
             else "frame-video-operation-read" if frame_video_operation_read
             else "video-transform-operation-read" if video_transform_operation_read
             else "support-consultation-brief-compose" if support_consultation_compose
+            else "partner-crm-consultation-preview" if partner_crm_consultation_preview
+            else "partner-crm-consultation-confirm" if partner_crm_consultation_confirm
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -1825,6 +1843,9 @@ async def security_headers(request: Request, call_next):
             is_campaign_schedule_request = campaign_schedule_write or campaign_schedule_read
             is_reliability_request = reliability_followup_write or reliability_followup_read
             is_inbox_request = inbox_write or inbox_read or notification_tick
+            is_partner_crm_consultation_request = (
+                partner_crm_consultation_preview or partner_crm_consultation_confirm
+            )
             is_mailbox_confirmation = request.url.path in {
                 "/api/v1/auth/email-verification/confirm",
                 "/api/v1/auth/password-recovery/confirm",
@@ -1834,7 +1855,9 @@ async def security_headers(request: Request, call_next):
                     False,
                     "Vui lòng thử lại sau ít phút.",
                     data=(
-                        copyfast_chat_workspace._boundary()
+                        copyfast_partner_crm._boundary(lead_persisted=False)
+                        if is_partner_crm_consultation_request
+                        else copyfast_chat_workspace._boundary()
                         if is_chat_workspace_request
                         else copyfast_analytics_workspace._boundary()
                         if is_analytics_workspace_request

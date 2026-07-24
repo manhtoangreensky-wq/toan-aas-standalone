@@ -7,6 +7,7 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | Web route/action | Authority | Status |
 | --- | --- | --- |
 | `/api/v1/video-operations/*` (not yet a public catalogue route) | Signed Web account + private Asset Vault source | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded JPEG poster utility; no Bot/provider/PayOS/wallet delegation and no claim that existing `/video/*` Bot companion routes render media. It stays outside the public registry until the dedicated signed workbench is implemented in the broader video navigation/UI phase. |
+| `/crm/consultations/new` and `/api/v1/partner-crm/consultations/*` | Signed Web account + CSRF for preview/confirmation | `WEB_NATIVE_CUSTOMER_INTAKE` — closed consultation catalog, non-persistent preview and explicit storage-only consent before one owner CRM `draft`; no Bot callback/state, contact authorization, quote, payment, provider/job, notification or Support-case action. |
 
 | Telegram command | Web route/action | Status |
 | --- | --- | --- |

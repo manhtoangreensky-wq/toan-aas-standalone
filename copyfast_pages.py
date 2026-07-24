@@ -208,6 +208,8 @@ def _title_for(path: str) -> str:
         return "Content Handoff mới"
     if normalized == "/crm/leads/new":
         return "Lead mới"
+    if normalized == "/crm/consultations/new":
+        return "Gửi nhu cầu tư vấn"
     if PROMPT_LIBRARY_PATH.fullmatch(normalized):
         return "Prompt Library"
     if CONTENT_STUDIO_PATH.fullmatch(normalized):
