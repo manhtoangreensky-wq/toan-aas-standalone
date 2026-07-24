@@ -101,7 +101,8 @@ def test_customer_surfaces_use_progressive_disclosure_and_ephemeral_password_rev
         assert markup in PORTAL
         assert f".{css_class}" in CSS
 
-    assert 'class="portal-settings-nav" aria-label="Thiết lập tài khoản"' in PORTAL
+    assert "function renderAccountSettingsNav(currentPath)" in PORTAL
+    assert 'class="portal-settings-nav" aria-label="${safeText(uiText("interfaceLocale.settingsNav", "Thiết lập tài khoản"))}"' in PORTAL
     assert 'class="portal-onboarding-steps" aria-label="Tiến trình liên kết Telegram"' in PORTAL
 
     # Password visibility is an in-page accessibility affordance only.  The

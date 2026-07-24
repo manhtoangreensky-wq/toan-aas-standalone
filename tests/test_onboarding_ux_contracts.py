@@ -26,11 +26,12 @@ def test_onboarding_keeps_workspace_independent_and_never_offers_a_dead_link_act
     assert "telegramConnectionBlockReason(context)" in onboarding
     assert 'data-portal-action="start-telegram-link" data-portal-route="/onboarding"${linkActionDisabled}>${safeText(linkActionLabel)}' in onboarding
     assert "Web hoạt động độc lập" in onboarding
-    assert "Bỏ qua lúc này" in onboarding
+    assert "Vào Workspace" in onboarding
     choice = onboarding[onboarding.index("const independentWorkspaceChoice"):onboarding.index("const linkChallengePaused")]
-    assert 'const skipRoute = "/dashboard";' in onboarding
+    assert "const skipRoute = workspaceRoute;" in onboarding
+    assert 'const skipLabel = continuation ? "Mở lại workflow" : "Vào Workspace";' in onboarding
     assert 'href="${safeText(skipRoute)}"' in choice
-    assert "workspaceRoute" not in choice
+    assert ">${safeText(skipLabel)}</a>" in choice
     assert 'renderEmpty("Chưa có mã liên kết"' in onboarding
 
 

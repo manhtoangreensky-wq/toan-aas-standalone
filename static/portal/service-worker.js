@@ -185,6 +185,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // shell allow-list evolves in a future release.
   "/" + "api/v1/workspace/setup",
   "/workspace/setup",
+  // Onboarding and Account contain signed-session state, login-method
+  // metadata and one-time Telegram-link presentation. They are never an
+  // offline/public PWA fallback, including all Account child routes.
+  "/onboarding",
+  "/account",
   // Workspace Menu has no route-specific API, but the catalog and signed
   // session still make it account-private. Keep it explicit so a future PWA
   // cache expansion cannot turn it into a public offline destination.
