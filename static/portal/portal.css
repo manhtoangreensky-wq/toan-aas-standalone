@@ -6319,3 +6319,91 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-project-operations-board .portal-project-card { transition: none; }
   .portal-project-operations-board .portal-project-card:hover { transform: none; }
 }
+
+/* Campaign Operations Board — app-first planning surface. Keep this scoped
+   layer flat and token-driven so the canonical Calendar/detail styles remain
+   unchanged while the root reads as an operational workspace, not a landing
+   section. */
+.portal-campaign-operations-board,
+.portal-campaign-operations-authoring { display: grid; gap: 18px; }
+.portal-campaign-operations-summary,
+.portal-campaign-operations-authoring-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, .8fr);
+  gap: 24px;
+  align-items: end;
+  padding: 25px;
+  border: 1px solid var(--portal-border);
+  border-radius: 22px;
+  background: var(--portal-surface);
+}
+.portal-campaign-operations-summary h2,
+.portal-campaign-operations-authoring-intro h2 { max-width: 790px; margin: 7px 0 9px; color: var(--portal-text); font-size: clamp(25px, 3vw, 39px); line-height: 1.06; letter-spacing: -.035em; }
+.portal-campaign-operations-summary p,
+.portal-campaign-operations-authoring-intro p { max-width: 780px; margin: 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.62; }
+.portal-campaign-operations-summary dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-campaign-operations-summary dl > div { display: grid; gap: 4px; min-width: 0; min-height: 105px; padding: 14px; border: 1px solid var(--portal-border); border-radius: 14px; background: var(--portal-surface-strong); }
+.portal-campaign-operations-summary dt { color: var(--portal-accent); font-size: 25px; font-weight: 820; letter-spacing: -.04em; }
+.portal-campaign-operations-summary dd { margin: 0; color: var(--portal-muted-strong); font-size: 11px; line-height: 1.45; }
+.portal-campaign-operations-primary { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 19px 21px; border: 1px solid var(--portal-border); border-radius: 18px; background: var(--portal-surface-strong); }
+.portal-campaign-operations-primary h2 { margin: 4px 0 5px; color: var(--portal-text); font-size: 18px; letter-spacing: -.018em; }
+.portal-campaign-operations-primary p { max-width: 760px; margin: 0; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.52; }
+.portal-campaign-operations-primary > .portal-button { flex: 0 0 auto; min-height: 42px; }
+.portal-campaign-operations-create-guard { display: grid; gap: 4px; max-width: 320px; padding: 12px 14px; border: 1px solid var(--portal-border); border-radius: 12px; background: var(--portal-surface-soft); }
+.portal-campaign-operations-create-guard strong { color: var(--portal-text); font-size: 12px; }
+.portal-campaign-operations-create-guard span { color: var(--portal-muted-strong); font-size: 11px; line-height: 1.45; }
+.portal-campaign-operations-workspace,
+.portal-campaign-operations-authoring-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 16px; align-items: start; }
+.portal-campaign-operations-library,
+.portal-campaign-operations-boundary,
+.portal-campaign-operations-authoring .portal-campaign-operations-create { border-color: var(--portal-border); background: var(--portal-surface); }
+.portal-campaign-operations-library .portal-card-header,
+.portal-campaign-operations-boundary .portal-card-header { align-items: flex-start; }
+.portal-campaign-operations-quick-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+.portal-campaign-operations-quick-links a { display: grid; gap: 4px; min-width: 0; min-height: 76px; padding: 13px; border: 1px solid var(--portal-border); border-radius: 13px; background: var(--portal-surface-strong); color: inherit; text-decoration: none; transition: border-color 180ms ease, background 180ms ease; }
+.portal-campaign-operations-quick-links a:hover,
+.portal-campaign-operations-quick-links a:focus-visible { border-color: var(--portal-border-strong); background: var(--portal-surface-soft); }
+.portal-campaign-operations-quick-links strong { color: var(--portal-text); font-size: 13px; }
+.portal-campaign-operations-quick-links span { color: var(--portal-muted-strong); font-size: 11px; line-height: 1.42; }
+.portal-campaign-operations-board .portal-campaign-board { margin: 0; }
+.portal-campaign-operations-board .portal-campaign-card { min-height: 222px; border-color: var(--portal-border); background: var(--portal-surface-strong); box-shadow: none; }
+.portal-campaign-operations-board .portal-campaign-card h3 { color: var(--portal-text); }
+.portal-campaign-operations-board .portal-campaign-card .portal-campaign-facts dd,
+.portal-campaign-operations-board .portal-campaign-card .portal-campaign-facts dt { color: var(--portal-muted-strong); }
+.portal-campaign-operations-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.portal-campaign-operations-steps li { display: grid; gap: 3px; padding: 0 0 12px; border-bottom: 1px solid var(--portal-border); }
+.portal-campaign-operations-steps li:last-child { padding-bottom: 0; border-bottom: 0; }
+.portal-campaign-operations-steps strong { color: var(--portal-text); font-size: 12px; }
+.portal-campaign-operations-steps span { color: var(--portal-muted-strong); font-size: 11px; line-height: 1.5; }
+.portal-campaign-operations-authoring-actions { display: grid; gap: 12px; justify-items: start; }
+.portal-campaign-operations-authoring-actions > span { color: var(--portal-muted-strong); font-size: 12px; line-height: 1.5; }
+
+@media (max-width: 1040px) {
+  .portal-campaign-operations-workspace,
+  .portal-campaign-operations-authoring-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .portal-campaign-operations-summary,
+  .portal-campaign-operations-authoring-intro { grid-template-columns: 1fr; gap: 16px; padding: 20px; border-radius: 18px; }
+  .portal-campaign-operations-summary dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .portal-campaign-operations-summary dl > div { min-height: 86px; padding: 11px; }
+  .portal-campaign-operations-primary { align-items: flex-start; flex-direction: column; padding: 16px; border-radius: 16px; }
+  .portal-campaign-operations-primary .portal-button { width: 100%; min-height: 44px; }
+  .portal-campaign-operations-create-guard { width: 100%; box-sizing: border-box; }
+  .portal-campaign-operations-quick-links { grid-template-columns: 1fr; }
+  .portal-campaign-operations-board .portal-button,
+  .portal-campaign-operations-board .portal-input,
+  .portal-campaign-operations-board .portal-select,
+  .portal-campaign-operations-authoring .portal-button,
+  .portal-campaign-operations-authoring .portal-input,
+  .portal-campaign-operations-authoring .portal-select { min-height: 44px; }
+}
+
+@media (max-width: 460px) {
+  .portal-campaign-operations-summary dl { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-campaign-operations-quick-links a { transition: none; }
+}
