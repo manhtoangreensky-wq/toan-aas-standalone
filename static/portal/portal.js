@@ -937,6 +937,14 @@
     layout: "partner-crm", type: "partner-crm", fields: [], action: "none", status: "ready",
     notes: ["Không nhập API key, OTP/CVV, thông tin thẻ, chứng từ thanh toán, URL/handle bên ngoài hoặc hướng dẫn liên hệ tự động.", "Lead chỉ được tạo trong Web database sau CSRF, idempotency và validation server-side; không tạo action thương mại nào."]
   });
+  // This is intentionally not the generic CRM authoring form above. A signed
+  // customer can turn a bounded consultation request into one private CRM
+  // draft only after an explicit storage-only consent. It never collects a
+  // contact channel or converts a Support Brief/case into a lead.
+  customerPage("/crm/consultations/new", "Gửi nhu cầu tư vấn", "Chọn nhu cầu, xem lại dữ liệu và chỉ tạo lead CRM draft riêng tư khi bạn xác nhận lưu trữ.", ICONS.support, {
+    layout: "consultation-crm-intake", type: "consultation-crm-intake", fields: [], action: "none", status: "ready",
+    notes: ["Luồng này dùng signed Web account hiện tại; không nhập email, số điện thoại, Zalo, Telegram, secret hoặc thông tin thanh toán.", "Xem lại chỉ là preview, chưa lưu gì. Xác nhận chỉ tạo CRM draft riêng tư; không cấp consent liên hệ, không tạo case Support, notification, payment, job hoặc Bot action."]
+  });
   customerPage("/content/prompt-pack", "Content Prompt Pack", "Tạo prompt, caption, hook, ý tưởng và hướng visual bằng template Web-native deterministic để tiếp tục biên tập.", ICONS.prompt, {
     layout: "content-prompt-pack", type: "content-prompt-pack", fields: [], action: "none", status: "ready",
     notes: [
@@ -7399,6 +7407,15 @@
       partnerCrmManagerDirectory: Array.isArray(source.partnerCrmManagerDirectory) ? source.partnerCrmManagerDirectory.slice(0, 50) : [],
       partnerCrmManagerListing: source.partnerCrmManagerListing && typeof source.partnerCrmManagerListing === "object" ? source.partnerCrmManagerListing : {},
       partnerCrmReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.partnerCrmReadState || "")) ? String(source.partnerCrmReadState) : "guarded",
+      // Consultation intake has a deliberately separate, page-memory-only
+      // projection. It never falls back to the generic CRM form, Support
+      // Brief, a Bot state, URL parameters or browser persistence.
+      consultationCrmCatalog: source.consultationCrmCatalog && typeof source.consultationCrmCatalog === "object" ? source.consultationCrmCatalog : {},
+      consultationCrmReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.consultationCrmReadState || "")) ? String(source.consultationCrmReadState) : "guarded",
+      consultationCrmDraftInput: source.consultationCrmDraftInput && typeof source.consultationCrmDraftInput === "object" ? source.consultationCrmDraftInput : {},
+      consultationCrmSelection: typeof source.consultationCrmSelection === "string" ? source.consultationCrmSelection.slice(0, 120) : "",
+      consultationCrmPreview: source.consultationCrmPreview && typeof source.consultationCrmPreview === "object" ? source.consultationCrmPreview : {},
+      consultationCrmReceipt: source.consultationCrmReceipt && typeof source.consultationCrmReceipt === "object" ? source.consultationCrmReceipt : {},
       // Voice Studio is deliberately a separate Web-native authoring
       // projection. It must never be conflated with Bot Voice Vault profiles
       // or hydrated from generic `/voice` bridge data after a private read
@@ -8979,7 +8996,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "consultation-crm-intake", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -23437,8 +23454,148 @@
     if (!canView) return '<article class="portal-page">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Partner & Lead CRM đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cho phép CRM Web-native.", ICONS.support) + "</section></article>";
     const leads = (Array.isArray(context.partnerCrmLeads) ? context.partnerCrmLeads : []).map((item) => partnerCrmLead(item, false)).filter(Boolean); const summary = context.partnerCrmSummary && typeof context.partnerCrmSummary === "object" ? context.partnerCrmSummary : {};
     const listing = partnerCrmListing(context);
-    const pipelineMarkup = renderPartnerCrmKanban(leads) + renderPartnerCrmPagination(listing, canView);
+    const pipelineMarkup = '<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/crm/consultations/new">Gửi nhu cầu tư vấn</a><span class="portal-form-note">Dành cho yêu cầu customer-side có consent lưu CRM draft riêng tư.</span></div>' + renderPartnerCrmKanban(leads) + renderPartnerCrmPagination(listing, canView);
     return '<article class="portal-page portal-crm-workspace">' + renderHero(page, context) + '<section class="portal-coordination-summary"><div><span class="portal-section-kicker">Odoo-style private pipeline</span><h2>Lead theo stage, có consent và activity rõ ràng</h2><p>CRM tổ chức metadata do bạn nhập; không tự liên hệ, không lookup, không referral/payout hay thay đổi trạng thái Bot.</p></div><dl><div><dt>' + safeText(String(Number(summary.total || 0))) + '</dt><dd>lead của tôi</dd></div><div><dt>' + safeText(String(leads.filter((item) => ["review", "proposal"].includes(item.stage)).length)) + '</dt><dd>cần theo dõi</dd></div></dl></section><div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">New lead</span><h2 class="portal-card-title">Tạo lead draft</h2></div>' + badge(canCreate ? "ready" : "guarded") + '</div>' + partnerCrmForm(null, "/crm/leads", "partner-crm-create", canCreate) + '</section><aside class="portal-card portal-card-pad"><h2 class="portal-card-title">Nguyên tắc vận hành</h2><ol class="portal-project-steps"><li><strong>1. Ghi nhận</strong><span>Lead là metadata riêng tư.</span></li><li><strong>2. Qualify</strong><span>Chuyển stage có revision server-side.</span></li><li><strong>3. Theo dõi</strong><span>Ghi chú/consent không gửi liên hệ tự động.</span></li></ol></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Pipeline</h2><p class="portal-card-subtitle">Kanban chỉ phản ánh lead thuộc account hiện tại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-refresh" data-portal-route="/crm/leads">Làm mới</button></div>' + pipelineMarkup + '</section></article>';
+  }
+  function consultationCrmRenderText(value, maximum, minimum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= (minimum || 1) && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function consultationCrmRenderDetail(value, maximum, minimum) {
+    const text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    return text.length >= (minimum || 1) && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function consultationCrmCatalogForRender(context) {
+    const source = context && context.consultationCrmCatalog && typeof context.consultationCrmCatalog === "object"
+      ? context.consultationCrmCatalog
+      : {};
+    const catalogVersion = consultationCrmRenderText(source.catalog_version, 64);
+    const groups = Array.isArray(source.groups) ? source.groups : [];
+    const seen = new Set();
+    const projected = [];
+    for (const group of groups.slice(0, 8)) {
+      const groupId = String(group && group.id || "").trim();
+      const title = consultationCrmRenderText(group && group.title, 120);
+      const summary = consultationCrmRenderText(group && group.summary, 360);
+      const services = Array.isArray(group && group.services) ? group.services : [];
+      if (!/^[a-z][a-z0-9_-]{1,63}$/.test(groupId) || !title || !summary || !services.length || services.length > 16) return {};
+      const projectedServices = [];
+      for (const service of services) {
+        const id = String(service && service.id || "").trim();
+        const category = String(service && service.category || "").trim().toLowerCase();
+        const serviceTitle = consultationCrmRenderText(service && service.title, 140);
+        const serviceSummary = consultationCrmRenderText(service && service.summary, 300);
+        if (!/^[a-z][a-z0-9-]{2,95}$/.test(id) || !/^[a-z][a-z0-9_]{2,63}$/.test(category)
+          || seen.has(id) || !serviceTitle || !serviceSummary) return {};
+        seen.add(id);
+        projectedServices.push({ id, category, title: serviceTitle, summary: serviceSummary });
+      }
+      projected.push({ id: groupId, title, summary, services: projectedServices });
+    }
+    return catalogVersion && projected.length && seen.size <= 32
+      ? { catalog_version: catalogVersion, groups: projected }
+      : {};
+  }
+
+  function consultationCrmServiceFromCatalog(catalog, serviceId) {
+    const selected = String(serviceId || "").trim();
+    if (!catalog || !Array.isArray(catalog.groups) || !selected) return null;
+    for (const group of catalog.groups) {
+      const service = (group.services || []).find((item) => item.id === selected);
+      if (service) return { ...service, group_id: group.id, group_title: group.title };
+    }
+    return null;
+  }
+
+  function consultationCrmDraftForRender(context, catalog) {
+    const source = context && context.consultationCrmDraftInput && typeof context.consultationCrmDraftInput === "object"
+      ? context.consultationCrmDraftInput
+      : {};
+    const serviceId = String(source.service_id || context && context.consultationCrmSelection || "").trim();
+    return {
+      service_id: consultationCrmServiceFromCatalog(catalog, serviceId) ? serviceId : "",
+      request_title: consultationCrmRenderText(source.request_title, 120, 4),
+      need_summary: consultationCrmRenderDetail(source.need_summary, 1000, 12)
+    };
+  }
+
+  function consultationCrmPreviewForRender(context, catalog) {
+    const source = context && context.consultationCrmPreview && typeof context.consultationCrmPreview === "object"
+      ? context.consultationCrmPreview
+      : {};
+    const selection = source.selection && typeof source.selection === "object" ? source.selection : {};
+    const request = source.request && typeof source.request === "object" ? source.request : {};
+    const serviceId = String(selection.id || request.service_id || "").trim();
+    const service = consultationCrmServiceFromCatalog(catalog, serviceId);
+    const requestTitle = consultationCrmRenderText(request.request_title, 120, 4);
+    const needSummary = consultationCrmRenderDetail(request.need_summary, 1000, 12);
+    if (!service || !requestTitle || !needSummary || String(source.catalog_version || "") !== String(catalog.catalog_version || "") || source.lead_persisted !== false) return {};
+    return {
+      catalog_version: catalog.catalog_version,
+      selection: service,
+      request: { service_id: service.id, request_title: requestTitle, need_summary: needSummary }
+    };
+  }
+
+  function consultationCrmReceiptForRender(context, catalog) {
+    const source = context && context.consultationCrmReceipt && typeof context.consultationCrmReceipt === "object"
+      ? context.consultationCrmReceipt
+      : {};
+    const lead = source.lead && typeof source.lead === "object" ? source.lead : {};
+    const consultation = source.consultation && typeof source.consultation === "object" ? source.consultation : {};
+    const leadId = String(lead.id || "").trim();
+    const service = consultationCrmServiceFromCatalog(catalog, consultation.service_id);
+    const revision = Number(lead.revision);
+    if (!validPartnerCrmLeadId(leadId) || !Number.isInteger(revision) || revision < 1 || revision > 1000000
+      || String(lead.stage || "") !== "draft" || !service || String(consultation.catalog_version || "") !== String(catalog.catalog_version || "")) return {};
+    return { lead: { id: leadId, revision, stage: "draft" }, consultation: { service_id: service.id, catalog_version: catalog.catalog_version } };
+  }
+
+  function renderConsultationCrmIntake(page, context) {
+    const route = String(page.routePath || page.path || "/crm/consultations/new");
+    const canView = Boolean(context.capabilities && context.capabilities["consultation-crm-view"] === true);
+    const canPreview = Boolean(context.capabilities && context.capabilities["consultation-crm-preview"] === true);
+    const canConfirm = Boolean(context.capabilities && context.capabilities["consultation-crm-confirm"] === true);
+    const readState = String(context.consultationCrmReadState || "guarded");
+    const catalog = consultationCrmCatalogForRender(context);
+    if (!canView) {
+      return '<article class="portal-page portal-consultation-crm-intake">' + renderHero(page, context)
+        + '<section class="portal-card portal-card-pad">' + renderEmpty("Gửi nhu cầu tư vấn đang được bảo vệ", "Đăng nhập bằng signed Web session để máy chủ kiểm tra catalog CRM riêng tư.", ICONS.security) + '</section></article>';
+    }
+    const receipt = consultationCrmReceiptForRender(context, catalog);
+    if (receipt.lead) {
+      const leadPath = "/crm/leads/" + encodeURIComponent(receipt.lead.id);
+      return '<article class="portal-page portal-consultation-crm-intake">' + renderHero(page, context)
+        + '<section class="portal-card portal-card-pad portal-support-consultation-result" data-state="ready" role="status" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">CRM draft đã được xác nhận</span><h2 class="portal-card-title">Lead riêng tư đã được tạo</h2><p class="portal-card-subtitle">Máy chủ đã xác nhận lead ở stage Draft. Không có consent liên hệ, thông báo, payment, job hoặc Bot action được tạo.</p></div>' + badge("ready") + '</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="' + safeText(leadPath) + '">Mở lead draft</a><a class="portal-button portal-button--quiet" href="/crm/consultations/new">Gửi nhu cầu khác</a></div></section></article>';
+    }
+    if (!catalog.catalog_version || readState !== "ready") {
+      const failed = readState === "failed";
+      const message = failed
+        ? "Catalog tư vấn chưa được máy chủ xác minh. Không dùng dữ liệu cũ hoặc fallback để tạo lead."
+        : "Đang kiểm tra catalog tư vấn riêng tư; chưa có dữ liệu hoặc lead nào được tạo.";
+      const retry = failed
+        ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="consultation-crm-catalog-retry" data-portal-route="' + safeText(route) + '">Tải lại catalog</button>'
+        : "";
+      return '<article class="portal-page portal-consultation-crm-intake">' + renderHero(page, context)
+        + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">CRM intake · signed account</span><h2 class="portal-card-title">Gửi nhu cầu tư vấn</h2><p class="portal-card-subtitle">' + safeText(message) + '</p></div>' + badge(failed ? "guarded" : "processing") + '</div><div class="portal-form-footer" aria-live="polite">' + retry + '</div></section></article>';
+    }
+    const draft = consultationCrmDraftForRender(context, catalog);
+    const preview = consultationCrmPreviewForRender(context, catalog);
+    const previewMatchesDraft = Boolean(preview.request && preview.request.service_id === draft.service_id
+      && preview.request.request_title === draft.request_title && preview.request.need_summary === draft.need_summary);
+    const disabled = canPreview ? "" : " disabled";
+    const serviceGroups = catalog.groups.map((group) => '<fieldset class="portal-workspace-setup-focus consultation-crm-service-group"><legend>' + safeText(group.title) + '</legend><p>' + safeText(group.summary) + '</p><div class="portal-workspace-setup-focus-grid">' + group.services.map((service) => {
+      const id = "consultation-crm-service-" + service.id;
+      const checked = service.id === draft.service_id ? " checked" : "";
+      return '<label class="portal-workspace-setup-focus-card" for="' + safeText(id) + '"><input id="' + safeText(id) + '" type="radio" name="service_id" value="' + safeText(service.id) + '" required' + checked + disabled + '><span><strong>' + safeText(service.title) + '</strong><small>' + safeText(service.summary) + '</small></span></label>';
+    }).join("") + '</div></fieldset>').join("");
+    const previewPanel = previewMatchesDraft
+      ? '<section class="portal-card portal-card-pad portal-support-consultation-result" data-consultation-crm-preview data-state="awaiting_confirm" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước 2 · Review trước khi lưu</span><h2 class="portal-card-title">' + safeText(preview.selection.title) + '</h2><p class="portal-card-subtitle">' + safeText(preview.selection.summary) + '</p></div>' + badge("awaiting_confirm") + '</div><dl class="portal-summary-list"><div class="portal-summary-item"><dt>Tiêu đề</dt><dd>' + safeText(preview.request.request_title) + '</dd></div><div class="portal-summary-item"><dt>Nhu cầu</dt><dd>' + safeText(preview.request.need_summary) + '</dd></div></dl><p class="portal-form-note">Đây là preview đã được server kiểm tra. Chưa có lead nào tồn tại cho tới khi bạn xác nhận ở bước dưới.</p><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="consultation-crm-confirm" data-portal-route="' + safeText(route) + '" data-portal-confirm="Tạo một lead CRM draft riêng tư từ yêu cầu đã review? Điều này chỉ đồng ý lưu trữ draft, không cấp quyền liên hệ hoặc tạo hành động bên ngoài." novalidate><input type="hidden" name="service_id" value="' + safeText(preview.request.service_id) + '"><input type="hidden" name="request_title" value="' + safeText(preview.request.request_title) + '"><input type="hidden" name="need_summary" value="' + safeText(preview.request.need_summary) + '"><fieldset class="portal-workspace-setup-focus"><legend>Xác nhận phạm vi lưu trữ</legend><label class="portal-checkbox portal-starter-kit-confirm-check"><input type="checkbox" name="consent_to_store" value="true" required' + (canConfirm ? "" : " disabled") + '><span>Tôi đồng ý lưu bản nháp yêu cầu này trong CRM của Web account. Điều này chỉ là đồng ý lưu trữ draft, không phải đồng ý để TOAN AAS liên hệ qua email, điện thoại, Zalo hoặc Telegram.</span></label></fieldset><div class="portal-form-footer"><span class="portal-form-note">Lead sẽ ở stage Draft và thuộc signed account hiện tại. Không có contact, notification, payment, wallet, provider, job, asset hoặc Bot action.</span><button class="portal-button portal-button--primary" type="submit" data-consultation-crm-confirm' + (canConfirm ? "" : " disabled") + '>Tạo lead draft riêng tư</button></div></form></section>'
+      : '<section class="portal-card portal-card-pad portal-support-consultation-result" data-consultation-crm-preview data-state="idle" role="status" aria-live="polite"><p>Chọn nhu cầu, điền nội dung an toàn rồi bấm “Xem lại yêu cầu”. Preview không lưu CRM lead.</p></section>';
+    return '<article class="portal-page portal-consultation-crm-intake">' + renderHero(page, context)
+      + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước 1 · Consultation intake</span><h2 class="portal-card-title">Gửi nhu cầu tư vấn</h2><p class="portal-card-subtitle">Tạo một yêu cầu có cấu trúc để review trước khi lưu thành CRM draft. Web account hiện tại đã xác định phiên của bạn.</p></div>' + badge(canPreview ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="consultation-crm-preview" data-portal-route="' + safeText(route) + '" novalidate><div class="portal-fields">' + serviceGroups + '<label class="portal-field portal-field--wide" for="consultation-crm-title"><span>Tiêu đề nhu cầu <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" id="consultation-crm-title" name="request_title" type="text" minlength="4" maxlength="120" required autocomplete="off" value="' + safeText(draft.request_title) + '" placeholder="Ví dụ: Cần tư vấn tổ chức quy trình nội dung cho đội nhỏ"' + disabled + '><span class="portal-field-help">Từ 4 đến 120 ký tự, nêu mục tiêu ở mức không nhạy cảm.</span></label><label class="portal-field portal-field--wide" for="consultation-crm-summary"><span>Nhu cầu cần tư vấn <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" id="consultation-crm-summary" name="need_summary" minlength="12" maxlength="1000" required autocomplete="off" placeholder="Mô tả bối cảnh và điều bạn cần làm rõ…"' + disabled + '>' + safeText(draft.need_summary) + '</textarea><span class="portal-field-help">Không nhập email, số điện thoại, Zalo, Telegram, secret, OTP/CVV, số thẻ, bill hoặc thông tin thanh toán. Signed Web account đã xác định owner.</span></label></div><div class="portal-form-footer"><span class="portal-form-note">Chỉ bấm một lần để tạo preview server-side. Bước này không ghi CRM, không gửi liên hệ và không tạo bất kỳ output nào.</span><button class="portal-button portal-button--primary" type="submit" data-consultation-crm-preview-submit' + disabled + '>Xem lại yêu cầu</button></div></form></section>' + previewPanel + '<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/crm/leads">Về Partner & Lead CRM</a></div></article>';
   }
   function renderPartnerCrmDetail(page, context) {
     const detail = context.partnerCrmDetail && typeof context.partnerCrmDetail === "object" ? context.partnerCrmDetail : {}; const lead = partnerCrmLead(detail.lead, true); const canView = Boolean(context.capabilities && context.capabilities["partner-crm-view"] === true);
@@ -23495,6 +23652,7 @@
       case "content-handoff-detail": return renderContentHandoffDetail(page, context);
       case "content-handoff-admin": return renderContentHandoffAdmin(page, context);
       case "partner-crm": return renderPartnerCrm(page, context);
+      case "consultation-crm-intake": return renderConsultationCrmIntake(page, context);
       case "partner-crm-detail": return renderPartnerCrmDetail(page, context);
       case "partner-crm-manager": return renderPartnerCrmManager(page, context);
       case "prompt-studio": return renderPromptStudio(page, context);
@@ -23716,6 +23874,37 @@
     // Integration uses this event only to fence a delayed explicit request.
     // It has no storage, submit, network or navigation side effect.
     window.dispatchEvent(new CustomEvent("toanaas:sfx-cue-sheet-draft-edited"));
+  }
+
+  function markConsultationCrmDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "consultation-crm-preview") return;
+    // A user edit never posts, clears fields, redirects or stores a draft.
+    // It makes a prior server preview visibly stale and locks its confirmation
+    // control until the customer explicitly asks the server to review again.
+    const intake = form.closest(".portal-consultation-crm-intake");
+    const preview = intake && intake.querySelector("[data-consultation-crm-preview]");
+    if (preview && preview.getAttribute("data-stale") !== "true") {
+      preview.setAttribute("data-stale", "true");
+      preview.setAttribute("data-state", "stale");
+      let status = preview.querySelector("[data-consultation-crm-preview-status]");
+      if (!status) {
+        status = document.createElement("p");
+        status.className = "portal-form-note";
+        status.setAttribute("data-consultation-crm-preview-status", "");
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        preview.appendChild(status);
+      }
+      status.textContent = "Nội dung đã thay đổi. Hãy xem lại yêu cầu trước khi tạo lead draft.";
+      preview.querySelectorAll("[data-consultation-crm-confirm]").forEach((control) => {
+        control.disabled = true;
+        control.setAttribute("aria-disabled", "true");
+      });
+    }
+    // The integration receives no customer text through this event. It only
+    // invalidates a late request and checks the current native form again on
+    // preview/confirm, keeping this route out of generic transient storage.
+    window.dispatchEvent(new CustomEvent("toanaas:consultation-crm-draft-edited"));
   }
 
   function synchronizeImageResizePreset(form) {
@@ -25372,6 +25561,9 @@
     document.addEventListener("input", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
+      if (form && form.getAttribute("data-portal-action") === "consultation-crm-preview") {
+        markConsultationCrmDraftEdited(form);
+      }
       if (form && form.getAttribute("data-portal-action") === "music-direction-preset-compose") {
         markMusicDirectionPresetDraftEdited(form);
       }
@@ -25400,6 +25592,9 @@
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
+        if (form.getAttribute("data-portal-action") === "consultation-crm-preview") {
+          markConsultationCrmDraftEdited(form);
+        }
         if (form.hasAttribute("data-workspace-setup-form") && event.target && event.target.matches && event.target.matches('input[type="checkbox"][name^="focus_"]')) {
           synchronizeWorkspaceSetupFocusLimit(form, event.target);
         }

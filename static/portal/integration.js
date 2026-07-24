@@ -314,6 +314,19 @@
   let partnerCrmListHydrationEpoch = 0;
   let partnerCrmDetailHydrationEpoch = 0;
   let partnerCrmManagerHydrationEpoch = 0;
+  // Customer consultation intake is intentionally a separate CRM boundary.
+  // Its catalog, preview and durable confirmation must never share generic
+  // CRM list hydration, Support Brief state or a Bot/bridge projection.
+  let consultationCrmSessionEpoch = 0;
+  let consultationCrmCatalogHydrationEpoch = 0;
+  let consultationCrmPreviewRequestEpoch = 0;
+  // A preview is only confirmable while it belongs to the exact untouched
+  // intake request that produced it. The Portal edit event advances the
+  // request epoch without carrying customer text outside the form.
+  let consultationCrmPreviewFreshEpoch = 0;
+  let consultationCrmConfirmRequestEpoch = 0;
+  let consultationCrmPreviewInFlight = false;
+  let consultationCrmConfirmInFlight = false;
   // Content Studio carries private briefs, references, versions and authored
   // text. Its list, detail and nested version reads must never cross a
   // signed account, a newer record or a route change.
@@ -4158,7 +4171,10 @@
   }
   function isNativePartnerCrmPath(path) {
     const normalized = String(path || "").split("?")[0];
-    return normalized === "/crm/leads" || normalized === "/crm/leads/new" || normalized === "/admin/crm/leads" || Boolean(partnerCrmLeadIdFromPath(normalized));
+    // Keep the literal here because this routing helper is declared before
+    // the consultation catalog constants below. That avoids a temporal-dead-
+    // zone dependency if a future bootstrap invokes it earlier in this file.
+    return normalized === "/crm/leads" || normalized === "/crm/leads/new" || normalized === "/crm/consultations/new" || normalized === "/admin/crm/leads" || Boolean(partnerCrmLeadIdFromPath(normalized));
   }
   function partnerCrmBoundaryIsSafe(data, persisted) {
     if (!data || typeof data !== "object" || String(data.execution || "") !== "web_native_partner_lead_crm_only" || data.lead_persisted !== persisted) return false;
@@ -4188,6 +4204,265 @@
     if (safety) throw new Error(safety.replace("Content Studio", "CRM"));
     return { lead_name, organization, contact_email, lead_kind, opportunity_summary, source_kind, source_label, tags, consent_status, consent_note };
   }
+
+  // Consultation intake is a dedicated customer-side route.  Keep its
+  // closed catalog here rather than borrowing Support Brief or generic CRM
+  // form fields: the server alone decides what durable CRM metadata is pinned
+  // after the customer explicitly consents to storage-only draft creation.
+  const CONSULTATION_CRM_ROUTE = "/crm/consultations/new";
+  const CONSULTATION_CRM_GROUP_IDS = Object.freeze(["premium", "custom_bot", "service"]);
+  const CONSULTATION_CRM_GROUP_SERVICE_IDS = Object.freeze({
+    premium: Object.freeze(["web-premium-creator", "web-premium-shop", "web-premium-business", "web-premium-private"]),
+    custom_bot: Object.freeze(["web-custom-shop", "web-custom-content", "web-custom-support", "web-custom-internal", "web-custom-custom"]),
+    service: Object.freeze(["web-service-image", "web-service-video", "web-service-frame-video", "web-service-document", "web-service-voice", "web-service-package"])
+  });
+  const CONSULTATION_CRM_SERVICE_META = Object.freeze({
+    "web-premium-creator": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-shop": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-business": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-premium-private": Object.freeze({ group: "premium", category: "premium_lead" }),
+    "web-custom-shop": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-content": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-support": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-internal": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-custom-custom": Object.freeze({ group: "custom_bot", category: "custom_bot_lead" }),
+    "web-service-image": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-frame-video": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-document": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-voice": Object.freeze({ group: "service", category: "service_consulting" }),
+    "web-service-package": Object.freeze({ group: "service", category: "service_consulting" })
+  });
+  const CONSULTATION_CRM_BOUNDARY_KEYS = Object.freeze([
+    "telegram_state_changed", "bot_called", "bridge_called", "provider_called", "remote_lookup_called",
+    "social_platform_called", "contacted", "notification_sent", "job_created", "wallet_mutated",
+    "payment_started", "payout_created", "referral_ledger_changed", "promo_or_membership_changed", "publish_action_created"
+  ]);
+  const CONSULTATION_CRM_EMAIL_PATTERN = /(?<![A-Za-z0-9._%+-])[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})+(?![A-Za-z0-9.-])/i;
+  const CONSULTATION_CRM_PHONE_PATTERN = /(?<!\d)(?:\+?84|0)(?:[\s().-]*\d){8,10}(?!\d)/;
+  const CONSULTATION_CRM_CONTACT_LABEL_PATTERN = /\b(?:email|e-mail|zalo|telegram|phone|số\s*điện\s*thoại|so\s*dien\s*thoai|sđt|sdt)\s*(?:[:=]|là|la)\s*\S+/i;
+  const CONSULTATION_CRM_TELEGRAM_HANDLE_PATTERN = /(?<![A-Za-z0-9._])@[A-Za-z][A-Za-z0-9_]{4,31}\b/;
+  const CONSULTATION_CRM_SECRET_PATTERN = /\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|token|client[ _-]?secret|secret(?:[ _-]?key)?|password|passphrase|authorization)\b\s*(?:[:=]|\bis\b)\s*(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}|\bbearer\s+[A-Za-z0-9._~+/=-]{12,}|\b(?:otp|cvv|cvc|pin|mã\s*(?:xác\s*(?:minh|thực)|otp)|ma\s*(?:xac\s*(?:minh|thuc)|otp)|verification\s+(?:code|token)|one[ -]?time(?:\s+(?:pass(?:word|code)?|code))?)\b/i;
+  const CONSULTATION_CRM_KNOWN_SECRET_TOKEN_PATTERN = /(?<![A-Za-z0-9_])(?:(?:sk|pk|rk)[_-][A-Za-z0-9_-]{12,}|gh(?:p|o|u|s|r)_[A-Za-z0-9]{12,}|github_pat_[A-Za-z0-9_]{12,}|xox(?:b|p|a|r|s)-[A-Za-z0-9-]{12,}|AIza[0-9A-Za-z_-]{20,}|(?:AKIA|ASIA)[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8})(?![A-Za-z0-9_])/i;
+  const CONSULTATION_CRM_CARD_PATTERN = /(?<![0-9A-Za-z])[0-9](?:[\s./-]*[0-9]){12,18}(?![0-9A-Za-z])/;
+  const CONSULTATION_CRM_PAYMENT_PROOF_PATTERN = /\b(?:tx(?:id|n)?|transaction\s+(?:hash|id|reference|no\.?|number)|mã\s*(?:(?:giao\s*)?(?:dịch|gd)|tham\s*chiếu|thanh\s*toán)|ma\s*(?:(?:giao\s*)?(?:dich|gd)|tham\s*chieu|thanh\s*toan)|biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|số\s*tài\s*khoản|so\s*tai\s*khoan|stk|tài\s*khoản\s*(?:ngân\s*hàng|bank)|tai\s*khoan\s*(?:ngan\s*hang|bank)|bank\s+account|account\s+(?:number|no|id)|qr\s*(?:code|thanh\s*toán|thanh\s*toan)?)\b/i;
+
+  function isNativeConsultationCrmPath(path) {
+    return String(path || "").split("?")[0] === CONSULTATION_CRM_ROUTE;
+  }
+
+  function consultationCrmCatalogVersion(value) {
+    const version = String(value || "").trim();
+    return /^[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[._-][A-Za-z0-9._-]{1,48})?$/.test(version) ? version : "";
+  }
+
+  function consultationCrmLine(value, minimum, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function consultationCrmDetail(value, minimum, maximum) {
+    const text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function consultationCrmCatalogBoundaries(value) {
+    const boundaries = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    // The nested catalog boundary is the same fixed server contract used by
+    // preview/confirm.  `execution` is deliberately allowed *and* pinned:
+    // treating it as an unknown key would silently make every valid catalog
+    // guarded, while accepting another execution surface would be unsafe.
+    const allowed = new Set(CONSULTATION_CRM_BOUNDARY_KEYS.concat(["execution", "lead_persisted"]));
+    return boundaries.execution === "web_native_partner_lead_crm_only"
+      && boundaries.lead_persisted === false
+      && CONSULTATION_CRM_BOUNDARY_KEYS.every((key) => boundaries[key] === false)
+      && Object.keys(boundaries).every((key) => allowed.has(key))
+      ? { ...boundaries }
+      : null;
+  }
+
+  function consultationCrmBoundaryIsSafe(data, persisted) {
+    if (!data || typeof data !== "object" || String(data.execution || "") !== "web_native_partner_lead_crm_only" || data.lead_persisted !== persisted) return false;
+    return CONSULTATION_CRM_BOUNDARY_KEYS.every((key) => data[key] === false);
+  }
+
+  function consultationCrmScopeIsSafe(data) {
+    return data && typeof data === "object"
+      && data.intake_consent_scope === "crm_draft_storage_only"
+      && data.outbound_contact_authorized === false;
+  }
+
+  function consultationCrmServiceId(value) {
+    const serviceId = String(value || "").trim();
+    if (!Object.prototype.hasOwnProperty.call(CONSULTATION_CRM_SERVICE_META, serviceId)) {
+      throw new Error("Hãy chọn một nhu cầu tư vấn Web hợp lệ.");
+    }
+    return serviceId;
+  }
+
+  function consultationCrmFindService(catalog, serviceId) {
+    const source = catalog && typeof catalog === "object" ? catalog : {};
+    const groups = Array.isArray(source.groups) ? source.groups : [];
+    for (const group of groups) {
+      const service = Array.isArray(group && group.services) ? group.services.find((item) => item && item.id === serviceId) : null;
+      if (service) return { group, service };
+    }
+    return null;
+  }
+
+  function consultationCrmCatalogProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : null;
+    const catalogVersion = data ? consultationCrmCatalogVersion(data.catalog_version) : "";
+    const boundaries = data ? consultationCrmCatalogBoundaries(data.boundaries) : null;
+    const groups = data && Array.isArray(data.groups) ? data.groups : [];
+    if (!data || !catalogVersion || data.delivery !== "web_native_partner_lead_crm_only" || data.persistence !== "none" || data.automation !== "none"
+      || data.contact_collection !== false || data.outbound_contact_authorized !== false
+      || !boundaries || groups.length !== CONSULTATION_CRM_GROUP_IDS.length) return { catalog: {}, readState: "guarded" };
+    const seen = new Set();
+    const projected = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const group = groups[index] && typeof groups[index] === "object" && !Array.isArray(groups[index]) ? groups[index] : null;
+      const id = group ? String(group.id || "").trim() : "";
+      const title = group ? consultationCrmLine(group.title, 3, 120) : "";
+      const summary = group ? consultationCrmLine(group.summary, 3, 360) : "";
+      const expectedIds = CONSULTATION_CRM_GROUP_SERVICE_IDS[id];
+      const services = group && Array.isArray(group.services) ? group.services : [];
+      if (!group || id !== CONSULTATION_CRM_GROUP_IDS[index] || !title || !summary || !Array.isArray(expectedIds) || services.length !== expectedIds.length) {
+        return { catalog: {}, readState: "guarded" };
+      }
+      const projectedServices = [];
+      for (let serviceIndex = 0; serviceIndex < services.length; serviceIndex += 1) {
+        const item = services[serviceIndex] && typeof services[serviceIndex] === "object" && !Array.isArray(services[serviceIndex]) ? services[serviceIndex] : null;
+        const serviceId = item ? String(item.id || "").trim() : "";
+        const meta = CONSULTATION_CRM_SERVICE_META[serviceId];
+        const category = item ? String(item.category || "").trim().toLowerCase() : "";
+        const serviceTitle = item ? consultationCrmLine(item.title, 3, 140) : "";
+        const serviceSummary = item ? consultationCrmLine(item.summary, 3, 300) : "";
+        const prompt = item ? consultationCrmLine(item.prompt, 3, 320) : "";
+        if (!item || serviceId !== expectedIds[serviceIndex] || seen.has(serviceId) || !meta || meta.group !== id || meta.category !== category
+          || !serviceTitle || !serviceSummary || !prompt) return { catalog: {}, readState: "guarded" };
+        seen.add(serviceId);
+        projectedServices.push({ id: serviceId, category, title: serviceTitle, summary: serviceSummary, prompt });
+      }
+      projected.push({ id, title, summary, services: projectedServices });
+    }
+    if (seen.size !== Object.keys(CONSULTATION_CRM_SERVICE_META).length) return { catalog: {}, readState: "guarded" };
+    return {
+      catalog: {
+        catalog_version: catalogVersion, groups: projected, boundaries,
+        delivery: "web_native_partner_lead_crm_only", persistence: "none", automation: "none",
+        contact_collection: false, outbound_contact_authorized: false
+      },
+      readState: "ready"
+    };
+  }
+
+  function consultationCrmSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (CONSULTATION_CRM_EMAIL_PATTERN.test(text) || CONSULTATION_CRM_PHONE_PATTERN.test(text)
+      || CONSULTATION_CRM_CONTACT_LABEL_PATTERN.test(text) || CONSULTATION_CRM_TELEGRAM_HANDLE_PATTERN.test(text)) {
+      return "Nhu cầu tư vấn dùng signed Web account; không nhập email, số điện thoại, Zalo hoặc Telegram vào nội dung.";
+    }
+    if (CONSULTATION_CRM_PAYMENT_PROOF_PATTERN.test(text)) {
+      return "Nhu cầu tư vấn không nhận bill, TXID, số tài khoản, QR hoặc thông tin thanh toán.";
+    }
+    if (CONSULTATION_CRM_SECRET_PATTERN.test(text) || CONSULTATION_CRM_KNOWN_SECRET_TOKEN_PATTERN.test(text) || CONSULTATION_CRM_CARD_PATTERN.test(text)) {
+      return "Nhu cầu tư vấn không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    }
+    return "";
+  }
+
+  function consultationCrmPayload(fields, catalog) {
+    const service_id = consultationCrmServiceId(fields && fields.service_id);
+    const selected = consultationCrmFindService(catalog, service_id);
+    if (!selected || selected.service.category !== CONSULTATION_CRM_SERVICE_META[service_id].category) {
+      throw new Error("Catalog tư vấn Web chưa sẵn sàng. Hãy tải lại trang rồi thử lại.");
+    }
+    const request_title = consultationCrmLine(fields && fields.request_title, 4, 120);
+    const need_summary = consultationCrmDetail(fields && fields.need_summary, 12, 1000);
+    if (!request_title) throw new Error("Tiêu đề nhu cầu cần từ 4 đến 120 ký tự hợp lệ.");
+    if (!need_summary) throw new Error("Nhu cầu cần tư vấn cần từ 12 đến 1.000 ký tự hợp lệ.");
+    const safety = consultationCrmSafetyError(request_title, need_summary);
+    if (safety) throw new Error(safety);
+    return { service_id, request_title, need_summary };
+  }
+
+  function consultationCrmPreviewProjection(result, catalog, payload) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : null;
+    const selection = data && data.selection && typeof data.selection === "object" && !Array.isArray(data.selection) ? data.selection : null;
+    const request = data && data.request && typeof data.request === "object" && !Array.isArray(data.request) ? data.request : null;
+    const serviceId = selection ? String(selection.id || "").trim() : "";
+    const selected = consultationCrmFindService(catalog, serviceId);
+    const groupId = selection ? String(selection.group_id || "").trim() : "";
+    const category = selection ? String(selection.category || "").trim().toLowerCase() : "";
+    const title = selection ? consultationCrmLine(selection.title, 3, 140) : "";
+    const summary = selection ? consultationCrmLine(selection.summary, 3, 300) : "";
+    const prompt = selection ? consultationCrmLine(selection.prompt, 3, 320) : "";
+    const requestTitle = request ? consultationCrmLine(request.request_title, 4, 120) : "";
+    const needSummary = request ? consultationCrmDetail(request.need_summary, 12, 1000) : "";
+    const requestedServiceId = request ? String(request.service_id || "").trim() : "";
+    if (!data || result.status !== "awaiting_confirm" || !consultationCrmBoundaryIsSafe(data, false) || !consultationCrmScopeIsSafe(data)
+      || String(data.catalog_version || "") !== String(catalog.catalog_version || "") || !selected
+      || groupId !== selected.group.id || category !== selected.service.category || title !== selected.service.title
+      || summary !== selected.service.summary || prompt !== selected.service.prompt || requestedServiceId !== serviceId
+      || !requestTitle || !needSummary || !payload || payload.service_id !== serviceId
+      || payload.request_title !== requestTitle || payload.need_summary !== needSummary) return { preview: {}, readState: "guarded" };
+    return {
+      preview: {
+        catalog_version: catalog.catalog_version,
+        selection: { id: serviceId, group_id: groupId, category, title, summary, prompt },
+        request: { service_id: serviceId, request_title: requestTitle, need_summary: needSummary },
+        lead_persisted: false,
+        intake_consent_scope: "crm_draft_storage_only",
+        outbound_contact_authorized: false
+      },
+      readState: "ready"
+    };
+  }
+
+  function consultationCrmReceiptProjection(result, catalog, preview) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : null;
+    const lead = data && data.lead && typeof data.lead === "object" && !Array.isArray(data.lead) ? data.lead : null;
+    const consultation = data && data.consultation && typeof data.consultation === "object" && !Array.isArray(data.consultation) ? data.consultation : null;
+    const leadId = lead ? String(lead.id || "").trim() : "";
+    const revision = lead ? validPartnerCrmRevision(lead.revision) : 0;
+    const stage = lead ? String(lead.stage || "").trim() : "";
+    const serviceId = consultation ? String(consultation.service_id || "").trim() : "";
+    const currentService = consultationCrmFindService(catalog, serviceId);
+    if (!data || result.status !== "draft" || !consultationCrmBoundaryIsSafe(data, true) || !consultationCrmScopeIsSafe(data)
+      || !validPartnerCrmLeadId(leadId) || !revision || stage !== "draft" || !currentService
+      || !preview || !preview.selection || preview.selection.id !== serviceId
+      || String(consultation.catalog_version || "") !== String(catalog.catalog_version || "")) return null;
+    return {
+      lead: { id: leadId, revision, stage: "draft" },
+      consultation: { service_id: serviceId, catalog_version: catalog.catalog_version },
+      intake_consent_scope: "crm_draft_storage_only",
+      outbound_contact_authorized: false
+    };
+  }
+
+  function consultationCrmPreviewMatchesPayload(value, catalog, payload) {
+    const preview = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const selection = preview && preview.selection && typeof preview.selection === "object" ? preview.selection : null;
+    const request = preview && preview.request && typeof preview.request === "object" ? preview.request : null;
+    const serviceId = selection ? String(selection.id || "").trim() : "";
+    const selected = consultationCrmFindService(catalog, serviceId);
+    if (!preview || !selection || !request || !payload || !selected) return false;
+    return preview.catalog_version === catalog.catalog_version
+      && preview.lead_persisted === false
+      && preview.intake_consent_scope === "crm_draft_storage_only"
+      && preview.outbound_contact_authorized === false
+      && serviceId === payload.service_id
+      && selection.group_id === selected.group.id
+      && selection.category === selected.service.category
+      && selection.title === selected.service.title
+      && selection.summary === selected.service.summary
+      && selection.prompt === selected.service.prompt
+      && request.service_id === payload.service_id
+      && request.request_title === payload.request_title
+      && request.need_summary === payload.need_summary;
+  }
+
   function channelStrategySafetyError(...values) {
     const standard = contentStudioSafetyError(...values);
     if (standard) return standard.replace("Content Studio", "Channel Strategy");
@@ -10862,6 +11137,13 @@
     supportConsultationComposeInFlight = false;
     ++contentHandoffSessionEpoch;
     ++partnerCrmSessionEpoch;
+    ++consultationCrmSessionEpoch;
+    ++consultationCrmCatalogHydrationEpoch;
+    ++consultationCrmPreviewRequestEpoch;
+    ++consultationCrmConfirmRequestEpoch;
+    consultationCrmPreviewFreshEpoch = 0;
+    consultationCrmPreviewInFlight = false;
+    consultationCrmConfirmInFlight = false;
     ++contentStudioSessionEpoch;
     ++mediaWorkspaceSessionEpoch;
     ++musicDirectionPresetComposeRequestEpoch;
@@ -11534,6 +11816,9 @@
       "partner-crm-stage": Boolean(account && me.csrf_token && partnerCrmEnabled),
       "partner-crm-consent": Boolean(account && me.csrf_token && partnerCrmEnabled),
       "partner-crm-note": Boolean(account && me.csrf_token && partnerCrmEnabled),
+      "consultation-crm-view": Boolean(account && partnerCrmEnabled),
+      "consultation-crm-preview": Boolean(account && me.csrf_token && partnerCrmEnabled),
+      "consultation-crm-confirm": Boolean(account && me.csrf_token && partnerCrmEnabled),
       "content-prompt-pack-compose": Boolean(account && me.csrf_token && contentPromptPackEnabled),
       "content-prompt-pack-save-memory": Boolean(account && me.csrf_token && contentPromptPackEnabled && memoryCenterEnabled),
       "publish-review-pack-compose": Boolean(account && me.csrf_token && publishReviewPackEnabled),
@@ -11869,6 +12154,13 @@
     ++partnerCrmListHydrationEpoch;
     ++partnerCrmDetailHydrationEpoch;
     ++partnerCrmManagerHydrationEpoch;
+    ++consultationCrmSessionEpoch;
+    ++consultationCrmCatalogHydrationEpoch;
+    ++consultationCrmPreviewRequestEpoch;
+    ++consultationCrmConfirmRequestEpoch;
+    consultationCrmPreviewFreshEpoch = 0;
+    consultationCrmPreviewInFlight = false;
+    consultationCrmConfirmInFlight = false;
     ++contentStudioSessionEpoch;
     ++contentStudioListHydrationEpoch;
     ++contentStudioDetailHydrationEpoch;
@@ -12242,6 +12534,15 @@
       partnerCrmManagerDirectory: [],
       partnerCrmManagerListing: partnerCrmManagerListingProjection("all", 0, {}, 0),
       partnerCrmReadState: account && partnerCrmEnabled ? "loading" : "guarded",
+      // The customer consultation route owns its catalog/preview/receipt
+      // state. Clear it on every signed bootstrap so a prior account cannot
+      // see an unconfirmed request or an opaque lead receipt.
+      consultationCrmCatalog: {},
+      consultationCrmReadState: account && partnerCrmEnabled ? "loading" : "guarded",
+      consultationCrmDraftInput: {},
+      consultationCrmSelection: "",
+      consultationCrmPreview: {},
+      consultationCrmReceipt: {},
       // Prompt Pack has no stored history. Clear its in-memory text result,
       // save selection and content-free Memory receipt on every bootstrap so
       // a prior signed account cannot see or reuse another account's topic,
@@ -12682,6 +12983,7 @@
         "/admin/content-handoffs": account && contentHandoffEnabled ? "processing" : "guarded",
         "/crm/leads": account && partnerCrmEnabled ? "processing" : "guarded",
         "/crm/leads/new": account && partnerCrmEnabled ? "processing" : "guarded",
+        "/crm/consultations/new": account && partnerCrmEnabled ? "processing" : "guarded",
         "/admin/crm/leads": account && partnerCrmEnabled ? "processing" : "guarded",
         ...contentPromptPackRouteStates(Boolean(account && contentPromptPackEnabled)),
         "/content/prompt-pack": account && contentPromptPackEnabled ? "ready" : "guarded",
@@ -13184,7 +13486,8 @@
         contentHandoffReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
-    if (account && partnerCrmEnabled && ["/crm/leads", "/crm/leads/new"].includes(currentPath)) await hydratePartnerCrm();
+    if (account && partnerCrmEnabled && currentPath === CONSULTATION_CRM_ROUTE) await hydrateConsultationCrmIntake();
+    else if (account && partnerCrmEnabled && ["/crm/leads", "/crm/leads/new"].includes(currentPath)) await hydratePartnerCrm();
     else if (account && partnerCrmEnabled && partnerCrmLeadIdFromPath(currentPath)) await hydratePartnerCrmLead(partnerCrmLeadIdFromPath(currentPath));
     else if (account && partnerCrmEnabled && currentPath === "/admin/crm/leads") await hydratePartnerCrmManagerDirectory();
     else if (isNativePartnerCrmPath(currentPath)) {
@@ -13193,7 +13496,8 @@
       merge({
         partnerCrmSummary: {}, partnerCrmLeads: [], partnerCrmListing: partnerCrmListingProjection(0, {}, 0),
         partnerCrmDetail: {}, partnerCrmPolicy: {}, partnerCrmManagerDirectory: [], partnerCrmManagerListing: partnerCrmManagerListingProjection("all", 0, {}, 0),
-        partnerCrmReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+        partnerCrmReadState: "guarded", consultationCrmCatalog: {}, consultationCrmReadState: "guarded", consultationCrmDraftInput: {}, consultationCrmSelection: "", consultationCrmPreview: {}, consultationCrmReceipt: {},
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && operationsDeskEnabled && currentPath === "/admin/work-queue") {
@@ -14808,6 +15112,98 @@
       if (!partnerCrmRequestIsCurrent(requestEpoch, partnerCrmManagerHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       merge({ partnerCrmManagerDirectory: [], partnerCrmManagerListing: partnerCrmManagerListingProjection(stage, offset, {}, 0), partnerCrmReadState: "guarded", pageStates: { ...(base().pageStates || {}), "/admin/crm/leads": "guarded" } });
       return { items: [], listing: partnerCrmManagerListingProjection(stage, offset, {}, 0) };
+    }
+  }
+
+  function consultationCrmRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch) {
+    return requestEpoch === currentEpoch
+      && sessionEpoch === consultationCrmSessionEpoch
+      && currentPortalPath() === CONSULTATION_CRM_ROUTE
+      && isNativeConsultationCrmPath(currentPortalPath())
+      && base().partnerCrmEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function consultationCrmPreviewIsFresh() {
+    const stalePreview = document.querySelector('.portal-consultation-crm-intake [data-consultation-crm-preview][data-stale="true"]');
+    return consultationCrmPreviewFreshEpoch > 0
+      && consultationCrmPreviewFreshEpoch === consultationCrmPreviewRequestEpoch
+      && consultationCrmPreviewInFlight === false
+      && consultationCrmConfirmInFlight === false
+      && !stalePreview;
+  }
+
+  function setConsultationCrmBusy(action, busy) {
+    const root = document.querySelector(".portal-consultation-crm-intake");
+    if (!root) return;
+    const actionNames = action === "consultation-crm-confirm"
+      ? new Set(["consultation-crm-preview", "consultation-crm-confirm"])
+      : new Set([action]);
+    root.querySelectorAll("[data-portal-form]").forEach((form) => {
+      if (!actionNames.has(form.getAttribute("data-portal-action") || "")) return;
+      if (busy) form.setAttribute("aria-busy", "true");
+      else form.removeAttribute("aria-busy");
+      form.querySelectorAll("input, textarea, select, button").forEach((control) => {
+        if (busy) {
+          control.dataset.consultationCrmWasDisabled = control.disabled ? "true" : "false";
+          control.disabled = true;
+          return;
+        }
+        if (control.dataset.consultationCrmWasDisabled === "false") control.disabled = false;
+        delete control.dataset.consultationCrmWasDisabled;
+      });
+    });
+    const submit = root.querySelector(`[data-portal-action="${action}"] button[type="submit"]`);
+    if (!submit) return;
+    if (busy) {
+      submit.dataset.consultationCrmBusyLabel = submit.textContent || "";
+      submit.textContent = action === "consultation-crm-confirm" ? "Đang tạo lead draft…" : "Đang kiểm tra yêu cầu…";
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(submit.dataset, "consultationCrmBusyLabel")) {
+      submit.textContent = submit.dataset.consultationCrmBusyLabel;
+      delete submit.dataset.consultationCrmBusyLabel;
+    }
+  }
+
+  async function hydrateConsultationCrmIntake() {
+    const requestEpoch = ++consultationCrmCatalogHydrationEpoch;
+    ++consultationCrmPreviewRequestEpoch;
+    consultationCrmPreviewFreshEpoch = 0;
+    const sessionEpoch = consultationCrmSessionEpoch;
+    consultationCrmPreviewInFlight = false;
+    if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmCatalogHydrationEpoch, sessionEpoch)) {
+      return { catalog: {}, readState: "guarded", stale: true };
+    }
+    // A catalog refresh cannot preserve an unreviewed request from another
+    // account, a stale version or an earlier page mount. This is page memory
+    // only; no value enters URL/local/session storage or generic CRM state.
+    merge({
+      consultationCrmCatalog: {}, consultationCrmReadState: "loading", consultationCrmDraftInput: {},
+      consultationCrmSelection: "", consultationCrmPreview: {}, consultationCrmReceipt: {}
+    });
+    try {
+      const result = await api("/partner-crm/consultations/catalog");
+      if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmCatalogHydrationEpoch, sessionEpoch)) {
+        return { catalog: {}, readState: "guarded", stale: true };
+      }
+      const projection = consultationCrmCatalogProjection(result);
+      merge({
+        consultationCrmCatalog: projection.catalog, consultationCrmReadState: projection.readState, consultationCrmDraftInput: {},
+        consultationCrmSelection: "", consultationCrmPreview: {}, consultationCrmReceipt: {},
+        pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: projection.readState === "ready" ? "ready" : "guarded" }
+      });
+      return projection;
+    } catch (error) {
+      if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmCatalogHydrationEpoch, sessionEpoch)) {
+        return { catalog: {}, readState: "guarded", stale: true };
+      }
+      merge({
+        consultationCrmCatalog: {}, consultationCrmReadState: "failed", consultationCrmDraftInput: {},
+        consultationCrmSelection: "", consultationCrmPreview: {}, consultationCrmReceipt: {},
+        pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+      });
+      return { catalog: {}, readState: "failed", error };
     }
   }
 
@@ -24444,6 +24840,204 @@
         });
         return;
       }
+      if (action === "consultation-crm-catalog-retry") {
+        if (route !== CONSULTATION_CRM_ROUTE || currentPortalPath() !== CONSULTATION_CRM_ROUTE || !isNativeConsultationCrmPath(route)) {
+          throw new Error("Catalog tư vấn chỉ có thể được tải lại từ màn hình Consultation intake đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["consultation-crm-view"] === true)) {
+          throw new Error("Cần signed Web session để xem catalog tư vấn riêng tư.");
+        }
+        if (consultationCrmConfirmInFlight) {
+          toast("Lead draft đang chờ máy chủ xác nhận. Không thể tải lại catalog lúc này.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const projection = await hydrateConsultationCrmIntake();
+          if (!projection || projection.stale) return;
+          if (projection.readState !== "ready") {
+            throw new Error("Catalog tư vấn chưa được máy chủ xác minh. Hãy thử lại sau.");
+          }
+          toast("Đã tải lại catalog tư vấn riêng tư từ máy chủ.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "consultation-crm-preview") {
+        if (route !== CONSULTATION_CRM_ROUTE || currentPortalPath() !== CONSULTATION_CRM_ROUTE || !isNativeConsultationCrmPath(route)) {
+          throw new Error("Preview chỉ nhận yêu cầu từ màn hình Consultation intake đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["consultation-crm-preview"] === true)) {
+          throw new Error("Cần signed Web session, CSRF và CRM đang sẵn sàng để xem lại yêu cầu tư vấn.");
+        }
+        if (consultationCrmPreviewInFlight) {
+          toast("Yêu cầu đang được máy chủ kiểm tra. Vui lòng chờ.", "error");
+          return;
+        }
+        const catalogProjection = consultationCrmCatalogProjection({ data: base().consultationCrmCatalog });
+        if (base().consultationCrmReadState !== "ready" || catalogProjection.readState !== "ready") {
+          throw new Error("Catalog tư vấn chưa sẵn sàng. Hãy tải lại catalog trước khi xem lại yêu cầu.");
+        }
+        // Preview is deliberately not a generic CRM write: the strict
+        // request model forbids an idempotency key and the server persists no
+        // lead at this stage. Its only browser state is this page's memory.
+        const payload = consultationCrmPayload(fields, catalogProjection.catalog);
+        const requestEpoch = ++consultationCrmPreviewRequestEpoch;
+        const sessionEpoch = consultationCrmSessionEpoch;
+        consultationCrmPreviewFreshEpoch = 0;
+        if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmPreviewRequestEpoch, sessionEpoch)) return;
+        consultationCrmPreviewInFlight = true;
+        merge({
+          consultationCrmDraftInput: payload, consultationCrmSelection: payload.service_id,
+          consultationCrmPreview: {}, consultationCrmReceipt: {}
+        });
+        setConsultationCrmBusy(action, true);
+        try {
+          const result = await api("/partner-crm/consultations/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmPreviewRequestEpoch, sessionEpoch)) return;
+          const currentCatalog = consultationCrmCatalogProjection({ data: base().consultationCrmCatalog });
+          if (currentCatalog.readState !== "ready") {
+            merge({
+              consultationCrmReadState: "guarded", consultationCrmPreview: {}, consultationCrmReceipt: {},
+              pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+            });
+            throw new Error("Catalog tư vấn đã thay đổi trong khi yêu cầu được kiểm tra. Hãy tải lại catalog.");
+          }
+          const projection = consultationCrmPreviewProjection(result, currentCatalog.catalog, payload);
+          if (projection.readState !== "ready") {
+            merge({
+              consultationCrmReadState: "guarded", consultationCrmPreview: {}, consultationCrmReceipt: {},
+              pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+            });
+            throw new Error("Máy chủ chưa trả preview tư vấn đúng ranh giới an toàn.");
+          }
+          consultationCrmPreviewFreshEpoch = requestEpoch;
+          merge({
+            consultationCrmDraftInput: projection.preview.request, consultationCrmSelection: projection.preview.selection.id,
+            consultationCrmPreview: projection.preview, consultationCrmReceipt: {}, consultationCrmReadState: "ready",
+            pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "ready" }
+          });
+          toast(result.message || "Đã kiểm tra yêu cầu. Chưa có lead nào được tạo.");
+        } catch (error) {
+          if (consultationCrmRequestIsCurrent(requestEpoch, consultationCrmPreviewRequestEpoch, sessionEpoch)) {
+            const guarded = error && error.payload && error.payload.status === "guarded"
+              && consultationCrmBoundaryIsSafe(error.payload.data, false);
+            if (guarded) {
+              consultationCrmPreviewFreshEpoch = 0;
+              merge({
+                consultationCrmDraftInput: payload, consultationCrmSelection: payload.service_id,
+                consultationCrmPreview: {}, consultationCrmReceipt: {}, consultationCrmReadState: "guarded",
+                pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+              });
+            }
+          }
+          throw error;
+        } finally {
+          if (consultationCrmRequestIsCurrent(requestEpoch, consultationCrmPreviewRequestEpoch, sessionEpoch)) {
+            consultationCrmPreviewInFlight = false;
+            setConsultationCrmBusy(action, false);
+          }
+        }
+        return;
+      }
+      if (action === "consultation-crm-confirm") {
+        if (route !== CONSULTATION_CRM_ROUTE || currentPortalPath() !== CONSULTATION_CRM_ROUTE || !isNativeConsultationCrmPath(route)) {
+          throw new Error("Xác nhận chỉ nhận yêu cầu từ màn hình Consultation intake đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["consultation-crm-confirm"] === true)) {
+          throw new Error("Cần signed Web session, CSRF và CRM đang sẵn sàng để tạo lead draft.");
+        }
+        if (consultationCrmConfirmInFlight) {
+          toast("Lead draft đang chờ máy chủ xác nhận. Vui lòng chờ.", "error");
+          return;
+        }
+        const catalogProjection = consultationCrmCatalogProjection({ data: base().consultationCrmCatalog });
+        if (base().consultationCrmReadState !== "ready" || catalogProjection.readState !== "ready") {
+          throw new Error("Catalog tư vấn không còn sẵn sàng. Hãy tải lại catalog và xem lại yêu cầu.");
+        }
+        const payload = consultationCrmPayload(fields, catalogProjection.catalog);
+        const consentToStore = fields.consent_to_store === true || String(fields.consent_to_store || "").trim().toLowerCase() === "true";
+        if (!consentToStore) {
+          throw new Error("Bạn cần đồng ý phạm vi chỉ lưu CRM draft trước khi tiếp tục.");
+        }
+        if (!consultationCrmPreviewIsFresh() || !consultationCrmPreviewMatchesPayload(base().consultationCrmPreview, catalogProjection.catalog, payload)) {
+          throw new Error("Nội dung đã thay đổi hoặc preview không còn mới. Hãy xem lại yêu cầu trước khi tạo lead draft.");
+        }
+        const confirmPayload = { ...payload, consent_to_store: true, confirm_create: true };
+        const requestEpoch = ++consultationCrmConfirmRequestEpoch;
+        const sessionEpoch = consultationCrmSessionEpoch;
+        if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmConfirmRequestEpoch, sessionEpoch)) return;
+        const scope = "partner-crm:consultation:confirm:" + payload.service_id;
+        const submission = acquireSubmission(scope, JSON.stringify(confirmPayload));
+        if (!submission) {
+          toast("Lead draft đang chờ máy chủ xác nhận. Vui lòng chờ.", "error");
+          return;
+        }
+        // Keep this idempotency key until a receipt has passed the strict
+        // projection and is actually available to the current page. A 2xx
+        // response with malformed data may still mean the server persisted a
+        // lead; replacing its key for a same-page retry could create a second
+        // draft instead of replaying the server's canonical receipt.
+        let receiptVerified = false;
+        consultationCrmConfirmInFlight = true;
+        setConsultationCrmBusy(action, true);
+        try {
+          const result = await api("/partner-crm/consultations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...confirmPayload, idempotency_key: submission.key })
+          });
+          if (!consultationCrmRequestIsCurrent(requestEpoch, consultationCrmConfirmRequestEpoch, sessionEpoch)) return;
+          const currentCatalog = consultationCrmCatalogProjection({ data: base().consultationCrmCatalog });
+          const receipt = currentCatalog.readState === "ready"
+            ? consultationCrmReceiptProjection(result, currentCatalog.catalog, base().consultationCrmPreview)
+            : null;
+          if (!receipt) {
+            consultationCrmPreviewFreshEpoch = 0;
+            merge({
+              consultationCrmPreview: {}, consultationCrmReceipt: {}, consultationCrmReadState: "guarded",
+              pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+            });
+            throw new Error("Máy chủ chưa trả receipt lead draft đúng ranh giới an toàn.");
+          }
+          consultationCrmPreviewFreshEpoch = 0;
+          merge({
+            consultationCrmReceipt: receipt, consultationCrmPreview: {}, consultationCrmDraftInput: {}, consultationCrmSelection: "",
+            consultationCrmReadState: "ready", pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "ready" }
+          });
+          receiptVerified = true;
+          // Stay on the intake route. The customer chooses the explicit lead
+          // link rendered from the redacted server receipt; no auto-navigation
+          // turns a successful storage-only confirmation into another action.
+          toast(result.message || "Đã tạo lead draft riêng tư.");
+        } catch (error) {
+          if (consultationCrmRequestIsCurrent(requestEpoch, consultationCrmConfirmRequestEpoch, sessionEpoch)) {
+            const guarded = error && error.payload && error.payload.status === "guarded"
+              && consultationCrmBoundaryIsSafe(error.payload.data, false);
+            if (guarded) {
+              consultationCrmPreviewFreshEpoch = 0;
+              merge({
+                consultationCrmPreview: {}, consultationCrmReceipt: {}, consultationCrmReadState: "guarded",
+                pageStates: { ...(base().pageStates || {}), [CONSULTATION_CRM_ROUTE]: "guarded" }
+              });
+            }
+          }
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (receiptVerified) discardSubmission(scope, submission);
+          if (consultationCrmRequestIsCurrent(requestEpoch, consultationCrmConfirmRequestEpoch, sessionEpoch)) {
+            consultationCrmConfirmInFlight = false;
+            setConsultationCrmBusy(action, false);
+          }
+        }
+        return;
+      }
       if (action === "partner-crm-refresh") {
         const leadId = partnerCrmLeadIdFromPath(route);
         if (leadId) await hydratePartnerCrmLead(leadId);
@@ -32261,6 +32855,22 @@
     if (selectScriptToScreenEpisode(event.target)) event.preventDefault();
   });
 
+  window.addEventListener("toanaas:consultation-crm-draft-edited", () => {
+    // The presentation layer sends this event without the customer text. An
+    // actual edit owns a newer request, so an older preview can neither paint
+    // over it nor be confirmed. A durable confirmation is never interrupted:
+    // its controls are locked and the server receipt remains authoritative.
+    if (currentPortalPath() !== CONSULTATION_CRM_ROUTE || consultationCrmConfirmInFlight) return;
+    const receipt = base().consultationCrmReceipt && typeof base().consultationCrmReceipt === "object"
+      ? base().consultationCrmReceipt : {};
+    if (receipt.lead && validPartnerCrmLeadId(receipt.lead.id)) return;
+    ++consultationCrmPreviewRequestEpoch;
+    consultationCrmPreviewFreshEpoch = 0;
+    if (consultationCrmPreviewInFlight) {
+      consultationCrmPreviewInFlight = false;
+      setConsultationCrmBusy("consultation-crm-preview", false);
+    }
+  });
   window.addEventListener("toanaas:script-to-screen-draft-edited", () => {
     // Portal UI emits this only for an actual user edit, never while mounting
     // a fresh result. A delayed response for a prior brief/episode is then

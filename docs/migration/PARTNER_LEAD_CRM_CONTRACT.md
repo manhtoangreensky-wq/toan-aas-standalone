@@ -17,6 +17,9 @@ lead read or write.
 | Route | Access | Purpose |
 | --- | --- | --- |
 | `GET /api/v1/partner-crm/policy` | signed account | States the exact CRM and manager-directory boundary. |
+| `GET /api/v1/partner-crm/consultations/catalog` | signed account | Returns a closed customer consultation catalog; no record is created. |
+| `POST /api/v1/partner-crm/consultations/preview` | signed + CSRF | Validates a consultation request in memory only; no CRM write, audit or receipt is created. |
+| `POST /api/v1/partner-crm/consultations` | signed + CSRF | Creates one owner-scoped `draft` only after storage-only consent, confirmation and idempotency validation. |
 | `GET /api/v1/partner-crm/summary` | signed account | Owner-scoped stage counts. |
 | `GET /api/v1/partner-crm/leads` | signed account | Owner-scoped lead list and search. |
 | `POST /api/v1/partner-crm/leads` | signed + CSRF | Creates a `draft` lead. |
@@ -78,6 +81,46 @@ The CRM does not:
 Every response carries an explicit boundary with these side effects set to
 `false`, so a Web UI cannot represent stored CRM metadata as a completed
 commercial action.
+
+## Customer consultation intake
+
+`/crm/consultations/new` is a dedicated customer route. It does **not** reuse
+the generic `/crm/leads/new` payload, and it is not a handoff from the
+non-persistent Support Consultation Brief.
+
+The flow is deliberately one-way:
+
+1. A signed account reads the closed server-owned catalog.
+2. It sends only `service_id`, `request_title` and `need_summary` to a
+   CSRF-protected preview route. Preview is non-persistent and returns
+   `awaiting_confirm`.
+3. The account separately submits `consent_to_store=true`,
+   `confirm_create=true`, and an idempotency key to create a private draft.
+
+The browser cannot set CRM stage, source, tags, lead kind, consent state,
+contact address or organization. On confirmation the server pins:
+
+| Field | Server-owned value |
+| --- | --- |
+| `lead_kind` | `customer` |
+| `source_kind` | `inbound` |
+| `stage` | `draft` |
+| `contact_email` | empty |
+| `tags` | `web-consultation` and the closed service ID |
+| `consent_status` | `documented` |
+| `consent_note` | storage of this Web CRM draft only; never contact consent |
+
+The signed account is the ownership boundary; free text rejects email, phone,
+Zalo, Telegram handles, secrets/tokens, OTP/CVV/card-like numbers and markup.
+The response explicitly states `intake_consent_scope=crm_draft_storage_only`
+and `outbound_contact_authorized=false`. It does not authorize email,
+Telegram, Zalo, SMS, marketing, quote, contract, provider, job, wallet,
+payment, notification or Support-case action.
+
+Only the server-owned service ID/version and opaque lead ID/revision/stage are
+kept in the replay receipt. Request title and summary never enter the CRM
+idempotency receipt or audit detail. The exact preview and confirm paths,
+including trailing-slash variants, have fixed pre-DB rate buckets.
 
 ## Focused verification
 

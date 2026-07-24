@@ -77,6 +77,32 @@ def lead_payload(key: str = "partner-crm-lead-create-0001", **overrides: Any) ->
     return value
 
 
+def consultation_preview_payload(**overrides: Any) -> dict[str, Any]:
+    """The narrow customer intake is intentionally not a generic CRM form."""
+
+    value: dict[str, Any] = {
+        "service_id": "web-service-video",
+        "request_title": "Tư vấn quy trình video cho đội nhỏ",
+        "need_summary": "Đội nhỏ cần chuẩn hóa brief, review và theo dõi đầu ra video trong Web.",
+    }
+    value.update(overrides)
+    return value
+
+
+def consultation_confirm_payload(
+    key: str = "consultation-crm-confirm-0001",
+    **overrides: Any,
+) -> dict[str, Any]:
+    value = {
+        **consultation_preview_payload(),
+        "consent_to_store": True,
+        "confirm_create": True,
+        "idempotency_key": key,
+    }
+    value.update(overrides)
+    return value
+
+
 def storage_counts(db_path: Path) -> dict[str, int]:
     tables = (
         "web_partner_crm_leads",
@@ -570,3 +596,253 @@ def test_partner_crm_can_be_disabled_without_creating_a_canonical_admin_backdoor
         guarded = client.get("/api/v1/partner-crm/policy")
         assert guarded.status_code == 503
         assert "WEBAPP_PARTNER_CRM_ENABLED" in guarded.text
+
+
+def test_customer_consultation_crm_is_signed_previewed_then_persisted_only_after_storage_consent(tmp_path, monkeypatch):
+    """A customer intake is a closed, two-step CRM contract, never generic lead input."""
+
+    db_path = tmp_path / "partner-crm-test.db"
+    preview_payload = consultation_preview_payload()
+    confirm_payload = consultation_confirm_payload()
+    with make_client(tmp_path, monkeypatch) as client:
+        # Every route is account-bound; the persistent stages are CSRF-bound too.
+        assert client.get("/api/v1/partner-crm/consultations/catalog").status_code == 401
+        assert client.post("/api/v1/partner-crm/consultations/preview", json=preview_payload).status_code == 401
+        assert client.post("/api/v1/partner-crm/consultations", json=confirm_payload).status_code == 401
+
+        owner_email = "consultation-owner@example.com"
+        csrf = login(client, owner_email)
+        catalog = client.get("/api/v1/partner-crm/consultations/catalog")
+        assert catalog.status_code == 200 and catalog.json()["ok"] is True
+        catalog_data = catalog.json()["data"]
+        assert catalog.json()["status"] == "read_only"
+        assert catalog_data["persistence"] == "none"
+        assert catalog_data["automation"] == "none"
+        assert catalog_data["contact_collection"] is False
+        assert catalog_data["outbound_contact_authorized"] is False
+        assert_boundary(catalog_data, persisted=False)
+        assert_boundary(catalog_data["boundaries"], persisted=False)
+        services = [service for group in catalog_data["groups"] for service in group["services"]]
+        assert len(services) == 15
+        assert len({service["id"] for service in services}) == 15
+        assert preview_payload["service_id"] in {service["id"] for service in services}
+        for service in services:
+            assert set(service) == {"id", "group_id", "category", "title", "summary", "prompt"}
+            assert not {"price", "payment", "contact_email", "telegram_id", "phone"}.intersection(service)
+
+        assert client.post("/api/v1/partner-crm/consultations/preview", json=preview_payload).status_code == 403
+        assert client.post("/api/v1/partner-crm/consultations", json=confirm_payload).status_code == 403
+
+        # Initialise only the existing local CRM schema, then prove preview has
+        # no write, audit, event or replay receipt side effect.
+        assert client.get("/api/v1/partner-crm/summary").status_code == 200
+        before_preview = storage_counts(db_path)
+        with sqlite3.connect(db_path) as conn:
+            tables_before = {str(row[0]) for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        preview = client.post(
+            "/api/v1/partner-crm/consultations/preview",
+            headers={"X-CSRF-Token": csrf},
+            json=preview_payload,
+        )
+        assert preview.status_code == 200 and preview.json()["ok"] is True
+        preview_body = preview.json()
+        preview_data = preview_body["data"]
+        assert preview_body["status"] == "awaiting_confirm"
+        assert preview_data["selection"]["id"] == preview_payload["service_id"]
+        assert preview_data["request"] == preview_payload
+        assert preview_data["stage"] == "draft"
+        assert preview_data["record_created"] is False
+        assert preview_data["input_persisted"] is False
+        assert preview_data["intake_consent_scope"] == "crm_draft_storage_only"
+        assert preview_data["outbound_contact_authorized"] is False
+        assert "lead" not in preview_data
+        assert_boundary(preview_data, persisted=False)
+        assert_boundary(preview_data["boundaries"], persisted=False)
+        assert storage_counts(db_path) == before_preview
+
+        # A review is not consent.  Both explicit booleans are required even
+        # when the customer has already sent a valid preview payload.
+        for rejected_payload in (
+            consultation_confirm_payload("consultation-consent-false-0001", consent_to_store=False),
+            consultation_confirm_payload("consultation-confirm-false-0001", confirm_create=False),
+        ):
+            rejected = client.post(
+                "/api/v1/partner-crm/consultations",
+                headers={"X-CSRF-Token": csrf},
+                json=rejected_payload,
+            )
+            assert rejected.status_code == 422
+        assert storage_counts(db_path) == before_preview
+
+        created = client.post(
+            "/api/v1/partner-crm/consultations",
+            headers={"X-CSRF-Token": csrf},
+            json=confirm_payload,
+        )
+        assert created.status_code == 200 and created.json()["ok"] is True
+        created_body = created.json()
+        created_data = created_body["data"]
+        assert created_body["status"] == "draft"
+        assert created_data["lead"]["stage"] == "draft"
+        assert created_data["lead"]["revision"] == 1
+        assert created_data["consultation"] == {
+            "service_id": preview_payload["service_id"],
+            "catalog_version": catalog_data["catalog_version"],
+        }
+        assert created_data["intake_consent_scope"] == "crm_draft_storage_only"
+        assert created_data["outbound_contact_authorized"] is False
+        assert_boundary(created_data, persisted=True)
+        # The replay receipt is deliberately content-free: safe metadata and
+        # opaque lead state may be returned, customer narrative may not.
+        assert preview_payload["request_title"] not in created.text
+        assert preview_payload["need_summary"] not in created.text
+
+        replay = client.post(
+            "/api/v1/partner-crm/consultations",
+            headers={"X-CSRF-Token": csrf},
+            json=confirm_payload,
+        )
+        assert replay.status_code == 200 and replay.json() == created_body
+        collision = client.post(
+            "/api/v1/partner-crm/consultations",
+            headers={"X-CSRF-Token": csrf},
+            json=consultation_confirm_payload(
+                confirm_payload["idempotency_key"],
+                need_summary="Một nhu cầu video khác hẳn không thể dùng lại receipt cũ.",
+            ),
+        )
+        assert collision.status_code == 409
+
+        lead_id = created_data["lead"]["id"]
+        # Switching to another signed account must not disclose the title,
+        # summary or even distinguish the private lead from a missing one.
+        login(client, "consultation-other@example.com")
+        hidden = client.get(f"/api/v1/partner-crm/leads/{lead_id}")
+        assert hidden.status_code == 200
+        assert hidden.json()["error_code"] == "WEB_PARTNER_CRM_LEAD_NOT_FOUND"
+        assert preview_payload["request_title"] not in hidden.text
+        assert preview_payload["need_summary"] not in hidden.text
+        assert_boundary(hidden.json()["data"], persisted=False)
+
+    with sqlite3.connect(db_path) as conn:
+        stored = conn.execute(
+            """SELECT account_id, lead_name, organization, contact_email, lead_kind, opportunity_summary,
+                      source_kind, source_label, tags_json, consent_status, consent_note, stage, revision
+                 FROM web_partner_crm_leads"""
+        ).fetchall()
+        events = conn.execute(
+            "SELECT action, stage, revision FROM web_partner_crm_events"
+        ).fetchall()
+        audit = conn.execute(
+            "SELECT detail FROM web_audit_events WHERE action='web.partner_crm.consultation.create'"
+        ).fetchone()
+        receipt = conn.execute(
+            "SELECT response_json FROM web_idempotency WHERE scope LIKE 'web-partner-crm:%:consultation:create'"
+        ).fetchone()
+        tables = {str(row[0]) for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+
+    assert stored == [(
+        account_id_for_email(db_path, "consultation-owner@example.com"),
+        preview_payload["request_title"],
+        "",
+        "",
+        "customer",
+        preview_payload["need_summary"],
+        "inbound",
+        "Yêu cầu tư vấn Web · Video",
+        json.dumps(["web-consultation", preview_payload["service_id"]], ensure_ascii=False),
+        "documented",
+        "Khách đã xác nhận chỉ lưu lead draft CRM trong Web; không phải consent liên hệ.",
+        "draft",
+        1,
+    )]
+    assert events == [("consultation_lead_confirmed", "draft", 1)]
+    assert audit is not None
+    assert "service=web-service-video;scope=crm_draft_storage_only;stage=draft" in str(audit[0])
+    assert preview_payload["request_title"] not in str(audit[0])
+    assert preview_payload["need_summary"] not in str(audit[0])
+    assert receipt is not None
+    assert preview_payload["request_title"] not in str(receipt[0])
+    assert preview_payload["need_summary"] not in str(receipt[0])
+    # The confirmed intake writes only to the existing CRM lead/event/audit
+    # tables.  Account authentication may own unrelated tables (for example
+    # Telegram link codes), so compare schema before/after instead of treating
+    # an unrelated table name as an execution signal.
+    assert tables == tables_before
+
+
+def test_customer_consultation_crm_rejects_contact_secret_and_generic_crm_fields_without_writes(tmp_path, monkeypatch):
+    """The signed account is the owner, so free text cannot become a contact channel."""
+
+    db_path = tmp_path / "partner-crm-test.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "consultation-safety@example.com")
+        headers = {"X-CSRF-Token": csrf}
+        assert client.get("/api/v1/partner-crm/summary").status_code == 200
+        before = storage_counts(db_path)
+
+        invalid_previews = (
+            consultation_preview_payload(service_id="web-unknown"),
+            consultation_preview_payload(request_title="Email: customer@example.com"),
+            consultation_preview_payload(need_summary="Hãy gọi số 0912345678 để cùng xem quy trình video hiện tại."),
+            consultation_preview_payload(need_summary="Telegram: @consultation_team để trao đổi về video và asset."),
+            consultation_preview_payload(need_summary="TXID 7f2b9a9013c4 là thông tin thanh toán không thuộc yêu cầu tư vấn."),
+            consultation_preview_payload(need_summary="api_key=super-secret-value-should-not-ever-be-stored-here"),
+            consultation_preview_payload(need_summary="Mã OTP 123456 chỉ để kiểm tra một cách không an toàn."),
+            consultation_preview_payload(need_summary="Số thẻ 4111 1111 1111 1111 không thuộc nội dung tư vấn."),
+            consultation_preview_payload(request_title="<script>alert(1)</script>"),
+            consultation_preview_payload(contact_email="browser@example.com"),
+            consultation_preview_payload(lead_kind="partner"),
+            consultation_preview_payload(source_kind="manual"),
+            consultation_preview_payload(tags=["browser-controlled"]),
+            # Preview is intentionally non-persistent: accepting an
+            # idempotency key here would encourage client code to route it
+            # through a durable mutation helper and blur the two steps.
+            consultation_preview_payload(idempotency_key="preview-must-not-have-receipt-0001"),
+            consultation_preview_payload(bot_callback="menu:consultation"),
+            consultation_preview_payload(telegram_state="awaiting_contact"),
+        )
+        for payload in invalid_previews:
+            rejected = client.post(
+                "/api/v1/partner-crm/consultations/preview",
+                headers=headers,
+                json=payload,
+            )
+            assert rejected.status_code == 422
+
+        # Confirmation has the same strict intake schema plus two explicit
+        # booleans.  Browser-provided CRM metadata or fake external actions
+        # must fail before any idempotency/audit/lead write.
+        invalid_confirms = (
+            consultation_confirm_payload("consultation-extra-001", contact_email="browser@example.com"),
+            consultation_confirm_payload("consultation-extra-002", stage="qualified"),
+            consultation_confirm_payload("consultation-extra-003", consent_status="documented"),
+            consultation_confirm_payload("consultation-extra-004", provider="fake"),
+            consultation_confirm_payload("consultation-extra-005", payment_amount=100_000),
+            consultation_confirm_payload("consultation-extra-006", bot_callback="callback"),
+            consultation_confirm_payload("consultation-extra-007", telegram_state="pending"),
+        )
+        for payload in invalid_confirms:
+            rejected = client.post(
+                "/api/v1/partner-crm/consultations",
+                headers=headers,
+                json=payload,
+            )
+            assert rejected.status_code == 422
+
+        assert storage_counts(db_path) == before
+
+    with make_client(tmp_path, monkeypatch, enabled=False) as disabled:
+        csrf = login(disabled, "consultation-disabled@example.com")
+        headers = {"X-CSRF-Token": csrf}
+        assert disabled.get("/api/v1/partner-crm/consultations/catalog").status_code == 503
+        assert disabled.post(
+            "/api/v1/partner-crm/consultations/preview",
+            headers=headers,
+            json=consultation_preview_payload(),
+        ).status_code == 503
+        assert disabled.post(
+            "/api/v1/partner-crm/consultations",
+            headers=headers,
+            json=consultation_confirm_payload("consultation-disabled-0001"),
+        ).status_code == 503
