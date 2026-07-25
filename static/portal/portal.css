@@ -6962,3 +6962,147 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-billing-entrypoints .portal-payment-entry,
   .portal-billing-catalog-card { transition: none; }
 }
+
+/* Music & SFX Library is a dense private workspace view, not a catalogue or
+ * a player. It intentionally shares the app shell tokens and keeps all data
+ * cards focused on safe collection metadata. */
+.portal-music-library { display: grid; gap: 18px; min-width: 0; }
+.portal-music-library-intro {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: clamp(20px, 2.7vw, 30px);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-music-library-intro > div { min-width: 0; }
+.portal-music-library-intro h2 { margin: 7px 0 8px; color: var(--portal-text); font-size: clamp(25px, 3vw, 38px); letter-spacing: -.045em; line-height: 1.08; }
+.portal-music-library-intro p { max-width: 760px; margin: 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.65; }
+.portal-music-library-intro-actions { display: grid; flex: 0 0 auto; gap: 10px; justify-items: end; }
+.portal-music-library-read-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  background: var(--portal-surface);
+  color: var(--portal-muted-strong);
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1.1;
+}
+.portal-music-library-board { min-width: 0; border-color: var(--portal-border); background: var(--portal-surface); }
+.portal-music-library-board .portal-card-header { align-items: flex-start; }
+.portal-music-library-board .portal-button,
+.portal-music-library-intro-actions .portal-button,
+.portal-music-library-filter .portal-button,
+.portal-music-library-guard .portal-button { min-height: 44px; }
+.portal-music-library-filter {
+  display: grid;
+  gap: 11px;
+  margin: 14px 0 16px;
+  padding: 13px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-strong);
+}
+.portal-music-library-filter .portal-fields { grid-template-columns: minmax(0, 1fr); }
+.portal-music-library-filter .portal-field { gap: 6px; }
+.portal-music-library-filter .portal-form-footer { margin-top: 0; padding-top: 1px; }
+.portal-music-library-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.portal-music-library-card {
+  display: grid;
+  min-width: 0;
+  min-height: 236px;
+  align-content: start;
+  gap: 13px;
+  padding: 16px;
+  border: 1px solid var(--portal-border);
+  border-radius: 15px;
+  background: var(--portal-surface-strong);
+  transition: border-color var(--portal-transition), background var(--portal-transition), transform var(--portal-transition);
+}
+.portal-music-library-card:hover { border-color: var(--portal-border-strong); background: var(--portal-surface-soft); transform: translateY(-1px); }
+.portal-music-library-card-head { display: flex; gap: 8px; align-items: center; justify-content: space-between; min-width: 0; }
+.portal-music-library-role,
+.portal-music-library-favorite,
+.portal-music-library-tags span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 8px;
+  overflow: hidden;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  background: var(--portal-surface);
+  color: var(--portal-muted-strong);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.portal-music-library-role { border-color: rgba(45, 212, 191, .36); color: var(--portal-accent); }
+.portal-music-library-favorite { border-color: rgba(251, 191, 36, .38); color: var(--portal-warning); letter-spacing: .01em; text-transform: none; }
+.portal-music-library-card-copy { display: grid; min-width: 0; gap: 5px; }
+.portal-music-library-card-copy h3 { margin: 0; overflow-wrap: anywhere; color: var(--portal-text); font-size: 15px; line-height: 1.38; }
+.portal-music-library-card-copy p { margin: 0; overflow-wrap: anywhere; color: var(--portal-muted); font-size: 12px; line-height: 1.55; }
+.portal-music-library-card-copy strong { color: var(--portal-muted-strong); font-weight: 720; }
+.portal-music-library-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.portal-music-library-meta > div { min-width: 0; padding: 10px; border: 1px solid var(--portal-border); border-radius: 11px; background: rgba(6, 17, 29, .28); }
+.portal-music-library-meta dt { color: var(--portal-muted); font-size: 10px; font-weight: 760; }
+.portal-music-library-meta dd { margin: 5px 0 0; overflow-wrap: anywhere; color: var(--portal-muted-strong); font-size: 11px; font-weight: 680; line-height: 1.48; }
+.portal-music-library-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; }
+.portal-music-library-tags span { border-color: rgba(147, 197, 253, .28); background: rgba(59, 130, 246, .10); color: var(--portal-info); font-size: 9px; font-weight: 730; letter-spacing: 0; text-transform: none; }
+.portal-music-library-muted { align-self: center; color: var(--portal-muted); font-size: 11px; }
+.portal-music-library-card-footer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 2px; }
+.portal-music-library-card-footer > span { flex: 1 1 150px; color: var(--portal-muted); font-size: 10px; line-height: 1.5; }
+.portal-music-library-card-footer .portal-button { min-height: 44px; }
+.portal-music-library-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--portal-border); color: var(--portal-muted-strong); font-size: 11px; font-weight: 700; }
+.portal-music-library-pagination > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.portal-music-library-pagination .portal-button { min-height: 44px; }
+.portal-music-library-boundary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 17px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface);
+}
+.portal-music-library-boundary > div { display: grid; min-width: 0; gap: 4px; }
+.portal-music-library-boundary strong { color: var(--portal-text); font-size: 13px; }
+.portal-music-library-boundary span { max-width: 780px; color: var(--portal-muted); font-size: 12px; line-height: 1.55; }
+.portal-music-library-boundary .portal-button { flex: 0 0 auto; min-height: 44px; }
+.portal-music-library-guard { border-color: var(--portal-border); background: var(--portal-surface); }
+.portal-music-library :is(a, button, input):focus-visible { outline: 3px solid rgba(81, 213, 188, .65); outline-offset: 3px; }
+
+@media (max-width: 1040px) {
+  .portal-music-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .portal-music-library-intro, .portal-music-library-boundary { flex-direction: column; gap: 13px; padding: 18px; }
+  .portal-music-library-intro-actions { width: 100%; justify-items: stretch; }
+  .portal-music-library-intro-actions .portal-button, .portal-music-library-boundary .portal-button { width: 100%; justify-content: center; min-height: 44px; }
+  .portal-music-library-grid { grid-template-columns: 1fr; }
+  .portal-music-library-card { min-height: 0; padding: 15px; }
+  .portal-music-library-filter { padding: 12px; }
+  .portal-music-library-filter .portal-inline-actions { width: 100%; }
+  .portal-music-library-filter .portal-inline-actions .portal-button { flex: 1 1 100%; justify-content: center; min-height: 44px; }
+  .portal-music-library-card-footer .portal-button, .portal-music-library-pagination .portal-button { min-height: 44px; }
+  .portal-music-library-pagination { align-items: flex-start; flex-direction: column; }
+  .portal-music-library-pagination > div { width: 100%; }
+  .portal-music-library-pagination > div .portal-button { flex: 1 1 0; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-music-library-card { transition: none; }
+  .portal-music-library-card:hover { transform: none; }
+}

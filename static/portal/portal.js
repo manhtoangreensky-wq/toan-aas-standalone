@@ -1491,8 +1491,24 @@
   ]);
 
   featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
-  readOnlyPage("/music/library", "Thư viện nhạc", "Danh sách nhạc thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets", ["/music-library"]);
-  readOnlyPage("/music/sfx-library", "Thư viện SFX", "Danh sách hiệu ứng âm thanh thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets");
+  // These libraries intentionally use the owner-scoped Media Workspace
+  // projection rather than the old generic `/assets`/Bridge list. They are
+  // metadata-only: no player, download, provider catalog or Bot hand-off is
+  // implied by a card in either library.
+  customerPage("/music/library", "Thư viện nhạc", "Xem metadata nhạc đã gắn vào Audio Collection riêng tư của Web account hiện tại.", ICONS.music, {
+    layout: "music-library", type: "music-library", musicLibraryRole: "music", fields: [], action: "none", status: "read_only",
+    notes: [
+      "Chỉ metadata của audio active đã gắn vào collection active thuộc signed Web account được nạp. Không có player, preview, download, file name, asset ID, URL hoặc provider catalog.",
+      "Trang chỉ đọc. Không tạo music, job, Xu, PayOS, asset, delivery, Bot state hoặc Telegram action. Mở collection để server kiểm tra ownership lại trước khi biên tập metadata."
+    ]
+  }, ["/music-library"]);
+  customerPage("/music/sfx-library", "Thư viện SFX", "Xem metadata SFX đã gắn vào Audio Collection riêng tư của Web account hiện tại.", ICONS.music, {
+    layout: "music-library", type: "music-library", musicLibraryRole: "sfx", fields: [], action: "none", status: "read_only",
+    notes: [
+      "Chỉ metadata của audio active đã gắn vào collection active thuộc signed Web account được nạp. Không có player, preview, download, file name, asset ID, URL hoặc provider catalog.",
+      "Trang chỉ đọc. Không tạo SFX, job, Xu, PayOS, asset, delivery, Bot state hoặc Telegram action. Mở collection để server kiểm tra ownership lại trước khi biên tập metadata."
+    ]
+  });
   featurePage("/music/sfx", "Hiệu ứng âm thanh", "Chuẩn bị brief SFX; không tìm kho ngoài, tạo âm thanh hay charge Xu ở browser.", ICONS.music, FIELD_SETS.musicSfx);
   featurePage("/music/create", "Tạo nhạc AI", "Tạo bản nháp nhạc AI và đợi engine/ước tính từ Core Bridge.", ICONS.music, FIELD_SETS.music, ["/music/ai"]);
   featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.musicSong);
@@ -7619,6 +7635,20 @@
       },
       mediaWorkspaceListing: source.mediaWorkspaceListing && typeof source.mediaWorkspaceListing === "object" ? source.mediaWorkspaceListing : {},
       mediaWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.mediaWorkspaceReadState || "")) ? String(source.mediaWorkspaceReadState) : "guarded",
+      // Music/SFX Library is a separate read-only projection over active
+      // Media Workspace attachments. Its query and results stay in mounted
+      // signed-session state only; nothing is restored from generic Assets,
+      // Bot state, a provider catalog or browser persistence.
+      musicLibraryItems: Array.isArray(source.musicLibraryItems) ? source.musicLibraryItems.slice(0, 24) : [],
+      musicLibraryFilter: {
+        q: source.musicLibraryFilter && typeof source.musicLibraryFilter.q === "string"
+          ? source.musicLibraryFilter.q.replace(/\s+/g, " ").trim().slice(0, 100)
+          : ""
+      },
+      musicLibraryListing: source.musicLibraryListing && typeof source.musicLibraryListing === "object" ? source.musicLibraryListing : {},
+      musicLibraryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.musicLibraryReadState || ""))
+        ? String(source.musicLibraryReadState)
+        : "guarded",
       // Music Prompt Composer shares the maintenance gate only. Its result is
       // a transient text receipt: reject an incomplete response instead of
       // reconstructing it from an Audio Library collection or browser state.
@@ -10818,6 +10848,131 @@
 
   function renderMediaAudioAssetPagination(listing, route) {
     return renderMemoryPagination(listing, "audio Asset Vault", "media-audio-page", route, "data-media-audio-offset", "portal-media-pagination");
+  }
+
+  // Music/SFX Library is deliberately narrower than the Audio Library editor:
+  // it renders only metadata returned by the dedicated owner-scoped read.
+  // There is no selected asset, player, download, provider search, Bot
+  // companion or browser-side source/audio state in this view.
+  function musicLibraryRoleForPage(page) {
+    const declared = String(page && page.musicLibraryRole || "").toLowerCase();
+    if (["music", "sfx"].includes(declared)) return declared;
+    const route = String(page && (page.routePath || page.path) || "").split("?")[0];
+    return route === "/music/sfx-library" ? "sfx" : "music";
+  }
+
+  function musicLibraryFilterState(context) {
+    const source = context && context.musicLibraryFilter && typeof context.musicLibraryFilter === "object" ? context.musicLibraryFilter : {};
+    return {
+      q: typeof source.q === "string" ? source.q.replace(/\s+/g, " ").trim().slice(0, 100) : ""
+    };
+  }
+
+  function musicLibraryListing(context) {
+    const source = context && context.musicLibraryListing && typeof context.musicLibraryListing === "object" ? context.musicLibraryListing : {};
+    const filters = source.filters && typeof source.filters === "object" ? source.filters : (context && context.musicLibraryFilter);
+    return {
+      filters: musicLibraryFilterState({ musicLibraryFilter: filters }),
+      pagination: memoryListingPagination(source.pagination, 24)
+    };
+  }
+
+  function musicLibraryItems(context, role) {
+    const expected = role === "sfx" ? "sfx" : "music";
+    return (Array.isArray(context && context.musicLibraryItems) ? context.musicLibraryItems : [])
+      .filter((item) => item && typeof item === "object" && validMediaCollectionId(item.collection_id) && String(item.role || "") === expected)
+      .slice(0, 24);
+  }
+
+  function musicLibraryDurationLabel(value) {
+    const seconds = Number(value);
+    if (!Number.isInteger(seconds) || seconds < 1 || seconds > 7200) return "Chưa khai báo thời lượng";
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return minutes ? `${minutes}m ${String(remainder).padStart(2, "0")}s tự khai báo` : `${seconds}s tự khai báo`;
+  }
+
+  function renderMusicLibraryCards(items, role, route) {
+    const roleLabel = role === "sfx" ? "SFX" : "Music";
+    if (!items.length) {
+      return renderEmpty(
+        role === "sfx" ? "Chưa có SFX trong thư viện" : "Chưa có nhạc trong thư viện",
+        "Gắn audio active vào một Audio Collection riêng tư trước. Trang này không suy đoán catalog, file, preview hoặc kết quả âm thanh.",
+        ICONS.music
+      );
+    }
+    return `<div class="portal-music-library-grid">${items.map((item) => {
+      const collectionId = String(item.collection_id || "");
+      const tags = mediaCollectionTags(item.tags);
+      const collectionRoute = `/media-workspace/${encodeURIComponent(collectionId)}`;
+      const favorite = item.favorite === true
+        ? '<span class="portal-music-library-favorite">Đã đánh dấu</span>'
+        : "";
+      const tagMarkup = tags.length
+        ? `<div class="portal-music-library-tags" aria-label="Tags audio">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>`
+        : '<span class="portal-music-library-muted">Chưa có tag</span>';
+      return `<article class="portal-music-library-card">
+        <header class="portal-music-library-card-head">
+          <span class="portal-music-library-role">${safeText(roleLabel)}</span>
+          ${favorite}
+        </header>
+        <div class="portal-music-library-card-copy">
+          <h3>${safeText(String(item.reference_title || roleLabel))}</h3>
+          <p>Thuộc collection <strong>${safeText(String(item.collection_title || "Audio Collection"))}</strong></p>
+        </div>
+        <dl class="portal-music-library-meta">
+          <div><dt>Thời lượng</dt><dd>${safeText(musicLibraryDurationLabel(item.user_declared_duration_seconds))}</dd></div>
+          <div><dt>Cập nhật</dt><dd>${safeText(String(item.updated_at || item.collection_updated_at || "—"))}</dd></div>
+        </dl>
+        ${tagMarkup}
+        <footer class="portal-music-library-card-footer">
+          <span>Metadata riêng tư · không có player hoặc delivery.</span>
+          <a class="portal-button portal-button--quiet" href="${safeText(collectionRoute)}">Mở collection <span aria-hidden="true">→</span></a>
+        </footer>
+      </article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderMusicLibrary(page, context) {
+    // Static aliases share one manifest record, so preserve the server-owned
+    // requested path for actions. Otherwise `/music-library` would render a
+    // canonical `/music/library` button and the signed runtime would rightly
+    // reject it as a stale-route interaction.
+    const route = String((context && context.path) || page.routePath || page.path || "/music/library").split("?")[0];
+    const role = musicLibraryRoleForPage(page);
+    const roleLabel = role === "sfx" ? "SFX" : "nhạc";
+    const title = role === "sfx" ? "Thư viện SFX của tôi" : "Thư viện nhạc của tôi";
+    const alternate = role === "sfx"
+      ? { href: "/music/library", label: "Mở thư viện nhạc" }
+      : { href: "/music/sfx-library", label: "Mở thư viện SFX" };
+    const canView = Boolean(context.capabilities && context.capabilities["music-library-view"] === true);
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.musicLibraryReadState || ""))
+      ? String(context.musicLibraryReadState)
+      : "guarded";
+    const listing = musicLibraryListing(context);
+    const filter = listing.filters;
+    const items = musicLibraryItems(context, role);
+    const filterForm = `<form class="portal-music-library-filter" data-portal-form data-portal-no-transient data-portal-action="music-library-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label: `Tìm ${roleLabel}`, placeholder: "Tên reference đã đặt, collection hoặc tag…", maxLength: 100, wide: true }], canView, context, filter, "music-library-filter")}<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm chỉ đọc metadata owner-scoped trong phiên hiện tại; không lưu vào URL, Bot hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-filter-clear" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>Xóa lọc</button><button class="portal-button portal-button--primary" type="submit"${canView ? "" : " disabled"}>Tìm trong thư viện</button></div></div></form>`;
+    const guard = !canView || readState !== "ready";
+    if (guard) {
+      const loading = canView && readState === "loading";
+      const failed = canView && readState === "failed";
+      const heading = loading ? `Đang kiểm tra thư viện ${roleLabel}` : failed ? `Chưa thể tải thư viện ${roleLabel}` : `Thư viện ${roleLabel} đang được bảo vệ`;
+      const copy = loading
+        ? "Đang nạp metadata đã được owner-check. Dữ liệu cũ không được giữ lại hoặc thay bằng generic Assets."
+        : failed
+          ? "Máy chủ chưa trả danh sách metadata owner-scoped hợp lệ nên Web đã ẩn state cũ. Không dùng Bot, provider, catalog hoặc file thay thế."
+          : "Đăng nhập bằng signed Web session và chờ Audio Workspace được bật để xem metadata riêng tư. Telegram ID thô không cấp quyền cho màn này.";
+      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite"><div class="portal-state" data-state="${failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>Không có generic Assets</span><span>Không có player/catalog</span><span>Không có Bot hand-off</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${loading ? "Đang nạp metadata" : "Thử lại dữ liệu private"}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
+    }
+    const resultNote = filter.q
+      ? `Kết quả cho “${safeText(filter.q)}” chỉ tìm trên tên reference đã đặt, collection và tag đã redaction.`
+      : `Chỉ ${roleLabel} active đã gắn vào Audio Collection active của signed Web account hiện tại được hiển thị.`;
+    return `<article class="portal-page portal-music-library">${renderHero(page, context)}
+      <section class="portal-music-library-intro"><div><span class="portal-section-kicker">Private media library</span><h2>${safeText(title)}</h2><p>Quét nhanh các reference đã tổ chức trong Audio Collection mà không mở file, preview hoặc kho bên ngoài. Mỗi card chỉ là metadata để tiếp tục làm việc trong collection.</p></div><div class="portal-music-library-intro-actions"><span class="portal-music-library-read-badge">Read only · signed session</span><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></section>
+      <section class="portal-card portal-card-pad portal-music-library-board"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped metadata</span><h2 class="portal-card-title">Tìm và mở đúng collection</h2><p class="portal-card-subtitle">${resultNote}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div>${filterForm}${renderMusicLibraryCards(items, role, route)}${renderMemoryPagination(listing, role === "sfx" ? "SFX" : "audio nhạc", "music-library-page", route, "data-music-library-offset", "portal-music-library-pagination")}</section>
+      <aside class="portal-music-library-boundary"><div><strong>Ranh giới của thư viện</strong><span>Chỉ đọc metadata. Không mở player/preview, không tạo audio, job, wallet, payment, asset, delivery, Bot hoặc Telegram action.</span></div><a class="portal-button portal-button--quiet" href="/media-workspace">Mở Audio Workspace</a></aside>
+    </article>`;
   }
 
   function mediaAudioAssetFilterFields() {
@@ -24874,6 +25029,7 @@
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "audio-hub": return renderMediaWorkspace(page, context);
       case "audio-hub-detail": return renderMediaWorkspaceDetail(page, context);
+      case "music-library": return renderMusicLibrary(page, context);
       case "music-prompt-composer": return renderMusicPromptComposer(page, context);
       case "music-direction-presets": return renderMusicDirectionPresets(page, context);
       case "sfx-cue-sheet": return renderSfxCueSheet(page, context);
@@ -26418,6 +26574,12 @@
     }
     if (String(action || "").startsWith("prompt-library-")) {
       Object.assign(fields, { __promptLibraryOffset: source.getAttribute("data-prompt-library-offset") || "" });
+    }
+    // Music/SFX Library paging carries only a bounded list offset from the
+    // metadata-only view. It never carries an asset/item ID, filename, URL,
+    // player state, provider handle or Bot callback into the action payload.
+    if (String(action || "").startsWith("music-library-")) {
+      Object.assign(fields, { __musicLibraryOffset: source.getAttribute("data-music-library-offset") || "" });
     }
     if (String(action || "").startsWith("media-")) {
       Object.assign(fields, {

@@ -640,6 +640,62 @@ def _audio_asset_public(row: tuple[Any, ...]) -> dict[str, Any]:
     }
 
 
+def _library_item_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project one attached audio reference for the private Music/SFX library.
+
+    This intentionally has a narrower shape than ``_item_public``.  The
+    library is a navigation view over active Web-native collections, not an
+    Asset Vault delivery endpoint: it never exposes an asset/item identifier,
+    source filename, content type, storage descriptor, URL or preview handle.
+    A signed owner can open the containing collection when they need to manage
+    its attachment through the existing owner-scoped workflow.
+    """
+
+    # Asset Vault display names may be derived from an uploaded source file
+    # when the customer omitted a label.  Keep this library projection free
+    # of that source-derived metadata: an unset custom reference title gets a
+    # neutral label instead.
+    title = _excerpt(row[3], limit=MAX_ITEM_LABEL)
+    return {
+        "collection_id": str(row[0]),
+        "collection_title": _excerpt(row[1], limit=MAX_TITLE),
+        "role": str(row[2]),
+        "reference_title": title or "Audio reference",
+        "tags": _decode_tags(row[4]),
+        "favorite": bool(row[5]),
+        "user_declared_duration_seconds": int(row[6]) if row[6] is not None else None,
+        "updated_at": str(row[7]),
+        "collection_updated_at": str(row[8]),
+    }
+
+
+def _library_read_boundaries() -> dict[str, Any]:
+    """Explicitly document the no-side-effect boundary for library reads."""
+
+    return {
+        "execution": "web_native_media_library_read_only",
+        "library_persisted": False,
+        "collection_mutated": False,
+        "input_persisted": False,
+        "source_audio_inspected": False,
+        "provider_called": False,
+        "catalog_searched": False,
+        "player_opened": False,
+        "preview_created": False,
+        "audio_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "delivery_created": False,
+        "bot_called": False,
+        "telegram_called": False,
+        "rights_verified": False,
+        "release_approved": False,
+    }
+
+
 def _audio_asset_not_found() -> dict[str, Any]:
     return envelope(
         False,
@@ -2443,6 +2499,97 @@ async def list_audio_assets(
             "filters": {"q": query},
             "pagination": {"limit": bounded, "offset": bounded_offset, "returned": len(items)},
             "source": "asset_vault_owner_scoped",
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/library-items")
+async def list_library_items(
+    role: str,
+    q: str = "",
+    limit: int = 30,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
+    """List active owner-attached music or SFX metadata without delivery.
+
+    The old Telegram Music/SFX library is not a Web data source.  This route
+    reads only the signed account's active collection attachments and has no
+    provider, Bot, player, job, wallet, payment or Asset Vault write path.
+    The deliberately small projection lets the browser find a collection
+    without receiving a raw audio identifier or transportable media handle.
+    """
+
+    _require_enabled()
+    role_filter = str(role or "").strip().lower()
+    if role_filter not in {"music", "sfx"}:
+        raise HTTPException(status_code=422, detail="Loại thư viện chỉ có thể là music hoặc sfx")
+    query = _safe_filter(q, label="Từ khóa thư viện", maximum=100)
+    bounded = max(1, min(int(limit), MAX_LIST_LIMIT))
+    bounded_offset = max(0, min(int(offset), 10_000))
+
+    # Keep this SQL predicate aligned with ``_is_audio_asset``.  Doing the
+    # filtering in SQL before pagination means busy accounts do not lose an
+    # older valid attachment behind non-audio or inactive rows.
+    audio_clauses: list[str] = []
+    audio_params: list[Any] = []
+    for extension in sorted(AUDIO_EXTENSIONS):
+        content_types = sorted(AUDIO_CONTENT_TYPES.get(extension, frozenset()))
+        placeholders = ", ".join("?" for _ in content_types)
+        audio_clauses.append(f"(LOWER(a.extension)=? AND LOWER(a.content_type) IN ({placeholders}))")
+        audio_params.extend([extension, *content_types])
+    clauses = [
+        "i.account_id=?",
+        "i.role=?",
+        "c.state='active'",
+        "a.state='active'",
+        f"({' OR '.join(audio_clauses)})",
+    ]
+    params: list[Any] = [str(account["id"]), role_filter, *audio_params]
+    if query:
+        like = f"%{_escaped_like(query)}%"
+        # Search only the concise metadata that this route is allowed to
+        # return.  Asset Vault display labels can themselves be source-derived
+        # when a customer omitted one, so this list searches only the explicit
+        # item title, collection title and tags. Rights/attribution notes and
+        # source filenames remain in their respective owner-scoped editor/Vault
+        # views.
+        clauses.append(
+            "(i.title_override LIKE ? ESCAPE '\\' OR c.title LIKE ? ESCAPE '\\' "
+            "OR i.tags_json LIKE ? ESCAPE '\\')"
+        )
+        params.extend([like, like, like])
+
+    with read_transaction() as conn:
+        rows = conn.execute(
+            """SELECT c.id, c.title, i.role, i.title_override, i.tags_json, i.favorite,
+                      i.user_declared_duration_seconds, i.updated_at, c.updated_at
+               FROM web_media_items AS i
+               JOIN web_media_collections AS c
+                 ON c.id=i.collection_id AND c.account_id=i.account_id
+               JOIN web_asset_files AS a
+                 ON a.id=i.asset_id AND a.account_id=i.account_id
+               WHERE """ + " AND ".join(clauses) + """
+               ORDER BY i.favorite DESC, i.updated_at DESC, i.id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded + 1, bounded_offset),
+        ).fetchall()
+    items = [_library_item_public(row) for row in rows[:bounded]]
+    has_more = len(rows) > bounded
+    return envelope(
+        True,
+        "Đã tải thư viện nhạc/SFX riêng tư từ Audio Workspace của bạn.",
+        data={
+            "items": items,
+            "filters": {"role": role_filter, "q": query},
+            "pagination": {
+                "limit": bounded,
+                "offset": bounded_offset,
+                "returned": len(items),
+                "has_more": has_more,
+                "next_offset": bounded_offset + bounded if has_more else None,
+            },
+            "boundary": _library_read_boundaries(),
         },
         status_name="read_only",
     )

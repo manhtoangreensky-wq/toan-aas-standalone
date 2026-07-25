@@ -352,6 +352,10 @@
   let mediaWorkspaceListHydrationEpoch = 0;
   let mediaWorkspaceAudioHydrationEpoch = 0;
   let mediaWorkspaceDetailHydrationEpoch = 0;
+  // The Music/SFX Library has a distinct signed read. A late list response
+  // must never replace a newer filter, route or account session with another
+  // user's private collection metadata.
+  let musicLibraryHydrationEpoch = 0;
   // Collection review receipts are transient, signed-tab projections. A
   // collection refresh, route change or account bootstrap must fence a late
   // response before it can replace the current owner's review state.
@@ -3653,6 +3657,26 @@
     return isMediaWorkspaceListViewPath(normalized) || isNativeMusicPromptComposerPath(normalized) || isNativeMusicDirectionPresetPath(normalized) || isNativeSfxCueSheetPath(normalized) || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
   }
 
+  // The historical `/music/library` aliases are now a first-party signed
+  // metadata library. Keep them outside `isNativeMediaWorkspacePath`: the
+  // editor list/detail hydration remains independent and this page must never
+  // inherit a generic Asset Vault, Bot or provider projection.
+  const MUSIC_LIBRARY_ROLES = new Set(["music", "sfx"]);
+  const MUSIC_LIBRARY_PATHS = Object.freeze({
+    "/music/library": "music",
+    "/music-library": "music",
+    "/music/sfx-library": "sfx"
+  });
+
+  function musicLibraryRoleForPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return MUSIC_LIBRARY_PATHS[normalized] || "";
+  }
+
+  function isNativeMusicLibraryPath(path) {
+    return Boolean(musicLibraryRoleForPath(path));
+  }
+
   function mediaWorkspaceSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
     if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Audio Library không nhận ký tự điều khiển không an toàn.";
@@ -4206,6 +4230,152 @@
         next_offset: nextOffset,
         previous_offset: currentOffset >= MEDIA_AUDIO_ASSET_LIST_LIMIT ? currentOffset - MEDIA_AUDIO_ASSET_LIST_LIMIT : null
       }
+    };
+  }
+
+  // Music/SFX Library is a small, signed, metadata-only projection.  Keep
+  // its input, response shape and stale-response guard independent from the
+  // richer Audio Workspace editor so it can never inherit an Asset Vault
+  // delivery row, a Bot projection or a provider/player state.
+  const MUSIC_LIBRARY_LIST_LIMIT = 24;
+  const MUSIC_LIBRARY_ITEM_KEYS = Object.freeze([
+    "collection_id", "collection_title", "role", "reference_title", "tags", "favorite",
+    "user_declared_duration_seconds", "updated_at", "collection_updated_at"
+  ]);
+  const MUSIC_LIBRARY_DATA_KEYS = Object.freeze(["items", "filters", "pagination", "boundary"]);
+  const MUSIC_LIBRARY_FILTER_KEYS = Object.freeze(["role", "q"]);
+  const MUSIC_LIBRARY_PAGINATION_KEYS = Object.freeze(["limit", "offset", "returned", "has_more", "next_offset"]);
+  const MUSIC_LIBRARY_BOUNDARY_KEYS = Object.freeze([
+    "execution", "library_persisted", "collection_mutated", "input_persisted", "source_audio_inspected",
+    "provider_called", "catalog_searched", "player_opened", "preview_created", "audio_created", "output_created",
+    "job_created", "wallet_mutated", "payment_started", "asset_saved", "delivery_created", "bot_called",
+    "telegram_called", "rights_verified", "release_approved"
+  ]);
+
+  function musicLibraryFilterPayload(value, expectedRole) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const role = String(source.role || expectedRole || "").trim().toLowerCase();
+    if (!MUSIC_LIBRARY_ROLES.has(role) || (expectedRole && role !== expectedRole)) {
+      throw new Error("Loại thư viện Music/SFX không hợp lệ.");
+    }
+    const q = mediaWorkspaceLine(source.q, "Từ khóa thư viện", 0, 100, true);
+    const safety = mediaWorkspaceSafetyError(q);
+    if (safety) throw new Error(safety);
+    return { role, q };
+  }
+
+  function musicLibraryListOffset(value) {
+    return mediaWorkspaceListOffset(value);
+  }
+
+  function musicLibraryListPath(role, filter, offset) {
+    const normalized = musicLibraryFilterPayload(filter, role);
+    const query = new URLSearchParams({
+      role: normalized.role,
+      limit: String(MUSIC_LIBRARY_LIST_LIMIT),
+      offset: String(musicLibraryListOffset(offset))
+    });
+    if (normalized.q) query.set("q", normalized.q);
+    return `/media-workspace/library-items?${query.toString()}`;
+  }
+
+  function musicLibraryReadLine(value, minimum, maximum, allowEmpty) {
+    const text = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+    if (!text && allowEmpty === true) return "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function musicLibraryReadTimestamp(value) {
+    const text = musicLibraryReadLine(value, 1, 80, false);
+    return text && !Number.isNaN(Date.parse(text)) ? text : "";
+  }
+
+  function musicLibraryItemProjection(value, expectedRole) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!item || !musicPromptComposerExactKeys(item, MUSIC_LIBRARY_ITEM_KEYS)) return null;
+    const collectionId = validMediaCollectionId(item.collection_id) ? String(item.collection_id) : "";
+    const collectionTitle = musicLibraryReadLine(item.collection_title, 1, 180, false);
+    const role = String(item.role || "").trim().toLowerCase();
+    const referenceTitle = musicLibraryReadLine(item.reference_title, 1, 180, false);
+    const rawTags = item.tags;
+    const tags = Array.isArray(rawTags) && rawTags.length <= 16
+      ? rawTags.map((tag) => musicLibraryReadLine(tag, 1, 48, false))
+      : [];
+    const duration = item.user_declared_duration_seconds;
+    const safeDuration = duration === null ? null : (Number.isSafeInteger(duration) && duration >= 1 && duration <= 7200 ? duration : null);
+    const updatedAt = musicLibraryReadTimestamp(item.updated_at);
+    const collectionUpdatedAt = musicLibraryReadTimestamp(item.collection_updated_at);
+    if (!collectionId || !collectionTitle || role !== expectedRole || !MUSIC_LIBRARY_ROLES.has(role)
+      || !referenceTitle || !Array.isArray(rawTags) || rawTags.length > 16 || tags.some((tag) => !tag)
+      || typeof item.favorite !== "boolean" || (duration !== null && safeDuration === null)
+      || !updatedAt || !collectionUpdatedAt) return null;
+    return {
+      collection_id: collectionId,
+      collection_title: collectionTitle,
+      role,
+      reference_title: referenceTitle,
+      tags,
+      favorite: item.favorite,
+      user_declared_duration_seconds: safeDuration,
+      updated_at: updatedAt,
+      collection_updated_at: collectionUpdatedAt
+    };
+  }
+
+  function musicLibraryBoundaryIsSafe(value) {
+    const boundary = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    return Boolean(boundary && musicPromptComposerExactKeys(boundary, MUSIC_LIBRARY_BOUNDARY_KEYS)
+      && boundary.execution === "web_native_media_library_read_only"
+      && MUSIC_LIBRARY_BOUNDARY_KEYS.filter((key) => key !== "execution").every((key) => boundary[key] === false));
+  }
+
+  function musicLibraryListingProjection(role, filter, offset, source, returned) {
+    const normalized = musicLibraryFilterPayload(filter, role);
+    const data = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+    const pagination = data.pagination && typeof data.pagination === "object" && !Array.isArray(data.pagination) ? data.pagination : {};
+    const currentOffset = musicLibraryListOffset(offset);
+    const rawNextOffset = Number(pagination.next_offset);
+    const nextOffset = pagination.has_more === true && Number.isInteger(rawNextOffset)
+      && rawNextOffset > currentOffset && rawNextOffset <= MEDIA_WORKSPACE_MAX_LIST_OFFSET
+      ? rawNextOffset
+      : null;
+    return {
+      filters: normalized,
+      pagination: {
+        limit: MUSIC_LIBRARY_LIST_LIMIT,
+        offset: currentOffset,
+        returned: Math.max(0, Math.min(MUSIC_LIBRARY_LIST_LIMIT, Number.isInteger(Number(returned)) ? Number(returned) : 0)),
+        has_more: nextOffset !== null,
+        next_offset: nextOffset,
+        previous_offset: currentOffset >= MUSIC_LIBRARY_LIST_LIMIT ? currentOffset - MUSIC_LIBRARY_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function musicLibraryResponseProjection(result, expectedRole, filter, offset) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : null;
+    const normalized = musicLibraryFilterPayload(filter, expectedRole);
+    const currentOffset = musicLibraryListOffset(offset);
+    if (!result || result.status !== "read_only" || !data || !musicPromptComposerExactKeys(data, MUSIC_LIBRARY_DATA_KEYS)) return null;
+    const responseFilter = data.filters && typeof data.filters === "object" && !Array.isArray(data.filters) ? data.filters : null;
+    const pagination = data.pagination && typeof data.pagination === "object" && !Array.isArray(data.pagination) ? data.pagination : null;
+    if (!responseFilter || !pagination || !musicPromptComposerExactKeys(responseFilter, MUSIC_LIBRARY_FILTER_KEYS)
+      || !musicPromptComposerExactKeys(pagination, MUSIC_LIBRARY_PAGINATION_KEYS)
+      || !musicLibraryBoundaryIsSafe(data.boundary)
+      || responseFilter.role !== normalized.role || responseFilter.q !== normalized.q
+      || pagination.limit !== MUSIC_LIBRARY_LIST_LIMIT || pagination.offset !== currentOffset
+      || !Number.isSafeInteger(pagination.returned) || pagination.returned < 0 || pagination.returned > MUSIC_LIBRARY_LIST_LIMIT
+      || typeof pagination.has_more !== "boolean") return null;
+    const rawNextOffset = pagination.next_offset;
+    if ((pagination.has_more && (!Number.isSafeInteger(rawNextOffset) || rawNextOffset <= currentOffset || rawNextOffset > MEDIA_WORKSPACE_MAX_LIST_OFFSET))
+      || (!pagination.has_more && rawNextOffset !== null)) return null;
+    const rawItems = Array.isArray(data.items) ? data.items : null;
+    if (!rawItems || rawItems.length > MUSIC_LIBRARY_LIST_LIMIT || rawItems.length !== pagination.returned) return null;
+    const items = rawItems.map((item) => musicLibraryItemProjection(item, normalized.role));
+    if (items.some((item) => !item)) return null;
+    return {
+      items,
+      listing: musicLibraryListingProjection(normalized.role, normalized, currentOffset, data, items.length)
     };
   }
 
@@ -11582,6 +11752,7 @@
     consultationCrmConfirmInFlight = false;
     ++contentStudioSessionEpoch;
     ++mediaWorkspaceSessionEpoch;
+    ++musicLibraryHydrationEpoch;
     ++mediaWorkspaceReviewPackRequestEpoch;
     ++musicDirectionPresetComposeRequestEpoch;
     musicDirectionPresetComposePendingRequestEpoch = 0;
@@ -12212,6 +12383,12 @@
       "free-prompt-gallery-save": Boolean(account && me.csrf_token && freePromptGalleryEnabled && memoryCenterEnabled),
       "guide-center-view": Boolean(account && guideCenterEnabled),
       "media-workspace-view": Boolean(account && mediaWorkspaceEnabled),
+      // Music/SFX Library is a GET-only owner projection. It needs the same
+      // signed account + narrow Web Workspace flag, but never CSRF, bridge,
+      // provider, player, job, wallet or payment authority.
+      "music-library-view": Boolean(account && mediaWorkspaceEnabled),
+      "music-library-refresh": Boolean(account && mediaWorkspaceEnabled),
+      "music-library-page": Boolean(account && mediaWorkspaceEnabled),
       "media-workspace-refresh": Boolean(account && mediaWorkspaceEnabled),
       "media-workspace-page": Boolean(account && mediaWorkspaceEnabled),
       "media-audio-page": Boolean(account && mediaWorkspaceEnabled),
@@ -12633,6 +12810,7 @@
     ++contentStudioDetailHydrationEpoch;
     ++contentStudioVariantHistoryHydrationEpoch;
     ++mediaWorkspaceSessionEpoch;
+    ++musicLibraryHydrationEpoch;
     ++mediaWorkspaceListHydrationEpoch;
     ++mediaWorkspaceAudioHydrationEpoch;
     ++mediaWorkspaceDetailHydrationEpoch;
@@ -12962,6 +13140,13 @@
       mediaWorkspaceFilter: { q: "", tag: "", prompt_mode: "", state: "all" },
       mediaWorkspaceListing: mediaWorkspaceListingProjection({ q: "", tag: "", prompt_mode: "", state: "all" }, 0, {}, 0),
       mediaWorkspaceReadState: account && mediaWorkspaceEnabled ? "loading" : "guarded",
+      // The two historical Music/SFX screens now use a distinct, metadata-
+      // only list. Keep it blank until its own signed endpoint has returned
+      // an exact safe response; it must never inherit generic `/assets` data.
+      musicLibraryItems: [],
+      musicLibraryFilter: { q: "" },
+      musicLibraryListing: musicLibraryListingProjection("music", { role: "music", q: "" }, 0, {}, 0),
+      musicLibraryReadState: account && mediaWorkspaceEnabled ? "loading" : "guarded",
       // Music Prompt Composer never hydrates a collection or history. Clear
       // its short-lived receipt on each signed bootstrap so one account cannot
       // see another account's private direction text after a session change.
@@ -13477,6 +13662,9 @@
         "/guides": account && guideCenterEnabled ? "processing" : "guarded",
         "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
+        "/music/library": account && mediaWorkspaceEnabled ? "processing" : "guarded",
+        "/music-library": account && mediaWorkspaceEnabled ? "processing" : "guarded",
+        "/music/sfx-library": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/music-prompt-composer": account && musicPromptComposerEnabled ? "ready" : "guarded",
         "/media-workspace/music-directions": account && musicDirectionPresetsEnabled ? "ready" : "guarded",
         "/media-workspace/sfx-cue-sheet": account && sfxCueSheetEnabled ? "ready" : "guarded",
@@ -13684,7 +13872,22 @@
         });
       }
     }
-    if (isNativeMusicPromptComposerPath(currentPath)) {
+    if (isNativeMusicLibraryPath(currentPath)) {
+      // This read has a deliberately separate API/schema from both the Audio
+      // Workspace editor and legacy Music Bridge routes. Never use a generic
+      // asset response as an empty-state substitute.
+      if (account && mediaWorkspaceEnabled) {
+        await hydrateMusicLibrary();
+      } else {
+        const role = musicLibraryRoleForPath(currentPath) || "music";
+        merge({
+          musicLibraryItems: [], musicLibraryFilter: { q: "" },
+          musicLibraryListing: musicLibraryListingProjection(role, { role, q: "" }, 0, {}, 0),
+          musicLibraryReadState: "guarded",
+          pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+        });
+      }
+    } else if (isNativeMusicPromptComposerPath(currentPath)) {
       // This route has no collection/history/project hydration. Its receipt is
       // intentionally in-memory only and is cleared on a guarded bootstrap.
       if (!(account && musicPromptComposerEnabled)) merge({
@@ -15051,6 +15254,67 @@
       && !isNativeMusicDirectionPresetPath(expectedPath)
       && base().mediaWorkspaceEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function musicLibraryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, expectedRole) {
+    return requestEpoch === musicLibraryHydrationEpoch
+      && sessionEpoch === mediaWorkspaceSessionEpoch
+      && currentPortalPath() === expectedPath
+      && musicLibraryRoleForPath(expectedPath) === expectedRole
+      && base().mediaWorkspaceEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && Boolean(base().capabilities && base().capabilities["music-library-view"] === true);
+  }
+
+  async function hydrateMusicLibrary(filterValue, offsetValue) {
+    const path = currentPortalPath();
+    const role = musicLibraryRoleForPath(path);
+    const requestEpoch = ++musicLibraryHydrationEpoch;
+    const sessionEpoch = mediaWorkspaceSessionEpoch;
+    if (!role || !isNativeMusicLibraryPath(path)) return { stale: true };
+    const priorListing = base().musicLibraryListing && typeof base().musicLibraryListing === "object"
+      ? base().musicLibraryListing
+      : musicLibraryListingProjection(role, { role, q: "" }, 0, {}, 0);
+    const priorPagination = priorListing.pagination && typeof priorListing.pagination === "object" ? priorListing.pagination : {};
+    const filter = musicLibraryFilterPayload(filterValue === undefined
+      ? (priorListing.filters || base().musicLibraryFilter || { role, q: "" })
+      : { ...(filterValue || {}), role }, role);
+    const offset = musicLibraryListOffset(offsetValue === undefined ? priorPagination.offset : offsetValue);
+    const loadingListing = musicLibraryListingProjection(role, filter, offset, {}, 0);
+    // Blank old account/route data before a fresh signed read. A valid empty
+    // response is distinct from an earlier account's list, so no stale card
+    // is allowed to stay visible while a request is pending.
+    if (musicLibraryRequestIsCurrent(requestEpoch, sessionEpoch, path, role)) {
+      merge({
+        musicLibraryItems: [], musicLibraryFilter: { q: filter.q }, musicLibraryListing: loadingListing,
+        musicLibraryReadState: "loading",
+        pageStates: { ...(base().pageStates || {}), [path]: "processing" }
+      });
+    }
+    try {
+      const result = await api(musicLibraryListPath(role, filter, offset));
+      if (!musicLibraryRequestIsCurrent(requestEpoch, sessionEpoch, path, role)) return { stale: true };
+      const projection = musicLibraryResponseProjection(result, role, filter, offset);
+      if (!projection) throw new Error("Máy chủ chưa trả thư viện Music/SFX owner-scoped an toàn.");
+      if (!musicLibraryRequestIsCurrent(requestEpoch, sessionEpoch, path, role)) return { stale: true };
+      merge({
+        musicLibraryItems: projection.items,
+        musicLibraryFilter: { q: projection.listing.filters.q },
+        musicLibraryListing: projection.listing,
+        musicLibraryReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [path]: "read_only" }
+      });
+      return projection;
+    } catch (_) {
+      if (!musicLibraryRequestIsCurrent(requestEpoch, sessionEpoch, path, role)) return { stale: true };
+      const emptyListing = musicLibraryListingProjection(role, filter, offset, {}, 0);
+      merge({
+        musicLibraryItems: [], musicLibraryFilter: { q: filter.q }, musicLibraryListing: emptyListing,
+        musicLibraryReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
+      });
+      return { items: [], listing: emptyListing, failed: true };
+    }
   }
 
   async function hydrateMediaWorkspace(filterValue, offsetValue) {
@@ -23676,7 +23940,7 @@
     // Workspace Menu has the same no-projection property, but it is a
     // navigation directory rather than a preference form. Keeping the fence
     // explicit prevents either route from inheriting a future generic read.
-    if (isNativeWorkspaceMenuPath(path) || isNativeGuideCenterPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
+    if (isNativeWorkspaceMenuPath(path) || isNativeGuideCenterPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path) || isNativeMusicLibraryPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
@@ -23782,7 +24046,7 @@
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures) }
         });
-      } else if (path === "/assets" || ["/image/assets", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/assets", "/video/export", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         if (!isCurrent()) return null;
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
@@ -25206,6 +25470,31 @@
           if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép prompt.");
         }
         toast("Đã sao chép prompt từ template riêng tư. Chưa có AI execution nào được tạo.");
+        return;
+      }
+      if (["music-library-filter", "music-library-filter-clear", "music-library-page", "music-library-refresh"].includes(action)) {
+        const role = musicLibraryRoleForPath(route);
+        if (!role || route !== currentPortalPath() || !isNativeMusicLibraryPath(route)) {
+          throw new Error("Chỉ có thể thao tác thư viện Music/SFX ở trang riêng tư hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["music-library-view"] === true)) {
+          throw new Error("Cần signed Web session để xem thư viện Music/SFX riêng tư.");
+        }
+        if (action === "music-library-page") {
+          await hydrateMusicLibrary(undefined, musicLibraryListOffset(fields.__musicLibraryOffset));
+          toast("Đã tải trang metadata tiếp theo từ Audio Workspace riêng tư.");
+          return;
+        }
+        if (action === "music-library-refresh") {
+          await hydrateMusicLibrary();
+          toast("Đã làm mới thư viện Music/SFX của Web account hiện tại.");
+          return;
+        }
+        const filter = action === "music-library-filter-clear"
+          ? { role, q: "" }
+          : musicLibraryFilterPayload({ q: fields.q, role }, role);
+        await hydrateMusicLibrary(filter, 0);
+        toast(filter.q ? "Đã áp dụng bộ lọc metadata trong thư viện." : "Đã hiển thị toàn bộ metadata Music/SFX active.");
         return;
       }
       if (action === "media-workspace-filter" || action === "media-workspace-filter-clear") {
@@ -33158,6 +33447,16 @@
       }
       if (action === "auth-logout") {
         clearSessionScopedTransientDrafts();
+        // A navigation can wait for the logout response while a private
+        // Music/SFX list is still in flight. Invalidate it immediately so it
+        // cannot paint a signed owner's cards during that transition.
+        ++mediaWorkspaceSessionEpoch;
+        ++musicLibraryHydrationEpoch;
+        merge({
+          musicLibraryItems: [], musicLibraryFilter: { q: "" },
+          musicLibraryListing: musicLibraryListingProjection("music", { role: "music", q: "" }, 0, {}, 0),
+          musicLibraryReadState: "guarded"
+        });
         const result = await api("/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         toast(result.message || "Đã đăng xuất.");
         window.location.assign("/login");

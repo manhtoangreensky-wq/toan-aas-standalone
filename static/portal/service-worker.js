@@ -155,6 +155,12 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/media-workspace/music-prompt-composer",
   "/media-workspace/music-directions",
   "/media-workspace/sfx-cue-sheet",
+  // Music and SFX Library render signed owner-scoped attachment metadata.
+  // Keep both canonical views and the historical music alias out of Cache
+  // Storage so another account's library can never appear after sign-out.
+  "/music/library",
+  "/music-library",
+  "/music/sfx-library",
   // Image Operations Hub is a private visual projection over signed Image
   // Studio data. Its artboard metadata must never be reachable through a
   // public shell/offline fallback after sign-out or account switching.

@@ -88,11 +88,21 @@ def create_collection(client: TestClient, csrf: str, key: str = "media-collectio
     return response.json()["data"]["collection"]
 
 
-def upload_asset(client: TestClient, csrf: str, *, key: str, name: str, content: bytes, content_type: str) -> dict:
+def upload_asset(
+    client: TestClient,
+    csrf: str,
+    *,
+    key: str,
+    name: str,
+    content: bytes,
+    content_type: str,
+    display_name: str | None = "Audio reference",
+) -> dict:
+    data = {} if display_name is None else {"display_name": display_name}
     response = client.post(
         "/api/v1/asset-vault/upload",
         headers={"X-CSRF-Token": csrf, "Idempotency-Key": key},
-        data={"display_name": "Audio reference"},
+        data=data,
         files={"file": (name, content, content_type)},
     )
     assert response.status_code == 200
@@ -424,6 +434,338 @@ def test_media_audio_listing_filters_before_pagination_and_is_owner_scoped(tmp_p
             hidden = other.get("/api/v1/media-workspace/audio-assets", params={"q": "Needle audio", "limit": 1})
             assert hidden.status_code == 200
             assert hidden.json()["data"]["items"] == []
+
+
+def test_music_sfx_library_is_active_owner_scoped_metadata_only_and_never_persists(tmp_path, monkeypatch):
+    """The Web library is a read-only collection index, never a media delivery surface."""
+    db_path = tmp_path / "copyfast-media-workspace-test.db"
+    endpoint = "/api/v1/media-workspace/library-items"
+    with make_client(tmp_path, monkeypatch) as owner:
+        assert owner.get(endpoint, params={"role": "music"}).status_code == 401
+        csrf = register_and_login(owner, "media-library-owner@example.com")
+
+        collection = create_collection(
+            owner,
+            csrf,
+            "media-library-owner-collection-create-0001",
+            title="Thư viện chiến dịch hè",
+        )
+        music_primary = upload_asset(
+            owner,
+            csrf,
+            key="media-library-primary-upload-0001",
+            name="private-primary.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        primary_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                music_primary["id"],
+                1,
+                "media-library-primary-attach-0001",
+                title_override="Nhạc mở đầu chiến dịch",
+                tags=["summer", "brand"],
+                favorite=True,
+                user_declared_duration_seconds=15,
+            ),
+        )
+        assert primary_attached.status_code == 200
+        primary_item_id = primary_attached.json()["data"]["item_id"]
+
+        music_secondary = upload_asset(
+            owner,
+            csrf,
+            key="media-library-secondary-upload-0001",
+            name="private-secondary.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        secondary_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                music_secondary["id"],
+                2,
+                "media-library-secondary-attach-0001",
+                title_override="Nhạc nền ambient",
+                tags=["ambient"],
+                favorite=False,
+                user_declared_duration_seconds=None,
+            ),
+        )
+        assert secondary_attached.status_code == 200
+        secondary_item_id = secondary_attached.json()["data"]["item_id"]
+
+        sfx = upload_asset(
+            owner,
+            csrf,
+            key="media-library-sfx-upload-0001",
+            name="private-transition.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        sfx_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                sfx["id"],
+                3,
+                "media-library-sfx-attach-0001",
+                role="sfx",
+                title_override="SFX chuyển cảnh",
+                tags=["transition"],
+                favorite=True,
+                user_declared_duration_seconds=2,
+            ),
+        )
+        assert sfx_attached.status_code == 200
+        sfx_item_id = sfx_attached.json()["data"]["item_id"]
+
+        reference = upload_asset(
+            owner,
+            csrf,
+            key="media-library-reference-upload-0001",
+            name="private-reference.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        reference_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                reference["id"],
+                4,
+                "media-library-reference-attach-0001",
+                role="reference",
+                title_override="Tham chiếu nội bộ",
+            ),
+        )
+        assert reference_attached.status_code == 200
+        reference_item_id = reference_attached.json()["data"]["item_id"]
+
+        archived_collection = create_collection(
+            owner,
+            csrf,
+            "media-library-archived-collection-create-0001",
+            title="Collection đã archive",
+        )
+        archived_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{archived_collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                music_primary["id"],
+                1,
+                "media-library-archived-attach-0001",
+                title_override="Không được liệt kê archive",
+            ),
+        )
+        assert archived_attached.status_code == 200
+        archived_item_id = archived_attached.json()["data"]["item_id"]
+        archived = owner.post(
+            f"/api/v1/media-workspace/collections/{archived_collection['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 2, "idempotency_key": "media-library-archive-0001"},
+        )
+        assert archived.status_code == 200
+
+        inactive_collection = create_collection(
+            owner,
+            csrf,
+            "media-library-inactive-collection-create-0001",
+            title="Collection asset inactive",
+        )
+        inactive_asset = upload_asset(
+            owner,
+            csrf,
+            key="media-library-inactive-upload-0001",
+            name="private-inactive.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        inactive_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{inactive_collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                inactive_asset["id"],
+                1,
+                "media-library-inactive-attach-0001",
+                title_override="Không được liệt kê inactive",
+            ),
+        )
+        assert inactive_attached.status_code == 200
+        inactive_item_id = inactive_attached.json()["data"]["item_id"]
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_asset_files SET state='archived' WHERE id=?",
+                (inactive_asset["id"],),
+            )
+            conn.commit()
+
+        def library_table_counts() -> dict[str, int]:
+            with sqlite3.connect(db_path) as conn:
+                return {
+                    table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                    for table in (
+                        "web_media_collections", "web_media_items", "web_media_events",
+                        "web_idempotency", "web_audit_events",
+                    )
+                }
+
+        before = library_table_counts()
+        invalid = owner.get(endpoint, params={"role": "reference"})
+        assert invalid.status_code == 422
+
+        first = owner.get(endpoint, params={"role": "music", "limit": 1, "offset": 0})
+        assert first.status_code == 200
+        first_body = first.json()
+        assert first_body["ok"] is True
+        assert first_body["status"] == "read_only"
+        assert set(first_body["data"]) == {"items", "filters", "pagination", "boundary"}
+        first_data = first_body["data"]
+        assert first_data["filters"] == {"role": "music", "q": ""}
+        assert first_data["pagination"] == {
+            "limit": 1, "offset": 0, "returned": 1, "has_more": True, "next_offset": 1,
+        }
+        assert set(first_data["items"][0]) == {
+            "collection_id", "collection_title", "role", "reference_title", "tags", "favorite",
+            "user_declared_duration_seconds", "updated_at", "collection_updated_at",
+        }
+        assert first_data["items"][0]["role"] == "music"
+        assert first_data["items"][0]["collection_id"] == collection["id"]
+        assert first_data["items"][0]["reference_title"] == "Nhạc mở đầu chiến dịch"
+        assert first_data["items"][0]["tags"] == ["summer", "brand"]
+        assert first_data["items"][0]["favorite"] is True
+        assert first_data["items"][0]["user_declared_duration_seconds"] == 15
+        assert first_data["boundary"] == {
+            "execution": "web_native_media_library_read_only",
+            "library_persisted": False,
+            "collection_mutated": False,
+            "input_persisted": False,
+            "source_audio_inspected": False,
+            "provider_called": False,
+            "catalog_searched": False,
+            "player_opened": False,
+            "preview_created": False,
+            "audio_created": False,
+            "output_created": False,
+            "job_created": False,
+            "wallet_mutated": False,
+            "payment_started": False,
+            "asset_saved": False,
+            "delivery_created": False,
+            "bot_called": False,
+            "telegram_called": False,
+            "rights_verified": False,
+            "release_approved": False,
+        }
+
+        second = owner.get(endpoint, params={"role": "music", "limit": 1, "offset": 1})
+        assert second.status_code == 200
+        second_data = second.json()["data"]
+        assert second_data["pagination"] == {
+            "limit": 1, "offset": 1, "returned": 1, "has_more": False, "next_offset": None,
+        }
+        assert {first_data["items"][0]["reference_title"], second_data["items"][0]["reference_title"]} == {
+            "Nhạc mở đầu chiến dịch", "Nhạc nền ambient",
+        }
+
+        filtered = owner.get(endpoint, params={"role": "music", "q": "ambient", "limit": 24})
+        assert filtered.status_code == 200
+        assert [item["reference_title"] for item in filtered.json()["data"]["items"]] == ["Nhạc nền ambient"]
+
+        sfx_listing = owner.get(endpoint, params={"role": "sfx", "limit": 24})
+        assert sfx_listing.status_code == 200
+        assert [item["reference_title"] for item in sfx_listing.json()["data"]["items"]] == ["SFX chuyển cảnh"]
+
+        for private_value in (
+            music_primary["id"], music_secondary["id"], sfx["id"], reference["id"], inactive_asset["id"],
+            primary_item_id, secondary_item_id, sfx_item_id, reference_item_id, archived_item_id, inactive_item_id,
+            "private-primary.wav", "private-secondary.wav", "private-transition.wav", "private-reference.wav",
+            "private-inactive.wav", "private-web-assets", "storage_key", "original_filename",
+            "Không được liệt kê archive", "Không được liệt kê inactive", "Tham chiếu nội bộ",
+        ):
+            assert private_value not in first.text
+            assert private_value not in second.text
+            assert private_value not in sfx_listing.text
+        assert library_table_counts() == before
+
+        # Asset Vault defaults an omitted display label from the upload name.
+        # The library must never use that source-derived value as a visible
+        # fallback or a searchable field; only an explicit item title is safe
+        # here. This regression is intentionally after the read-count check:
+        # attaching the fixture is a separate existing Workspace write.
+        source_named = upload_asset(
+            owner,
+            csrf,
+            key="media-library-source-derived-upload-0001",
+            name="source-derived-private-name.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+            display_name=None,
+        )
+        source_named_attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(
+                source_named["id"],
+                5,
+                "media-library-source-derived-attach-0001",
+                title_override="",
+                tags=[],
+                favorite=False,
+                user_declared_duration_seconds=None,
+            ),
+        )
+        assert source_named_attached.status_code == 200
+        neutral_listing = owner.get(endpoint, params={"role": "music", "limit": 24})
+        assert neutral_listing.status_code == 200
+        neutral_items = neutral_listing.json()["data"]["items"]
+        assert any(item["reference_title"] == "Audio reference" for item in neutral_items)
+        assert source_named["id"] not in neutral_listing.text
+        assert "source-derived-private-name.wav" not in neutral_listing.text
+        source_name_filter = owner.get(
+            endpoint,
+            params={"role": "music", "q": "source-derived-private-name", "limit": 24},
+        )
+        assert source_name_filter.status_code == 200
+        assert source_name_filter.json()["data"]["items"] == []
+
+        with make_client(tmp_path, monkeypatch) as other:
+            csrf_other = register_and_login(other, "media-library-other@example.com")
+            foreign_collection = create_collection(
+                other,
+                csrf_other,
+                "media-library-other-collection-create-0001",
+                title="Collection người khác",
+            )
+            foreign_audio = upload_asset(
+                other,
+                csrf_other,
+                key="media-library-other-upload-0001",
+                name="foreign-private.wav",
+                content=wav_bytes(),
+                content_type="audio/wav",
+            )
+            foreign_attached = other.post(
+                f"/api/v1/media-workspace/collections/{foreign_collection['id']}/items",
+                headers={"X-CSRF-Token": csrf_other},
+                json=attach_payload(
+                    foreign_audio["id"], 1, "media-library-other-attach-0001",
+                    title_override="Nhạc của người khác",
+                ),
+            )
+            assert foreign_attached.status_code == 200
+            foreign = other.get(endpoint, params={"role": "music", "limit": 24})
+            assert [item["reference_title"] for item in foreign.json()["data"]["items"]] == ["Nhạc của người khác"]
+
+        owner_after_foreign = owner.get(endpoint, params={"role": "music", "limit": 24})
+        assert owner_after_foreign.status_code == 200
+        assert {item["reference_title"] for item in owner_after_foreign.json()["data"]["items"]} == {
+            "Nhạc mở đầu chiến dịch", "Nhạc nền ambient", "Audio reference",
+        }
+        assert "Nhạc của người khác" not in owner_after_foreign.text
 
 
 def test_media_collections_are_paginated_and_owner_scoped(tmp_path, monkeypatch):
