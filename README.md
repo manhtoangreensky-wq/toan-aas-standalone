@@ -55,6 +55,12 @@ Production Web App for `app.toanaas.vn`.
   an absolute child directory of that volume in production (for example
   `/data/toanaas_webapp_assets`); the application refuses static, relative or
   out-of-volume storage. The vault never serves blobs from `/static`.
+- `WEBAPP_AUDIO_CHANGE_REQUESTS_ENABLED` defaults to `false`. It adds only an
+  explicit Web-native draft → estimate → confirm layer for an already attached
+  private audio asset. It also requires the existing Asset Vault and Audio
+  Asset Operations gates; it never enables a Bot/provider call, wallet/Xu,
+  PayOS, payment, music generation or public media URL. See
+  [`AUDIO_CHANGE_REQUEST_CONTRACT.md`](docs/migration/AUDIO_CHANGE_REQUEST_CONTRACT.md).
 - `WEBAPP_PROJECT_PACKAGE_ENABLED` defaults to `false`. Enable it only after
   this **Web service** has a persistent volume. Its
   `WEBAPP_PROJECT_PACKAGE_ROOT` must be a separate absolute child directory

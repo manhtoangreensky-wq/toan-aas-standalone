@@ -25,7 +25,7 @@ import re
 import shutil
 import stat
 import subprocess
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Callable
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -1279,6 +1279,7 @@ def _reserve_operation(
     target_format: str | None,
     normalization_profile: str | None,
     idempotency_key: str,
+    reservation_precondition: Callable[[Any, dict[str, Any]], None] | None = None,
 ) -> tuple[dict[str, Any], bool]:
     if kind not in SUPPORTED_KINDS:
         raise HTTPException(status_code=422, detail="Loại Audio Asset Operation không hợp lệ")
@@ -1307,6 +1308,14 @@ def _reserve_operation(
             if not hmac.compare_digest(str(existing[-1] or ""), fingerprint):
                 raise HTTPException(status_code=409, detail="Idempotency key đã dùng cho Audio Asset Operation khác")
             return _operation_public_with_verified_output(tuple(existing[:-1])), True
+        # A higher-level Web-native flow may bind the executor to another
+        # owner-scoped record (for example an active Audio Hub attachment).
+        # Run that check in the very same reservation transaction, after a
+        # safe replay has been recognized but before any queue row exists.
+        # Direct Audio Asset Operations intentionally pass no callback and
+        # retain their original behavior.
+        if reservation_precondition is not None:
+            reservation_precondition(conn, source)
         operation_id = str(uuid.uuid4())
         now = utc_now()
         conn.execute(
@@ -1386,6 +1395,7 @@ async def _create_operation(
     idempotency_key: str,
     request: Request,
     account: dict,
+    reservation_precondition: Callable[[Any, dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     ffmpeg, ffprobe = _require_runtime()
     ensure_copyfast_schema()
@@ -1404,6 +1414,7 @@ async def _create_operation(
         target_format=target_format,
         normalization_profile=normalization_profile,
         idempotency_key=idempotency_key,
+        reservation_precondition=reservation_precondition,
     )
     if replay:
         return _operation_envelope(reserved, replay=True)
@@ -1417,6 +1428,38 @@ async def _create_operation(
         request_id=_request_id(request),
     )
     return _operation_envelope(operation)
+
+
+async def execute_audio_asset_operation(
+    *,
+    kind: str,
+    target_format: str | None,
+    normalization_profile: str | None,
+    source_asset_id: str,
+    idempotency_key: str,
+    request: Request,
+    account: dict,
+    reservation_precondition: Callable[[Any, dict[str, Any]], None] | None = None,
+) -> dict[str, Any]:
+    """Execute one already-authorized private operation.
+
+    This server-only adapter preserves the normal Audio Asset Operations
+    owner/runtime/output checks while allowing a narrowly scoped Web workflow
+    to add an atomic reservation-time ownership precondition.  It does not
+    expose a browser-controlled callback, process option, provider, Bot,
+    wallet or payment capability.
+    """
+
+    return await _create_operation(
+        kind=kind,
+        target_format=target_format,
+        normalization_profile=normalization_profile,
+        source_asset_id=source_asset_id,
+        idempotency_key=idempotency_key,
+        request=request,
+        account=account,
+        reservation_precondition=reservation_precondition,
+    )
 
 
 @router.post("/inspect")

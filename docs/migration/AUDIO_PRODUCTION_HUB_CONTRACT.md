@@ -14,7 +14,7 @@ same owner-scoped collection UUID and server authority.
 
 | Surface | Authority | Never introduced by this projection |
 | --- | --- | --- |
-| `/audio-hub`, `/audio-hub/new`, `/audio-hub/{collection_id}` | Portal route/render/hydration layer | New database, API, ledger, job, provider, player, waveform, raw URL or generated output |
+| `/audio-hub`, `/audio-hub/new`, `/audio-hub/{collection_id}` | Portal route/render/hydration layer | New `audio_hub` database/API, ledger, provider, player, waveform, raw URL or generated music/SFX output |
 | `/api/v1/media-workspace/*` | Existing standalone Web Media Workspace | Bot callback replay, Telegram state, provider request, wallet/Xu or PayOS mutation |
 | `/media-workspace/*` | Existing compatible editor and API-backed model | Automatic redirect away from the customer-selected visual route |
 
@@ -27,9 +27,13 @@ same owner-scoped collection UUID and server authority.
                                          (owner-scoped Media Workspace API)
 ```
 
-All browser reads and writes remain under `/api/v1/media-workspace/*`. The
-alias does not call `/api/v1/audio-hub/*` because that authority does not
-exist. After a create or duplicate, the portal keeps the source route family:
+Collection reads and authoring writes remain under `/api/v1/media-workspace/*`.
+The alias does not call `/api/v1/audio-hub/*` because that authority does not
+exist. A separate, opt-in `/api/v1/audio-change-requests/*` flow may appear
+only on an active Hub collection detail for a pre-existing attached Asset Vault
+audio item; it is not an Audio Hub namespace and follows the explicit
+`AUDIO_CHANGE_REQUEST_CONTRACT.md` draft/estimate/confirm boundary. After a
+create or duplicate, the portal keeps the source route family:
 an Audio Hub create opens `/audio-hub/{collection_id}`, while a Library create
 opens `/media-workspace/{collection_id}`.
 
@@ -48,6 +52,11 @@ The board renders three auditable lanes:
    existing Media Workspace namespace and returns no approval, source-audio
    inspection, provider/catalog/player/preview/job/payment/output/delivery or
    Telegram result.
+5. **Audio Change Request** — an opt-in, explicit local transform request for
+   a currently attached private audio item. It never creates music/SFX,
+   contacts a provider/Bot, uses wallet/Xu or PayOS, or treats a plan as a
+   quote. Only a confirmed request may link the existing verified local audio
+   executor; see `AUDIO_CHANGE_REQUEST_CONTRACT.md`.
 
 ## Security and lifecycle guarantees
 
@@ -62,8 +71,11 @@ The board renders three auditable lanes:
   public offline fallback or a shell-cache entry, so a prior account's brief,
   reference or revision cannot reappear after sign-out/account switching.
 - The board never claims that music/SFX was generated, previewed, delivered,
-  rendered, charged or completed. Provider, Bot, Key4U, Suno, PayOS, wallet/Xu
-  and job state stay outside this module.
+  charged or completed. Provider, Bot, Key4U, Suno, PayOS, wallet/Xu and job
+  state stay outside this module. A confirmed Audio Change Request is limited
+  to a pre-existing private audio inspection/conversion/normalization and may
+  show `completed` only after the existing executor has freshly verified its
+  output; it is not music generation or an Audio Hub provider runtime.
 - The review pack is a transient read-like POST with CSRF and exact revision
   checking. It records no collection mutation, history, idempotency/event/audit
   receipt or new Audio Hub data authority; it exposes counts/checks only and

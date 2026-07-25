@@ -352,6 +352,10 @@
   let mediaWorkspaceListHydrationEpoch = 0;
   let mediaWorkspaceAudioHydrationEpoch = 0;
   let mediaWorkspaceDetailHydrationEpoch = 0;
+  // Audio Change Requests are a separate signed-tab projection for the Audio
+  // Hub detail route. A late request can never replace a newer collection,
+  // account or visual route with stale private state.
+  let audioChangeRequestHydrationEpoch = 0;
   // The Music/SFX Library has a distinct signed read. A late list response
   // must never replace a newer filter, route or account session with another
   // user's private collection metadata.
@@ -11754,6 +11758,7 @@
     ++mediaWorkspaceSessionEpoch;
     ++musicLibraryHydrationEpoch;
     ++mediaWorkspaceReviewPackRequestEpoch;
+    ++audioChangeRequestHydrationEpoch;
     ++musicDirectionPresetComposeRequestEpoch;
     musicDirectionPresetComposePendingRequestEpoch = 0;
     ++sfxCueSheetComposeRequestEpoch;
@@ -12051,6 +12056,10 @@
     // wallet/Xu, PayOS, canonical jobs, a public media URL or a browser-owned
     // audio processor. Asset Vault, topology and runtime checks stay server-side.
     const audioAssetOperationsEnabled = Boolean(status.flags && status.flags.audio_asset_operations_enabled === true);
+    // This false-by-default flag adds only a Web-native confirmation layer on
+    // top of an existing private audio executor. It never grants a Bot,
+    // provider, wallet/Xu, PayOS, price or payment capability to the Portal.
+    const audioChangeRequestsEnabled = Boolean(status.flags && status.flags.audio_change_requests_enabled === true);
     // Video Finishing is a dedicated bounded MP4 transform.  The presentation
     // gate never grants generic Video Studio, provider, Bot, worker, wallet,
     // PayOS, browser FFmpeg, upload URL or public-preview authority.
@@ -12538,6 +12547,11 @@
       "audio-asset-operation-refresh": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-download": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
+      "audio-change-request-view": Boolean(account && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
+      "audio-change-request-refresh": Boolean(account && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
+      "audio-change-request-draft": Boolean(account && me.csrf_token && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
+      "audio-change-request-estimate": Boolean(account && me.csrf_token && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
+      "audio-change-request-confirm": Boolean(account && me.csrf_token && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
       "video-transform-operation-view": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
       "video-transform-operation-refresh": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
       "video-transform-operation-estimate": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
@@ -12815,6 +12829,7 @@
     ++mediaWorkspaceAudioHydrationEpoch;
     ++mediaWorkspaceDetailHydrationEpoch;
     ++mediaWorkspaceReviewPackRequestEpoch;
+    ++audioChangeRequestHydrationEpoch;
     ++voiceStudioSessionEpoch;
     ++voiceStudioListHydrationEpoch;
     ++voiceStudioDetailHydrationEpoch;
@@ -13063,6 +13078,7 @@
       subtitleFormatToolsEnabled,
       subtitleAssetOperationsEnabled,
       audioAssetOperationsEnabled,
+      audioChangeRequestsEnabled,
       videoTransformOperationsEnabled,
       frameVideoOperationsEnabled,
       videoPosterEnabled,
@@ -13132,6 +13148,8 @@
       mediaCollectionDetail: {},
       mediaComposer: {},
       audioHubReviewPack: {},
+      audioChangeRequests: [],
+      audioChangeRequestReadState: account && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled ? "loading" : "guarded",
       mediaAudioAssets: [],
       mediaAudioAssetFilter: { q: "" },
       mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
@@ -13914,7 +13932,7 @@
       // Never retain a previous account's audio metadata or fall back to the
       // Bot music bridge when the dedicated Web feature/session is guarded.
       merge({
-        mediaWorkspaceSummary: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, mediaAudioAssets: [],
+        mediaWorkspaceSummary: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, audioChangeRequests: [], audioChangeRequestReadState: "guarded", mediaAudioAssets: [],
         mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceEvents: [], mediaWorkspacePolicy: {}, mediaWorkspaceFilter: { q: "", tag: "", prompt_mode: "", state: "all" },
         mediaWorkspaceListing: mediaWorkspaceListingProjection({ q: "", tag: "", prompt_mode: "", state: "all" }, 0, {}, 0), mediaWorkspaceReadState: "guarded",
@@ -15359,6 +15377,8 @@
         mediaCollectionDetail: {},
         mediaComposer: {},
         audioHubReviewPack: {},
+        audioChangeRequests: [],
+        audioChangeRequestReadState: "guarded",
         mediaAudioAssets: [],
         mediaAudioAssetFilter: { q: "" },
         mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
@@ -15373,7 +15393,7 @@
       // survive a signed read failure or a changed account session.
       const emptyListing = mediaWorkspaceListingProjection(filter, offset, {}, 0);
       merge({
-        mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {},
+        mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, audioChangeRequests: [], audioChangeRequestReadState: "guarded",
         mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspaceEvents: [], mediaWorkspaceFilter: filter, mediaWorkspaceListing: emptyListing, mediaWorkspaceReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/media-workspace": "guarded", "/media-workspace/new": "guarded", "/audio-hub": "guarded", "/audio-hub/new": "guarded", [path]: "guarded" }
@@ -15414,11 +15434,90 @@
     }
   }
 
+  const AUDIO_CHANGE_REQUEST_OPERATIONS = new Set(["inspect", "convert_mp3", "convert_m4a", "normalize"]);
+  const AUDIO_CHANGE_REQUEST_STATES = new Set(["draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+
+  function audioChangeRequestItem(value, expectedCollectionId) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = validMediaCollectionId(source.id) ? String(source.id) : "";
+    const collectionId = validMediaCollectionId(source.collection_id) ? String(source.collection_id) : "";
+    const itemId = validMediaCollectionId(source.media_item_id) ? String(source.media_item_id) : "";
+    const requestedOperation = String(source.requested_operation || (typeof source.operation === "string" ? source.operation : "")).trim();
+    const state = String(source.state || source.status || "").trim();
+    const revision = validMediaRevision(source.revision);
+    const collectionRevision = validMediaRevision(source.collection_revision);
+    const nested = source.operation && typeof source.operation === "object" && !Array.isArray(source.operation)
+      ? audioAssetOperationItem(source.operation) : null;
+    if (!id || !collectionId || collectionId !== String(expectedCollectionId || "") || !itemId
+      || !AUDIO_CHANGE_REQUEST_OPERATIONS.has(requestedOperation) || !AUDIO_CHANGE_REQUEST_STATES.has(state)
+      || !revision || !collectionRevision) return null;
+    if (nested && ((requestedOperation === "inspect" && nested.kind !== "audio_inspect")
+      || (requestedOperation === "convert_mp3" && (nested.kind !== "audio_convert" || nested.target_format !== "mp3"))
+      || (requestedOperation === "convert_m4a" && (nested.kind !== "audio_convert" || nested.target_format !== "m4a"))
+      || (requestedOperation === "normalize" && (nested.kind !== "audio_normalize" || nested.target_format !== "m4a")))) return null;
+    return {
+      id,
+      collection_id: collectionId,
+      media_item_id: itemId,
+      requested_operation: requestedOperation,
+      operation: nested || requestedOperation,
+      state,
+      status: state,
+      revision,
+      collection_revision: collectionRevision,
+      requires_confirmation: source.requires_confirmation === true,
+    };
+  }
+
+  function audioChangeRequestPathIsCurrent(route, collectionId) {
+    const detail = base().mediaCollectionDetail && typeof base().mediaCollectionDetail === "object" ? base().mediaCollectionDetail : {};
+    const collection = detail.collection && typeof detail.collection === "object" ? detail.collection : {};
+    return mediaWorkspaceVisualRoot(route) === "/audio-hub"
+      && route === mediaWorkspaceCollectionRoute(collectionId, route)
+      && currentPortalPath() === route
+      && String(collection.id || "") === String(collectionId || "")
+      && base().audioChangeRequestsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && Boolean(base().capabilities && base().capabilities["audio-change-request-view"] === true);
+  }
+
+  function clearAudioChangeRequestsProjection(readState) {
+    const state = ["loading", "ready", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    merge({ audioChangeRequests: [], audioChangeRequestReadState: state });
+  }
+
+  async function hydrateAudioChangeRequests(collectionId, visualRoute) {
+    const route = mediaWorkspaceCollectionRoute(collectionId, visualRoute || currentPortalPath());
+    const expectedCollectionId = validMediaCollectionId(collectionId) ? String(collectionId) : "";
+    const requestEpoch = ++audioChangeRequestHydrationEpoch;
+    const sessionEpoch = mediaWorkspaceSessionEpoch;
+    if (!expectedCollectionId || !audioChangeRequestPathIsCurrent(route, expectedCollectionId)) {
+      if (mediaWorkspaceVisualRoot(route) === "/audio-hub") clearAudioChangeRequestsProjection("guarded");
+      return null;
+    }
+    merge({ audioChangeRequests: [], audioChangeRequestReadState: "loading" });
+    try {
+      const result = await api(`/audio-change-requests/drafts?collection_id=${encodeURIComponent(expectedCollectionId)}&limit=24`, { cache: "no-store" });
+      if (requestEpoch !== audioChangeRequestHydrationEpoch || sessionEpoch !== mediaWorkspaceSessionEpoch || !audioChangeRequestPathIsCurrent(route, expectedCollectionId)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const raw = Array.isArray(data.requests) ? data.requests : [];
+      const requests = raw.map((item) => audioChangeRequestItem(item, expectedCollectionId)).filter(Boolean).slice(0, 24);
+      if (raw.length !== requests.length) throw new Error("Máy chủ chưa trả Audio Change Request owner-scoped hợp lệ.");
+      merge({ audioChangeRequests: requests, audioChangeRequestReadState: "ready" });
+      return requests;
+    } catch (_) {
+      if (requestEpoch !== audioChangeRequestHydrationEpoch || sessionEpoch !== mediaWorkspaceSessionEpoch || !audioChangeRequestPathIsCurrent(route, expectedCollectionId)) return null;
+      clearAudioChangeRequestsProjection("failed");
+      return null;
+    }
+  }
+
   async function hydrateMediaCollection(collectionId, visualRoute) {
     if (!validMediaCollectionId(collectionId)) throw new Error("Mã Audio Collection không hợp lệ.");
     const route = mediaWorkspaceCollectionRoute(collectionId, visualRoute || currentPortalPath());
     const requestEpoch = ++mediaWorkspaceDetailHydrationEpoch;
     ++mediaWorkspaceReviewPackRequestEpoch;
+    ++audioChangeRequestHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (currentPortalPath() !== route) return null;
     const priorAudioListing = base().mediaAudioAssetListing && typeof base().mediaAudioAssetListing === "object"
@@ -15457,9 +15556,13 @@
         mediaAudioAssets: audioAssets, mediaAudioAssetFilter: audioFilter, mediaAudioAssetListing: audioListing,
         mediaComposer: {},
         audioHubReviewPack: {},
+        audioChangeRequests: [],
+        audioChangeRequestReadState: mediaWorkspaceVisualRoot(route) === "/audio-hub" && base().audioChangeRequestsEnabled === true ? "loading" : "guarded",
         mediaWorkspaceReadState: "ready",
         pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
       });
+      if (mediaWorkspaceVisualRoot(route) === "/audio-hub") await hydrateAudioChangeRequests(collectionId, route);
+      else clearAudioChangeRequestsProjection("guarded");
       return { collection, versions, items, audioAssets };
     } catch (_) {
       if (!mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceDetailHydrationEpoch, sessionEpoch, route)) return null;
@@ -15467,7 +15570,7 @@
         // Fail closed: a failed detail request must not leave a previous
         // account's collection list, summary, or event projection visible.
         mediaWorkspaceSummary: {}, mediaCollections: [], mediaWorkspaceEvents: [],
-        mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
+        mediaCollectionDetail: {}, mediaComposer: {}, audioHubReviewPack: {}, audioChangeRequests: [], audioChangeRequestReadState: "guarded", mediaAudioAssets: [], mediaAudioAssetFilter: { q: "" }, mediaAudioAssetListing: mediaAudioAssetListingProjection({ q: "" }, 0, {}, 0),
         mediaWorkspacePolicy: {}, mediaWorkspaceReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
@@ -25495,6 +25598,101 @@
           : musicLibraryFilterPayload({ q: fields.q, role }, role);
         await hydrateMusicLibrary(filter, 0);
         toast(filter.q ? "Đã áp dụng bộ lọc metadata trong thư viện." : "Đã hiển thị toàn bộ metadata Music/SFX active.");
+        return;
+      }
+      if (["audio-change-request-refresh", "audio-change-request-draft", "audio-change-request-estimate", "audio-change-request-confirm"].includes(action)) {
+        const collectionId = mediaWorkspaceCollectionIdFromPath(route);
+        const currentDetail = base().mediaCollectionDetail && typeof base().mediaCollectionDetail === "object" ? base().mediaCollectionDetail : {};
+        const collection = currentDetail.collection && typeof currentDetail.collection === "object" ? currentDetail.collection : {};
+        const items = Array.isArray(currentDetail.items) ? currentDetail.items : [];
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (!collectionId || !audioChangeRequestPathIsCurrent(route, collectionId)
+          || String(collection.id || "") !== collectionId || String(collection.state || "") !== "active") {
+          throw new Error("Audio Change Request chỉ có thể thao tác trong Audio Hub collection đang mở và active.");
+        }
+        if (action === "audio-change-request-refresh") {
+          if (capabilities["audio-change-request-refresh"] !== true) throw new Error("Audio Change Request chưa sẵn sàng cho signed Web session này.");
+          setActionBusy(action, route, true);
+          try {
+            await hydrateAudioChangeRequests(collectionId, route);
+            if (base().audioChangeRequestReadState !== "ready") throw new Error("Không thể tải Audio Change Request owner-scoped an toàn.");
+            toast("Đã làm mới Audio Change Request của collection hiện tại.");
+          } finally {
+            setActionBusy(action, route, false);
+          }
+          return;
+        }
+        if (action === "audio-change-request-draft") {
+          if (capabilities["audio-change-request-draft"] !== true) throw new Error("Phiên signed Web chưa sẵn sàng để lưu Audio Change Request.");
+          const itemId = String(fields.media_item_id || "").trim();
+          const operation = String(fields.operation || "").trim();
+          const item = items.find((candidate) => candidate && String(candidate.id || "") === itemId);
+          if (!validMediaCollectionId(itemId) || !item || !validVaultAssetId(item.asset_id) || !AUDIO_CHANGE_REQUEST_OPERATIONS.has(operation)) {
+            throw new Error("Hãy chọn một audio reference active trong collection và loại thay đổi hợp lệ.");
+          }
+          const payload = { collection_id: collectionId, item_id: itemId, operation };
+          const scope = `audio-change-request:${collectionId}:${itemId}:${operation}:draft`;
+          const submission = acquireSubmission(scope, JSON.stringify(payload));
+          if (!submission) return;
+          let acknowledged = false;
+          setActionBusy(action, route, true);
+          try {
+            const result = await api("/audio-change-requests/drafts", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+            });
+            acknowledged = true;
+            await hydrateMediaCollection(collectionId, route);
+            toast(result.message || "Đã lưu Audio Change Request.");
+          } catch (error) {
+            acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+            if (acknowledged) await hydrateMediaCollection(collectionId, route);
+            throw error;
+          } finally {
+            releaseSubmission(submission);
+            if (acknowledged) discardSubmission(scope, submission);
+            setActionBusy(action, route, false);
+          }
+          return;
+        }
+        const requestId = String(fields.audio_change_request_id || "").trim();
+        const currentRequest = (Array.isArray(base().audioChangeRequests) ? base().audioChangeRequests : [])
+          .find((candidate) => candidate && String(candidate.id || "") === requestId && String(candidate.collection_id || "") === collectionId) || null;
+        if (!validMediaCollectionId(requestId) || !currentRequest || !validMediaRevision(currentRequest.revision)) {
+          throw new Error("Audio Change Request chưa được nạp an toàn. Hãy làm mới trước khi tiếp tục.");
+        }
+        if (action === "audio-change-request-estimate" && capabilities["audio-change-request-estimate"] !== true) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để ước tính Audio Change Request.");
+        }
+        if (action === "audio-change-request-confirm" && capabilities["audio-change-request-confirm"] !== true) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để xác nhận Audio Change Request.");
+        }
+        const isConfirm = action === "audio-change-request-confirm";
+        const payload = isConfirm
+          ? { expected_revision: currentRequest.revision, confirm: true }
+          : { expected_revision: currentRequest.revision };
+        const scope = `audio-change-request:${requestId}:${isConfirm ? "confirm" : "estimate"}:${currentRequest.revision}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/audio-change-requests/drafts/${encodeURIComponent(requestId)}/${isConfirm ? "confirm" : "estimate"}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateMediaCollection(collectionId, route);
+          toast(result.message || (isConfirm ? "Đã gửi xác nhận Audio Change Request." : "Đã kiểm tra Audio Change Request."));
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await hydrateMediaCollection(collectionId, route);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "media-workspace-filter" || action === "media-workspace-filter-clear") {

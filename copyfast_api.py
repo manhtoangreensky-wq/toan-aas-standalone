@@ -631,6 +631,11 @@ def _flags() -> dict[str, bool]:
         # default and never grants Bot/Core Bridge, provider, TTS/ASR/dubbing,
         # wallet/Xu or PayOS authority.
         "audio_asset_operations_enabled": enabled("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", False),
+        # Audio Change Requests add an explicit Web-owned confirmation layer
+        # for a collection-attached private audio asset.  This false-by-default
+        # flag does not enable an audio provider, Bot/Core Bridge, canonical
+        # job, wallet/Xu, PayOS, quote price or payment capability.
+        "audio_change_requests_enabled": enabled("WEBAPP_AUDIO_CHANGE_REQUESTS_ENABLED", False),
         # Image Creative Studio is authoring-only: it stores directions and
         # safe Asset Vault UUID references, never an image operation or
         # external execution capability.
