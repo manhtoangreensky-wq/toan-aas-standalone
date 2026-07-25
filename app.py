@@ -30,6 +30,7 @@ import copyfast_admin_erp_navigation
 import copyfast_admin_security_posture
 import copyfast_analytics_workspace
 import copyfast_audio_asset_operations
+import copyfast_audio_change_requests
 import copyfast_autopilot
 import copyfast_assets
 import copyfast_auth
@@ -551,6 +552,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/document-operations/")
                 or path.startswith("/api/v1/subtitle-asset-operations/")
                 or path.startswith("/api/v1/audio-asset-operations/")
+                or path.startswith("/api/v1/audio-change-requests/")
                 or path.startswith("/api/v1/video-operations/")
                 or path == "/api/v1/frame-video-operations"
                 or path.startswith("/api/v1/frame-video-operations/")
@@ -617,6 +619,8 @@ class PromptLibraryBodyLimitMiddleware:
         if path.startswith("/api/v1/subtitle-asset-operations/"):
             return self.subtitle_asset_operation_max_bytes
         if path.startswith("/api/v1/audio-asset-operations/"):
+            return self.audio_asset_operation_max_bytes
+        if path.startswith("/api/v1/audio-change-requests/"):
             return self.audio_asset_operation_max_bytes
         if path.startswith("/api/v1/video-operations/"):
             return self.video_operation_max_bytes
@@ -699,6 +703,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_document_operation = path.startswith("/api/v1/document-operations/")
         is_subtitle_asset_operation = path.startswith("/api/v1/subtitle-asset-operations/")
         is_audio_asset_operation = path.startswith("/api/v1/audio-asset-operations/")
+        is_audio_change_request = path.startswith("/api/v1/audio-change-requests/")
         is_video_operation = path.startswith("/api/v1/video-operations/")
         is_frame_video_operation = path == "/api/v1/frame-video-operations" or path.startswith("/api/v1/frame-video-operations/")
         is_video_transform_operation = path == "/api/v1/video-transform-operations" or path.startswith("/api/v1/video-transform-operations/")
@@ -832,6 +837,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_asset_operation
                     else "Dữ liệu Audio Asset Operations vượt giới hạn kích thước an toàn."
                     if is_audio_asset_operation
+                    else "Dữ liệu Audio Change Request vượt giới hạn kích thước an toàn."
+                    if is_audio_change_request
                     else "Dữ liệu Video Poster vượt giới hạn kích thước an toàn."
                     if is_video_operation
                     else "Dữ liệu Frame Video vượt giới hạn kích thước an toàn."
@@ -913,6 +920,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_asset_operation
                     else "WEB_AUDIO_ASSET_OPERATION_BODY_TOO_LARGE"
                     if is_audio_asset_operation
+                    else "WEB_AUDIO_CHANGE_REQUEST_BODY_TOO_LARGE"
+                    if is_audio_change_request
                     else "WEB_VIDEO_OPERATION_BODY_TOO_LARGE"
                     if is_video_operation
                     else "WEB_FRAME_VIDEO_OPERATION_BODY_TOO_LARGE"
@@ -1287,6 +1296,18 @@ async def security_headers(request: Request, call_next):
         )
         and not audio_asset_operation_download
     )
+    # Audio Change Requests are a separate draft/estimate/confirm boundary
+    # over a collection-attached private audio item. Keep their read/write
+    # buckets distinct from direct transforms before CSRF, owner/revision or
+    # runtime work; this does not grant Bot/provider/payment authority.
+    audio_change_request_write = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/audio-change-requests/")
+    )
+    audio_change_request_read = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/audio-change-requests/")
+    )
     # Video Poster uses a fixed local FFmpeg invocation after it has verified
     # a private Asset Vault source. Keep its creation, status views and private
     # delivery in distinct family buckets before CSRF/ownership/process work.
@@ -1621,6 +1642,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if audio_asset_operation_read:
         rate_limit = 120
+    if audio_change_request_write:
+        rate_limit = 20
+    if audio_change_request_read:
+        rate_limit = 120
     if video_operation_run:
         # FFmpeg work is additionally serialized and source/output validated;
         # this pre-DB limit blocks repeat browser execution attempts before an
@@ -1782,6 +1807,8 @@ async def security_headers(request: Request, call_next):
             else "audio-asset-operation-write" if audio_asset_operation_write
             else "audio-asset-operation-download" if audio_asset_operation_download
             else "audio-asset-operation-read" if audio_asset_operation_read
+            else "audio-change-request-write" if audio_change_request_write
+            else "audio-change-request-read" if audio_change_request_read
             else "prompt-library-read" if prompt_library_read
             else "media-workspace-write" if media_workspace_write
             else "media-workspace-preview" if media_workspace_preview
@@ -2354,6 +2381,7 @@ app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_subtitle_asset_operations.router)
 app.include_router(copyfast_audio_asset_operations.router)
+app.include_router(copyfast_audio_change_requests.router)
 app.include_router(copyfast_video_operations.router)
 app.include_router(copyfast_frame_video_operations.router)
 app.include_router(copyfast_video_transform_operations.router)

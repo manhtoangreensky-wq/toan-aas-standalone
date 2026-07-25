@@ -132,6 +132,18 @@ def audio_asset_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def audio_change_requests_enabled() -> bool:
+    """Whether the Audio Hub draft/estimate/confirm layer is deliberately enabled.
+
+    This switch only gates a Web-native confirmation workflow for the existing
+    private Audio Asset Operations executor.  It never enables Bot/core-bridge
+    behavior, provider music/voice calls, canonical jobs, wallet/Xu, PayOS or
+    payment authority.
+    """
+
+    return os.environ.get("WEBAPP_AUDIO_CHANGE_REQUESTS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_to_pdf_enabled() -> bool:
     """Whether the Pillow-backed Image-to-PDF decoder is deliberately enabled.
 
@@ -4205,6 +4217,47 @@ def ensure_copyfast_schema() -> None:
         if "sequence" not in audio_asset_event_columns:
             conn.execute("ALTER TABLE web_audio_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
 
+        # Audio Change Requests bind a collection-attached Asset Vault audio
+        # item to an explicit Web-native draft -> estimate -> confirm flow.
+        # Snapshots retain only immutable identifiers/digests/revisions needed
+        # for ownership and race checks.  ``media_item_id`` deliberately is
+        # not a foreign key: users may detach a mutable collection item after
+        # drafting a request.  The preserved snapshot then fail-closes every
+        # later lifecycle transition instead of making normal detach fail.
+        # The request never becomes a second audio store, provider request,
+        # Bot state, wallet/Xu ledger, PayOS record or payment/job authority.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_audio_change_requests (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                collection_id TEXT NOT NULL,
+                media_item_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                operation TEXT NOT NULL,
+                target_format TEXT,
+                normalization_profile TEXT,
+                state TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                collection_revision INTEGER NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_lifecycle_revision INTEGER NOT NULL,
+                source_format TEXT NOT NULL,
+                operation_id TEXT UNIQUE,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                estimated_at TEXT,
+                confirmed_at TEXT,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(collection_id) REFERENCES web_media_collections(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(operation_id) REFERENCES web_audio_asset_operations(id)
+            )
+            """
+        )
+
         # Storyboard Grid keeps its bounded scene cuts in a purpose-specific
         # table instead of overloading Web image transforms.  A completed
         # operation delivers one verified private JPEG-scene ZIP/manifest;
@@ -5451,6 +5504,12 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operation_events_operation_sequence ON web_audio_asset_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_change_requests_account_collection_updated ON web_audio_change_requests(account_id, collection_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_change_requests_account_state_updated ON web_audio_change_requests(account_id, state, updated_at DESC, id DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_video_operations_account_updated ON web_video_operations(account_id, updated_at DESC, id DESC)"

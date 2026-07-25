@@ -11240,6 +11240,157 @@
     return `<section class="portal-card portal-card-pad portal-audio-hub-review-pack" data-audio-hub-review-pack-status data-media-collection-id="${safeText(String(collection.id || ""))}" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"><div class="portal-card-header"><div><span class="portal-section-kicker">Collection review · session only</span><h2 class="portal-card-title">Kiểm tra readiness trước khi chuyển sang workflow chuyên dụng</h2><p class="portal-card-subtitle">Review tổng hợp brief, reference và metadata của collection đã qua owner check. Nó không nghe audio, xác minh license, tạo approval, player, preview, output, job hoặc delivery.</p></div>${badge(receipt ? "read_only" : canCompose ? "ready" : "guarded")}</div>${result}<div class="portal-form-footer"><span class="portal-form-note">Không có ghi nhận review nghiệp vụ, idempotency, event hay audit record cho thao tác này. Mọi quyền và release vẫn cần người chịu trách nhiệm review riêng.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="audio-hub-review-pack-compose" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id || ""))}" data-media-collection-revision="${safeText(String(collection.revision || ""))}"${canCompose ? "" : " disabled"}>Lập gói review</button></div></section>`;
   }
 
+  const AUDIO_CHANGE_REQUEST_OPERATION_LABELS = Object.freeze({
+    inspect: "Kiểm tra metadata",
+    convert_mp3: "Tạo bản sao MP3",
+    convert_m4a: "Tạo bản sao M4A",
+    normalize: "Chuẩn hóa âm lượng → M4A"
+  });
+
+  function audioChangeRequestId(value) {
+    const id = String(value || "").trim();
+    return /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(id) ? id : "";
+  }
+
+  function audioChangeRequestOperationCode(value) {
+    if (typeof value === "string" && Object.prototype.hasOwnProperty.call(AUDIO_CHANGE_REQUEST_OPERATION_LABELS, value)) return value;
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const direct = [source.requested_operation, source.operation, source.operation_code]
+      .map((item) => String(item || "").trim())
+      .find((item) => Object.prototype.hasOwnProperty.call(AUDIO_CHANGE_REQUEST_OPERATION_LABELS, item));
+    if (direct) return direct;
+    const kind = String(source.kind || "").trim().toLowerCase();
+    const target = String(source.target_format || "").trim().toLowerCase();
+    if (kind === "audio_inspect") return "inspect";
+    if (kind === "audio_normalize") return "normalize";
+    if (kind === "audio_convert" && target === "mp3") return "convert_mp3";
+    if (kind === "audio_convert" && target === "m4a") return "convert_m4a";
+    return "";
+  }
+
+  function audioChangeRequestVerifiedCompletion(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const operation = source.operation && typeof source.operation === "object" && !Array.isArray(source.operation) ? source.operation : null;
+    if (!operation || String(operation.state || operation.status || "").trim().toLowerCase() !== "completed") return null;
+    const operationCode = audioChangeRequestOperationCode(operation);
+    if (operationCode === "inspect" && operation.output_available === false) {
+      return Object.freeze({ key: "completed", label: "Đã kiểm định", note: "Metadata audio đã được xác minh; thao tác này không tạo file mới.", badgeState: "completed" });
+    }
+    if (["convert_mp3", "convert_m4a", "normalize"].includes(operationCode) && operation.output_available === true) {
+      return Object.freeze({ key: "completed", label: "Thay đổi đã xác minh", note: "Bản audio private đã được xác minh trước khi trạng thái này được hiển thị.", badgeState: "completed" });
+    }
+    return null;
+  }
+
+  function audioChangeRequestStage(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const state = String(source.status || source.state || "").trim().toLowerCase();
+    if (state === "draft") return Object.freeze({ key: "draft", label: "Bản nháp", note: "Chờ yêu cầu ước tính.", badgeState: "draft" });
+    if (["estimate", "estimated", "estimate_ready"].includes(state)) return Object.freeze({ key: "estimate", label: "Ước tính đã sẵn sàng", note: "Hãy kiểm tra lựa chọn trước khi gửi xác nhận.", badgeState: "review" });
+    if (["awaiting_confirmation", "awaiting_confirm"].includes(state)) return Object.freeze({ key: "awaiting_confirmation", label: "Chờ xác nhận", note: "Request đã giữ nguyên lựa chọn để bạn xác nhận rõ ràng.", badgeState: "awaiting_confirm" });
+    if (["linked_operation_guarded", "linked_guarded"].includes(state)) return Object.freeze({ key: "linked_operation_guarded", label: "Thao tác liên kết · guarded", note: "Trạng thái liên kết đang được bảo vệ; màn này không tự bắt đầu xử lý.", badgeState: "guarded" });
+    if (state === "completed") {
+      return audioChangeRequestVerifiedCompletion(source)
+        || Object.freeze({ key: "linked_operation_guarded", label: "Thao tác liên kết · guarded", note: "Kết quả chưa đủ điều kiện xác minh để hiển thị là hoàn tất.", badgeState: "guarded" });
+    }
+    return Object.freeze({ key: "guarded", label: "Đang bảo vệ", note: "Không thể suy đoán trạng thái request từ dữ liệu hiện có.", badgeState: "guarded" });
+  }
+
+  function audioChangeRequestAssetLabel(item) {
+    const source = item && typeof item === "object" ? item : {};
+    const asset = source.asset && typeof source.asset === "object" ? source.asset : {};
+    const title = String(source.title_override || asset.display_name || asset.original_filename || "Audio reference").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const format = String(asset.extension || "AUDIO").replace(".", "").trim().toUpperCase().slice(0, 12);
+    return {
+      title: title || "Audio reference",
+      format: format || "AUDIO",
+      role: mediaRoleLabel(source.role)
+    };
+  }
+
+  function renderAudioChangeRequests(collection, items, context, route) {
+    function audioChangeRequestSourceIsActive(item) {
+      const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const asset = source.asset && typeof source.asset === "object" && !Array.isArray(source.asset) ? source.asset : {};
+      return validMediaCollectionId(source.id)
+        && String(asset.state || "") === "active"
+        && String(source.delivery || "") === "asset_vault_attachment_only";
+    }
+
+    const collectionId = validMediaCollectionId(collection && collection.id) ? String(collection.id) : "";
+    if (!collectionId) return "";
+    const collectionActive = String(collection && collection.state || "").trim() === "active";
+    const revision = Number.isInteger(Number(collection && collection.revision)) && Number(collection.revision) > 0
+      ? String(Number(collection.revision)) : "";
+    const capabilities = context && context.capabilities && typeof context.capabilities === "object" ? context.capabilities : {};
+    const rawReadState = String(context && context.audioChangeRequestReadState || "").trim();
+    const readState = ["loading", "ready", "failed", "guarded"].includes(rawReadState) ? rawReadState : "guarded";
+    const canView = capabilities["audio-change-request-view"] === true;
+    const ready = collectionActive && canView && readState === "ready";
+    const canDraft = ready && capabilities["audio-change-request-draft"] === true;
+    const canEstimate = ready && capabilities["audio-change-request-estimate"] === true;
+    const canConfirm = ready && capabilities["audio-change-request-confirm"] === true;
+    const allSourceItems = (Array.isArray(items) ? items : []).filter((item) => item && validMediaCollectionId(item.id)).slice(0, 250);
+    const sourceItems = allSourceItems.filter(audioChangeRequestSourceIsActive);
+    const allItemsById = new Map(allSourceItems.map((item) => [String(item.id), item]));
+    const sourceById = new Map(sourceItems.map((item) => [String(item.id), item]));
+    const sources = sourceItems.map((item) => ({ id: String(item.id), ...audioChangeRequestAssetLabel(item) }));
+    const requests = (Array.isArray(context && context.audioChangeRequests) ? context.audioChangeRequests : [])
+      .filter((request) => {
+        const source = request && typeof request === "object" ? request : {};
+        const requestId = audioChangeRequestId(source.id || source.request_id);
+        const itemId = validMediaCollectionId(source.media_item_id) ? String(source.media_item_id) : "";
+        const requestCollectionId = String(source.media_collection_id || source.collection_id || "").trim();
+        // A detached item is still a valid historical request record. Keep it
+        // visible as guarded rather than silently dropping a request that can
+        // no longer be advanced. A verified completed operation remains
+        // visible because its sealed private output is independent of the
+        // collection attachment after reservation.
+        return Boolean(requestId && itemId && (!requestCollectionId || requestCollectionId === collectionId));
+      }).slice(0, 24);
+    const readableState = !collectionActive || !canView ? "guarded" : readState === "ready" ? "read_only" : readState === "loading" ? "processing" : readState === "failed" ? "error" : "guarded";
+    const sourceHint = !canView
+      ? "Audio Change Request đang được bảo vệ cho phiên hiện tại."
+      : !collectionActive
+        ? "Collection đã archive; lịch sử chỉ đọc và không thể lập, ước tính hoặc xác nhận request mới."
+      : readState === "loading"
+        ? "Đang đọc request private của collection này."
+        : readState === "failed"
+          ? "Không thể đọc request private an toàn. Hãy làm mới trước khi tạo bản nháp mới."
+          : !sources.length
+            ? "Collection chưa có audio reference phù hợp để lập request."
+            : "Chọn một audio reference trong collection rồi lưu bản nháp thay đổi.";
+    const draftDisabled = canDraft && sources.length ? "" : " disabled";
+    const sourceOptions = sources.map((item) => `<option value="${safeText(item.id)}" data-media-item-id="${safeText(item.id)}">${safeText(item.title)} · ${safeText(item.role)} · ${safeText(item.format)}</option>`).join("");
+    const draftFormId = `audio-change-request-draft-${collectionId}`;
+    const requestRows = requests.length ? requests.map((request) => {
+      const source = request && typeof request === "object" ? request : {};
+      const requestId = audioChangeRequestId(source.id || source.request_id);
+      const itemId = String(source.media_item_id || "");
+      const item = allItemsById.get(itemId);
+      const sourceAttached = sourceById.has(itemId);
+      const media = sourceAttached ? audioChangeRequestAssetLabel(item) : {
+        title: "Audio reference đã được gỡ khỏi collection",
+        format: "PRIVATE",
+        role: "Đã gỡ"
+      };
+      const operation = audioChangeRequestOperationCode(source.operation) || audioChangeRequestOperationCode(source.requested_operation);
+      const operationLabel = AUDIO_CHANGE_REQUEST_OPERATION_LABELS[operation] || "Thao tác được bảo vệ";
+      const stage = collectionActive && sourceAttached ? audioChangeRequestStage(source) : (audioChangeRequestVerifiedCompletion(source) || Object.freeze({ key: "linked_operation_guarded", label: collectionActive ? "Audio reference đã gỡ" : "Collection đã archive", note: collectionActive ? "Audio reference không còn trong collection; request không thể được tiếp tục từ board này." : "Collection đã archive; request không thể được tiếp tục từ board này.", badgeState: "guarded" }));
+      const estimateFormId = `audio-change-request-estimate-${requestId}`;
+      const confirmFormId = `audio-change-request-confirm-${requestId}`;
+      const estimateControl = stage.key === "draft"
+        ? `<form id="${safeText(estimateFormId)}" class="portal-audio-change-request-action" data-portal-form data-portal-no-transient data-portal-action="audio-change-request-estimate" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}" data-media-item-id="${safeText(itemId)}" data-audio-change-request-id="${safeText(requestId)}"><input type="hidden" name="audio_change_request_id" value="${safeText(requestId)}"><input type="hidden" name="media_item_id" value="${safeText(itemId)}"><input type="hidden" name="operation" value="${safeText(operation)}"><button class="portal-button portal-button--quiet" type="submit"${canEstimate ? "" : " disabled"}>Yêu cầu ước tính</button></form>`
+        : "";
+      const confirmControl = ["estimate", "awaiting_confirmation"].includes(stage.key)
+        ? `<form id="${safeText(confirmFormId)}" class="portal-audio-change-request-action" data-portal-form data-portal-no-transient data-portal-action="audio-change-request-confirm" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}" data-media-item-id="${safeText(itemId)}" data-audio-change-request-id="${safeText(requestId)}" data-portal-confirm="Xác nhận lựa chọn thay đổi audio này? Màn này chỉ gửi xác nhận cho request đang được bảo vệ."><input type="hidden" name="audio_change_request_id" value="${safeText(requestId)}"><input type="hidden" name="media_item_id" value="${safeText(itemId)}"><input type="hidden" name="operation" value="${safeText(operation)}"><button class="portal-button portal-button--primary" type="submit"${canConfirm ? "" : " disabled"}>Gửi xác nhận</button></form>`
+        : "";
+      const actionMarkup = estimateControl || confirmControl || `<span class="portal-audio-change-request-next">${safeText(stage.key === "linked_operation_guarded" ? "Liên kết đang được bảo vệ." : stage.note)}</span>`;
+      return `<li class="portal-audio-change-request-row" data-audio-change-request-id="${safeText(requestId)}" data-audio-change-request-state="${safeText(stage.key)}" data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}" data-media-item-id="${safeText(itemId)}"><div class="portal-audio-change-request-row-copy"><strong>${safeText(operationLabel)}</strong><span>${safeText(media.title)} · ${safeText(media.role)} · ${safeText(media.format)}</span><small>${safeText(stage.note)}</small></div><div class="portal-audio-change-request-row-status"><span class="portal-audio-change-request-stage" data-stage="${safeText(stage.key)}">${safeText(stage.label)}</span>${badge(stage.badgeState)}</div><div class="portal-audio-change-request-row-action">${actionMarkup}</div></li>`;
+    }).join("") : `<div class="portal-audio-change-request-empty"><strong>${readState === "loading" ? "Đang đọc yêu cầu thay đổi" : readState === "failed" ? "Chưa thể tải yêu cầu thay đổi" : "Chưa có yêu cầu thay đổi"}</strong><span>${readState === "loading" ? "Danh sách chỉ hiển thị sau khi dữ liệu collection được xác minh." : readState === "failed" ? "Làm mới để đọc lại trạng thái private; trang không dùng dữ liệu cũ thay thế." : "Lưu một bản nháp khi bạn đã chọn audio reference và loại thay đổi cần thực hiện."}</span></div>`;
+    return `<section class="portal-audio-change-requests" aria-labelledby="audio-change-request-title" data-audio-change-requests data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}"><div class="portal-audio-change-request-heading"><div><h3 id="audio-change-request-title">Yêu cầu thay đổi audio</h3><p>Lập request theo một audio reference đã có. Quy trình luôn dừng ở trạng thái được bảo vệ cho đến khi lớp liên kết xác nhận.</p></div><div class="portal-audio-change-request-heading-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-change-request-refresh" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}"${canView ? "" : " disabled"}>Làm mới</button>${badge(readableState)}</div></div><div class="portal-audio-change-request-stages" aria-label="Trình tự Audio Change Request"><div data-stage="draft"><strong>Bản nháp</strong><span>Lưu audio và lựa chọn thay đổi.</span></div><div data-stage="estimate"><strong>Ước tính</strong><span>Kiểm tra request trước khi xác nhận.</span></div><div data-stage="awaiting_confirmation"><strong>Chờ xác nhận</strong><span>Giữ lựa chọn rõ ràng cho bạn.</span></div><div data-stage="linked_operation_guarded"><strong>Liên kết · guarded</strong><span>Không tự bắt đầu xử lý từ board.</span></div></div><form id="${safeText(draftFormId)}" class="portal-form portal-audio-change-request-form" data-portal-form data-portal-no-transient data-portal-action="audio-change-request-draft" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(collectionId)}" data-media-collection-revision="${safeText(revision)}" data-media-item-id="" novalidate><div class="portal-fields"><label class="portal-field"><span>Audio reference <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="media_item_id" aria-describedby="audio-change-request-source-hint" required${draftDisabled}><option value="">Chọn audio trong collection</option>${sourceOptions}</select><small id="audio-change-request-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small></label><label class="portal-field"><span>Loại thay đổi <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="operation" required${draftDisabled}><option value="inspect">${safeText(AUDIO_CHANGE_REQUEST_OPERATION_LABELS.inspect)}</option><option value="convert_mp3">${safeText(AUDIO_CHANGE_REQUEST_OPERATION_LABELS.convert_mp3)}</option><option value="convert_m4a">${safeText(AUDIO_CHANGE_REQUEST_OPERATION_LABELS.convert_m4a)}</option><option value="normalize">${safeText(AUDIO_CHANGE_REQUEST_OPERATION_LABELS.normalize)}</option></select><small>Chỉ chọn loại thay đổi đã được liệt kê; không có trường cấu hình kỹ thuật trong board này.</small></label></div><div class="portal-form-footer"><span class="portal-form-note" data-audio-change-request-read-state role="status" aria-live="polite">Collection, revision và audio reference sẽ được kiểm tra lại ở từng bước.</span><button class="portal-button portal-button--primary" type="submit"${draftDisabled}>Lưu bản nháp</button></div></form><div class="portal-audio-change-request-history"><div class="portal-audio-change-request-history-heading"><h4>Request của collection</h4><span>Chỉ trạng thái đã được xác minh mới hiển thị ở đây.</span></div><ol>${requestRows}</ol></div></section>`;
+  }
+
   function renderAudioHubCollectionBoard(collection, items, context, route) {
     const roleLanes = MEDIA_ITEM_ROLES.map(([role, label], index) => {
       const allReferences = items.filter((item) => item && String(item.role || "reference") === role);
@@ -11250,7 +11401,8 @@
       });
       return `<article class="portal-audio-hub-collection-lane"><span class="portal-audio-hub-lane-index">0${index + 1}</span><div><strong>${safeText(label)}</strong><b>${safeText(String(allReferences.length))} reference${allReferences.length === 1 ? "" : "s"}</b>${labels.length ? `<ul>${labels.map((labelValue) => `<li>${safeText(labelValue)}</li>`).join("")}</ul>` : "<p>Chưa có reference ở lane này.</p>"}</div></article>`;
     }).join("");
-    return `<section class="portal-audio-hub-collection-board" aria-label="Audio Production Board của collection"><div class="portal-audio-hub-collection-heading"><div><span class="portal-section-kicker">Collection production board</span><h2>Kiểm tra assembly trước khi mở một công cụ chuyên dụng.</h2><p>Lane chỉ trình bày metadata reference đã nạp sau owner check. Không có player, waveform, raw URL, download state hay thao tác engine trong board này.</p></div><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(String(collection.id || ""))}">Mở Audio Library editor</a></div><div class="portal-audio-hub-collection-lanes">${roleLanes}</div>${renderAudioHubReviewPack(collection, context, route)}<div class="portal-form-footer"><span class="portal-form-note">Mỗi công cụ kế tiếp mở độc lập; không nhận collection, asset hoặc account data từ đường dẫn này.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/media-workspace/music-directions">Music Directions</a><a class="portal-button portal-button--quiet" href="/media-workspace/sfx-cue-sheet">SFX Cue Sheet</a><a class="portal-button portal-button--quiet" href="/audio/assets">Audio Operations</a></div></div></section>`;
+    const changeRequests = isAudioHubRoute(route) ? renderAudioChangeRequests(collection, items, context, route) : "";
+    return `<section class="portal-audio-hub-collection-board" aria-label="Audio Production Board của collection"><div class="portal-audio-hub-collection-heading"><div><span class="portal-section-kicker">Collection production board</span><h2>Kiểm tra assembly trước khi mở một công cụ chuyên dụng.</h2><p>Lane chỉ trình bày metadata reference đã nạp sau owner check. Không có player, waveform, raw URL, download state hay thao tác engine trong board này.</p></div><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(String(collection.id || ""))}">Mở Audio Library editor</a></div><div class="portal-audio-hub-collection-lanes">${roleLanes}</div>${changeRequests}${renderAudioHubReviewPack(collection, context, route)}<div class="portal-form-footer"><span class="portal-form-note">Mỗi công cụ kế tiếp mở độc lập; không nhận collection, asset hoặc account data từ đường dẫn này.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/media-workspace/music-directions">Music Directions</a><a class="portal-button portal-button--quiet" href="/media-workspace/sfx-cue-sheet">SFX Cue Sheet</a><a class="portal-button portal-button--quiet" href="/audio/assets">Audio Operations</a></div></div></section>`;
   }
 
   function mediaItemEditor(item, collection, enabled, route, canOpenAudioOperations) {
