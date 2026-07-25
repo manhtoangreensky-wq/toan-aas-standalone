@@ -1737,6 +1737,24 @@ def test_telegram_start_is_configuration_gated_and_never_reuses_core_callback_cr
         assert client.post("/api/v1/auth/telegram/login/start").json()["error_code"] == "TELEGRAM_LINK_CONFIGURATION_REQUIRED"
 
 
+@pytest.mark.parametrize("placeholder", ["BOT_USERNAME", "@your_bot_username", "TeLeGrAm_BoT_UsErNaMe"])
+def test_telegram_start_rejects_deployment_template_username_placeholders(tmp_path, monkeypatch, placeholder):
+    """A syntactically valid env-template value must not create a dead link."""
+    with make_client(tmp_path, monkeypatch) as client:
+        monkeypatch.setenv("BOT_USERNAME", placeholder)
+        status_payload = client.get("/api/v1/auth/telegram/connection/status").json()
+
+        assert status_payload["status"] == "guarded"
+        assert status_payload["data"]["bot_username"] == ""
+        assert status_payload["data"]["bot_chat_url"] == ""
+        assert status_payload["data"]["bot_deep_link_ready"] is False
+        assert status_payload["data"]["missing_configuration"] == ["BOT_USERNAME"]
+
+        blocked = client.post("/api/v1/auth/telegram/login/start").json()
+        assert blocked["error_code"] == "TELEGRAM_LINK_CONFIGURATION_REQUIRED"
+        assert "code" not in blocked["data"]
+
+
 def test_telegram_start_requires_explicit_paired_bot_adapter_release_gate(tmp_path, monkeypatch):
     """Web credentials alone must not expose a deep link the Bot cannot consume."""
     with make_client(tmp_path, monkeypatch) as client:
