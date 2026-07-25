@@ -203,6 +203,31 @@ def test_dashboard_is_private_in_pwa_and_uses_app_first_mobile_ui_rules() -> Non
     assert "linear-gradient" not in command_center_css
 
 
+def test_dashboard_hero_uses_a_quiet_data_first_grid_with_aligned_mobile_actions() -> None:
+    command_center_css = CSS[CSS.index("/* Workspace Command Center"):]
+    for token in (
+        ".portal-workspace-command-center .portal-dashboard-overview {",
+        "grid-template-columns: minmax(0, 1fr);",
+        "border-color: var(--portal-border);",
+        ".portal-workspace-command-center .portal-dashboard-overview-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }",
+        ".portal-workspace-command-center .portal-dashboard-overview-actions {",
+        "grid-column: 1 / -1;",
+    ):
+        assert token in command_center_css
+
+    mobile_css = command_center_css[command_center_css.index("@media (max-width: 700px)"):]
+    assert (
+        ".portal-workspace-command-center .portal-dashboard-overview-stats "
+        "{ grid-template-columns: repeat(2, minmax(0, 1fr)); }"
+    ) in mobile_css
+
+    compact_mobile_css = command_center_css[command_center_css.index("@media (max-width: 460px)"):]
+    assert (
+        ".portal-workspace-command-center .portal-dashboard-overview-stats "
+        "{ grid-template-columns: 1fr; }"
+    ) in compact_mobile_css
+
+
 def test_dashboard_contract_records_authority_non_goals_and_failure_semantics() -> None:
     for token in (
         "`/dashboard`",

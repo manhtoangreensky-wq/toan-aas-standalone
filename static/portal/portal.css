@@ -6487,14 +6487,17 @@ button, a, input, select, textarea { touch-action: manipulation; }
    treatment with token-driven surfaces, not a marketing/landing composition. */
 .portal-workspace-command-center { display: grid; gap: 18px; min-width: 0; }
 .portal-workspace-command-center .portal-dashboard-overview {
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
-  align-items: end;
-  border-color: var(--portal-border-strong);
+  align-items: start;
+  border-color: var(--portal-border);
   background: var(--portal-surface-strong);
   box-shadow: none;
 }
-.portal-workspace-command-center .portal-dashboard-overview h1 { color: var(--portal-text); }
+.portal-workspace-command-center .portal-dashboard-overview h1 { color: var(--portal-text); font-size: clamp(30px, 3.4vw, 44px); }
 .portal-workspace-command-center .portal-dashboard-overview p { color: var(--portal-muted-strong); }
+.portal-workspace-command-center .portal-dashboard-overview-actions { align-items: center; gap: 8px; }
+.portal-workspace-command-center .portal-dashboard-overview-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .portal-workspace-command-center .portal-dashboard-overview-stats > div {
   border-color: var(--portal-border);
   background: var(--portal-surface);
@@ -6616,7 +6619,19 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-command-center-account-facts { grid-template-columns: 1fr; }
   .portal-command-center-lane-actions { width: 100%; }
   .portal-command-center-lane-actions .portal-button { flex: 1 1 150px; min-height: 44px; justify-content: center; }
-  .portal-workspace-command-center .portal-dashboard-overview-actions .portal-button { min-height: 44px; }
+  .portal-workspace-command-center .portal-dashboard-overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-workspace-command-center .portal-dashboard-overview-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .portal-workspace-command-center .portal-dashboard-overview-actions .portal-button { width: 100%; min-height: 44px; justify-content: center; }
+  .portal-workspace-command-center .portal-dashboard-overview-actions .portal-button--primary { grid-column: 1 / -1; }
+}
+
+@media (max-width: 460px) {
+  .portal-workspace-command-center .portal-dashboard-overview-stats { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
