@@ -55,6 +55,21 @@ PASSWORD_RECOVERY_TOKEN_BYTES = 32
 PASSWORD_RECOVERY_CONFIRM_MAX_BODY_BYTES = 4_096
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
+# A value such as the Railway variable name itself can satisfy Telegram's
+# username character rules, but it is not a public Bot address.  Treat these
+# common deployment-template placeholders as absent so the Portal never
+# creates a dead `t.me/BOT_USERNAME` handoff or issues a code no real Bot can
+# receive.  This is deliberately a small closed set: a custom public username
+# is still accepted solely by the syntax check below.
+TELEGRAM_BOT_USERNAME_PLACEHOLDERS = frozenset({
+    "bot_username",
+    "your_bot_username",
+    "yourbotusername",
+    "telegram_bot_username",
+    "toan_aas_bot_username",
+    "change_me",
+    "replace_me",
+})
 SMTP_HOST_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
 EMAIL_VERIFICATION_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 TELEGRAM_ONLY_EMAIL_DOMAIN = "telegram.toanaas.invalid"
@@ -823,6 +838,8 @@ def _new_telegram_code() -> str:
 
 def _telegram_bot_username() -> str:
     username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
+    if username.casefold() in TELEGRAM_BOT_USERNAME_PLACEHOLDERS:
+        return ""
     return username if TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(username) else ""
 
 

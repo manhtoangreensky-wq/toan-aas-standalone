@@ -105,6 +105,13 @@ This avoids a button that looks active but can only create a dead code.
 are Railway secrets. The two callback credentials must not fall back to, or
 reuse, any `CORE_BRIDGE_*` credential.
 
+`BOT_USERNAME` must be the actual public Telegram username, without `@` — not
+the literal Railway template text `BOT_USERNAME` or a generic placeholder such
+as `your_bot_username`. The Web validates those common placeholders as
+**missing**: it will not expose `https://t.me/BOT_USERNAME`, create a one-time
+code, or make the sign-in button appear usable. This is a configuration guard,
+not a substitute for deploying the paired Bot callback adapter.
+
 `/api/v1/auth/telegram/connection/status` distinguishes two honest states:
 
 - **Web ready**: the Web receiver has its public Bot username and dedicated
