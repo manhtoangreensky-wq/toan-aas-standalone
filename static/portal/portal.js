@@ -8860,6 +8860,13 @@
     return localizedNavigationLabel(fallback);
   }
 
+  function documentTitle(page, context) {
+    const pageTitle = localizedPageTitle(page, context)
+      .replace(/\s*[·—–-]\s*TOAN AAS\s*$/i, "")
+      .trim();
+    return !pageTitle || pageTitle === "TOAN AAS" ? "TOAN AAS" : `${pageTitle} · TOAN AAS`;
+  }
+
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
@@ -22844,7 +22851,7 @@
       && mfaChallengeMinutes <= 10;
     const primaryForm = mfaLoginPending
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="/login" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="/login"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
-      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>`;
+      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}"><span>${alternative[1]}</span><span class="portal-auth-button-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>`;
     const isLogin = page.path === "/login";
     const isRegister = page.path === "/register";
     const providerMethods = mfaLoginPending
@@ -22863,16 +22870,19 @@
       : (isLogin
         ? "Email + mật khẩu là đường chính để vào Workspace."
         : (isRegister ? "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau." : safeText(page.description)));
+    const authHeading = isLogin ? "Chào mừng trở lại" : (isRegister ? "Tạo Workspace của bạn" : safeText(displayPageTitle(page, context)));
+    const authIntroDescription = isLogin
+      ? "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần."
+      : (isRegister
+        ? "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot."
+        : safeText(page.description));
     const authSwitch = `<nav class="portal-auth-switch" aria-label="Chọn phương thức truy cập"><a href="/login"${isLogin ? ' aria-current="page"' : ""}>Đăng nhập</a><a href="/register"${isRegister ? ' aria-current="page"' : ""}>Tạo tài khoản</a></nav>`;
-    const authJourney = (isLogin || isRegister)
-      ? `<ol class="portal-auth-journey" aria-label="Lộ trình bắt đầu Workspace"><li data-state="current"><span aria-hidden="true">1</span><div><strong>${isLogin ? "Truy cập Workspace" : "Tạo Web account"}</strong><small>${isLogin ? "Xác minh bằng email + mật khẩu hoặc phương thức đã cấu hình." : "Hồ sơ mặc định được tạo ở server; không cần Telegram ID."}</small></div></li><li><span aria-hidden="true">2</span><div><strong>Cá nhân hóa tối thiểu</strong><small>Chọn cách làm việc sau khi vào ứng dụng, không có wizard bắt buộc.</small></div></li><li><span aria-hidden="true">3</span><div><strong>Liên kết Telegram nếu cần</strong><small>Tùy chọn để mở dữ liệu canonical do Bot xác minh.</small></div></li></ol>`
-      : "";
     const alternativeMethods = providerMethods
       ? `<details class="portal-auth-alternatives"${alternativeMethodsOpen ? " open" : ""}><summary><span>${isLogin ? "Dùng Telegram hoặc OAuth" : "Tạo tài khoản qua OAuth"}</span><small>${isLogin ? "Tùy chọn · chỉ hiện provider đã cấu hình" : "Tùy chọn · không tự ghép theo email"}</small></summary><div class="portal-auth-alternatives-body">${providerMethods}</div></details>`
       : "";
     const authAssurance = `<details class="portal-auth-assurance"><summary>Vì sao Workspace này an toàn?</summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary>Thông tin bảo mật và tích hợp</summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
-    return `<article class="portal-auth-page portal-auth-page--access"><a class="portal-auth-brand" href="/welcome" aria-label="Xem giới thiệu TOAN AAS"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace · secure access</small></span><em>Giới thiệu</em></a><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p>${authSwitch}${authJourney}${authAssurance}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Primary access</span><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${alternativeMethods}${operationalNotes}</section></article>`;
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><a class="portal-auth-back" href="/welcome"><span>Giới thiệu</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p></section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(reason)}</p></div></div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${alternativeMethods}${authAssurance}${operationalNotes}</section></div></article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -27373,7 +27383,7 @@
       commandPalette.hidden = true;
       commandPalette.innerHTML = "";
     }
-    document.title = `${localizedPageTitle(page, context)} · TOAN AAS`;
+    document.title = documentTitle(page, context);
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
