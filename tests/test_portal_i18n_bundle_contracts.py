@@ -8,6 +8,7 @@ than importing the FastAPI application or any Bot/provider module.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "static" / "portal" / "portal-i18n.js"
 PORTAL_BUNDLE = ROOT / "static" / "portal" / "portal.js"
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
@@ -89,7 +91,7 @@ for (const locale of expected) {
   if (JSON.stringify(keys) !== JSON.stringify(referenceKeys)) {
     throw new Error(`Locale keyset diverged for ${locale}`);
   }
-  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install"]) {
+  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install", "shellNav.billing", "shellNav.contentStudio", "shellNav.scriptToSeries", "shellNav.serviceStatus"]) {
     if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
   }
 }
@@ -99,6 +101,8 @@ if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese 
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");
 if (api.t("starter.install", "zh") !== "安装入门套件") throw new Error("Reviewed Chinese text is unavailable");
 if (api.t("starter.install", "en") !== "Install Starter Kit") throw new Error("Reviewed English text is unavailable");
+if (api.t("shellNav.contentStudio", "zh") !== "内容工作室") throw new Error("Reviewed Chinese App Shell text is unavailable");
+if (api.t("shellNav.billing", "en") !== "Billing & plans") throw new Error("Reviewed English App Shell text is unavailable");
 if (api.t("missing.translation.key", "vi") !== "") throw new Error("Unknown key must not invent a translation");
 if (api.currentLocale() !== "zh") throw new Error("Server bootstrap interface locale did not win over profile fallback");
 if (api.localeTag("zh") !== "zh-CN") throw new Error("Reviewed Chinese Intl tag is unavailable");
@@ -268,13 +272,18 @@ vm.runInContext(portalSource, context, { filename: portalPath });
 if (typeof domReady !== "function") throw new Error("Portal did not register a first mount");
 domReady();
 const firstMount = documentElement.attributes["data-portal-locale"];
+const firstSidebar = sidebar.innerHTML;
 
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "en" } });
 const hydratedProfile = documentElement.attributes["data-portal-locale"];
+const englishSidebar = sidebar.innerHTML;
+
+context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "vi", profile: { locale: "vi" } });
+const vietnameseSidebar = sidebar.innerHTML;
 
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "zh-TW" } });
 const invalidProfile = documentElement.attributes["data-portal-locale"];
-process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang }));
+process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang, firstSidebar, englishSidebar, vietnameseSidebar }));
 '''
     try:
         result = subprocess.run(
@@ -304,6 +313,15 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert snapshot["hydratedProfile"] == "en"
     assert snapshot["invalidProfile"] == "zh"
     assert snapshot["documentLang"] == "zh-CN"
+    assert "内容规划" in snapshot["firstSidebar"]
+    assert "内容工作室" in snapshot["firstSidebar"]
+    assert "钱包与套餐" in snapshot["firstSidebar"]
+    assert "Content planning" in snapshot["englishSidebar"]
+    assert "Content Studio" in snapshot["englishSidebar"]
+    assert "Billing &amp; plans" in snapshot["englishSidebar"]
+    assert "Lập kế hoạch nội dung" in snapshot["vietnameseSidebar"]
+    assert "Content Studio" in snapshot["vietnameseSidebar"]
+    assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
 
 
 def test_i18n_bundle_is_presentation_only_without_browser_persistence_or_network() -> None:
@@ -414,3 +432,35 @@ def test_core_portal_renderers_consume_reviewed_locale_keys() -> None:
         assert required in setup
     for required in ('uiText("starter.catalogTitle"', 'uiText("starter.confirmationTitle"', 'uiText("starter.scopeTitle"'):
         assert required in starter
+
+
+def test_app_shell_navigation_uses_the_reviewed_locale_catalogue() -> None:
+    navigation = _between(PORTAL, "const NAVIGATION_I18N_KEYS", "function localizedNavigationLabel")
+    localized_navigation = _between(PORTAL, "function localizedNavigationLabel", "function localizedPageTitle")
+    command_palette = _between(PORTAL, "function commandPaletteItems", "function renderCommandPalette")
+    static_navigation = _between(PORTAL, "function navGroups", "function matchesRouteFamily")
+
+    for label, key in (
+        ("Tài sản", "nav.assets"),
+        ("Ví & gói", "shellNav.billing"),
+        ("Content Studio", "shellNav.contentStudio"),
+        ("Image Operations Hub", "shellNav.imageOperationsHub"),
+        ("Automation Center", "shellNav.automationCenter"),
+        ("Script-to-Screen & Phim dài tập", "shellNav.scriptToSeries"),
+    ):
+        assert f'"{label}": "{key}"' in navigation
+
+    assert 'source.startsWith("ERP · ")' in localized_navigation
+    assert 'uiText("shellNav.erp", "ERP")' in localized_navigation
+    assert 'title: localizedNavigationLabel(String(candidate.title || "TOAN AAS"))' in command_palette
+    assert 'section: localizedNavigationLabel(String(candidate.section || "Workspace"))' in command_palette
+    assert ".portal-nav-link > span:not(.portal-nav-icon)" in PORTAL_CSS
+    assert "overflow-wrap: anywhere;" in PORTAL_CSS
+
+    static_labels = set(re.findall(r'\["/[^"\n]+", "([^"]+)", ICONS\.', static_navigation))
+    static_labels.update(re.findall(r'^\s*label: "([^"]+)"', static_navigation, flags=re.MULTILINE))
+    unmapped_labels = sorted(
+        label for label in static_labels
+        if f'"{label}": ' not in navigation
+    )
+    assert not unmapped_labels, f"Static App Shell labels missing i18n keys: {unmapped_labels}"

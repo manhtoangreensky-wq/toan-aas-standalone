@@ -8745,18 +8745,106 @@
     "Tạo mới": "nav.create",
     "Công việc": "nav.work",
     "Job Center": "nav.jobs",
+    // Retain the legacy route label for existing manifest metadata, but do
+    // not surface Telegram as the name of the standalone Web asset center.
     "Tài sản Bot": "nav.assets",
-    "Ví & gói": "nav.wallet",
+    "Tài sản": "nav.assets",
+    "Ví & gói": "shellNav.billing",
+    "Ví Xu": "nav.wallet",
     "Tài khoản & hỗ trợ": "nav.accountSupport",
     "Tài khoản": "nav.account",
     "Hỗ trợ": "nav.support",
     "Bảng giá": "nav.pricing",
-    "Quản trị": "nav.admin"
+    "Quản trị": "nav.admin",
+    "Bot companion": "shellNav.botCompanion",
+    "Video Studio": "shellNav.videoStudio",
+    "Video Studio · Ý tưởng & kịch bản": "shellNav.videoIdeasScripts",
+    "Video Studio · Phim & storyboard": "shellNav.videoFilmStoryboard",
+    "Video Studio · Tư liệu & chuyển động": "shellNav.videoReferenceMotion",
+    "Project Packages": "shellNav.projectPackages",
+    "Asset Vault": "shellNav.assetVault",
+    "Bản nháp": "shellNav.workspaceDrafts",
+    "Prompt Library": "shellNav.promptLibrary",
+    "Prompt Gallery miễn phí": "shellNav.freePromptGallery",
+    "Content Studio": "shellNav.contentStudio",
+    "Channel Strategy": "shellNav.channelStrategy",
+    "Content Handoff": "shellNav.contentHandoff",
+    "Partner & Lead CRM": "shellNav.partnerLeadCrm",
+    "Content Prompt Pack": "shellNav.contentPromptPack",
+    "Gói review trước khi đăng": "shellNav.publishReview",
+    "Contextual Ad Prompt": "shellNav.contextualAdPrompt",
+    "Trend Research": "shellNav.trendResearch",
+    "Media Factory": "shellNav.mediaFactory",
+    "Creative Flow": "shellNav.creativeFlow",
+    "Nguồn & quyền": "shellNav.sourceRights",
+    "Analytics Workspace": "shellNav.analyticsWorkspace",
+    "Memory Center": "shellNav.memoryCenter",
+    "Nhắc việc": "shellNav.reminders",
+    "Kế hoạch nội dung": "shellNav.contentPlans",
+    "Lịch nội dung": "shellNav.contentCalendar",
+    "Tự rà soát": "shellNav.selfReview",
+    "Image Prompt Composer": "shellNav.imagePromptComposer",
+    "Image Operations Hub": "shellNav.imageOperationsHub",
+    "Image Studio": "shellNav.imageStudio",
+    "Document Workspace": "shellNav.documentWorkspace",
+    "Subtitle Studio": "shellNav.subtitleStudio",
+    "Subtitle Asset Operations": "shellNav.subtitleAssetOps",
+    "SRT/VTT Lab": "shellNav.subtitleFormatLab",
+    "Voice Studio": "shellNav.voiceStudio",
+    "Voice Direction Composer": "shellNav.voiceDirectionComposer",
+    "Audio Library": "shellNav.audioLibrary",
+    "Media Workspace": "shellNav.audioWorkspace",
+    "SFX Cue Sheet": "shellNav.sfxCueSheet",
+    "Audio Asset Operations": "shellNav.audioAssetOps",
+    "Tất cả công cụ": "shellNav.allTools",
+    "Content & Chat": "shellNav.contentChat",
+    "Image": "shellNav.image",
+    "Video": "shellNav.video",
+    "Voice & Music": "shellNav.voiceMusic",
+    "Ngôn ngữ & Docs": "shellNav.languageDocs",
+    "Nạp Xu": "shellNav.topupCredit",
+    "Membership": "shellNav.membership",
+    "Gói dịch vụ": "shellNav.servicePackages",
+    "Ngôn ngữ giao diện": "shellNav.interfaceLanguage",
+    "Hoạt động Web": "shellNav.webActivity",
+    "Kiểm soát dữ liệu": "shellNav.dataControls",
+    "Chăm sóc dữ liệu Web": "shellNav.workspaceCare",
+    "Inbox": "shellNav.inbox",
+    "Automation Center": "shellNav.automationCenter",
+    "Ticket của tôi": "shellNav.myTickets",
+    "Operations Center": "shellNav.operationsCenter",
+    "Trạng thái dịch vụ": "shellNav.serviceStatus",
+    "Giới thiệu": "shellNav.referrals",
+    "Ưu đãi": "shellNav.rewards",
+    "Cộng đồng": "shellNav.community",
+    "Kế hoạch sản xuất": "shellNav.productionPlan",
+    "Bắt đầu theo quy trình": "shellNav.guidedStart",
+    "Video Idea Planner": "shellNav.videoIdeaPlanner",
+    "Story Video Planner": "shellNav.storyVideoPlanner",
+    "Video Prompt Planner": "shellNav.videoPromptPlanner",
+    "Cinematic Concept": "shellNav.cinematicConcept",
+    "Creative Motion Guide": "shellNav.creativeMotionGuide",
+    "Script-to-Screen & Phim dài tập": "shellNav.scriptToSeries",
+    "Long-form Roadmap": "shellNav.longFormRoadmap",
+    "Self-shot Scene Planner": "shellNav.selfShotPlanner",
+    "Storyboard Composer": "shellNav.storyboardComposer",
+    "Image Motion Planner": "shellNav.imageMotionPlanner",
+    "Reference Format Planner": "shellNav.referenceFormatPlanner"
   });
 
   function localizedNavigationLabel(label) {
     const source = String(label || "");
-    return uiText(NAVIGATION_I18N_KEYS[source] || "", source);
+    const key = NAVIGATION_I18N_KEYS[source];
+    if (key) return uiText(key, source);
+    // Server-authorized ERP module titles stay server data and are never
+    // browser-translated. Only the stable shell prefix is part of this
+    // reviewed UI catalog.
+    if (source.startsWith("ERP · ")) {
+      const moduleTitle = source.slice("ERP · ".length).trim();
+      const prefix = uiText("shellNav.erp", "ERP");
+      return moduleTitle ? `${prefix} · ${moduleTitle}` : prefix;
+    }
+    return source;
   }
 
   function localizedPageTitle(page, context) {
@@ -8898,7 +8986,7 @@
       {
         label: "Công việc",
         links: [
-          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản Bot", ICONS.assets]
+          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
         ]
       },
       {
@@ -9126,8 +9214,8 @@
       seen.add(path);
       items.push({
         path,
-        title: String(candidate.title || "TOAN AAS"),
-        section: String(candidate.section || "Workspace"),
+        title: localizedNavigationLabel(String(candidate.title || "TOAN AAS")),
+        section: localizedNavigationLabel(String(candidate.section || "Workspace")),
         icon: candidate.icon || ICONS.default,
         current: normalizePath(path) === activePath
       });
