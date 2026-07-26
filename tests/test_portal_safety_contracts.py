@@ -111,7 +111,7 @@ def test_dashboard_hydrates_only_canonical_metadata() -> None:
     assert 'dashboardReadState: "ready"' in INTEGRATION
     assert 'dashboardReadState: "failed"' in INTEGRATION
     assert "Tài sản gần đây" in PORTAL
-    assert "Không đồng nghĩa delivery" in PORTAL
+    assert 'dashboardText("canonical.metrics.assetsDetail")' in PORTAL
 
 
 def test_dashboard_work_queue_uses_only_owner_scoped_canonical_metadata() -> None:
@@ -120,7 +120,7 @@ def test_dashboard_work_queue_uses_only_owner_scoped_canonical_metadata() -> Non
         PORTAL.index("function renderStudioLaunchpad(context)")
     ]
     assert "data-workspace-action-center" in work_queue
-    assert "Công việc cần chú ý" in work_queue
+    assert 'dashboardText("actionCenter.title")' in work_queue
     assert 'Array.isArray(context.jobs)' in work_queue
     assert 'Array.isArray(context.assets)' in work_queue
     assert 'Array.isArray(context.tickets)' in work_queue
@@ -1430,9 +1430,9 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert '}, ["/app"]);' in PORTAL
     assert "function renderLanding(page, context)" in PORTAL
     assert 'case "landing": return renderLanding(page, context);' in PORTAL
-    assert "Không tạo output giả" in PORTAL
-    assert "Project &amp; Studio Document Web-owned" in PORTAL
-    assert "Telegram companion là tùy chọn" in PORTAL
+    assert 'text("proof.noFakeOutput")' in PORTAL
+    assert 'text("proof.webOwned")' in PORTAL
+    assert 'text("proof.companionOptional")' in PORTAL
     landing = PORTAL[
         PORTAL.index("function renderLanding(page, context)"):
         PORTAL.index("function renderNotFound(page, context)")
@@ -1440,8 +1440,8 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert "/api/v1/" not in landing
     assert "fetch(" not in landing
     assert "localStorage" not in landing
-    assert "Không có ledger Xu, webhook PayOS" in landing
-    assert 'href: "/login?next=/video/create"' in landing
+    assert 'text(`trust.${item.key}.body`)' in landing
+    assert 'href: "/video/create"' in landing
     assert 'id="studios"' in landing
     assert 'id="workflow"' in landing
     assert 'id="trust"' in landing

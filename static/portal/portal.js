@@ -17234,12 +17234,63 @@
     return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
   }
 
+  function dashboardText(key, params) {
+    return safeText(uiText(`dashboard.${key}`, "", params));
+  }
+
+  // The delivery helpers below intentionally stay local to Dashboard. The
+  // shared delivery surfaces still own their own copy, while this signed
+  // command center must render every fixed label through the reviewed display
+  // locale without changing any canonical/customer record.
+  function dashboardReportedOutput(item) {
+    if (!(item && item.output_available)) return `<span class="portal-delivery-state" data-delivery="waiting">${dashboardText("canonical.jobs.output.none")}</span>`;
+    const status = jobStatus(item);
+    if (["failed", "cancelled", "refunded"].includes(status)) return `<span class="portal-delivery-state" data-delivery="unavailable">${dashboardText("canonical.jobs.output.held")}</span>`;
+    if (status === "completed") return `<span class="portal-delivery-state" data-delivery="reported">${dashboardText("canonical.jobs.output.validated")}</span>`;
+    return `<span class="portal-delivery-state" data-delivery="reported">${dashboardText("canonical.jobs.output.reported")}</span>`;
+  }
+
+  function dashboardAssetSourceLabel(kind) {
+    if (kind === "web_vault") return dashboardText("canonical.assets.source.webVault");
+    if (kind === "web_native_output") return dashboardText("canonical.assets.source.webNativeOutput");
+    return dashboardText("canonical.assets.source.canonicalDelivery");
+  }
+
+  function dashboardAssetJobLink(item) {
+    const assetId = String(item && item.id || "").trim();
+    if (!/^[A-Za-z0-9._:-]{1,160}$/.test(assetId)) return safeText(assetId || "—");
+    const identity = assetRecordIdentity(item);
+    const isWebVault = identity.kind === "web_vault";
+    const href = isWebVault ? "/asset-vault" : `/jobs/${encodeURIComponent(assetId)}`;
+    const aria = isWebVault
+      ? dashboardText("canonical.assets.openVaultAria", { id: assetId })
+      : dashboardText("canonical.assets.openJobAria", { id: assetId });
+    return `<span class="portal-record-link"><a href="${safeText(href)}" aria-label="${aria}">${safeText(assetId)}</a><span class="portal-record-source" data-record-source="${safeText(identity.kind)}">${dashboardAssetSourceLabel(identity.kind)}</span></span>`;
+  }
+
+  function dashboardAssetDeliveryState(item) {
+    const identity = assetRecordIdentity(item);
+    if (identity.kind === "web_vault") return `<span class="portal-delivery-state" data-delivery="vault">${dashboardText("canonical.assets.delivery.vault")}</span>`;
+    if (item && item.download_ready === true) {
+      const deliveryPath = item.delivery_ready === true ? assetDownloadPath(item) : "";
+      if (deliveryPath) return `<a class="portal-delivery-state portal-delivery-link" data-delivery="validated" href="${safeText(deliveryPath)}" rel="noreferrer">${dashboardText("canonical.assets.delivery.download")}</a>`;
+      return `<span class="portal-delivery-state" data-delivery="validated">${dashboardText("canonical.assets.delivery.signedPending")}</span>`;
+    }
+    const status = jobStatus(item);
+    if (["failed", "cancelled", "refunded"].includes(status)) return `<span class="portal-delivery-state" data-delivery="unavailable">${dashboardText("canonical.assets.delivery.unavailable")}</span>`;
+    if (item && item.output_available) return `<span class="portal-delivery-state" data-delivery="reported">${dashboardText("canonical.assets.delivery.reported")}</span>`;
+    if (status === "completed") return `<span class="portal-delivery-state" data-delivery="pending">${dashboardText("canonical.assets.delivery.completedPending")}</span>`;
+    return `<span class="portal-delivery-state" data-delivery="pending">${dashboardText("canonical.assets.delivery.pending")}</span>`;
+  }
+
   function renderDashboardWorkspaceSummary(context) {
     const readState = dashboardReadState(context);
     const name = displayName(context);
     const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
     const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
-    const setupActionLabel = setupProfile.setup_state === "completed" ? "Điều chỉnh Workspace" : "Thiết lập Workspace";
+    const setupActionLabel = setupProfile.setup_state === "completed"
+      ? dashboardText("summary.setupAdjust")
+      : dashboardText("summary.setup");
     const drafts = dashboardActiveDrafts(context);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
@@ -17248,32 +17299,32 @@
     const processing = canonicalReady ? jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length : "—";
     const deliveryReady = canonicalReady ? assets.filter((item) => item && item.delivery_ready === true && item.download_ready === true).length : "—";
     const canonicalLabel = canonicalReady
-      ? "Canonical đã xác minh"
+      ? dashboardText("summary.canonicalReady")
       : readState === "loading"
-        ? "Đang kiểm tra"
+        ? dashboardText("summary.canonicalLoading")
         : readState === "failed"
-          ? "Cần làm mới"
-          : "Chưa kết nối";
+          ? dashboardText("summary.canonicalFailed")
+          : dashboardText("summary.canonicalGuarded");
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
-      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">TOAN AAS / Workspace</span><h1 id="workspace-overview-title">Chào ${safeText(name)}</h1><p>Xây Project, tiếp tục brief và theo dõi công việc ở một nơi. Project và Studio Document hoạt động độc lập trên Web; Bot chỉ là integration tùy chọn cho các capability bạn chọn liên kết.</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects">Mở Project Center <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/features">Tạo workflow</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${safeText(setupActionLabel)}</a></div></div>
-      <dl class="portal-dashboard-overview-stats" aria-label="Tóm tắt workspace"><div><dt>Projects</dt><dd>${safeText(String(projects.length))}</dd><span>Web-owned</span></div><div><dt>Bản nháp</dt><dd>${safeText(String(drafts.length))}</dd><span>Web-owned</span></div><div><dt>Đang xử lý</dt><dd>${safeText(String(processing))}</dd><span>${safeText(canonicalLabel)}</span></div><div><dt>Sẵn sàng tải</dt><dd>${safeText(String(deliveryReady))}</dd><span>${safeText(canonicalLabel)}</span></div></dl>
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects"><span>${dashboardText("summary.openProjects")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="/features">${dashboardText("summary.createWorkflow")}</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${setupActionLabel}</a></div></div>
+      <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(String(projects.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(String(drafts.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
     </section>`;
   }
 
   function renderDashboardRecentDrafts(context) {
     const drafts = dashboardActiveDrafts(context).slice(0, 3);
     const body = drafts.length
-      ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || "Bản nháp Web"))}</strong><small>${safeText(String(item.feature_title || "Workflow Web"))} · cập nhật ${safeText(String(item.updated_at || item.created_at || "—"))}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div>`
-      : renderEmpty("Chưa có brief đang làm", "Bắt đầu ở một studio; bản nháp Web chỉ lưu brief an toàn và không tạo job, charge hay output.", "✦");
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">Continue working</span><h2 class="portal-card-title">Bản nháp gần đây</h2><p class="portal-card-subtitle">Mở thư viện để tiếp tục đúng workflow; file, quote và trạng thái canonical luôn được kiểm tra lại.</p></div><a class="portal-button portal-button--quiet" href="/workspace">Xem tất cả →</a></div>${body}</section>`;
+      ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+      : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/workspace"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 3);
     const body = projects.length
-      ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || "Project"))}</strong><small>${safeText(String(project.objective || "Web Workspace"))} · ${safeText(String(Number(project.document_count || 0)))} Studio Documents</small></span><b aria-hidden="true">→</b></a>`).join("")}</div>`
-      : renderEmpty("Chưa có Project đang mở", "Tạo một Project để gom creative brief, prompt, script và storyboard có version history độc lập trên Web.", "✦");
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">Independent work</span><h2 class="portal-card-title">Project gần đây</h2><p class="portal-card-subtitle">Không cần liên kết Telegram để bắt đầu authoring và version hóa nội dung.</p></div><a class="portal-button portal-button--quiet" href="/projects">Mở Project Center →</a></div>${body}</section>`;
+      ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+      : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h2 class="portal-card-title">${dashboardText("projects.title")}</h2><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardStartGuide(context) {
@@ -17291,97 +17342,97 @@
     const defaultSteps = [
       {
         number: "01",
-        eyebrow: "Web-native",
-        title: "Tạo Project đầu tiên",
-        description: "Gom brief, tài liệu và phiên bản sáng tạo vào một nơi do Web sở hữu.",
+        eyebrow: dashboardText("guide.project.eyebrow"),
+        title: dashboardText("guide.project.title"),
+        description: dashboardText("guide.project.body"),
         href: "/projects",
-        action: "Mở Project Center"
+        action: dashboardText("guide.project.action")
       },
       {
         number: "02",
-        eyebrow: "Planning",
-        title: "Chọn một Studio",
-        description: "Bắt đầu từ content, image, video, voice hoặc document bằng workflow rõ ràng.",
+        eyebrow: dashboardText("guide.studio.eyebrow"),
+        title: dashboardText("guide.studio.title"),
+        description: dashboardText("guide.studio.body"),
         href: "/features",
-        action: "Khám phá Studio"
+        action: dashboardText("guide.studio.action")
       },
       linked
         ? {
           number: "03",
-          eyebrow: "Security",
-          title: "Hoàn thiện bảo mật",
-          description: "Kiểm tra phương thức đăng nhập, phiên đang mở và bảo mật hai lớp cho tài khoản Web.",
+          eyebrow: dashboardText("guide.security.eyebrow"),
+          title: dashboardText("guide.security.title"),
+          description: dashboardText("guide.security.body"),
           href: "/account/security",
-          action: "Mở Security Center"
+          action: dashboardText("guide.security.action")
         }
         : {
           number: "03",
-          eyebrow: "Optional",
-          title: "Liên kết Telegram khi cần",
-          description: "Chỉ làm bước này khi cần đọc Xu, jobs và assets canonical từ Bot; không nhập Telegram ID trên Web.",
+          eyebrow: dashboardText("guide.optional.eyebrow"),
+          title: dashboardText("guide.optional.title"),
+          description: dashboardText("guide.optional.body"),
           href: "/onboarding",
-          action: "Xem cách liên kết"
+          action: dashboardText("guide.optional.action")
         }
     ];
     const steps = setupPending
       ? [
           {
             number: "01",
-            eyebrow: "Cá nhân hóa",
-            title: "Thiết lập Workspace",
-            description: "Chọn cách làm việc và tối đa ba studio để Web gợi ý đúng điểm bắt đầu.",
+            eyebrow: dashboardText("guide.setup.eyebrow"),
+            title: dashboardText("guide.setup.title"),
+            description: dashboardText("guide.setup.body"),
             href: "/workspace/setup",
-            action: "Thiết lập ngay"
+            action: dashboardText("guide.setup.action")
           },
           {
             number: "02",
-            eyebrow: "Web-native",
-            title: "Tạo Project đầu tiên",
-            description: "Gom brief, tài liệu và phiên bản sáng tạo vào một nơi do Web sở hữu.",
+            eyebrow: dashboardText("guide.project.eyebrow"),
+            title: dashboardText("guide.project.title"),
+            description: dashboardText("guide.project.body"),
             href: "/projects",
-            action: "Mở Project Center"
+            action: dashboardText("guide.project.action")
           },
           {
             number: "03",
-            eyebrow: "Planning",
-            title: "Chọn một Studio",
-            description: "Bắt đầu từ content, image, voice, music hoặc document bằng workflow rõ ràng.",
+            eyebrow: dashboardText("guide.studio.eyebrow"),
+            title: dashboardText("guide.studio.title"),
+            description: dashboardText("guide.studio.body"),
             href: "/features",
-            action: "Khám phá Studio"
+            action: dashboardText("guide.studio.action")
           }
         ]
       : defaultSteps;
-    return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">First session</span><h2 id="dashboard-start-guide-title">Bắt đầu nhanh, không bị khóa vào Telegram</h2><p>Web Workspace có thể dùng độc lập ngay từ bước đầu. Mỗi bước đều mở trang đích rõ ràng và không tự tạo job, charge hoặc dữ liệu provider.</p></div><span class="portal-start-guide-note">3 bước · tự chọn</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
+    return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${dashboardText("guide.kicker")}</span><h2 id="dashboard-start-guide-title">${dashboardText("guide.title")}</h2><p>${dashboardText("guide.body")}</p></div><span class="portal-start-guide-note">${dashboardText("guide.note")}</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em><span>${safeText(step.action)}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
   function renderDashboardAccountLane(context) {
     const linked = telegramIdentityLinked(context);
-    const accountType = String(context.profile && context.profile.accountType || "Web account");
-    const linkLabel = linked ? "Telegram đã liên kết" : "Telegram là tùy chọn";
+    const accountType = String(context.profile && context.profile.accountType || dashboardText("account.defaultType"));
+    const linkLabel = linked ? dashboardText("account.linkedLabel") : dashboardText("account.unlinkedLabel");
     const linkBody = linked
-      ? "Bạn có thể đọc projection canonical theo signed session hiện tại. Việc liên kết không mở thêm quyền ghi từ browser."
-      : "Bạn vẫn dùng Project và Studio độc lập; chỉ liên kết khi cần xem dữ liệu canonical do Bot xác minh.";
-    return `<section class="portal-command-center-lane portal-command-center-lane--account" aria-labelledby="workspace-account-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Account & Security</span><h2 id="workspace-account-lane-title">Tài khoản, quyền và kết nối</h2><p>Mỗi đường dẫn kiểm tra lại signed session và quyền ở server; không nhận Telegram ID hay role từ browser.</p></div></div><dl class="portal-command-center-account-facts"><div><dt>Loại tài khoản</dt><dd>${safeText(accountType)}</dd></div><div><dt>Integration</dt><dd>${safeText(linkLabel)}</dd></div></dl><p class="portal-command-center-lane-note">${safeText(linkBody)}</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/account">Mở tài khoản</a><a class="portal-button portal-button--quiet" href="/account/security">Bảo mật</a><a class="portal-button portal-button--quiet" href="/onboarding">Liên kết khi cần</a></div></section>`;
+      ? dashboardText("account.linkedBody")
+      : dashboardText("account.unlinkedBody");
+    return `<section class="portal-command-center-lane portal-command-center-lane--account" aria-labelledby="workspace-account-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${dashboardText("account.kicker")}</span><h2 id="workspace-account-lane-title">${dashboardText("account.title")}</h2><p>${dashboardText("account.body")}</p></div></div><dl class="portal-command-center-account-facts"><div><dt>${dashboardText("account.type")}</dt><dd>${safeText(accountType)}</dd></div><div><dt>${dashboardText("account.integration")}</dt><dd>${linkLabel}</dd></div></dl><p class="portal-command-center-lane-note">${linkBody}</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/account">${dashboardText("account.open")}</a><a class="portal-button portal-button--quiet" href="/account/security">${dashboardText("account.security")}</a><a class="portal-button portal-button--quiet" href="/onboarding">${dashboardText("account.link")}</a></div></section>`;
   }
 
   function renderDashboardCanonicalLane(context, readState) {
     const canRetry = Boolean(context.capabilities && context.capabilities["dashboard-refresh"] === true);
     if (readState === "loading") {
-      return `<section class="portal-command-center-canonical" data-state="loading" aria-live="polite" aria-busy="true"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Đang kiểm tra dữ liệu vận hành</h2><p>Wallet, job, asset, ticket và feature readiness chỉ xuất hiện sau khi server xác minh lại signed session hiện tại. Không dùng dữ liệu cũ trong lúc chờ.</p></div>${badge("processing")}</div></section>`;
+      return `<section class="portal-command-center-canonical" data-state="loading" aria-live="polite" aria-busy="true"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2>${dashboardText("canonical.loadingTitle")}</h2><p>${dashboardText("canonical.loadingBody")}</p></div>${badge("processing")}</div></section>`;
     }
     if (readState === "failed") {
-      return `<section class="portal-command-center-canonical" data-state="failed" aria-live="polite"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Chưa thể xác minh trạng thái vận hành</h2><p>Dashboard đã xóa projection canonical cũ. Bạn vẫn có thể làm việc với Project và bản nháp Web; hãy làm mới khi kết nối sẵn sàng để xem dữ liệu đã xác minh.</p><div class="portal-command-center-lane-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="dashboard-refresh" data-portal-route="/dashboard"${canRetry ? "" : " disabled"}>Thử lại</button><a class="portal-button portal-button--quiet" href="/account">Kiểm tra kết nối</a></div></div>${badge("failed")}</div></section>`;
+      return `<section class="portal-command-center-canonical" data-state="failed" aria-live="polite"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2>${dashboardText("canonical.failedTitle")}</h2><p>${dashboardText("canonical.failedBody")}</p><div class="portal-command-center-lane-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="dashboard-refresh" data-portal-route="/dashboard"${canRetry ? "" : " disabled"}>${dashboardText("canonical.retry")}</button><a class="portal-button portal-button--quiet" href="/account">${dashboardText("canonical.checkConnection")}</a></div></div>${badge("failed")}</div></section>`;
     }
     if (readState !== "ready") {
-      return `<section class="portal-command-center-canonical" data-state="guarded"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2>Integration chưa sẵn sàng</h2><p>Phần Web-native vẫn hoạt động độc lập. Wallet, job, assets và ticket canonical chỉ mở sau khi signed account có kết nối do máy chủ xác nhận.</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/onboarding">Xem cách liên kết</a><a class="portal-button portal-button--quiet" href="/account/security">Mở Security Center</a></div></div>${badge("guarded")}</div></section>`;
+      return `<section class="portal-command-center-canonical" data-state="guarded"><div class="portal-command-center-state"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2>${dashboardText("canonical.guardedTitle")}</h2><p>${dashboardText("canonical.guardedBody")}</p><div class="portal-command-center-lane-actions"><a class="portal-button portal-button--quiet" href="/onboarding">${dashboardText("canonical.learnLink")}</a><a class="portal-button portal-button--quiet" href="/account/security">${dashboardText("canonical.openSecurity")}</a></div></div>${badge("guarded")}</div></section>`;
     }
 
     const jobs = Array.isArray(context.jobs) ? context.jobs.slice(0, 5) : [];
     const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
     const wallet = canonicalWalletProjection(context.wallet);
-    const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(wallet ? String(wallet.balance_xu) : "—")}</strong><em>${wallet ? "Không tính lại ở browser" : "Chờ projection hợp lệ"}</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(wallet ? String(wallet.total_spent_xu) : "—")}</strong><em>${wallet ? "Đọc từ ledger canonical" : "Chờ projection hợp lệ"}</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`;
-    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
-    return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">Canonical integration</span><h2 id="workspace-canonical-lane-title">Vận hành đã được xác minh</h2><p>Chỉ đọc dữ liệu Core Bridge thuộc signed session hiện tại. Dashboard không cộng Xu, tạo job, tạo delivery URL hay gọi provider.</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
+    const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>${dashboardText("canonical.metrics.balanceLabel")}</span><strong>${safeText(wallet ? String(wallet.balance_xu) : "—")}</strong><em>${wallet ? dashboardText("canonical.metrics.balanceCanonicalDetail") : dashboardText("canonical.metrics.balancePendingDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.spentLabel")}</span><strong>${safeText(wallet ? String(wallet.total_spent_xu) : "—")}</strong><em>${wallet ? dashboardText("canonical.metrics.spentCanonicalDetail") : dashboardText("canonical.metrics.spentPendingDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.jobsLabel")}</span><strong>${safeText(String(jobs.length))}</strong><em>${dashboardText("canonical.metrics.jobsDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.assetsLabel")}</span><strong>${safeText(String(assets.length))}</strong><em>${dashboardText("canonical.metrics.assetsDetail")}</em></div></section>`;
+    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${dashboardText("canonical.jobs.title")}</h2><p class="portal-card-subtitle">${dashboardText("canonical.jobs.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("canonical.jobs.open")}</a></div>${renderRowsTable([dashboardText("canonical.jobs.table.id"), dashboardText("canonical.jobs.table.feature"), dashboardText("canonical.jobs.table.status"), dashboardText("canonical.jobs.table.output")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardReportedOutput(item)}</td>`, dashboardText("canonical.jobs.emptyTitle"), dashboardText("canonical.jobs.emptyBody"))}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${dashboardText("canonical.assets.title")}</h2><p class="portal-card-subtitle">${dashboardText("canonical.assets.body")}</p></div><a class="portal-button portal-button--quiet" href="/assets">${dashboardText("canonical.assets.open")}</a></div>${renderRowsTable([dashboardText("canonical.assets.table.asset"), dashboardText("canonical.assets.table.feature"), dashboardText("canonical.assets.table.status"), dashboardText("canonical.assets.table.delivery")], assets, (item) => `<td>${dashboardAssetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardAssetDeliveryState(item)}</td>`, dashboardText("canonical.assets.emptyTitle"), dashboardText("canonical.assets.emptyBody"))}</section></div>`;
+    return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2 id="workspace-canonical-lane-title">${dashboardText("canonical.readyTitle")}</h2><p>${dashboardText("canonical.readyBody")}</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
   }
 
   function renderDashboard(page, context) {
@@ -17390,7 +17441,7 @@
     // when the separate canonical reader is loading, guarded or failed.
     // It never substitutes zeroes, stale records or an invented success for
     // wallet/job/asset/ticket data that the Core Bridge did not confirm.
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">Continue Web work</span><h2 id="workspace-work-lane-title">Project và bản nháp đang làm</h2><p>Hai thư viện này là dữ liệu Web-owned, owner-scoped và có luồng riêng; chúng không phụ thuộc vào canonical integration.</p></div></div><div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>Ranh giới dữ liệu và bảo mật</summary><p class="portal-form-note">Web-native authoring, canonical read models và account controls được hiển thị thành các lane riêng. Portal không biến trạng thái lỗi thành output, giao dịch hoặc quyền truy cập giả.</p></details></article>`;
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div><div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -17410,56 +17461,56 @@
       {
         icon: ICONS.jobs,
         count: processing,
-        label: "Đang xử lý",
+        label: dashboardText("actionCenter.processing.label"),
         status: processing ? "processing" : "read_only",
-        detail: processing ? "Job đang xếp hàng hoặc chạy theo trạng thái Bot canonical." : "Không có job queued hoặc processing trong dữ liệu hiện tại.",
+        detail: processing ? dashboardText("actionCenter.processing.detailActive") : dashboardText("actionCenter.processing.detailEmpty"),
         href: "/jobs",
-        action: "Mở Job Center"
+        action: dashboardText("actionCenter.processing.action")
       },
       {
         icon: ICONS.assets,
         count: deliveryReady,
-        label: "Tệp đã sẵn sàng",
+        label: dashboardText("actionCenter.delivery.label"),
         status: deliveryReady ? "ready" : "read_only",
-        detail: deliveryReady ? "Asset đã có delivery contract owner-scoped từ Bot." : "Chưa có asset nào được Bot cấp delivery contract.",
+        detail: deliveryReady ? dashboardText("actionCenter.delivery.detailActive") : dashboardText("actionCenter.delivery.detailEmpty"),
         href: "/assets",
-        action: "Mở thư viện"
+        action: dashboardText("actionCenter.delivery.action")
       },
       {
         icon: ICONS.jobs,
         count: needsReview,
-        label: "Cần xem job",
+        label: dashboardText("actionCenter.review.label"),
         status: needsReview ? "failed" : "read_only",
-        detail: needsReview ? "Bot báo job failed; mở chi tiết trước khi tạo ticket hỗ trợ." : "Không có job failed trong cửa sổ metadata hiện tại.",
+        detail: needsReview ? dashboardText("actionCenter.review.detailActive") : dashboardText("actionCenter.review.detailEmpty"),
         href: "/jobs",
-        action: "Xem job"
+        action: dashboardText("actionCenter.review.action")
       },
       {
         icon: ICONS.ticket,
         count: waitingUser,
-        label: "Ticket chờ bạn",
+        label: dashboardText("actionCenter.tickets.label"),
         status: waitingUser ? "awaiting_confirm" : "read_only",
-        detail: waitingUser ? "Bot đang chờ phản hồi của bạn trong thread canonical." : "Không có ticket đang chờ phản hồi từ bạn.",
+        detail: waitingUser ? dashboardText("actionCenter.tickets.detailActive") : dashboardText("actionCenter.tickets.detailEmpty"),
         href: "/tickets",
-        action: "Mở ticket"
+        action: dashboardText("actionCenter.tickets.action")
       }
     ];
-    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Work Queue</span><h2 id="workspace-action-center-title">Công việc cần chú ý</h2><p>Chỉ tổng hợp metadata canonical thuộc signed session hiện tại; không suy đoán output, charge hay delivery.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Xem tất cả công việc →</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${safeText(card.label)}</h3><p>${safeText(card.detail)}</p><span class="portal-action-card-link">${safeText(card.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
+    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("actionCenter.kicker")}</span><h2 id="workspace-action-center-title">${dashboardText("actionCenter.title")}</h2><p>${dashboardText("actionCenter.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("actionCenter.openAll")}</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3><p>${card.detail}</p><span class="portal-action-card-link">${card.action} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
   }
 
   function renderStudioLaunchpad(context) {
     const studios = [
-      { route: "/image/create", icon: ICONS.image, title: "Ảnh", description: "Prompt, tham chiếu và estimate canonical.", tags: ["Prompt", "Assets"] },
-      { route: "/video/create", icon: ICONS.video, title: "Video", description: "Brief, cảnh và tiến độ từ Job Center.", tags: ["Draft", "Jobs"] },
-      { route: "/voice/tts", icon: ICONS.voice, title: "Voice", description: "TTS, Voice Vault và consent rõ ràng.", tags: ["Vault", "Estimate"] },
-      { route: "/music/create", icon: ICONS.music, title: "Music", description: "Prompt nhạc, chính sách và báo giá bot.", tags: ["Policy", "Quote"] },
-      { route: "/content/pack", icon: ICONS.prompt, title: "Content", description: "Caption, hook, script và storyboard.", tags: ["Planning", "0 Xu draft"] },
-      { route: "/documents", icon: ICONS.document, title: "Documents", description: "PDF/OCR theo contract và delivery riêng tư.", tags: ["Files", "Guarded"] }
+      { route: "/image/create", icon: ICONS.image, title: dashboardText("launchpad.studio.image.title"), description: dashboardText("launchpad.studio.image.body"), tags: [dashboardText("launchpad.studio.image.tagPrompt"), dashboardText("launchpad.studio.image.tagAssets")] },
+      { route: "/video/create", icon: ICONS.video, title: dashboardText("launchpad.studio.video.title"), description: dashboardText("launchpad.studio.video.body"), tags: [dashboardText("launchpad.studio.video.tagDraft"), dashboardText("launchpad.studio.video.tagJobs")] },
+      { route: "/voice/tts", icon: ICONS.voice, title: dashboardText("launchpad.studio.voice.title"), description: dashboardText("launchpad.studio.voice.body"), tags: [dashboardText("launchpad.studio.voice.tagVault"), dashboardText("launchpad.studio.voice.tagEstimate")] },
+      { route: "/music/create", icon: ICONS.music, title: dashboardText("launchpad.studio.music.title"), description: dashboardText("launchpad.studio.music.body"), tags: [dashboardText("launchpad.studio.music.tagPolicy"), dashboardText("launchpad.studio.music.tagQuote")] },
+      { route: "/content/pack", icon: ICONS.prompt, title: dashboardText("launchpad.studio.content.title"), description: dashboardText("launchpad.studio.content.body"), tags: [dashboardText("launchpad.studio.content.tagPlanning"), dashboardText("launchpad.studio.content.tagDraft")] },
+      { route: "/documents", icon: ICONS.document, title: dashboardText("launchpad.studio.documents.title"), description: dashboardText("launchpad.studio.documents.body"), tags: [dashboardText("launchpad.studio.documents.tagFiles"), dashboardText("launchpad.studio.documents.tagGuarded")] }
     ];
-    return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">TOAN AAS Studio</span><h2>Chọn một workflow rõ ràng</h2><p>Mỗi studio dùng cùng hợp đồng draft → estimate → confirm; browser không gọi provider, ví hay job trực tiếp.</p></div><a class="portal-button portal-button--quiet" href="/pricing">Xem pricing canonical →</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
+    return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("launchpad.kicker")}</span><h2>${dashboardText("launchpad.title")}</h2><p>${dashboardText("launchpad.body")}</p></div><a class="portal-button portal-button--quiet" href="/pricing">${dashboardText("launchpad.pricing")}</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
       const studioPage = manifest[studio.route] || { path: studio.route, access: "member", action: "none" };
       const state = stateFor(studioPage, context);
-      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${safeText(studio.title)}</h3><p>${safeText(studio.description)}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div><span class="portal-studio-open">Mở studio <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
+      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${studio.title}</h3><p>${studio.description}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${tag}</span>`).join("")}</div><span class="portal-studio-open">${dashboardText("launchpad.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
     }).join("")}</div></section>`;
   }
 

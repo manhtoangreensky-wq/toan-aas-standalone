@@ -58,7 +58,7 @@ def test_dashboard_separates_web_native_account_and_canonical_lanes() -> None:
     surface = dashboard_surface()
     root = surface[surface.index("function renderDashboard(page, context)"):]
     for token in (
-        "Continue Web work",
+        'dashboardText("work.kicker")',
         "renderDashboardRecentProjects(context)",
         "renderDashboardRecentDrafts(context)",
         "renderDashboardAccountLane(context)",
@@ -67,7 +67,7 @@ def test_dashboard_separates_web_native_account_and_canonical_lanes() -> None:
         "renderStudioLaunchpad(context)",
     ):
         assert token in root
-    for token in ("Account & Security", "Canonical integration"):
+    for token in ('dashboardText("account.kicker")', "function renderDashboardCanonicalLane"):
         assert token in surface
     for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "bridge_request", "CORE_BRIDGE"):
         assert forbidden.lower() not in root.lower()
@@ -86,7 +86,7 @@ def test_dashboard_uses_typed_read_state_and_never_disguises_unread_counts_as_ze
         'const processing = canonicalReady ?',
         'const deliveryReady = canonicalReady ?',
         'readState === "failed"',
-        "Cần làm mới",
+            'dashboardText("summary.canonicalFailed")',
     ):
         assert token in summary
     canonical = surface[surface.index("function renderDashboardCanonicalLane"):surface.index("function renderDashboard(page, context)")]
@@ -95,8 +95,8 @@ def test_dashboard_uses_typed_read_state_and_never_disguises_unread_counts_as_ze
         'if (readState === "failed")',
         'if (readState !== "ready")',
         'data-portal-action="dashboard-refresh"',
-        "Dashboard đã xóa projection canonical cũ",
-        "Không dùng placeholder để thay thế một output đã được xác minh.",
+        'dashboardText("canonical.failedBody")',
+        'dashboardText("canonical.assets.emptyBody")',
     ):
         assert token in canonical
 
@@ -242,3 +242,221 @@ def test_dashboard_contract_records_authority_non_goals_and_failure_semantics() 
         "database table/migration mới",
     ):
         assert token in CONTRACT
+
+
+def test_dashboard_fixed_copy_uses_reviewed_catalogue_without_changing_authority() -> None:
+    surface = dashboard_surface()
+    assert "function dashboardText(key, params)" in surface
+    for function_name in (
+        "renderDashboardWorkspaceSummary",
+        "renderDashboardRecentDrafts",
+        "renderDashboardRecentProjects",
+        "renderDashboardStartGuide",
+        "renderDashboardAccountLane",
+        "renderDashboardCanonicalLane",
+        "renderDashboard",
+        "renderWorkspaceActionCenter",
+        "renderStudioLaunchpad",
+    ):
+        start = PORTAL.index(f"function {function_name}(")
+        next_function = PORTAL.find("\n  function ", start + 1)
+        block = PORTAL[start:next_function if next_function != -1 else len(PORTAL)]
+        assert "dashboardText(" in block
+    dashboard = PORTAL[PORTAL.index("function renderDashboard(page, context)"):PORTAL.index("function renderWorkspaceActionCenter")]
+    for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage"):
+        assert forbidden not in dashboard.lower()
+
+
+def test_dashboard_command_center_moves_all_fixed_chrome_to_dashboard_keys() -> None:
+    """Keep fixed chrome localized without rewriting canonical customer data."""
+
+    expected_keys = {
+        "renderDashboardCanonicalLane": (
+            "canonical.kicker",
+            "canonical.loadingTitle",
+            "canonical.loadingBody",
+            "canonical.failedTitle",
+            "canonical.failedBody",
+            "canonical.retry",
+            "canonical.checkConnection",
+            "canonical.guardedTitle",
+            "canonical.guardedBody",
+            "canonical.learnLink",
+            "canonical.openSecurity",
+            "canonical.readyTitle",
+            "canonical.readyBody",
+            "canonical.metrics.balanceLabel",
+            "canonical.metrics.balanceCanonicalDetail",
+            "canonical.metrics.balancePendingDetail",
+            "canonical.metrics.spentLabel",
+            "canonical.metrics.spentCanonicalDetail",
+            "canonical.metrics.spentPendingDetail",
+            "canonical.metrics.jobsLabel",
+            "canonical.metrics.jobsDetail",
+            "canonical.metrics.assetsLabel",
+            "canonical.metrics.assetsDetail",
+            "canonical.jobs.title",
+            "canonical.jobs.body",
+            "canonical.jobs.open",
+            "canonical.jobs.table.id",
+            "canonical.jobs.table.feature",
+            "canonical.jobs.table.status",
+            "canonical.jobs.table.output",
+            "canonical.jobs.emptyTitle",
+            "canonical.jobs.emptyBody",
+            "canonical.assets.title",
+            "canonical.assets.body",
+            "canonical.assets.open",
+            "canonical.assets.table.asset",
+            "canonical.assets.table.feature",
+            "canonical.assets.table.status",
+            "canonical.assets.table.delivery",
+            "canonical.assets.emptyTitle",
+            "canonical.assets.emptyBody",
+        ),
+        "renderDashboard": (
+            "work.kicker",
+            "work.title",
+            "work.body",
+            "assurance.title",
+            "assurance.body",
+        ),
+        "renderWorkspaceActionCenter": (
+            "actionCenter.kicker",
+            "actionCenter.title",
+            "actionCenter.body",
+            "actionCenter.openAll",
+            "actionCenter.processing.label",
+            "actionCenter.processing.detailActive",
+            "actionCenter.processing.detailEmpty",
+            "actionCenter.processing.action",
+            "actionCenter.delivery.label",
+            "actionCenter.delivery.detailActive",
+            "actionCenter.delivery.detailEmpty",
+            "actionCenter.delivery.action",
+            "actionCenter.review.label",
+            "actionCenter.review.detailActive",
+            "actionCenter.review.detailEmpty",
+            "actionCenter.review.action",
+            "actionCenter.tickets.label",
+            "actionCenter.tickets.detailActive",
+            "actionCenter.tickets.detailEmpty",
+            "actionCenter.tickets.action",
+        ),
+        "renderStudioLaunchpad": (
+            "launchpad.kicker",
+            "launchpad.title",
+            "launchpad.body",
+            "launchpad.pricing",
+            "launchpad.open",
+            "launchpad.studio.image.title",
+            "launchpad.studio.image.body",
+            "launchpad.studio.image.tagPrompt",
+            "launchpad.studio.image.tagAssets",
+            "launchpad.studio.video.title",
+            "launchpad.studio.video.body",
+            "launchpad.studio.video.tagDraft",
+            "launchpad.studio.video.tagJobs",
+            "launchpad.studio.voice.title",
+            "launchpad.studio.voice.body",
+            "launchpad.studio.voice.tagVault",
+            "launchpad.studio.voice.tagEstimate",
+            "launchpad.studio.music.title",
+            "launchpad.studio.music.body",
+            "launchpad.studio.music.tagPolicy",
+            "launchpad.studio.music.tagQuote",
+            "launchpad.studio.content.title",
+            "launchpad.studio.content.body",
+            "launchpad.studio.content.tagPlanning",
+            "launchpad.studio.content.tagDraft",
+            "launchpad.studio.documents.title",
+            "launchpad.studio.documents.body",
+            "launchpad.studio.documents.tagFiles",
+            "launchpad.studio.documents.tagGuarded",
+        ),
+    }
+    blocks: dict[str, str] = {}
+    for function_name, keys in expected_keys.items():
+        start = PORTAL.index(f"function {function_name}(")
+        next_function = PORTAL.find("\n  function ", start + 1)
+        block = PORTAL[start:next_function if next_function != -1 else len(PORTAL)]
+        blocks[function_name] = block
+        for key in keys:
+            assert f'dashboardText("{key}")' in block
+
+    fixed_literals = (
+        "Canonical integration",
+        "Wallet, job, asset, ticket và feature readiness chỉ xuất hiện",
+        "Chưa thể xác minh trạng thái vận hành",
+        "Dashboard đã xóa projection canonical cũ",
+        "Thử lại",
+        "Kiểm tra kết nối",
+        "Integration chưa sẵn sàng",
+        "Phần Web-native vẫn hoạt động độc lập.",
+        "Xem cách liên kết",
+        "Mở Security Center",
+        "Xu canonical",
+        "Không tính lại ở browser",
+        "Đã dùng",
+        "Đọc từ ledger canonical",
+        "Job gần đây",
+        "Trong cửa sổ hiện tại",
+        "Asset metadata",
+        "Không đồng nghĩa delivery",
+        "Core Bridge kiểm tra ownership",
+        "Mở Job Center →",
+        "Output engine",
+        "Chưa có hoạt động được xác minh",
+        "Tài sản gần đây",
+        "Chỉ metadata riêng tư",
+        "Mở tài sản →",
+        "Chưa có asset metadata",
+        "Continue Web work",
+        "Hai thư viện này là dữ liệu Web-owned",
+        "Web-native authoring, canonical read models",
+        "Work Queue",
+        "Chỉ tổng hợp metadata canonical",
+        "Xem tất cả công việc →",
+        "Đang xử lý",
+        "Tệp đã sẵn sàng",
+        "Cần xem job",
+        "Ticket chờ bạn",
+        "TOAN AAS Studio",
+        "Mỗi studio dùng cùng hợp đồng",
+        "Xem pricing canonical →",
+        "Prompt, tham chiếu và estimate canonical.",
+        "Brief, cảnh và tiến độ từ Job Center.",
+        "TTS, Voice Vault và consent rõ ràng.",
+        "Prompt nhạc, chính sách và báo giá bot.",
+        "Caption, hook, script và storyboard.",
+        "PDF/OCR theo contract và delivery riêng tư.",
+        "Mở studio",
+    )
+    command_center = "\n".join(blocks.values())
+    for literal in fixed_literals:
+        assert literal not in command_center
+
+
+def test_dashboard_ready_rows_use_dashboard_localized_delivery_helpers() -> None:
+    """A ready Dashboard must not borrow fixed Vietnamese delivery chrome."""
+
+    canonical_start = PORTAL.index("function renderDashboardCanonicalLane(")
+    canonical_end = PORTAL.index("function renderDashboard(page, context)", canonical_start)
+    canonical = PORTAL[canonical_start:canonical_end]
+
+    for helper in (
+        "function dashboardReportedOutput(item)",
+        "function dashboardAssetJobLink(item)",
+        "function dashboardAssetDeliveryState(item)",
+    ):
+        assert helper in PORTAL
+
+    assert "dashboardReportedOutput(item)" in canonical
+    assert "dashboardAssetJobLink(item)" in canonical
+    assert 'dashboardAssetDeliveryState(item)' in canonical
+    for leaked_helper in (
+        "reportedOutput(item)",
+        "assetJobLink(item)",
+        'assetDeliveryState(item, "asset")',
+    ):
+        assert leaked_helper not in canonical
