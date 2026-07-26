@@ -104,6 +104,55 @@ def test_public_landing_uses_i18n_real_routes_and_portal_svg_icons() -> None:
         assert forbidden not in landing
 
 
+def test_welcome_uses_one_public_container_for_aligned_teal_sky_sections() -> None:
+    landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
+
+    assert 'class="portal-landing portal-landing-public-container"' in landing
+    assert ".portal-landing-public-container" in THEME
+    assert "--portal-public-content-width:" in THEME
+    assert "width: var(--portal-public-content-width);" in THEME
+    assert "landing.cta.start" in (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
+    assert 'text("preview.guardedBody")' in landing
+
+
+def test_public_navigation_keeps_primary_actions_visible_on_intermediate_desktop_widths() -> None:
+    compact_desktop = re.search(
+        r"@media \(max-width: 1240px\)\s*\{(?P<declarations>.*?)\n\}",
+        THEME,
+        flags=re.DOTALL,
+    )
+
+    assert compact_desktop is not None
+    assert re.search(
+        r"\.portal-landing-nav-links\s*\{\s*display:\s*none;\s*\}",
+        compact_desktop.group("declarations"),
+        flags=re.DOTALL,
+    )
+
+
+def test_mobile_landing_navigation_uses_reviewed_compact_action_copy() -> None:
+    landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
+    catalogue = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
+
+    for token in (
+        'text("cta.startCompact")',
+        'text("cta.workspaceCompact")',
+        "portal-landing-nav-primary-full",
+        "portal-landing-nav-primary-compact",
+    ):
+        assert token in landing
+    for key in ("landing.cta.startCompact", "landing.cta.workspaceCompact"):
+        assert catalogue.count(f'"{key}"') == 3
+    assert ".portal-landing-nav-primary-compact" in THEME
+    compact_label = re.search(
+        r"\.portal-landing-nav-primary-compact\s*\{(?P<declarations>.*?)\n\s*\}",
+        THEME,
+        flags=re.DOTALL,
+    )
+    assert compact_label is not None
+    assert "white-space: nowrap;" in compact_label.group("declarations")
+
+
 def test_landing_has_balanced_responsive_layout_and_accessible_controls() -> None:
     for selector in (
         ".portal-landing-locale-nav",

@@ -46,7 +46,7 @@ def test_portal_shell_loads_the_teal_cyan_theme_between_base_css_and_javascript(
     assert portal_css < portal_theme < i18n < portal < integration
 
 
-def test_teal_cyan_theme_exposes_accessible_responsive_foundation_tokens() -> None:
+def test_unified_teal_sky_tokens_drive_light_and_dark_surfaces() -> None:
     assert PORTAL_THEME.is_file()
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
 
@@ -55,13 +55,16 @@ def test_teal_cyan_theme_exposes_accessible_responsive_foundation_tokens() -> No
     root_declarations = root.group("declarations")
 
     expected_tokens = (
-        "--portal-bg: #07141d;",
-        "--portal-surface: #0d2330;",
-        "--portal-accent: #0e9f9a;",
-        "--portal-info: #0284c7;",
-        "--portal-ink: #06212b;",
-        "--portal-light-soft: #f4fbfb;",
-        "--portal-light-action: #0b5961;",
+        "--portal-bg: #062a36;",
+        "--portal-surface: #0b3440;",
+        "--portal-surface-strong: #104352;",
+        "--portal-border: #246070;",
+        "--portal-accent: #14b8a6;",
+        "--portal-accent-hover: #2dd4bf;",
+        "--portal-info: #38bdf8;",
+        "--portal-light-canvas: #f4fbfc;",
+        "--portal-light-border: #d7ecef;",
+        "--portal-ink: #092b36;",
     )
 
     for token in expected_tokens:
@@ -80,12 +83,13 @@ def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> N
     assert root is not None
     root_declarations = root.group("declarations")
     expected_tokens = (
-        "--portal-chrome: #081b26;",
-        "--portal-accent-hover: #26c8bf;",
-        "--portal-light-accent-border: #8fd6d3;",
-        "--portal-light-accent-soft: #e2f6f4;",
+        "--portal-chrome: #062a36;",
+        "--portal-light-surface: #ffffff;",
+        "--portal-light-soft: #e8f5f6;",
+        "--portal-light-accent-border: #8bded7;",
+        "--portal-light-accent-soft: #e0f7f5;",
         "--portal-light-hover-surface: #f8fdfd;",
-        "--portal-landing-divider: #d5eaed;",
+        "--portal-landing-divider: #d7ecef;",
     )
 
     for token in expected_tokens:
@@ -93,17 +97,21 @@ def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> N
 
     rendered_rules = theme_source[root.end() :]
     for literal in (
-        "#081b26",
-        "#26c8bf",
-        "#52727c",
+        "#062a36",
+        "#0b3440",
+        "#104352",
+        "#246070",
+        "#14b8a6",
+        "#2dd4bf",
+        "#38bdf8",
+        "#092b36",
+        "#335969",
+        "#0d2330",
         "#ffffff",
-        "#f4fbfb",
-        "#c7e3e6",
-        "#d9edef",
-        "#e2f6f4",
-        "#d5eaed",
-        "#0b756f",
-        "#06212b",
+        "#f4fbfc",
+        "#d7ecef",
+        "#e8f5f6",
+        "#e0f7f5",
     ):
         assert literal not in rendered_rules
 
@@ -116,6 +124,49 @@ def test_root_is_the_only_owner_of_hex_colour_literals() -> None:
     rendered_rules = theme_source[root.end() :]
     literals = re.findall(r"#[0-9a-fA-F]{3,8}\b", rendered_rules)
     assert not literals, f"move semantic colour literals into :root: {', '.join(sorted(set(literals)))}"
+
+
+def test_shared_chrome_does_not_keep_legacy_blue_or_teal_rgba_values() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
+
+    assert root is not None
+    rendered_rules = theme_source[root.end() :]
+    for legacy_colour in ("rgba(2, 132, 199", "rgba(14, 159, 154"):
+        assert legacy_colour not in rendered_rules
+
+    active_navigation = re.search(
+        r"\.portal-nav-link\[aria-current=\"page\"\]\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    dark_focus = re.search(
+        r"\.portal-input:focus,\s*\.portal-select:focus,\s*\.portal-textarea:focus\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    light_focus = re.search(
+        r"\.portal-auth-page--access \.portal-input:focus,\s*"
+        r"\.portal-auth-page--access \.portal-select:focus,\s*"
+        r"\.portal-auth-page--access \.portal-textarea:focus\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    table_hover = re.search(
+        r"\.portal-data-table tbody tr:hover\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert active_navigation is not None
+    assert dark_focus is not None
+    assert light_focus is not None
+    assert table_hover is not None
+    assert "var(--portal-info)" in active_navigation.group("declarations")
+    assert "var(--portal-info)" in dark_focus.group("declarations")
+    assert "var(--portal-info)" in light_focus.group("declarations")
+    assert "var(--portal-accent)" in table_hover.group("declarations")
 
 
 def test_final_theme_preserves_44px_mobile_controls_after_the_legacy_catalogue() -> None:
@@ -158,11 +209,11 @@ def test_light_surface_focus_ring_overrides_the_catalogue_important_outline_with
     assert "outline: 2px solid #5eead4 !important;" in legacy_focus.group("declarations")
     assert final_focus is not None
     assert "outline: 3px solid var(--portal-focus) !important;" in final_focus.group("declarations")
-    assert "--portal-focus: #0284c7;" in theme_source
-    assert "--portal-light-canvas: #f6fcfc;" in theme_source
+    assert "--portal-focus: #0b6d8c;" in theme_source
+    assert "--portal-light-canvas: #f4fbfc;" in theme_source
     assert "--portal-light-surface: #ffffff;" in theme_source
-    assert _contrast_ratio("#0284c7", "#ffffff") >= 3
-    assert _contrast_ratio("#0284c7", "#f6fcfc") >= 3
+    assert _contrast_ratio("#0b6d8c", "#ffffff") >= 3
+    assert _contrast_ratio("#0b6d8c", "#f4fbfc") >= 3
     assert SHELL_TEMPLATE.index(BASE_STYLESHEET) < SHELL_TEMPLATE.index(THEME_STYLESHEET)
 
 
@@ -170,11 +221,11 @@ def test_pwa_metadata_and_offline_shell_share_the_canonical_portal_background() 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     offline_shell = OFFLINE_SHELL.read_text(encoding="utf-8")
 
-    assert manifest["background_color"] == "#07141d"
-    assert manifest["theme_color"] == "#07141d"
-    assert '<meta name="theme-color" content="#07141d">' in offline_shell
-    assert "background: #07141d;" in offline_shell
-    assert "#07131f" not in offline_shell
+    assert manifest["background_color"] == "#062a36"
+    assert manifest["theme_color"] == "#062a36"
+    assert '<meta name="theme-color" content="#062a36">' in offline_shell
+    assert "background: #062a36;" in offline_shell
+    assert "#07141d" not in offline_shell
 
 
 def test_access_copy_stays_top_aligned_with_the_email_form() -> None:
@@ -234,7 +285,7 @@ def test_primary_teal_actions_use_dark_ink_for_readable_contrast() -> None:
 
     assert root is not None
     assert primary is not None
-    assert "--portal-accent-ink: #06212b;" in root.group("declarations")
+    assert "--portal-accent-ink: #092b36;" in root.group("declarations")
     assert "color: var(--portal-accent-ink);" in primary.group("declarations")
 
 

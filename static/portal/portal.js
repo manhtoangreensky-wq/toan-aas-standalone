@@ -344,14 +344,14 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email (có thể dùng Gmail)", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Dùng Email + mật khẩu đã tạo tài khoản. Google (OAuth) là một phương thức riêng và chỉ được bật khi server có cấu hình OAuth." },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true, maxLength: 256 }
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng Email + mật khẩu đã tạo tài khoản. Google (OAuth) là một phương thức riêng và chỉ được bật khi server có cấu hình OAuth.", helpKey: "access.help.loginEmail" },
+      { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Nhập mật khẩu", placeholderKey: "access.placeholder.password", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh." },
-      { name: "email", label: "Email (có thể dùng Gmail)", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng." },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
-      { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
+      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên bạn muốn dùng", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh.", helpKey: "access.help.registerName" },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng.", helpKey: "access.help.registerEmail" },
+      { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "access.placeholder.passwordMin", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
+      { name: "confirm_password", label: "Xác nhận mật khẩu", labelKey: "access.field.passwordConfirm", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "access.placeholder.passwordConfirm", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     passwordRecovery: [
       { name: "email", label: "Email tài khoản", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không." }
@@ -767,13 +767,13 @@
   definePage({
     path: "/login", title: "Đăng nhập an toàn", icon: ICONS.account, section: "Tài khoản",
     description: "Đăng nhập bằng Email + mật khẩu (có thể dùng Gmail), Google/GitHub/Apple OAuth, hoặc xác minh Telegram một lần trong bot; signed session chỉ do máy chủ tạo sau xác thực.",
-    access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", fields: copyFields(FIELD_SETS.authLogin),
+    access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", actionLabelKey: "access.action.signIn", fields: copyFields(FIELD_SETS.authLogin),
     notes: ["Không nhập raw Telegram ID vào browser. Telegram Login dùng OIDC đã ký trên server; Bot deep-link một lần vẫn khóa identity canonical, hết hạn và chống replay.", "Email + mật khẩu (có thể dùng Gmail), Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple là các phương thức riêng. OAuth chỉ hiện khi server đã có client, secret và callback hợp lệ."]
   });
   definePage({
     path: "/register", title: "Tạo tài khoản", icon: ICONS.account, section: "Tài khoản",
     description: "Tạo hồ sơ bằng Email + mật khẩu (có thể dùng Gmail), hoặc bằng Google/GitHub/Apple OAuth khi server đã cấu hình thật. Mật khẩu chỉ được băm ở máy chủ.",
-    access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", fields: copyFields(FIELD_SETS.authRegister),
+    access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", actionLabelKey: "access.action.register", fields: copyFields(FIELD_SETS.authRegister),
     notes: ["Hồ sơ mới có sẵn locale vi, múi giờ Asia/Ho_Chi_Minh và avatar gradient. Browser không nhận hoặc lưu Telegram ID; server chỉ giữ identity canonical sau khi Bot xác minh.", "Email + mật khẩu là phương thức đang bật; địa chỉ Gmail hoạt động như email bình thường. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình OAuth thật.", "Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; response đăng ký không tiết lộ email đã có tài khoản hay chưa.", "Chỉ đăng nhập Email + mật khẩu hoặc OAuth đã xác thực mới cấp signed session và CSRF; shell không giả lập token hoặc session."]
   });
   definePage({
@@ -9336,6 +9336,9 @@
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
       const fieldLabel = field.labelKey ? uiText(field.labelKey, field.label) : field.label;
       const fieldHelp = field.helpKey ? uiText(field.helpKey, field.help) : field.help;
+      const fieldPlaceholder = field.placeholderKey ? uiText(field.placeholderKey, field.placeholder) : field.placeholder;
+      const passwordShowLabel = uiText("access.password.showLabel", "Hiện mật khẩu");
+      const passwordShowText = uiText("access.password.show", "Hiện");
       const descriptionIds = [];
       const help = fieldHelp ? (descriptionIds.push(`${id}-help`), `<span id="${id}-help" class="portal-field-help">${safeText(fieldHelp)}</span>`) : "";
       const staged = stagedUploadCount ? (descriptionIds.push(`${id}-staged`), `<span id="${id}-staged" class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>`) : "";
@@ -9352,7 +9355,7 @@
       const inputMode = field.inputMode ? ` inputmode="${safeText(field.inputMode)}"` : "";
       let control;
       if (field.control === "textarea") {
-        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${required}${ariaRequired}${minLength}${maxLength}${describedBy}${controlData}${disabled}>${safeText(value)}</textarea>`;
+        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(fieldPlaceholder)}"${required}${ariaRequired}${minLength}${maxLength}${describedBy}${controlData}${disabled}>${safeText(value)}</textarea>`;
       } else if (field.control === "select") {
         let options = Array.isArray(field.options) ? field.options : [];
         if (field.optionsFrom === "voiceProfiles") {
@@ -9441,15 +9444,15 @@
         const multiple = type === "file" && field.multiple ? " multiple" : "";
         const accept = type === "file" && field.accept ? ` accept="${safeText(field.accept)}"` : "";
         const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
-        const input = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${controlData}${disabled}>`;
+        const input = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(fieldPlaceholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${controlData}${disabled}>`;
         // Password visibility is a local, tab-only affordance.  It never
         // persists, emits an action, or changes the signed form contract.
         control = type === "password"
-          ? `<span class="portal-password-control">${input}<button class="portal-password-toggle" type="button" aria-controls="${id}" aria-label="Hiện mật khẩu" aria-pressed="false" data-portal-toggle-password${disabled}><span data-portal-password-toggle-label>Hiện</span></button></span>`
+          ? `<span class="portal-password-control">${input}<button class="portal-password-toggle" type="button" aria-controls="${id}" aria-label="${safeText(passwordShowLabel)}" aria-pressed="false" data-portal-toggle-password${disabled}><span data-portal-password-toggle-label>${safeText(passwordShowText)}</span></button></span>`
           : input;
       }
       const requiredMark = hasRequiredIndicator
-        ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true"${field.required === true || field.requiredUpload === true ? "" : " hidden"}>*</span><span class="portal-sr-only" data-portal-required-message${field.required === true || field.requiredUpload === true ? "" : " hidden"}> bắt buộc</span>`
+        ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true"${field.required === true || field.requiredUpload === true ? "" : " hidden"}>*</span><span class="portal-sr-only" data-portal-required-message${field.required === true || field.requiredUpload === true ? "" : " hidden"}> ${safeText(uiText("chrome.required", "Bắt buộc"))}</span>`
         : "";
       const referencePicker = field.referencePicker ? renderOperationAssetReferencePicker(context, field.referencePicker) : "";
       return `<div class="portal-field${wide ? " portal-field--wide" : ""}"${wrapperData}><label for="${id}">${safeText(fieldLabel)}${requiredMark}</label>${control}${help}${staged}${referencePicker}</div>`;
@@ -23082,11 +23085,28 @@
   }
 
   function renderAuth(page, context) {
-    const alternative = page.path === "/login" ? ["/register", "Tạo tài khoản"] : ["/login", "Đăng nhập"];
+    const accessText = (key, fallback) => uiText(`access.${key}`, fallback);
+    const isLogin = page.path === "/login";
+    const isRegister = page.path === "/register";
+    const alternative = isLogin
+      ? ["/register", accessText("alternative.register", "Tạo tài khoản")]
+      : ["/login", accessText("alternative.signIn", "Đăng nhập")];
+    const actionLabel = page.actionLabelKey ? uiText(page.actionLabelKey, page.actionLabel) : page.actionLabel;
+    const requestedLocale = reviewedInterfaceLocale(context && context.interfaceLocale) || "vi";
+    const localeHref = (code) => {
+      const params = new URLSearchParams(window.location.search || "");
+      params.set("lang", code);
+      return `${page.path}?${params.toString()}`;
+    };
+    const localeMarkup = [
+      ["vi", uiText("locale.vi", "Tiếng Việt")],
+      ["en", uiText("locale.en", "English")],
+      ["zh", uiText("locale.zh", "中文")]
+    ].map(([code, label]) => `<a class="portal-auth-locale-link" href="${safeText(localeHref(code))}"${requestedLocale === code ? ' aria-current="true"' : ""}>${safeText(label)}</a>`).join("");
     const enabled = canAct(page, context);
-    const reason = actionBlockReason(page, context);
+    const unavailableMessage = accessText("primary.unavailable", "Đang kiểm tra phiên bảo mật trước khi cho phép thao tác.");
     const recoveryLink = page.path === "/login"
-      ? '<a class="portal-button portal-button--quiet" href="/password-recovery">Quên mật khẩu?</a>'
+      ? `<a class="portal-button portal-button--quiet" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
       : "";
     const noTransient = page.path === "/password-recovery" ? " data-portal-no-transient" : "";
     const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
@@ -23121,9 +23141,7 @@
       && mfaChallengeMinutes <= 10;
     const primaryForm = mfaLoginPending
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="/login" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="/login"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
-      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}"><span>${alternative[1]}</span><span class="portal-auth-button-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>`;
-    const isLogin = page.path === "/login";
-    const isRegister = page.path === "/register";
+      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}?lang=${safeText(requestedLocale)}"><span>${safeText(alternative[1])}</span><span class="portal-auth-button-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
     const providerMethods = mfaLoginPending
       ? ""
       : (isLogin ? renderTelegramLoginMethod(context) : (isRegister ? renderOAuthRegistrationMethods(context) : ""));
@@ -23134,25 +23152,25 @@
     );
     const primaryTitle = mfaLoginPending
       ? "Xác thực hai lớp"
-      : (isLogin ? "Đăng nhập bằng email" : (isRegister ? "Tạo tài khoản bằng email" : page.title));
+      : (isLogin ? accessText("primary.login", "Đăng nhập bằng email") : (isRegister ? accessText("primary.register", "Tạo tài khoản bằng email") : page.title));
     const primaryDescription = mfaLoginPending
       ? "Nhập mã xác thực trong ứng dụng hoặc mã khôi phục của chính bạn."
       : (isLogin
-        ? "Email + mật khẩu là đường chính để vào Workspace."
-        : (isRegister ? "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau." : safeText(page.description)));
-    const authHeading = isLogin ? "Chào mừng trở lại" : (isRegister ? "Tạo Workspace của bạn" : safeText(displayPageTitle(page, context)));
+        ? accessText("primary.loginDescription", "Email + mật khẩu là đường chính để vào Workspace.")
+        : (isRegister ? accessText("primary.registerDescription", "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau.") : safeText(page.description)));
+    const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : safeText(displayPageTitle(page, context)));
     const authIntroDescription = isLogin
-      ? "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần."
+      ? accessText("intro.login", "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần.")
       : (isRegister
-        ? "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot."
+        ? accessText("intro.register", "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot.")
         : safeText(page.description));
-    const authSwitch = `<nav class="portal-auth-switch" aria-label="Chọn phương thức truy cập"><a href="/login"${isLogin ? ' aria-current="page"' : ""}>Đăng nhập</a><a href="/register"${isRegister ? ' aria-current="page"' : ""}>Tạo tài khoản</a></nav>`;
+    const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
     const alternativeMethods = providerMethods
-      ? `<details class="portal-auth-alternatives"${alternativeMethodsOpen ? " open" : ""}><summary><span>${isLogin ? "Dùng Telegram hoặc OAuth" : "Tạo tài khoản qua OAuth"}</span><small>${isLogin ? "Tùy chọn · chỉ hiện provider đã cấu hình" : "Tùy chọn · không tự ghép theo email"}</small></summary><div class="portal-auth-alternatives-body">${providerMethods}</div></details>`
+      ? `<details class="portal-auth-alternatives"${alternativeMethodsOpen ? " open" : ""}><summary><span>${safeText(isLogin ? accessText("alternatives.loginTitle", "Dùng Telegram hoặc OAuth") : accessText("alternatives.registerTitle", "Tạo tài khoản qua OAuth"))}</span><small>${safeText(isLogin ? accessText("alternatives.loginHint", "Tùy chọn · chỉ hiện provider đã cấu hình") : accessText("alternatives.registerHint", "Tùy chọn · không tự ghép theo email"))}</small></summary><div class="portal-auth-alternatives-body">${providerMethods}</div></details>`
       : "";
-    const authAssurance = `<details class="portal-auth-assurance"><summary>Vì sao Workspace này an toàn?</summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
-    const operationalNotes = `<details class="portal-auth-help"><summary>Thông tin bảo mật và tích hợp</summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><a class="portal-auth-back" href="/welcome"><span>Giới thiệu</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p></section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(reason)}</p></div></div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${alternativeMethods}${authAssurance}${operationalNotes}</section></div></article>`;
+    const authAssurance = `<details class="portal-auth-assurance"><summary>${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
+    const operationalNotes = `<details class="portal-auth-help"><summary>${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p></section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(unavailableMessage)}</p></div></div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${alternativeMethods}${authAssurance}${operationalNotes}</section></div></article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -24418,6 +24436,9 @@
     const primaryAction = signedIn
       ? `<a class="portal-button portal-button--primary" href="/dashboard"><span>${text("cta.workspace")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`
       : `<a class="portal-button portal-button--primary" href="/register"><span>${text("cta.start")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`;
+    const navigationAction = signedIn
+      ? `<a class="portal-button portal-button--primary portal-landing-nav-primary" href="/dashboard"><span class="portal-landing-nav-primary-full">${text("cta.workspace")}</span><span class="portal-landing-nav-primary-compact" aria-hidden="true">${text("cta.workspaceCompact")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`
+      : `<a class="portal-button portal-button--primary portal-landing-nav-primary" href="/register"><span class="portal-landing-nav-primary-full">${text("cta.start")}</span><span class="portal-landing-nav-primary-compact" aria-hidden="true">${text("cta.startCompact")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`;
     const secondaryAction = signedIn
       ? `<a class="portal-button portal-button--quiet" href="/account">${text("cta.account")}</a>`
       : `<a class="portal-button portal-button--quiet" href="/login">${text("cta.signIn")}</a>`;
@@ -24440,9 +24461,9 @@
     ];
     const trustMarkup = trustCards.map((item) => `<article><span class="portal-landing-trust-icon" aria-hidden="true">${portalIcon(item.icon)}</span><strong>${text(`trust.${item.key}.title`)}</strong><p>${text(`trust.${item.key}.body`)}</p></article>`).join("");
     const localeMarkup = languageLinks.map((item) => `<a class="portal-landing-locale-link" href="${item.href}"${locale === item.code ? ' aria-current="true"' : ""}>${item.label}</a>`).join("");
-    return `<article class="portal-landing" aria-label="TOAN AAS">
+    return `<article class="portal-landing portal-landing-public-container" aria-label="TOAN AAS">
       <header class="portal-landing-header">
-        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#studios">${text("nav.features")}</a><a href="#workflow">${text("nav.workflow")}</a><a href="#trust">${text("nav.trust")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${secondaryAction}${primaryAction}</div></nav>
+        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#studios">${text("nav.features")}</a><a href="#workflow">${text("nav.workflow")}</a><a href="#trust">${text("nav.trust")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${secondaryAction}${navigationAction}</div></nav>
       </header>
       <section class="portal-landing-hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${text("hero.title")}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}<a class="portal-button" href="/login?next=/features"><span>${text("hero.explore")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><aside class="portal-landing-preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside></section>
       <section class="portal-landing-section" id="studios"><div class="portal-landing-section-heading"><span>${text("studios.kicker")}</span><h2>${text("studios.title")}</h2><p>${text("studios.body")}</p></div><div class="portal-landing-studios">${studioCards}</div></section>
@@ -27396,9 +27417,9 @@
           const reveal = input.type === "password";
           input.type = reveal ? "text" : "password";
           passwordToggle.setAttribute("aria-pressed", reveal ? "true" : "false");
-          passwordToggle.setAttribute("aria-label", reveal ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+          passwordToggle.setAttribute("aria-label", reveal ? uiText("access.password.hideLabel", "Ẩn mật khẩu") : uiText("access.password.showLabel", "Hiện mật khẩu"));
           const label = passwordToggle.querySelector("[data-portal-password-toggle-label]");
-          if (label) label.textContent = reveal ? "Ẩn" : "Hiện";
+          if (label) label.textContent = reveal ? uiText("access.password.hide", "Ẩn") : uiText("access.password.show", "Hiện");
         }
         return;
       }

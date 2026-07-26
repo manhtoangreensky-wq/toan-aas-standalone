@@ -11,9 +11,11 @@ ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+THEME = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "WORKSPACE_COMMAND_CENTER_CONTRACT.md").read_text(encoding="utf-8")
+PORTAL_SHELL_TEMPLATE = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
 
 
 def dashboard_surface() -> str:
@@ -460,3 +462,89 @@ def test_dashboard_ready_rows_use_dashboard_localized_delivery_helpers() -> None
         'assetDeliveryState(item, "asset")',
     ):
         assert leaked_helper not in canonical
+
+
+def test_signed_workspace_shell_uses_token_driven_geometry_at_each_breakpoint() -> None:
+    """The final theme keeps the data-first shell operable without fake cards."""
+
+    marker = "/* Signed Workspace shell alignment. */"
+    assert marker in THEME
+    next_marker = "/* Final public-companion layout."
+    start = THEME.index(marker)
+    end = THEME.index(next_marker, start)
+    workspace_theme = THEME[start:end]
+
+    for selector in (
+        ".portal-shell:not(.portal-shell--auth):not(.portal-shell--landing)",
+        ".portal-sidebar {",
+        ".portal-header {",
+        ".portal-main {",
+        ".portal-data-table-wrap {",
+        ".portal-mobile-nav {",
+        ".portal-mobile-nav-link {",
+    ):
+        assert selector in workspace_theme
+
+    for declaration in (
+        "grid-template-columns: minmax(0, 1fr);",
+        "min-height: 44px;",
+        "border-color: var(--portal-border);",
+        "background: var(--portal-surface);",
+        "background: var(--portal-surface-strong);",
+        "color: var(--portal-text);",
+    ):
+        assert declaration in workspace_theme
+
+    for breakpoint in ("@media (max-width: 1040px)", "@media (max-width: 700px)", "@media (max-width: 460px)"):
+        assert breakpoint in workspace_theme
+
+    mobile_theme = workspace_theme[workspace_theme.index("@media (max-width: 700px)"):]
+    assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in mobile_theme
+    assert "padding-bottom: calc(104px + var(--portal-safe-bottom));" in mobile_theme
+    assert "gradient(" not in workspace_theme
+    assert re.search(r"#[0-9a-fA-F]{3,8}\b", workspace_theme) is None
+
+
+def test_signed_workspace_primary_actions_keep_the_shared_teal_hierarchy() -> None:
+    marker = "/* Signed Workspace shell alignment. */"
+    next_marker = "/* Final public-companion layout."
+    start = THEME.index(marker)
+    workspace_theme = THEME[start:THEME.index(next_marker, start)]
+
+    base = re.search(
+        r"\.portal-button\s*\{(?P<declarations>.*?)\n\}",
+        workspace_theme,
+        flags=re.DOTALL,
+    )
+    base_hover = re.search(
+        r"\.portal-button:hover:not\(:disabled\),\s*\n"
+        r"\.portal-button:focus-visible\s*\{(?P<declarations>.*?)\n\}",
+        workspace_theme,
+        flags=re.DOTALL,
+    )
+    primary = re.search(
+        r"\.portal-button--primary\s*\{(?P<declarations>.*?)\n\}",
+        workspace_theme,
+        flags=re.DOTALL,
+    )
+    hover = re.search(
+        r"\.portal-button--primary:hover:not\(:disabled\),\s*\n"
+        r"\.portal-button--primary:focus-visible\s*\{(?P<declarations>.*?)\n\}",
+        workspace_theme,
+        flags=re.DOTALL,
+    )
+
+    assert base is not None
+    assert base_hover is not None
+    assert primary is not None
+    assert hover is not None
+    assert primary.start() > base.start()
+    assert hover.start() > base_hover.start()
+    assert "background: var(--portal-accent);" in primary.group("declarations")
+    assert "color: var(--portal-accent-ink);" in primary.group("declarations")
+    assert "background: var(--portal-accent-hover);" in hover.group("declarations")
+
+
+def test_signed_shell_document_theme_color_matches_the_teal_pwa_shell() -> None:
+    assert '<meta name="theme-color" content="#062a36">' in PORTAL_SHELL_TEMPLATE
+    assert "#07141d" not in PORTAL_SHELL_TEMPLATE
