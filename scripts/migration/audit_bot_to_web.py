@@ -2068,6 +2068,43 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
+# The frozen Bot's exact add-expense button only displays command guidance; it
+# does not create an expense itself. The underlying Bot commands later write
+# canonical finance events and remain out of scope. This distinct registry is
+# therefore intentionally separate from canonical Admin ERP read navigation:
+# it records only a fresh entry to the independently guarded Web-owned Finance
+# Planning workspace. Case or suffix variants must remain unreviewed.
+FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|finance_add_expense": {
+        "target": "/admin/finance/planning",
+        "classification": "admin",
+        "feature_key": "admin_finance_planning",
+        "authority": "SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING_NAVIGATION",
+            "BOT_FINANCE_ADD_EXPENSE_HELP_NOT_REPLAYED",
+            "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+            "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+            "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+            "NO_BOT_EXPENSE_COMMAND_OR_FINANCE_EXPENSE_EVENT_TRANSFER",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_BOT_EXPENSE_ID_AMOUNT_CATEGORY_VENDOR_NOTE_OR_PRE_ESTABLISHMENT_TRANSFER",
+            "NO_PAYMENT_PROOF_OR_FINANCIAL_IDENTIFIER_TRANSFER",
+            "NO_PAYOS_WALLET_XU_LEDGER_PROVIDER_OR_EXPORT_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot finance add-expense help button does not automatically record an expense: it displays "
+            "separate Bot command guidance. The Web starts a fresh independently signed local-admin Finance "
+            "Planning workspace only; it receives no raw callback, Telegram identity/role, Bot help/command, "
+            "pending state, expense ID, amount, category, vendor, note, pre-establishment, finance event, payment "
+            "proof, financial identifier, ledger/Xu/wallet/PayOS/provider/export state or write authority."
+        ),
+    },
+}
+
 # The frozen Bot's affiliate menu exposes this exact admin-only hint. The
 # corresponding Bot command derives live connection/configuration material and
 # receives canonical performance events, so this finite callback can start
@@ -8427,6 +8464,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     # instead of inheriting the canonical-admin navigation disposition.
     billing_menu_navigation_entry = BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     admin_erp_navigation_entry = ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.get(identifier)
+    finance_add_expense_planning_entry = FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS.get(identifier)
     postback_readiness_navigation_entry = POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(identifier)
@@ -8475,6 +8513,25 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "billing_menu_feature_key": str(billing_menu_navigation_entry["feature_key"]),
             "billing_menu_authority": str(billing_menu_navigation_entry["authority"]),
             "billing_menu_launch_mode": str(billing_menu_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if finance_add_expense_planning_entry is not None:
+        # The Bot literal is help text only. It may begin a fresh, separately
+        # guarded Web-owned planning workspace, but never replays a Bot
+        # command, finance event, pending input or financial identity/state.
+        target = str(finance_add_expense_planning_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(finance_add_expense_planning_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_finance_add_expense_fresh_web_planning_navigation",
+            "source_dispositions": tuple(finance_add_expense_planning_entry["source_dispositions"]),
+            "source_evidence": str(finance_add_expense_planning_entry["source_evidence"]),
+            "finance_add_expense_planning_feature_key": str(finance_add_expense_planning_entry["feature_key"]),
+            "finance_add_expense_planning_authority": str(finance_add_expense_planning_entry["authority"]),
+            "finance_add_expense_planning_launch_mode": str(finance_add_expense_planning_entry["launch_mode"]),
             "evidence": evidence,
         }
     if admin_erp_navigation_entry is not None:
@@ -10704,6 +10761,19 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         for source, contract in ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.items()
     ]
     admin_erp_menu_action_count = len(admin_erp_menu_contract_rows)
+    finance_add_expense_planning_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_finance_add_expense_fresh_web_planning_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS.items()
+    ]
+    finance_add_expense_planning_action_count = len(finance_add_expense_planning_contract_rows)
     postback_readiness_contract_rows = [
         [
             source,
@@ -11365,6 +11435,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + f"- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — {billing_menu_action_count} exact Bot-admin Billing menu dispositions; each may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
         + f"- [`ADMIN_ERP_MENU_CALLBACK_CONTRACT.md`](ADMIN_ERP_MENU_CALLBACK_CONTRACT.md) — {admin_erp_menu_action_count} exact Bot-admin category/status menu dispositions; each opens only a fresh canonical-admin Web read route and never transfers Bot snapshots, commands, provider/package/payment controls or runtime authority.\n"
+        + f"- [`FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md`](FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md) — {finance_add_expense_planning_action_count} exact Bot Finance Add-Expense help disposition; it may only enter a fresh signed Web-local-admin Finance Planning workspace and never replays Bot help/command/pending/finance state or becomes a financial write.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
         + "- [`VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`](VIDEO_FINALIZATION_CALLBACK_CONTRACT.md) — exact Bot Video Finishing session boundaries; the separate signed Web workflow never replays Telegram draft, quote, export or payment callbacks.\n"
@@ -11821,11 +11892,22 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|finance_expense_last_month` remains source-review-required; "
         "`menu|finance_expense_year` remains source-review-required; "
         "`menu|finance_expense_categories` only mirrors the static category-list guidance as a fresh Finance read "
-        "route; and `menu|finance_add_expense` remains source-review-required. Unlisted `menu|finance_expense*` and "
-        "`menu|finance_add_expense*` values cannot inherit a Finance route. `menu|finance_profit` only mirrors the "
+        "route; `menu|finance_add_expense` has the separate `FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md` and cannot "
+        "inherit this canonical Finance route. Unlisted `menu|finance_expense*` and `menu|finance_add_expense*` values "
+        "cannot inherit a Finance route. `menu|finance_profit` only mirrors the "
         "static profit-period guidance as a fresh Finance read route; `menu|finance_profit_this_month` remains "
         "source-review-required; and `menu|finance_profit_year` remains source-review-required. Unlisted "
         "`menu|finance_profit*` values cannot inherit a Finance route.\n",
+    )
+    write(
+        "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md",
+        "# Finance Add-Expense callback contract\n\n"
+        f"The {finance_add_expense_planning_action_count} exact Bot Finance Add-Expense help value below is static source evidence for a **fresh**, independently authorized Web-native Planning entry only. The Bot button displays command guidance and does not automatically record an expense. The standalone Web never receives a raw callback token, Telegram identity/role, Bot help/command, pending state, reset/history effect, expense ID, period, amount, category, vendor, note, pre-establishment, finance event, payment proof, financial identifier, ledger/Xu/wallet/PayOS/provider/export state or write authority.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            finance_add_expense_planning_contract_rows,
+        )
+        + "\n\nThe reviewed lower-case literal starts only `/admin/finance/planning`, whose server independently requires a signed Web-local-admin session and applies its own feature gate, CSRF, confirmation, idempotency, revision and audit contract. This mapping neither creates nor pre-fills a plan and does not replay any Bot command or canonical `finance_expense_events` write. It does not grant canonical Bot-admin authority. `menu|finance_expense_categories` retains its separate canonical Finance read navigation. Any other `menu|finance_add_expense*` value cannot inherit this Planning route; case variants, suffixes, child values, commands and all other finance expense actions remain source-review-required until separately designed and tested.\n",
     )
     write(
         "POSTBACK_READINESS_CALLBACK_CONTRACT.md",

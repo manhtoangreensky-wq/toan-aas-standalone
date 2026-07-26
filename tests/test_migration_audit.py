@@ -111,6 +111,7 @@ async def dashboard():
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "BILLING_MENU_CALLBACK_CONTRACT.md",
         "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
+        "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "MEDIA_CREATOR_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
@@ -139,6 +140,7 @@ async def dashboard():
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
     assert "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md" in readme
+    assert "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_CALLBACK_CONTRACT.md" in readme
     assert "SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md" in readme
     assert "MANUAL_PAYMENT_CALLBACK_CONTRACT.md" in readme
@@ -163,18 +165,26 @@ async def dashboard():
     assert "menu\\|finance_expense_categories" in admin_erp_contract
     assert "menu\\|finance_profit" in admin_erp_contract
     assert "menu\\|finance_export" in admin_erp_contract
+    assert "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
     assert "`menu|admin_provider_test` remains source-review-required" in admin_erp_contract
     for callback in (
         "menu|finance_revenue",
         "menu|finance_expense",
-        "menu|finance_add_expense",
         "menu|finance_profit_this_month",
         "menu|finance_profit_year",
         "menu|finance_export_month",
         "menu|finance_export_year",
     ):
         assert f"`{callback}` remains source-review-required" in admin_erp_contract
+    finance_add_expense_count = len(audit.FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS)
+    assert f"— {finance_add_expense_count} exact Bot Finance Add-Expense help disposition" in readme
+    finance_add_expense_contract = (docs_dir / "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert f"The {finance_add_expense_count} exact Bot Finance Add-Expense help value below" in finance_add_expense_contract
+    assert "menu\\|finance_add_expense" in finance_add_expense_contract
+    assert "/admin/finance/planning" in finance_add_expense_contract
+    assert "SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING" in finance_add_expense_contract
+    assert "Any other `menu|finance_add_expense*` value cannot inherit this Planning route" in finance_add_expense_contract
     for callback in (
         "menu|admin_confirm_provider_freeze_shopaikey",
         "menu|admin_confirm_provider_unfreeze_shopaikey",
@@ -1774,12 +1784,13 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
 
     # Expense Month is limited to its static Bot selector. Data reads,
     # categories, writes and any spelling/suffix variant stay source review.
+    # The distinct Add-Expense help literal is covered by its own private
+    # Planning contract below and cannot inherit this canonical read mapping.
     for callback in (
         "menu|finance_expense",
         "menu|finance_expense_this_month",
         "menu|finance_expense_last_month",
         "menu|finance_expense_year",
-        "menu|finance_add_expense",
         "menu|finance_expense_month_future",
         "menu|finance_expense_month|future",
         "MENU|FINANCE_EXPENSE_MONTH",
@@ -1836,6 +1847,97 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
     for callback in expected:
         assert callback not in public_catalog
     assert all(item["route"] not in set(target for target, _feature in expected.values()) for item in menu_capability_catalog())
+
+
+def test_static_audit_maps_finance_add_expense_help_to_private_planning_entry() -> None:
+    """One Bot help button may start a fresh Web planning entry, never a write."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected = {
+        "menu|finance_add_expense": {
+            "target": "/admin/finance/planning",
+            "classification": "admin",
+            "feature_key": "admin_finance_planning",
+            "authority": "SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING",
+            "launch_mode": "WEB_NAVIGATION",
+        },
+    }
+
+    assert set(audit.FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS) == set(expected)
+    assert "menu|finance_add_expense" not in audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS
+
+    descriptor = audit.FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS[
+        "menu|finance_add_expense"
+    ]
+    assert {key: descriptor[key] for key in expected["menu|finance_add_expense"]} == expected[
+        "menu|finance_add_expense"
+    ]
+    assert descriptor["source_dispositions"] == (
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING_NAVIGATION",
+        "BOT_FINANCE_ADD_EXPENSE_HELP_NOT_REPLAYED",
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_BOT_EXPENSE_COMMAND_OR_FINANCE_EXPENSE_EVENT_TRANSFER",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_BOT_EXPENSE_ID_AMOUNT_CATEGORY_VENDOR_NOTE_OR_PRE_ESTABLISHMENT_TRANSFER",
+        "NO_PAYMENT_PROOF_OR_FINANCIAL_IDENTIFIER_TRANSFER",
+        "NO_PAYOS_WALLET_XU_LEDGER_PROVIDER_OR_EXPORT_ACTION",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    mapped = audit._map_callback("menu|finance_add_expense", "callback_data", evidence, routes)
+    assert mapped["target"] == "/admin/finance/planning"
+    assert mapped["classification"] == "admin"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_finance_add_expense_fresh_web_planning_navigation"
+    assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+    assert mapped["finance_add_expense_planning_feature_key"] == "admin_finance_planning"
+    assert mapped["finance_add_expense_planning_authority"] == "SIGNED_WEB_LOCAL_ADMIN_FINANCE_PLANNING"
+    assert mapped["finance_add_expense_planning_launch_mode"] == "WEB_NAVIGATION"
+    assert "help button does not automatically record an expense" in mapped["source_evidence"]
+    for forbidden_key in (
+        "admin_erp_feature_key",
+        "admin_erp_authority",
+        "admin_erp_launch_mode",
+    ):
+        assert forbidden_key not in mapped
+
+    # The existing static Categories parent retains its separately reviewed
+    # canonical read navigation. It cannot inherit the Planning authority.
+    categories = audit._map_callback("menu|finance_expense_categories", "callback_data", evidence, routes)
+    assert categories["target"] == "/admin/finance"
+    assert categories["resolution"] == "reviewed_admin_erp_fresh_web_navigation"
+    assert "finance_add_expense_planning_feature_key" not in categories
+
+    # Only the lower-case literal is reviewed. Generic finance expense
+    # actions, Bot commands/pending state and spelling/suffix variants remain
+    # fail-closed until they receive their own source contract.
+    for callback in (
+        "menu|finance_expense",
+        "menu|finance_expense_this_month",
+        "menu|finance_expense_last_month",
+        "menu|finance_expense_year",
+        "menu|finance_add_expense_future",
+        "menu|finance_add_expense|future",
+        "MENU|FINANCE_ADD_EXPENSE",
+    ):
+        unresolved = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert unresolved["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert unresolved["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert unresolved["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "finance_add_expense_planning_feature_key" not in unresolved
+        assert "finance_add_expense_planning_authority" not in unresolved
+        assert "finance_add_expense_planning_launch_mode" not in unresolved
+
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "menu|finance_add_expense" not in public_catalog
+    assert all(item["route"] != "/admin/finance/planning" for item in menu_capability_catalog())
 
 
 def test_static_audit_keeps_package_purchase_callbacks_in_catalog_or_bot_payment_boundary(tmp_path: Path) -> None:
