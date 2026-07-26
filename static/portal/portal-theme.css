@@ -668,19 +668,25 @@ body {
   overflow: clip;
 }
 
+.portal-landing-public-container {
+  --portal-public-content-width: min(1240px, calc(100% - 48px - var(--portal-safe-left) - var(--portal-safe-right)));
+}
+
 .portal-landing-header {
   border-bottom: 1px solid var(--portal-landing-divider);
   background: var(--portal-light-canvas);
 }
 
-.portal-landing-nav,
-.portal-landing-hero,
-.portal-landing-section,
-.portal-landing-workflow,
-.portal-landing-trust,
-.portal-landing-final,
-.portal-landing-footer {
-  width: min(1216px, calc(100% - 48px - var(--portal-safe-left) - var(--portal-safe-right)));
+.portal-landing-public-container :is(
+  .portal-landing-nav,
+  .portal-landing-hero,
+  .portal-landing-section,
+  .portal-landing-workflow,
+  .portal-landing-trust,
+  .portal-landing-final,
+  .portal-landing-footer
+) {
+  width: var(--portal-public-content-width);
   margin-inline: auto;
 }
 
@@ -772,6 +778,11 @@ body {
 .portal-landing-locale-link[aria-current="true"] {
   background: var(--portal-light-accent-soft);
   color: var(--portal-accent-deep);
+}
+
+.portal-landing-nav-primary-compact {
+  display: none;
+  white-space: nowrap;
 }
 
 .portal-landing .portal-button {
@@ -1210,6 +1221,20 @@ body {
   color: var(--portal-light-surface);
 }
 
+@media (max-width: 1240px) {
+  .portal-landing-nav {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .portal-landing-nav-links {
+    display: none;
+  }
+
+  .portal-landing-nav-actions {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 920px) {
   .portal-landing-nav {
     grid-template-columns: auto minmax(0, 1fr);
@@ -1244,14 +1269,8 @@ body {
 }
 
 @media (max-width: 600px) {
-  .portal-landing-nav,
-  .portal-landing-hero,
-  .portal-landing-section,
-  .portal-landing-workflow,
-  .portal-landing-trust,
-  .portal-landing-final,
-  .portal-landing-footer {
-    width: calc(100% - 32px - var(--portal-safe-left) - var(--portal-safe-right));
+  .portal-landing-public-container {
+    --portal-public-content-width: calc(100% - 32px - var(--portal-safe-left) - var(--portal-safe-right));
   }
 
   .portal-landing-nav {
@@ -1273,6 +1292,19 @@ body {
 
   .portal-landing-nav-actions > .portal-button--quiet {
     display: none;
+  }
+
+  .portal-landing-nav-primary {
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  .portal-landing-nav-primary-full {
+    display: none;
+  }
+
+  .portal-landing-nav-primary-compact {
+    display: inline;
   }
 
   .portal-landing-locale-link {
