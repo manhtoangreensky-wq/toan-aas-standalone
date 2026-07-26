@@ -46,7 +46,7 @@ def test_portal_shell_loads_the_teal_cyan_theme_between_base_css_and_javascript(
     assert portal_css < portal_theme < i18n < portal < integration
 
 
-def test_unified_teal_sky_tokens_drive_light_and_dark_surfaces() -> None:
+def test_rebalanced_teal_sky_tokens_keep_the_signed_canvas_light_and_rail_deep() -> None:
     assert PORTAL_THEME.is_file()
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
 
@@ -55,16 +55,16 @@ def test_unified_teal_sky_tokens_drive_light_and_dark_surfaces() -> None:
     root_declarations = root.group("declarations")
 
     expected_tokens = (
-        "--portal-bg: #062a36;",
-        "--portal-surface: #0b3440;",
-        "--portal-surface-strong: #104352;",
-        "--portal-border: #246070;",
-        "--portal-accent: #14b8a6;",
-        "--portal-accent-hover: #2dd4bf;",
-        "--portal-info: #38bdf8;",
-        "--portal-light-canvas: #f4fbfc;",
-        "--portal-light-border: #d7ecef;",
-        "--portal-ink: #092b36;",
+        "--portal-app-canvas: #f4fbfc;",
+        "--portal-surface-light: #ffffff;",
+        "--portal-action: #0f766e;",
+        "--portal-on-action: #ffffff;",
+        "--portal-brand: #14b8a6;",
+        "--portal-context: #0284c7;",
+        "--portal-rail: #083344;",
+        "--portal-border: #d7ecef;",
+        "--portal-muted: #486b75;",
+        "--portal-ink: #083344;",
     )
 
     for token in expected_tokens:
@@ -76,20 +76,24 @@ def test_unified_teal_sky_tokens_drive_light_and_dark_surfaces() -> None:
     assert "min-height: 44px;" in theme_source
 
 
-def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> None:
+def test_theme_maps_legacy_component_names_to_the_semantic_teal_sky_tokens() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
 
     assert root is not None
     root_declarations = root.group("declarations")
     expected_tokens = (
-        "--portal-chrome: #062a36;",
-        "--portal-light-surface: #ffffff;",
+        "--portal-bg: var(--portal-app-canvas);",
+        "--portal-surface: var(--portal-surface-light);",
+        "--portal-accent: var(--portal-brand);",
+        "--portal-info: var(--portal-context);",
+        "--portal-light-canvas: var(--portal-app-canvas);",
+        "--portal-light-surface: var(--portal-surface-light);",
         "--portal-light-soft: #e8f5f6;",
         "--portal-light-accent-border: #8bded7;",
         "--portal-light-accent-soft: #e0f7f5;",
         "--portal-light-hover-surface: #f8fdfd;",
-        "--portal-landing-divider: #d7ecef;",
+        "--portal-landing-divider: var(--portal-border);",
     )
 
     for token in expected_tokens:
@@ -97,19 +101,14 @@ def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> N
 
     rendered_rules = theme_source[root.end() :]
     for literal in (
-        "#062a36",
-        "#0b3440",
-        "#104352",
-        "#246070",
+        "#083344",
+        "#0f766e",
         "#14b8a6",
-        "#2dd4bf",
-        "#38bdf8",
-        "#092b36",
-        "#335969",
-        "#0d2330",
+        "#0284c7",
         "#ffffff",
         "#f4fbfc",
         "#d7ecef",
+        "#486b75",
         "#e8f5f6",
         "#e0f7f5",
     ):
@@ -163,10 +162,10 @@ def test_shared_chrome_does_not_keep_legacy_blue_or_teal_rgba_values() -> None:
     assert dark_focus is not None
     assert light_focus is not None
     assert table_hover is not None
-    assert "var(--portal-info)" in active_navigation.group("declarations")
-    assert "var(--portal-info)" in dark_focus.group("declarations")
-    assert "var(--portal-info)" in light_focus.group("declarations")
-    assert "var(--portal-accent)" in table_hover.group("declarations")
+    assert "var(--portal-context)" in active_navigation.group("declarations")
+    assert "var(--portal-context)" in dark_focus.group("declarations")
+    assert "var(--portal-context)" in light_focus.group("declarations")
+    assert "var(--portal-brand)" in table_hover.group("declarations")
 
 
 def test_final_theme_preserves_44px_mobile_controls_after_the_legacy_catalogue() -> None:
@@ -209,11 +208,11 @@ def test_light_surface_focus_ring_overrides_the_catalogue_important_outline_with
     assert "outline: 2px solid #5eead4 !important;" in legacy_focus.group("declarations")
     assert final_focus is not None
     assert "outline: 3px solid var(--portal-focus) !important;" in final_focus.group("declarations")
-    assert "--portal-focus: #0b6d8c;" in theme_source
-    assert "--portal-light-canvas: #f4fbfc;" in theme_source
-    assert "--portal-light-surface: #ffffff;" in theme_source
-    assert _contrast_ratio("#0b6d8c", "#ffffff") >= 3
-    assert _contrast_ratio("#0b6d8c", "#f4fbfc") >= 3
+    assert "--portal-focus: var(--portal-context);" in theme_source
+    assert "--portal-app-canvas: #f4fbfc;" in theme_source
+    assert "--portal-surface-light: #ffffff;" in theme_source
+    assert _contrast_ratio("#0284c7", "#ffffff") >= 3
+    assert _contrast_ratio("#0284c7", "#f4fbfc") >= 3
     assert SHELL_TEMPLATE.index(BASE_STYLESHEET) < SHELL_TEMPLATE.index(THEME_STYLESHEET)
 
 
@@ -278,15 +277,17 @@ def test_public_landing_uses_a_bounded_editorial_hero_scale() -> None:
     assert any("font-size: clamp(40px, 4.5vw, 64px);" in declaration for declaration in headings)
 
 
-def test_primary_teal_actions_use_dark_ink_for_readable_contrast() -> None:
+def test_primary_actions_use_the_accessible_dark_teal_and_readable_on_action_text() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
     primary = re.search(r"\.portal-button--primary\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
 
     assert root is not None
     assert primary is not None
-    assert "--portal-accent-ink: #092b36;" in root.group("declarations")
-    assert "color: var(--portal-accent-ink);" in primary.group("declarations")
+    assert "--portal-action: #0f766e;" in root.group("declarations")
+    assert "--portal-on-action: #ffffff;" in root.group("declarations")
+    assert "background: var(--portal-action);" in primary.group("declarations")
+    assert "color: var(--portal-on-action);" in primary.group("declarations")
 
 
 def test_light_auth_provider_options_override_dark_catalogue_text() -> None:
@@ -310,7 +311,7 @@ def test_light_auth_provider_options_override_dark_catalogue_text() -> None:
     assert "color: var(--portal-ink);" in strong.group("declarations")
 
 
-def test_light_auth_primary_submit_uses_the_shared_teal_action() -> None:
+def test_light_auth_primary_submit_uses_the_shared_dark_teal_action() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     primary_submit = re.search(
         r"\.portal-auth-page--access \.portal-auth-primary \.portal-button--primary\s*\{"
@@ -320,8 +321,38 @@ def test_light_auth_primary_submit_uses_the_shared_teal_action() -> None:
     )
 
     assert primary_submit is not None
-    assert "background: var(--portal-accent);" in primary_submit.group("declarations")
-    assert "color: var(--portal-accent-ink);" in primary_submit.group("declarations")
+    assert "background: var(--portal-action);" in primary_submit.group("declarations")
+    assert "color: var(--portal-on-action);" in primary_submit.group("declarations")
+
+
+def test_signed_workspace_uses_light_working_surfaces_and_a_deep_teal_sidebar_rail() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    marker = "/* Signed Workspace shell alignment. */"
+    workspace = theme_source[theme_source.index(marker) : theme_source.index("/* Final public-companion layout.")]
+
+    shell = re.search(
+        r"\.portal-shell:not\(\.portal-shell--auth\):not\(\.portal-shell--landing\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        workspace,
+        flags=re.DOTALL,
+    )
+    sidebar = re.search(r"\.portal-sidebar\s*\{(?P<declarations>.*?)\n\}", workspace, flags=re.DOTALL)
+    header = re.search(r"\.portal-header\s*\{(?P<declarations>.*?)\n\}", workspace, flags=re.DOTALL)
+    cards = re.search(
+        r"\.portal-shell:not\(\.portal-shell--auth\):not\(\.portal-shell--landing\) :is\("
+        r"(?P<declarations>.*?)\n\}",
+        workspace,
+        flags=re.DOTALL,
+    )
+
+    assert shell is not None
+    assert sidebar is not None
+    assert header is not None
+    assert cards is not None
+    assert "background: var(--portal-app-canvas);" in shell.group("declarations")
+    assert "background: var(--portal-rail);" in sidebar.group("declarations")
+    assert "background: var(--portal-surface-light);" in header.group("declarations")
+    assert "background: var(--portal-surface-light);" in cards.group("declarations")
 
 
 def test_theme_is_in_build_hash_fallback_shell_and_public_pwa_shell() -> None:

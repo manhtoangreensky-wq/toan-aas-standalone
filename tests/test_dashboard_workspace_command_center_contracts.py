@@ -540,9 +540,9 @@ def test_signed_workspace_primary_actions_keep_the_shared_teal_hierarchy() -> No
     assert hover is not None
     assert primary.start() > base.start()
     assert hover.start() > base_hover.start()
-    assert "background: var(--portal-accent);" in primary.group("declarations")
-    assert "color: var(--portal-accent-ink);" in primary.group("declarations")
-    assert "background: var(--portal-accent-hover);" in hover.group("declarations")
+    assert "background: var(--portal-action);" in primary.group("declarations")
+    assert "color: var(--portal-on-action);" in primary.group("declarations")
+    assert "background: var(--portal-action-hover);" in hover.group("declarations")
 
 
 def test_signed_shell_document_theme_color_matches_the_teal_pwa_shell() -> None:

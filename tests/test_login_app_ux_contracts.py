@@ -30,42 +30,52 @@ def test_access_screen_uses_one_compact_app_entry_without_repeating_the_brand() 
 
 def test_access_screen_keeps_sensitive_auth_actions_but_stacks_fields_for_readability() -> None:
     auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
-    scope = CSS[CSS.rindex("/* Compact application access screen."):]
+    access_theme = _section(
+        THEME,
+        "/* Access remains email-first and server-owned.",
+        "/* The public companion shares the brand palette",
+    )
 
     assert 'data-portal-action="${safeText(page.action)}"' in auth
     assert 'data-portal-route="${safeText(page.path)}"' in auth
     assert 'class="portal-auth-alternatives"' in auth
     assert 'class="portal-auth-assurance"' in auth
-    assert ".portal-auth-page--access .portal-auth-primary .portal-fields {\n  grid-template-columns: minmax(0, 1fr);" in CSS
-    assert ".portal-auth-page--access .portal-auth-card {\n  grid-area: card;" in scope
-    assert "border-color: var(--portal-border);" in scope
-    assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;" in CSS
-    assert ".portal-auth-page--access .portal-auth-alternatives summary:focus-visible {\n  outline: 3px solid rgba(45, 212, 191, .65);" in CSS
+    assert ".portal-auth-page--access .portal-auth-primary .portal-fields {\n  grid-template-columns: minmax(0, 1fr);" in access_theme
+    assert ".portal-auth-page--access .portal-auth-card {\n  grid-area: card;" in access_theme
+    assert "border-color: var(--portal-border);" in access_theme
+    assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;" in access_theme
+    assert "var(--portal-context)" in access_theme
 
 
-def test_access_screen_uses_a_flat_two_column_app_layout_before_collapsing_for_mobile() -> None:
-    """The final auth scope must override older landing-era auth declarations."""
+def test_access_screen_uses_one_centered_column_without_the_legacy_dark_split() -> None:
+    """The final theme owns the access layout after the obsolete catalogue layer is removed."""
 
-    scope = CSS[CSS.rindex("/* Compact application access screen."):]
+    access_theme = _section(
+        THEME,
+        "/* Access remains email-first and server-owned.",
+        "/* The public companion shares the brand palette",
+    )
 
-    assert ".portal-body--auth,\n.portal-shell--auth { background: #0a0f17; }" in scope
-    assert "radial-gradient" not in scope
-    assert ".portal-auth-page--access {\n  grid-template-columns: minmax(0, .82fr) minmax(440px, 480px);\n  grid-template-areas:\n    \"header header\"\n    \"intro card\";" in scope
-    assert ".portal-auth-page--access .portal-auth-shell { display: contents; }" in scope
-    assert ".portal-auth-page--access .portal-auth-intro {\n  grid-area: intro;\n  display: grid;\n  align-self: stretch;\n  align-content: start;" in scope
-    assert "@media (max-width: 920px)" in scope
-    assert "grid-template-areas:\n      \"header\"\n      \"intro\"\n      \"card\";" in scope
-    assert "min-height: 44px" in scope
+    assert "/* Compact application access screen." not in CSS
+    assert ".portal-body--auth,\n.portal-shell--auth { background: #0a0f17; }" not in CSS
+    assert "grid-template-columns: minmax(0, .82fr) minmax(440px, 480px);" not in CSS
+    assert '"header header"\n    "intro card"' not in CSS
+    assert "grid-template-columns: minmax(0, min(100%, 480px));" in access_theme
+    assert 'grid-template-areas: "header" "intro" "card";' in access_theme
+    assert ".portal-auth-page--access .portal-auth-shell { display: contents; }" in access_theme
+    assert ".portal-auth-page--access .portal-auth-intro {\n  grid-area: intro;" in access_theme
+    assert "border-right: 1px" not in access_theme
+    assert "max-width: 11ch;" not in access_theme
+    assert ".portal-auth-page--access .portal-auth-card {\n  grid-area: card;" in access_theme
+    assert "max-width: 480px;" in access_theme
 
 
 def test_access_screen_compacts_mobile_rhythm_without_shrinking_controls() -> None:
-    scope = CSS[CSS.rindex("/* Compact application access screen."):]
-    mobile = scope.split("@media (max-width: 600px) {", 1)[1]
+    mobile = THEME.split("@media (max-width: 600px) {", 1)[1]
 
-    assert "padding-top: 12px;" in mobile
+    assert "padding-top: 16px;" in mobile
     assert ".portal-auth-page--access .portal-auth-card { padding: 16px; }" in mobile
-    assert ".portal-auth-page--access .portal-auth-intro .portal-title { font-size: 32px; }" in mobile
-    assert ".portal-auth-page--access .portal-auth-switch a {\n    min-height: 44px;" in mobile
+    assert ".portal-auth-page--access .portal-auth-switch," in mobile
     assert "min-height: 44px;" in mobile
 
 
@@ -77,6 +87,7 @@ def test_access_intro_uses_a_balanced_heading_measure_without_a_single_word_wrap
     )
 
     assert "max-width: 18ch;" in title
+    assert "max-width: 11ch;" not in title
     assert "font-size: clamp(38px, 3.7vw, 48px);" in title
     assert "text-wrap: balance;" in title
 
