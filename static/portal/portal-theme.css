@@ -264,6 +264,36 @@ body {
   border-bottom-color: var(--portal-light-border);
 }
 
+.portal-auth-page--access .portal-auth-locale-nav {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--portal-light-border);
+  border-radius: var(--portal-radius-sm);
+  background: var(--portal-light-surface);
+}
+
+.portal-auth-page--access .portal-auth-locale-link {
+  display: inline-grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding-inline: 7px;
+  border-radius: 7px;
+  color: var(--portal-light-action);
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.portal-auth-page--access .portal-auth-locale-link:hover,
+.portal-auth-page--access .portal-auth-locale-link[aria-current="true"] {
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-accent-deep);
+}
+
 .portal-auth-page--access .portal-auth-brand .portal-brand-mark {
   border-color: var(--portal-light-accent-border);
   background: var(--portal-accent);
@@ -290,9 +320,10 @@ body {
 }
 
 .portal-auth-page--access .portal-auth-intro .portal-title {
-  max-width: 12ch;
-  font-size: clamp(36px, 4.4vw, 54px);
-  line-height: 1.06;
+  max-width: 18ch;
+  font-size: clamp(38px, 3.7vw, 48px);
+  line-height: 1.08;
+  text-wrap: balance;
 }
 
 .portal-auth-page--access .portal-auth-intro .portal-description {
@@ -612,6 +643,36 @@ body {
 }
 
 @media (max-width: 600px) {
+  .portal-auth-page--access .portal-auth-brand strong {
+    white-space: nowrap;
+  }
+
+  .portal-auth-page--access .portal-auth-brand small {
+    display: none;
+  }
+
+  .portal-auth-page--access .portal-auth-back {
+    min-width: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .portal-auth-page--access .portal-auth-back-label {
+    display: none;
+  }
+
+  .portal-auth-page--access .portal-auth-locale-nav {
+    gap: 0;
+    margin-left: auto;
+  }
+
+  .portal-auth-page--access .portal-auth-locale-link {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 0;
+    font-size: 10px;
+  }
+
   .portal-auth-page--access {
     width: min(100% - 32px, 560px);
     padding-top: 16px;

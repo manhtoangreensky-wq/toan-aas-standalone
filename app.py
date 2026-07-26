@@ -108,6 +108,7 @@ from copyfast_pages import ROOT, render_portal
 LOGGER = logging.getLogger(__name__)
 STARTUP_RECONCILIATION_TASK_NAME = "copyfast-startup-reconciliation"
 PUBLIC_WELCOME_INTERFACE_LOCALES = frozenset({"vi", "en", "zh"})
+PUBLIC_ACCESS_INTERFACE_LOCALES = frozenset({"vi", "en", "zh"})
 STARTUP_RECONCILIATION_STEPS = (
     ("admin_document_archive", copyfast_admin_document_archive.reconcile_admin_document_archive_storage),
     ("asset_vault", copyfast_assets.reconcile_asset_vault_storage),
@@ -145,6 +146,18 @@ def _origins() -> list[str]:
 def _public_welcome_interface_locale(request: Request) -> str:
     locale = request.query_params.get("lang")
     return locale if locale in PUBLIC_WELCOME_INTERFACE_LOCALES else "vi"
+
+
+def _public_access_interface_locale(request: Request) -> str:
+    """Allow only reviewed display locales before a signed profile exists.
+
+    This controls presentation for public account routes only. It never writes
+    a preference, accepts a Telegram locale, or influences identity/session
+    authority.
+    """
+
+    locale = request.query_params.get("lang")
+    return locale if locale in PUBLIC_ACCESS_INTERFACE_LOCALES else "vi"
 
 
 async def _run_startup_reconciliation(application: FastAPI) -> None:
@@ -2587,7 +2600,7 @@ async def page(page_path: str, request: Request):
         try:
             current_session(request)
         except HTTPException:
-            return render_portal(page_path)
+            return render_portal(page_path, interface_locale=_public_access_interface_locale(request))
         return RedirectResponse("/dashboard", status_code=307)
     if normalized not in public_pages:
         try:
@@ -2603,4 +2616,6 @@ async def page(page_path: str, request: Request):
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
     if normalized == "/welcome":
         portal_interface_locale = _public_welcome_interface_locale(request)
+    elif normalized == "/password-recovery":
+        portal_interface_locale = _public_access_interface_locale(request)
     return render_portal(page_path, interface_locale=portal_interface_locale)
