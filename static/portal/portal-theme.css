@@ -167,8 +167,8 @@ body {
 }
 
 .portal-nav-link[aria-current="page"] {
-  border-color: rgba(2, 132, 199, .74);
-  background: rgba(2, 132, 199, .19);
+  border-color: color-mix(in srgb, var(--portal-info) 74%, transparent);
+  background: color-mix(in srgb, var(--portal-info) 19%, transparent);
   color: var(--portal-nav-active-text);
 }
 
@@ -215,7 +215,7 @@ body {
 .portal-select:focus,
 .portal-textarea:focus {
   border-color: var(--portal-info);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, .2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-info) 20%, transparent);
 }
 
 .portal-data-table th,
@@ -224,7 +224,7 @@ body {
 }
 
 .portal-data-table tbody tr:hover {
-  background: rgba(14, 159, 154, .08);
+  background: color-mix(in srgb, var(--portal-accent) 8%, transparent);
 }
 
 .portal-command-dialog {
@@ -353,7 +353,7 @@ body {
 .portal-auth-page--access .portal-select:focus,
 .portal-auth-page--access .portal-textarea:focus {
   border-color: var(--portal-info);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, .16);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-info) 16%, transparent);
 }
 
 .portal-auth-page--access .portal-auth-assurance,
@@ -379,7 +379,7 @@ body {
 }
 
 .portal-auth-page--access .portal-auth-alternatives summary:focus-visible {
-  outline-color: rgba(2, 132, 199, .72);
+  outline-color: color-mix(in srgb, var(--portal-info) 72%, transparent);
 }
 
 .portal-auth-page--access .portal-auth-provider-option {

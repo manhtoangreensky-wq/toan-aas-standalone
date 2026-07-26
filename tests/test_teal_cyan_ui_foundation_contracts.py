@@ -126,6 +126,49 @@ def test_root_is_the_only_owner_of_hex_colour_literals() -> None:
     assert not literals, f"move semantic colour literals into :root: {', '.join(sorted(set(literals)))}"
 
 
+def test_shared_chrome_does_not_keep_legacy_blue_or_teal_rgba_values() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
+
+    assert root is not None
+    rendered_rules = theme_source[root.end() :]
+    for legacy_colour in ("rgba(2, 132, 199", "rgba(14, 159, 154"):
+        assert legacy_colour not in rendered_rules
+
+    active_navigation = re.search(
+        r"\.portal-nav-link\[aria-current=\"page\"\]\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    dark_focus = re.search(
+        r"\.portal-input:focus,\s*\.portal-select:focus,\s*\.portal-textarea:focus\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    light_focus = re.search(
+        r"\.portal-auth-page--access \.portal-input:focus,\s*"
+        r"\.portal-auth-page--access \.portal-select:focus,\s*"
+        r"\.portal-auth-page--access \.portal-textarea:focus\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    table_hover = re.search(
+        r"\.portal-data-table tbody tr:hover\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert active_navigation is not None
+    assert dark_focus is not None
+    assert light_focus is not None
+    assert table_hover is not None
+    assert "var(--portal-info)" in active_navigation.group("declarations")
+    assert "var(--portal-info)" in dark_focus.group("declarations")
+    assert "var(--portal-info)" in light_focus.group("declarations")
+    assert "var(--portal-accent)" in table_hover.group("declarations")
+
+
 def test_final_theme_preserves_44px_mobile_controls_after_the_legacy_catalogue() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     theme_root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
