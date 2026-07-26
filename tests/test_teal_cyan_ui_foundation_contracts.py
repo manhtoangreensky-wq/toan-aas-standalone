@@ -46,7 +46,7 @@ def test_portal_shell_loads_the_teal_cyan_theme_between_base_css_and_javascript(
     assert portal_css < portal_theme < i18n < portal < integration
 
 
-def test_teal_cyan_theme_exposes_accessible_responsive_foundation_tokens() -> None:
+def test_unified_teal_sky_tokens_drive_light_and_dark_surfaces() -> None:
     assert PORTAL_THEME.is_file()
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
 
@@ -55,13 +55,16 @@ def test_teal_cyan_theme_exposes_accessible_responsive_foundation_tokens() -> No
     root_declarations = root.group("declarations")
 
     expected_tokens = (
-        "--portal-bg: #07141d;",
-        "--portal-surface: #0d2330;",
-        "--portal-accent: #0e9f9a;",
-        "--portal-info: #0284c7;",
-        "--portal-ink: #06212b;",
-        "--portal-light-soft: #f4fbfb;",
-        "--portal-light-action: #0b5961;",
+        "--portal-bg: #062a36;",
+        "--portal-surface: #0b3440;",
+        "--portal-surface-strong: #104352;",
+        "--portal-border: #246070;",
+        "--portal-accent: #14b8a6;",
+        "--portal-accent-hover: #2dd4bf;",
+        "--portal-info: #38bdf8;",
+        "--portal-light-canvas: #f4fbfc;",
+        "--portal-light-border: #d7ecef;",
+        "--portal-ink: #092b36;",
     )
 
     for token in expected_tokens:
@@ -80,12 +83,13 @@ def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> N
     assert root is not None
     root_declarations = root.group("declarations")
     expected_tokens = (
-        "--portal-chrome: #081b26;",
-        "--portal-accent-hover: #26c8bf;",
-        "--portal-light-accent-border: #8fd6d3;",
-        "--portal-light-accent-soft: #e2f6f4;",
+        "--portal-chrome: #062a36;",
+        "--portal-light-surface: #ffffff;",
+        "--portal-light-soft: #e8f5f6;",
+        "--portal-light-accent-border: #8bded7;",
+        "--portal-light-accent-soft: #e0f7f5;",
         "--portal-light-hover-surface: #f8fdfd;",
-        "--portal-landing-divider: #d5eaed;",
+        "--portal-landing-divider: #d7ecef;",
     )
 
     for token in expected_tokens:
@@ -93,17 +97,21 @@ def test_theme_tokenizes_shared_chrome_and_repeated_light_landing_colours() -> N
 
     rendered_rules = theme_source[root.end() :]
     for literal in (
-        "#081b26",
-        "#26c8bf",
-        "#52727c",
+        "#062a36",
+        "#0b3440",
+        "#104352",
+        "#246070",
+        "#14b8a6",
+        "#2dd4bf",
+        "#38bdf8",
+        "#092b36",
+        "#335969",
+        "#0d2330",
         "#ffffff",
-        "#f4fbfb",
-        "#c7e3e6",
-        "#d9edef",
-        "#e2f6f4",
-        "#d5eaed",
-        "#0b756f",
-        "#06212b",
+        "#f4fbfc",
+        "#d7ecef",
+        "#e8f5f6",
+        "#e0f7f5",
     ):
         assert literal not in rendered_rules
 
@@ -158,11 +166,11 @@ def test_light_surface_focus_ring_overrides_the_catalogue_important_outline_with
     assert "outline: 2px solid #5eead4 !important;" in legacy_focus.group("declarations")
     assert final_focus is not None
     assert "outline: 3px solid var(--portal-focus) !important;" in final_focus.group("declarations")
-    assert "--portal-focus: #0284c7;" in theme_source
-    assert "--portal-light-canvas: #f6fcfc;" in theme_source
+    assert "--portal-focus: #0b6d8c;" in theme_source
+    assert "--portal-light-canvas: #f4fbfc;" in theme_source
     assert "--portal-light-surface: #ffffff;" in theme_source
-    assert _contrast_ratio("#0284c7", "#ffffff") >= 3
-    assert _contrast_ratio("#0284c7", "#f6fcfc") >= 3
+    assert _contrast_ratio("#0b6d8c", "#ffffff") >= 3
+    assert _contrast_ratio("#0b6d8c", "#f4fbfc") >= 3
     assert SHELL_TEMPLATE.index(BASE_STYLESHEET) < SHELL_TEMPLATE.index(THEME_STYLESHEET)
 
 
@@ -234,7 +242,7 @@ def test_primary_teal_actions_use_dark_ink_for_readable_contrast() -> None:
 
     assert root is not None
     assert primary is not None
-    assert "--portal-accent-ink: #06212b;" in root.group("declarations")
+    assert "--portal-accent-ink: #092b36;" in root.group("declarations")
     assert "color: var(--portal-accent-ink);" in primary.group("declarations")
 
 

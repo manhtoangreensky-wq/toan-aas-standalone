@@ -25,13 +25,15 @@ portal implementation:
   opens login/dashboard.
 - **Style:** Swiss Modernism 2.0 + flat productivity UI: strict layout,
   semantic surfaces, one accent, limited decoration and high contrast.
-- **Theme:** dark slate surfaces with a teal brand/action accent. No
+- **Theme:** deep teal surfaces with a turquoise brand/action accent and
+  sky-blue contextual affordances. No
   AI-purple/pink gradient treatment in workspace, account, billing or ERP
   screens.
-- **Palette:** workspace background `#07141d`; surface `#0d2330`; elevated
-  surface `#112b39`; primary/action `#0e9f9a`; primary ink `#06212b`; text
-  `#edf8fa`; muted text `#9bb9c3`; border `#234555`; cyan context `#0284c7`;
-  light public canvas `#f6fcfc`; light ink `#06212b`; danger `#e66d70`.
+- **Palette:** workspace background `#062a36`; surface `#0b3440`; elevated
+  surface `#104352`; primary/action `#14b8a6`; primary ink `#092b36`; text
+  `#effcfd`; muted text `#aac8ce`; border `#246070`; sky context `#38bdf8`;
+  light public canvas `#f4fbfc`; light border `#d7ecef`; light ink `#092b36`;
+  danger `#e66d70`.
 - **Content density:** compact but readable: body 14–16px, 4/8px spacing
   rhythm, 40px desktop and 44px mobile controls; no operational copy below
   12px where it is needed to make a decision.
@@ -39,6 +41,12 @@ portal implementation:
   animation; respect `prefers-reduced-motion`.
 - **Icons:** consistent accessible vector treatment for new structural UI;
   status also has textual labels.
+- **Token ownership:** `static/portal/portal-theme.css :root` is the only
+  owner of CSS hex colour literals. Components use `--portal-*` semantic
+  tokens only; do not restore raw hex, purple or pink values in page rules.
+- **Surface ownership:** signed Workspace, ERP and account operations use the
+  deep teal family; `/welcome` and access screens use the light canvas and
+  white surface family. Both use the same teal action and sky context tokens.
 
 The companion implementation guide is
 [`docs/UX_APP_FIRST_REDESIGN.md`](../../docs/UX_APP_FIRST_REDESIGN.md).
@@ -51,21 +59,24 @@ The companion implementation guide is
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#0E9F9A` | `--portal-accent` |
-| On Primary | `#06212B` | `--portal-accent-ink` |
-| Secondary | `#0284C7` | `--portal-info` |
-| Workspace background | `#07141D` | `--portal-bg` |
-| Workspace surface | `#0D2330` | `--portal-surface` |
-| Public canvas | `#F6FCFC` | `--portal-light-canvas` |
-| Light foreground | `#06212B` | `--portal-ink` |
-| Muted | `#9BB9C3` / `#52727C` | `--portal-muted` / `--portal-light-muted` |
-| Border | `#234555` / `#C7E3E6` | `--portal-border` / `--portal-light-border` |
+| Primary | `#14B8A6` | `--portal-accent` |
+| Primary hover | `#2DD4BF` | `--portal-accent-hover` |
+| On Primary / light ink | `#092B36` | `--portal-accent-ink` / `--portal-ink` |
+| Sky context | `#38BDF8` | `--portal-info` |
+| Workspace background | `#062A36` | `--portal-bg` |
+| Workspace surface | `#0B3440` | `--portal-surface` |
+| Elevated workspace surface | `#104352` | `--portal-surface-strong` |
+| Public canvas | `#F4FBFC` | `--portal-light-canvas` |
+| Light border | `#D7ECEF` | `--portal-light-border` |
+| Muted | `#AAC8CE` / `#486B75` | `--portal-muted` / `--portal-light-muted` |
+| Border | `#246070` | `--portal-border` |
 | Destructive | `#E66D70` | `--portal-danger` |
-| Ring | `#0284C7` | `--portal-focus` |
+| Accessible focus ring | `#0B6D8C` | `--portal-focus` |
 
-**Color Notes:** teal actions and sky-cyan context; public routes use a cool
-light canvas while signed workspaces remain deep ink-blue. Purple/pink
-generation gradients are not part of the TOAN AAS system.
+**Color Notes:** teal actions and sky-blue context are shared across public
+and signed surfaces. Public routes use a cool light canvas while signed
+workspaces remain deep teal. Purple/pink generation gradients are not part of
+the TOAN AAS system.
 
 ### Typography
 
@@ -73,6 +84,8 @@ generation gradients are not part of the TOAN AAS system.
 - **Body Font:** Inter
 - **Mood:** dark, cinematic, technical, precision, clean, premium, developer, professional, high-end utility
 - **Google Fonts:** [Inter + Inter](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)
+- **Scale:** 12 / 14 / 16 / 20 / 28 / 40px, with headings and controls kept on
+  the shared scale instead of page-specific one-off values.
 
 **CSS Import:**
 ```css
@@ -111,8 +124,8 @@ generation gradients are not part of the TOAN AAS system.
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #0E9F9A;
-  color: #06212B;
+  background: var(--portal-accent);
+  color: var(--portal-accent-ink);
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -128,8 +141,8 @@ generation gradients are not part of the TOAN AAS system.
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #0284C7;
-  border: 2px solid #0284C7;
+  color: var(--portal-info);
+  border: 2px solid var(--portal-info);
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -142,7 +155,7 @@ generation gradients are not part of the TOAN AAS system.
 
 ```css
 .card {
-  background: #0D2330;
+  background: var(--portal-surface);
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -161,16 +174,16 @@ generation gradients are not part of the TOAN AAS system.
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--portal-light-border);
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 200ms ease;
 }
 
 .input:focus {
-  border-color: #0284C7;
+  border-color: var(--portal-focus);
   outline: none;
-  box-shadow: 0 0 0 3px rgb(2 132 199 / 20%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-focus) 20%, transparent);
 }
 ```
 
