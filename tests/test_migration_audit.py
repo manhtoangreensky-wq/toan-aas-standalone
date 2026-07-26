@@ -186,10 +186,7 @@ async def dashboard():
     assert "menu\\|admin_billing_pending" in billing_menu_contract
     assert "menu\\|admin_billing_duyet" in billing_menu_contract
     assert "menu\\|admin_billing_tuchoi" in billing_menu_contract
-    for callback in (
-        "menu|admin_billing_payos",
-    ):
-        assert f"`{callback}` remains source-review-required" in billing_menu_contract
+    assert "menu\\|admin_billing_payos" in billing_menu_contract
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -1468,6 +1465,7 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
         "menu|admin_billing_pending": ("/admin/payments", "admin_payments"),
         "menu|admin_billing_duyet": ("/admin/payments", "admin_payments"),
         "menu|admin_billing_tuchoi": ("/admin/payments", "admin_payments"),
+        "menu|admin_billing_payos": ("/admin/payments", "admin_payments"),
     }
 
     assert set(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == set(expected)
@@ -1536,10 +1534,22 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
     ):
         assert disposition in rejection_guidance["source_dispositions"]
 
+    payos_guidance = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS[
+        "menu|admin_billing_payos"
+    ]
+    for disposition in (
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_PAYOS_TEST_HELP_NOT_REPLAYED",
+        "NO_ORDER_CODE_OR_PAYMENT_REFERENCE_TRANSFER",
+        "NO_PAYMENT_APPROVE_REJECT_PAYOS_TEST_OR_WEBHOOK_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in payos_guidance["source_dispositions"]
+
     # An adjacent or future Bot callback cannot inherit an administrator route
     # or any financial control through the menu namespace.
     for callback in (
-        "menu|admin_billing_payos",
         "menu|admin_billing_pending_future",
         "menu|admin_billing_pending|future",
         "MENU|ADMIN_BILLING_PENDING",
@@ -1549,6 +1559,9 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
         "menu|admin_billing_tuchoi_future",
         "menu|admin_billing_tuchoi|future",
         "MENU|ADMIN_BILLING_TUCHOI",
+        "menu|admin_billing_payos_future",
+        "menu|admin_billing_payos|future",
+        "MENU|ADMIN_BILLING_PAYOS",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
         assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
