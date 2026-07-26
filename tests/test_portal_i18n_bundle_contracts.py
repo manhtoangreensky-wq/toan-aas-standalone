@@ -96,6 +96,20 @@ for (const locale of expected) {
   }
 }
 
+const landingKeys = [
+  "landing.nav.features", "landing.nav.workflow", "landing.nav.trust",
+  "landing.nav.language", "landing.cta.start", "landing.cta.signIn",
+  "landing.hero.title", "landing.hero.body", "landing.hero.explore",
+  "landing.proof.webOwned", "landing.proof.noFakeOutput",
+  "landing.proof.companionOptional", "landing.preview.title",
+  "landing.workflow.title", "landing.trust.title", "landing.footer.legal"
+];
+for (const locale of expected) {
+  for (const key of landingKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 if (api.normalizeLocale("zh-CN") !== "zh") throw new Error("Chinese display alias did not normalize");
 if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese must not masquerade as Simplified Chinese");
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");

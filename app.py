@@ -107,6 +107,7 @@ from copyfast_pages import ROOT, render_portal
 
 LOGGER = logging.getLogger(__name__)
 STARTUP_RECONCILIATION_TASK_NAME = "copyfast-startup-reconciliation"
+PUBLIC_WELCOME_INTERFACE_LOCALES = frozenset({"vi", "en", "zh"})
 STARTUP_RECONCILIATION_STEPS = (
     ("admin_document_archive", copyfast_admin_document_archive.reconcile_admin_document_archive_storage),
     ("asset_vault", copyfast_assets.reconcile_asset_vault_storage),
@@ -139,6 +140,11 @@ def _origins() -> list[str]:
         if parsed.scheme != "https" and not (local_http and not production):
             raise RuntimeError("CORS_ALLOW_ORIGINS chỉ chấp nhận HTTPS, trừ localhost khi phát triển")
     return origins
+
+
+def _public_welcome_interface_locale(request: Request) -> str:
+    locale = request.query_params.get("lang")
+    return locale if locale in PUBLIC_WELCOME_INTERFACE_LOCALES else "vi"
 
 
 async def _run_startup_reconciliation(application: FastAPI) -> None:
@@ -2472,9 +2478,10 @@ async def legacy_b2b_redirect():
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
     normalized = normalized.rstrip("/") or "/"
-    # This value is populated only after the existing signed-session check
-    # below. It is presentation metadata for the server shell, never a
-    # request/header preference, a Bot locale or workflow-language input.
+    # Signed pages may replace this presentation metadata only after the
+    # existing signed-session check below. The public `/welcome` page has one
+    # separate, exact `lang` allowlist; neither path accepts a Bot locale or
+    # workflow-language input.
     portal_interface_locale = "vi"
     # This is the final portal fallback.  It must never turn an unknown API or
     # internal endpoint into a login redirect or an HTML shell, because API
@@ -2594,4 +2601,6 @@ async def page(page_path: str, request: Request):
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
+    if normalized == "/welcome":
+        portal_interface_locale = _public_welcome_interface_locale(request)
     return render_portal(page_path, interface_locale=portal_interface_locale)
