@@ -1622,13 +1622,13 @@ SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] 
     },
 }
 
-# ``menu|billing`` is a Bot-admin menu boundary, not a customer top-up
-# shortcut.  Keep its sole reviewed disposition in this private finite
+# Billing menu callbacks are Bot-admin boundaries, not customer top-up
+# shortcuts.  Keep the finite, exact reviewed dispositions in this private
 # registry rather than in ``MENU_ACTION_REGISTRY``: no raw Telegram token or
-# customer/admin payment control may enter the public browser catalog.  The
+# customer/admin payment control may enter the public browser catalog.  Each
 # destination repeats canonical signed-admin authorization and is navigation
-# only; it does not import the Bot's billing menu, manual-deposit state,
-# payment reference, PayOS/webhook state, wallet/Xu ledger or mutation.
+# only; it does not import Bot billing menu, manual-deposit state, payment
+# reference, PayOS/webhook state, wallet/Xu ledger or mutation.
 BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
     "menu|billing": {
         "target": "/admin/payments",
@@ -1650,6 +1650,27 @@ BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "payment guidance. The Web opens a fresh canonical-admin payments read route; it receives no "
             "Telegram identity, billing menu, pending deposit, payment reference, wallet/Xu ledger, "
             "PayOS/webhook state, provider state or write authority."
+        ),
+    },
+    "menu|admin_billing_pending": {
+        "target": "/admin/payments",
+        "classification": "admin",
+        "feature_key": "admin_payments",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_BILLING_PENDING_HELP_NOT_REPLAYED",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "NO_BILL_ID_OR_PAYMENT_REFERENCE_TRANSFER",
+            "NO_PAYMENT_APPROVE_REJECT_PAYOS_TEST_OR_WEBHOOK_ACTION",
+            "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot callback only renders parameter-free Pending Bills command guidance. The Web opens a "
+            "fresh canonical-admin payments read route; it receives no Telegram identity, Bot pending-bill state, "
+            "bill ID, payment reference, wallet/Xu ledger, PayOS/webhook state, provider state or write authority."
         ),
     },
 }
@@ -10466,6 +10487,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
     ]
+    billing_menu_action_count = len(billing_menu_contract_rows)
     admin_erp_menu_contract_rows = [
         [
             source,
@@ -11138,7 +11160,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`AUDIO_HUB_CALLBACK_CONTRACT.md`](AUDIO_HUB_CALLBACK_CONTRACT.md) — Bot Audio Hub and suggestion callbacks remain source-review boundaries; no product context, cache, voice/video state, keyword or Telegram action becomes generic Web navigation.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
-        + "- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — exact Bot-admin Billing menu disposition; it may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
+        + f"- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — {billing_menu_action_count} exact Bot-admin Billing menu dispositions; each may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
         + f"- [`ADMIN_ERP_MENU_CALLBACK_CONTRACT.md`](ADMIN_ERP_MENU_CALLBACK_CONTRACT.md) — {admin_erp_menu_action_count} exact Bot-admin category/status menu dispositions; each opens only a fresh canonical-admin Web read route and never transfers Bot snapshots, commands, provider/package/payment controls or runtime authority.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
@@ -11548,12 +11570,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "BILLING_MENU_CALLBACK_CONTRACT.md",
         "# Billing menu callback disposition contract\n\n"
-        "The frozen Bot callback handler treats the exact `menu|billing` value as administrator-only, even though a top-up keyboard may render a billing button. Its protected branch can show Bot-local billing and manual-payment guidance. It is not a customer wallet/top-up entry, a browser command, a payment/order reference, a canonical ledger row or a settlement state. The standalone Web never receives the raw callback token, a Telegram identity, Bot menu/context, pending deposit, manual bill, payment reference, wallet/Xu balance, PayOS/webhook state, provider state or write authority.\n\n"
+        f"The {billing_menu_action_count} exact Bot menu values below are administrator-only Billing guidance. They are not customer wallet/top-up entries, browser commands, payment/order references, canonical ledger rows or settlement state. The standalone Web never receives a raw callback token, Telegram identity, Bot menu/context, pending deposit, manual bill, bill ID, payment reference, wallet/Xu balance, PayOS/webhook state, provider state or write authority.\n\n"
         + _markdown_table(
             ["Bot callback source", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             billing_menu_contract_rows,
         )
-        + "\n\nThe sole reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. Any other `menu|billing*` value remains source-review-required and cannot inherit this Admin route.\n",
+        + "\n\nEach reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. `menu|admin_billing_duyet` remains source-review-required; `menu|admin_billing_tuchoi` remains source-review-required; and `menu|admin_billing_payos` remains source-review-required. Any other `menu|billing*` or `menu|admin_billing*` value cannot inherit this Admin route.\n",
     )
     write(
         "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
