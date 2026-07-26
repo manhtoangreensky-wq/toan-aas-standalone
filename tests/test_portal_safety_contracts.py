@@ -382,7 +382,7 @@ def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_
     assert "function catalogEntryState(module, page, context)" in PORTAL
     assert "context.readiness.features[key]" in PORTAL
     assert '"/music/sfx-library": "sfx_library"' in INTEGRATION
-    assert 'readOnlyPage("/music/sfx-library", "Thư viện SFX"' in PORTAL
+    assert 'customerPage("/music/sfx-library", "Thư viện SFX"' in PORTAL
     assert 'page.path === "/music/sfx-library" ? "sfx"' in PORTAL
     assert 'href: "/music/sfx-library", label: "Mở thư viện SFX"' in PORTAL
     assert 'class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ"' in PORTAL
@@ -428,11 +428,12 @@ def test_feature_family_navigators_only_link_registered_workflows_and_keep_guard
 
 def test_resolved_portal_page_title_beats_the_generic_server_placeholder_for_aliases() -> None:
     assert "function displayPageTitle(page, context)" in PORTAL
-    assert 'serverTitle !== "TOAN AAS"' in PORTAL
+    assert 'const genericServerTitles = new Set(["TOAN AAS", "TOAN AAS Workspace"]);' in PORTAL
+    assert "!genericServerTitles.has(serverTitle)" in PORTAL
     assert "displayPageTitle(page, context)" in PORTAL
     assert "function localizedPageTitle(page, context)" in PORTAL
     assert "const fallback = displayPageTitle(page, context);" in PORTAL
-    assert "document.title = `${localizedPageTitle(page, context)} · TOAN AAS`;" in PORTAL
+    assert "document.title = documentTitle(page, context);" in PORTAL
 
 
 def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
@@ -458,7 +459,7 @@ def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation
 
 def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
     assert 'layout: "account", fields: [], action: "none", status: "ready"' in PORTAL
-    assert "Hồ sơ & liên kết" in PORTAL
+    assert "Hồ sơ & phương thức truy cập" in PORTAL
     assert 'data-portal-action="update-profile"' in PORTAL
     assert 'badge(profileEnabled ? "ready" : "guarded")' in PORTAL
     assert "Telegram identity, role, Xu, PayOS và provider" in PORTAL
