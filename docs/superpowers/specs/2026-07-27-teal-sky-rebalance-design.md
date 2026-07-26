@@ -105,6 +105,10 @@ real anonymous login path without submitting a credential.
   text, muted supporting copy, visible focus/selection treatment and the same
   light working-surface grammar; their form, provider and job boundaries are
   unchanged.
+- Browser QA then exposed the register-route profile-default notice still
+  using pale-on-dark legacy copy. The access theme now gives that informational
+  notice a sky contextual surface, dark heading, 12px+ supporting text and
+  unchanged server-owned registration behavior.
 - Static validation evidence:
   `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'; python -m pytest -q --noconftest
   tests/test_teal_cyan_ui_foundation_contracts.py

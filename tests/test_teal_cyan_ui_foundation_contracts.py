@@ -407,6 +407,21 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
         theme_source,
         flags=re.DOTALL,
     )
+    access_notice = re.search(
+        r"\.portal-auth-page--access \.portal-notice\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    access_notice_title = re.search(
+        r"\.portal-auth-page--access \.portal-notice strong\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    access_notice_body = re.search(
+        r"\.portal-auth-page--access \.portal-notice p\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
     preset_card = re.search(
         r"\.portal-page\.portal-music-directions \.portal-music-directions-preset-card\s*\{"
         r"(?P<declarations>.*?)\n\}",
@@ -428,11 +443,18 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
 
     assert password_toggle is not None
     assert password_toggle_hover is not None
+    assert access_notice is not None
+    assert access_notice_title is not None
+    assert access_notice_body is not None
     assert preset_card is not None
     assert preset_title is not None
     assert preset_detail is not None
     assert "color: var(--portal-light-action);" in password_toggle.group("declarations")
     assert "background: var(--portal-light-hover-surface);" in password_toggle_hover.group("declarations")
+    assert "background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));" in access_notice.group("declarations")
+    assert "color: var(--portal-ink);" in access_notice_title.group("declarations")
+    assert "color: var(--portal-muted);" in access_notice_body.group("declarations")
+    assert "font-size: 12px;" in access_notice_body.group("declarations")
     assert "background: var(--portal-surface-light);" in preset_card.group("declarations")
     assert "color: var(--portal-ink);" in preset_card.group("declarations")
     assert "color: var(--portal-ink);" in preset_title.group("declarations")

@@ -499,6 +499,22 @@ body {
   color: var(--portal-action);
 }
 
+.portal-auth-page--access .portal-notice {
+  border-color: color-mix(in srgb, var(--portal-context) 30%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));
+  color: var(--portal-context);
+}
+
+.portal-auth-page--access .portal-notice strong {
+  color: var(--portal-ink);
+}
+
+.portal-auth-page--access .portal-notice p {
+  color: var(--portal-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .portal-auth-page--access .portal-auth-assurance,
 .portal-auth-page--access .portal-auth-help,
 .portal-auth-page--access .portal-auth-alternatives {
