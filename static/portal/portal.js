@@ -18006,6 +18006,17 @@
       .slice(0, 12);
   }
 
+  function renderDeliveryWorkspaceNav(currentPath) {
+    const normalized = normalizePath(currentPath || "/jobs");
+    const activePath = normalized.startsWith("/jobs/") ? "/jobs" : normalized;
+    const items = [
+      { path: "/jobs", label: uiText("nav.jobs", "Job Center") },
+      { path: "/assets", label: uiText("nav.assets", "Tài sản") },
+      { path: "/asset-vault", label: "Asset Vault" }
+    ];
+    return `<nav class="portal-delivery-nav" aria-label="${safeText("Delivery")}">${items.map((item) => `<a href="${safeText(item.path)}"${item.path === activePath ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
+  }
+
   function renderJobOutputAssets(job, source) {
     const assets = exactJobAssets(job, source);
     if (!assets.length) {
@@ -18171,6 +18182,7 @@
   }
 
   function renderJobs(page, context) {
+    const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const allJobs = Array.isArray(context.jobs) ? context.jobs : [];
     const selected = JOB_FILTERS.some(([value]) => value === context.jobFilter) ? context.jobFilter : "all";
     const jobs = selected === "all" ? allJobs : allJobs.filter((item) => jobStatus(item) === selected);
@@ -18181,13 +18193,14 @@
       : "";
     const filters = filterBar(JOB_FILTERS, selected, "filter-jobs", "data-job-filter", "Lọc job", counts) + firstJobActions;
     const records = renderDeliveryRecords("jobs", ["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? "Chưa có job được xác minh" : "Không có job ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả job sau khi tạo/confirm thành công." : "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất.");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderJobDeliverySummary(allJobs)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled ? "" : " disabled"}>Làm mới</button><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">Danh sách chỉ có metadata canonical thuộc signed session.</p>${filters}${records}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Delivery được tách riêng khỏi engine</strong><p>Job completed hoặc metadata output không tạo preview/download. Cần một signed delivery contract, ownership check và validation artifact trước khi Web mở file.</p></div></div></section></article>`;
   }
 
   function renderJobDetail(page, context) {
+    const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const record = safeText(page.recordId || "—");
     const job = context.jobDetail && typeof context.jobDetail === "object" ? context.jobDetail : null;
     const jobAssets = exactJobAssets(job, context.jobAssets);
@@ -18195,12 +18208,13 @@
     const detail = job && Object.keys(job).length
       ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tính năng</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái canonical</span><span class="portal-summary-value">${badge(jobStatus(job))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Tạo lúc</span><span class="portal-summary-value">${safeText(job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Xu dự kiến</span><span class="portal-summary-value">${safeText(canonicalXu(job.estimated_xu))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Xu đã ghi ledger</span><span class="portal-summary-value">${safeText(canonicalXu(job.charged_xu))}</span></div>${job.refund_status ? `<div class="portal-summary-item"><span class="portal-summary-key">Hoàn Xu</span><span class="portal-summary-value">${safeText(job.refund_status)}</span></div>` : ""}${job.error_category ? `<div class="portal-summary-item"><span class="portal-summary-key">Nhóm lỗi canonical</span><span class="portal-summary-value">${safeText(job.error_category)}</span></div>` : ""}<div class="portal-summary-item"><span class="portal-summary-key">Output engine</span><span class="portal-summary-value">${reportedOutput(job)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Delivery Web</span><span class="portal-summary-value">${assetDeliveryState(deliveryAsset || job, deliveryAsset ? "asset" : "")}</span></div></div>`
       : renderEmpty("Chưa có job detail an toàn", "Bridge cần kiểm tra ownership trước khi trả request, timeline và output của job này.", "⌛");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job ${record}</h2><p class="portal-card-subtitle">ID hiển thị không xác thực dữ liệu hoặc quyền download.</p></div>${badge(job ? jobStatus(job) : stateFor(page, context))}</div>${detail}</section>
       <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Delivery protection</h2><p class="portal-card-subtitle">Không có download trực tiếp từ path đoán được.</p></div>${job ? assetDeliveryState(deliveryAsset || job, deliveryAsset ? "asset" : "") : deliveryPending()}<div class="portal-notice portal-notice--info" style="margin-top:14px"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Trạng thái hiện tại</strong><p>${safeText(job ? jobStateExplanation(job) : "Chờ Core Bridge kiểm tra ownership trước khi mô tả job.")}</p></div></div>${renderNotes(page)}</aside></div>${renderJobDeliveryLifecycle(job, context, context.jobAssets)}${renderJobOutputAssets(job, context.jobAssets)}${renderJobRecoverySupport(job, context, context.jobAssets)}</article>`;
   }
 
   function renderAssets(page, context) {
+    const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const allAssets = Array.isArray(context.assets) ? context.assets : [];
     const selected = ASSET_FILTERS.some(([value]) => value === context.assetFilter) ? context.assetFilter : "all";
     const isSelected = (item, value) => {
@@ -18224,7 +18238,7 @@
       ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge."
       : (selected === "web_vault" ? "Tệp Web riêng chỉ xuất hiện sau khi bạn lưu vào Asset Vault; chúng không phải output hay delivery." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.");
     const records = renderDeliveryRecords("assets", ["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(assetRecordStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, renderAssetMobileCard, emptyTitle, emptyText);
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderAssetDeliverySummary(allAssets)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets" data-delivery-refresh-control="assets" aria-controls="delivery-assets-records"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div><p class="portal-delivery-read-status" data-delivery-read-status="/assets" role="status" aria-live="polite">Nguồn và delivery được kiểm tra riêng cho từng record.</p>${filters}${records}</section></article>`;
   }
@@ -19898,6 +19912,7 @@
   }
 
   function renderAssetVault(page, context) {
+    const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const canView = Boolean(context.capabilities && context.capabilities["asset-vault-view"] === true);
     const canUpload = Boolean(context.capabilities && context.capabilities["asset-vault-upload"] === true);
     const canArchive = Boolean(context.capabilities && context.capabilities["asset-vault-archive"] === true);
@@ -19905,7 +19920,7 @@
     const canInspectLifecycle = Boolean(context.capabilities && context.capabilities["asset-vault-lifecycle-view"] === true);
     const canRestore = Boolean(context.capabilities && context.capabilities["asset-vault-restore"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.assets)}</span><div><h2>Asset Vault đang ở chế độ an toàn</h2><p>Kho tệp Web chỉ hoạt động khi môi trường có persistent volume riêng. Không có fallback sang static, browser storage hoặc Tài sản Bot.</p><div class="portal-state-meta"><span>Cần signed session</span><span>Không dùng storage công khai</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}${deliveryNav}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.assets)}</span><div><h2>Asset Vault đang ở chế độ an toàn</h2><p>Kho tệp Web chỉ hoạt động khi môi trường có persistent volume riêng. Không có fallback sang static, browser storage hoặc Tài sản Bot.</p><div class="portal-state-meta"><span>Cần signed session</span><span>Không dùng storage công khai</span><span>Không có output giả</span></div></div></div></section></article>`;
     }
     const listing = assetVaultListing(context);
     const filter = listing.filters;
@@ -19932,7 +19947,7 @@
       + renderFields(assetVaultFilterFields(), true, context, filter, "asset-vault-filter")
       + '<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm chạy tại API owner-scoped trong phiên trang hiện tại; không lưu từ khóa riêng vào URL, Telegram hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-filter-clear" data-portal-route="/asset-vault">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm tệp</button></div></div></form>';
     const fileDisabled = canUpload ? "" : " disabled";
-    return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}
+    return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}${deliveryNav}
       <section class="portal-vault-intro"><div><span class="portal-section-kicker">Private Web storage</span><h2>Kho tệp riêng cho Project và workflow Web</h2><p>Asset Vault dùng signed session, owner check, CSRF và private storage. Không tạo public link, preview giả, job, Xu hay PayOS.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Tệp trong trang hiện tại</dd></div><div><dt>25 MB</dt><dd>Giới hạn mặc định mỗi tệp</dd></div></dl></section>
       <div class="portal-vault-layout"><section class="portal-card portal-card-pad portal-vault-upload"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm tệp</h2><p class="portal-card-subtitle">Chỉ tải định dạng được kiểm tra ở máy chủ. Tệp luôn tải về dạng attachment riêng tư.</p></div>${badge(canUpload ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="asset-vault-upload" data-portal-route="/asset-vault" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class="portal-vault-dropzone" for="portal-vault-file"><span class="portal-vault-dropzone-icon" aria-hidden="true">↑</span><span><strong>Chọn tệp riêng tư</strong><small>Ảnh, video, audio, PDF, TXT/SRT/VTT hoặc DOCX · tối đa 25 MB mặc định</small></span><input id="portal-vault-file" class="portal-vault-file-input" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx" required${fileDisabled}></label><div class="portal-form-footer"><span class="portal-form-note">Tệp không được gửi sang Bot, provider hoặc browser storage. Upload có idempotency và audit metadata đã sanitize.</span><button class="portal-button portal-button--primary" type="submit"${fileDisabled}>Lưu vào Asset Vault</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Hai thư viện phục vụ hai mục đích khác nhau.</p></div></div><ul class="portal-project-steps"><li><strong>Asset Vault Web</strong><span>Tệp bạn chủ động lưu cho Project/Web workflow, owner-scoped và private.</span></li><li><strong>Tài sản Bot</strong><span>Output delivery của job canonical, có metadata/URL ký riêng ở <a href="/assets">Tài sản Bot</a>.</span></li><li><strong>Không suy diễn output</strong><span>Một tệp Vault không tự trở thành input engine hoặc kết quả đã hoàn tất.</span></li></ul></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thư viện Asset Vault</h2><p class="portal-card-subtitle">Chỉ tệp thuộc signed Web account hiện tại. Tệp archived vẫn có metadata để đối chiếu, nhưng download đã bị khóa đúng theo server contract.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-refresh" data-portal-route="/asset-vault"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${filterForm}${cards}${lifecyclePanel}${renderAssetVaultPagination(listing)}</section>
