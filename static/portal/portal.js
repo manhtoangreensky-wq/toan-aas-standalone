@@ -18012,9 +18012,9 @@
     const items = [
       { path: "/jobs", label: uiText("nav.jobs", "Job Center") },
       { path: "/assets", label: uiText("nav.assets", "Tài sản") },
-      { path: "/asset-vault", label: "Asset Vault" }
+      { path: "/asset-vault", label: uiText("shellNav.assetVault", "Asset Vault") }
     ];
-    return `<nav class="portal-delivery-nav" aria-label="${safeText("Delivery")}">${items.map((item) => `<a href="${safeText(item.path)}"${item.path === activePath ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
+    return `<nav class="portal-delivery-nav" aria-label="${safeText(uiText("shellNav.delivery", "Delivery"))}">${items.map((item) => `<a href="${safeText(item.path)}"${item.path === activePath ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
   }
 
   function renderJobOutputAssets(job, source) {

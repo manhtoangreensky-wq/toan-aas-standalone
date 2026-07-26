@@ -9,6 +9,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+PORTAL_I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 
 APPROVED_DELIVERY_PATHS = ("/jobs", "/assets", "/asset-vault")
 ACTIVE_PATH_CONDITION = 'item.path === activePath ? \' aria-current="page"\' : ""'
@@ -50,6 +51,21 @@ def _delivery_nav_css(source: str = CSS) -> str:
     return _section(source, "/* Delivery workspace navigation.", "/* Music & SFX Library")
 
 
+def _shell_navigation_messages(source: str = PORTAL_I18N) -> str:
+    return _section(source, "const SHELL_NAVIGATION_MESSAGES = {", "Object.keys(MESSAGES)")
+
+
+def _shell_navigation_locale(locale: str, source: str | None = None) -> str:
+    source = _shell_navigation_messages() if source is None else source
+    start = f"    {locale}: {{"
+    end = {
+        "vi": "\n    en: {",
+        "en": "\n    zh: {",
+        "zh": "\n  };",
+    }[locale]
+    return _section(source, start, end)
+
+
 def _assert_delivery_nav_contract(nav: str) -> None:
     items_match = re.search(r"const items = \[(?P<items>.*?)\];", nav, re.DOTALL)
     assert items_match, "Delivery nav must declare its route items locally."
@@ -57,12 +73,9 @@ def _assert_delivery_nav_contract(nav: str) -> None:
     paths = re.findall(r'path:\s*"([^"]+)"', items_source)
     assert paths == list(APPROVED_DELIVERY_PATHS)
     assert len(paths) == len(set(paths)) == len(APPROVED_DELIVERY_PATHS)
-    expected_items = '''
-      { path: "/jobs", label: uiText("nav.jobs", "Job Center") },
-      { path: "/assets", label: uiText("nav.assets", "Tài sản") },
-      { path: "/asset-vault", label: "Asset Vault" }
-    '''
-    assert re.sub(r"\s+", "", items_source) == re.sub(r"\s+", "", expected_items)
+    assert items_source.count("path:") == len(APPROVED_DELIVERY_PATHS)
+    assert items_source.count("{") == len(APPROVED_DELIVERY_PATHS)
+    assert items_source.count("}") == len(APPROVED_DELIVERY_PATHS)
 
     assert '${items.map((item) => `<a href="${safeText(item.path)}"' in nav
     assert nav.count("items.map((item) =>") == 1
@@ -97,8 +110,18 @@ def test_delivery_navigation_has_only_the_three_approved_routes() -> None:
         ("/assets", "nav.assets", "Tài sản"),
     ):
         assert f'{{ path: "{path}", label: uiText("{key}", "{fallback}") }}' in nav
-    assert '{ path: "/asset-vault", label: "Asset Vault" }' in nav
+    assert '{ path: "/asset-vault", label: uiText("shellNav.assetVault", "Asset Vault") }' in nav
+    assert 'aria-label="${safeText(uiText("shellNav.delivery", "Delivery"))}"' in nav
     _assert_delivery_nav_contract(nav)
+
+
+def test_delivery_navigation_uses_reviewed_shell_labels_in_each_supported_locale() -> None:
+    for locale, delivery_label in (
+        ("vi", "Giao nhận"),
+        ("en", "Delivery"),
+        ("zh", "交付"),
+    ):
+        assert f'"shellNav.delivery": "{delivery_label}"' in _shell_navigation_locale(locale)
 
 
 def test_delivery_navigation_keeps_job_details_in_job_center() -> None:
