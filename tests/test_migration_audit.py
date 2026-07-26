@@ -160,6 +160,7 @@ async def dashboard():
     assert "menu\\|provider_custom_help" in admin_erp_contract
     assert "menu\\|finance_revenue_month" in admin_erp_contract
     assert "menu\\|finance_expense_month" in admin_erp_contract
+    assert "menu\\|finance_expense_categories" in admin_erp_contract
     assert "menu\\|finance_profit" in admin_erp_contract
     assert "menu\\|finance_export" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
@@ -1598,6 +1599,7 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|provider_custom_help": ("/admin/providers", "admin_providers"),
         "menu|finance_revenue_month": ("/admin/finance", "admin_finance"),
         "menu|finance_expense_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_expense_categories": ("/admin/finance", "admin_finance"),
         "menu|finance_profit": ("/admin/finance", "admin_finance"),
         "menu|finance_export": ("/admin/finance", "admin_finance"),
         "menu|admin_overview": ("/admin", "admin_overview"),
@@ -1662,6 +1664,18 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
     ):
         assert disposition in finance_expense_month["source_dispositions"]
+
+    finance_expense_categories = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS[
+        "menu|finance_expense_categories"
+    ]
+    for disposition in (
+        "BOT_FINANCE_EXPENSE_CATEGORIES_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_OR_EXPENSE_PARAMETER_TRANSFER",
+        "NO_EXPENSE_WRITE_CATEGORY_OR_FILE_DELIVERY",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    ):
+        assert disposition in finance_expense_categories["source_dispositions"]
 
     finance_profit = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS["menu|finance_profit"]
     for disposition in (
@@ -1765,11 +1779,13 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|finance_expense_this_month",
         "menu|finance_expense_last_month",
         "menu|finance_expense_year",
-        "menu|finance_expense_categories",
         "menu|finance_add_expense",
         "menu|finance_expense_month_future",
         "menu|finance_expense_month|future",
         "MENU|FINANCE_EXPENSE_MONTH",
+        "menu|finance_expense_categories_future",
+        "menu|finance_expense_categories|future",
+        "MENU|FINANCE_EXPENSE_CATEGORIES",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
         assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
