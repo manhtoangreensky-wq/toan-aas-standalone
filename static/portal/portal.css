@@ -7551,3 +7551,182 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-onboarding-steps li { padding: 12px; }
   .portal-onboarding-route { padding: 13px; }
 }
+
+/* Account & Security workspace UX. The security center retains every signed
+   server action; this late scope only clarifies navigation, posture, density,
+   and destructive-action hierarchy inside the existing app shell. */
+.portal-account-page,
+.portal-account-security,
+.portal-account-activity,
+.portal-account-data-controls,
+.portal-interface-locale-navigator {
+  max-width: 1140px;
+}
+.portal-account-page .portal-settings-nav,
+.portal-account-security .portal-settings-nav,
+.portal-account-activity .portal-settings-nav,
+.portal-account-data-controls .portal-settings-nav,
+.portal-interface-locale-navigator .portal-settings-nav {
+  width: 100%;
+  max-width: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4px;
+  border-color: var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-strong);
+  scroll-snap-type: x mandatory;
+  scrollbar-color: var(--portal-border-strong) transparent;
+}
+.portal-account-page .portal-settings-nav a,
+.portal-account-security .portal-settings-nav a,
+.portal-account-activity .portal-settings-nav a,
+.portal-account-data-controls .portal-settings-nav a,
+.portal-interface-locale-navigator .portal-settings-nav a {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--portal-muted-strong);
+  font-size: 13px;
+  font-weight: 740;
+  scroll-snap-align: start;
+  transition: color var(--portal-transition), border-color var(--portal-transition), background-color var(--portal-transition);
+}
+.portal-account-page .portal-settings-nav a:hover,
+.portal-account-page .portal-settings-nav a:focus-visible,
+.portal-account-security .portal-settings-nav a:hover,
+.portal-account-security .portal-settings-nav a:focus-visible,
+.portal-account-activity .portal-settings-nav a:hover,
+.portal-account-activity .portal-settings-nav a:focus-visible,
+.portal-account-data-controls .portal-settings-nav a:hover,
+.portal-account-data-controls .portal-settings-nav a:focus-visible,
+.portal-interface-locale-navigator .portal-settings-nav a:hover,
+.portal-interface-locale-navigator .portal-settings-nav a:focus-visible {
+  border-color: var(--portal-border-strong);
+  color: var(--portal-text);
+  background: var(--portal-surface-soft);
+}
+.portal-account-page .portal-settings-nav a[aria-current="page"],
+.portal-account-security .portal-settings-nav a[aria-current="page"],
+.portal-account-activity .portal-settings-nav a[aria-current="page"],
+.portal-account-data-controls .portal-settings-nav a[aria-current="page"],
+.portal-interface-locale-navigator .portal-settings-nav a[aria-current="page"] {
+  border-color: rgba(45, 212, 191, .44);
+  color: var(--portal-text);
+  background: rgba(45, 212, 191, .12);
+}
+.portal-account-page .portal-account-command {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr) auto;
+  gap: 16px;
+  padding: clamp(20px, 2.6vw, 28px);
+  border-color: var(--portal-border-strong);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-account-page .portal-account-command-copy h2 { margin-top: 0; }
+.portal-account-page .portal-account-command-facts { gap: 9px; }
+.portal-account-page .portal-account-command-facts > div { padding: 11px; background: var(--portal-surface); }
+.portal-account-page .portal-account-command-facts dt { font-size: 12px; letter-spacing: .035em; }
+.portal-account-page .portal-account-command-facts dd { font-size: 13px; line-height: 1.45; }
+.portal-account-page .portal-account-command > .portal-button { min-height: 44px; }
+.portal-account-page .portal-account-overview { gap: 16px; }
+.portal-account-page .portal-account-session { border-color: var(--portal-border); background: var(--portal-surface-strong); }
+.portal-account-page .portal-summary-item { gap: 14px; }
+.portal-account-page .portal-summary-item .portal-summary-key { font-size: 12px; }
+.portal-account-page .portal-summary-item .portal-summary-value { font-size: 13px; line-height: 1.5; }
+.portal-account-page [data-portal-action="auth-logout"] {
+  border-color: rgba(248, 113, 113, .5);
+  color: #fecaca;
+  background: rgba(248, 113, 113, .08);
+}
+.portal-account-page [data-portal-action="auth-logout"]:hover,
+.portal-account-page [data-portal-action="auth-logout"]:focus-visible {
+  border-color: rgba(248, 113, 113, .72);
+  color: #fee2e2;
+  background: rgba(248, 113, 113, .15);
+}
+.portal-security-posture {
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.5vw, 28px);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-security-posture-head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.portal-security-posture-head > div { min-width: 0; }
+.portal-security-posture-head h2 { margin: 0; color: var(--portal-text); font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.03em; }
+.portal-security-posture-head p { max-width: 680px; margin: 6px 0 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.6; }
+.portal-security-posture-head .portal-button { min-height: 44px; flex: 0 0 auto; white-space: nowrap; }
+.portal-security-posture-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.portal-security-posture-facts > div {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface);
+}
+.portal-security-posture-facts > div[data-state="ready"] { border-color: rgba(45, 212, 191, .42); }
+.portal-security-posture-facts > div[data-state="guarded"] { border-color: rgba(246, 191, 82, .3); }
+.portal-security-posture-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 10px;
+  color: var(--portal-accent);
+  background: var(--portal-surface-soft);
+}
+.portal-security-posture-icon .portal-icon { width: 17px; height: 17px; }
+.portal-security-posture-facts small,
+.portal-security-posture-facts strong,
+.portal-security-posture-facts em { display: block; min-width: 0; }
+.portal-security-posture-facts small { color: var(--portal-muted); font-size: 12px; font-weight: 720; }
+.portal-security-posture-facts strong { margin-top: 2px; color: var(--portal-text); font-size: 13px; line-height: 1.38; }
+.portal-security-posture-facts em { margin-top: 2px; color: var(--portal-muted-strong); font-size: 12px; font-style: normal; line-height: 1.42; }
+.portal-account-security .portal-security-assurance { margin-top: 2px; border-color: var(--portal-border); background: var(--portal-surface-strong); }
+.portal-account-security .portal-security-assurance summary { min-height: 44px; font-size: 13px; }
+
+@media (max-width: 1040px) {
+  .portal-account-page .portal-account-command { grid-template-columns: minmax(0, 1fr) auto; }
+  .portal-account-page .portal-account-command-facts { grid-column: 1 / -1; }
+  .portal-security-posture-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .portal-account-page .portal-settings-nav,
+  .portal-account-security .portal-settings-nav,
+  .portal-account-activity .portal-settings-nav,
+  .portal-account-data-controls .portal-settings-nav,
+  .portal-interface-locale-navigator .portal-settings-nav { width: 100%; }
+  .portal-account-page .portal-settings-nav a,
+  .portal-account-security .portal-settings-nav a,
+  .portal-account-activity .portal-settings-nav a,
+  .portal-account-data-controls .portal-settings-nav a,
+  .portal-interface-locale-navigator .portal-settings-nav a { flex: 0 0 auto; min-height: 44px; text-align: left; }
+  .portal-account-page .portal-account-command { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
+  .portal-account-page .portal-account-command-facts { grid-column: auto; grid-template-columns: 1fr; }
+  .portal-account-page .portal-summary-item { display: grid; grid-template-columns: 1fr; gap: 4px; align-items: start; }
+  .portal-security-posture { gap: 14px; padding: 18px; border-radius: 18px; }
+  .portal-security-posture-head { align-items: stretch; flex-direction: column; }
+  .portal-security-posture-head .portal-button { width: 100%; justify-content: center; }
+  .portal-security-posture-facts { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-account-page .portal-settings-nav a,
+  .portal-account-security .portal-settings-nav a,
+  .portal-account-activity .portal-settings-nav a,
+  .portal-account-data-controls .portal-settings-nav a,
+  .portal-interface-locale-navigator .portal-settings-nav a { transition: none; }
+}
