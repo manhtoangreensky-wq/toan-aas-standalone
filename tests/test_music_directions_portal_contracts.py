@@ -132,6 +132,16 @@ def test_music_directions_uses_native_radio_selection_without_auto_submit_or_nav
             assert forbidden not in local_only
 
 
+def test_delegated_clicks_do_not_dispatch_the_form_container_for_local_picker_changes() -> None:
+    """A radio/label click may update the local picker but must not submit its form."""
+
+    bindings = _function_block(PORTAL, "bindInteractions")
+
+    assert 'if (action && action.tagName !== "FORM" && !action.disabled) {' in bindings
+    assert 'if (action.tagName === "BUTTON" && action.type === "submit") return;' in bindings
+    assert 'if (event.target.matches("[data-portal-form]")) {' in bindings
+
+
 def test_music_directions_requires_signed_capability_csrf_and_validates_matching_receipts() -> None:
     assert '"music-direction-preset-compose": Boolean(account && me.csrf_token && musicDirectionPresetsEnabled)' in INTEGRATION
     assert '"/media-workspace/music-directions": account && musicDirectionPresetsEnabled ? "ready" : "guarded"' in INTEGRATION

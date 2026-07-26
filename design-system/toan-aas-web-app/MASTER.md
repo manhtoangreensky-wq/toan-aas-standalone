@@ -25,15 +25,15 @@ portal implementation:
   opens login/dashboard.
 - **Style:** Swiss Modernism 2.0 + flat productivity UI: strict layout,
   semantic surfaces, one accent, limited decoration and high contrast.
-- **Theme:** deep teal surfaces with a turquoise brand/action accent and
-  sky-blue contextual affordances. No
-  AI-purple/pink gradient treatment in workspace, account, billing or ERP
+- **Theme:** light cyan application canvas with white working surfaces. The
+  deep teal rail is reserved for desktop navigation; primary actions are dark
+  teal, mint is brand support, and sky blue communicates focus and context.
+  No AI-purple/pink gradient treatment in workspace, account, billing or ERP
   screens.
-- **Palette:** workspace background `#062a36`; surface `#0b3440`; elevated
-  surface `#104352`; primary/action `#14b8a6`; primary ink `#092b36`; text
-  `#effcfd`; muted text `#aac8ce`; border `#246070`; sky context `#38bdf8`;
-  light public canvas `#f4fbfc`; light border `#d7ecef`; light ink `#092b36`;
-  danger `#e66d70`.
+- **Palette:** application canvas `#f4fbfc`; working surface `#ffffff`; deep
+  teal rail and ink `#083344`; primary/action `#0f766e` with white action
+  text; mint brand `#14b8a6`; sky context/focus `#0284c7`; muted text
+  `#486b75`; border `#d7ecef`; danger `#b91c1c`.
 - **Content density:** compact but readable: body 14–16px, 4/8px spacing
   rhythm, 40px desktop and 44px mobile controls; no operational copy below
   12px where it is needed to make a decision.
@@ -41,12 +41,17 @@ portal implementation:
   animation; respect `prefers-reduced-motion`.
 - **Icons:** consistent accessible vector treatment for new structural UI;
   status also has textual labels.
-- **Token ownership:** `static/portal/portal-theme.css :root` is the only
-  owner of CSS hex colour literals. Components use `--portal-*` semantic
-  tokens only; do not restore raw hex, purple or pink values in page rules.
-- **Surface ownership:** signed Workspace, ERP and account operations use the
-  deep teal family; `/welcome` and access screens use the light canvas and
-  white surface family. Both use the same teal action and sky context tokens.
+- **Token ownership:** `static/portal/portal-theme.css :root` is the canonical
+  owner of the shared teal--sky palette and all new/rebalanced theme rules use
+  `--portal-*` semantic tokens. The historical catalogue still contains raw
+  legacy colours; when a legacy route is placed on a light surface, add a
+  specific final-theme override instead of inheriting pale-on-dark text or
+  restoring new raw page colours.
+- **Surface ownership:** signed Workspace, ERP, account operations and access
+  screens use the light canvas and white surface family. The desktop sidebar
+  alone uses the deep teal rail; `/welcome` follows the same calm public
+  companion palette. All surfaces share the dark-teal action and sky context
+  tokens.
 
 The companion implementation guide is
 [`docs/UX_APP_FIRST_REDESIGN.md`](../../docs/UX_APP_FIRST_REDESIGN.md).
@@ -59,30 +64,27 @@ The companion implementation guide is
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#14B8A6` | `--portal-accent` |
-| Primary hover | `#2DD4BF` | `--portal-accent-hover` |
-| On Primary / light ink | `#092B36` | `--portal-accent-ink` / `--portal-ink` |
-| Sky context | `#38BDF8` | `--portal-info` |
-| Workspace background | `#062A36` | `--portal-bg` |
-| Workspace surface | `#0B3440` | `--portal-surface` |
-| Elevated workspace surface | `#104352` | `--portal-surface-strong` |
-| Public canvas | `#F4FBFC` | `--portal-light-canvas` |
-| Light border | `#D7ECEF` | `--portal-light-border` |
-| Muted | `#AAC8CE` / `#486B75` | `--portal-muted` / `--portal-light-muted` |
-| Border | `#246070` | `--portal-border` |
-| Destructive | `#E66D70` | `--portal-danger` |
-| Accessible focus ring | `#0B6D8C` | `--portal-focus` |
+| Primary action | `#0F766E` | `--portal-action` |
+| On action | `#FFFFFF` | `--portal-on-action` |
+| Mint brand | `#14B8A6` | `--portal-brand` |
+| Sky context / focus | `#0284C7` | `--portal-context` / `--portal-focus` |
+| App canvas | `#F4FBFC` | `--portal-app-canvas` |
+| Working surface | `#FFFFFF` | `--portal-surface-light` |
+| Deep rail / ink | `#083344` | `--portal-rail` / `--portal-ink` |
+| Border | `#D7ECEF` | `--portal-border` |
+| Muted | `#486B75` | `--portal-muted` |
+| Destructive | `#B91C1C` | `--portal-danger` |
 
-**Color Notes:** teal actions and sky-blue context are shared across public
-and signed surfaces. Public routes use a cool light canvas while signed
-workspaces remain deep teal. Purple/pink generation gradients are not part of
-the TOAN AAS system.
+**Color Notes:** dark teal actions and sky-blue context are shared across
+public and signed surfaces. The signed workspace is light and operational;
+only its navigation rail stays deep teal. Purple/pink generation gradients are
+not part of the TOAN AAS system.
 
 ### Typography
 
 - **Heading Font:** Inter
 - **Body Font:** Inter
-- **Mood:** dark, cinematic, technical, precision, clean, premium, developer, professional, high-end utility
+- **Mood:** calm, technical, precise, clean, high-trust, professional, dense operational utility
 - **Google Fonts:** [Inter + Inter](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)
 - **Scale:** 12 / 14 / 16 / 20 / 28 / 40px, with headings and controls kept on
   the shared scale instead of page-specific one-off values.
