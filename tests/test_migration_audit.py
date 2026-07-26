@@ -152,6 +152,12 @@ async def dashboard():
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_VARIANT_CALLBACK_CONTRACT.md" in readme
     assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
+    admin_erp_count = len(audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS)
+    assert f"— {admin_erp_count} exact Bot-admin category/status menu dispositions" in readme
+    admin_erp_contract = (docs_dir / "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert f"The {admin_erp_count} exact Bot menu values below" in admin_erp_contract
+    assert "menu\\|admin_packages_catalog" in admin_erp_contract
+    assert "menu|admin_packages_grant_combo" in admin_erp_contract
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -1482,6 +1488,7 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|operator": ("/admin", "admin_overview"),
         "menu|finance": ("/admin/finance", "admin_finance"),
         "menu|admin_packages": ("/admin/packages", "admin_packages"),
+        "menu|admin_packages_catalog": ("/admin/packages", "admin_packages"),
         "menu|admin_provider": ("/admin/providers", "admin_providers"),
         "menu|admin_overview": ("/admin", "admin_overview"),
         "menu|admin_provider_status": ("/admin/providers", "admin_providers"),
@@ -1508,6 +1515,15 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
         assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
 
+    package_catalog = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS["menu|admin_packages_catalog"]
+    for disposition in (
+        "BOT_PACKAGE_CATALOG_HELP_NOT_REPLAYED",
+        "NO_PACKAGE_GRANT_REVOKE_ADJUST_OR_ENTITLEMENT_ACTION",
+        "NO_PACKAGE_USER_ID_OR_CODE_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    ):
+        assert disposition in package_catalog["source_dispositions"]
+
     # Exact identifiers are source evidence only. Case changes, suffixes and
     # sensitive child actions must not inherit an ERP route or a Web control.
     for callback in (
@@ -1517,9 +1533,16 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|admin_confirm_freeze_image",
         "menu|admin_provider_test",
         "menu|finance_compliance_update",
+        "menu|admin_packages_grant_combo",
+        "menu|admin_packages_grant_monthly",
+        "menu|admin_packages_user",
+        "menu|admin_packages_catalog_future",
+        "MENU|ADMIN_PACKAGES_CATALOG",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
         assert mapped["resolution"] != "reviewed_admin_erp_fresh_web_navigation"
+        assert mapped["target"] != "/admin/packages"
+        assert mapped["status"] != "NAVIGATION_ONLY"
 
     from copyfast_registry import FEATURE_BY_KEY, menu_capability_catalog
 
