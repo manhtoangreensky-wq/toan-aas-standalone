@@ -221,11 +221,11 @@ def test_pwa_metadata_and_offline_shell_share_the_canonical_portal_background() 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     offline_shell = OFFLINE_SHELL.read_text(encoding="utf-8")
 
-    assert manifest["background_color"] == "#07141d"
-    assert manifest["theme_color"] == "#07141d"
-    assert '<meta name="theme-color" content="#07141d">' in offline_shell
-    assert "background: #07141d;" in offline_shell
-    assert "#07131f" not in offline_shell
+    assert manifest["background_color"] == "#062a36"
+    assert manifest["theme_color"] == "#062a36"
+    assert '<meta name="theme-color" content="#062a36">' in offline_shell
+    assert "background: #062a36;" in offline_shell
+    assert "#07141d" not in offline_shell
 
 
 def test_access_copy_stays_top_aligned_with_the_email_form() -> None:
