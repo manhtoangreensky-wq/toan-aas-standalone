@@ -161,15 +161,17 @@ async def dashboard():
     assert "menu\\|finance_revenue_month" in admin_erp_contract
     assert "menu\\|finance_expense_month" in admin_erp_contract
     assert "menu\\|finance_profit" in admin_erp_contract
+    assert "menu\\|finance_export" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
     assert "`menu|admin_provider_test` remains source-review-required" in admin_erp_contract
     for callback in (
         "menu|finance_revenue",
-        "menu|finance_export",
         "menu|finance_expense",
         "menu|finance_add_expense",
         "menu|finance_profit_this_month",
         "menu|finance_profit_year",
+        "menu|finance_export_month",
+        "menu|finance_export_year",
     ):
         assert f"`{callback}` remains source-review-required" in admin_erp_contract
     for callback in (
@@ -1552,6 +1554,7 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|finance_revenue_month": ("/admin/finance", "admin_finance"),
         "menu|finance_expense_month": ("/admin/finance", "admin_finance"),
         "menu|finance_profit": ("/admin/finance", "admin_finance"),
+        "menu|finance_export": ("/admin/finance", "admin_finance"),
         "menu|admin_overview": ("/admin", "admin_overview"),
         "menu|admin_provider_status": ("/admin/providers", "admin_providers"),
         "menu|admin_provider_usage": ("/admin/provider-cost", "admin_provider_cost"),
@@ -1625,6 +1628,16 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
     ):
         assert disposition in finance_profit["source_dispositions"]
 
+    finance_export = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS["menu|finance_export"]
+    for disposition in (
+        "BOT_FINANCE_EXPORT_GUIDANCE_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_EXPORT_PERIOD_OR_COMMAND_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    ):
+        assert disposition in finance_export["source_dispositions"]
+
     # Exact identifiers are source evidence only. Case changes, suffixes and
     # sensitive child actions must not inherit an ERP route or a Web control.
     for callback in (
@@ -1669,12 +1682,28 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|finance_revenue_last_month",
         "menu|finance_revenue_year",
         "menu|finance_revenue_custom_help",
-        "menu|finance_export",
         "menu|finance_export_month",
         "menu|finance_export_year",
         "menu|finance_revenue_month_future",
         "menu|finance_revenue_month|future",
         "MENU|FINANCE_REVENUE_MONTH",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "admin_erp_feature_key" not in mapped
+        assert "admin_erp_authority" not in mapped
+        assert "admin_erp_launch_mode" not in mapped
+
+    # Export Guidance is limited to the static Bot parent. Its period-specific
+    # command guidance and all variants stay source review, never file delivery.
+    for callback in (
+        "menu|finance_export_month",
+        "menu|finance_export_year",
+        "menu|finance_export_future",
+        "menu|finance_export|future",
+        "MENU|FINANCE_EXPORT",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
         assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
