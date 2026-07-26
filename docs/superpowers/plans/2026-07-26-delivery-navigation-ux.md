@@ -164,4 +164,3 @@ git commit -m "Add Delivery workspace navigation"
 \`\`\`
 
 Then request spec-compliance and code-quality review before creating a PR. Do not deploy Railway or contact external providers.
-
