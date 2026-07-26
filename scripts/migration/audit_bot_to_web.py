@@ -1744,6 +1744,27 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "entitlement, Xu, PayOS or payment state."
         ),
     },
+    "menu|admin_packages_catalog": {
+        "target": "/admin/packages",
+        "classification": "admin",
+        "feature_key": "admin_packages",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PACKAGE_CATALOG_HELP_NOT_REPLAYED",
+            "NO_PACKAGE_GRANT_REVOKE_ADJUST_OR_ENTITLEMENT_ACTION",
+            "NO_PACKAGE_USER_ID_OR_CODE_TRANSFER",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot baseline only displays catalog command guidance. It is not a Web package adapter or "
+            "a write: fresh navigation receives no package code, user ID, grant/revoke/adjustment, entitlement, "
+            "Xu, PayOS or payment state."
+        ),
+    },
     "menu|admin_provider": {
         "target": "/admin/providers",
         "classification": "admin",
@@ -10457,6 +10478,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.items()
     ]
+    admin_erp_menu_action_count = len(admin_erp_menu_contract_rows)
     postback_readiness_contract_rows = [
         [
             source,
@@ -11117,7 +11139,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — exact Bot-admin Billing menu disposition; it may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
-        + "- [`ADMIN_ERP_MENU_CALLBACK_CONTRACT.md`](ADMIN_ERP_MENU_CALLBACK_CONTRACT.md) — eight exact Bot-admin category/status menu dispositions; each opens only a fresh canonical-admin Web read route and never transfers Bot snapshots, commands, provider/package/payment controls or runtime authority.\n"
+        + f"- [`ADMIN_ERP_MENU_CALLBACK_CONTRACT.md`](ADMIN_ERP_MENU_CALLBACK_CONTRACT.md) — {admin_erp_menu_action_count} exact Bot-admin category/status menu dispositions; each opens only a fresh canonical-admin Web read route and never transfers Bot snapshots, commands, provider/package/payment controls or runtime authority.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
         + "- [`VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`](VIDEO_FINALIZATION_CALLBACK_CONTRACT.md) — exact Bot Video Finishing session boundaries; the separate signed Web workflow never replays Telegram draft, quote, export or payment callbacks.\n"
@@ -11536,7 +11558,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
         "# Admin ERP menu callback disposition contract\n\n"
-        "The eight exact Bot menu values below are administrator-only category, summary or status screens. "
+        f"The {admin_erp_menu_action_count} exact Bot menu values below are administrator-only category, summary or status screens. "
         "They are static source evidence for a **fresh** Web Admin ERP read navigation only. The standalone Web "
         "never receives a raw callback token, Telegram identity/role, Bot menu or pending state, command snippet, "
         "finance/provider snapshot, package code/user ID, payment/ledger/Xu/PayOS state, job/runtime state, secret "
@@ -11549,6 +11571,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "not expose an Admin button to customers, pass a Bot admin role to the browser, grant/revoke a package, "
         "change entitlement, create/finalize a payment, mutate Xu/ledger/PayOS, test/freeze/unfreeze a provider, "
         "run a command, inspect an unredacted snapshot, retry/refund a job, restart a worker or claim runtime health. "
+        "`menu|admin_packages_catalog` only mirrors the Bot's static catalog-command guidance as a fresh read route; "
+        "`menu|admin_packages_grant_combo`, `menu|admin_packages_grant_monthly`, and `menu|admin_packages_user` "
+        "remain command-guidance source-review records because they describe grant or user-lookup operations. "
         "Case variants, suffixes and all other `menu|admin_*` values remain fail-closed source-review records and "
         "cannot inherit one of these routes.\n",
     )
