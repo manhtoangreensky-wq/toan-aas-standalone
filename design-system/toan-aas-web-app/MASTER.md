@@ -41,9 +41,12 @@ portal implementation:
   animation; respect `prefers-reduced-motion`.
 - **Icons:** consistent accessible vector treatment for new structural UI;
   status also has textual labels.
-- **Token ownership:** `static/portal/portal-theme.css :root` is the only
-  owner of CSS hex colour literals. Components use `--portal-*` semantic
-  tokens only; do not restore raw hex, purple or pink values in page rules.
+- **Token ownership:** `static/portal/portal-theme.css :root` is the canonical
+  owner of the shared teal--sky palette and all new/rebalanced theme rules use
+  `--portal-*` semantic tokens. The historical catalogue still contains raw
+  legacy colours; when a legacy route is placed on a light surface, add a
+  specific final-theme override instead of inheriting pale-on-dark text or
+  restoring new raw page colours.
 - **Surface ownership:** signed Workspace, ERP, account operations and access
   screens use the light canvas and white surface family. The desktop sidebar
   alone uses the deep teal rail; `/welcome` follows the same calm public

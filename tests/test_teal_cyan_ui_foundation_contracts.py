@@ -388,3 +388,52 @@ def test_mobile_portal_main_keeps_both_safe_area_insets() -> None:
     assert main is not None
     assert "var(--portal-safe-left)" in main.group("declarations")
     assert "var(--portal-safe-right)" in main.group("declarations")
+
+
+def test_light_auth_password_toggle_and_music_direction_presets_override_dark_catalogue_text() -> None:
+    """Late dark catalogue rules cannot make controls unreadable on light surfaces."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    password_toggle = re.search(
+        r"\.portal-auth-page--access \.portal-password-toggle\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    password_toggle_hover = re.search(
+        r"\.portal-auth-page--access \.portal-password-toggle:hover,\s*"
+        r"\.portal-auth-page--access \.portal-password-toggle:focus-visible\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    preset_card = re.search(
+        r"\.portal-page\.portal-music-directions \.portal-music-directions-preset-card\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    preset_title = re.search(
+        r"\.portal-page\.portal-music-directions \.portal-music-directions-preset-copy strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    preset_detail = re.search(
+        r"\.portal-page\.portal-music-directions \.portal-music-directions-preset-copy small\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert password_toggle is not None
+    assert password_toggle_hover is not None
+    assert preset_card is not None
+    assert preset_title is not None
+    assert preset_detail is not None
+    assert "color: var(--portal-light-action);" in password_toggle.group("declarations")
+    assert "background: var(--portal-light-hover-surface);" in password_toggle_hover.group("declarations")
+    assert "background: var(--portal-surface-light);" in preset_card.group("declarations")
+    assert "color: var(--portal-ink);" in preset_card.group("declarations")
+    assert "color: var(--portal-ink);" in preset_title.group("declarations")
+    assert "color: var(--portal-muted);" in preset_detail.group("declarations")

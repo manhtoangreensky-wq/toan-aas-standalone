@@ -98,13 +98,20 @@ real anonymous login path without submitting a credential.
   handling, CSRF, provider availability, PayOS, wallet/Xu, webhook, role, PWA
   or Bot behavior. No fixed visible copy changed, so the i18n bundle remains
   unchanged.
+- Spec review found two light-surface cascade regressions before merge: the
+  access password-visibility control retained pale-on-dark legacy text, and
+  Music/SFX Direction preset cards retained pale text after their surfaces
+  became white. Final semantic overrides now give those controls dark-teal
+  text, muted supporting copy, visible focus/selection treatment and the same
+  light working-surface grammar; their form, provider and job boundaries are
+  unchanged.
 - Static validation evidence:
   `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'; python -m pytest -q --noconftest
   tests/test_teal_cyan_ui_foundation_contracts.py
   tests/test_login_app_ux_contracts.py
   tests/test_dashboard_workspace_command_center_contracts.py
   tests/test_portal_i18n_bundle_contracts.py
-  tests/test_portal_safety_contracts.py` completed with **124 passed**.
+  tests/test_portal_safety_contracts.py` completed with **125 passed**.
 - A live visual-browser check could not run in this environment because the
   available Browser runtime reported no browser targets. The responsive layout
   invariants are covered by the static contracts; verify `/login` and

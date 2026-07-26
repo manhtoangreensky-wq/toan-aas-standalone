@@ -489,6 +489,16 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 16%, transparent);
 }
 
+.portal-auth-page--access .portal-password-toggle {
+  color: var(--portal-light-action);
+}
+
+.portal-auth-page--access .portal-password-toggle:hover,
+.portal-auth-page--access .portal-password-toggle:focus-visible {
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action);
+}
+
 .portal-auth-page--access .portal-auth-assurance,
 .portal-auth-page--access .portal-auth-help,
 .portal-auth-page--access .portal-auth-alternatives {
@@ -1474,6 +1484,104 @@ body {
   .portal-command-center-lane--work .portal-dashboard-draft {
     transition: none;
   }
+}
+
+/* Music and SFX direction pickers were authored before the light workspace
+   canvas. Keep their text, selected states and guard details readable without
+   changing their form semantics or any provider/job boundary. */
+.portal-page.portal-music-directions .portal-music-directions-intro,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-intro, .portal-music-directions-form, .portal-music-directions-boundary, .portal-music-directions-result) h2,
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-intro, .portal-sfx-cue-sheet-form, .portal-sfx-cue-sheet-boundary, .portal-sfx-cue-sheet-result) h2,
+.portal-page.portal-music-directions .portal-music-directions-picker legend,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-picker legend {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-intro p, .portal-music-directions-intro dd, .portal-music-directions-selection, .portal-music-directions-list p, .portal-music-directions-list dt, .portal-music-directions-list dd, .portal-music-directions-list pre),
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-intro p, .portal-sfx-cue-sheet-intro dd, .portal-sfx-cue-sheet-selection, .portal-sfx-cue-sheet-list p, .portal-sfx-cue-sheet-list dt, .portal-sfx-cue-sheet-list dd, .portal-sfx-cue-sheet-list pre) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-intro dl > div, .portal-music-directions-guard-list span, .portal-music-directions-list li, .portal-music-directions-list dl > div),
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-intro dl > div, .portal-sfx-cue-sheet-guard-list span, .portal-sfx-cue-sheet-list li, .portal-sfx-cue-sheet-list dl > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-intro dt, .portal-music-directions-guard-list strong, .portal-music-directions-list-head strong),
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-intro dt, .portal-sfx-cue-sheet-guard-list strong, .portal-sfx-cue-sheet-list-head strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-preset-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-preset-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-preset-card:hover,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-preset-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-preset-card[data-selected="true"],
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-preset-card[data-selected="true"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--portal-brand) 19%, transparent);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-preset-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-preset-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-preset-copy small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-preset-copy small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-preset-cue, .portal-music-directions-guard-list em, .portal-music-directions-meta span, .portal-music-directions-index, .portal-music-directions-list-head em),
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-preset-cue, .portal-sfx-cue-sheet-guard-list em, .portal-sfx-cue-sheet-meta span, .portal-sfx-cue-sheet-index, .portal-sfx-cue-sheet-list-head em) {
+  border-color: color-mix(in srgb, var(--portal-brand) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-brand) 10%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-radio,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-radio {
+  accent-color: var(--portal-action);
+}
+
+.portal-page.portal-music-directions :is(.portal-music-directions-review, .portal-music-directions-review ul),
+.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-review, .portal-sfx-cue-sheet-review ul) {
+  border-color: color-mix(in srgb, var(--portal-danger) 34%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-danger) 8%, var(--portal-surface-light));
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-music-directions .portal-music-directions-review strong,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-review strong {
+  color: var(--portal-danger);
 }
 
 /* Final public-companion layout. These rules deliberately sit after the
