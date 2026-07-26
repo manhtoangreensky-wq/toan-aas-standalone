@@ -109,6 +109,11 @@ real anonymous login path without submitting a credential.
   using pale-on-dark legacy copy. The access theme now gives that informational
   notice a sky contextual surface, dark heading, 12px+ supporting text and
   unchanged server-owned registration behavior.
+- A signed local-browser smoke test also found the delegated click handler
+  treated a form container as an action source, so selecting a Music Direction
+  radio could trigger required-field validation before the explicit submit.
+  Form containers are now ignored by click dispatch; native form submission
+  remains the single path that can call the server action.
 - Static validation evidence:
   `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'; python -m pytest -q --noconftest
   tests/test_teal_cyan_ui_foundation_contracts.py
@@ -116,6 +121,9 @@ real anonymous login path without submitting a credential.
   tests/test_dashboard_workspace_command_center_contracts.py
   tests/test_portal_i18n_bundle_contracts.py
   tests/test_portal_safety_contracts.py` completed with **125 passed**.
+- Final targeted UI/contracts validation, including Music Directions and SFX
+  picker behavior, completed with **138 passed**; `compileall` for the
+  app/shell/auth entry points and `git diff --check` also passed.
 - A live visual-browser check could not run in this environment because the
   available Browser runtime reported no browser targets. The responsive layout
   invariants are covered by the static contracts; verify `/login` and

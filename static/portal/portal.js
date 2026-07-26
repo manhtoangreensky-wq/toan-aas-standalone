@@ -27439,7 +27439,7 @@
         return;
       }
       const action = event.target.closest("[data-portal-action]");
-      if (action && !action.disabled) {
+      if (action && action.tagName !== "FORM" && !action.disabled) {
         if (action.tagName === "BUTTON" && action.type === "submit") return;
         dispatchAction(action, getBootstrap());
         return;

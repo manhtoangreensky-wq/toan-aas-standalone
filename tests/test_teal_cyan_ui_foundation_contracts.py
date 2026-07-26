@@ -440,6 +440,15 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
         theme_source,
         flags=re.DOTALL,
     )
+    selected_preset = re.search(
+        r"\.portal-shell:not\(\.portal-shell--auth\):not\(\.portal-shell--landing\) "
+        r"\.portal-page\.portal-music-directions \.portal-music-directions-preset-card\[data-selected=\"true\"\],"
+        r"\s*\.portal-shell:not\(\.portal-shell--auth\):not\(\.portal-shell--landing\) "
+        r"\.portal-page\.portal-sfx-cue-sheet \.portal-sfx-cue-sheet-preset-card\[data-selected=\"true\"\]"
+        r"\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
 
     assert password_toggle is not None
     assert password_toggle_hover is not None
@@ -449,6 +458,7 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
     assert preset_card is not None
     assert preset_title is not None
     assert preset_detail is not None
+    assert selected_preset is not None
     assert "color: var(--portal-light-action);" in password_toggle.group("declarations")
     assert "background: var(--portal-light-hover-surface);" in password_toggle_hover.group("declarations")
     assert "background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));" in access_notice.group("declarations")
@@ -459,3 +469,4 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
     assert "color: var(--portal-ink);" in preset_card.group("declarations")
     assert "color: var(--portal-ink);" in preset_title.group("declarations")
     assert "color: var(--portal-muted);" in preset_detail.group("declarations")
+    assert "background: var(--portal-light-soft);" in selected_preset.group("declarations")
