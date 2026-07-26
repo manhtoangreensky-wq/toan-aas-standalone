@@ -157,7 +157,14 @@ async def dashboard():
     admin_erp_contract = (docs_dir / "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert f"The {admin_erp_count} exact Bot menu values below" in admin_erp_contract
     assert "menu\\|admin_packages_catalog" in admin_erp_contract
+    assert "menu\\|provider_custom_help" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
+    assert "`menu|admin_provider_test` remains source-review-required" in admin_erp_contract
+    for callback in (
+        "menu|admin_confirm_provider_freeze_shopaikey",
+        "menu|admin_confirm_provider_unfreeze_shopaikey",
+    ):
+        assert f"`{callback}` remains Telegram-only" in admin_erp_contract
     billing_menu_count = len(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS)
     assert f"— {billing_menu_count} exact Bot-admin Billing menu dispositions" in readme
     billing_menu_contract = (docs_dir / "BILLING_MENU_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
@@ -1529,6 +1536,7 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|admin_packages": ("/admin/packages", "admin_packages"),
         "menu|admin_packages_catalog": ("/admin/packages", "admin_packages"),
         "menu|admin_provider": ("/admin/providers", "admin_providers"),
+        "menu|provider_custom_help": ("/admin/providers", "admin_providers"),
         "menu|admin_overview": ("/admin", "admin_overview"),
         "menu|admin_provider_status": ("/admin/providers", "admin_providers"),
         "menu|admin_provider_usage": ("/admin/provider-cost", "admin_provider_cost"),
@@ -1563,6 +1571,15 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
     ):
         assert disposition in package_catalog["source_dispositions"]
 
+    provider_custom_help = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS["menu|provider_custom_help"]
+    for disposition in (
+        "BOT_PROVIDER_CUSTOM_HELP_NOT_REPLAYED",
+        "NO_PROVIDER_TEST_FREEZE_UNFREEZE_OR_CONTROL_ACTION",
+        "NO_PROVIDER_NAME_OR_CONFIG_TRANSFER",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    ):
+        assert disposition in provider_custom_help["source_dispositions"]
+
     # Exact identifiers are source evidence only. Case changes, suffixes and
     # sensitive child actions must not inherit an ERP route or a Web control.
     for callback in (
@@ -1582,6 +1599,39 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert mapped["resolution"] != "reviewed_admin_erp_fresh_web_navigation"
         assert mapped["target"] != "/admin/packages"
         assert mapped["status"] != "NAVIGATION_ONLY"
+
+    # Provider Custom Help is a finite admin-only guidance route. Its test,
+    # config and spelling variants retain the generic source-review boundary.
+    for callback in (
+        "menu|admin_provider_test",
+        "menu|provider_custom_help_future",
+        "menu|provider_custom_help|future",
+        "MENU|PROVIDER_CUSTOM_HELP",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "admin_erp_feature_key" not in mapped
+        assert "admin_erp_authority" not in mapped
+        assert "admin_erp_launch_mode" not in mapped
+
+    # Existing confirmation callbacks are deliberately even stricter: their
+    # raw Bot actions remain Telegram-only and cannot inherit providers read
+    # navigation or canonical-admin metadata.
+    for callback in (
+        "menu|admin_confirm_provider_freeze_shopaikey",
+        "menu|admin_confirm_provider_freeze_video",
+        "menu|admin_confirm_provider_freeze_image",
+        "menu|admin_confirm_provider_unfreeze_shopaikey",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "telegram_only"
+        assert "admin_erp_feature_key" not in mapped
+        assert "admin_erp_authority" not in mapped
+        assert "admin_erp_launch_mode" not in mapped
 
     from copyfast_registry import FEATURE_BY_KEY, menu_capability_catalog
 

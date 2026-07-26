@@ -1805,6 +1805,28 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "unfreeze, provider payload, job, billing or runtime action."
         ),
     },
+    "menu|provider_custom_help": {
+        "target": "/admin/providers",
+        "classification": "admin",
+        "feature_key": "admin_providers",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_PROVIDER_CUSTOM_HELP_NOT_REPLAYED",
+            "NO_PROVIDER_TEST_FREEZE_UNFREEZE_OR_CONTROL_ACTION",
+            "NO_PROVIDER_NAME_OR_CONFIG_TRANSFER",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot-admin-only action renders parameter-free provider freeze/unfreeze command guidance and a "
+            "Telegram keyboard. The Web opens a fresh canonical-admin Providers read route; it receives no Telegram "
+            "identity, provider name/configuration, command, freeze/test state, worker/runtime state, secret, payment, "
+            "wallet/Xu, PayOS or write authority."
+        ),
+    },
     "menu|admin_overview": {
         "target": "/admin",
         "classification": "admin",
@@ -11596,7 +11618,13 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|admin_packages_catalog` only mirrors the Bot's static catalog-command guidance as a fresh read route; "
         "`menu|admin_packages_grant_combo`, `menu|admin_packages_grant_monthly`, and `menu|admin_packages_user` "
         "remain command-guidance source-review records because they describe grant or user-lookup operations. "
-        "Case variants, suffixes and all other `menu|admin_*` values remain fail-closed source-review records and "
+        "`menu|provider_custom_help` only mirrors Bot provider freeze/unfreeze command guidance as a fresh Providers "
+        "read route; `menu|admin_provider_test` remains source-review-required; "
+        "`menu|admin_confirm_provider_freeze_shopaikey` remains Telegram-only; "
+        "`menu|admin_confirm_provider_freeze_video` remains Telegram-only; "
+        "`menu|admin_confirm_provider_freeze_image` remains Telegram-only; and "
+        "`menu|admin_confirm_provider_unfreeze_shopaikey` remains Telegram-only. Case variants, suffixes "
+        "and all other `menu|admin_*` or `menu|provider_custom*` values remain fail-closed source-review records and "
         "cannot inherit one of these routes.\n",
     )
     write(
