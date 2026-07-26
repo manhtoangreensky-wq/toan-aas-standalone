@@ -1572,10 +1572,14 @@ body {
   accent-color: var(--portal-action);
 }
 
-.portal-page.portal-music-directions :is(.portal-music-directions-review, .portal-music-directions-review ul),
-.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-review, .portal-sfx-cue-sheet-review ul) {
+.portal-page.portal-music-directions .portal-music-directions-review,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-review {
   border-color: color-mix(in srgb, var(--portal-danger) 34%, var(--portal-border));
   background: color-mix(in srgb, var(--portal-danger) 8%, var(--portal-surface-light));
+}
+
+.portal-page.portal-music-directions .portal-music-directions-review ul,
+.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-review ul {
   color: var(--portal-muted);
 }
 
