@@ -7037,6 +7037,60 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-billing-catalog-card { transition: none; }
 }
 
+/* Billing workspace navigation. This route-only strip keeps the canonical
+   wallet, top-up, package and pricing views in one predictable app area. */
+.portal-wallet-page,
+.portal-billing-catalog-page { max-width: 1140px; }
+.portal-billing-nav {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-strong);
+  scroll-snap-type: x mandatory;
+  scrollbar-color: var(--portal-border-strong) transparent;
+}
+.portal-billing-nav a {
+  display: inline-flex;
+  flex: 1 0 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--portal-muted-strong);
+  font-size: 13px;
+  font-weight: 740;
+  text-align: center;
+  white-space: nowrap;
+  text-decoration: none;
+  scroll-snap-align: start;
+  transition: color var(--portal-transition), border-color var(--portal-transition), background-color var(--portal-transition);
+}
+.portal-billing-nav a:hover,
+.portal-billing-nav a:focus-visible {
+  border-color: var(--portal-border-strong);
+  color: var(--portal-text);
+  background: var(--portal-surface-soft);
+}
+.portal-billing-nav a[aria-current="page"] {
+  border-color: rgba(45, 212, 191, .44);
+  color: var(--portal-text);
+  background: rgba(45, 212, 191, .12);
+}
+@media (max-width: 700px) {
+  .portal-billing-nav a { flex: 0 0 auto; min-height: 44px; justify-content: flex-start; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-billing-nav a { transition: none; }
+}
+
 /* Music & SFX Library is a dense private workspace view, not a catalogue or
  * a player. It intentionally shares the app shell tokens and keeps all data
  * cards focused on safe collection metadata. */

@@ -17659,6 +17659,17 @@
     return Boolean(payos && payos.request_enabled === true && payos.topup_catalog_available === true && context.capabilities && context.capabilities["payment-create"] === true);
   }
 
+  function renderBillingWorkspaceNav(currentPath) {
+    const activePath = normalizePath(currentPath || "/wallet");
+    const items = [
+      { path: "/wallet", label: uiText("nav.wallet", "Ví Xu") },
+      { path: "/wallet/topup", label: uiText("shellNav.topupCredit", "Nạp Xu") },
+      { path: "/packages", label: uiText("workspaceMenu.card.packages.title", "Gói dịch vụ") },
+      { path: "/pricing", label: uiText("nav.pricing", "Bảng giá") }
+    ];
+    return `<nav class="portal-billing-nav" aria-label="${safeText(uiText("shellNav.billing", "Ví & gói"))}">${items.map((item) => `<a href="${safeText(item.path)}"${activePath === item.path ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
+  }
+
   function renderPaymentEntryPoints(context) {
     const options = context.paymentOptions && typeof context.paymentOptions === "object" ? context.paymentOptions : {};
     const payos = options.payos && typeof options.payos === "object" ? options.payos : {};
@@ -17744,6 +17755,7 @@
 
   function renderWallet(page, context) {
     const topup = page.path === "/wallet/topup";
+    const billingNav = renderBillingWorkspaceNav(page.path);
     const readState = walletReadState(context);
     const wallet = canonicalWalletProjection(context.wallet);
     const history = canonicalWalletHistoryProjection(context.walletHistory);
@@ -17779,10 +17791,11 @@
     const asideFacts = wallet && readState === "ready"
       ? `<dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>`
       : `<p class="portal-form-note">${safeText(readStatusText)}</p>`;
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad portal-wallet-command"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(readBadge)}</div>${asideFacts}<p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(readStatusText)}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/wallet">Lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></aside></div>${assurance}${historyCard}</article>`;
+    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad portal-wallet-command"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(readBadge)}</div>${asideFacts}<p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(readStatusText)}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/wallet">Lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></aside></div>${assurance}${historyCard}</article>`;
   }
 
   function renderCatalog(page, context) {
+    const billingNav = renderBillingWorkspaceNav(page.path);
     const pricing = canonicalPricingCatalog(context.pricingCatalog);
     const packages = canonicalPackageCatalog(context.packageCatalog);
     const pricingPage = page.path === "/pricing";
@@ -17810,7 +17823,7 @@
       ? "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."
       : (pricingPage ? "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh." : "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành.");
     const cards = hasCatalog ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chưa được Core Bridge cấp")}</span><span>${item.status === "read_only" ? "Catalog canonical" : "Chờ xác minh"}</span></span></section>`).join("") : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
-    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? "Pricing canonical" : "Package catalog canonical"}</span><h2>${pricingPage ? "Bảng giá đúng theo authority" : "Gói dịch vụ không suy đoán"}</h2><p>${pricingPage ? "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp." : "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical."}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Mở nạp Xu canonical</a></div></section></article>`;
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? "Pricing canonical" : "Package catalog canonical"}</span><h2>${pricingPage ? "Bảng giá đúng theo authority" : "Gói dịch vụ không suy đoán"}</h2><p>${pricingPage ? "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp." : "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical."}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Mở nạp Xu canonical</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([
