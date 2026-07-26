@@ -1814,6 +1814,29 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "authority."
         ),
     },
+    "menu|finance_export": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPORT_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_EXPORT_PERIOD_OR_COMMAND_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot-admin-only literal renders static export-command guidance and a Telegram selector. The Web opens "
+            "a fresh canonical-admin Finance read route; it receives no Telegram identity, finance summary, export "
+            "period/command, file request/delivery, transaction, ledger/Xu, payment, PayOS, provider, runtime or "
+            "write authority."
+        ),
+    },
     "menu|admin_packages": {
         "target": "/admin/packages",
         "classification": "admin",
@@ -11699,10 +11722,10 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|finance_revenue_this_month` remains source-review-required; "
         "`menu|finance_revenue_last_month` remains source-review-required; "
         "`menu|finance_revenue_year` remains source-review-required; "
-        "`menu|finance_revenue_custom_help` remains source-review-required; "
-        "`menu|finance_export` remains source-review-required; "
-        "`menu|finance_export_month` remains source-review-required; and "
-        "`menu|finance_export_year` remains source-review-required. Unlisted `menu|finance_revenue*` and `menu|finance_export*` values cannot "
+        "`menu|finance_revenue_custom_help` remains source-review-required. Unlisted `menu|finance_revenue*` values cannot "
+        "inherit a Finance route. `menu|finance_export` only mirrors the static export-command guidance as a fresh "
+        "Finance read route; `menu|finance_export_month` remains source-review-required; and "
+        "`menu|finance_export_year` remains source-review-required. Unlisted `menu|finance_export*` values cannot "
         "inherit a Finance route. `menu|finance_expense_month` only mirrors the static expense-period/add-expense "
         "guidance as a fresh Finance read route; `menu|finance_expense` remains source-review-required; "
         "`menu|finance_expense_this_month` remains source-review-required; "
