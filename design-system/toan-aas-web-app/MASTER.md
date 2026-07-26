@@ -28,9 +28,10 @@ portal implementation:
 - **Theme:** dark slate surfaces with a teal brand/action accent. No
   AI-purple/pink gradient treatment in workspace, account, billing or ERP
   screens.
-- **Palette:** background `#0a0f17`; surface `#121a26`; elevated surface
-  `#172234`; primary/action `#2dd4bf`; primary ink `#052e2b`; text `#f8fafc`;
-  muted text `#aab8c7`; border `#2a394b`; danger `#f87171`.
+- **Palette:** workspace background `#07141d`; surface `#0d2330`; elevated
+  surface `#112b39`; primary/action `#0e9f9a`; primary ink `#06212b`; text
+  `#edf8fa`; muted text `#9bb9c3`; border `#234555`; cyan context `#0284c7`;
+  light public canvas `#f6fcfc`; light ink `#06212b`; danger `#e66d70`.
 - **Content density:** compact but readable: body 14–16px, 4/8px spacing
   rhythm, 40px desktop and 44px mobile controls; no operational copy below
   12px where it is needed to make a decision.
@@ -50,18 +51,21 @@ The companion implementation guide is
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#7C3AED` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#6366F1` | `--color-secondary` |
-| Accent/CTA | `#EC4899` | `--color-accent` |
-| Background | `#FAF5FF` | `--color-background` |
-| Foreground | `#0F172A` | `--color-foreground` |
-| Muted | `#F7F3FD` | `--color-muted` |
-| Border | `#EFE7FC` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| Ring | `#7C3AED` | `--color-ring` |
+| Primary | `#0E9F9A` | `--portal-accent` |
+| On Primary | `#06212B` | `--portal-accent-ink` |
+| Secondary | `#0284C7` | `--portal-info` |
+| Workspace background | `#07141D` | `--portal-bg` |
+| Workspace surface | `#0D2330` | `--portal-surface` |
+| Public canvas | `#F6FCFC` | `--portal-light-canvas` |
+| Light foreground | `#06212B` | `--portal-ink` |
+| Muted | `#9BB9C3` / `#52727C` | `--portal-muted` / `--portal-light-muted` |
+| Border | `#234555` / `#C7E3E6` | `--portal-border` / `--portal-light-border` |
+| Destructive | `#E66D70` | `--portal-danger` |
+| Ring | `#0284C7` | `--portal-focus` |
 
-**Color Notes:** AI purple + generation pink
+**Color Notes:** teal actions and sky-cyan context; public routes use a cool
+light canvas while signed workspaces remain deep ink-blue. Purple/pink
+generation gradients are not part of the TOAN AAS system.
 
 ### Typography
 
@@ -107,8 +111,8 @@ The companion implementation guide is
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #EC4899;
-  color: white;
+  background: #0E9F9A;
+  color: #06212B;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -124,8 +128,8 @@ The companion implementation guide is
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #7C3AED;
-  border: 2px solid #7C3AED;
+  color: #0284C7;
+  border: 2px solid #0284C7;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -138,7 +142,7 @@ The companion implementation guide is
 
 ```css
 .card {
-  background: #FAF5FF;
+  background: #0D2330;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -164,9 +168,9 @@ The companion implementation guide is
 }
 
 .input:focus {
-  border-color: #7C3AED;
+  border-color: #0284C7;
   outline: none;
-  box-shadow: 0 0 0 3px #7C3AED20;
+  box-shadow: 0 0 0 3px rgb(2 132 199 / 20%);
 }
 ```
 
@@ -192,13 +196,16 @@ The companion implementation guide is
 
 ## Style Guidelines
 
-**Style:** Modern Dark (Cinema Mobile)
+**Style:** Swiss Modernism 2.0 + flat productivity UI
 
-**Keywords:** dark mode, cinematic, ambient light, glassmorphism, deep black, indigo, glow, blur, atmospheric, reanimated, haptic, premium, layered, frosted glass, linear gradient
+**Keywords:** AI workspace, deep ink-blue, teal, sky cyan, clean, structured,
+high-trust, compact, responsive, professional
 
 **Best For:** Developer tools, pro productivity apps, fintech/trading dashboards, media/streaming platforms, AI tool interfaces, high-end gaming companion apps
 
-**Key Effects:** Expo.out Bezier(0.16,1,0.3,1) easing; spring modals (damping:20 stiffness:90); haptic-linked press (Impact Light/Medium); animated ambient light blobs (Reanimated translateX/Y slow oscillation); BlurView glassmorphism headers/nav (intensity 20); scale press 0.97 → 1.0; avoid pure #000000 (OLED smear)
+**Key Effects:** 150–220ms opacity/transform transitions; restrained shadows;
+flat operational surfaces; no decorative infinite animation or marketing-style
+glassmorphism in the signed workspace.
 
 ### Page Pattern
 
