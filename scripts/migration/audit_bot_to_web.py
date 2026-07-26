@@ -1695,6 +1695,28 @@ BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "runtime or write authority."
         ),
     },
+    "menu|admin_billing_tuchoi": {
+        "target": "/admin/payments",
+        "classification": "admin",
+        "feature_key": "admin_payments",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_BILLING_REJECT_HELP_NOT_REPLAYED",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "NO_BILL_ID_OR_PAYMENT_REFERENCE_TRANSFER",
+            "NO_PAYMENT_APPROVE_REJECT_PAYOS_TEST_OR_WEBHOOK_ACTION",
+            "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot-admin-only literal renders static manual-rejection command guidance and a Telegram back keyboard. "
+            "The Web opens a fresh canonical-admin Payments read route; it receives no Telegram identity, pending "
+            "deposit, bill ID, payment reference, transaction, wallet/Xu ledger, PayOS/webhook, provider, runtime "
+            "or write authority."
+        ),
+    },
 }
 
 # These exact Bot-admin category pages only render a menu, a summary or an
@@ -11711,7 +11733,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Bot callback source", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             billing_menu_contract_rows,
         )
-        + "\n\nEach reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. `menu|admin_billing_duyet` only mirrors the Bot's static manual-approval command guidance as a fresh Payments read route; `menu|admin_billing_tuchoi` remains source-review-required; and `menu|admin_billing_payos` remains source-review-required. Any other `menu|billing*` or `menu|admin_billing*` value cannot inherit this Admin route.\n",
+        + "\n\nEach reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. `menu|admin_billing_duyet` only mirrors the Bot's static manual-approval command guidance as a fresh Payments read route; `menu|admin_billing_tuchoi` only mirrors the Bot's static manual-rejection command guidance as a fresh Payments read route; and `menu|admin_billing_payos` remains source-review-required. Any other `menu|billing*` or `menu|admin_billing*` value cannot inherit this Admin route.\n",
     )
     write(
         "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",

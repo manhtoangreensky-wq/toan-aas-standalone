@@ -185,8 +185,8 @@ async def dashboard():
     assert f"The {billing_menu_count} exact Bot menu values below" in billing_menu_contract
     assert "menu\\|admin_billing_pending" in billing_menu_contract
     assert "menu\\|admin_billing_duyet" in billing_menu_contract
+    assert "menu\\|admin_billing_tuchoi" in billing_menu_contract
     for callback in (
-        "menu|admin_billing_tuchoi",
         "menu|admin_billing_payos",
     ):
         assert f"`{callback}` remains source-review-required" in billing_menu_contract
@@ -1467,6 +1467,7 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
         "menu|billing": ("/admin/payments", "admin_payments"),
         "menu|admin_billing_pending": ("/admin/payments", "admin_payments"),
         "menu|admin_billing_duyet": ("/admin/payments", "admin_payments"),
+        "menu|admin_billing_tuchoi": ("/admin/payments", "admin_payments"),
     }
 
     assert set(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == set(expected)
@@ -1522,10 +1523,22 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
     ):
         assert disposition in approval_guidance["source_dispositions"]
 
+    rejection_guidance = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS[
+        "menu|admin_billing_tuchoi"
+    ]
+    for disposition in (
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_REJECT_HELP_NOT_REPLAYED",
+        "NO_BILL_ID_OR_PAYMENT_REFERENCE_TRANSFER",
+        "NO_PAYMENT_APPROVE_REJECT_PAYOS_TEST_OR_WEBHOOK_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in rejection_guidance["source_dispositions"]
+
     # An adjacent or future Bot callback cannot inherit an administrator route
     # or any financial control through the menu namespace.
     for callback in (
-        "menu|admin_billing_tuchoi",
         "menu|admin_billing_payos",
         "menu|admin_billing_pending_future",
         "menu|admin_billing_pending|future",
@@ -1533,6 +1546,9 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
         "menu|admin_billing_duyet_future",
         "menu|admin_billing_duyet|future",
         "MENU|ADMIN_BILLING_DUYET",
+        "menu|admin_billing_tuchoi_future",
+        "menu|admin_billing_tuchoi|future",
+        "MENU|ADMIN_BILLING_TUCHOI",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
         assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
