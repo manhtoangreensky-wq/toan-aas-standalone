@@ -1857,6 +1857,29 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "provider, runtime or write authority."
         ),
     },
+    "menu|finance_expense_categories": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPENSE_CATEGORIES_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_OR_EXPENSE_PARAMETER_TRANSFER",
+            "NO_EXPENSE_WRITE_CATEGORY_OR_FILE_DELIVERY",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot-admin-only literal renders a static expense-category list and a Telegram expense keyboard. The "
+            "Web opens a fresh canonical-admin Finance read route; it receives no Telegram identity, finance summary, "
+            "period/category/vendor/note parameter, transaction, ledger/Xu, payment, PayOS, export/file, provider, "
+            "runtime or write authority."
+        ),
+    },
     "menu|finance_profit": {
         "target": "/admin/finance",
         "classification": "admin",
@@ -11797,8 +11820,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|finance_expense_this_month` remains source-review-required; "
         "`menu|finance_expense_last_month` remains source-review-required; "
         "`menu|finance_expense_year` remains source-review-required; "
-        "`menu|finance_expense_categories` remains source-review-required; and "
-        "`menu|finance_add_expense` remains source-review-required. Unlisted `menu|finance_expense*` and "
+        "`menu|finance_expense_categories` only mirrors the static category-list guidance as a fresh Finance read "
+        "route; and `menu|finance_add_expense` remains source-review-required. Unlisted `menu|finance_expense*` and "
         "`menu|finance_add_expense*` values cannot inherit a Finance route. `menu|finance_profit` only mirrors the "
         "static profit-period guidance as a fresh Finance read route; `menu|finance_profit_this_month` remains "
         "source-review-required; and `menu|finance_profit_year` remains source-review-required. Unlisted "
