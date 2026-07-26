@@ -158,6 +158,17 @@ async def dashboard():
     assert f"The {admin_erp_count} exact Bot menu values below" in admin_erp_contract
     assert "menu\\|admin_packages_catalog" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
+    billing_menu_count = len(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS)
+    assert f"— {billing_menu_count} exact Bot-admin Billing menu dispositions" in readme
+    billing_menu_contract = (docs_dir / "BILLING_MENU_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert f"The {billing_menu_count} exact Bot menu values below" in billing_menu_contract
+    assert "menu\\|admin_billing_pending" in billing_menu_contract
+    for callback in (
+        "menu|admin_billing_duyet",
+        "menu|admin_billing_tuchoi",
+        "menu|admin_billing_payos",
+    ):
+        assert f"`{callback}` remains source-review-required" in billing_menu_contract
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -1431,15 +1442,32 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     evidence = {"file": "bot.py", "line": 1}
+    expected = {
+        "menu|billing": ("/admin/payments", "admin_payments"),
+        "menu|admin_billing_pending": ("/admin/payments", "admin_payments"),
+    }
 
-    assert set(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == {"menu|billing"}
-    descriptor = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|billing"]
-    assert descriptor["target"] == "/admin/payments"
-    assert descriptor["classification"] == "admin"
-    assert descriptor["feature_key"] == "admin_payments"
-    assert descriptor["authority"] == "SIGNED_CANONICAL_ADMIN_READ"
-    assert descriptor["launch_mode"] == "WEB_NAVIGATION"
-    assert descriptor["source_dispositions"] == (
+    assert set(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == set(expected)
+
+    for callback, (target, feature_key) in expected.items():
+        descriptor = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS[callback]
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert descriptor["target"] == target
+        assert descriptor["classification"] == "admin"
+        assert descriptor["feature_key"] == feature_key
+        assert descriptor["authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert descriptor["launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["target"] == target
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_billing_menu_admin_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["billing_menu_feature_key"] == feature_key
+        assert mapped["billing_menu_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert mapped["billing_menu_launch_mode"] == "WEB_NAVIGATION"
+
+    billing = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|billing"]
+    assert billing["source_dispositions"] == (
         "BOT_ADMIN_ONLY",
         "BOT_BILLING_MENU_STATE_NOT_REPLAYED",
         "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
@@ -1448,33 +1476,44 @@ def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only
         "NO_RUNTIME_CLAIM",
     )
 
-    mapped = audit._map_callback("menu|billing", "callback_data", evidence, routes)
-    assert mapped["target"] == "/admin/payments"
-    assert mapped["classification"] == "admin"
-    assert mapped["status"] == "NAVIGATION_ONLY"
-    assert mapped["resolution"] == "reviewed_billing_menu_admin_navigation"
-    assert mapped["source_dispositions"] == descriptor["source_dispositions"]
-    assert mapped["billing_menu_feature_key"] == "admin_payments"
-    assert mapped["billing_menu_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
-    assert mapped["billing_menu_launch_mode"] == "WEB_NAVIGATION"
+    pending = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|admin_billing_pending"]
+    for disposition in (
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_PENDING_HELP_NOT_REPLAYED",
+        "NO_BILL_ID_OR_PAYMENT_REFERENCE_TRANSFER",
+        "NO_PAYMENT_APPROVE_REJECT_PAYOS_TEST_OR_WEBHOOK_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in pending["source_dispositions"]
 
     # An adjacent or future Bot callback cannot inherit an administrator route
     # or any financial control through the menu namespace.
-    unknown = audit._map_callback("menu|billing_future", "callback_data", evidence, routes)
-    assert unknown["target"] != "/admin/payments"
-    assert unknown["resolution"] != "reviewed_billing_menu_admin_navigation"
-    wrong_case = audit._map_callback("MENU|BILLING", "callback_data", evidence, routes)
-    assert wrong_case["target"] != "/admin/payments"
-    assert wrong_case["resolution"] != "reviewed_billing_menu_admin_navigation"
+    for callback in (
+        "menu|admin_billing_duyet",
+        "menu|admin_billing_tuchoi",
+        "menu|admin_billing_payos",
+        "menu|admin_billing_pending_future",
+        "menu|admin_billing_pending|future",
+        "MENU|ADMIN_BILLING_PENDING",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "billing_menu_feature_key" not in mapped
+        assert "billing_menu_authority" not in mapped
+        assert "billing_menu_launch_mode" not in mapped
 
     # The raw Bot identifier and the administrator-only target are both
     # absent from the browser-safe customer catalog.
     from copyfast_registry import menu_capability_catalog
 
     public_catalog = menu_capability_catalog()
-    assert all("menu|billing" not in str(item) for item in public_catalog)
+    for callback in expected:
+        assert all(callback not in str(item) for item in public_catalog)
     assert all(item["route"] != "/admin/payments" for item in public_catalog)
-    assert "menu|billing" not in audit.MENU_ACTION_REGISTRY
+    assert all(callback not in audit.MENU_ACTION_REGISTRY for callback in expected)
 
 
 def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> None:

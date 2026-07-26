@@ -2184,6 +2184,7 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
     with make_client(tmp_path, monkeypatch) as client:
         for path in (
             "/admin",
+            "/admin/payments",
             "/admin/finance/tax-readiness",
             "/admin/growth/postback-readiness",
             "/admin/job-recovery-guide",
@@ -2197,6 +2198,7 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
         register_and_link(client, role="admin")
         for path in (
             "/admin/users",
+            "/admin/payments",
             "/admin/finance/tax-readiness",
             "/admin/growth/postback-readiness",
             "/admin/job-recovery-guide",
@@ -2216,13 +2218,14 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
 
         monkeypatch.setattr(application_module, "require_canonical_admin", canonical_ok)
         for path in (
+            "/admin/payments",
             "/admin/finance/tax-readiness",
             "/admin/growth/postback-readiness",
             "/admin/job-recovery-guide",
         ):
             allowed = client.get(path, follow_redirects=False)
             assert allowed.status_code == 200
-        assert canonical_checks == ["checked", "checked", "checked"]
+        assert canonical_checks == ["checked", "checked", "checked", "checked"]
 
 
 def test_web_local_admin_crm_page_is_signed_role_only_and_never_queries_bot_bridge(tmp_path, monkeypatch):
