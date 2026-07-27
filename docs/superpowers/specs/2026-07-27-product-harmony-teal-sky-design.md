@@ -107,3 +107,25 @@ private-download validation or PWA private-cache exclusions.
 - The landing implementation is submitted in a separate Bot-repo PR; the
   Web App branch never includes `bot.py`, wallet/PayOS/provider changes or
   production environment changes.
+
+## Visual fidelity ledger — 2026-07-27
+
+The references used for this pass are the approved desktop Workspace and
+public-companion concepts. The implementation was checked against the live
+local FastAPI shell at `http://127.0.0.1:8766` with payment and provider calls
+disabled.
+
+| Checkpoint | Reference and render evidence | Result / correction |
+| --- | --- | --- |
+| Shared visual language | The public companion and signed dashboard use the same teal, sky, white-surface and deep-ink roles. | Passed. The landing explains the product and entry points; the signed Workspace keeps the denser operational rail, commands and factual states. |
+| Desktop alignment | Signed `/dashboard` at the browser desktop viewport: rail, command bar, hero, four summary cells and Quick Start panel share one content rail. | Passed. Semantic geometry tokens set the rail, content maximum, page padding and section rhythm. |
+| Customer light surfaces | Signed `/features` originally exposed a legacy navy `.portal-catalog-context` customer panel. | Corrected. The final Product Harmony layer gives its border, icon, badge and copy tokenized light teal–sky surfaces; no workflow or authority logic changed. |
+| Admin readability | The Admin authority detail used a light card over legacy title/subtitle colors designed for a dark surface. | Corrected. Nested title/value now use `--portal-ink`; secondary key/subtitle use `--portal-muted`. Canonical signed-admin guards remain server-owned. |
+| Small-text contrast | Quick Start secondary action text used the sky focus token at 9–10px. | Corrected. Informational action copy uses the accessible teal action token; sky remains the focus treatment. |
+| Mobile 375 × 812 | Signed `/dashboard` was checked at 375 × 812: 16px-style gutters, labelled dock clearance and a two-column four-cell summary were visible with `scrollWidth == clientWidth`. | Passed. No horizontal overflow; the feature catalogue context also renders as a readable light surface at this width. |
+| Route protection | A direct unauthenticated local request to `/admin` returned HTTP 401. | Passed. No administrator UI or data is granted by a guessed browser route. |
+
+Intentional deviation: the marketing landing source lives in the separate
+Bot-repository landing workstream. Its teal–sky UI is deliberately a public
+companion rather than a copy of the signed application. This Web App branch
+does not alter Bot, provider, payment, wallet, webhook or production settings.
