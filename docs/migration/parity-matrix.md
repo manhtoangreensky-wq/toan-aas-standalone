@@ -1,6 +1,6 @@
 # Parity matrix
 
-Observed-runtime static Web-surface coverage: **38.84%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Observed-runtime typed source-disposition coverage: **72.79%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`; excluded Telegram transport registrations: `54`; excluded unreferenced `handlers/` package records: `57`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.
+Observed-runtime static Web-surface coverage: **38.71%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Observed-runtime typed source-disposition coverage: **72.79%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`; excluded Telegram transport registrations: `54`; excluded unreferenced `handlers/` package records: `57`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ Observed-runtime static Web-surface coverage: **38.84%** (`MAPPED_TO_EXISTING_RO
 | command | /clear_vip | /admin/clear_vip | COPIED_GUARDED |
 | command | /commands | /guides | COPIED_GUARDED |
 | command | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
-| command | /community | /community | COPIED_GUARDED |
+| command | /community | /community | WEB_NATIVE_READ_ONLY |
 | command | /compose_video | /admin/compose_video | COPIED_GUARDED |
 | command | /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | command | /content_policy | /legal | COPIED_GUARDED |
@@ -200,9 +200,21 @@ Observed-runtime static Web-surface coverage: **38.84%** (`MAPPED_TO_EXISTING_RO
 | command | /head_brain | /admin/head_brain | COPIED_GUARDED |
 | command | /head_run | /admin/head_run | COPIED_GUARDED |
 | command | /help | /guides | COPIED_GUARDED |
-| command | /hub | /community | COPIED_GUARDED |
+| command | /hub | /community | WEB_NATIVE_READ_ONLY |
 | command | /huongdan | /guides | COPIED_GUARDED |
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.
+## Community Trust Center command boundary
+
+Only the five exact public Bot commands below may open a fresh signed Web-native, read-only snapshot. No Bot identity, command/callback, pending/menu state, Bot-issued channel URL/configuration, or browser URL/query/action is transferred or replayed. The boundary creates no Bot mutation, bridge/provider/payment/job/asset/notification action or runtime claim.
+
+| Bot command | Web target | Status | Boundary |
+| --- | --- | --- | --- |
+| /community | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /kenh_chinh_thuc | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /official_channels | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /toanaas_hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+
+`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY` and `WEB_NATIVE_READ_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.

@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Observed-runtime static Web-surface coverage: **38.84%**. Observed-runtime typed source-disposition coverage: **73.11%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
+Observed-runtime static Web-surface coverage: **38.71%**. Observed-runtime typed source-disposition coverage: **73.11%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `4053`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ Observed-runtime static Web-surface coverage: **38.84%**. Observed-runtime typed
 | command | /clear_vip | /admin/clear_vip | COPIED_GUARDED |
 | command | /commands | /guides | COPIED_GUARDED |
 | command | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
-| command | /community | /community | COPIED_GUARDED |
+| command | /community | /community | WEB_NATIVE_READ_ONLY |
 | command | /compose_video | /admin/compose_video | COPIED_GUARDED |
 | command | /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | command | /content_policy | /legal | COPIED_GUARDED |
@@ -200,9 +200,21 @@ Observed-runtime static Web-surface coverage: **38.84%**. Observed-runtime typed
 | command | /head_brain | /admin/head_brain | COPIED_GUARDED |
 | command | /head_run | /admin/head_run | COPIED_GUARDED |
 | command | /help | /guides | COPIED_GUARDED |
-| command | /hub | /community | COPIED_GUARDED |
+| command | /hub | /community | WEB_NATIVE_READ_ONLY |
 | command | /huongdan | /guides | COPIED_GUARDED |
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.
+## Community Trust Center command boundary
+
+Only the five exact public Bot commands below may open a fresh signed Web-native, read-only snapshot. No Bot identity, command/callback, pending/menu state, Bot-issued channel URL/configuration, or browser URL/query/action is transferred or replayed. The boundary creates no Bot mutation, bridge/provider/payment/job/asset/notification action or runtime claim.
+
+| Bot command | Web target | Status | Boundary |
+| --- | --- | --- | --- |
+| /community | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /kenh_chinh_thuc | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /official_channels | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /toanaas_hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+
+Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `WEB_NATIVE_READ_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.

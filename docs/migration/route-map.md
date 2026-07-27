@@ -124,7 +124,7 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /clear_vip | /admin/clear_vip | COPIED_GUARDED |
 | /commands | /guides | COPIED_GUARDED |
 | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
-| /community | /community | COPIED_GUARDED |
+| /community | /community | WEB_NATIVE_READ_ONLY |
 | /compose_video | /admin/compose_video | COPIED_GUARDED |
 | /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | /content_policy | /legal | COPIED_GUARDED |
@@ -207,7 +207,19 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /head_brain | /admin/head_brain | COPIED_GUARDED |
 | /head_run | /admin/head_run | COPIED_GUARDED |
 | /help | /guides | COPIED_GUARDED |
-| /hub | /community | COPIED_GUARDED |
+| /hub | /community | WEB_NATIVE_READ_ONLY |
 | /huongdan | /guides | COPIED_GUARDED |
 | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
+
+## Community Trust Center command boundary
+
+Only the five exact public Bot commands below may open a fresh signed Web-native, read-only snapshot. No Bot identity, command/callback, pending/menu state, Bot-issued channel URL/configuration, or browser URL/query/action is transferred or replayed. The boundary creates no Bot mutation, bridge/provider/payment/job/asset/notification action or runtime claim.
+
+| Bot command | Web target | Status | Boundary |
+| --- | --- | --- | --- |
+| /community | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /kenh_chinh_thuc | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /official_channels | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /toanaas_hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |

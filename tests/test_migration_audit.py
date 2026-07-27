@@ -655,6 +655,125 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         assert "document_capability_key" not in mapped
 
 
+def test_static_audit_maps_only_exact_public_community_commands_to_read_only_trust_center() -> None:
+    """Community navigation starts a fresh Web snapshot; no Bot state crosses over."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected_commands = {
+        "official_channels",
+        "kenh_chinh_thuc",
+        "hub",
+        "community",
+        "toanaas_hub",
+    }
+
+    assert audit.COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_COMMANDS == frozenset(expected_commands)
+
+    for command in sorted(expected_commands):
+        mapped = audit._map_command(
+            {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
+            routes,
+        )
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/community"
+        assert mapped["status"] == "WEB_NATIVE_READ_ONLY"
+        assert mapped["resolution"] == "reviewed_community_trust_center_fresh_web_navigation"
+        assert mapped["source_dispositions"] == audit.COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_DISPOSITIONS
+        assert {
+            "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+            "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+            "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+            "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+            "NO_BOT_MUTATION_OR_RUNTIME_CLAIM",
+        }.issubset(mapped["source_dispositions"])
+        assert mapped["community_trust_center_authority"] == "SIGNED_WEB_NATIVE_READ_ONLY"
+        assert mapped["community_trust_center_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["community_trust_center_snapshot_mode"] == "SERVER_VALIDATED_READ_ONLY_SNAPSHOT"
+
+    # The disposition is a closed command catalog, not a generic community
+    # namespace or callback bridge. Future command/callback values stay out.
+    unreviewed_command = audit._map_command(
+        {"command": "official_channel", "handler": "customer_handler", "file": "bot.py", "line": 1},
+        routes,
+    )
+    assert unreviewed_command["status"] != "WEB_NATIVE_READ_ONLY"
+    callback = audit._map_callback("community|open", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert callback["status"] != "WEB_NATIVE_READ_ONLY"
+
+
+def test_static_audit_documents_community_trust_center_read_only_boundary(tmp_path: Path) -> None:
+    """Generated migration views must expose the closed community command catalog."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        "\n".join(
+            f"application.add_handler(CommandHandler('{command}', customer_handler))"
+            for command in sorted(
+                {
+                    "official_channels",
+                    "kenh_chinh_thuc",
+                    "hub",
+                    "community",
+                    "toanaas_hub",
+                }
+            )
+        ),
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+@app.get('/{page_path:path}')
+async def page(page_path):
+    return {}
+""",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+
+    for name in ("FEATURE_PARITY_MATRIX.md", "TELEGRAM_TO_WEB_ROUTE_MAP.md", "KNOWN_GAPS_AND_GUARDS.md"):
+        content = (tmp_path / "docs" / name).read_text(encoding="utf-8")
+        assert "Community Trust Center command boundary" in content
+        assert "WEB_NATIVE_READ_ONLY" in content
+        assert "No Bot identity, command/callback, pending/menu state" in content
+        for command in (
+            "official_channels",
+            "kenh_chinh_thuc",
+            "hub",
+            "community",
+            "toanaas_hub",
+        ):
+            assert f"/{command}" in content
+
+    command_mappings = result["parity_gap"]["command_mappings"]
+    community_mappings = [item for item in command_mappings if item["target"] == "/community"]
+    assert {item["source"] for item in community_mappings} == {
+        "/official_channels",
+        "/kenh_chinh_thuc",
+        "/hub",
+        "/community",
+        "/toanaas_hub",
+    }
+    assert all(item["status"] == "WEB_NATIVE_READ_ONLY" for item in community_mappings)
+    assert all("BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED" in item["source_dispositions"] for item in community_mappings)
+
+
+def test_community_trust_center_replaces_the_legacy_bot_companion_handoff_copy() -> None:
+    """The human-facing migration guide must not contradict the audited boundary."""
+
+    content = (SCRIPT_PATH.parents[2] / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
+
+    assert "| `/community` | `/community`, `/official_channels`, `/kenh_chinh_thuc`, `/hub`, `/toanaas_hub` | Signed Web-native Trust Center uses a fresh server-validated, read-only catalog; it never replays Bot state, identity or URL/configuration. |" in content
+    assert "Bot publishes community/channel information." not in content
+    assert "`/notes`, `/reminders`, `/guides` and\n`/community` are the explicit Web-native exceptions" in content
+
+
 def test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs() -> None:
     """Bot language menus open a fresh signed navigator, never a locale write."""
 
@@ -997,23 +1116,23 @@ async def web_page(page_path: str):
     assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, {"/{page_path:path}"}) is None
 
 
-def test_static_audit_routes_personal_bot_commands_to_distinct_companion_surfaces() -> None:
+def test_static_audit_routes_personal_bot_commands_to_distinct_web_surfaces() -> None:
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
-        "notes": "/notes",
-        "reminders": "/reminders",
-        "referral": "/referrals",
-        "gift": "/rewards",
-        "community": "/community",
-        "guide": "/guides",
-        "growth_ai": "/growth/ai",
-        "campaign_report": "/campaign/report",
+        "notes": ("/notes", "COPIED_GUARDED"),
+        "reminders": ("/reminders", "COPIED_GUARDED"),
+        "referral": ("/referrals", "COPIED_GUARDED"),
+        "gift": ("/rewards", "COPIED_GUARDED"),
+        "community": ("/community", "WEB_NATIVE_READ_ONLY"),
+        "guide": ("/guides", "COPIED_GUARDED"),
+        "growth_ai": ("/growth/ai", "COPIED_GUARDED"),
+        "campaign_report": ("/campaign/report", "COPIED_GUARDED"),
     }
-    for command, target in expected.items():
+    for command, (target, status) in expected.items():
         mapped = audit._map_command({"command": command, "handler": f"cmd_{command}", "file": "bot.py", "line": 1}, routes)
         assert mapped["target"] == target
-        assert mapped["status"] == "COPIED_GUARDED"
+        assert mapped["status"] == status
 
 
 def test_static_audit_routes_customer_hubs_to_specific_web_surfaces() -> None:
@@ -1046,21 +1165,21 @@ def test_static_audit_routes_customer_payment_support_policy_and_link_commands_t
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
-        "thucong": "/wallet/topup",
-        "gopy": "/support",
-        "source_help": "/guides/source-rights",
-        "dubbing_help": "/guides/source-rights",
-        "linkweb": "/onboarding",
-        "mode": "/account",
-        "toanaas_hub": "/community",
-        "uudai": "/rewards",
-        "ads_policy": "/legal",
-        "cancel": "/jobs",
+        "thucong": ("/wallet/topup", "COPIED_GUARDED"),
+        "gopy": ("/support", "COPIED_GUARDED"),
+        "source_help": ("/guides/source-rights", "COPIED_GUARDED"),
+        "dubbing_help": ("/guides/source-rights", "COPIED_GUARDED"),
+        "linkweb": ("/onboarding", "COPIED_GUARDED"),
+        "mode": ("/account", "COPIED_GUARDED"),
+        "toanaas_hub": ("/community", "WEB_NATIVE_READ_ONLY"),
+        "uudai": ("/rewards", "COPIED_GUARDED"),
+        "ads_policy": ("/legal", "COPIED_GUARDED"),
+        "cancel": ("/jobs", "COPIED_GUARDED"),
     }
-    for command, target in expected.items():
+    for command, (target, status) in expected.items():
         mapped = audit._map_command({"command": command, "handler": f"cmd_{command}", "file": "bot.py", "line": 1}, routes)
         assert mapped["target"] == target
-        assert mapped["status"] == "COPIED_GUARDED"
+        assert mapped["status"] == status
 
 
 def test_static_audit_keeps_explicit_public_overrides_out_of_admin_surface() -> None:
