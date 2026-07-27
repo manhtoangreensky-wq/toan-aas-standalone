@@ -143,6 +143,7 @@ def _safe_url(value: object, *, hosts: frozenset[str], require_path: bool = Fals
         return ""
     try:
         parsed = urlsplit(raw)
+        port = parsed.port
     except ValueError:
         return ""
     if (
@@ -150,7 +151,7 @@ def _safe_url(value: object, *, hosts: frozenset[str], require_path: bool = Fals
         or parsed.hostname not in hosts
         or parsed.username is not None
         or parsed.password is not None
-        or parsed.port is not None
+        or port is not None
         or parsed.query
         or parsed.fragment
         or (require_path and not parsed.path)

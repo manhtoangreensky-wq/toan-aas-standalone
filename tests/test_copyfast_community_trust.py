@@ -129,6 +129,21 @@ def test_invalid_or_missing_external_configuration_is_guarded_without_a_url(tmp_
     assert_false_boundaries(data)
 
 
+def test_malformed_url_port_is_guarded_instead_of_breaking_the_catalog(tmp_path, monkeypatch) -> None:
+    """A malformed configured port is not an application error or a link."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        monkeypatch.setenv("WEBAPP_COMMUNITY_URL", "https://t.me:not-a-port/TOANAAS")
+        login(client)
+        response = client.get("/api/v1/community/trust-center")
+
+    assert response.status_code == 200
+    community = channel_by_id(response.json()["data"], "community")
+    assert community["availability"] == "guarded"
+    assert "url" not in community
+    assert community["missing_config"] == ["WEBAPP_COMMUNITY_URL"]
+
+
 def test_catalog_is_fresh_and_has_no_runtime_adapter_imports(monkeypatch) -> None:
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-community-trust-static-secret")
     for name in MODULES:
