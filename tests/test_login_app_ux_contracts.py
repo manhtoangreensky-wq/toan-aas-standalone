@@ -56,12 +56,13 @@ def test_access_screen_uses_a_balanced_desktop_rail_and_single_column_mobile_fal
     assert "/* Compact application access screen." not in CSS
     assert ".portal-body--auth,\n.portal-shell--auth { background: #0a0f17; }" not in CSS
     assert "grid-template-columns: minmax(0, .82fr) minmax(440px, 480px);" not in CSS
-    assert '@media (min-width: 981px)' in redesign
+    assert '@media (min-width: 1081px)' in redesign
+    assert '@media (min-width: 981px)' not in redesign
     assert "width: min(100%, 1180px);" in redesign
     assert 'grid-template-areas: "intro card";' in redesign
     assert "minmax(420px, 480px)" in redesign
     assert 'class="portal-auth-context"' in PORTAL
-    assert '@media (max-width: 980px)' in redesign
+    assert '@media (max-width: 1080px)' in redesign
     assert 'grid-template-areas: "intro" "card";' in redesign
     assert ".portal-auth-context { display: none; }" in redesign
 

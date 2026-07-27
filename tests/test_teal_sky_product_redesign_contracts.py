@@ -70,12 +70,27 @@ def test_access_context_has_complete_vietnamese_english_and_chinese_copy() -> No
 def test_access_desktop_uses_a_balanced_two_column_rail_and_mobile_hides_context() -> None:
     layer = _redesign_layer()
 
-    assert "@media (min-width: 981px)" in layer
+    assert "@media (min-width: 1081px)" in layer
+    assert "@media (min-width: 981px)" not in layer
     assert 'grid-template-areas: "intro card";' in layer
     assert "minmax(420px, 480px)" in layer
     assert "width: min(100%, 1180px);" in layer
-    assert "@media (max-width: 980px)" in layer
+    assert "@media (max-width: 1080px)" in layer
     assert ".portal-auth-context { display: none; }" in layer
+
+
+def test_access_header_preserves_locale_targets_at_320px() -> None:
+    """The compact header visually hides redundant brand copy without losing its name."""
+
+    layer = _redesign_layer()
+
+    assert "@media (max-width: 380px)" in layer
+    assert ".portal-auth-page--access .portal-auth-header { gap: 6px; }" in layer
+    assert ".portal-auth-page--access .portal-auth-brand > span:last-child {\n    position: absolute;" in layer
+    assert "clip-path: inset(50%);" in layer
+    assert "white-space: nowrap;" in layer
+    assert ".portal-auth-page--access .portal-auth-locale-link {\n  display: inline-grid;\n  min-width: 44px;\n  min-height: 44px;" in THEME
+    assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;\n  min-width: 44px;" in THEME
 
 
 def test_pwa_and_first_paint_chrome_use_the_same_deep_teal_as_the_signed_rail() -> None:
