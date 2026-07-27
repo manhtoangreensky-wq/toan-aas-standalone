@@ -1281,10 +1281,10 @@
     { command: "/promos", title: "Khuyến mãi", text: "Mở hướng dẫn promo/coupon trong Bot; Web không áp mã hoặc thay đổi Xu." },
     { command: "/birthday", title: "Quà sinh nhật", text: "Tiếp tục yêu cầu/quy trình birthday trong Bot canonical." }
   ]);
-  botCompanionPage("/community", "Cộng đồng", "Các kênh chính thức và community links do Bot phát hành; Portal chỉ tạo handoff an toàn.", ICONS.support, [
-    { command: "/community", title: "Community hub", text: "Mở community hub do Bot phát hành." },
-    { command: "/official_channels", title: "Kênh chính thức", text: "Xem danh sách kênh chính thức từ Bot thay vì một danh sách URL tĩnh trong Web." }
-  ]);
+  customerPage("/community", "Cộng đồng", "Kiểm tra website, Workspace, Telegram Bot và community từ danh sách chính thức có bảo vệ chống giả mạo.", ICONS.support, {
+    type: "community-trust-center", layout: "community-trust-center", fields: [], action: "none", status: "read_only",
+    notes: ["Danh sách chỉ nhận URL đã được Web server kiểm tra; không nhận Telegram ID, command, callback hoặc state Bot.", "Không có nạp Xu, PayOS, provider, job, asset, notification hay delivery trên trang này."]
+  });
   customerPage("/guides", "Guide Center", "Tìm bước bắt đầu, workspace phù hợp và nguyên tắc an toàn trong một catalog Web-native chỉ đọc.", ICONS.legal, {
     type: "guide-center", layout: "guide-center", fields: [], action: "none", status: "read_only",
     notes: ["Guide Center là catalog Web-native theo signed profile locale; không replay menu, command, callback, identity hoặc state của Bot.", "Trang chỉ điều hướng tới các workspace Web đã allowlist. Nó không gọi bridge/provider, tạo job, thay đổi wallet/payment, asset, publish hoặc delivery."]
@@ -2137,6 +2137,106 @@
   // whole narrow contract before presenting a title, seed prompt or copy
   // instruction; an incomplete response must not be repaired or remembered
   // by the browser.
+  // Community Trust Center is a separate server-owned, signed directory. The
+  // presentation shell repeats its closed shape check so an arbitrary URL or
+  // internal route can never reach an anchor even if state is injected locally.
+  const COMMUNITY_TRUST_CHANNEL_IDS = new Set(["website", "workspace", "telegram_bot", "community", "support"]);
+  const COMMUNITY_TRUST_INTERNAL_ROUTES = new Set(["/dashboard", "/support"]);
+  const COMMUNITY_TRUST_CHANNEL_KINDS = Object.freeze({
+    website: "external", workspace: "internal", telegram_bot: "external", community: "external", support: "internal"
+  });
+  const COMMUNITY_TRUST_EXTERNAL_HOSTS = Object.freeze({
+    website: new Set(["toanaas.vn", "www.toanaas.vn"]),
+    telegram_bot: new Set(["t.me"]),
+    community: new Set(["t.me"])
+  });
+  const COMMUNITY_TRUST_INTERNAL_ROUTE_BY_ID = Object.freeze({ workspace: "/dashboard", support: "/support" });
+  const COMMUNITY_TRUST_UI_KEYS = Object.freeze([
+    "kicker", "heading", "body", "ready", "guarded", "open", "open_workspace",
+    "safety_title", "safety_body", "boundary_title", "boundary_body", "loading_title",
+    "loading_body", "failed_title", "failed_body", "guarded_title", "guarded_body"
+  ]);
+  const COMMUNITY_TRUST_BOUNDARY_FIELDS = Object.freeze([
+    "bot_called", "bridge_called", "provider_called", "wallet_mutated", "payment_started",
+    "job_created", "asset_saved", "notification_sent"
+  ]);
+
+  function communityTrustText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
+  }
+
+  function communityTrustPortalUrl(value, id) {
+    const allowedHosts = COMMUNITY_TRUST_EXTERNAL_HOSTS[id];
+    if (!allowedHosts || typeof value !== "string" || value.length < 9 || value.length > 400) return "";
+    try {
+      const url = new URL(value);
+      if (url.protocol !== "https:" || !allowedHosts.has(url.hostname) || url.username || url.password || url.port || url.search || url.hash) return "";
+      if (url.hostname === "t.me" && (!url.pathname || url.pathname === "/")) return "";
+      return url.href;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function normalizeCommunityTrustCatalog(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["snapshot_version", "locale", "ui", "channels", "safety", "boundaries"];
+    const exactShape = Object.keys(source).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(source, key));
+    const locale = ["vi", "en", "zh"].includes(source.locale) ? source.locale : "";
+    const ui = source.ui && typeof source.ui === "object" && !Array.isArray(source.ui) ? source.ui : {};
+    const uiSafe = Object.keys(ui).length === COMMUNITY_TRUST_UI_KEYS.length
+      && COMMUNITY_TRUST_UI_KEYS.every((key) => Object.prototype.hasOwnProperty.call(ui, key) && communityTrustText(ui[key], 1, 360));
+    const seen = new Set();
+    const rawChannels = Array.isArray(source.channels) ? source.channels : [];
+    const channels = rawChannels.map((candidate) => {
+      const channel = candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+      const id = typeof channel.id === "string" ? channel.id : "";
+      const kind = typeof channel.kind === "string" ? channel.kind : "";
+      const availability = typeof channel.availability === "string" ? channel.availability : "";
+      const baseSafe = COMMUNITY_TRUST_CHANNEL_IDS.has(id) && !seen.has(id) && COMMUNITY_TRUST_CHANNEL_KINDS[id] === kind
+        && ["ready", "guarded"].includes(availability) && communityTrustText(channel.title, 1, 120)
+        && communityTrustText(channel.summary, 1, 360);
+      if (!baseSafe) return null;
+      if (availability === "ready" && kind === "external") {
+        const url = Object.keys(channel).length === 6 && Object.prototype.hasOwnProperty.call(channel, "url") ? communityTrustPortalUrl(channel.url, id) : "";
+        if (!url) return null;
+        seen.add(id);
+        return { id, kind, availability, title: channel.title, summary: channel.summary, url };
+      }
+      if (availability === "ready" && kind === "internal") {
+        const route = Object.keys(channel).length === 6 && Object.prototype.hasOwnProperty.call(channel, "route") && COMMUNITY_TRUST_INTERNAL_ROUTES.has(channel.route) && COMMUNITY_TRUST_INTERNAL_ROUTE_BY_ID[id] === channel.route
+          ? channel.route
+          : "";
+        if (!route) return null;
+        seen.add(id);
+        return { id, kind, availability, title: channel.title, summary: channel.summary, route };
+      }
+      const missing = Array.isArray(channel.missing_config) ? channel.missing_config : [];
+      if (availability !== "guarded" || Object.keys(channel).length !== 6 || missing.length !== 1 || !communityTrustText(missing[0], 2, 100)) return null;
+      seen.add(id);
+      return { id, kind, availability, title: channel.title, summary: channel.summary, missing_config: [missing[0]] };
+    }).filter(Boolean);
+    const safety = source.safety && typeof source.safety === "object" && !Array.isArray(source.safety) ? source.safety : {};
+    const checks = Array.isArray(safety.checks) ? safety.checks : [];
+    const safetySafe = Object.keys(safety).length === 3 && communityTrustText(safety.title, 1, 160)
+      && communityTrustText(safety.body, 1, 360) && checks.length >= 3 && checks.length <= 6
+      && checks.every((item) => communityTrustText(item, 1, 260));
+    const boundaries = source.boundaries && typeof source.boundaries === "object" && !Array.isArray(source.boundaries) ? source.boundaries : {};
+    const boundaryKeys = ["execution", "snapshot_read_only", ...COMMUNITY_TRUST_BOUNDARY_FIELDS];
+    const boundariesSafe = Object.keys(boundaries).length === boundaryKeys.length && boundaryKeys.every((key) => Object.prototype.hasOwnProperty.call(boundaries, key))
+      && boundaries.execution === "web_native_community_trust_center" && boundaries.snapshot_read_only === true
+      && COMMUNITY_TRUST_BOUNDARY_FIELDS.every((field) => boundaries[field] === false);
+    if (!exactShape || !locale || !communityTrustText(source.snapshot_version, 1, 80) || !uiSafe
+      || rawChannels.length !== COMMUNITY_TRUST_CHANNEL_IDS.size || channels.length !== rawChannels.length
+      || seen.size !== COMMUNITY_TRUST_CHANNEL_IDS.size
+      || !safetySafe || !boundariesSafe) return {};
+    return {
+      snapshot_version: source.snapshot_version, locale, ui: { ...ui }, channels,
+      safety: { title: safety.title, body: safety.body, checks: [...checks] }, boundaries: { ...boundaries }
+    };
+  }
+
   // Guide Center is an independently signed, static navigation catalog. It is
   // intentionally stricter than a generic help page: the browser accepts only
   // a closed route/topic schema and never treats an explanatory card as an
@@ -7238,6 +7338,7 @@
       : [];
     const freePromptGalleryCatalog = normalizeFreePromptGalleryCatalog(source.freePromptGalleryCatalog);
     const guideCenterCatalog = normalizeGuideCenterCatalog(source.guideCenterCatalog);
+    const communityTrustCatalog = normalizeCommunityTrustCatalog(source.communityTrustCatalog);
     const freePromptGalleryListing = normalizeFreePromptGalleryListing(source.freePromptGalleryListing, freePromptGalleryCatalog);
     const freePromptGalleryDetail = normalizeFreePromptGalleryDetail(source.freePromptGalleryDetail);
     const freePromptGallerySaveResult = normalizeFreePromptGallerySaveResult(source.freePromptGallerySaveResult);
@@ -7606,6 +7707,14 @@
       guideCenterCatalog,
       guideCenterReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.guideCenterReadState || ""))
         ? String(source.guideCenterReadState)
+        : "guarded",
+      // Community Trust Center is a server-checked directory. Keep only its
+      // exact closed snapshot in presentation state and clear all links on a
+      // failed, stale or malformed signed response.
+      communityTrustEnabled: source.communityTrustEnabled === true,
+      communityTrustCatalog,
+      communityTrustReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.communityTrustReadState || ""))
+        ? String(source.communityTrustReadState)
         : "guarded",
       // Audio Library & Briefing is a separate owner-scoped Web workspace.
       // It retains only server-redacted metadata in presentation state and
@@ -8856,6 +8965,7 @@
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/guides") return uiText("page.guideCenter.title", fallback);
+    if (path === "/community") return uiText("page.communityTrust.title", fallback);
     if (path === "/workspace/setup") return uiText("setup.title", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("starter.title", fallback);
     return localizedNavigationLabel(fallback);
@@ -8876,6 +8986,7 @@
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/guides") return uiText("page.guideCenter.description", fallback);
+    if (path === "/community") return uiText("page.communityTrust.description", fallback);
     if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("page.starterKits.description", fallback);
     return fallback;
@@ -24007,6 +24118,48 @@
     return BOT_COMPANION_COMMAND_PATTERN.test(command) ? command : "";
   }
 
+  function communityTrustShellText(key, fallback) {
+    return uiText(`communityTrust.${key}`, fallback);
+  }
+
+  function renderCommunityTrustCenter(page, context) {
+    const catalog = normalizeCommunityTrustCatalog(context && context.communityTrustCatalog);
+    const canRead = Boolean(context && context.capabilities && context.capabilities["community-trust-view"] === true);
+    const readState = String(context && context.communityTrustReadState || (canRead ? "loading" : "guarded"));
+    if (!canRead || readState === "guarded") {
+      return `<article class="portal-page portal-community-trust-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(communityTrustShellText("guardedTitle", "Cần đăng nhập để xem kênh đã xác minh"), communityTrustShellText("guardedBody", "Danh sách kênh chỉ được tải trong phiên Web đã ký; không có fallback sang lệnh Bot hoặc URL lưu trong trình duyệt."), ICONS.security)}</section></article>`;
+    }
+    if (readState === "loading") {
+      return `<article class="portal-page portal-community-trust-center">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-busy="true">${renderEmpty(communityTrustShellText("loadingTitle", "Đang kiểm tra kênh chính thức"), communityTrustShellText("loadingBody", "Portal đang tải danh sách từ phiên đã xác thực; không dùng link cũ trong trình duyệt để thay thế."), ICONS.support)}</section></article>`;
+    }
+    if (readState !== "ready" || !catalog.snapshot_version) {
+      return `<article class="portal-page portal-community-trust-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(communityTrustShellText("failedTitle", "Chưa thể xác minh danh sách kênh"), communityTrustShellText("failedBody", "Hãy tải lại hoặc dùng Hỗ trợ trong Workspace. Portal không hiển thị link suy đoán."), ICONS.support)}</section></article>`;
+    }
+    const ui = catalog.ui && typeof catalog.ui === "object" ? catalog.ui : {};
+    const channels = Array.isArray(catalog.channels) ? catalog.channels : [];
+    const safety = catalog.safety && typeof catalog.safety === "object" ? catalog.safety : {};
+    const checks = Array.isArray(safety.checks) ? safety.checks : [];
+    const cards = channels.map((channel) => {
+      const availability = String(channel && channel.availability || "guarded");
+      const kind = String(channel && channel.kind || "");
+      const title = safeText(String(channel && channel.title || ""));
+      const summary = safeText(String(channel && channel.summary || ""));
+      const ready = availability === "ready";
+      const label = ready ? String(ui.open || "Mở kênh") : String(ui.guarded || "Đang bảo vệ");
+      if (availability === "guarded") {
+        const missing = Array.isArray(channel && channel.missing_config) ? channel.missing_config.join(", ") : "";
+        return `<article class="portal-card portal-card-pad portal-community-trust-card" aria-disabled="true"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(label)}</span><h3 class="portal-card-title">${title}</h3><p class="portal-card-subtitle">${summary}</p></div>${badge("guarded")}</div><p class="portal-form-note">${safeText(missing ? `Chờ ${missing}` : "Chưa có cấu hình đã xác minh.")}</p></article>`;
+      }
+      if (!ready) return "";
+      const target = kind === "external" ? String(channel && channel.url || "") : String(channel && channel.route || "");
+      const action = kind === "external"
+        ? `<a class="portal-button portal-button--quiet" href="${safeText(target)}" target="_blank" rel="noopener noreferrer">${safeText(label)}</a>`
+        : `<a class="portal-button portal-button--quiet" href="${safeText(target)}">${safeText(ui.open_workspace || label)}</a>`;
+      return `<article class="portal-card portal-card-pad portal-community-trust-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.ready || "Đã xác minh"))}</span><h3 class="portal-card-title">${title}</h3><p class="portal-card-subtitle">${summary}</p></div>${badge("read_only")}</div><div class="portal-form-footer">${action}</div></article>`;
+    }).join("");
+    return `<article class="portal-page portal-community-trust-center">${renderHero(page, context)}<section class="portal-community-trust-intro"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2>${safeText(String(ui.heading || ""))}</h2><p>${safeText(String(ui.body || ""))}</p></div><div class="portal-community-trust-state">${badge("read_only")}<span>${safeText(String(ui.ready || ""))}</span></div></section><section class="portal-community-trust-grid" aria-label="${safeText(String(ui.heading || ""))}">${cards}</section><section class="portal-card portal-card-pad portal-community-trust-safety"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(safety.title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(safety.body || ""))}</p></div>${badge("read_only")}</div><ul>${checks.map((check) => `<li>${safeText(String(check || ""))}</li>`).join("")}</ul></section><section class="portal-card portal-card-pad portal-community-trust-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.boundary_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.boundary_body || ""))}</p></div>${badge("read_only")}</div>${renderNotes(page)}</section></article>`;
+  }
+
   function renderBotCompanion(page, context) {
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     const botUrl = safeTelegramLink(connection.bot_chat_url || "");
@@ -25437,6 +25590,7 @@
       case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
       case "free-prompt-gallery": return renderFreePromptGallery(page, context);
       case "guide-center": return renderGuideCenter(page, context);
+      case "community-trust-center": return renderCommunityTrustCenter(page, context);
       case "media-workspace": return renderMediaWorkspace(page, context);
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "audio-hub": return renderMediaWorkspace(page, context);

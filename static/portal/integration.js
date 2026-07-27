@@ -247,6 +247,11 @@
   // a different route or an already-guarded session.
   let guideCenterSessionEpoch = 0;
   let guideCenterHydrationEpoch = 0;
+  // Community Trust Center is another signed, read-only snapshot. Its
+  // current account, route and request sequence must not leak across a
+  // logout, locale switch, account switch or delayed response.
+  let communityTrustSessionEpoch = 0;
+  let communityTrustHydrationEpoch = 0;
   // Project Package lists are private immutable export metadata. Keep a
   // separate request sequence for the all-project library and each Project
   // detail so a delayed page can never replace a newer signed view.
@@ -2147,6 +2152,13 @@
   // command list, provider/status feed or bridge-backed route.
   function isNativeGuideCenterPath(path) {
     return String(path || "").split("?")[0] === "/guides";
+  }
+
+  // Community Trust Center is a Web-owned directory of server-validated
+  // links. It must not inherit a generic canonical/Bot projection simply
+  // because the same account happens to have linked Telegram.
+  function isNativeCommunityTrustPath(path) {
+    return String(path || "").split("?")[0] === "/community";
   }
 
   // Interface Locale Navigator owns only the signed Web presentation
@@ -5446,6 +5458,94 @@
       && checklist.length >= 4 && checklist.length <= 6 && checklist.every((item) => publishReviewPackText(item, 2, 280))
       && publishReviewPackText(pack.copy_instruction, 1, 900) && publishReviewPackBoundaryIsSafe(data)
     );
+  }
+
+  // Community Trust Center is a signed read-only catalog. Keep the complete
+  // shape closed before presentation: the server never needs a browser URL or
+  // Telegram identity, and a malformed reply cannot create an external link.
+  const COMMUNITY_TRUST_CHANNEL_IDS = new Set(["website", "workspace", "telegram_bot", "community", "support"]);
+  const COMMUNITY_TRUST_INTERNAL_ROUTES = new Set(["/dashboard", "/support"]);
+  const COMMUNITY_TRUST_CHANNEL_KINDS = Object.freeze({
+    website: "external", workspace: "internal", telegram_bot: "external", community: "external", support: "internal"
+  });
+  const COMMUNITY_TRUST_EXTERNAL_HOSTS = Object.freeze({
+    website: new Set(["toanaas.vn", "www.toanaas.vn"]),
+    telegram_bot: new Set(["t.me"]),
+    community: new Set(["t.me"])
+  });
+  const COMMUNITY_TRUST_INTERNAL_ROUTE_BY_ID = Object.freeze({ workspace: "/dashboard", support: "/support" });
+  const COMMUNITY_TRUST_UI_KEYS = Object.freeze([
+    "kicker", "heading", "body", "ready", "guarded", "open", "open_workspace",
+    "safety_title", "safety_body", "boundary_title", "boundary_body", "loading_title",
+    "loading_body", "failed_title", "failed_body", "guarded_title", "guarded_body"
+  ]);
+  const COMMUNITY_TRUST_BOUNDARY_FIELDS = Object.freeze([
+    "bot_called", "bridge_called", "provider_called", "wallet_mutated", "payment_started",
+    "job_created", "asset_saved", "notification_sent"
+  ]);
+
+  function communityTrustText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
+  }
+
+  function communityTrustUrl(value, id) {
+    const allowedHosts = COMMUNITY_TRUST_EXTERNAL_HOSTS[id];
+    if (!allowedHosts || typeof value !== "string" || value.length < 9 || value.length > 400) return "";
+    try {
+      const url = new URL(value);
+      if (url.protocol === "https:" && allowedHosts.has(url.hostname) && !url.username && !url.password && !url.port && !url.search && !url.hash) {
+        if (url.hostname === "t.me" && (!url.pathname || url.pathname === "/")) return "";
+        return url.href;
+      }
+    } catch (_) {
+      return "";
+    }
+    return "";
+  }
+
+  function communityTrustCatalogIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const keys = ["snapshot_version", "locale", "ui", "channels", "safety", "boundaries"];
+    const locale = typeof data.locale === "string" && ["vi", "en", "zh"].includes(data.locale);
+    const ui = data.ui && typeof data.ui === "object" && !Array.isArray(data.ui) ? data.ui : {};
+    const uiSafe = Object.keys(ui).length === COMMUNITY_TRUST_UI_KEYS.length
+      && COMMUNITY_TRUST_UI_KEYS.every((key) => Object.prototype.hasOwnProperty.call(ui, key) && communityTrustText(ui[key], 1, 360));
+    const seen = new Set();
+    const channels = Array.isArray(data.channels) ? data.channels : [];
+    const channelsSafe = channels.length === COMMUNITY_TRUST_CHANNEL_IDS.size && channels.every((candidate) => {
+      const item = candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+      const id = typeof item.id === "string" ? item.id : "";
+      const kind = typeof item.kind === "string" ? item.kind : "";
+      const availability = typeof item.availability === "string" ? item.availability : "";
+      const coreSafe = COMMUNITY_TRUST_CHANNEL_IDS.has(id) && !seen.has(id)
+        && COMMUNITY_TRUST_CHANNEL_KINDS[id] === kind && ["ready", "guarded"].includes(availability)
+        && communityTrustText(item.title, 1, 120) && communityTrustText(item.summary, 1, 360);
+      let valid = false;
+      if (coreSafe && availability === "ready" && kind === "external") {
+        valid = Object.keys(item).length === 6 && Object.prototype.hasOwnProperty.call(item, "url") && Boolean(communityTrustUrl(item.url, id));
+      } else if (coreSafe && availability === "ready" && kind === "internal") {
+        valid = Object.keys(item).length === 6 && Object.prototype.hasOwnProperty.call(item, "route") && COMMUNITY_TRUST_INTERNAL_ROUTES.has(item.route) && COMMUNITY_TRUST_INTERNAL_ROUTE_BY_ID[id] === item.route;
+      } else if (coreSafe && availability === "guarded") {
+        const missing = Array.isArray(item.missing_config) ? item.missing_config : [];
+        valid = Object.keys(item).length === 6 && missing.length === 1 && communityTrustText(missing[0], 2, 100);
+      }
+      if (valid) seen.add(id);
+      return valid;
+    });
+    const safety = data.safety && typeof data.safety === "object" && !Array.isArray(data.safety) ? data.safety : {};
+    const checks = Array.isArray(safety.checks) ? safety.checks : [];
+    const safetySafe = Object.keys(safety).length === 3 && communityTrustText(safety.title, 1, 160)
+      && communityTrustText(safety.body, 1, 360) && checks.length >= 3 && checks.length <= 6
+      && checks.every((item) => communityTrustText(item, 1, 260));
+    const boundaries = data.boundaries && typeof data.boundaries === "object" && !Array.isArray(data.boundaries) ? data.boundaries : {};
+    const boundaryKeys = ["execution", "snapshot_read_only", ...COMMUNITY_TRUST_BOUNDARY_FIELDS];
+    return Object.keys(data).length === keys.length && keys.every((key) => Object.prototype.hasOwnProperty.call(data, key))
+      && communityTrustText(data.snapshot_version, 1, 80) && locale && uiSafe && channelsSafe
+      && seen.size === COMMUNITY_TRUST_CHANNEL_IDS.size && safetySafe
+      && Object.keys(boundaries).length === boundaryKeys.length && boundaryKeys.every((key) => Object.prototype.hasOwnProperty.call(boundaries, key))
+      && boundaries.execution === "web_native_community_trust_center" && boundaries.snapshot_read_only === true
+      && COMMUNITY_TRUST_BOUNDARY_FIELDS.every((field) => boundaries[field] === false);
   }
 
   // Guide Center is a signed static navigation catalog. Validate its complete
@@ -11731,6 +11831,8 @@
     ++promptLibrarySessionEpoch;
     ++freePromptGallerySessionEpoch;
     ++guideCenterSessionEpoch;
+    ++communityTrustSessionEpoch;
+    ++communityTrustHydrationEpoch;
     ++projectPackageSessionEpoch;
     ++documentWorkspaceSessionEpoch;
     ++chatWorkspaceSessionEpoch;
@@ -11932,6 +12034,10 @@
     // flag because it cannot execute, write or unlock any workflow; a signed
     // session is the only access boundary for its reviewed Web copy.
     const guideCenterEnabled = Boolean(account);
+    // Community Trust Center follows the same signed-session boundary, but
+    // its server-owned catalog is deliberately independent from Bot, bridge,
+    // wallet, payment and provider capabilities.
+    const communityTrustEnabled = Boolean(account);
     // Audio Library & Briefing is a distinct Web-owned metadata/Asset Vault
     // relation.  Its flag never represents a music provider, AI generation,
     // external preview, Bot job, wallet, Xu or payment capability.
@@ -12391,6 +12497,7 @@
       "free-prompt-gallery-view": Boolean(account && freePromptGalleryEnabled),
       "free-prompt-gallery-save": Boolean(account && me.csrf_token && freePromptGalleryEnabled && memoryCenterEnabled),
       "guide-center-view": Boolean(account && guideCenterEnabled),
+      "community-trust-view": Boolean(account && communityTrustEnabled),
       "media-workspace-view": Boolean(account && mediaWorkspaceEnabled),
       // Music/SFX Library is a GET-only owner projection. It needs the same
       // signed account + narrow Web Workspace flag, but never CSRF, bridge,
@@ -13046,6 +13153,7 @@
       promptStudioEnabled,
       freePromptGalleryEnabled,
       guideCenterEnabled,
+      communityTrustEnabled,
       mediaWorkspaceEnabled,
       musicPromptComposerEnabled,
       musicDirectionPresetsEnabled,
@@ -13140,6 +13248,11 @@
       // locale/session transition in this in-memory Portal state.
       guideCenterCatalog: {},
       guideCenterReadState: account && guideCenterEnabled ? "loading" : "guarded",
+      // Community Trust Center is another signed, localized snapshot. Clear
+      // it with every bootstrap so no account, locale or failed response can
+      // leave an earlier official-channel link visible in memory.
+      communityTrustCatalog: {},
+      communityTrustReadState: account && communityTrustEnabled ? "loading" : "guarded",
       // Always clear every Audio Workspace projection before the signed
       // owner-scoped read starts.  A session change/failure must never leave
       // a prior user's brief, Asset Vault metadata or audit labels visible.
@@ -13678,6 +13791,7 @@
         ...promptStudioRouteStates(Boolean(account && promptStudioEnabled)),
         "/free-prompt-gallery": account && freePromptGalleryEnabled ? "processing" : "guarded",
         "/guides": account && guideCenterEnabled ? "processing" : "guarded",
+        "/community": account && communityTrustEnabled ? "processing" : "guarded",
         "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/music/library": account && mediaWorkspaceEnabled ? "processing" : "guarded",
@@ -13887,6 +14001,19 @@
         merge({
           guideCenterCatalog: {}, guideCenterReadState: "guarded",
           pageStates: { ...(base().pageStates || {}), "/guides": "guarded" }
+        });
+      }
+    }
+    if (currentPath === "/community") {
+      // Community Trust Center owns a narrow signed catalog boundary. It
+      // never substitutes generic canonical data, a Bot command or a browser
+      // remembered link when the request is unavailable or malformed.
+      if (account && communityTrustEnabled) {
+        await hydrateCommunityTrustCenter();
+      } else {
+        merge({
+          communityTrustCatalog: {}, communityTrustReadState: "guarded",
+          pageStates: { ...(base().pageStates || {}), "/community": "guarded" }
         });
       }
     }
@@ -14379,7 +14506,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeCommunityTrustPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -15016,6 +15143,49 @@
       && isNativeGuideCenterPath(expectedPath)
       && base().guideCenterEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function communityTrustRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === communityTrustHydrationEpoch
+      && sessionEpoch === communityTrustSessionEpoch
+      && expectedPath === "/community"
+      && currentPortalPath() === expectedPath
+      && isNativeCommunityTrustPath(expectedPath)
+      && base().communityTrustEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateCommunityTrustCenter() {
+    // This is a signed, private/no-store catalog. Keep it in current page
+    // memory only, and fail closed if account, locale, route or request order
+    // changes while the server response is in flight.
+    const requestEpoch = ++communityTrustHydrationEpoch;
+    const sessionEpoch = communityTrustSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativeCommunityTrustPath(expectedPath)) return { stale: true };
+    try {
+      const result = await api("/community/trust-center", { cache: "no-store" });
+      if (!communityTrustRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      const catalog = result.data && typeof result.data === "object" ? result.data : {};
+      if (!communityTrustCatalogIsSafe(catalog)) throw new Error("Máy chủ chưa trả danh sách kênh chính thức an toàn.");
+      if (!communityTrustRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        communityTrustCatalog: catalog,
+        communityTrustReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/community": "read_only" }
+      });
+      return catalog;
+    } catch (_) {
+      // Never repair a bad response with raw URL data, a stale snapshot or a
+      // Bot handoff. The guarded failure state intentionally contains no link.
+      if (!communityTrustRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        communityTrustCatalog: {},
+        communityTrustReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/community": "guarded" }
+      });
+      return null;
+    }
   }
 
   async function hydrateGuideCenter() {
@@ -24043,7 +24213,7 @@
     // Workspace Menu has the same no-projection property, but it is a
     // navigation directory rather than a preference form. Keeping the fence
     // explicit prevents either route from inheriting a future generic read.
-    if (isNativeWorkspaceMenuPath(path) || isNativeGuideCenterPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path) || isNativeMusicLibraryPath(path)) return;
+    if (isNativeWorkspaceMenuPath(path) || isNativeGuideCenterPath(path) || isNativeCommunityTrustPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path) || isNativeMusicLibraryPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
