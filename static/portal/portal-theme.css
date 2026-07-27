@@ -76,6 +76,12 @@
   --portal-radius-sm: 9px;
   --portal-control-height: 42px;
   --portal-transition: 180ms cubic-bezier(.2, .8, .2, 1);
+  --portal-rail-width: 272px;
+  --portal-content-max-width: 1600px;
+  --portal-desktop-page-padding: clamp(24px, 3vw, 40px);
+  --portal-mobile-page-padding: 16px;
+  --portal-mobile-content-inset: 104px;
+  --portal-section-gap: clamp(20px, 2.4vw, 30px);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -1604,6 +1610,7 @@ body {
   color: var(--portal-danger);
 }
 
+
 /* Final public-companion layout. These rules deliberately sit after the
    legacy landing styles so the public entry uses the same quiet teal–cyan
    system as the signed Portal without inheriting its dark marketing effects. */
@@ -2363,5 +2370,222 @@ body {
     justify-content: start;
     min-height: 0;
     padding-top: 28px;
+  }
+}
+
+/* Product Harmony -- final light teal-sky application layer. */
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
+  grid-template-columns: var(--portal-rail-width) minmax(0, 1fr);
+}
+
+.portal-main {
+  width: min(100%, var(--portal-content-max-width));
+  max-width: var(--portal-content-max-width);
+  padding: var(--portal-desktop-page-padding);
+}
+
+.portal-page,
+.portal-workspace-command-center {
+  gap: var(--portal-section-gap);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-workspace-setup-focus-card,
+  .portal-workspace-setup-focus-icon,
+  .portal-workspace-menu-group-head > span
+) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-setup-focus-card:hover,
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-setup-focus-card:focus-within,
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-setup-focus-card:has(input:checked) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-setup-focus-card:focus-within {
+  outline: 3px solid var(--portal-context);
+  outline-offset: 2px;
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-setup-focus-icon {
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-workspace-menu-group-head > span {
+  color: var(--portal-muted);
+}
+
+.portal-admin-home > .portal-admin-guard,
+.portal-admin-home > .portal-admin-grid .portal-metric,
+.portal-admin-work-queues,
+.portal-admin-work-queue,
+.portal-admin-authority,
+.portal-admin-directory-group,
+.portal-admin-directory-group > .portal-module-grid .portal-module-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-admin-home > .portal-admin-guard .portal-state h2,
+.portal-admin-home > .portal-admin-grid .portal-metric strong,
+.portal-admin-work-queues .portal-section-heading h2,
+.portal-admin-work-queue strong,
+.portal-admin-authority > summary,
+.portal-admin-directory-group > summary,
+.portal-admin-directory-group > summary strong {
+  color: var(--portal-ink);
+}
+
+.portal-admin-home > .portal-admin-guard .portal-state p,
+.portal-admin-home > .portal-admin-grid .portal-metric span,
+.portal-admin-home > .portal-admin-grid .portal-metric em,
+.portal-admin-work-queues .portal-section-heading p,
+.portal-admin-work-queue small,
+.portal-admin-directory-group > summary small {
+  color: var(--portal-muted);
+}
+
+.portal-admin-work-queue:hover,
+.portal-admin-work-queue:focus-visible,
+.portal-admin-directory-group > summary:hover,
+.portal-admin-authority > summary:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-admin-work-queue:focus-visible,
+.portal-admin-authority > summary:focus-visible,
+.portal-admin-directory-group > summary:focus-visible {
+  outline: 3px solid var(--portal-context) !important;
+  outline-offset: 2px;
+}
+
+.portal-admin-authority[open],
+.portal-admin-directory-group[open] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-strong);
+}
+
+.portal-admin-authority[open] > summary,
+.portal-admin-directory-group[open] > summary {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-admin-authority > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-admin-authority > .portal-card .portal-card-title,
+.portal-admin-authority > .portal-card .portal-summary-value {
+  color: var(--portal-ink);
+}
+
+.portal-admin-authority > .portal-card .portal-card-subtitle,
+.portal-admin-authority > .portal-card .portal-summary-key {
+  color: var(--portal-muted);
+}
+
+.portal-admin-directory-group > .portal-module-grid .portal-module-card:hover,
+.portal-admin-directory-group > .portal-module-grid .portal-module-card:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-start-guide {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-start-guide-step {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-start-guide-head h2,
+.portal-start-guide-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-start-guide-head p,
+.portal-start-guide-copy p {
+  color: var(--portal-muted);
+}
+
+.portal-start-guide-note,
+.portal-start-guide-number {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-start-guide-copy small,
+.portal-start-guide-copy em {
+  color: var(--portal-action);
+}
+
+.portal-start-guide-step:hover,
+.portal-start-guide-step:focus-visible {
+  border-color: var(--portal-context);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  transform: translateY(-2px);
+}
+
+.portal-start-guide-step:focus-visible {
+  outline: 3px solid var(--portal-context) !important;
+  outline-offset: 2px;
+}
+
+.portal-catalog-context {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-catalog-context strong {
+  color: var(--portal-ink);
+}
+
+.portal-catalog-context p {
+  color: var(--portal-muted);
+}
+
+.portal-catalog-context > .portal-module-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-catalog-context > .portal-badge {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+@media (max-width: 700px) {
+  .portal-main {
+    width: 100%;
+    padding: var(--portal-mobile-page-padding)
+      calc(var(--portal-mobile-page-padding) + var(--portal-safe-right))
+      0
+      calc(var(--portal-mobile-page-padding) + var(--portal-safe-left));
+    padding-bottom: calc(var(--portal-mobile-content-inset) + var(--portal-safe-bottom));
+  }
+
+  .portal-workspace-command-center .portal-dashboard-overview-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

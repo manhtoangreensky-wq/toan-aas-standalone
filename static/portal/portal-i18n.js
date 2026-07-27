@@ -2812,6 +2812,63 @@
     }
   };
 
+  const ADMIN_HOME_MESSAGES = {
+    vi: {
+      "adminHome.title": "Trung tâm điều hành ERP",
+      "adminHome.guard.kicker": "Trung tâm điều hành ERP",
+      "adminHome.guard.verifiedTitle": "Quyền quản trị chuẩn đã được máy chủ xác nhận",
+      "adminHome.guard.pendingTitle": "Trung tâm ERP đang chờ xác minh quyền phiên",
+      "adminHome.metrics.users": "Người dùng",
+      "adminHome.metrics.engineJobs": "Tác vụ hệ thống",
+      "adminHome.metrics.workerJobs": "Tác vụ xử lý",
+      "adminHome.metrics.payments": "Thanh toán",
+      "adminHome.metrics.readiness": "Mức sẵn sàng",
+      "adminHome.queues.kicker": "Hàng đợi của tôi",
+      "adminHome.queues.title": "Tác vụ cần xử lý",
+      "adminHome.queues.body": "Chỉ hiển thị phân hệ thuộc quyền máy chủ cấp cho phiên quản trị này.",
+      "adminHome.readiness.kicker": "Mức sẵn sàng",
+      "adminHome.readiness.title": "Trạng thái hệ thống",
+      "adminHome.readiness.body": "Chỉ xem trạng thái Bot đã ẩn dữ liệu nhạy cảm; không bật hoặc tắt nhà cung cấp từ trình duyệt.",
+      "adminHome.authority.summary": "Quyền hạn và ranh giới quản trị"
+    },
+    en: {
+      "adminHome.title": "Admin ERP control center",
+      "adminHome.guard.kicker": "ERP control center",
+      "adminHome.guard.verifiedTitle": "Canonical admin verified by the server",
+      "adminHome.guard.pendingTitle": "Admin ERP is waiting for signed authority",
+      "adminHome.metrics.users": "Users",
+      "adminHome.metrics.engineJobs": "Engine jobs",
+      "adminHome.metrics.workerJobs": "Worker jobs",
+      "adminHome.metrics.payments": "Payments",
+      "adminHome.metrics.readiness": "Readiness",
+      "adminHome.queues.kicker": "My queues",
+      "adminHome.queues.title": "Queues to open",
+      "adminHome.queues.body": "Only modules granted by the server for this admin session are shown.",
+      "adminHome.readiness.kicker": "Readiness",
+      "adminHome.readiness.title": "System status",
+      "adminHome.readiness.body": "Bot status is redacted and read-only; providers cannot be toggled in the browser.",
+      "adminHome.authority.summary": "Authority & admin boundaries"
+    },
+    zh: {
+      "adminHome.title": "Admin ERP 控制中心",
+      "adminHome.guard.kicker": "ERP 控制中心",
+      "adminHome.guard.verifiedTitle": "服务器已验证 canonical admin",
+      "adminHome.guard.pendingTitle": "Admin ERP 正在等待签名权限",
+      "adminHome.metrics.users": "用户",
+      "adminHome.metrics.engineJobs": "引擎任务",
+      "adminHome.metrics.workerJobs": "Worker 任务",
+      "adminHome.metrics.payments": "支付",
+      "adminHome.metrics.readiness": "就绪度",
+      "adminHome.queues.kicker": "我的队列",
+      "adminHome.queues.title": "待处理队列",
+      "adminHome.queues.body": "仅显示服务器为当前管理会话授予的模块。",
+      "adminHome.readiness.kicker": "就绪度",
+      "adminHome.readiness.title": "系统状态",
+      "adminHome.readiness.body": "Bot 状态仅作脱敏只读展示；浏览器不会切换服务商。",
+      "adminHome.authority.summary": "权限与管理边界"
+    }
+  };
+
   Object.keys(MESSAGES).forEach((locale) => Object.assign(
     MESSAGES[locale],
     INTERFACE_EXTENSION_MESSAGES[locale],
@@ -2819,7 +2876,8 @@
     LANDING_MESSAGES[locale],
     DASHBOARD_MESSAGES[locale],
     DASHBOARD_COMMAND_CENTER_MESSAGES[locale],
-    DASHBOARD_DELIVERY_MESSAGES[locale]
+    DASHBOARD_DELIVERY_MESSAGES[locale],
+    ADMIN_HOME_MESSAGES[locale]
   ));
 
   function verifyEqualKeysets() {
