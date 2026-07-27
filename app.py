@@ -36,6 +36,7 @@ import copyfast_assets
 import copyfast_auth
 import copyfast_auth_throttle
 import copyfast_channel_strategy
+import copyfast_community_trust
 import copyfast_content_handoff
 import copyfast_content_studio
 import copyfast_chat_workspace
@@ -2412,6 +2413,7 @@ app.include_router(copyfast_quick_image_planner.router)
 app.include_router(copyfast_music_media.router)
 app.include_router(copyfast_content_studio.router)
 app.include_router(copyfast_channel_strategy.router)
+app.include_router(copyfast_community_trust.router)
 app.include_router(copyfast_content_handoff.router)
 app.include_router(copyfast_free_prompt_gallery.router)
 app.include_router(copyfast_guide_center.router)
