@@ -8,8 +8,8 @@
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#062a36",
-  "theme_color": "#062a36",
+  "background_color": "#063b47",
+  "theme_color": "#063b47",
   "shortcuts": [
     {
       "name": "Tổng quan",

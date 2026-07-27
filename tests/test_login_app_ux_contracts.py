@@ -47,27 +47,23 @@ def test_access_screen_keeps_sensitive_auth_actions_but_stacks_fields_for_readab
     assert "var(--portal-context)" in access_theme
 
 
-def test_access_screen_uses_one_centered_column_without_the_legacy_dark_split() -> None:
-    """The final theme owns the access layout after the obsolete catalogue layer is removed."""
+def test_access_screen_uses_a_balanced_desktop_rail_and_single_column_mobile_fallback() -> None:
+    """The redesign makes desktop access proportional without changing auth ownership."""
 
-    access_theme = _section(
-        THEME,
-        "/* Access remains email-first and server-owned.",
-        "/* The public companion shares the brand palette",
-    )
+    marker = "/* Teal–Sky Product Redesign -- final semantic layer. */"
+    redesign = THEME[THEME.index(marker):]
 
     assert "/* Compact application access screen." not in CSS
     assert ".portal-body--auth,\n.portal-shell--auth { background: #0a0f17; }" not in CSS
     assert "grid-template-columns: minmax(0, .82fr) minmax(440px, 480px);" not in CSS
-    assert '"header header"\n    "intro card"' not in CSS
-    assert "grid-template-columns: minmax(0, min(100%, 480px));" in access_theme
-    assert 'grid-template-areas: "header" "intro" "card";' in access_theme
-    assert ".portal-auth-page--access .portal-auth-shell { display: contents; }" in access_theme
-    assert ".portal-auth-page--access .portal-auth-intro {\n  grid-area: intro;" in access_theme
-    assert "border-right: 1px" not in access_theme
-    assert "max-width: 11ch;" not in access_theme
-    assert ".portal-auth-page--access .portal-auth-card {\n  grid-area: card;" in access_theme
-    assert "max-width: 480px;" in access_theme
+    assert '@media (min-width: 981px)' in redesign
+    assert "width: min(100%, 1180px);" in redesign
+    assert 'grid-template-areas: "intro card";' in redesign
+    assert "minmax(420px, 480px)" in redesign
+    assert 'class="portal-auth-context"' in PORTAL
+    assert '@media (max-width: 980px)' in redesign
+    assert 'grid-template-areas: "intro" "card";' in redesign
+    assert ".portal-auth-context { display: none; }" in redesign
 
 
 def test_access_screen_compacts_mobile_rhythm_without_shrinking_controls() -> None:

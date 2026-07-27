@@ -55,16 +55,16 @@ def test_rebalanced_teal_sky_tokens_keep_the_signed_canvas_light_and_rail_deep()
     root_declarations = root.group("declarations")
 
     expected_tokens = (
-        "--portal-app-canvas: #f4fbfc;",
+        "--portal-app-canvas: #f3fbfc;",
         "--portal-surface-light: #ffffff;",
         "--portal-action: #0f766e;",
         "--portal-on-action: #ffffff;",
-        "--portal-brand: #14b8a6;",
-        "--portal-context: #0284c7;",
-        "--portal-rail: #083344;",
-        "--portal-border: #d7ecef;",
-        "--portal-muted: #486b75;",
-        "--portal-ink: #083344;",
+        "--portal-brand: #0d9488;",
+        "--portal-context: #0369a1;",
+        "--portal-rail: #063b47;",
+        "--portal-border: #d5e9ed;",
+        "--portal-muted: #456b77;",
+        "--portal-ink: #073a45;",
     )
 
     for token in expected_tokens:
@@ -89,9 +89,9 @@ def test_theme_maps_legacy_component_names_to_the_semantic_teal_sky_tokens() -> 
         "--portal-info: var(--portal-context);",
         "--portal-light-canvas: var(--portal-app-canvas);",
         "--portal-light-surface: var(--portal-surface-light);",
-        "--portal-light-soft: #e8f5f6;",
-        "--portal-light-accent-border: #8bded7;",
-        "--portal-light-accent-soft: #e0f7f5;",
+        "--portal-light-soft: #e8f6f7;",
+        "--portal-light-accent-border: #8ccfcf;",
+        "--portal-light-accent-soft: #e6f8f7;",
         "--portal-light-hover-surface: #f8fdfd;",
         "--portal-landing-divider: var(--portal-border);",
     )
@@ -101,16 +101,16 @@ def test_theme_maps_legacy_component_names_to_the_semantic_teal_sky_tokens() -> 
 
     rendered_rules = theme_source[root.end() :]
     for literal in (
-        "#083344",
+        "#073a45",
         "#0f766e",
-        "#14b8a6",
-        "#0284c7",
+        "#0d9488",
+        "#0369a1",
         "#ffffff",
-        "#f4fbfc",
-        "#d7ecef",
-        "#486b75",
-        "#e8f5f6",
-        "#e0f7f5",
+        "#f3fbfc",
+        "#d5e9ed",
+        "#456b77",
+        "#e8f6f7",
+        "#e6f8f7",
     ):
         assert literal not in rendered_rules
 
@@ -209,10 +209,10 @@ def test_light_surface_focus_ring_overrides_the_catalogue_important_outline_with
     assert final_focus is not None
     assert "outline: 3px solid var(--portal-focus) !important;" in final_focus.group("declarations")
     assert "--portal-focus: var(--portal-context);" in theme_source
-    assert "--portal-app-canvas: #f4fbfc;" in theme_source
+    assert "--portal-app-canvas: #f3fbfc;" in theme_source
     assert "--portal-surface-light: #ffffff;" in theme_source
-    assert _contrast_ratio("#0284c7", "#ffffff") >= 3
-    assert _contrast_ratio("#0284c7", "#f4fbfc") >= 3
+    assert _contrast_ratio("#0369a1", "#ffffff") >= 3
+    assert _contrast_ratio("#0369a1", "#f3fbfc") >= 3
     assert SHELL_TEMPLATE.index(BASE_STYLESHEET) < SHELL_TEMPLATE.index(THEME_STYLESHEET)
 
 
@@ -220,10 +220,10 @@ def test_pwa_metadata_and_offline_shell_share_the_canonical_portal_background() 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     offline_shell = OFFLINE_SHELL.read_text(encoding="utf-8")
 
-    assert manifest["background_color"] == "#062a36"
-    assert manifest["theme_color"] == "#062a36"
-    assert '<meta name="theme-color" content="#062a36">' in offline_shell
-    assert "background: #062a36;" in offline_shell
+    assert manifest["background_color"] == "#063b47"
+    assert manifest["theme_color"] == "#063b47"
+    assert '<meta name="theme-color" content="#063b47">' in offline_shell
+    assert "background: #063b47;" in offline_shell
     assert "#07141d" not in offline_shell
 
 

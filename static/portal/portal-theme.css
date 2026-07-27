@@ -3,31 +3,31 @@
    security and JavaScript contracts retain their DOM ownership. */
 :root {
   color-scheme: light;
-  --portal-app-canvas: #f4fbfc;
+  --portal-app-canvas: #f3fbfc;
   --portal-surface-light: #ffffff;
   --portal-action: #0f766e;
   --portal-action-hover: #115e59;
   --portal-on-action: #ffffff;
-  --portal-brand: #14b8a6;
-  --portal-brand-hover: #0d9488;
-  --portal-context: #0284c7;
-  --portal-rail: #083344;
-  --portal-rail-surface: #0f4555;
-  --portal-rail-hover: #0b4a5d;
-  --portal-rail-border: #155667;
+  --portal-brand: #0d9488;
+  --portal-brand-hover: #0f766e;
+  --portal-context: #0369a1;
+  --portal-rail: #063b47;
+  --portal-rail-surface: #0b5261;
+  --portal-rail-hover: #0a5666;
+  --portal-rail-border: #176576;
   --portal-rail-text: #effcfd;
-  --portal-rail-muted: #b9d9df;
-  --portal-ink: #083344;
-  --portal-muted: #486b75;
-  --portal-muted-strong: #335969;
-  --portal-border: #d7ecef;
-  --portal-border-strong: #8bded7;
+  --portal-rail-muted: #c0dde2;
+  --portal-ink: #073a45;
+  --portal-muted: #456b77;
+  --portal-muted-strong: #335965;
+  --portal-border: #d5e9ed;
+  --portal-border-strong: #8ccfcf;
   --portal-bg: var(--portal-app-canvas);
-  --portal-bg-deep: #e8f5f6;
+  --portal-bg-deep: #e8f6f7;
   --portal-chrome: var(--portal-surface-light);
   --portal-surface: var(--portal-surface-light);
-  --portal-surface-strong: #e8f5f6;
-  --portal-surface-soft: #e0f7f5;
+  --portal-surface-strong: #e8f6f7;
+  --portal-surface-soft: #e6f8f7;
   --portal-text: var(--portal-ink);
   --portal-accent: var(--portal-brand);
   --portal-accent-hover: var(--portal-brand-hover);
@@ -40,11 +40,11 @@
   --portal-success: #15803d;
   --portal-light-canvas: var(--portal-app-canvas);
   --portal-light-surface: var(--portal-surface-light);
-  --portal-light-soft: #e8f5f6;
+  --portal-light-soft: #e8f6f7;
   --portal-light-border: var(--portal-border);
-  --portal-light-border-subtle: #e5f2f4;
-  --portal-light-accent-border: #8bded7;
-  --portal-light-accent-soft: #e0f7f5;
+  --portal-light-border-subtle: #e4f0f2;
+  --portal-light-accent-border: #8ccfcf;
+  --portal-light-accent-soft: #e6f8f7;
   --portal-light-hover-surface: #f8fdfd;
   --portal-light-muted: var(--portal-muted);
   --portal-light-action: var(--portal-action);
@@ -843,6 +843,187 @@ body {
    preserving the 44px touch target inherited from the component catalogue. */
 @media (max-width: 700px) {
   :root { --portal-control-height: 44px; }
+}
+
+/* Teal–Sky Product Redesign foundation rules.
+   This intentionally sits after the legacy catalogue and the prior harmony
+   layer. It owns only visual geometry and readable light-surface primitives;
+   route, authority, job and provider state stay in their existing owners. */
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-card-title,
+  .portal-summary-value,
+  .portal-action-card-title,
+  .portal-action-card-count,
+  .portal-module-card-title,
+  .portal-dashboard-draft strong,
+  .portal-studio-card strong,
+  .portal-section-heading h2,
+  .portal-section-heading h3
+) {
+  color: var(--portal-ink);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-card-subtitle,
+  .portal-summary-key,
+  .portal-action-card-body,
+  .portal-action-card-link,
+  .portal-module-card-footer,
+  .portal-dashboard-draft small,
+  .portal-studio-card p,
+  .portal-studio-card .portal-badge,
+  .portal-section-kicker
+) {
+  color: var(--portal-muted);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-action-card-link,
+  .portal-module-card-footer a,
+  .portal-studio-card .portal-open-label
+) {
+  color: var(--portal-action);
+}
+
+@media (min-width: 921px) {
+  .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-header {
+    padding-inline:
+      max(var(--portal-desktop-page-padding), calc((100% - var(--portal-content-max-width)) / 2 + var(--portal-desktop-page-padding)));
+  }
+}
+
+.portal-shell--auth .portal-main {
+  width: min(100%, 1180px);
+  max-width: 1180px;
+}
+
+.portal-auth-page--access {
+  width: min(100%, 1180px);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "header" "content";
+  row-gap: clamp(28px, 4vw, 52px);
+  padding: clamp(28px, 4vw, 52px) 0 clamp(48px, 7vw, 80px);
+}
+
+.portal-auth-page--access .portal-auth-shell {
+  display: grid;
+  grid-area: content;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+  grid-template-areas: "intro card";
+  align-items: start;
+  gap: clamp(48px, 7vw, 104px);
+}
+
+.portal-auth-page--access .portal-auth-intro {
+  justify-items: start;
+  gap: 18px;
+  max-width: 500px;
+  padding-top: clamp(20px, 4vw, 58px);
+  text-align: left;
+}
+
+.portal-auth-page--access .portal-auth-intro .portal-title {
+  max-width: 14ch;
+  font-size: clamp(38px, 4vw, 56px);
+  letter-spacing: -.05em;
+}
+
+.portal-auth-page--access .portal-auth-intro .portal-description {
+  max-width: 42ch;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.portal-auth-context {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 420px);
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-soft);
+}
+
+.portal-auth-context-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 12px;
+  color: var(--portal-action);
+  background: var(--portal-surface-light);
+}
+
+.portal-auth-context-icon .portal-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.portal-auth-context-kicker {
+  margin: 0;
+  color: var(--portal-action);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.portal-auth-context-title {
+  margin: -6px 0 0;
+  color: var(--portal-ink);
+  font-size: 20px;
+  font-weight: 760;
+  line-height: 1.32;
+}
+
+.portal-auth-context-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  list-style: none;
+}
+
+.portal-auth-context-list li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.portal-auth-context-list li::before {
+  width: 7px;
+  height: 7px;
+  margin-top: .48em;
+  border-radius: 50%;
+  background: var(--portal-brand);
+  content: "";
+}
+
+@media (max-width: 980px) {
+  .portal-shell--auth .portal-main {
+    width: min(100%, 560px);
+    max-width: 560px;
+  }
+
+  .portal-auth-page--access .portal-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "card";
+    gap: 20px;
+  }
+
+  .portal-auth-page--access .portal-auth-intro {
+    justify-items: center;
+    max-width: 480px;
+    padding-top: 0;
+    text-align: center;
+  }
+
+  .portal-auth-context { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2588,4 +2769,185 @@ body {
   .portal-workspace-command-center .portal-dashboard-overview-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Teal–Sky Product Redesign -- final semantic layer. */
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-card-title,
+  .portal-summary-value,
+  .portal-action-card-title,
+  .portal-action-card-count,
+  .portal-module-card-title,
+  .portal-dashboard-draft strong,
+  .portal-studio-card strong,
+  .portal-section-heading h2,
+  .portal-section-heading h3
+) {
+  color: var(--portal-ink);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-card-subtitle,
+  .portal-summary-key,
+  .portal-action-card-body,
+  .portal-action-card-link,
+  .portal-module-card-footer,
+  .portal-dashboard-draft small,
+  .portal-studio-card p,
+  .portal-studio-card .portal-badge,
+  .portal-section-kicker
+) {
+  color: var(--portal-muted);
+}
+
+.portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
+  .portal-action-card-link,
+  .portal-module-card-footer a,
+  .portal-studio-card .portal-open-label
+) {
+  color: var(--portal-action);
+}
+
+@media (min-width: 921px) {
+  .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) .portal-header {
+    padding-inline:
+      max(var(--portal-desktop-page-padding), calc((100% - var(--portal-content-max-width)) / 2 + var(--portal-desktop-page-padding)));
+  }
+}
+
+@media (min-width: 981px) {
+  .portal-shell--auth .portal-main {
+    width: min(100%, 1180px);
+    max-width: 1180px;
+  }
+
+  .portal-auth-page--access {
+    width: min(100%, 1180px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "content";
+    row-gap: clamp(28px, 4vw, 52px);
+    padding: clamp(28px, 4vw, 52px) 0 clamp(48px, 7vw, 80px);
+  }
+
+  .portal-auth-page--access .portal-auth-shell {
+    display: grid;
+    grid-area: content;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+    grid-template-areas: "intro card";
+    align-items: start;
+    gap: clamp(48px, 7vw, 104px);
+  }
+
+  .portal-auth-page--access .portal-auth-intro {
+    justify-items: start;
+    gap: 18px;
+    max-width: 500px;
+    padding-top: clamp(20px, 4vw, 58px);
+    text-align: left;
+  }
+
+  .portal-auth-page--access .portal-auth-intro .portal-title {
+    max-width: 14ch;
+    font-size: clamp(38px, 4vw, 56px);
+    letter-spacing: -.05em;
+  }
+
+  .portal-auth-page--access .portal-auth-intro .portal-description {
+    max-width: 42ch;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .portal-auth-context {
+    display: grid;
+    gap: 14px;
+    width: min(100%, 420px);
+    margin-top: 18px;
+    padding: 20px;
+    border: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius-lg);
+    background: var(--portal-surface-soft);
+  }
+}
+
+.portal-auth-context-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 12px;
+  color: var(--portal-action);
+  background: var(--portal-surface-light);
+}
+
+.portal-auth-context-icon .portal-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.portal-auth-context-kicker {
+  margin: 0;
+  color: var(--portal-action);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.portal-auth-context-title {
+  margin: -6px 0 0;
+  color: var(--portal-ink);
+  font-size: 20px;
+  font-weight: 760;
+  line-height: 1.32;
+}
+
+.portal-auth-context-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  list-style: none;
+}
+
+.portal-auth-context-list li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.portal-auth-context-list li::before {
+  width: 7px;
+  height: 7px;
+  margin-top: .48em;
+  border-radius: 50%;
+  background: var(--portal-brand);
+  content: "";
+}
+
+@media (max-width: 980px) {
+  .portal-shell--auth .portal-main {
+    width: min(100%, 560px);
+    max-width: 560px;
+  }
+
+  .portal-auth-page--access .portal-auth-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "card";
+    gap: 20px;
+  }
+
+  .portal-auth-page--access .portal-auth-intro {
+    justify-items: center;
+    max-width: 480px;
+    padding-top: 0;
+    text-align: center;
+  }
+
+  .portal-auth-context { display: none; }
 }
