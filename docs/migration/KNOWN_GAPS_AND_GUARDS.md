@@ -14,6 +14,18 @@
 
 A guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.
 
+## Community Trust Center command boundary
+
+Only the five exact public Bot commands below may open a fresh signed Web-native, read-only snapshot. No Bot identity, command/callback, pending/menu state, Bot-issued channel URL/configuration, or browser URL/query/action is transferred or replayed. The boundary creates no Bot mutation, bridge/provider/payment/job/asset/notification action or runtime claim.
+
+| Bot command | Web target | Status | Boundary |
+| --- | --- | --- | --- |
+| /community | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /kenh_chinh_thuc | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /official_channels | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+| /toanaas_hub | /community | WEB_NATIVE_READ_ONLY | Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred. |
+
 ## Additive Web-native guard: Video Poster Lab
 
 Video Poster Lab is a Web-owned, bounded private JPEG extraction utility, not

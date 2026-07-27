@@ -109,6 +109,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // prior account's snapshot in Cache Storage, even though it is read-only.
   "/" + "api/v1/guides",
   "/guides",
+  // Community Trust Center follows signed locale and returns a private,
+  // server-checked catalog. Never retain its links after logout, account
+  // switching or a later guarded configuration response.
+  "/" + "api/v1/community",
+  "/community",
   // Content Operations Board projects signed-account summary, activity,
   // references and brief metadata. Keep the canonical page family explicit so
   // a future public-shell expansion cannot replay a prior account's content.

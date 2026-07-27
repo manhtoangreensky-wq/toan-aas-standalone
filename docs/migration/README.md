@@ -101,7 +101,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md) — signed, read-only Guide Center with a closed Web route catalog; it never replays Bot guide commands, callbacks, state or execution.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
-- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.
+- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards and help handoffs.
 - [`FEATURE_CONFIRM_CONTRACT.md`](FEATURE_CONFIRM_CONTRACT.md) — explicit job tracking/confirm contract.
 - [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.
 - [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.

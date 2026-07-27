@@ -312,6 +312,28 @@ COMMAND_ROUTE_OVERRIDES = {
     "cancel": "/jobs",
 }
 
+# The public Community/official-channel commands are a finite, reviewed
+# navigation catalog.  They may start only a fresh signed Web Trust Center
+# snapshot; they do not transfer a Telegram identity, Bot command/callback,
+# pending state, Bot-issued URL/configuration, or browser URL/action.
+COMMUNITY_TRUST_CENTER_ROUTE = "/community"
+COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_COMMANDS = frozenset(
+    {
+        "official_channels",
+        "kenh_chinh_thuc",
+        "hub",
+        "community",
+        "toanaas_hub",
+    }
+)
+COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_DISPOSITIONS = (
+    "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+    "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+    "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+    "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+    "NO_BOT_MUTATION_OR_RUNTIME_CLAIM",
+)
+
 # The signed Web interface preference is deliberately closed to these three
 # reviewed catalogs. Bot language callbacks can set Bot-owned user/menu
 # state, so the finite values below may open only a fresh Web-native interface
@@ -5821,6 +5843,7 @@ def _mapping_status(
     dashboard_fallback: bool = False,
     navigation_entrypoint: bool = False,
     navigation_only: bool = False,
+    web_native_read_only: bool = False,
 ) -> str:
     if telegram_only:
         return "TELEGRAM_ONLY"
@@ -5830,6 +5853,12 @@ def _mapping_status(
         _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
     ):
         return "NAVIGATION_ENTRYPOINT"
+    if web_native_read_only and (
+        _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
+    ):
+        # This is a fresh signed Web snapshot, not a replay of a Bot command,
+        # callback, identity, channel URL/configuration or browser action.
+        return "WEB_NATIVE_READ_ONLY"
     if navigation_only and (
         _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
     ):
@@ -5888,6 +5917,11 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         and name in INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_COMMANDS
     )
     document_navigation_entry = DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS.get(name)
+    community_trust_center_navigation = (
+        not telegram_only
+        and not admin
+        and name in COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_COMMANDS
+    )
     route_override = COMMAND_ROUTE_OVERRIDES.get(name)
     if admin and not telegram_only:
         target = f"/admin/{name}"
@@ -5895,11 +5929,16 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         target = INTERFACE_LOCALE_NAVIGATOR_ROUTE
     elif document_navigation_entry is not None:
         target = str(document_navigation_entry["target"])
+    elif community_trust_center_navigation:
+        target = COMMUNITY_TRUST_CENTER_ROUTE
     else:
         target = route_override or _feature_route(name)
     navigation_entrypoint = not telegram_only and not admin and name in DASHBOARD_ENTRYPOINT_COMMANDS and target == "/dashboard"
     interface_locale_navigation = interface_locale_navigation and target == INTERFACE_LOCALE_NAVIGATOR_ROUTE
     document_navigation = not telegram_only and not admin and document_navigation_entry is not None
+    community_trust_center_navigation = (
+        community_trust_center_navigation and target == COMMUNITY_TRUST_CENTER_ROUTE
+    )
     dashboard_fallback = not telegram_only and not navigation_entrypoint and route_override is None and target == "/dashboard"
     status = _mapping_status(
         target,
@@ -5908,6 +5947,7 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         dashboard_fallback=dashboard_fallback,
         navigation_entrypoint=navigation_entrypoint,
         navigation_only=document_navigation or interface_locale_navigation,
+        web_native_read_only=community_trust_center_navigation,
     )
     if telegram_only:
         resolution = "telegram_only"
@@ -5917,6 +5957,8 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         resolution = "reviewed_interface_locale_fresh_web_navigation"
     elif document_navigation:
         resolution = "reviewed_document_fresh_web_navigation"
+    elif community_trust_center_navigation:
+        resolution = "reviewed_community_trust_center_fresh_web_navigation"
     elif dashboard_fallback:
         resolution = "unreviewed_dashboard_fallback_requires_feature_disposition"
     else:
@@ -5958,6 +6000,23 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
                 "interface_locale_route": INTERFACE_LOCALE_NAVIGATOR_ROUTE,
                 "interface_locale_feature_key": "interface_locale_navigator",
                 "interface_locale_supported_values": ("vi", "en", "zh"),
+            }
+        )
+    if community_trust_center_navigation:
+        mapping.update(
+            {
+                "source_dispositions": COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_DISPOSITIONS,
+                "source_evidence": (
+                    "The public Bot command may only open a fresh signed Web-native Community Trust Center "
+                    "snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, "
+                    "menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. "
+                    "The Web reads only its independently server-validated snapshot and cannot mutate Bot "
+                    "state or claim a runtime action."
+                ),
+                "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+                "community_trust_center_launch_mode": "WEB_NAVIGATION",
+                "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
+                "community_trust_center_route": COMMUNITY_TRUST_CENTER_ROUTE,
             }
         )
     return mapping
@@ -11500,7 +11559,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md) — signed, read-only Guide Center with a closed Web route catalog; it never replays Bot guide commands, callbacks, state or execution.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
         + "- [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.\n"
-        + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.\n"
+        + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards and help handoffs.\n"
         + "- [`FEATURE_CONFIRM_CONTRACT.md`](FEATURE_CONFIRM_CONTRACT.md) — explicit job tracking/confirm contract.\n"
         + "- [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.\n"
         + "- [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.\n"
@@ -12211,6 +12270,25 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         [item["source_kind"], item["source"], item["target"], item["status"]]
         for item in (gap["command_mappings"] + gap["callback_mappings"] + gap.get("callback_template_mappings", []) + gap["conversation_mappings"])[:200]
     ]
+    community_trust_center_command_rows = [
+        [
+            f"/{command}",
+            COMMUNITY_TRUST_CENTER_ROUTE,
+            "WEB_NATIVE_READ_ONLY",
+            "Fresh signed server-validated snapshot; no Bot state, identity, URL/configuration or browser action is transferred.",
+        ]
+        for command in sorted(COMMUNITY_TRUST_CENTER_FRESH_WEB_NAVIGATION_COMMANDS)
+    ]
+    community_trust_center_boundary = (
+        "## Community Trust Center command boundary\n\n"
+        "Only the five exact public Bot commands below may open a fresh signed Web-native, read-only snapshot. "
+        "No Bot identity, command/callback, pending/menu state, Bot-issued channel URL/configuration, or browser URL/query/action "
+        "is transferred or replayed. The boundary creates no Bot mutation, bridge/provider/payment/job/asset/notification action or runtime claim.\n\n"
+        + _markdown_table(
+            ["Bot command", "Web target", "Status", "Boundary"],
+            community_trust_center_command_rows,
+        )
+    )
     write(
         "parity-matrix.md",
         "# Parity matrix\n\n"
@@ -12219,7 +12297,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         f"Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). "
         f"Product-action denominator: `{int(metric_scope.get('product_action_denominator') or 0)}`; excluded Telegram transport registrations: `{int(metric_scope.get('excluded_telegram_transport_handlers') or 0)}`; excluded unreferenced `handlers/` package records: `{int(metric_scope.get('excluded_unreferenced_handler_package_records') or 0)}`. **Comparability: `{coverage_comparability.get('status') or 'NOT_AUDITED'}` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows or [["None discovered", "", "", ""]])
-        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.\n",
+        + "\n\n"
+        + community_trust_center_boundary
+        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY` and `WEB_NATIVE_READ_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.\n",
     )
     fallback_rows = [
         [
@@ -12254,6 +12334,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "| --- | --- | --- |\n"
         "| `/api/v1/video-operations/*` (not yet a public catalogue route) | Signed Web account + private Asset Vault source | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded JPEG poster utility; no Bot/provider/PayOS/wallet delegation and no claim that existing `/video/*` Bot companion routes render media. It stays outside the public registry until the dedicated signed workbench is implemented in the broader video navigation/UI phase. |\n\n"
         + _markdown_table(["Telegram command", "Web route/action", "Status"], route_rows or [["None discovered", "", ""]])
+        + "\n\n"
+        + community_trust_center_boundary
         + "\n",
     )
     bot_tables = set(bot["database_tables"])
@@ -12375,6 +12457,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# Known gaps from static audit\n\n"
         + _markdown_table(["Area", "Severity", "Count", "Finding"], gap_rows)
         + "\n\nThese are static findings. Resolve each through contracts and tests before marking a Web App flow complete.\n\n"
+        + community_trust_center_boundary
+        + "\n\n"
         + "## Additive Web-native guard: Video Poster Lab\n\n"
         + "Video Poster Lab is intentionally outside the static Telegram mapping counts: it\n"
         + "is a Web-owned utility, not a replacement for a Telegram command. Its code and\n"
@@ -12415,12 +12499,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# Feature parity matrix\n\n"
         f"Observed-runtime static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%**. Observed-runtime typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**. Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). Product-action denominator: `{int(metric_scope.get('product_action_denominator') or 0)}`. **Comparability: `{coverage_comparability.get('status') or 'NOT_AUDITED'}` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows)
-        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.\n",
+        + "\n\n"
+        + community_trust_center_boundary
+        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `WEB_NATIVE_READ_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.\n",
     )
     write(
         "TELEGRAM_TO_WEB_ROUTE_MAP.md",
         "# Telegram command and callback to Web route map\n\n"
         + _markdown_table(["Telegram command", "Web route/action", "Status"], route_rows)
+        + "\n\n"
+        + community_trust_center_boundary
         + "\n\n`TELEGRAM_ONLY` entries stay documented rather than becoming unsafe browser actions.\n",
     )
     write(
@@ -12506,6 +12594,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# Known gaps and guards\n\n"
         + _markdown_table(["Area", "Severity", "Count", "Finding"], gap_rows)
         + "\n\nA guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.\n\n"
+        + community_trust_center_boundary
+        + "\n\n"
         + "## Additive Web-native guard: Video Poster Lab\n\n"
         + "Video Poster Lab is a Web-owned, bounded private JPEG extraction utility, not\n"
         + "a Telegram command mapping. Its route, schema and read-model integration do\n"

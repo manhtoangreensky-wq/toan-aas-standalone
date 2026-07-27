@@ -9,7 +9,7 @@ their own signed customer routes:
 | `/reminders` | Bot reference: `/reminders`, `/remind` | Web-owned one-time/recurring reminder state; no Telegram/email/push delivery claim and no Bot reminder mutation. |
 | `/referrals` | `/referral`, `/ref` | Referral identity, links and rewards remain canonical in Bot. |
 | `/rewards` | `/gift`, `/promos`, `/birthday` | Gift/promo/birthday eligibility and Xu effects remain Bot state. |
-| `/community` | `/community`, `/official_channels` | Bot publishes community/channel information. |
+| `/community` | `/community`, `/official_channels`, `/kenh_chinh_thuc`, `/hub`, `/toanaas_hub` | Signed Web-native Trust Center uses a fresh server-validated, read-only catalog; it never replays Bot state, identity or URL/configuration. |
 | `/guides` | Bot reference: `/menu`, `/guide`, `/help` | Signed Web-native Guide Center is a static navigation catalog. It never replays Bot commands, child callbacks, conversation or identity state. |
 | `/account` | `/language`, `/mode`, `/profile`, `/mydata`, `/data_delete` | Web-owned profile metadata stays separate; data-deletion policy and confirmation remain in Bot. |
 | `/support`, `/tickets`, `/admin/support` | Bot reference: `/support`, `/tickets`, `/ticket_status`, `/support_tickets` | Web-owned Support Desk cases, private timeline and staff triage; never reads/writes Bot ticket tables, Telegram attachments or notifications. |
@@ -26,13 +26,16 @@ All remaining Bot-companion routes require the normal signed Web session and
 linked Telegram identity before they render. They receive only public
 `BOT_USERNAME` metadata from the safe Telegram connection-status endpoint,
 then offer a user-initiated `https://t.me/<BOT_USERNAME>` handoff and an
-allowlisted command copy action. `/notes`, `/reminders` and `/guides` are
-the explicit Web-native exceptions: they require a signed Web session but not
-a Telegram link. Notes/reminders call only the owner-scoped Web Memory API
+allowlisted command copy action. `/notes`, `/reminders`, `/guides` and
+`/community` are the explicit Web-native exceptions: they require a signed
+Web session but not a Telegram link. Notes/reminders call only the owner-scoped Web Memory API
 documented in [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md);
 Guide Center is the read-only, closed navigation catalog documented in
-[`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md). `/support`
-and `/tickets` are a second explicit exception: they are handled by the
+[`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md). Community
+Trust Center is the independently server-validated, read-only channel catalog
+documented in [`KNOWN_GAPS_AND_GUARDS.md`](KNOWN_GAPS_AND_GUARDS.md); it
+never imports a Bot identity, command, callback, channel URL or configuration.
+`/support` and `/tickets` are a second explicit exception: they are handled by the
 owner-scoped Web Support Desk documented in
 [`WEB_SUPPORT_DESK_CONTRACT.md`](WEB_SUPPORT_DESK_CONTRACT.md), not a Bot
 handoff or a ticket-table mirror.
@@ -57,8 +60,8 @@ ambiguous destination.
 This is an intentional product boundary: the Web dashboard makes all
 discoverable workflows visible, while the Telegram Bot remains the fast,
 conversation-first interface for the remaining Bot-owned operations.
-Memory Center and Support Desk are feature-specific Web-native contracts
-rather than Bot handoffs. Memory AI classification/billing quota/actual
+Memory Center, Community Trust Center and Support Desk are feature-specific
+Web-native contracts rather than Bot handoffs. Memory AI classification/billing quota/actual
 notification delivery remain guarded; Support Desk similarly does not send
 notifications, accept payment proofs, issue refunds or create a provider/job
 outcome until a separately designed adapter exists.

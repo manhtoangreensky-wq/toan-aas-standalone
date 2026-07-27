@@ -65324,15 +65324,27 @@
     },
     {
       "classification": "customer",
+      "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+      "community_trust_center_launch_mode": "WEB_NAVIGATION",
+      "community_trust_center_route": "/community",
+      "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
       "evidence": {
         "file": "bot.py",
         "line": 128387
       },
       "handler": "cmd_hub",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_community_trust_center_fresh_web_navigation",
       "source": "/community",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+        "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+        "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+        "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+        "NO_BOT_MUTATION_OR_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The public Bot command may only open a fresh signed Web-native Community Trust Center snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. The Web reads only its independently server-validated snapshot and cannot mutate Bot state or claim a runtime action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "WEB_NATIVE_READ_ONLY",
       "target": "/community"
     },
     {
@@ -66427,15 +66439,27 @@
     },
     {
       "classification": "customer",
+      "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+      "community_trust_center_launch_mode": "WEB_NAVIGATION",
+      "community_trust_center_route": "/community",
+      "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
       "evidence": {
         "file": "bot.py",
         "line": 128386
       },
       "handler": "cmd_hub",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_community_trust_center_fresh_web_navigation",
       "source": "/hub",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+        "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+        "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+        "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+        "NO_BOT_MUTATION_OR_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The public Bot command may only open a fresh signed Web-native Community Trust Center snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. The Web reads only its independently server-validated snapshot and cannot mutate Bot state or claim a runtime action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "WEB_NATIVE_READ_ONLY",
       "target": "/community"
     },
     {
@@ -66816,15 +66840,27 @@
     },
     {
       "classification": "customer",
+      "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+      "community_trust_center_launch_mode": "WEB_NAVIGATION",
+      "community_trust_center_route": "/community",
+      "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
       "evidence": {
         "file": "bot.py",
         "line": 128385
       },
       "handler": "cmd_official_channels",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_community_trust_center_fresh_web_navigation",
       "source": "/kenh_chinh_thuc",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+        "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+        "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+        "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+        "NO_BOT_MUTATION_OR_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The public Bot command may only open a fresh signed Web-native Community Trust Center snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. The Web reads only its independently server-validated snapshot and cannot mutate Bot state or claim a runtime action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "WEB_NATIVE_READ_ONLY",
       "target": "/community"
     },
     {
@@ -68044,15 +68080,27 @@
     },
     {
       "classification": "customer",
+      "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+      "community_trust_center_launch_mode": "WEB_NAVIGATION",
+      "community_trust_center_route": "/community",
+      "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
       "evidence": {
         "file": "bot.py",
         "line": 128384
       },
       "handler": "cmd_official_channels",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_community_trust_center_fresh_web_navigation",
       "source": "/official_channels",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+        "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+        "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+        "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+        "NO_BOT_MUTATION_OR_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The public Bot command may only open a fresh signed Web-native Community Trust Center snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. The Web reads only its independently server-validated snapshot and cannot mutate Bot state or claim a runtime action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "WEB_NATIVE_READ_ONLY",
       "target": "/community"
     },
     {
@@ -71448,15 +71496,27 @@
     },
     {
       "classification": "customer",
+      "community_trust_center_authority": "SIGNED_WEB_NATIVE_READ_ONLY",
+      "community_trust_center_launch_mode": "WEB_NAVIGATION",
+      "community_trust_center_route": "/community",
+      "community_trust_center_snapshot_mode": "SERVER_VALIDATED_READ_ONLY_SNAPSHOT",
       "evidence": {
         "file": "bot.py",
         "line": 128388
       },
       "handler": "cmd_hub",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_community_trust_center_fresh_web_navigation",
       "source": "/toanaas_hub",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_COMMUNITY_TRUST_CENTER_READ_ONLY",
+        "BOT_COMMAND_AND_CALLBACK_STATE_NOT_REPLAYED",
+        "NO_BOT_IDENTITY_OR_URL_CONFIGURATION_TRANSFER",
+        "NO_BROWSER_URL_QUERY_OR_ACTION_TRANSFER",
+        "NO_BOT_MUTATION_OR_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The public Bot command may only open a fresh signed Web-native Community Trust Center snapshot. It does not receive a Telegram/Bot identity, Bot command or callback value, menu/pending state, Bot-issued channel URL/configuration, or browser URL/query/action. The Web reads only its independently server-validated snapshot and cannot mutate Bot state or claim a runtime action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "WEB_NATIVE_READ_ONLY",
       "target": "/community"
     },
     {
@@ -75014,11 +75074,12 @@
   },
   "mapping_coverage_percent": 72.79,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1574,
+    "COPIED_GUARDED": 1569,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 809,
     "NEEDS_FEATURE_DISPOSITION": 1103,
-    "TELEGRAM_ONLY": 565
+    "TELEGRAM_ONLY": 565,
+    "WEB_NATIVE_READ_ONLY": 5
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -75057,7 +75118,7 @@
     "unresolved_callback_templates": 332,
     "unresolved_source_count": 1103
   },
-  "static_web_surface_coverage_percent": 38.84,
+  "static_web_surface_coverage_percent": 38.71,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
