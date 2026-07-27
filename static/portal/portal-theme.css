@@ -2815,7 +2815,7 @@ body {
   }
 }
 
-@media (min-width: 981px) {
+@media (min-width: 1081px) {
   .portal-shell--auth .portal-main {
     width: min(100%, 1180px);
     max-width: 1180px;
@@ -2929,7 +2929,7 @@ body {
   content: "";
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .portal-shell--auth .portal-main {
     width: min(100%, 560px);
     max-width: 560px;
@@ -2950,4 +2950,20 @@ body {
   }
 
   .portal-auth-context { display: none; }
+}
+
+@media (max-width: 380px) {
+  .portal-auth-page--access .portal-auth-header { gap: 6px; }
+  .portal-auth-page--access .portal-auth-brand > span:last-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
 }
