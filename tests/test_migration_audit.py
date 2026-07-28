@@ -3235,17 +3235,21 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     assert not any(prefix in {"support|", "ticket|", "feedback|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
 
     customer_identifiers = (
-        "support|start",
-        "support|ticket",
         "support|premium_type|business",
         "support|consult_need|video|0",
-        "ticket|start",
         "ticket|cat|refund",
-        "ticket|mine",
         "ticket|pv|42",
         "ticket|reply_user|42",
         "ticket|done|42",
         "ticket|attach|42",
+        "SUPPORT|START",
+        "support|start|future",
+        "support|consult|video",
+        "support|premium|business",
+        "support|admin_contact|future",
+        "ticket|start|future",
+        "support|ticket|42",
+        "ticket|mine|future",
         "SUPPORT|TICKET",
         "ticket|pv|42|future",
         "support|future|opaque",
@@ -3259,6 +3263,40 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapped["source_dispositions"]
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
+
+    # Only these exact Support/Ticket menu entries may begin fresh signed Web
+    # navigation. The opaque audit intent neither forwards Bot data nor
+    # preselects a category, fetches a Bot ticket, or creates a Web case.
+    support_ticket_navigation = {
+        "support|start": {"target": "/support", "web_support_ticket_intent": "web_support_start"},
+        "support|consult": {"target": "/support", "web_support_ticket_intent": "web_support_consultation"},
+        "support|premium": {"target": "/support", "web_support_ticket_intent": "web_support_premium_consultation"},
+        "support|admin_contact": {"target": "/support", "web_support_ticket_intent": "web_support_admin_contact"},
+        "ticket|start": {"target": "/support", "web_support_ticket_intent": "web_support_ticket_start"},
+        "support|ticket": {"target": "/support", "web_support_ticket_intent": "web_support_ticket_create"},
+        "ticket|mine": {"target": "/tickets", "web_support_ticket_intent": "web_ticket_history"},
+    }
+    assert audit.SUPPORT_TICKET_FRESH_WEB_NAVIGATION_ACTIONS == support_ticket_navigation
+    expected_support_ticket_dispositions = {
+        "FRESH_SIGNED_WEB_SUPPORT_TICKET_NAVIGATION",
+        "FINITE_BOT_SUPPORT_TICKET_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_TICKET_TO_BROWSER",
+        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE_NOT_REPLAYED",
+        "BOT_TICKET_LEAD_ATTACHMENT_ADMIN_OR_TELEGRAM_DELIVERY_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_SUPPORT_CASES_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    }
+    for identifier, action in support_ticket_navigation.items():
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == action["target"]
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_support_ticket_fresh_web_navigation"
+        assert mapped["support_ticket_navigation_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
+        assert mapped["support_ticket_navigation_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["web_support_ticket_intent"] == action["web_support_ticket_intent"]
+        assert set(mapped["source_dispositions"]) == expected_support_ticket_dispositions
 
     # Only the finite feedback keyboard entries can start a fresh Web-native
     # Support Desk form. The opaque Web audit intent is not a query/form/API
@@ -3299,6 +3337,8 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     from copyfast_registry import menu_capability_catalog
 
     public_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    for identifier in support_ticket_navigation:
+        assert identifier not in public_catalog
     for identifier in feedback_navigation:
         assert identifier not in public_catalog
 
@@ -3345,8 +3385,11 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY" in mapped["source_dispositions"]
 
     for template, classification in (
+        ("support|consult|{*}", "customer"),
+        ("support|ticket|{*}", "customer"),
         ("support|premium_type|{*}", "customer"),
         ("support|consult_need|{*}|{*}", "customer"),
+        ("ticket|mine|{*}", "customer"),
         ("ticket|pv|{*}", "customer"),
         ("ticket|reply_user|{*}", "customer"),
         ("ticket|st|{*}|{*}", "admin"),
@@ -3369,9 +3412,18 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     (bot_root / "bot.py").write_text(
         '''
 def support_ticket_keyboard(ticket_id, service_type, admin_kind):
+    InlineKeyboardButton("support start", callback_data="support|start")
+    InlineKeyboardButton("support consult", callback_data="support|consult")
+    InlineKeyboardButton("support premium", callback_data="support|premium")
+    InlineKeyboardButton("support admin contact", callback_data="support|admin_contact")
+    InlineKeyboardButton("ticket start", callback_data="ticket|start")
     InlineKeyboardButton("support", callback_data="support|ticket")
+    InlineKeyboardButton("ticket mine", callback_data="ticket|mine")
     InlineKeyboardButton("consult", callback_data=f"support|consult_need|{service_type}|0")
+    InlineKeyboardButton("consult suffix", callback_data=f"support|consult|{service_type}")
+    InlineKeyboardButton("support ticket suffix", callback_data=f"support|ticket|{ticket_id}")
     InlineKeyboardButton("ticket", callback_data=f"ticket|pv|{ticket_id}")
+    InlineKeyboardButton("ticket mine suffix", callback_data=f"ticket|mine|{ticket_id}")
     InlineKeyboardButton("attachment", callback_data=f"ticket|attach|{ticket_id}")
     InlineKeyboardButton("status", callback_data=f"ticket|st|{ticket_id}|refund_pending")
     InlineKeyboardButton("admin", callback_data=f"ticket|{admin_kind}|{ticket_id}")
@@ -3386,7 +3438,13 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
     callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
     templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
-    assert callbacks["support|ticket"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    for identifier, action in support_ticket_navigation.items():
+        assert callbacks[identifier]["target"] == action["target"]
+        assert callbacks[identifier]["resolution"] == "reviewed_support_ticket_fresh_web_navigation"
+        assert callbacks[identifier]["web_support_ticket_intent"] == action["web_support_ticket_intent"]
+    assert templates["support|consult|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["support|ticket|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["ticket|mine|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["support|consult_need|{*}|0"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|pv|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|attach|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
@@ -3402,11 +3460,14 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert "ticket\\|*" in contract
     assert "feedback\\|*" in contract
     assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
+    assert "reviewed_support_ticket_fresh_web_navigation" in contract
+    assert "seven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions" in contract
+    assert "no category preselection, Bot ticket fetch, or case creation from the Bot entry" in contract
     assert "feedback\\|cat\\|refund" in feedback_contract
     assert "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER" in feedback_contract
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "FEEDBACK_MENU_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
-    assert "The sole exception is the nine exact Feedback entry literals" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "seven exact Support/Ticket entry literals plus nine Feedback literals" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
 
 
