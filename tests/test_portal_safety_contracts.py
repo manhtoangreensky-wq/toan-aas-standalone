@@ -362,7 +362,9 @@ def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> No
     # only from the signed, server-issued module projection.
     assert "erp.groups.forEach((group) =>" in PORTAL
     assert "serverAuthorizesAdminRoute(context, page.routePath || page.path)" in PORTAL
-    assert '["/video/create", "Video", ICONS.video]' in PORTAL
+    # Video remains a catalog/deep-link workflow; the compact customer rail
+    # must not promote it as a permanent shortcut outside Video Studio.
+    assert 'featurePage("/video/create", "Video nhanh"' in PORTAL
 
 
 def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_readiness() -> None:
@@ -1472,7 +1474,8 @@ def test_dashboard_uses_an_application_workspace_shell_with_owner_scoped_drafts(
     assert 'class="portal-dashboard-overview"' in PORTAL
     assert 'class="portal-dashboard-draft-list"' in PORTAL
     assert 'class="portal-sidebar-create" href="/features"' in PORTAL
-    assert 'label: "Bot companion"' in PORTAL
+    assert 'botCompanionPage("/referrals", "Giới thiệu"' in PORTAL
+    assert 'label: "Bot companion"' not in PORTAL
     assert 'label: "Workspace"' in PORTAL
     assert '["/workspace", "/dashboard"].includes(currentPath)' in INTEGRATION
     for selector in (".portal-dashboard-overview", ".portal-dashboard-draft", ".portal-sidebar-create"):

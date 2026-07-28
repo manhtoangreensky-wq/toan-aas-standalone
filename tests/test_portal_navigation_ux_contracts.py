@@ -49,22 +49,24 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
-    # The permanent default is intentionally small; all non-core groups open
-    # automatically only for their active route family and remain reachable
-    # via their native disclosure summary or the command palette.
+    # The permanent default is intentionally small. Video is the one deep
+    # workspace that retains its established contextual disclosure tree; the
+    # general customer catalogue stays in `/features` and the command palette.
     assert 'label: "Workspace", defaultOpen: true' in navigation
     for group in (
-        "Nội dung & kế hoạch",
-        "AI Labs & Media",
         "Video Studio",
         "Video Studio · Ý tưởng & kịch bản",
         "Video Studio · Phim & storyboard",
         "Video Studio · Tư liệu & chuyển động",
     ):
         assert f'label: "{group}"' in navigation
+    assert 'label: "Nội dung & kế hoạch"' not in navigation
+    assert 'label: "AI Labs & Media"' not in navigation
     assert "const videoStudioNavGroups = [" in navigation
     assert "groups.splice(3, 0, ...videoStudioNavGroups);" in navigation
-    assert '<details class="portal-nav-group"${open ? " open" : ""}>' in sidebar
+    assert 'if (matchesRouteFamily(currentRoute, "/video-studio")) {' in navigation
+    assert 'if (currentRoute === "/admin" || currentRoute.startsWith("/admin/")) {' in navigation
+    assert '<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>' in sidebar
     assert 'const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);' in sidebar
     assert 'class="portal-nav-summary"' in sidebar
     assert ".portal-nav-summary" in css

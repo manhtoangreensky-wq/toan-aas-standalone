@@ -9077,36 +9077,38 @@
     );
   }
 
+  function currentCustomerWorkflowGroup(currentPage, groups) {
+    const route = safeCatalogRoute(currentPage && (currentPage.routePath || currentPage.path));
+    const currentRoute = normalizePath(route);
+    if (!route || currentRoute === "/admin" || currentRoute.startsWith("/admin/") || matchesRouteFamily(currentRoute, "/video-studio")) return null;
+    if (groups.some((group) => group.links.some(([path]) => isNavCurrent(path, currentPage)))) return null;
+    const title = String(currentPage && currentPage.title || "").trim().slice(0, 96);
+    if (!title) return null;
+    return {
+      label: "Đang mở", defaultOpen: true, current: true,
+      links: [[route, title, ICONS.prompt]]
+    };
+  }
+
   function navGroups(context, currentPage) {
+    const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
         label: "Workspace", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/workspace-menu", "Chuyển workspace", ICONS.dashboard], ["/starter-kits", "Starter Kits", ICONS.package], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets]
-        ]
-      },
-      {
-        label: "Nội dung & kế hoạch",
-        links: [
-          ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/free-prompt-gallery", "Prompt Gallery miễn phí", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/content/channel-strategy", "Channel Strategy", ICONS.prompt], ["/content/handoffs", "Content Handoff", ICONS.prompt], ["/crm/leads", "Partner & Lead CRM", ICONS.support], ["/content/prompt-pack", "Content Prompt Pack", ICONS.prompt], ["/content/publish-review", "Gói review trước khi đăng", ICONS.prompt], ["/content/contextual-prompt", "Contextual Ad Prompt", ICONS.prompt], ["/trend-research", "Trend Research", ICONS.reports], ["/media-factory", "Media Factory", ICONS.video], ["/creative-flow", "Creative Flow", ICONS.prompt], ["/guides/source-rights", "Nguồn & quyền", ICONS.security], ["/analytics", "Analytics Workspace", ICONS.reports], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
-        ]
-      },
-      {
-        label: "AI Labs & Media",
-        links: [
-          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-hub", "Image Operations Hub", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/media-workspace/sfx-cue-sheet", "SFX Cue Sheet", ICONS.music], ["/audio/assets", "Audio Asset Operations", ICONS.music]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system]
         ]
       },
       {
         label: "Tạo mới",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/image/create", "Image", ICONS.image], ["/video/create", "Video", ICONS.video], ["/voice/tts", "Voice & Music", ICONS.voice], ["/subtitle", "Ngôn ngữ & Docs", ICONS.subtitle]
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
         ]
       },
       {
         label: "Công việc",
         links: [
-          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
+          ["/workspace", "Bản nháp", ICONS.prompt], ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets], ["/asset-vault", "Asset Vault", ICONS.assets], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -9118,16 +9120,12 @@
       {
         label: "Tài khoản & hỗ trợ",
         links: [
-          ["/account", "Tài khoản", ICONS.account], ["/account/interface-language", "Ngôn ngữ giao diện", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/guides", "Guide Center", ICONS.legal], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
-        ]
-      },
-      {
-        label: "Bot companion",
-        links: [
-          ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support]
+          ["/account", "Tài khoản", ICONS.account], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support]
         ]
       }
     ];
+    const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
+    if (currentGroup) groups.unshift(currentGroup);
     // Video Studio has grown into a production-planning workspace.  Keep it
     // separate from general-purpose tools so the navigation stays scannable
     // and every planner is discoverable exactly once. These are authoring
@@ -9172,16 +9170,20 @@
         ]
       }
     ];
-    groups.splice(3, 0, ...videoStudioNavGroups);
+    if (matchesRouteFamily(currentRoute, "/video-studio")) {
+      groups.splice(3, 0, ...videoStudioNavGroups);
+    }
     const erp = adminErpNavigation(context);
     // A support operator is deliberately not promoted to canonical admin. The
     // API returns only the module routes its server-side authority permits.
-    erp.groups.forEach((group) => {
-      groups.push({
-        label: `ERP · ${group.title}`,
-        links: group.modules.map((module) => [module.route, module.title, module.icon])
+    if (currentRoute === "/admin" || currentRoute.startsWith("/admin/")) {
+      erp.groups.forEach((group) => {
+        groups.push({
+          label: `ERP · ${group.title}`,
+          links: group.modules.map((module) => [module.route, module.title, module.icon])
+        });
       });
-    });
+    }
     return groups;
   }
 
@@ -9385,7 +9387,7 @@
       // screen-reader accessible; the active family always expands, while
       // the five core Workspace destinations remain open for new customers.
       const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);
-      return `<details class="portal-nav-group"${open ? " open" : ""}>
+      return `<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>
         <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(localizedNavigationLabel(group.label))}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
         <div class="portal-nav-links">${links}</div>
       </details>`;

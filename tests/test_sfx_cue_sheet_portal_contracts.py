@@ -292,15 +292,15 @@ def test_sfx_cue_sheet_keeps_unsent_edits_stale_across_remount_without_storage_o
 def test_sfx_cue_sheet_has_a_clear_audio_workspace_entry_and_readable_review_copy() -> None:
     """Keep this bounded tool discoverable without disguising it as a library.
 
-    The parent workspace and side navigation are the two customer-facing entry
-    points.  The second assertion protects task-critical cue/review text from
-    being reduced back to decorative metadata sizes on the dark app surface.
+    The parent workspace and manifest-backed command palette are the customer
+    entry points. The second assertion protects task-critical cue/review text
+    from being reduced back to decorative metadata sizes on the dark app
+    surface.
     """
 
-    navigation_start = PORTAL.index('label: "AI Labs & Media"')
-    navigation_end = PORTAL.index('label: "Tạo mới"', navigation_start)
-    navigation = PORTAL[navigation_start:navigation_end]
-    assert '["/media-workspace/sfx-cue-sheet", "SFX Cue Sheet", ICONS.music]' in navigation
+    palette = _function_block(PORTAL, "commandPaletteItems")
+    assert 'customerPage("/media-workspace/sfx-cue-sheet", "SFX Cue Sheet"' in PORTAL
+    assert "Object.values(manifest)" in palette
 
     workspace = _function_block(PORTAL, "renderMediaWorkspace")
     assert "Công cụ biên tập nhanh" in workspace
