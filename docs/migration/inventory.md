@@ -2,11 +2,11 @@
 
 | Area | Bot | Web App |
 | --- | --- | --- |
-| Source files scanned | 172 | 187 |
+| Source files scanned | 172 | 190 |
 | Noncanonical Bot drafts excluded | 4 | n/a |
 | Commands | 773 | n/a |
 | Callback handler registrations | 54 | Dispatcher evidence only; not a user-action parity claim |
-| Callback-data values | 2862 | n/a |
+| Callback-data values | 2865 | n/a |
 | Legacy handlers/ package records outside observed runtime | 57 | Evidence only; excluded from product-action coverage |
 | Unresolved callback templates | 475 | n/a |
 | Conversation handlers | 0 | n/a |

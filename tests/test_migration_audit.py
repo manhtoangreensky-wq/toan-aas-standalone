@@ -337,6 +337,17 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     workflow_coverage = f"{float(parity_gap['workflow_equivalence']['coverage_percent']):g}"
     assert f"`{parity_gap['workflow_equivalence']['status']}` ({workflow_coverage}%)" in evidence
 
+    audit = _load_audit_module()
+    imgtool_navigation_mappings = [
+        mapping
+        for mapping in parity_gap["callback_mappings"]
+        if mapping["resolution"] == "reviewed_imgtool_fresh_web_navigation"
+    ]
+    assert {mapping["source"] for mapping in imgtool_navigation_mappings} == set(
+        audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS
+    )
+    assert all(mapping["status"] == "NAVIGATION_ONLY" for mapping in imgtool_navigation_mappings)
+
 
 def test_webapp_quality_workflow_uses_current_migration_audit_smoke_name() -> None:
     """The bounded CI suite must track the renamed Finance authority test."""
@@ -3151,13 +3162,63 @@ def provider_keyboard(uid):
 
 
 def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
-    """Telegram Image Tools state must never become a generic `/image` action."""
+    """Only exact Image Tools pickers may begin a fresh Web-native tool."""
 
     audit = _load_audit_module()
-    routes = {"/image", "/wallet/topup", "/jobs", "/{page_path:path}"}
+    routes = {
+        "/image",
+        "/image/prompt-composer",
+        "/image/edit",
+        "/image/resize",
+        "/image/brand-overlay",
+        "/wallet/topup",
+        "/jobs",
+        "/{page_path:path}",
+    }
     evidence = {"file": "bot.py", "line": 1}
 
     assert not any(prefix == "imgtool|" for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    imgtool_navigation = {
+        "imgtool|prompt_manual": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|edit_need_image": ("/image/edit", "web_image_enhance"),
+        "imgtool|resize_need_image": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_task|ratio": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_task|pixels": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_method|blur": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_method|pad": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_method|crop": ("/image/resize", "web_image_resize"),
+        "imgtool|editor_resize": ("/image/resize", "web_image_resize"),
+        "imgtool|editor_presets": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_preset|photo_clear_detail": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_preset|product_clean": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_preset|cinematic_warm": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_preset|fresh_blue": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_preset|food_vivid": ("/image/edit", "web_image_enhance"),
+        "imgtool|editor_overlays": ("/image/brand-overlay", "web_image_brand_overlay"),
+        "imgtool|editor_text": ("/image/brand-overlay", "web_image_brand_overlay"),
+        "imgtool|editor_logo": ("/image/brand-overlay", "web_image_brand_overlay"),
+    }
+    expected_navigation_dispositions = {
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM",
+    }
+    assert set(audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS) == set(imgtool_navigation)
+    for identifier, (target, intent) in imgtool_navigation.items():
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == target
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_imgtool_fresh_web_navigation"
+        assert mapped["imgtool_navigation_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
+        assert mapped["imgtool_navigation_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["web_image_tool_intent"] == intent
+        assert set(mapped["source_dispositions"]) == expected_navigation_dispositions
 
     for identifier in (
         "imgtool|",
@@ -3165,8 +3226,12 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "imgtool|prompt_use",
         "imgtool|prompt_tier|basic",
         "imgtool|edit_ai",
-        "imgtool|resize_method|pad",
-        "imgtool|editor_preset|photo_clear_detail",
+        "imgtool|ai_upscale_start",
+        "imgtool|edit_from_last",
+        "imgtool|editor_save",
+        "IMGTOOL|EDITOR_RESIZE",
+        "imgtool|resize_method|pad|future",
+        "imgtool|editor_preset|future",
         "IMGTOOL|PROMPT_NEED_IMAGE",
         "imgtool|prompt_tier|basic|future",
         "imgtool|future|opaque",
@@ -3183,6 +3248,8 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
     for template in (
         "imgtool|prompt_tier|{*}",
         "imgtool|resize_ratio|{*}",
+        "imgtool|resize_method|{*}",
+        "imgtool|editor_preset|{*}",
         "imgtool|prompt_confirm_change|{*}",
         "IMGTOOL|PROMPT_TIER|{*}",
         "imgtool|prompt_tier|{*}|future",
@@ -3196,23 +3263,65 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
 
     bot_root = tmp_path / "bot"
     bot_root.mkdir()
-    (bot_root / "bot.py").write_text(
-        '''
-def image_tools_keyboard(tier, ratio, token):
+    bot_source = '''
+def image_tools_keyboard(
+    tier,
+    ratio,
+    token,
+    back_callback="imgtool|editor_overlays",
+    unreviewed_back_callback="imgtool|editor_overlays_future",
+):
     InlineKeyboardButton("prompt", callback_data="imgtool|prompt_need_image")
+    InlineKeyboardButton("manual prompt", callback_data="imgtool|prompt_manual")
+    InlineKeyboardButton("edit image", callback_data="imgtool|edit_need_image")
+    InlineKeyboardButton("resize image", callback_data="imgtool|resize_task|ratio")
+    InlineKeyboardButton("resize method", callback_data="imgtool|resize_method|pad")
+    InlineKeyboardButton("preset", callback_data="imgtool|editor_preset|photo_clear_detail")
+    InlineKeyboardButton("overlay", callback_data="imgtool|editor_logo")
     InlineKeyboardButton("tier", callback_data=f"imgtool|prompt_tier|{tier}")
     InlineKeyboardButton("ratio", callback_data=f"imgtool|resize_ratio|{ratio}")
     InlineKeyboardButton("confirm", callback_data=f"imgtool|prompt_confirm_change|{token}")
     InlineKeyboardButton("edit", callback_data="imgtool|edit_ai")
-''',
+    InlineKeyboardButton("back", callback_data=back_callback)
+    InlineKeyboardButton("unreviewed back", callback_data=unreviewed_back_callback)
+
+
+def nested_image_tools_keyboard(back_callback="imgtool|editor_text"):
+    def nested_keyboard():
+        InlineKeyboardButton("nested back", callback_data=back_callback)
+'''
+    # The frozen Bot exceeds MAX_AST_PARSE_BYTES, so exercise the bounded
+    # source-only path that must recognize this reviewed default callback.
+    (bot_root / "bot.py").write_text(
+        bot_source + "\n#" + ("x" * audit.MAX_AST_PARSE_BYTES),
         encoding="utf-8",
     )
     web_root = tmp_path / "web"
     web_root.mkdir()
-    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    (web_root / "app.py").write_text(
+        '''app = FastAPI()
+@app.get("/image/prompt-composer")
+def prompt_composer(): pass
+@app.get("/image/edit")
+def edit(): pass
+@app.get("/image/resize")
+def resize(): pass
+@app.get("/image/brand-overlay")
+def brand_overlay(): pass
+''',
+        encoding="utf-8",
+    )
     result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
     callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
     templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert callbacks["imgtool|prompt_manual"]["target"] == "/image/prompt-composer"
+    assert callbacks["imgtool|edit_need_image"]["target"] == "/image/edit"
+    assert callbacks["imgtool|resize_task|ratio"]["target"] == "/image/resize"
+    assert callbacks["imgtool|editor_preset|photo_clear_detail"]["target"] == "/image/edit"
+    assert callbacks["imgtool|editor_logo"]["target"] == "/image/brand-overlay"
+    assert callbacks["imgtool|editor_overlays"]["target"] == "/image/brand-overlay"
+    assert "imgtool|editor_overlays_future" not in callbacks
+    assert "imgtool|editor_text" not in callbacks
     assert callbacks["imgtool|prompt_need_image"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert callbacks["imgtool|edit_ai"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert templates["imgtool|prompt_tier|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
@@ -3220,6 +3329,8 @@ def image_tools_keyboard(tier, ratio, token):
     assert templates["imgtool|prompt_confirm_change|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     contract = (tmp_path / "docs" / "IMAGE_TOOLS_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "imgtool\\|*" in contract
+    assert "reviewed_imgtool_fresh_web_navigation" in contract
+    assert "no raw Bot callback, Telegram image/prompt/preset or pending/result state" in contract
     assert "IMGTOOL_SOURCE_REVIEW_REQUIRED" in contract
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot Image Tools callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
