@@ -7302,10 +7302,10 @@ def _audio_hub_source_review_mapping(
         return {
             "source_kind": source_kind,
             "source": identifier,
-            "target": "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
+            "target": "TELEGRAM_ONLY",
             "classification": "customer",
-            "status": "NEEDS_FEATURE_DISPOSITION",
-            "resolution": "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "suggest_music_callback_reviewed_telegram_only_with_fresh_web_native_alternatives",
             "source_dispositions": (
                 "TELEGRAM_IDENTITY_CONTEXT",
                 "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE",
@@ -7315,24 +7315,26 @@ def _audio_hub_source_review_mapping(
                 "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING",
                 "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION",
                 "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+                "FRESH_WEB_NATIVE_ALTERNATIVES_ONLY",
                 "NO_RUNTIME_CLAIM",
             ),
             "source_evidence": (
                 "The frozen Bot suggest_music handler extracts a Telegram preset and sends a text instruction for "
                 "the Bot /music_library command. Its five known presets are not Web route identifiers, while an "
                 "unknown, suffixed or otherwise unreviewed value falls back to a default Bot keyword. The independent "
-                "Web Music Directions contract begins from an opaque Web preset ID and new description; it never accepts "
-                "or forwards this callback/keyword to a catalog, provider, playback, selection, wallet, job or delivery action."
+                "Web Music Directions contract begins from an opaque Web preset ID and new description as a fresh "
+                "non-executable alternative only; it never accepts or forwards this callback/keyword to a catalog, "
+                "provider, playback, selection, wallet, job or delivery action."
             ),
             "evidence": evidence,
         }
     return {
         "source_kind": source_kind,
         "source": identifier,
-        "target": "AUDIO_HUB_SOURCE_REVIEW_REQUIRED",
+        "target": "TELEGRAM_ONLY",
         "classification": "customer",
-        "status": "NEEDS_FEATURE_DISPOSITION",
-        "resolution": "audio_hub_callback_requires_web_native_owner_asset_execution_contract",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "audio_hub_callback_reviewed_telegram_only_with_fresh_web_native_alternatives",
         "source_dispositions": (
             "TELEGRAM_IDENTITY_CONTEXT",
             "BOT_AUDIO_PRODUCT_CONTEXT_AND_PENDING_STATE",
@@ -7344,6 +7346,7 @@ def _audio_hub_source_review_mapping(
             "NO_BOT_AUDIO_STATE_CACHE_PROFILE_OR_VIDEO_FINALIZATION_REPLAY",
             "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION",
             "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "FRESH_WEB_NATIVE_ALTERNATIVES_ONLY",
             "NO_RUNTIME_CLAIM",
         ),
         "source_evidence": (
@@ -7352,7 +7355,8 @@ def _audio_hub_source_review_mapping(
             "prompt or selected-media state, use short-lived per-user music/SFX/media caches, mutate a Video Finishing "
             "session, operate on voice-profile identifiers, call provider/catalog paths, charge a voice-profile save or "
             "deliver media in Telegram. The standalone Web has no adapter that accepts or replays the callback, Bot "
-            "pending/cache/profile/finalization state, provider result, canonical Xu action or Telegram delivery state."
+            "pending/cache/profile/finalization state, provider result, canonical Xu action or Telegram delivery state. "
+            "Fresh Web-native alternatives are separate non-executable surfaces only."
         ),
         "evidence": evidence,
     }
@@ -7366,8 +7370,8 @@ def _map_audio_hub_callback(
     """Fail closed for all Bot Audio Hub and suggestion callback values.
 
     Case variants, missing tokens, suffixes and future values are deliberately
-    caught as source-review records too.  Raw Bot callbacks must never inherit
-    a generic keyword-derived Web feature route.
+    classified as TELEGRAM_ONLY too. Raw Bot callbacks must never inherit a
+    generic keyword-derived Web feature route.
     """
 
     token = str(identifier or "").casefold()
@@ -10751,21 +10755,21 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     audio_hub_contract_rows = [
         [
             "music_quick|*, sfx_quick|*, media_quick|* (all literals and templates, including case variants, suffixes and future actions)",
-            "AUDIO_HUB_SOURCE_REVIEW_REQUIRED",
-            "audio_hub_callback_requires_web_native_owner_asset_execution_contract",
-            "Telegram product context plus pending prompt/voice state, per-user music/SFX/media cache or selected state, voice-profile/video-finalization state and possible provider/Xu/Telegram-delivery branches",
+            "TELEGRAM_ONLY",
+            "audio_hub_callback_reviewed_telegram_only_with_fresh_web_native_alternatives",
+            "Classification is complete: Telegram product context plus pending prompt/voice state, per-user music/SFX/media cache or selected state, voice-profile/video-finalization state and possible provider/Xu/Telegram-delivery branches remain Bot-only; fresh Web-native alternatives are non-executable only.",
         ],
         [
             "suggest_music|sales, suggest_music|tech, suggest_music|cinematic, suggest_music|review, suggest_music|trend",
-            "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
-            "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
-            "Bot text-only preset-to-keyword guidance. The independent Web Music Directions contract uses opaque server-owned web_preset_id values; it accepts or forwards no raw Bot callback or keyword.",
+            "TELEGRAM_ONLY",
+            "suggest_music_callback_reviewed_telegram_only_with_fresh_web_native_alternatives",
+            "Classification is complete: Bot text-only preset-to-keyword guidance remains Telegram-only. The independent Web Music Directions contract uses opaque server-owned web_preset_id values as a non-executable alternative only; it accepts or forwards no raw Bot callback or keyword.",
         ],
         [
             "case variants, missing tokens, suffixes or other suggest_music|* values",
-            "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED",
-            "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract",
-            "unknown Bot values fall back to a default keyword, so they remain source-review-only rather than stable Web intent, catalog or provider inputs.",
+            "TELEGRAM_ONLY",
+            "suggest_music_callback_reviewed_telegram_only_with_fresh_web_native_alternatives",
+            "Classification is complete: unknown Bot values fall back to a default keyword and remain Telegram-only, never stable Web intent, catalog or provider inputs; fresh Web-native alternatives are non-executable only.",
         ],
     ]
     payos_alert_contract_rows = [
@@ -11489,7 +11493,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md) — finite Bot document command entrypoints that only open fresh signed Web-native document pages; no Bot state or raw API is replayed.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
-        + "- [`AUDIO_HUB_CALLBACK_CONTRACT.md`](AUDIO_HUB_CALLBACK_CONTRACT.md) — Bot Audio Hub and suggestion callbacks remain source-review boundaries; no product context, cache, voice/video state, keyword or Telegram action becomes generic Web navigation.\n"
+        + "- [`AUDIO_HUB_CALLBACK_CONTRACT.md`](AUDIO_HUB_CALLBACK_CONTRACT.md) — Bot Audio Hub and suggestion callbacks are completely classified as `TELEGRAM_ONLY`; no product context, cache, voice/video state, keyword or Telegram action becomes generic Web navigation or a runtime-equivalence claim.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + f"- [`BILLING_MENU_CALLBACK_CONTRACT.md`](BILLING_MENU_CALLBACK_CONTRACT.md) — {billing_menu_action_count} exact Bot-admin Billing menu dispositions; each may only open a fresh canonical-admin payments read route and never becomes customer/manual top-up or a ledger/PayOS action.\n"
@@ -11590,17 +11594,18 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# Audio Hub and music-suggestion callback contract\n\n"
         "The frozen Bot owns four related Telegram callback namespaces: `music_quick|*`, `sfx_quick|*`, `media_quick|*` and `suggest_music|*`. They are not browser controls. The first three are one broad stateful dispatcher: it enters Telegram product context before branching and can set/clear pending input, retain prompt or selected-media state, use short-lived user-scoped music/SFX/media caches, mutate Video Finishing or voice-profile state, enter provider/catalog paths, charge a voice-profile save, or send media in Telegram. Most buttons are built through the frozen `product_context_callback(namespace, context, action)` helper, whose emitted shape is `namespace|normalized-context|action`; the static audit records only its literal source shapes and keeps dynamic context/action values opaque. A callback label such as `music`, `media`, `trend` or `voice` therefore cannot safely infer a Web Music, Video, Voice or Media Workspace route.\n\n"
         "`suggest_music|sales|tech|cinematic|review|trend` is narrower: it only returns a Bot text instruction containing a fixed `/music_library` keyword. It still is not a Web navigation parameter, catalog query, provider request or playback/selection command. Unknown, suffixed and case-variant values are not stable Web intent because the Bot handler falls back to a default keyword.\n\n"
+        "Classification is complete: every exact, case-variant, suffixed, future and opaque-template value in these four namespaces is `TELEGRAM_ONLY`. Classification is complete but does not add a Web feature or runtime-equivalence claim.\n\n"
         + _markdown_table(
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             audio_hub_contract_rows,
         )
-        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback remains a source-review boundary. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. The signed `/media-workspace/music-prompt-composer` and `/media-workspace/music-directions` surfaces are independent deterministic text-planning flows entered fresh by a signed Web user. Music Directions accepts only a bounded opaque lower-case `web_preset_id` plus a new Web description; it rejects raw Bot callbacks, full Bot `/music_library` commands, bare Bot keywords, Bot mode/selection internals and unknown request fields, while ordinary prose is never interpreted or forwarded as Bot input. It produces no audio, provider request, job, asset, collection, payment, wallet mutation or delivery. See `MUSIC_DIRECTION_PRESET_CONTRACT.md`. The separate signed `/media-workspace/sfx-cue-sheet` surface is also independent: it maps only fresh Web opaque IDs to three semantic editorial positions and does not accept `sfx_quick|*`, `music_quick|custom_sfx`, Bot SFX keywords, cache values or a source-media timeline. It performs no catalog/provider search, playback/audio creation, job, asset/collection or payment action; see `SFX_CUE_SHEET_CONTRACT.md`. This Web-only contract does not modify Bot code. A future Web Audio Hub must still start from its own signed owner-scoped data and separately reviewed execution contract.\n",
+        + "\n\nThe resolver is deliberately bounded: it may derive a concrete three-segment value only when the namespace, one of the two frozen canonical contexts and action are literal in source. For source-local lambda wrappers it may retain a literal/formatted action shape with an opaque context; it never evaluates a variable, normalizes a runtime value, follows an alias across functions, or accepts a callback from a browser. Every original callback is classified `TELEGRAM_ONLY`. No callback may open `/features/music`, `/features/video`, `/media-workspace`, `/voice-vault` or any other browser route; navigate/reset browser state; replay a Bot context, pending record, cache index, selected item, voice-profile identifier, Video Finishing value or keyword; invoke a provider/catalog; charge/refund Xu; create/retry/refund a job; expose an output; or claim delivery. For raw Bot callbacks, the fresh Web-native routes `/audio-hub`, `/audio/assets`, `/voice-studio`, `/media-workspace/music-directions`, and `/media-workspace/sfx-cue-sheet` are non-executable alternatives only: none is an adapter, route mapping, browser action, API grammar, state transfer or runtime-equivalence claim for a callback. The signed `/media-workspace/music-prompt-composer` and `/media-workspace/music-directions` surfaces are independent deterministic text-planning flows entered fresh by a signed Web user. Music Directions accepts only a bounded opaque lower-case `web_preset_id` plus a new Web description; it rejects raw Bot callbacks, full Bot `/music_library` commands, bare Bot keywords, Bot mode/selection internals and unknown request fields, while ordinary prose is never interpreted or forwarded as Bot input. It produces no audio, provider request, job, asset, collection, payment, wallet mutation or delivery. See `MUSIC_DIRECTION_PRESET_CONTRACT.md`. The separate signed `/media-workspace/sfx-cue-sheet` surface is also independent: it maps only fresh Web opaque IDs to three semantic editorial positions and does not accept `sfx_quick|*`, `music_quick|custom_sfx`, Bot SFX keywords, cache values or a source-media timeline. It performs no catalog/provider search, playback/audio creation, job, asset/collection or payment action; see `SFX_CUE_SHEET_CONTRACT.md`. This Web-only contract does not modify Bot code. A future Web Audio Hub must still start from its own signed owner-scoped data and separately reviewed execution contract.\n",
     )
     write(
         "MUSIC_DIRECTION_PRESET_CONTRACT.md",
         "# Music Directions preset contract\n\n"
         "## Purpose and authority\n\n"
-        "`/media-workspace/music-directions` is an independent signed Web-native text-planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `suggest_music|*` callback family. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`; its five callbacks reply with a Bot `/music_library` keyword and stay `SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED` in the parity audit.\n\n"
+        "`/media-workspace/music-directions` is an independent signed Web-native text-planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `suggest_music|*` callback family. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`; its five callbacks reply with a Bot `/music_library` keyword and are completely classified `TELEGRAM_ONLY` in the parity audit. That completed classification does not add a Web feature or runtime-equivalence claim.\n\n"
         "The page offers five reviewed, opaque Web preset IDs:\n\n"
         "| Web `web_preset_id` | User-facing direction |\n"
         "| --- | --- |\n"
@@ -11645,7 +11650,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "```\n\n"
         "It may present three text directions for manual review. It does not save to Memory, create an audio file or player, inspect source audio, call the Bot, Key4U, Suno or another provider, create a job, calculate or mutate Xu, start/finalize PayOS, save an asset/collection, publish, or claim delivery. The result is not evidence of generated music, playback rights, license clearance, provider availability or delivery.\n\n"
         "## Callback boundary remains unchanged\n\n"
-        "The independent page does not give browser meaning to any original Bot callback. All of these remain source-review-only and must not acquire a Web route, browser action or request parameter:\n\n"
+        "The independent page does not give browser meaning to any original Bot callback. All of these are `TELEGRAM_ONLY` and must not acquire a Web route, browser action or request parameter:\n\n"
         "- `suggest_music|sales`, `suggest_music|tech`, `suggest_music|cinematic`, `suggest_music|review`, and `suggest_music|trend`;\n"
         "- every case variant, missing token, suffix, unknown value, or future `suggest_music|*` value.\n\n"
         "No Web request may forward a raw Bot callback, Telegram identity/context, keyword, cache index, selected media, provider result, wallet/payment state, job identifier, output or delivery state. A future real audio/catalog experience requires its own owner-scoped, reviewed execution and delivery contract.\n",
@@ -11701,7 +11706,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "```\n\n"
         "The receipt may contain only textual cue role, direction, mix, avoid and editorial-review notes. It does not search Freesound or another catalog, create/play/preview/download/upload audio, call the Bot or a provider, create a job, calculate or mutate Xu, start/finalize PayOS, save Memory/asset/collection state, publish or claim delivery. It is not evidence that a sound, timing, license, rights clearance, provider result or output exists.\n\n"
         "## Callback boundary remains unchanged\n\n"
-        "Every original Bot SFX callback remains `AUDIO_HUB_SOURCE_REVIEW_REQUIRED`, including exact values, context forms, case variants, missing tokens, suffixes and future `sfx_quick|*` values. `music_quick|custom_sfx` and related Audio Hub actions remain source-review-only too. No Web request may forward a raw Bot callback, Telegram identity/context, cache index, provider result, selected media, preview value, wallet/payment state, job identifier, output or delivery state. A future real SFX catalog or execution experience requires its own owner-scoped, reviewed bridge/execution and delivery contract.\n",
+        "Every original Bot SFX callback is completely classified `TELEGRAM_ONLY`, including exact values, context forms, case variants, missing tokens, suffixes and future `sfx_quick|*` values. `music_quick|custom_sfx` and related Audio Hub actions are `TELEGRAM_ONLY` too. That completed classification does not add a Web feature or runtime-equivalence claim. No Web request may forward a raw Bot callback, Telegram identity/context, cache index, provider result, selected media, preview value, wallet/payment state, job identifier, output or delivery state. A future real SFX catalog or execution experience requires its own owner-scoped, reviewed bridge/execution and delivery contract.\n",
     )
     write(
         "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",
@@ -12357,7 +12362,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "\n\n## Bot Creative variant callback boundary\n\n"
         + "The Bot `creative|*` callback is a Telegram-admin selection transition over canonical creative-variant and production-job rows. A Web Creative Studio must use independently authorized Web records or a separately reviewed redacted bridge/read model; it never accepts a Bot callback, variant identifier, selected state, production update or handoff value. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
         + "\n\n## Bot Audio Hub callback boundary\n\n"
-        + "The Bot `music_quick|*`, `sfx_quick|*` and `media_quick|*` callbacks are a Telegram state machine over product context, guided pending input, music/SFX/media caches, selected media, voice-profile and Video Finishing state. A Web Audio Hub must start from Web-owned owner-scoped data and never accepts/replays a Bot callback, cache index, profile ID, finalization value or keyword. `suggest_music|*` is Bot reply guidance only, not a browser preset. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
+        + "The Bot `music_quick|*`, `sfx_quick|*`, `media_quick|*` and `suggest_music|*` callback families are completely classified `TELEGRAM_ONLY`: they are Telegram state transitions or guidance over product context, guided pending input, music/SFX/media caches, selected media, voice-profile, Video Finishing state or Bot keywords. A Web Audio Hub must start from Web-owned owner-scoped data and never accepts/replays a Bot callback, cache index, profile ID, finalization value or keyword. This completed classification does not add a Web feature or runtime-equivalence claim; fresh Web-native alternatives remain non-executable with respect to raw Bot callbacks. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         + "\n\n## Additive Web-native Video Poster state\n\n"
         + "| Table | Owner | Purpose | Explicitly not authoritative for |\n"
         + "| --- | --- | --- | --- |\n"
@@ -12378,7 +12383,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Web must not route or replay them; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Audio Hub callbacks are a Telegram state-machine boundary: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is only Bot keyword guidance. None may route/replay into Web; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Audio Hub callbacks are a Telegram state-machine boundary and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance. None may route/replay into Web. The classification does not add a Web feature or runtime-equivalence claim; fresh Web-native alternatives are non-executable for raw callbacks. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. Only nine exact Feedback menu literals may start a fresh signed Web Support Desk form; no raw callback/category or Bot state is transferred, and every other value stays source-review-required. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks are Telegram-admin creative-selection controls: `creative|*` can select a canonical variant, clear sibling selection and update linked production job state. Web must not route or replay them; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"
@@ -12532,7 +12537,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
         "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. No callback may open `/image` or invoke Web provider/job/wallet/payment/output/delivery behavior; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Audio Hub callbacks stay outside the Web route layer: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths. `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Audio Hub callbacks stay outside the Web route layer and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior. The classification does not add a Web feature or runtime-equivalence claim; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. The sole exception is the nine exact Feedback entry literals, which may only begin a fresh signed `/support` form without forwarding a callback/category or invoking Web ticket/ledger/delivery behavior. Every other value remains source-review-required; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
         "- Bot Creative callbacks stay outside the Web route layer: `creative|*` requires Bot-admin Telegram identity and can select a canonical creative variant, clear sibling selection and update linked production job state. No callback may open `/content-studio` or an Admin route or invoke Web creative/job/provider/output/ledger/delivery behavior; see `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n"

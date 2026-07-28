@@ -5050,8 +5050,8 @@ async def portal(page_path):
     assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in environment_contract.read_text(encoding="utf-8")
 
 
-def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: Path) -> None:
-    """Stateful Bot Audio Hub callbacks cannot infer Music, Video or Media routes."""
+def test_static_audit_classifies_reviewed_audio_hub_callbacks_as_telegram_only(tmp_path: Path) -> None:
+    """Reviewed Bot Audio Hub callbacks stay Telegram-only, never browser routes."""
 
     audit = _load_audit_module()
     routes = {"/features/music", "/features/video", "/media-workspace", "/voice-vault", "/{page_path:path}"}
@@ -5073,16 +5073,19 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
         "sfx_quick|future|opaque",
     ):
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
-        assert mapped["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
+        assert mapped["target"] == "TELEGRAM_ONLY"
         assert mapped["classification"] == "customer"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "audio_hub_callback_requires_web_native_owner_asset_execution_contract"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "audio_hub_callback_reviewed_telegram_only_with_fresh_web_native_alternatives"
         assert "BOT_AUDIO_PRODUCT_CONTEXT_AND_PENDING_STATE" in mapped["source_dispositions"]
         assert "BOT_MUSIC_SFX_MEDIA_CACHE_OR_SELECTED_STATE" in mapped["source_dispositions"]
         assert "BOT_VOICE_PROFILE_OR_VIDEO_FINALIZATION_STATE" in mapped["source_dispositions"]
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_BOT_AUDIO_STATE_CACHE_PROFILE_OR_VIDEO_FINALIZATION_REPLAY" in mapped["source_dispositions"]
         assert "NO_PROVIDER_LIBRARY_OR_TELEGRAM_DELIVERY_ACTION" in mapped["source_dispositions"]
+        assert "FRESH_WEB_NATIVE_ALTERNATIVES_ONLY" in mapped["source_dispositions"]
+        assert "web_route" not in mapped
+        assert "web_action" not in mapped
 
     for identifier in (
         "suggest_music|sales",
@@ -5092,13 +5095,14 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
         "suggest_music|unknown",
     ):
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
-        assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
+        assert mapped["target"] == "TELEGRAM_ONLY"
         assert mapped["classification"] == "customer"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "suggest_music_callback_reviewed_telegram_only_with_fresh_web_native_alternatives"
         assert "BOT_SUGGEST_MUSIC_PRESET_OR_KEYWORD_GUIDANCE" in mapped["source_dispositions"]
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_RAW_CALLBACK_OR_KEYWORD_FORWARDING" in mapped["source_dispositions"]
+        assert "FRESH_WEB_NATIVE_ALTERNATIVES_ONLY" in mapped["source_dispositions"]
         assert "opaque Web preset ID" in mapped["source_evidence"]
         assert "web_route" not in mapped
         assert "web_action" not in mapped
@@ -5112,9 +5116,9 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
     ):
         mapped = audit._map_callback_template(template, evidence, routes)
         assert mapped is not None
-        assert mapped["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "audio_hub_callback_requires_web_native_owner_asset_execution_contract"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "audio_hub_callback_reviewed_telegram_only_with_fresh_web_native_alternatives"
 
     for template in (
         "suggest_music|{*}",
@@ -5123,9 +5127,9 @@ def test_static_audit_keeps_audio_hub_callbacks_out_of_keyword_routes(tmp_path: 
     ):
         mapped = audit._map_callback_template(template, evidence, routes)
         assert mapped is not None
-        assert mapped["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "suggest_music_callback_remains_source_review_with_independent_web_native_preset_contract"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "suggest_music_callback_reviewed_telegram_only_with_fresh_web_native_alternatives"
 
     bot_root = tmp_path / "bot"
     web_root = tmp_path / "web"
@@ -5175,11 +5179,11 @@ async def portal(page_path):
         for item in result["parity_gap"]["callback_mappings"] + result["parity_gap"]["callback_template_mappings"]
     }
     for source in ("music_quick|calm", "music_quick|trend", "sfx_quick|whoosh", "media_quick|product", "music_quick|{*}", "sfx_quick|{*}", "media_quick|{*}"):
-        assert mappings[source]["target"] == "AUDIO_HUB_SOURCE_REVIEW_REQUIRED"
-        assert mappings[source]["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mappings[source]["target"] == "TELEGRAM_ONLY"
+        assert mappings[source]["status"] == "TELEGRAM_ONLY"
     for source in ("suggest_music|trend", "suggest_music|{*}"):
-        assert mappings[source]["target"] == "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED"
-        assert mappings[source]["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mappings[source]["target"] == "TELEGRAM_ONLY"
+        assert mappings[source]["status"] == "TELEGRAM_ONLY"
     assert not {
         item["target"]
         for source, item in mappings.items()
@@ -5187,11 +5191,11 @@ async def portal(page_path):
     }.intersection({"/features/music", "/features/video", "/media-workspace", "/voice-vault"})
 
     backlog = {item["family"]: item for item in result["parity_gap"]["feature_disposition_backlog"]}
-    assert "audio_hub" in backlog
-    assert "suggest_music" in backlog
+    assert "audio_hub" not in backlog
+    assert "suggest_music" not in backlog
     contract = (tmp_path / "docs" / "AUDIO_HUB_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
-    assert "AUDIO_HUB_SOURCE_REVIEW_REQUIRED" in contract
-    assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in contract
+    assert "TELEGRAM_ONLY" in contract
+    assert "does not add a Web feature or runtime-equivalence claim" in contract
     assert "music-prompt-composer" in contract
     assert "music-directions" in contract
     assert "sfx-cue-sheet" in contract
@@ -5199,14 +5203,14 @@ async def portal(page_path):
     music_directions_contract = (tmp_path / "docs" / "MUSIC_DIRECTION_PRESET_CONTRACT.md").read_text(encoding="utf-8")
     assert "/media-workspace/music-directions" in music_directions_contract
     assert "web_preset_id" in music_directions_contract
-    assert "SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED" in music_directions_contract
+    assert "TELEGRAM_ONLY" in music_directions_contract
     assert "No Web request may forward a raw Bot callback" in music_directions_contract
     sfx_cue_sheet_contract = (tmp_path / "docs" / "SFX_CUE_SHEET_CONTRACT.md").read_text(encoding="utf-8")
     assert "/media-workspace/sfx-cue-sheet" in sfx_cue_sheet_contract
     assert "web_sfx_preset_id" in sfx_cue_sheet_contract
     assert "motion_transition" in sfx_cue_sheet_contract
     assert "opening`, `transition` and `closing`" in sfx_cue_sheet_contract
-    assert "AUDIO_HUB_SOURCE_REVIEW_REQUIRED" in sfx_cue_sheet_contract
+    assert "TELEGRAM_ONLY" in sfx_cue_sheet_contract
     assert "does not modify Bot code" in sfx_cue_sheet_contract
     readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
@@ -5317,8 +5321,8 @@ async def voice():
             if item["source"].casefold().startswith(("music_quick|", "sfx_quick|", "media_quick|"))
         ]
         assert audio_mappings, mode
-        assert {item["target"] for item in audio_mappings} == {"AUDIO_HUB_SOURCE_REVIEW_REQUIRED"}, mode
-        assert {item["status"] for item in audio_mappings} == {"NEEDS_FEATURE_DISPOSITION"}, mode
+        assert {item["target"] for item in audio_mappings} == {"TELEGRAM_ONLY"}, mode
+        assert {item["status"] for item in audio_mappings} == {"TELEGRAM_ONLY"}, mode
         assert not {item["target"] for item in audio_mappings}.intersection(
             {"/features/music", "/features/video", "/media-workspace", "/voice-vault"}
         ), mode
