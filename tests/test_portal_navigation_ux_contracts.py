@@ -1,7 +1,12 @@
 """Focused navigation contracts for the signed portal shell."""
 
+import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +16,70 @@ PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 def _section(start: str, end: str) -> str:
     offset = PORTAL.index(start)
     return PORTAL[offset:PORTAL.index(end, offset + len(start))]
+
+
+def _run_current_customer_workflow_harness(source_path: Path) -> dict:
+    """Execute the real cue helper without exporting browser internals for tests."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required to exercise the Portal navigation helper")
+    script = r'''
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+const routePattern = source.includes("const CUSTOMER_APPLICATION_ROUTE")
+  ? extract("const CUSTOMER_APPLICATION_ROUTE", "function currentCustomerWorkflowGroup(currentPage, groups)")
+  : "";
+const runtime = [
+  'const window = { location: { pathname: "/dashboard" } };',
+  'const ICONS = Object.freeze({ prompt: "prompt" });',
+  'function uiText(_key, fallback) { return fallback; }',
+  extract("function normalizePath(path)", "const CAPABILITY_HUB_FAMILY_KEYS"),
+  extract("function safeCatalogRoute(value)", "function catalogEntryRoute(entry)"),
+  extract("function matchesRouteFamily(path, root)", "function isNavCurrent(linkPath, page)"),
+  extract("function isNavCurrent(linkPath, page)", "// The compact dock intentionally links"),
+  routePattern,
+  extract("function currentCustomerWorkflowGroup(currentPage, groups)", "function navGroups(context, currentPage)")
+].join("\n");
+eval(runtime);
+const compactGroups = [{ links: [["/dashboard", "Tổng quan", "dashboard"]] }];
+const cue = (page) => currentCustomerWorkflowGroup(page, compactGroups);
+const videoCue = cue({
+  routePath: "/video-studio/story-video-plan", access: "member",
+  title: "Story Video Planner"
+});
+if (!videoCue || videoCue.current !== true || videoCue.links.length !== 1 || videoCue.links[0][0] !== "/video-studio/story-video-plan") {
+  throw new Error("registered deep Video Studio route did not receive one current workflow cue");
+}
+for (const [name, page] of Object.entries({
+  compact: { routePath: "/dashboard", access: "member", title: "Tổng quan" },
+  public: { routePath: "/login", access: "public", title: "Đăng nhập" },
+  admin: { routePath: "/admin/users", access: "admin", title: "Người dùng" },
+  notFound: { routePath: "/not-found", path: "/not-found", access: "member", layout: "not-found", title: "Trang chưa được định tuyến" },
+  hostile: { routePath: '/video-studio/"onmouseover="alert(1)', access: "member", title: "Hostile" }
+})) {
+  if (cue(page) !== null) throw new Error(`${name} route unexpectedly received a current workflow cue`);
+}
+process.stdout.write(JSON.stringify({ videoCuePath: videoCue.links[0][0], videoCueCount: videoCue.links.length }));
+'''
+    try:
+        result = subprocess.run(
+            [node, "-e", script, str(source_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except OSError as exc:
+        pytest.skip(f"Node subprocess is unavailable in this test runner: {exc}")
+    assert result.returncode == 0, result.stderr or result.stdout
+    return json.loads(result.stdout)
 
 
 def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() -> None:
@@ -159,6 +228,17 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert "portal-nav-group--current" in sidebar
     assert ".portal-nav-group--current" in theme
     assert "var(--portal-border-strong)" in theme
+
+
+def test_current_customer_workflow_cue_supports_video_deep_routes_without_accepting_untrusted_paths() -> None:
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+
+    result = _run_current_customer_workflow_harness(ROOT / "static" / "portal" / "portal.js")
+    assert result == {
+        "videoCuePath": "/video-studio/story-video-plan",
+        "videoCueCount": 1,
+    }
+    assert 'href="${safeText(path)}"' in sidebar
 
 
 def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_menu() -> None:

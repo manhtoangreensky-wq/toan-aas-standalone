@@ -9077,10 +9077,11 @@
     );
   }
 
+  const CUSTOMER_APPLICATION_ROUTE = /^\/[a-z0-9][a-z0-9._~/-]*$/i;
+
   function currentCustomerWorkflowGroup(currentPage, groups) {
     const route = safeCatalogRoute(currentPage && (currentPage.routePath || currentPage.path));
-    const currentRoute = normalizePath(route);
-    if (!route || currentRoute === "/admin" || currentRoute.startsWith("/admin/") || matchesRouteFamily(currentRoute, "/video-studio")) return null;
+    if (!currentPage || currentPage.access !== "member" || currentPage.layout === "not-found" || currentPage.path === "/not-found" || !route || !CUSTOMER_APPLICATION_ROUTE.test(route)) return null;
     if (groups.some((group) => group.links.some(([path]) => isNavCurrent(path, currentPage)))) return null;
     const title = String(currentPage && currentPage.title || "").trim().slice(0, 96);
     if (!title) return null;
@@ -9377,7 +9378,7 @@
         return { path, label: localizedNavigationLabel(label), linkIcon, current };
       });
       const links = preparedLinks.map(({ path, label, linkIcon, current }) => {
-        return `<a class="portal-nav-link" href="${path}"${current ? ' aria-current="page"' : ""}>
+        return `<a class="portal-nav-link" href="${safeText(path)}"${current ? ' aria-current="page"' : ""}>
           <span class="portal-nav-icon" aria-hidden="true">${portalIcon(linkIcon)}</span>
           <span>${safeText(label)}</span>
         </a>`;
