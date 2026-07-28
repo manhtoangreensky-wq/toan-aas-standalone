@@ -51,9 +51,11 @@ def test_motion_asset_is_versioned_between_portal_and_integration_and_pre_cached
 
     build_sources = _section(PAGES, "_PORTAL_BUILD_SOURCE_FILES = (", ")\n\n# The portal shell")
     local_build_fallback = _section(PAGES, "def _local_portal_build_id()", "\n\ndef _portal_build_id()")
+    fallback_template = _section(PAGES, "def _fallback_template()", "\n\ndef render_portal")
     assert '"portal-motion.js",' in build_sources
     assert "for filename in _PORTAL_BUILD_SOURCE_FILES:" in local_build_fallback
     assert 'digest.update(b"missing")' in local_build_fallback
+    assert MOTION_SCRIPT in fallback_template.replace('\\"', '"')
 
     shell_allow_list = _section(WORKER, "const SHELL = Object.freeze([", "]);\nconst SHELL_PATHS")
     assert '"/static/portal/portal-motion.js",' in shell_allow_list
