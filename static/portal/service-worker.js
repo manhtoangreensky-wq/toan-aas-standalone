@@ -50,6 +50,7 @@ const SHELL = Object.freeze([
   "/static/portal/portal-theme.css",
   "/static/portal/portal-i18n.js",
   "/static/portal/portal.js",
+  "/static/portal/portal-motion.js",
   "/static/portal/integration.js",
   "/static/portal/manifest.webmanifest",
   "/static/portal/app-icon.svg",

@@ -22,6 +22,9 @@ def _section(source: str, start: str, end: str) -> str:
 def test_app_first_direction_is_documented_without_changing_authority_boundaries() -> None:
     assert "signed workspace and operations application, not a\nmarketing landing page" in REDESIGN
     assert "optional public introduction remains at `/welcome`" in REDESIGN
+    assert "light teal application canvas with white working surfaces" in REDESIGN
+    assert "dark slate foundation" not in REDESIGN
+    assert "prefers-reduced-motion" in REDESIGN
     assert "Browser state cannot disclose an admin route or grant access." in REDESIGN
     assert "does not alter Bot ownership" in REDESIGN
     assert "wallet/PayOS authority" in REDESIGN

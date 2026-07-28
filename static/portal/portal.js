@@ -25745,6 +25745,8 @@
     toast.className = `portal-toast${mode === "warning" ? " portal-toast--warning" : ""}`;
     toast.textContent = message;
     region.appendChild(toast);
+    const motion = window.TOANAASPortalMotion;
+    if (motion && typeof motion.enter === "function") motion.enter(toast, "pop");
     window.setTimeout(() => { toast.remove(); }, 4800);
   }
 
@@ -27835,6 +27837,9 @@
     if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
     const isLanding = page.layout === "landing";
     const isAuth = page.layout === "auth";
+    const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
+    shell.dataset.portalSurface = surface;
+    document.body.dataset.portalSurface = surface;
     // The public landing and unauthenticated access screens intentionally
     // avoid showing an authenticated workspace sidebar. This keeps the first
     // visit focused, prevents a misleading "already inside" impression, and
@@ -27860,38 +27865,50 @@
       commandPalette.innerHTML = "";
     }
     document.title = documentTitle(page, context);
-    sidebar.innerHTML = renderSidebar(page, context);
-    header.innerHTML = renderHeader(page, context);
-    main.innerHTML = renderPage(page, context);
-    placeSfxCueSheetReceipt(main);
-    bindVideoPreviewPlayer(main);
-    synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
-    main.querySelectorAll('[data-portal-action="subtitle-project-create"]').forEach((form) => synchronizeSubtitleLanguageSourceForm(form));
-    main.querySelectorAll('[data-portal-action="cinematic-concept-compose"]').forEach((form) => {
-      synchronizeCinematicConceptMessageMode(form);
-      synchronizeCinematicConceptDraftFreshness(form);
+    const motion = window.TOANAASPortalMotion || Object.freeze({
+      replace(_shell, _main, render) {
+        render();
+      }
     });
-    main.querySelectorAll('[data-portal-action="script-to-screen-planner-compose"]').forEach((form) => {
-      synchronizeScriptToScreenDraftFreshness(form);
-    });
-    main.querySelectorAll('[data-portal-action="storyboard-composer-compose"]').forEach((form) => {
-      synchronizeStoryboardComposerDraftFreshness(form);
-    });
-    main.querySelectorAll('[data-portal-action="image-motion-planner-compose"]').forEach((form) => {
-      synchronizeImageMotionPlannerDraftFreshness(form);
-    });
-    main.querySelectorAll('[data-portal-action="creative-motion-guide-compose"]').forEach((form) => {
-      synchronizeCreativeMotionGuideForm(form);
-    });
-    main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
-    main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
-    main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
-    main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
-    main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
-    syncDesktopFocusNavigation();
-    bindInteractions();
-    syncPwaInstallControl();
-    restoreFocus(focus);
+    function renderShell() {
+      sidebar.innerHTML = renderSidebar(page, context);
+      header.innerHTML = renderHeader(page, context);
+      main.innerHTML = renderPage(page, context);
+      placeSfxCueSheetReceipt(main);
+      bindVideoPreviewPlayer(main);
+      synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
+      main.querySelectorAll('[data-portal-action="subtitle-project-create"]').forEach((form) => synchronizeSubtitleLanguageSourceForm(form));
+      main.querySelectorAll('[data-portal-action="cinematic-concept-compose"]').forEach((form) => {
+        synchronizeCinematicConceptMessageMode(form);
+        synchronizeCinematicConceptDraftFreshness(form);
+      });
+      main.querySelectorAll('[data-portal-action="script-to-screen-planner-compose"]').forEach((form) => {
+        synchronizeScriptToScreenDraftFreshness(form);
+      });
+      main.querySelectorAll('[data-portal-action="storyboard-composer-compose"]').forEach((form) => {
+        synchronizeStoryboardComposerDraftFreshness(form);
+      });
+      main.querySelectorAll('[data-portal-action="image-motion-planner-compose"]').forEach((form) => {
+        synchronizeImageMotionPlannerDraftFreshness(form);
+      });
+      main.querySelectorAll('[data-portal-action="creative-motion-guide-compose"]').forEach((form) => {
+        synchronizeCreativeMotionGuideForm(form);
+      });
+      main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
+      main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
+      main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
+      main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
+      main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
+      syncDesktopFocusNavigation();
+      bindInteractions();
+      syncPwaInstallControl();
+    }
+    const replaceResult = motion.replace(shell, main, renderShell);
+    if (replaceResult && typeof replaceResult.then === "function") {
+      replaceResult.then(() => restoreFocus(focus), () => restoreFocus(focus));
+    } else {
+      restoreFocus(focus);
+    }
   }
 
   window.TOANAASPortal = Object.freeze({

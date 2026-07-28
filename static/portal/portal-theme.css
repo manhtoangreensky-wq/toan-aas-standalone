@@ -76,6 +76,13 @@
   --portal-radius-sm: 9px;
   --portal-control-height: 42px;
   --portal-transition: 180ms cubic-bezier(.2, .8, .2, 1);
+  --portal-motion-fast: 140ms;
+  --portal-motion-base: 220ms;
+  --portal-motion-slow: 420ms;
+  --portal-motion-distance: 10px;
+  --portal-motion-ease-standard: cubic-bezier(.2,.8,.2,1);
+  --portal-motion-ease-emphasis: cubic-bezier(.16,1,.3,1);
+  --portal-elevation-float: 0 12px 30px rgba(2, 20, 29, .16);
   --portal-rail-width: 272px;
   --portal-content-max-width: 1600px;
   --portal-desktop-page-padding: clamp(24px, 3vw, 40px);
@@ -2965,5 +2972,54 @@ body {
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
+  }
+}
+
+/* Shared portal lifecycle motion stays presentation-only: a short, one-shot
+   opacity/transform cue preserves continuity without moving layout or data. */
+@keyframes portal-motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes portal-motion-pop {
+  from {
+    opacity: 0;
+    transform: scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-portal-motion="enter"] {
+    animation: portal-motion-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  [data-portal-motion="pop"] {
+    animation: portal-motion-pop var(--portal-motion-fast) var(--portal-motion-ease-standard) both;
+  }
+
+  .portal-sidebar,
+  .portal-command-dialog,
+  .portal-toast {
+    transition-duration: var(--portal-motion-base);
+    transition-timing-function: var(--portal-motion-ease-standard);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-portal-motion] {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
