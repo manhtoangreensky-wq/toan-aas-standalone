@@ -77,6 +77,7 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     navigation = _section("function navGroups(context, currentPage)", "function matchesRouteFamily(path, root)")
     palette = _section("function commandPaletteItems(context, page)", "function renderCommandPalette(page, context)")
     sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+    theme = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
 
     # The signed customer rail is a compact orientation surface, rather than
     # a second full catalogue.  All customer destinations remain available
@@ -151,11 +152,13 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     # Deep routes retain a single, presentation-only orientation cue rather
     # than expanding the full customer catalogue again.
     assert "function currentCustomerWorkflowGroup(currentPage, groups)" in PORTAL
-    assert 'label: "Đang mở"' in PORTAL
+    assert 'label: uiText("nav.currentWorkflow", "Đang mở")' in PORTAL
     assert "current: true" in PORTAL
     assert "const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);" in navigation
     assert "if (currentGroup) groups.unshift(currentGroup);" in navigation
     assert "portal-nav-group--current" in sidebar
+    assert ".portal-nav-group--current" in theme
+    assert "var(--portal-border-strong)" in theme
 
 
 def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_menu() -> None:

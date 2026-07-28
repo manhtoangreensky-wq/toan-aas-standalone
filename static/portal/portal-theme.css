@@ -1183,6 +1183,22 @@ body {
   border-bottom-color: var(--portal-rail-border);
 }
 
+.portal-nav-group--current {
+  border-bottom-color: var(--portal-border-strong);
+}
+
+.portal-nav-group--current .portal-nav-summary,
+.portal-nav-group--current .portal-nav-label {
+  color: var(--portal-nav-active-text);
+}
+
+.portal-nav-group--current .portal-nav-group-count {
+  min-width: 2ch;
+  color: var(--portal-nav-active-icon);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
 .portal-nav-summary {
   border-color: transparent;
   color: var(--portal-rail-muted);

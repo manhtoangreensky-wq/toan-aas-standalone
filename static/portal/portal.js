@@ -9085,7 +9085,7 @@
     const title = String(currentPage && currentPage.title || "").trim().slice(0, 96);
     if (!title) return null;
     return {
-      label: "Đang mở", defaultOpen: true, current: true,
+      label: uiText("nav.currentWorkflow", "Đang mở"), defaultOpen: true, current: true,
       links: [[route, title, ICONS.prompt]]
     };
   }
