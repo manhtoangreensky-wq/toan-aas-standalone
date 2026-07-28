@@ -3,7 +3,32 @@
 This note records the local, non-live verification carried out for the two
 separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
-## Passing focused verification
+## Current static-audit rebaseline (2026-07-28)
+
+The current migration evidence is the generated bundle in `docs/migration/`
+and `reports/migration/`, produced from the sole frozen Bot baseline
+`b29d0d474974075f4cba963d2c510f49d2d1b3e4`. It is static source analysis,
+not a deployment, provider, PayOS, Telegram or runtime-equivalence result.
+
+| Scope | Command / evidence | Current result |
+| --- | --- | --- |
+| Static audit | `scripts/migration/audit_bot_to_web.py` against the frozen Git snapshot and current Web main | 773 canonical Bot commands, 2,862 callback-data values and 664 Web routes; 38.71% static Web surface coverage, 78.68% safe disposition coverage, and runtime equivalence is `NOT_STATICALLY_VERIFIABLE` (0%). |
+| Audit generator | `python -m py_compile scripts/migration/audit_bot_to_web.py` | passed locally; source parsing only. |
+| Focused regression | `python -m pytest -q tests/test_migration_audit.py -k 'static_audit_preserves_finance_planning_authority_and_redacts_secret_literals or audio_hub' -p no:cacheprovider` | Finance Planning authority and Audio Hub boundary contracts passed locally. |
+| Evidence hygiene | `git diff --check` and JSON parsing of `reports/migration/*.json` | no whitespace errors; all generated reports parsed. |
+
+The frozen snapshot does not contain `webapp_core_bridge.py`. Any older
+bridge, callback or route-coverage figures below are retained only as
+historical records and cannot be used to enable an integration or claim
+current parity.
+
+## Historical verification record (non-current)
+
+The following material is retained for traceability of earlier COPYFAST
+worktrees. It does not describe the current frozen-baseline rebaseline and
+must not be cited as current coverage, bridge availability or live readiness.
+
+### Passing focused verification
 
 | Worktree | Command | Result |
 | --- | --- | --- |
@@ -17,7 +42,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
 | Bot bridge | `python -m py_compile local_worker.py`, `webapp_core_bridge.py` | passed |
 | Bot baseline | `python -m py_compile bot.py` | timed out after 124s in this local runtime; process stopped, no provider/import flow was executed |
-| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 774 canonical commands, 1,925 callback-data values, 150 Web routes; 100% mapping coverage; 100% guarded-surface coverage; 0 unmapped routes; 30 static Bot bridge routes match 28 Web request shapes with 0 unmatched requests; the static Telegram callback contract is present with 0 reported gaps and both sides use the same body/timestamp/request-ID/path HMAC material shape. Preflight records requested baseline `b29d…` (where `webapp_core_bridge.py` is missing), audited bridge checkout `32d6…`, and the local-only drift (6 ahead / 0 behind) without fetching, merging or executing Bot code. The audit excludes clearly named noncanonical Bot drafts, reads only routes reachable from the signed `app.py` entrypoint, and propagates direct static admin guards so unmounted legacy decorators and neutral-named admin reports are not mistaken for customer parity. Personal Bot commands, Growth AI/campaign report, and the membership/status/tools/media command groups map to dedicated guarded/read-only Web hubs. |
+| Static audit (historical bridge checkout) | `audit_bot_to_web.py` against a former local P0 bridge worktree | Historical only: 774 canonical commands, 1,925 callback-data values, 150 Web routes; 100% mapping coverage; 100% guarded-surface coverage; 0 unmapped routes; 30 static Bot bridge routes match 28 Web request shapes with 0 unmatched requests; the static Telegram callback contract is present with 0 reported gaps and both sides use the same body/timestamp/request-ID/path HMAC material shape. Its preflight recorded requested baseline `b29d…` (where `webapp_core_bridge.py` was missing), audited bridge checkout `32d6…`, and local-only drift (6 ahead / 0 behind) without fetching, merging or executing Bot code. This row does not describe the current rebaseline. |
 | Portal visual smoke | local public landing and login at desktop and 390px mobile viewport | passed: the landing and unauthenticated login both hide the workspace sidebar/header without a layout gap, remain within the mobile viewport, expose no raw Telegram-ID field, and explain the Bot-adapter release gate when Telegram linking is not deployed. No live account, Telegram, provider, payment or Bot call was made. |
 | Campaign Planner visual smoke | local mock account + signed one-time Telegram callback | passed: register/login, browser-bound Telegram completion, `/campaigns`, create plan, timeline/card render and `draft → review` self-review update all completed. The mock used a temporary local database and HMAC test credential only; no live Bot, provider, PayOS or production account was touched. |
 | Campaign Planner detail | owner-scope API/route tests + full Web suite | passed: `/campaigns/{uuid}` serves only a strict UUID-shaped Web planning route; `GET /api/v1/campaigns/{id}` returns the same bounded local projection only to its signed owner. Invalid IDs receive `REQUEST_INVALID`; another signed account receives the non-enumerating guarded `CAMPAIGN_PLAN_NOT_FOUND` envelope. Detail edits and self-review reuse the existing CSRF/idempotency flow and do not resolve a Bot campaign. |
@@ -35,7 +60,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Professional App Shell | route/session/static-contract tests + full Web suite | passed: anonymous `/` and `/app` redirect to `/login`; every signed Web account, with or without Telegram, goes to `/dashboard`. Marketing is explicit at `/welcome`, not the application root. Railway checks `/health`. The dashboard hydrates only the signed account’s Web-owned drafts/Projects and keeps legacy Bot job/asset metadata separate; it creates no browser-owned payment, provider, ledger or delivery state. |
 | Signed UI hydration regression | local mock-browser smoke + portal contracts | passed: owner-scoped Workspace drafts render after reload in both `/workspace` and `/dashboard`; sanitized Account Activity and Campaign Detail records survive their API hydration/render pass; Assets/Tickets filters retain their selected local view state. The fix preserves only bounded, already-redacted API projections and does not add browser persistence, Bot, provider, PayOS or production calls. |
 
-## Full bot-suite baseline result
+### Historical full bot-suite baseline result
 
 `python -m pytest -q` completed with **1,321 passed and 3 failed**. The three
 failures are not changed by the bridge diff:
@@ -57,7 +82,7 @@ reports that are not part of the COPYFAST bridge diff. The bridge changes are
 additive (`bot.py` link entrypoints plus `webapp_core_bridge.py` and focused
 tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 
-## Guardrails verified by tests
+### Historical guardrails verified by tests
 
 - Browser has no core token, HMAC secret, provider key, raw provider task ID,
   wallet ledger writer, or PayOS webhook.

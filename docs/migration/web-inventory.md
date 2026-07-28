@@ -32,6 +32,7 @@
 | /admin/summary | GET | admin_summary |
 | /admin/tickets | GET | admin_tickets |
 | /admin/users | GET | admin_users |
+| /advisor | GET | support_advisor |
 | /affiliate-app | GET | legacy_affiliate_redirect |
 | /ai-advice | GET | get_ai_advice |
 | /ai/process | POST | process_ai_tool |
@@ -110,6 +111,9 @@
 | /briefs/{brief_id}/variants/{variant_id}/duplicate | POST | duplicate_variant |
 | /briefs/{brief_id}/variants/{variant_id}/restore | POST | restore_variant |
 | /briefs/{brief_id}/variants/{variant_id}/restore-version | POST | restore_variant_version |
+| /budgets | GET | list_budgets |
+| /budgets | POST | create_budget |
+| /budgets/{budget_id}/state | POST | change_budget_state |
 | /campaign-app | GET | legacy_campaign_redirect |
 | /campaign-calendar/window | GET | campaign_calendar_window |
 | /campaigns | GET | list_campaign_plans |
@@ -149,18 +153,14 @@
 | /collections/{collection_id}/items/{item_id}/preview | GET | preview_media_item |
 | /collections/{collection_id}/restore | POST | restore_collection |
 | /collections/{collection_id}/restore-version | POST | restore_collection_version |
+| /collections/{collection_id}/review-pack | POST | review_collection_pack |
 | /compose | POST | compose_prompt_blueprint |
+| /consultation-brief/catalog | GET | consultation_brief_catalog |
+| /consultation-brief/compose | POST | compose_consultation_brief |
+| /consultations | POST | confirm_consultation |
+| /consultations/catalog | GET | consultation_catalog |
+| /consultations/preview | POST | preview_consultation |
 | /convert | POST | convert_audio_asset |
 | /convert | POST | convert_subtitle_asset |
-| /core/me | GET | core_me |
-| /core/status | GET | core_status |
-| /create | POST | create_campaign |
-| /create | POST | create_campaign |
-| /create-payment-link | POST | create_payment_link |
-| /creative-flow | POST | create_creative_flow |
-| /customers | POST | add_customer |
-| /customers | GET | get_customers |
-| /dashboard | GET | get_dashboard_summary |
-| /dashboard-stats | GET | get_dashboard_stats |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

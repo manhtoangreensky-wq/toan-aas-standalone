@@ -9,6 +9,8 @@ from pathlib import Path
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "migration" / "audit_bot_to_web.py"
+REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
+FROZEN_BOT_BASELINE = "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
 
 
 def _load_audit_module():
@@ -19,7 +21,7 @@ def _load_audit_module():
     return module
 
 
-def test_static_audit_never_imports_source_and_redacts_secret_literals(tmp_path: Path) -> None:
+def test_static_audit_preserves_finance_planning_authority_and_redacts_secret_literals(tmp_path: Path) -> None:
     audit = _load_audit_module()
     bot_root = tmp_path / "bot"
     web_root = tmp_path / "web"
@@ -59,11 +61,22 @@ async def dashboard():
 """,
         encoding="utf-8",
     )
+    (web_root / "feature_flags.py").write_text(
+        """
+import os
+
+def _flag(name, *, default):
+    return os.environ.get(name, str(default).lower()).strip().lower() in {'1', 'true'}
+
+FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True)
+""",
+        encoding="utf-8",
+    )
 
     result = audit.run_audit(
         bot_root=bot_root,
         web_root=web_root,
-        bot_baseline_sha="b29d0d474974075f4cba963d2c510f49d2d1b3e4",
+        bot_baseline_sha=FROZEN_BOT_BASELINE,
         report_dir=report_dir,
         docs_dir=docs_dir,
     )
@@ -228,6 +241,112 @@ async def dashboard():
         "Compatibility target",
     ):
         assert marker in erp_map
+    # Finance Planning is a signed, Web-owned administrative workspace.  The
+    # audit must keep its flag, schema boundary and route visible in the three
+    # top-level migration maps whenever it regenerates the evidence bundle.
+    state_map = (docs_dir / "STATE_AND_DATABASE_MAP.md").read_text(encoding="utf-8")
+    environment_map = (docs_dir / "ENV_AND_PROVIDER_MAP.md").read_text(encoding="utf-8")
+    for marker in (
+        "Web-native Finance Planning state",
+        "web_finance_planning_budgets",
+        "web_finance_planning_costs",
+        "web_finance_planning_events",
+        "Web-local Finance Planning",
+        "/admin/finance/planning",
+        "WEBAPP_ADMIN_ERP_ENABLED",
+        "WEBAPP_FINANCE_PLANNING_ENABLED",
+        "It never reads, mirrors or mutates Bot finance events, Telegram identity/role, Xu/wallet, PayOS, provider",
+    ):
+        assert marker in state_map
+    assert "WEBAPP_FINANCE_PLANNING_ENABLED" in environment_map
+    assert "Finance Planning is Web-local" in environment_map
+    assert "WEBAPP_ADMIN_ERP_ENABLED" in environment_map
+    assert "web_finance_planning_budgets" in environment_map
+    assert "web_finance_planning_costs" in environment_map
+    assert "web_finance_planning_events" in environment_map
+    assert "It never enables a Bot finance read/write, Telegram role, wallet/Xu, PayOS, provider" in environment_map
+    assert "Web-local Finance Planning" in erp_map
+    assert "/admin/finance/planning" in erp_map
+    assert "WEBAPP_ADMIN_ERP_ENABLED" in erp_map
+    assert "WEBAPP_FINANCE_PLANNING_ENABLED" in erp_map
+    assert "CSRF, confirmation, idempotency, revision and audit controls" in erp_map
+    assert "must not read or mutate Bot identity/roles, ledger/Xu, PayOS, provider" in erp_map
+
+    # A lightweight Web flag wrapper is still static source evidence.  The
+    # inventory and companion environment map must not silently omit a
+    # Web-owned feature gate merely because it delegates to ``os.environ``.
+    assert any(
+        record["name"] == "WEBAPP_FINANCE_PLANNING_ENABLED"
+        and record["file"] == "feature_flags.py"
+        for record in result["web_inventory"]["env_references"]
+    )
+    companion_environment_map = (docs_dir / "env-provider-map.md").read_text(encoding="utf-8")
+    assert "## Web-local Finance Planning environment" in companion_environment_map
+    assert "WEBAPP_FINANCE_PLANNING_ENABLED" in companion_environment_map
+
+    # When the audit cannot observe a frozen Bot bridge source, generated
+    # authority text must stay fail-closed rather than imply a usable bridge.
+    bridge_contract = (docs_dir / "BRIDGE_CONTRACT_INVENTORY.md").read_text(encoding="utf-8")
+    assert "Guarded unavailable: no verified private bridge source was observed" in state_map
+    assert "Guarded unavailable: no verified private bridge source was observed" in erp_map
+    assert "| Canonical Bot admin | Guarded unavailable: no verified private bridge source was observed" in erp_map
+    assert "cannot claim the Bot-to-Web callback uses any credential or route" in bridge_contract
+    assert "The Bot→Web callback uses separate bearer/HMAC credentials" not in bridge_contract
+
+
+def test_current_migration_evidence_records_frozen_baseline_and_historical_bridge() -> None:
+    """Current evidence cannot present an absent frozen-baseline bridge as live."""
+
+    connection = (REPOSITORY_ROOT / "docs" / "migration" / "TELEGRAM_WEB_CONNECTION.md").read_text(
+        encoding="utf-8"
+    )
+    evidence = (REPOSITORY_ROOT / "docs" / "migration" / "TEST_EVIDENCE.md").read_text(encoding="utf-8")
+    preflight = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "preflight.json").read_text(encoding="utf-8"))
+    bot_inventory = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "bot_inventory.json").read_text(encoding="utf-8"))
+    web_inventory = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "web_inventory.json").read_text(encoding="utf-8"))
+    parity_gap = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "parity_gap.json").read_text(encoding="utf-8"))
+
+    assert preflight["bot"]["baseline_sha_requested"] == FROZEN_BOT_BASELINE
+    assert preflight["bot"]["baseline_bridge_source"] == {
+        "path": "webapp_core_bridge.py",
+        "state": "missing",
+        "present": False,
+    }
+
+    for marker in (
+        "## Current rebaseline status",
+        FROZEN_BOT_BASELINE,
+        "does not include",
+        "`webapp_core_bridge.py`",
+        "not a live Bot-link or deployment claim",
+        "## Historical / non-current bridge design notes",
+    ):
+        assert marker in connection
+
+    for marker in (
+        "## Current static-audit rebaseline (2026-07-28)",
+        FROZEN_BOT_BASELINE,
+        "## Historical verification record (non-current)",
+    ):
+        assert marker in evidence
+    assert f"{bot_inventory['counts']['commands']:,} canonical Bot commands" in evidence
+    assert f"{bot_inventory['counts']['callback_data']:,} callback-data values" in evidence
+    assert f"{web_inventory['counts']['routes']:,} Web routes" in evidence
+    assert f"{parity_gap['static_web_surface_coverage_percent']}% static Web surface coverage" in evidence
+    assert f"{parity_gap['mapping_coverage_percent']}% safe disposition coverage" in evidence
+    workflow_coverage = f"{float(parity_gap['workflow_equivalence']['coverage_percent']):g}"
+    assert f"`{parity_gap['workflow_equivalence']['status']}` ({workflow_coverage}%)" in evidence
+
+
+def test_webapp_quality_workflow_uses_current_migration_audit_smoke_name() -> None:
+    """The bounded CI suite must track the renamed Finance authority test."""
+
+    workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
+    current = "tests/test_migration_audit.py::test_static_audit_preserves_finance_planning_authority_and_redacts_secret_literals"
+    legacy = "tests/test_migration_audit.py::test_static_audit_never_imports_source_and_redacts_secret_literals"
+
+    assert current in workflow
+    assert legacy not in workflow
 
 
 def test_static_audit_uses_requested_git_baseline_snapshot_not_dirty_worktree(tmp_path: Path) -> None:
@@ -309,9 +428,43 @@ async def dashboard():
         "ahead_commits": 0,
         "behind_commits": 0,
     }
+    assert result["bot_inventory"]["source_root"] == f"git-baseline:{baseline_sha}"
     readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert f"Bot source audited: static Git baseline snapshot `{baseline_sha}`" in readme
     assert "working tree not used as source evidence" in readme
+
+
+def test_static_audit_excludes_its_configured_output_roots_from_web_inventory(tmp_path: Path) -> None:
+    """Regenerating reports cannot make the Web source fingerprint drift."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text("application.add_handler(CommandHandler('start', handler))\n", encoding="utf-8")
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    report_dir.mkdir(parents=True)
+    docs_dir.mkdir(parents=True)
+    (report_dir / "previous.json").write_text('{"generated": true}', encoding="utf-8")
+    (docs_dir / "previous.md").write_text("# Generated audit output\n", encoding="utf-8")
+
+    first = audit.run_audit(bot_root, web_root, "baseline", report_dir, docs_dir)
+    second = audit.run_audit(
+        bot_root,
+        web_root,
+        "baseline",
+        tmp_path / "external-output" / "reports",
+        tmp_path / "external-output" / "docs",
+    )
+
+    assert first["web_inventory"]["source_files_discovered"] == 1
+    assert first["web_inventory"]["source_files_scanned"] == 1
+    assert first["web_inventory"]["source_fingerprint_sha256"] == second["web_inventory"]["source_fingerprint_sha256"]
+    assert first["web_inventory"]["source_files_discovered"] == second["web_inventory"]["source_files_discovered"]
+    assert first["web_inventory"] == second["web_inventory"]
 
 
 def test_static_audit_records_api_routes_db_env_and_background_signals(tmp_path: Path) -> None:
