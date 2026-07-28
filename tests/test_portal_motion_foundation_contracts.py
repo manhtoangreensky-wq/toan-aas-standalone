@@ -89,6 +89,20 @@ def test_motion_utility_is_browser_only_progressive_enhancement() -> None:
         assert re.search(forbidden, motion, flags=re.IGNORECASE) is None
 
 
+def test_motion_utility_waits_for_view_transition_dom_update_before_entering() -> None:
+    motion = _motion_source()
+
+    # `startViewTransition()` may defer its update callback until the previous
+    # snapshot is captured.  Enter animation must therefore wait for the DOM
+    # update rather than running against the outgoing workspace.
+    assert "transition.updateCallbackDone" in motion
+    assert re.search(
+        r"transition\.updateCallbackDone\.then\(\(\)\s*=>\s*\{?\s*"
+        r"enter\(main,\s*[\"']enter[\"']\)",
+        motion,
+    )
+
+
 def test_theme_declares_shared_portal_motion_tokens_and_lifecycle_selectors() -> None:
     root = _theme_root()
     expected_tokens = (

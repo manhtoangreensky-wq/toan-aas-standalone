@@ -52,6 +52,7 @@ _PORTAL_BUILD_SOURCE_FILES = (
     "portal-theme.css",
     "portal-i18n.js",
     "portal.js",
+    "portal-motion.js",
     "integration.js",
     "service-worker.js",
     "manifest.webmanifest",
@@ -329,7 +330,7 @@ def _shell_title_for(path: str, locale: str) -> str:
 def _fallback_template() -> str:
     # Keep the fallback compatible with the strict production CSP: bootstrap
     # data lives in inert JSON, never in an inline executable script.
-    return """<!doctype html><html lang=\"__PORTAL_HTML_LANG__\" dir=\"ltr\" data-portal-locale=\"__PORTAL_LOCALE__\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"description\" content=\"__PORTAL_DESCRIPTION__\"><title>__PORTAL_TITLE__</title><link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal-theme.css?v=__PORTAL_ASSET_VERSION__\"></head><body><a class=\"skip-link\" href=\"#portal-main\">__PORTAL_SKIP_NAVIGATION__</a><main id=\"portal-root\" aria-label=\"__PORTAL_MAIN_NAVIGATION__\"><p>__PORTAL_BOOT_MESSAGE__</p></main><noscript>__PORTAL_NOSCRIPT__</noscript><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal-i18n.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__\" defer></script></body></html>"""
+    return """<!doctype html><html lang=\"__PORTAL_HTML_LANG__\" dir=\"ltr\" data-portal-locale=\"__PORTAL_LOCALE__\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"description\" content=\"__PORTAL_DESCRIPTION__\"><title>__PORTAL_TITLE__</title><link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal-theme.css?v=__PORTAL_ASSET_VERSION__\"></head><body><a class=\"skip-link\" href=\"#portal-main\">__PORTAL_SKIP_NAVIGATION__</a><main id=\"portal-root\" aria-label=\"__PORTAL_MAIN_NAVIGATION__\"><p>__PORTAL_BOOT_MESSAGE__</p></main><noscript>__PORTAL_NOSCRIPT__</noscript><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal-i18n.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal-motion.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__\" defer></script></body></html>"""
 
 
 def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResponse:
