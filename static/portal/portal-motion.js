@@ -31,7 +31,7 @@
     if (prefersReducedMotion() || typeof document.startViewTransition !== "function") {
       apply();
       enter(main, "enter");
-      return;
+      return Promise.resolve();
     }
     try {
       const transition = document.startViewTransition(apply);
@@ -39,15 +39,17 @@
       if (transition && transition.finished) transition.finished.catch(() => {});
       if (transition && transition.updateCallbackDone
           && typeof transition.updateCallbackDone.then === "function") {
-        transition.updateCallbackDone.then(() => {
+        return transition.updateCallbackDone.then(() => {
           enter(main, "enter");
         }).catch(() => {});
       } else {
         enter(main, "enter");
+        return Promise.resolve();
       }
     } catch (_) {
       apply();
       enter(main, "enter");
+      return Promise.resolve();
     }
   }
 
