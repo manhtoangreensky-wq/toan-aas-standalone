@@ -2,7 +2,7 @@
 
 ## Purpose and authority
 
-`/media-workspace/music-directions` is an independent signed Web-native text-planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `suggest_music|*` callback family. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`; its five callbacks reply with a Bot `/music_library` keyword and stay `SUGGEST_MUSIC_SOURCE_REVIEW_REQUIRED` in the parity audit.
+`/media-workspace/music-directions` is an independent signed Web-native text-planning surface. It is deliberately **not** an adapter for the frozen Telegram Bot's `suggest_music|*` callback family. The Bot remains frozen at `b29d0d474974075f4cba963d2c510f49d2d1b3e4`; its five callbacks reply with a Bot `/music_library` keyword and are completely classified `TELEGRAM_ONLY` in the parity audit. That completed classification does not add a Web feature or runtime-equivalence claim.
 
 The page offers five reviewed, opaque Web preset IDs:
 
@@ -60,7 +60,7 @@ It may present three text directions for manual review. It does not save to Memo
 
 ## Callback boundary remains unchanged
 
-The independent page does not give browser meaning to any original Bot callback. All of these remain source-review-only and must not acquire a Web route, browser action or request parameter:
+The independent page does not give browser meaning to any original Bot callback. All of these are `TELEGRAM_ONLY` and must not acquire a Web route, browser action or request parameter:
 
 - `suggest_music|sales`, `suggest_music|tech`, `suggest_music|cinematic`, `suggest_music|review`, and `suggest_music|trend`;
 - every case variant, missing token, suffix, unknown value, or future `suggest_music|*` value.
