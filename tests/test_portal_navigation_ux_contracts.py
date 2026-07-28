@@ -1,5 +1,6 @@
 """Focused navigation contracts for the signed portal shell."""
 
+import re
 from pathlib import Path
 
 
@@ -81,44 +82,45 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     permanent_projection = navigation[
         navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
     ]
-    permanent_labels = [
-        line.strip().split('"', 2)[1]
-        for line in permanent_projection.splitlines()
-        if line.strip().startswith('label: "')
+    compact_groups = {
+        "Workspace": ["/dashboard", "/projects", "/workboard", "/campaigns", "/calendar"],
+        "Tạo mới": ["/features", "/chat", "/content-studio", "/image-studio"],
+        "Công việc": ["/workspace", "/jobs", "/assets", "/asset-vault", "/approvals"],
+        "Ví & gói": ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing"],
+        "Tài khoản & hỗ trợ": ["/account", "/tickets", "/support"],
+    }
+    group_pattern = re.compile(
+        r'label:\s*"(?P<label>[^"]+)"(?P<body>.*?)(?=\s*\]\s*\},?\s*\n\s*\{|\s*\]\s*\}\s*\n\s*\];)',
+        re.DOTALL,
+    )
+    permanent_groups = [
+        (
+            match.group("label"),
+            re.findall(r'\["(?P<path>/[^"]+)"\s*,', match.group("body")),
+        )
+        for match in group_pattern.finditer(permanent_projection)
     ]
-    expected_labels = ["Workspace", "Tạo mới", "Công việc", "Ví & gói", "Tài khoản & hỗ trợ"]
-    assert permanent_labels == expected_labels
-    for label in expected_labels:
-        assert navigation.count(f'label: "{label}"') == 1
+    assert permanent_groups == list(compact_groups.items())
 
-    label_positions = [permanent_projection.index(f'label: "{label}"') for label in expected_labels]
-    for index, start in enumerate(label_positions):
-        end = label_positions[index + 1] if index + 1 < len(label_positions) else len(permanent_projection)
-        assert permanent_projection[start:end].count('["/') <= 5
-
-    for path in (
-        "/dashboard", "/projects", "/workboard", "/campaigns", "/calendar",
-        "/features", "/chat", "/content-studio", "/image-studio",
-        "/workspace", "/jobs", "/assets", "/asset-vault", "/approvals",
-        "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing",
-        "/account", "/tickets", "/support",
-    ):
-        assert f'["{path}",' in permanent_projection
-
-    # These dense non-video blocks must move out of the permanent rail, not
-    # disappear from the authoritative manifest or palette.
-    for stale_literal in (
-        'label: "Nội dung & kế hoạch"',
-        'label: "AI Labs & Media"',
-        'label: "Bot companion"',
-        '["/workspace-menu", "Chuyển workspace"',
-        '["/prompt-library", "Prompt Library"',
-        '["/voice-studio", "Voice Studio"',
-        '["/document-workspace", "Document Workspace"',
-        '["/automation", "Automation Center"',
-        '["/operations", "Operations Center"',
-    ):
-        assert stale_literal not in permanent_projection
+    permanent_routes = [path for _, paths in permanent_groups for path in paths]
+    assert len(permanent_routes) == 22
+    assert len(permanent_routes) == len(set(permanent_routes))
+    # Dense and Bot-companion routes remain discoverable through the manifest
+    # and palette, but do not get a permanent signed-customer rail position.
+    dense_or_bot_routes = {
+        "/workspace-menu", "/starter-kits", "/project-packages", "/prompt-library",
+        "/free-prompt-gallery", "/content/channel-strategy", "/content/handoffs",
+        "/crm/leads", "/content/prompt-pack", "/content/publish-review",
+        "/content/contextual-prompt", "/trend-research", "/media-factory", "/creative-flow",
+        "/guides/source-rights", "/analytics", "/notes", "/reminders", "/image/prompt-composer",
+        "/image-hub", "/document-workspace", "/subtitle-studio", "/subtitle/assets",
+        "/subtitle/formats", "/voice-studio", "/voice-studio/direction-composer",
+        "/media-workspace", "/media-workspace/sfx-cue-sheet", "/audio/assets",
+        "/account/interface-language", "/account/activity", "/account/data-controls",
+        "/account/workspace-care", "/guides", "/inbox", "/automation", "/operations",
+        "/status", "/referrals", "/rewards", "/community",
+    }
+    assert not set(permanent_routes).intersection(dense_or_bot_routes)
 
     assert "Object.values(manifest)" in palette
     assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
@@ -130,7 +132,19 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert "const videoStudioNavGroups = [" in navigation
     assert video_guard in navigation
     assert video_insertion in navigation
-    assert navigation.index(video_guard) < navigation.index(video_insertion)
+    guard_open = navigation.index("{", navigation.index(video_guard))
+    guard_depth = 0
+    guard_close = None
+    for position, character in enumerate(navigation[guard_open:], start=guard_open):
+        if character == "{":
+            guard_depth += 1
+        elif character == "}":
+            guard_depth -= 1
+            if guard_depth == 0:
+                guard_close = position
+                break
+    assert guard_close is not None
+    assert video_insertion in navigation[guard_open + 1:guard_close]
 
     # Deep routes retain a single, presentation-only orientation cue rather
     # than expanding the full customer catalogue again.
