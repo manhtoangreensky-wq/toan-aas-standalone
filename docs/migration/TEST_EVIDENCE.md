@@ -12,7 +12,7 @@ not a deployment, provider, PayOS, Telegram or runtime-equivalence result.
 
 | Scope | Command / evidence | Current result |
 | --- | --- | --- |
-| Static audit | `scripts/migration/audit_bot_to_web.py` against the frozen Git snapshot and current Web main | 773 canonical Bot commands, 2,862 callback-data values and 664 Web routes; 38.71% static Web surface coverage, 79.35% safe disposition coverage, and runtime equivalence is `NOT_STATICALLY_VERIFIABLE` (0%). |
+| Static audit | `scripts/migration/audit_bot_to_web.py` against the frozen Git snapshot and current Web main | 773 canonical Bot commands, 2,865 callback-data values and 664 Web routes; 38.68% static Web surface coverage, 80.15% safe disposition coverage, and runtime equivalence is `NOT_STATICALLY_VERIFIABLE` (0%). |
 | Audit generator | `python -m py_compile scripts/migration/audit_bot_to_web.py` | passed locally; source parsing only. |
 | Focused regression | `python -m pytest -q tests/test_migration_audit.py -k 'static_audit_preserves_finance_planning_authority_and_redacts_secret_literals or audio_hub' -p no:cacheprovider` | Finance Planning authority and Audio Hub boundary contracts passed locally. |
 | Evidence hygiene | `git diff --check` and JSON parsing of `reports/migration/*.json` | no whitespace errors; all generated reports parsed. |

@@ -11672,24 +11672,24 @@
         "file": "bot.py",
         "line": 39360
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|edit_need_image",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13320,26 +13320,51 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
-        "line": 40709
+        "line": 40550
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_logo",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/brand-overlay",
+      "web_image_tool_intent": "web_image_brand_overlay"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 40709
+      },
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
+      "source": "imgtool|editor_logo",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
+      "source_kind": "callback_data",
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/brand-overlay",
+      "web_image_tool_intent": "web_image_brand_overlay"
     },
     {
       "classification": "customer",
@@ -13545,26 +13570,51 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
-        "line": 39371
+        "line": 40535
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
-      "source": "imgtool|editor_presets",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
+      "source": "imgtool|editor_overlays",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/brand-overlay",
+      "web_image_tool_intent": "web_image_brand_overlay"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 39371
+      },
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
+      "source": "imgtool|editor_presets",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
+      "source_kind": "callback_data",
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13572,24 +13622,24 @@
         "file": "bot.py",
         "line": 39379
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_presets",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13597,24 +13647,24 @@
         "file": "bot.py",
         "line": 39386
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_presets",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13622,24 +13672,24 @@
         "file": "bot.py",
         "line": 40192
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_presets",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13647,24 +13697,24 @@
         "file": "bot.py",
         "line": 40199
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_presets",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13672,24 +13722,24 @@
         "file": "bot.py",
         "line": 40706
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_presets",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13697,24 +13747,24 @@
         "file": "bot.py",
         "line": 40721
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|cinematic_warm",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13722,24 +13772,24 @@
         "file": "bot.py",
         "line": 40723
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|food_vivid",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13747,24 +13797,24 @@
         "file": "bot.py",
         "line": 40722
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|fresh_blue",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13772,24 +13822,24 @@
         "file": "bot.py",
         "line": 40705
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|photo_clear_detail",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13797,24 +13847,24 @@
         "file": "bot.py",
         "line": 40719
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|photo_clear_detail",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13822,24 +13872,24 @@
         "file": "bot.py",
         "line": 40720
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_preset|product_clean",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit",
+      "web_image_tool_intent": "web_image_enhance"
     },
     {
       "classification": "customer",
@@ -13847,24 +13897,24 @@
         "file": "bot.py",
         "line": 40707
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_resize",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -13895,26 +13945,51 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
-        "line": 40708
+        "line": 40543
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|editor_text",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/brand-overlay",
+      "web_image_tool_intent": "web_image_brand_overlay"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 40708
+      },
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
+      "source": "imgtool|editor_text",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
+      "source_kind": "callback_data",
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/brand-overlay",
+      "web_image_tool_intent": "web_image_brand_overlay"
     },
     {
       "classification": "customer",
@@ -14372,24 +14447,24 @@
         "file": "bot.py",
         "line": 38787
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|prompt_manual",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/prompt-composer",
+      "web_image_tool_intent": "web_image_prompt_composer"
     },
     {
       "classification": "customer",
@@ -14397,24 +14472,24 @@
         "file": "bot.py",
         "line": 38791
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|prompt_manual",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/prompt-composer",
+      "web_image_tool_intent": "web_image_prompt_composer"
     },
     {
       "classification": "customer",
@@ -15222,24 +15297,24 @@
         "file": "bot.py",
         "line": 40232
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_method|blur",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15247,24 +15322,24 @@
         "file": "bot.py",
         "line": 40234
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_method|crop",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15272,24 +15347,24 @@
         "file": "bot.py",
         "line": 40233
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_method|pad",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15297,24 +15372,24 @@
         "file": "bot.py",
         "line": 40166
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_need_image",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15447,24 +15522,24 @@
         "file": "bot.py",
         "line": 39369
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|pixels",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15472,24 +15547,24 @@
         "file": "bot.py",
         "line": 39377
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|pixels",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15497,24 +15572,24 @@
         "file": "bot.py",
         "line": 39384
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|pixels",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15522,24 +15597,24 @@
         "file": "bot.py",
         "line": 40190
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|pixels",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15547,24 +15622,24 @@
         "file": "bot.py",
         "line": 40197
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|pixels",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15572,24 +15647,24 @@
         "file": "bot.py",
         "line": 39369
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|ratio",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15597,24 +15672,24 @@
         "file": "bot.py",
         "line": 39377
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|ratio",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15622,24 +15697,24 @@
         "file": "bot.py",
         "line": 39384
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|ratio",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15647,24 +15722,24 @@
         "file": "bot.py",
         "line": 40190
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|ratio",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "customer",
@@ -15672,24 +15747,24 @@
         "file": "bot.py",
         "line": 40197
       },
-      "fallback_family": "imgtool",
-      "resolution": "imgtool_callback_requires_web_native_image_workflow_contract",
+      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
+      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_imgtool_fresh_web_navigation",
       "source": "imgtool|resize_task|ratio",
       "source_dispositions": [
-        "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_IMAGE_TOOL_PENDING_STATE",
-        "BOT_TELEGRAM_FILE_RESULT_OR_MEMORY_STATE",
-        "CANONICAL_BOT_SHOPAI_PROVIDER_WALLET_OR_DELIVERY_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
-        "NO_BOT_FILE_OR_PENDING_STATE_REPLAY",
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
         "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Image Tools handler reads the Telegram caller and per-user image-tool pending/result state. Its branches can select a Telegram file, generate or save a prompt/note, perform local edit/resize output, consume a ShopAI confirmation, select a tier, call an image-edit provider or deliver media in Telegram. The standalone Web has no adapter that accepts or replays an imgtool callback, Telegram file id, pending state, confirmation, charge, provider response or output.",
+      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/resize",
+      "web_image_tool_intent": "web_image_resize"
     },
     {
       "classification": "admin",
@@ -74277,7 +74352,7 @@
     {
       "authority": "Source review required",
       "candidate_boundary": "source_review_required",
-      "count": 210,
+      "count": 178,
       "family": "imgtool",
       "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
       "priority": "P1",
@@ -74826,7 +74901,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 837,
+      "count": 805,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -74835,7 +74910,7 @@
           "priority": "P0"
         },
         {
-          "count": 210,
+          "count": 178,
           "family": "imgtool",
           "priority": "P1"
         },
@@ -75118,12 +75193,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 79.35,
+  "mapping_coverage_percent": 80.15,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1569,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 849,
-    "NEEDS_FEATURE_DISPOSITION": 837,
+    "NAVIGATION_ONLY": 884,
+    "NEEDS_FEATURE_DISPOSITION": 805,
     "TELEGRAM_ONLY": 791,
     "WEB_NATIVE_READ_ONLY": 5
   },
@@ -75132,7 +75207,7 @@
     "excluded_unreferenced_handler_package_records": 57,
     "note": "Coverage is calculated only from concrete source actions reachable from the observed bot.py entrypoint. CallbackQueryHandler registrations are transport metadata, and unreferenced handlers-package records remain evidence only. This changes the denominator; it does not add a Web feature or runtime-parity claim.",
     "numeric_tuple_non_action_rule": "Bare N:N aspect-ratio tuple values are configuration data, not callback actions; numeric-leading structured callbacks remain inventoried.",
-    "product_action_denominator": 4053
+    "product_action_denominator": 4056
   },
   "notes": [
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
@@ -75146,25 +75221,25 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 79.35,
+  "safe_disposition_coverage_percent": 80.15,
   "schema_version": "2.0",
   "source_counts": {
-    "callback_data": 2862,
+    "callback_data": 2865,
     "callback_handler_dispatchers": 54,
     "callback_handlers": 54,
     "callback_templates": 475,
     "commands": 773,
     "conversations": 0,
-    "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3216,
+    "observed_runtime_product_action_mappings": 4056,
+    "resolved_static_source_count": 3251,
     "telegram_transport_handler_records": 54,
-    "total_audited_source_records": 4164,
-    "total_mappings": 4053,
+    "total_audited_source_records": 4167,
+    "total_mappings": 4056,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
-    "unresolved_source_count": 837
+    "unresolved_source_count": 805
   },
-  "static_web_surface_coverage_percent": 38.71,
+  "static_web_surface_coverage_percent": 38.68,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
