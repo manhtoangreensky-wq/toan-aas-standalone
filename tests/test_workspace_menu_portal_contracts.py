@@ -39,10 +39,28 @@ def test_workspace_menu_is_an_explicit_signed_navigation_directory() -> None:
         'customerPage("/workspace-menu", "Chuyển workspace"',
         'type: "workspace-menu", layout: "workspace-menu", fields: [], action: "none", status: "read_only"',
         'case "workspace-menu": return renderWorkspaceMenu(page, context);',
-        '["/workspace-menu", "Chuyển workspace", ICONS.dashboard]',
         'href="/workspace-menu"',
     ):
         assert declaration in PORTAL
+
+    # The customer rail is intentionally compact.  This signed directory
+    # remains a real route and remains discoverable through the catalogue /
+    # command palette, but must not restore the old dense permanent rail.
+    navigation = _between(
+        PORTAL,
+        "function navGroups(context, currentPage)",
+        "function matchesRouteFamily(path, root)",
+    )
+    permanent_projection = navigation[
+        navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
+    ]
+    palette = _between(
+        PORTAL,
+        "function commandPaletteItems(context, page)",
+        "function renderCommandPalette(page, context)",
+    )
+    assert '["/workspace-menu", "Chuyển workspace", ICONS.dashboard]' not in permanent_projection
+    assert "Object.values(manifest)" in palette
 
     # A browser-owned projection must remain fixed and must not expose the
     # existing public catalog's Video, admin or payment-write entries.
