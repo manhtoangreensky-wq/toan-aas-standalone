@@ -62,6 +62,7 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `INTERNAL_BILLING_TOKEN`
 - `JAMENDO_CLIENT_ID`
 - `JAMENDO_CLIENT_SECRET`
+- `KEY4U_ADMIN_SMOKE_ENABLED`
 - `KEY4U_ALT_TTS_MODEL`
 - `KEY4U_ALT_TTS_MODEL`
 - `KEY4U_API_BASE`
@@ -92,6 +93,7 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `KEY4U_DEFAULT_VIDEO_MODEL`
 - `KEY4U_DEFAULT_VISION_MODEL`
 - `KEY4U_DEFAULT_VISION_MODEL`
+- `KEY4U_ENABLED`
 - `KEY4U_IMAGE_EDITS_ENDPOINT`
 - `KEY4U_IMAGE_EDITS_ENDPOINT`
 - `KEY4U_IMAGE_EDIT_ENDPOINT`
@@ -120,10 +122,12 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `KEY4U_NANO_BANANA_EDIT_MODEL`
 - `KEY4U_OPENAI_BASE_URL`
 - `KEY4U_OPENAI_BASE_URL`
+- `KEY4U_PUBLIC_ENABLED`
 - `KEY4U_RERANK_ENDPOINT`
 - `KEY4U_RERANK_ENDPOINT`
 - `KEY4U_RERANK_MODEL`
 - `KEY4U_RERANK_MODEL`
+- `KEY4U_SMART_ROUTING`
 - `KEY4U_STT_ENDPOINT`
 - `KEY4U_STT_ENDPOINT`
 - `KEY4U_STT_MODEL`
@@ -172,12 +176,14 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `KLING_API_KEY`
 - `KLING_SECRET_KEY`
 - `LEAD_WEBHOOK_SECRET`
+- `LOCAL_COMFY_ENABLED`
 - `LOCAL_COMFY_URL`
 - `LOCAL_FFMPEG_FONT_PATH`
 - `LOCAL_FFMPEG_PATH`
 - `LOCAL_FFMPEG_PATH`
 - `LOCAL_WORKER_BOT_URL`
 - `LOCAL_WORKER_ID`
+- `LOCAL_WORKER_MAX_JOB_SECONDS`
 - `LOCAL_WORKER_TOKEN`
 - `LOCAL_WORKER_TOKEN`
 - `MANUAL_BANK_ACCOUNT`
@@ -244,11 +250,14 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `PROMO_LAUNCH_BONUS_ELIGIBLE_METHODS`
 - `PROMO_RANK_TOPUP_REWARD_ELIGIBLE_CURRENCIES`
 - `PROMO_RANK_TOPUP_REWARD_ELIGIBLE_METHODS`
+- `PROVIDER_FALLBACK_ENABLED`
 - `PROVIDER_FALLBACK_ORDER`
 - `PROVIDER_FALLBACK_ORDER`
 - `PROVIDER_FREEZE_MESSAGE`
+- `PROVIDER_PARALLEL_ENABLED`
 - `PROVIDER_PRIMARY`
 - `PROVIDER_PRIMARY`
+- `PROVIDER_ROUTER_ENABLED`
 - `PUBLIC_BASE_URL`
 - `PUBLIC_SITE_URL`
 - `PUBLIC_VIDEO_GENERATION_ENABLED`
@@ -364,6 +373,9 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `WOKUSHOP_PUBLIC_ENABLED`
 - `WOKUSHOP_REASON`
 - `WOKUSHOP_REASON`
+- `WOKU_ADMIN_SMOKE_ENABLED`
+- `WOKU_ENABLED`
+- `WOKU_PUBLIC_ENABLED`
 - `WOKU_REASON`
 - `WOKU_REASON`
 
@@ -391,7 +403,8 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 - `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` defaults to `false`; when enabled it permits only verified, owner-scoped, same-origin inline preview of an attached active Asset Vault audio file.
 - This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.
 
-## Web-native Finance Operations Planning
+## Web-local Finance Planning
 
-- `WEBAPP_FINANCE_PLANNING_ENABLED` defaults to `true` and gates only the signed Admin ERP planning workspace at `/admin/finance/planning`.
-- It does not enable, replace, or write Bot canonical finance; Xu/wallet, PayOS/payment/webhook, provider/job, tax calculation, reimbursement execution, accounting export, or any production credential remain outside this flag.
+- `WEBAPP_FINANCE_PLANNING_ENABLED` defaults to `true` together with `WEBAPP_ADMIN_ERP_ENABLED` for the separately signed `/admin/finance/planning` workspace.
+- Finance Planning is Web-local: its switch only enables the additive `web_finance_planning_budgets`, `web_finance_planning_costs` and `web_finance_planning_events` planning/audit tables.
+- It never enables a Bot finance read/write, Telegram role, wallet/Xu, PayOS, provider, payment, refund, revenue, tax, export or canonical finance event.

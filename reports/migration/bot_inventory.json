@@ -27614,7 +27614,7 @@
     "commands": 773,
     "conversations": 0,
     "database_tables": 97,
-    "env_references": 364,
+    "env_references": 376,
     "providers": 15,
     "routes": 139
   },
@@ -30145,6 +30145,11 @@
       "name": "JAMENDO_CLIENT_SECRET"
     },
     {
+      "file": "providers/key4u_provider.py",
+      "line": 307,
+      "name": "KEY4U_ADMIN_SMOKE_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 513,
       "name": "KEY4U_ALT_TTS_MODEL"
@@ -30295,6 +30300,11 @@
       "name": "KEY4U_DEFAULT_VISION_MODEL"
     },
     {
+      "file": "providers/key4u_provider.py",
+      "line": 298,
+      "name": "KEY4U_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 485,
       "name": "KEY4U_IMAGE_EDITS_ENDPOINT"
@@ -30435,6 +30445,11 @@
       "name": "KEY4U_OPENAI_BASE_URL"
     },
     {
+      "file": "providers/key4u_provider.py",
+      "line": 306,
+      "name": "KEY4U_PUBLIC_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 502,
       "name": "KEY4U_RERANK_ENDPOINT"
@@ -30453,6 +30468,11 @@
       "file": "providers/key4u_provider.py",
       "line": 340,
       "name": "KEY4U_RERANK_MODEL"
+    },
+    {
+      "file": "providers/key4u_provider.py",
+      "line": 305,
+      "name": "KEY4U_SMART_ROUTING"
     },
     {
       "file": "bot.py",
@@ -30695,6 +30715,11 @@
       "name": "LEAD_WEBHOOK_SECRET"
     },
     {
+      "file": "local_worker.py",
+      "line": 80,
+      "name": "LOCAL_COMFY_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 904,
       "name": "LOCAL_COMFY_URL"
@@ -30723,6 +30748,11 @@
       "file": "local_worker.py",
       "line": 74,
       "name": "LOCAL_WORKER_ID"
+    },
+    {
+      "file": "local_worker.py",
+      "line": 75,
+      "name": "LOCAL_WORKER_MAX_JOB_SECONDS"
     },
     {
       "file": "bot.py",
@@ -31055,6 +31085,11 @@
       "name": "PROMO_RANK_TOPUP_REWARD_ELIGIBLE_METHODS"
     },
     {
+      "file": "provider_router.py",
+      "line": 27,
+      "name": "PROVIDER_FALLBACK_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 605,
       "name": "PROVIDER_FALLBACK_ORDER"
@@ -31070,6 +31105,11 @@
       "name": "PROVIDER_FREEZE_MESSAGE"
     },
     {
+      "file": "provider_router.py",
+      "line": 36,
+      "name": "PROVIDER_PARALLEL_ENABLED"
+    },
+    {
       "file": "bot.py",
       "line": 602,
       "name": "PROVIDER_PRIMARY"
@@ -31078,6 +31118,11 @@
       "file": "provider_router.py",
       "line": 31,
       "name": "PROVIDER_PRIMARY"
+    },
+    {
+      "file": "provider_router.py",
+      "line": 23,
+      "name": "PROVIDER_ROUTER_ENABLED"
     },
     {
       "file": "local_worker.py",
@@ -31653,6 +31698,21 @@
       "file": "provider_router.py",
       "line": 64,
       "name": "WOKUSHOP_REASON"
+    },
+    {
+      "file": "provider_router.py",
+      "line": 62,
+      "name": "WOKU_ADMIN_SMOKE_ENABLED"
+    },
+    {
+      "file": "provider_router.py",
+      "line": 60,
+      "name": "WOKU_ENABLED"
+    },
+    {
+      "file": "provider_router.py",
+      "line": 61,
+      "name": "WOKU_PUBLIC_ENABLED"
     },
     {
       "file": "bot.py",
@@ -33435,5 +33495,5 @@
   "source_files_discovered": 176,
   "source_files_scanned": 172,
   "source_fingerprint_sha256": "f3d494338eb19d729916151048d3f5d3ee03f0f895c3bfe7089e1e2a967f1b25",
-  "source_root": "C:\\Users\\toann\\AppData\\Local\\Temp\\toan-aas-bot-baseline-mlpc7tcv"
+  "source_root": "git-baseline:b29d0d474974075f4cba963d2c510f49d2d1b3e4"
 }

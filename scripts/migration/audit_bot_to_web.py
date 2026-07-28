@@ -36,6 +36,11 @@ from typing import Any, Iterable
 
 SCHEMA_VERSION = "2.0"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
+# These versioned migration directories are generated audit evidence, never
+# Web application source.  Exclude them even when an operator writes a
+# one-off audit to another output location; otherwise an old committed bundle
+# becomes input to the next Web fingerprint.
+STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS = (Path("docs") / "migration", Path("reports") / "migration")
 EXCLUDED_DIRS = {
     ".git",
     ".pytest_cache",
@@ -4284,16 +4289,34 @@ def _is_excluded_source_dir(name: str) -> bool:
     return name in EXCLUDED_DIRS or name.startswith("_pytest_")
 
 
-def _source_files(root: Path) -> list[Path]:
+def _path_is_within(path: Path, parent: Path) -> bool:
+    """Return whether an absolute path is the parent or one of its children."""
+
+    return path == parent or parent in path.parents
+
+
+def _source_files(root: Path, *, excluded_roots: Iterable[Path] = ()) -> list[Path]:
     files: list[Path] = []
+    root = root.resolve()
+    output_roots = tuple(path.resolve() for path in excluded_roots)
+
+    def excluded_output(path: Path) -> bool:
+        return any(_path_is_within(path, output_root) for output_root in output_roots)
+
     # ``Path.rglob`` cannot prune child directories.  ``os.walk`` lets this
     # static-only audit skip generated snapshots before attempting to read
     # them, which also keeps inaccessible temporary test directories harmless.
     for directory, child_dirs, filenames in os.walk(root, topdown=True, onerror=lambda _error: None):
-        child_dirs[:] = [name for name in child_dirs if not _is_excluded_source_dir(name)]
         base = Path(directory)
+        child_dirs[:] = [
+            name
+            for name in child_dirs
+            if not _is_excluded_source_dir(name) and not excluded_output(base / name)
+        ]
         for filename in filenames:
             path = base / filename
+            if excluded_output(path):
+                continue
             if path.suffix.lower() not in SOURCE_SUFFIXES:
                 continue
             try:
@@ -4639,13 +4662,42 @@ def _append_unique(records: list[dict[str, Any]], seen: set[tuple[Any, ...]], re
         records.append(record)
 
 
+def _environment_wrapper_names(tree: ast.AST) -> set[str]:
+    """Find local helpers that pass their first argument to an environment read.
+
+    The audit remains static-only: a function is a wrapper only when its own
+    AST directly passes one of its declared parameters to a recognised
+    ``os.getenv``/``os.environ.get``-style call.  This covers small feature
+    gates such as ``_flag(name, ...)`` without treating arbitrary helper names
+    as environment access.
+    """
+
+    wrappers: set[str] = set()
+    direct_environment_calls = {"os.getenv", "os.environ.get", "_env", "env"}
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        parameter_names = {argument.arg for argument in (*node.args.posonlyargs, *node.args.args)}
+        if not parameter_names:
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call) or _call_name(child.func) not in direct_environment_calls or not child.args:
+                continue
+            argument = child.args[0]
+            if isinstance(argument, ast.Name) and argument.id in parameter_names:
+                wrappers.add(node.name)
+                break
+    return wrappers
+
+
 def _extract_env_from_ast(tree: ast.AST, root: Path, path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
+    environment_wrappers = _environment_wrapper_names(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             call_name = _call_name(node.func)
-            captures_env = call_name in {"os.getenv", "os.environ.get", "_env", "env"}
+            captures_env = call_name in {"os.getenv", "os.environ.get", "_env", "env"} or call_name in environment_wrappers
             if captures_env and node.args:
                 name = _literal_string(node.args[0])
                 if name and ENV_LITERAL_RE.fullmatch(name):
@@ -5444,8 +5496,14 @@ def _fingerprint(files: list[Path], root: Path) -> str:
     return digest.hexdigest()
 
 
-def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
-    discovered_files = _source_files(root)
+def _summarize_inventory(
+    project_kind: str,
+    root: Path,
+    *,
+    excluded_source_roots: Iterable[Path] = (),
+    source_root_label: str | None = None,
+) -> dict[str, Any]:
+    discovered_files = _source_files(root, excluded_roots=excluded_source_roots)
     files, excluded_noncanonical_source_files = _active_inventory_files(project_kind, root, discovered_files)
     python_inventory = _extract_python_inventory(root, files)
     tables = _extract_database_references(root, files)
@@ -5454,7 +5512,7 @@ def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
         "schema_version": SCHEMA_VERSION,
         "project_kind": project_kind,
         "audit_mode": "static-only",
-        "source_root": str(root),
+        "source_root": source_root_label or str(root),
         "source_files_discovered": len(discovered_files),
         "source_files_scanned": len(files),
         "excluded_noncanonical_source_files": excluded_noncanonical_source_files,
@@ -10695,6 +10753,53 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     bridge_status = str(bridge_contract.get("status") or "NOT_AUDITED")
     bridge_matched = int(bridge_contract.get("matched_request_count") or 0)
     bridge_requests = int(bridge_contract.get("web_request_count") or 0)
+    verified_bridge_source_observed = bool(
+        baseline_bridge_present is True and bridge_contract.get("bot_bridge_source_present")
+    )
+    bridge_unavailable_note = (
+        "Guarded unavailable: no verified private bridge source was observed in this static audit. "
+        "A separately verified bridge release is required before canonical Bot data may be read."
+    )
+    identity_web_role = (
+        "Read only via a separately verified private bridge after account link"
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    wallet_web_role = (
+        "Read-only via a separately verified canonical bridge; no direct credit/debit"
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    payos_web_role = (
+        "Create/status only through a separately verified canonical bridge"
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    jobs_web_role = (
+        "Read/status via a separately verified bridge; signed delivery only"
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    canonical_admin_actions = (
+        "Read canonical users/jobs/payments/providers and request separately verified guarded Bot actions."
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    canonical_admin_authorizer = (
+        "Core Bridge canonical role after a separately verified bridge release"
+        if verified_bridge_source_observed
+        else bridge_unavailable_note
+    )
+    canonical_projection_description = (
+        "a canonical bridge projection"
+        if verified_bridge_source_observed
+        else "a candidate canonical projection that remains guarded-unavailable until a separately verified bridge release"
+    )
+    telegram_callback_summary = (
+        "The Bot-to-Web callback uses separate bearer/HMAC credentials and is not part of the Web-to-Bot core bridge credential."
+        if verified_bridge_source_observed
+        else "Because no verified private bridge source was observed, this static audit cannot claim the Bot-to-Web callback uses any credential or route."
+    )
     audit_source = preflight.get("bot", {}).get("audit_source", {})
     audit_source_mode = str(audit_source.get("mode") or "working_tree_fallback")
     audit_source_revision = str(audit_source.get("revision") or "unavailable")
@@ -12258,7 +12363,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + _markdown_table(["Method", "Web request", "Web source", "Line"], missing_bridge_rows or [["None", "", "", ""]])
         + "\n\n## Telegram one-time identity callback\n\n"
         + f"Static status: **{telegram_callback_status}**. Expected Web receiver: `{telegram_callback_contract.get('expected_web_callback_path') or 'unavailable'}`. "
-        + "The Bot→Web callback uses separate bearer/HMAC credentials and is not part of the Web→Bot core bridge credential.\n\n"
+        + telegram_callback_summary
+        + "\n\n"
         + _markdown_table(
             ["Check", "Bot", "Web"],
             [
@@ -12440,7 +12546,11 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "## Web-native Media Workspace preview environment\n\n"
         + "- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` (default `true`) enables the signed Web-owned collection workspace.\n"
         + "- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` (default `false`) permits same-origin inline preview only for an active audio Asset Vault file already attached to the requesting account's active collection.\n\n"
-        + "The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.\n",
+        + "The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.\n\n"
+        + "## Web-local Finance Planning environment\n\n"
+        + "- `WEBAPP_FINANCE_PLANNING_ENABLED` (default `true`) works only with `WEBAPP_ADMIN_ERP_ENABLED` for the separately signed `/admin/finance/planning` workspace.\n"
+        + "- It gates only the Web-owned `web_finance_planning_budgets`, `web_finance_planning_costs` and `web_finance_planning_events` planning/audit state.\n\n"
+        + "It is not a Bot finance, Telegram role, wallet/Xu, PayOS, provider, payment, refund, revenue, tax, export or canonical-finance-event switch.\n",
     )
     key4u_features = [
         ("Video", "video_single, video_multiscene, video_long"),
@@ -12520,14 +12630,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "STATE_AND_DATABASE_MAP.md",
         "# State and database authority map\n\n"
         "| State | Canonical authority | Web role |\n| --- | --- | --- |\n"
-        "| Telegram identity / role | Bot | Read via private bridge after account link |\n"
-        "| Xu ledger / refunds | Bot | Read-only; no direct credit/debit |\n"
-        "| PayOS order / webhook | Bot | Create/status only through canonical bridge when verified |\n"
-        "| Jobs / outputs | Bot + workers | Read/status via bridge, signed delivery only |\n"
+        + f"| Telegram identity / role | Bot | {identity_web_role} |\n"
+        + f"| Xu ledger / refunds | Bot | {wallet_web_role} |\n"
+        + f"| PayOS order / webhook | Bot | {payos_web_role} |\n"
+        + f"| Jobs / outputs | Bot + workers | {jobs_web_role} |\n"
         "| Web session / CSRF | Web App | Local additive session database only |\n\n"
         + _markdown_table(["Table set", "Count", "Examples"], [["Bot", str(len(bot_tables)), ", ".join(sorted(bot_tables)[:30]) or "None"], ["Web", str(len(web_tables)), ", ".join(sorted(web_tables)[:30]) or "None"]])
         + "\n\nBot Workboard/Task callbacks are distinct from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n\n"
-        + "Bot Creative callbacks are distinct from the Web Creative Studio: the Browser must never replay a Bot creative-variant identifier, selected state, production-job update, handoff instruction or Telegram-admin context. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n",
+        + "Bot Creative callbacks are distinct from the Web Creative Studio: the Browser must never replay a Bot creative-variant identifier, selected state, production-job update, handoff instruction or Telegram-admin context. See `CREATIVE_VARIANT_CALLBACK_CONTRACT.md`.\n\n"
+        + "## Web-native Finance Planning state\n\n"
+        + "`/admin/finance/planning` is a separately signed Web-local Finance Planning workspace, protected by `WEBAPP_ADMIN_ERP_ENABLED` and `WEBAPP_FINANCE_PLANNING_ENABLED`. Its additive Web-owned tables are `web_finance_planning_budgets`, `web_finance_planning_costs` and `web_finance_planning_events`; they provide budget/cost planning, revision and audit evidence only. It never reads, mirrors or mutates Bot finance events, Telegram identity/role, Xu/wallet, PayOS, provider, refund, revenue, tax, export or canonical Bot-admin state.\n",
     )
     write(
         "PAYOS_WALLET_JOB_MAP.md",
@@ -12561,7 +12673,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + _markdown_table(
             ["Authority domain", "Server authorizes", "May do", "Must not do"],
             [
-                ["Canonical Bot admin", "Core Bridge canonical role", "Read canonical users/jobs/payments/providers and request the existing guarded Bot actions.", "Accept a browser `admin_id`, duplicate wallet/PayOS state, call a provider from the browser, or create a second webhook/ledger."],
+                ["Canonical Bot admin", canonical_admin_authorizer, canonical_admin_actions, "Accept a browser `admin_id`, duplicate wallet/PayOS state, call a provider from the browser, or create a second webhook/ledger."],
                 ["Web Support Desk", "Signed server-side staff role", "Operate owner-scoped Web support cases, triage and review handoffs.", "Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract."],
                 ["Web CRM manager", "Signed server-side local admin role", "Read redacted, Web-owned Partner & Lead CRM pipeline records.", "Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data."],
             ],
@@ -12572,9 +12684,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
         "`WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; "
         "the server still checks the signed role on every request.\n\n"
-        + "The following is a Bot command compatibility map. A target is a signed guarded Web surface or a "
-        "canonical bridge projection; it is never proof that a browser may execute the Bot command directly.\n\n"
-        + _markdown_table(["Bot command", "Handler", "Compatibility target"], [[f"/{item['command']}", item["handler"], _admin_map_target(item)] for item in admin_commands[:200]] or [["None discovered", "", ""]]),
+        + "The following is a Bot command compatibility map. A target is a signed guarded Web surface or "
+        + canonical_projection_description
+        + "; it is never proof that a browser may execute the Bot command directly.\n\n"
+        + _markdown_table(["Bot command", "Handler", "Compatibility target"], [[f"/{item['command']}", item["handler"], _admin_map_target(item)] for item in admin_commands[:200]] or [["None discovered", "", ""]])
+        + "\n\n## Web-local Finance Planning\n\n"
+        + "`/admin/finance/planning` is a Web-local Finance Planning workspace, not a canonical Bot finance projection. The independently signed local-admin route requires `WEBAPP_ADMIN_ERP_ENABLED` and `WEBAPP_FINANCE_PLANNING_ENABLED`; every write is subject to the module's CSRF, confirmation, idempotency, revision and audit controls. It plans Web-owned budgets and operating costs only, and must not read or mutate Bot identity/roles, ledger/Xu, PayOS, provider, payment, refund, revenue, tax, export or canonical finance events.\n",
     )
     write(
         "ENV_AND_PROVIDER_MAP.md",
@@ -12586,7 +12701,11 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "\n\n## Web-native Media Workspace preview\n\n"
         + "- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` defaults to `true` for signed Web-owned collections.\n"
         + "- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` defaults to `false`; when enabled it permits only verified, owner-scoped, same-origin inline preview of an attached active Asset Vault audio file.\n"
-        + "- This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.\n",
+        + "- This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.\n\n"
+        + "## Web-local Finance Planning\n\n"
+        + "- `WEBAPP_FINANCE_PLANNING_ENABLED` defaults to `true` together with `WEBAPP_ADMIN_ERP_ENABLED` for the separately signed `/admin/finance/planning` workspace.\n"
+        + "- Finance Planning is Web-local: its switch only enables the additive `web_finance_planning_budgets`, `web_finance_planning_costs` and `web_finance_planning_events` planning/audit tables.\n"
+        + "- It never enables a Bot finance read/write, Telegram role, wallet/Xu, PayOS, provider, payment, refund, revenue, tax, export or canonical finance event.\n",
     )
     write(
         "KEY4U_CURRENT_DOCS_MAP.md",
@@ -12800,6 +12919,20 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
         raise ValueError(f"Bot root does not exist: {bot_root}")
     if not web_root.is_dir():
         raise ValueError(f"Web root does not exist: {web_root}")
+    report_dir = report_dir.resolve()
+    docs_dir = docs_dir.resolve()
+    candidate_web_output_roots = (
+        report_dir,
+        docs_dir,
+        *(web_root / relative for relative in STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS),
+    )
+    web_output_roots = tuple(
+        dict.fromkeys(
+            path
+            for path in candidate_web_output_roots
+            if path != web_root and _path_is_within(path, web_root)
+        )
+    )
     with _locked_bot_source_snapshot(bot_root, bot_baseline_sha) as (audit_bot_root, audit_source):
         bot_entrypoint = audit_bot_root / "bot.py"
         preflight = {
@@ -12810,6 +12943,7 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
                 "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
                 "Only source text, Python AST, and local read-only Git revision metadata are read.",
                 "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
+                "Configured output paths and standard migration evidence directories are excluded from the Web source inventory.",
                 "Report/document text is sanitized for secret-shaped literals.",
             ],
             "bot": {
@@ -12822,11 +12956,14 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
             },
             "webapp": {"root": str(web_root), "entrypoint_present": (web_root / "app.py").is_file()},
         }
-        bot = _summarize_inventory("telegram_bot", audit_bot_root)
-        web = _summarize_inventory("webapp", web_root)
+        bot_source_root_label = (
+            f"git-baseline:{audit_source['revision']}"
+            if audit_source.get("mode") == "git_baseline_snapshot"
+            else str(audit_bot_root)
+        )
+        bot = _summarize_inventory("telegram_bot", audit_bot_root, source_root_label=bot_source_root_label)
+        web = _summarize_inventory("webapp", web_root, excluded_source_roots=web_output_roots)
         gap = _build_parity_gap(bot, web, audit_bot_root, web_root)
-    report_dir = report_dir.resolve()
-    docs_dir = docs_dir.resolve()
     _write_json(report_dir / "preflight.json", preflight)
     _write_json(report_dir / "bot_inventory.json", bot)
     _write_json(report_dir / "web_inventory.json", web)

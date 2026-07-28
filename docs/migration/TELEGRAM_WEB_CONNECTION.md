@@ -1,14 +1,37 @@
 # Telegram Bot ↔ Web App connection
 
 Entering a Telegram ID in a browser is not an authentication method: another
-person can know or guess that value. The Web App therefore uses the existing
-Bot bridge rather than trusting an ID field.
+person can know or guess that value. The Web App must therefore reject that
+field; a canonical Bot link is valid only when a separately deployed bridge
+proves the caller server-side.
 
-## Two real connection paths
+## Current rebaseline status
 
-Telegram Login OIDC establishes a signed Web session directly at Telegram and
-does not require changing bot.py. The existing Bot one-time link then proves
-the canonical identity that owns Xu, PayOS state, jobs and private assets.
+The current static migration evidence is bound only to the frozen Bot baseline
+`b29d0d474974075f4cba963d2c510f49d2d1b3e4`. That snapshot does not include
+`webapp_core_bridge.py`. Consequently, the current audit reports a missing
+private bridge source and cannot establish any current Bot-to-Web identity
+callback contract.
+
+This is not a live Bot-link or deployment claim. A browser must not accept a
+raw Telegram ID, mint a deep-link code, unlock canonical Bot wallet/jobs/assets
+or show a connected state solely from the historical material below. Those
+functions remain disabled/guarded until a separately approved Bot bridge
+release is deployed and independently verified.
+
+## Historical / non-current bridge design notes
+
+The remainder of this document preserves a previous integration design and
+paired-service configuration checklist. It describes a separate bridge
+checkout and must not override the frozen-baseline evidence above or be read
+as proof that the Bot adapter is currently present, deployed or reachable.
+
+### Intended connection paths after a paired bridge release
+
+Telegram Login OIDC can establish a signed Web session directly at Telegram
+without changing `bot.py`. After a paired bridge release, the optional Bot
+one-time link can prove the canonical identity that owns Xu, PayOS state, jobs
+and private assets.
 
 For an account created by Telegram Login OIDC, the Bot callback must prove the
 same Telegram user before canonical data unlocks. The comparison is performed
@@ -51,19 +74,20 @@ Web signed session
   → browser exchanges its bound challenge for a signed session
 ```
 
-The separately audited Bot bridge source contains both `/start web_<code>`
-and `/linkweb <code>`, which call `confirm_web_link_from_telegram`. No
-wallet, PayOS webhook, Xu mutation, provider call, or browser-supplied
-Telegram ID is involved in this flow.
+The historical separate Bot bridge checkout contained both `/start web_<code>`
+and `/linkweb <code>`, which called `confirm_web_link_from_telegram`. That
+checkout is not the current frozen baseline. No wallet, PayOS webhook, Xu
+mutation, provider call or browser-supplied Telegram ID may be used as a
+substitute for a future verified callback.
 
-## Current source-boundary warning
+### Historical source-boundary warning
 
 The requested frozen Bot baseline is
-`b29d0d474974075f4cba963d2c510f49d2d1b3e4`. The local bridge worktree
-currently audited by the migration report is
-`32d6d1bfbc8040b0632a44e6a9326ed568cb1a59`, six commits ahead of that
-baseline, where the private callback adapter was added. This document does
-**not** claim that this adapter is in the currently deployed Bot.
+`b29d0d474974075f4cba963d2c510f49d2d1b3e4`. A prior separate bridge
+checkout, `32d6d1bfbc8040b0632a44e6a9326ed568cb1a59`, was six commits ahead
+of that baseline and contained a private callback adapter. It is historical
+implementation evidence only; the current migration rebaseline does **not**
+audit that checkout and does not claim the adapter is in the deployed Bot.
 
 Because the Web-only scope must not change `bot.py`, do not enable the
 deep-link callback in production merely by setting the Web variables below.
@@ -83,7 +107,7 @@ It also rejects a signed callback for an in-flight code without consuming that
 code, so the flag is a real maintenance stop rather than a presentation-only
 toggle.
 
-## Required paired Railway configuration
+### Conditional paired Railway configuration
 
 Set the same random values in the **Bot** service and the **Web App** service;
 do not put them in Git or browser JavaScript.
@@ -148,7 +172,7 @@ The persistent callback nonce is retained through the full accepted timestamp
 window, including permitted clock skew. Audit records use that authenticated
 callback request ID, never an unrelated browser request-id header.
 
-## Safe deployment handoff
+### Future paired-release handoff
 
 1. Generate one random callback token and one independent random HMAC secret
    in the Railway secret UI; do not paste either value into code, a ticket, or
@@ -243,7 +267,7 @@ the callback sends it through the safe onboarding continuation as well.
   installed app refreshes the current login/link UI after deploy. Private API,
   wallet, payment, admin and file responses remain outside the cache policy.
 
-## Verification without production side effects
+### Future paired-release verification (not performed by this audit)
 
 1. On Web, select **Đăng nhập với Telegram** and open the generated deep link.
 2. In Bot, `/start web_<code>` (or `/linkweb <code>`) invokes the signed

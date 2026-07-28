@@ -64,6 +64,7 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `INTERNAL_BILLING_TOKEN`
 - `JAMENDO_CLIENT_ID`
 - `JAMENDO_CLIENT_SECRET`
+- `KEY4U_ADMIN_SMOKE_ENABLED`
 - `KEY4U_ALT_TTS_MODEL`
 - `KEY4U_ALT_TTS_MODEL`
 - `KEY4U_API_BASE`
@@ -94,6 +95,7 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `KEY4U_DEFAULT_VIDEO_MODEL`
 - `KEY4U_DEFAULT_VISION_MODEL`
 - `KEY4U_DEFAULT_VISION_MODEL`
+- `KEY4U_ENABLED`
 - `KEY4U_IMAGE_EDITS_ENDPOINT`
 - `KEY4U_IMAGE_EDITS_ENDPOINT`
 - `KEY4U_IMAGE_EDIT_ENDPOINT`
@@ -122,10 +124,12 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `KEY4U_NANO_BANANA_EDIT_MODEL`
 - `KEY4U_OPENAI_BASE_URL`
 - `KEY4U_OPENAI_BASE_URL`
+- `KEY4U_PUBLIC_ENABLED`
 - `KEY4U_RERANK_ENDPOINT`
 - `KEY4U_RERANK_ENDPOINT`
 - `KEY4U_RERANK_MODEL`
 - `KEY4U_RERANK_MODEL`
+- `KEY4U_SMART_ROUTING`
 - `KEY4U_STT_ENDPOINT`
 - `KEY4U_STT_ENDPOINT`
 - `KEY4U_STT_MODEL`
@@ -174,12 +178,14 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `KLING_API_KEY`
 - `KLING_SECRET_KEY`
 - `LEAD_WEBHOOK_SECRET`
+- `LOCAL_COMFY_ENABLED`
 - `LOCAL_COMFY_URL`
 - `LOCAL_FFMPEG_FONT_PATH`
 - `LOCAL_FFMPEG_PATH`
 - `LOCAL_FFMPEG_PATH`
 - `LOCAL_WORKER_BOT_URL`
 - `LOCAL_WORKER_ID`
+- `LOCAL_WORKER_MAX_JOB_SECONDS`
 - `LOCAL_WORKER_TOKEN`
 - `LOCAL_WORKER_TOKEN`
 - `MANUAL_BANK_ACCOUNT`
@@ -246,11 +252,14 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `PROMO_LAUNCH_BONUS_ELIGIBLE_METHODS`
 - `PROMO_RANK_TOPUP_REWARD_ELIGIBLE_CURRENCIES`
 - `PROMO_RANK_TOPUP_REWARD_ELIGIBLE_METHODS`
+- `PROVIDER_FALLBACK_ENABLED`
 - `PROVIDER_FALLBACK_ORDER`
 - `PROVIDER_FALLBACK_ORDER`
 - `PROVIDER_FREEZE_MESSAGE`
+- `PROVIDER_PARALLEL_ENABLED`
 - `PROVIDER_PRIMARY`
 - `PROVIDER_PRIMARY`
+- `PROVIDER_ROUTER_ENABLED`
 - `PUBLIC_BASE_URL`
 - `PUBLIC_SITE_URL`
 - `PUBLIC_VIDEO_GENERATION_ENABLED`
@@ -366,6 +375,9 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `WOKUSHOP_PUBLIC_ENABLED`
 - `WOKUSHOP_REASON`
 - `WOKUSHOP_REASON`
+- `WOKU_ADMIN_SMOKE_ENABLED`
+- `WOKU_ENABLED`
+- `WOKU_PUBLIC_ENABLED`
 - `WOKU_REASON`
 - `WOKU_REASON`
 
@@ -417,8 +429,9 @@ FFmpeg/ffprobe runtime.
 
 The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.
 
-## Web-native Finance Operations Planning environment
+## Web-local Finance Planning environment
 
-- `WEBAPP_FINANCE_PLANNING_ENABLED` (default `true`) gates only the signed Admin ERP planning workspace at `/admin/finance/planning`.
+- `WEBAPP_FINANCE_PLANNING_ENABLED` (default `true`) works only with `WEBAPP_ADMIN_ERP_ENABLED` for the separately signed `/admin/finance/planning` workspace.
+- It gates only the Web-owned `web_finance_planning_budgets`, `web_finance_planning_costs` and `web_finance_planning_events` planning/audit state.
 
-It never enables, replaces, or writes Bot canonical finance; Xu/wallet, PayOS/payment/webhook, provider/job, tax calculation, reimbursement execution, accounting export, and production credentials all remain outside this flag.
+It is not a Bot finance, Telegram role, wallet/Xu, PayOS, provider, payment, refund, revenue, tax, export or canonical-finance-event switch.
