@@ -151,7 +151,8 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert "function currentCustomerWorkflowGroup(currentPage, groups)" in PORTAL
     assert 'label: "Đang mở"' in PORTAL
     assert "current: true" in PORTAL
-    assert "groups.unshift(currentGroup);" in navigation
+    assert "const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);" in navigation
+    assert "if (currentGroup) groups.unshift(currentGroup);" in navigation
     assert "portal-nav-group--current" in sidebar
 
 
