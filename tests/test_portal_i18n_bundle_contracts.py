@@ -91,7 +91,7 @@ for (const locale of expected) {
   if (JSON.stringify(keys) !== JSON.stringify(referenceKeys)) {
     throw new Error(`Locale keyset diverged for ${locale}`);
   }
-  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install", "shellNav.billing", "shellNav.contentStudio", "shellNav.scriptToSeries", "shellNav.serviceStatus"]) {
+  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "nav.currentWorkflow", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install", "shellNav.billing", "shellNav.contentStudio", "shellNav.scriptToSeries", "shellNav.serviceStatus"]) {
     if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
   }
 }
@@ -413,14 +413,14 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert snapshot["hydratedProfile"] == "en"
     assert snapshot["invalidProfile"] == "zh"
     assert snapshot["documentLang"] == "zh-CN"
-    assert "内容规划" in snapshot["firstSidebar"]
-    assert "内容工作室" in snapshot["firstSidebar"]
+    assert "工作台" in snapshot["firstSidebar"]
+    assert "新建" in snapshot["firstSidebar"]
     assert "钱包与套餐" in snapshot["firstSidebar"]
-    assert "Content planning" in snapshot["englishSidebar"]
-    assert "Content Studio" in snapshot["englishSidebar"]
+    assert "Workspace" in snapshot["englishSidebar"]
+    assert "Create" in snapshot["englishSidebar"]
     assert "Billing &amp; plans" in snapshot["englishSidebar"]
-    assert "Lập kế hoạch nội dung" in snapshot["vietnameseSidebar"]
-    assert "Content Studio" in snapshot["vietnameseSidebar"]
+    assert "Workspace" in snapshot["vietnameseSidebar"]
+    assert "Tạo mới" in snapshot["vietnameseSidebar"]
     assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
 
 

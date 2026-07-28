@@ -807,6 +807,7 @@
       "chrome.safeModeDetail": "Không gọi provider, Xu hoặc payment từ browser",
 
       "nav.workspace": "Workspace",
+      "nav.currentWorkflow": "Đang mở",
       "nav.starterKits": "Starter Kits",
       "nav.workboard": "Bảng công việc",
       "nav.contentPlanning": "Lập kế hoạch nội dung",
@@ -1138,6 +1139,7 @@
       "chrome.safeModeDetail": "No provider, credits or payment calls from the browser",
 
       "nav.workspace": "Workspace",
+      "nav.currentWorkflow": "Open now",
       "nav.starterKits": "Starter Kits",
       "nav.workboard": "Workboard",
       "nav.contentPlanning": "Content planning",
@@ -1469,6 +1471,7 @@
       "chrome.safeModeDetail": "浏览器不会调用提供方、Xu 或支付",
 
       "nav.workspace": "工作台",
+      "nav.currentWorkflow": "当前工作",
       "nav.starterKits": "入门套件",
       "nav.workboard": "工作看板",
       "nav.contentPlanning": "内容规划",

@@ -1,6 +1,12 @@
 """Focused navigation contracts for the signed portal shell."""
 
+import json
+import re
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,6 +16,70 @@ PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 def _section(start: str, end: str) -> str:
     offset = PORTAL.index(start)
     return PORTAL[offset:PORTAL.index(end, offset + len(start))]
+
+
+def _run_current_customer_workflow_harness(source_path: Path) -> dict:
+    """Execute the real cue helper without exporting browser internals for tests."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required to exercise the Portal navigation helper")
+    script = r'''
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+const routePattern = source.includes("const CUSTOMER_APPLICATION_ROUTE")
+  ? extract("const CUSTOMER_APPLICATION_ROUTE", "function currentCustomerWorkflowGroup(currentPage, groups)")
+  : "";
+const runtime = [
+  'const window = { location: { pathname: "/dashboard" } };',
+  'const ICONS = Object.freeze({ prompt: "prompt" });',
+  'function uiText(_key, fallback) { return fallback; }',
+  extract("function normalizePath(path)", "const CAPABILITY_HUB_FAMILY_KEYS"),
+  extract("function safeCatalogRoute(value)", "function catalogEntryRoute(entry)"),
+  extract("function matchesRouteFamily(path, root)", "function isNavCurrent(linkPath, page)"),
+  extract("function isNavCurrent(linkPath, page)", "// The compact dock intentionally links"),
+  routePattern,
+  extract("function currentCustomerWorkflowGroup(currentPage, groups)", "function navGroups(context, currentPage)")
+].join("\n");
+eval(runtime);
+const compactGroups = [{ links: [["/dashboard", "Tổng quan", "dashboard"]] }];
+const cue = (page) => currentCustomerWorkflowGroup(page, compactGroups);
+const videoCue = cue({
+  routePath: "/video-studio/story-video-plan", access: "member",
+  title: "Story Video Planner"
+});
+if (!videoCue || videoCue.current !== true || videoCue.links.length !== 1 || videoCue.links[0][0] !== "/video-studio/story-video-plan") {
+  throw new Error("registered deep Video Studio route did not receive one current workflow cue");
+}
+for (const [name, page] of Object.entries({
+  compact: { routePath: "/dashboard", access: "member", title: "Tổng quan" },
+  public: { routePath: "/login", access: "public", title: "Đăng nhập" },
+  admin: { routePath: "/admin/users", access: "admin", title: "Người dùng" },
+  notFound: { routePath: "/not-found", path: "/not-found", access: "member", layout: "not-found", title: "Trang chưa được định tuyến" },
+  hostile: { routePath: '/video-studio/"onmouseover="alert(1)', access: "member", title: "Hostile" }
+})) {
+  if (cue(page) !== null) throw new Error(`${name} route unexpectedly received a current workflow cue`);
+}
+process.stdout.write(JSON.stringify({ videoCuePath: videoCue.links[0][0], videoCueCount: videoCue.links.length }));
+'''
+    try:
+        result = subprocess.run(
+            [node, "-e", script, str(source_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except OSError as exc:
+        pytest.skip(f"Node subprocess is unavailable in this test runner: {exc}")
+    assert result.returncode == 0, result.stderr or result.stdout
+    return json.loads(result.stdout)
 
 
 def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() -> None:
@@ -48,26 +118,127 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
-    # The permanent default is intentionally small; all non-core groups open
-    # automatically only for their active route family and remain reachable
-    # via their native disclosure summary or the command palette.
+    # The permanent default is intentionally small. Video is the one deep
+    # workspace that retains its established contextual disclosure tree; the
+    # general customer catalogue stays in `/features` and the command palette.
     assert 'label: "Workspace", defaultOpen: true' in navigation
     for group in (
-        "Nội dung & kế hoạch",
-        "AI Labs & Media",
         "Video Studio",
         "Video Studio · Ý tưởng & kịch bản",
         "Video Studio · Phim & storyboard",
         "Video Studio · Tư liệu & chuyển động",
     ):
         assert f'label: "{group}"' in navigation
+    assert 'label: "Nội dung & kế hoạch"' not in navigation
+    assert 'label: "AI Labs & Media"' not in navigation
     assert "const videoStudioNavGroups = [" in navigation
     assert "groups.splice(3, 0, ...videoStudioNavGroups);" in navigation
-    assert '<details class="portal-nav-group"${open ? " open" : ""}>' in sidebar
+    assert 'if (matchesRouteFamily(currentRoute, "/video-studio")) {' in navigation
+    assert 'if (currentRoute === "/admin" || currentRoute.startsWith("/admin/")) {' in navigation
+    assert '<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>' in sidebar
     assert 'const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);' in sidebar
     assert 'class="portal-nav-summary"' in sidebar
     assert ".portal-nav-summary" in css
     assert ".portal-nav-group[open] .portal-nav-summary::before" in css
+
+
+def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discoverable() -> None:
+    navigation = _section("function navGroups(context, currentPage)", "function matchesRouteFamily(path, root)")
+    palette = _section("function commandPaletteItems(context, page)", "function renderCommandPalette(page, context)")
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+    theme = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
+
+    # The signed customer rail is a compact orientation surface, rather than
+    # a second full catalogue.  All customer destinations remain available
+    # through the feature catalogue and command palette below.
+    permanent_projection = navigation[
+        navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
+    ]
+    compact_groups = {
+        "Workspace": ["/dashboard", "/projects", "/workboard", "/campaigns", "/calendar"],
+        "Tạo mới": ["/features", "/chat", "/content-studio", "/image-studio"],
+        "Công việc": ["/workspace", "/jobs", "/assets", "/asset-vault", "/approvals"],
+        "Ví & gói": ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing"],
+        "Tài khoản & hỗ trợ": ["/account", "/tickets", "/support"],
+    }
+    group_pattern = re.compile(
+        r'label:\s*"(?P<label>[^"]+)"(?P<body>.*?)(?=\s*\]\s*\},?\s*\n\s*\{|\s*\]\s*\}\s*\n\s*\];)',
+        re.DOTALL,
+    )
+    permanent_groups = [
+        (
+            match.group("label"),
+            re.findall(r'\["(?P<path>/[^"]+)"\s*,', match.group("body")),
+        )
+        for match in group_pattern.finditer(permanent_projection)
+    ]
+    assert permanent_groups == list(compact_groups.items())
+
+    permanent_routes = [path for _, paths in permanent_groups for path in paths]
+    assert len(permanent_routes) == 22
+    assert len(permanent_routes) == len(set(permanent_routes))
+    # Dense and Bot-companion routes remain discoverable through the manifest
+    # and palette, but do not get a permanent signed-customer rail position.
+    dense_or_bot_routes = {
+        "/workspace-menu", "/starter-kits", "/project-packages", "/prompt-library",
+        "/free-prompt-gallery", "/content/channel-strategy", "/content/handoffs",
+        "/crm/leads", "/content/prompt-pack", "/content/publish-review",
+        "/content/contextual-prompt", "/trend-research", "/media-factory", "/creative-flow",
+        "/guides/source-rights", "/analytics", "/notes", "/reminders", "/image/prompt-composer",
+        "/image-hub", "/document-workspace", "/subtitle-studio", "/subtitle/assets",
+        "/subtitle/formats", "/voice-studio", "/voice-studio/direction-composer",
+        "/media-workspace", "/media-workspace/sfx-cue-sheet", "/audio/assets",
+        "/account/interface-language", "/account/activity", "/account/data-controls",
+        "/account/workspace-care", "/guides", "/inbox", "/automation", "/operations",
+        "/status", "/referrals", "/rewards", "/community",
+    }
+    assert not set(permanent_routes).intersection(dense_or_bot_routes)
+
+    assert "Object.values(manifest)" in palette
+    assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
+    assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
+
+    # Video keeps its existing planner tree, but only on a Video Studio route.
+    video_guard = 'if (matchesRouteFamily(currentRoute, "/video-studio")) {'
+    video_insertion = "groups.splice(3, 0, ...videoStudioNavGroups);"
+    assert "const videoStudioNavGroups = [" in navigation
+    assert video_guard in navigation
+    assert video_insertion in navigation
+    guard_open = navigation.index("{", navigation.index(video_guard))
+    guard_depth = 0
+    guard_close = None
+    for position, character in enumerate(navigation[guard_open:], start=guard_open):
+        if character == "{":
+            guard_depth += 1
+        elif character == "}":
+            guard_depth -= 1
+            if guard_depth == 0:
+                guard_close = position
+                break
+    assert guard_close is not None
+    assert video_insertion in navigation[guard_open + 1:guard_close]
+
+    # Deep routes retain a single, presentation-only orientation cue rather
+    # than expanding the full customer catalogue again.
+    assert "function currentCustomerWorkflowGroup(currentPage, groups)" in PORTAL
+    assert 'label: uiText("nav.currentWorkflow", "Đang mở")' in PORTAL
+    assert "current: true" in PORTAL
+    assert "const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);" in navigation
+    assert "if (currentGroup) groups.unshift(currentGroup);" in navigation
+    assert "portal-nav-group--current" in sidebar
+    assert ".portal-nav-group--current" in theme
+    assert "var(--portal-border-strong)" in theme
+
+
+def test_current_customer_workflow_cue_supports_video_deep_routes_without_accepting_untrusted_paths() -> None:
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+
+    result = _run_current_customer_workflow_harness(ROOT / "static" / "portal" / "portal.js")
+    assert result == {
+        "videoCuePath": "/video-studio/story-video-plan",
+        "videoCueCount": 1,
+    }
+    assert 'href="${safeText(path)}"' in sidebar
 
 
 def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_menu() -> None:

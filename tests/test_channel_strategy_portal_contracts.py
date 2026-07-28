@@ -36,9 +36,10 @@ def _bootstrap_normalizer() -> str:
     return _section(PORTAL, "function normalizeBootstrap(raw)", "function getBootstrap()")
 
 
-def test_channel_strategy_has_private_native_routes_and_portal_navigation() -> None:
+def test_channel_strategy_has_private_native_routes_and_workspace_discoverability() -> None:
     desktop_nav = _section(PORTAL, "function navGroups(context, currentPage)", "function matchesRouteFamily")
     mobile_nav = _section(PORTAL, "function isMobileNavCurrent(key, page)", "function renderMobileNav(page)")
+    palette = _section(PORTAL, "function commandPaletteItems(context, page)", "function renderCommandPalette(page, context)")
 
     assert 'WebFeature("channel_strategy"' in REGISTRY
     assert 'customerPage("/content/channel-strategy", "Channel Strategy"' in PORTAL
@@ -48,7 +49,12 @@ def test_channel_strategy_has_private_native_routes_and_portal_navigation() -> N
     assert "function renderChannelStrategyDetail(page, context)" in PORTAL
     assert 'case "channel-strategy": return renderChannelStrategy(page, context);' in PORTAL
     assert 'case "channel-strategy-detail": return renderChannelStrategyDetail(page, context);' in PORTAL
-    assert '"/content/channel-strategy", "Channel Strategy"' in desktop_nav
+    # The compact rail no longer mirrors the full feature catalogue. This
+    # private route remains in the manifest-backed command palette and keeps
+    # its Workspace mobile-family orientation without acquiring new access.
+    assert '"/content/channel-strategy", "Channel Strategy"' not in desktop_nav
+    assert "Object.values(manifest)" in palette
+    assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
     assert '"/content/channel-strategy"' in mobile_nav
     assert 'if (linkPath === "/content/channel-strategy")' in PORTAL
 
