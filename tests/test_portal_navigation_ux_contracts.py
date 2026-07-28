@@ -70,6 +70,77 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     assert ".portal-nav-group[open] .portal-nav-summary::before" in css
 
 
+def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discoverable() -> None:
+    navigation = _section("function navGroups(context, currentPage)", "function matchesRouteFamily(path, root)")
+    palette = _section("function commandPaletteItems(context, page)", "function renderCommandPalette(page, context)")
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+
+    # The signed customer rail is a compact orientation surface, rather than
+    # a second full catalogue.  All customer destinations remain available
+    # through the feature catalogue and command palette below.
+    permanent_projection = navigation[
+        navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
+    ]
+    permanent_labels = [
+        line.strip().split('"', 2)[1]
+        for line in permanent_projection.splitlines()
+        if line.strip().startswith('label: "')
+    ]
+    expected_labels = ["Workspace", "Tạo mới", "Công việc", "Ví & gói", "Tài khoản & hỗ trợ"]
+    assert permanent_labels == expected_labels
+    for label in expected_labels:
+        assert navigation.count(f'label: "{label}"') == 1
+
+    label_positions = [permanent_projection.index(f'label: "{label}"') for label in expected_labels]
+    for index, start in enumerate(label_positions):
+        end = label_positions[index + 1] if index + 1 < len(label_positions) else len(permanent_projection)
+        assert permanent_projection[start:end].count('["/') <= 5
+
+    for path in (
+        "/dashboard", "/projects", "/workboard", "/campaigns", "/calendar",
+        "/features", "/chat", "/content-studio", "/image-studio",
+        "/workspace", "/jobs", "/assets", "/asset-vault", "/approvals",
+        "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing",
+        "/account", "/tickets", "/support",
+    ):
+        assert f'["{path}",' in permanent_projection
+
+    # These dense non-video blocks must move out of the permanent rail, not
+    # disappear from the authoritative manifest or palette.
+    for stale_literal in (
+        'label: "Nội dung & kế hoạch"',
+        'label: "AI Labs & Media"',
+        'label: "Bot companion"',
+        '["/workspace-menu", "Chuyển workspace"',
+        '["/prompt-library", "Prompt Library"',
+        '["/voice-studio", "Voice Studio"',
+        '["/document-workspace", "Document Workspace"',
+        '["/automation", "Automation Center"',
+        '["/operations", "Operations Center"',
+    ):
+        assert stale_literal not in permanent_projection
+
+    assert "Object.values(manifest)" in palette
+    assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
+    assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
+
+    # Video keeps its existing planner tree, but only on a Video Studio route.
+    video_guard = 'if (matchesRouteFamily(currentRoute, "/video-studio")) {'
+    video_insertion = "groups.splice(3, 0, ...videoStudioNavGroups);"
+    assert "const videoStudioNavGroups = [" in navigation
+    assert video_guard in navigation
+    assert video_insertion in navigation
+    assert navigation.index(video_guard) < navigation.index(video_insertion)
+
+    # Deep routes retain a single, presentation-only orientation cue rather
+    # than expanding the full customer catalogue again.
+    assert "function currentCustomerWorkflowGroup(currentPage, groups)" in PORTAL
+    assert 'label: "Đang mở"' in PORTAL
+    assert "current: true" in PORTAL
+    assert "groups.unshift(currentGroup);" in navigation
+    assert "portal-nav-group--current" in sidebar
+
+
 def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_menu() -> None:
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
     interactions = _section("function bindInteractions()", "function mountPortal(override)")

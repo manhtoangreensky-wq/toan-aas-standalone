@@ -951,10 +951,12 @@ def test_personal_web_memory_is_native_while_bot_companions_preserve_telegram_fi
     for route, key, title in (
         ("/referrals", "referrals", "Giới thiệu"),
         ("/rewards", "rewards", "Ưu đãi & quà"),
-        ("/community", "community", "Cộng đồng"),
     ):
         assert f'botCompanionPage("{route}", "{title}"' in PORTAL
         assert f'WebFeature("{key}", "{title}", "account", "{route}"' in registry
+    assert 'customerPage("/community", "Cộng đồng"' in PORTAL
+    assert 'botCompanionPage("/community", ' not in PORTAL
+    assert 'WebFeature("community", "Cộng đồng", "account", "/community"' in registry
     companion = PORTAL[PORTAL.index("function renderBotCompanion(page, context)"):PORTAL.index("function renderLanding(page, context)")]
     assert 'data-portal-action="copy-bot-companion-command"' in companion
     assert "Portal chỉ mở Bot hoặc sao chép một lệnh an toàn" in PORTAL
