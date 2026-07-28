@@ -177,7 +177,7 @@ Insert "portal-motion.js", directly after "portal.js", in _PORTAL_BUILD_SOURCE_F
 
 Run:
 
-    & 'C:\Users\toann\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m pytest -q tests/test_portal_motion_foundation_contracts.py -k 'motion_asset_is_public_shell_only or motion_utility_is_presentation_only'
+    & 'C:\Users\toann\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m pytest -q tests/test_portal_motion_foundation_contracts.py -k 'motion_asset_is_versioned_between_portal_and_integration_and_pre_cached or motion_utility_is_browser_only_progressive_enhancement'
 
 Expected: PASS. Theme and mount assertions remain red until Task 3.
 
@@ -334,4 +334,3 @@ Expected: only the shell asset, theme/renderer presentation hooks, docs and targ
     gh pr create --base main --head feature/p0-webapp-ui-motion-foundation --title "Add teal sky portal motion foundation" --body "Summary: reduced-motion-safe portal lifecycle utility; teal-sky motion tokens; no business, payment, provider or authorization change. Verification: targeted static contracts, py_compile, diff check and browser QA at 375/768/1024/1440."
 
 Expected: a focused PR that can merge before the Customer Workspace shell PR begins.
-

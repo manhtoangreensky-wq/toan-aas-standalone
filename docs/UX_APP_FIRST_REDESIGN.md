@@ -14,17 +14,18 @@ record, or an unavailable provider look ready.
 ## Visual direction
 
 - **Style:** Swiss-modern productivity workspace with a compact, Odoo-like
-  information hierarchy. It uses a quiet dark slate foundation rather than a
-  decorative "AI landing" treatment.
-- **Brand expression:** one teal action accent only. Status colours are
-  semantic, never the only way a state is communicated.
+  information hierarchy. It uses a light teal application canvas with white working surfaces rather than a decorative "AI landing" treatment.
+- **Brand expression:** deep teal is reserved for the navigation rail; one
+  teal action accent and sky-blue context remain semantic, never the only way
+  a state is communicated.
 - **Typography:** Inter/system sans; body text is readable at 14–16px, with
   tabular figures for counts, balances and timestamps.
 - **Surfaces:** solid, layered surfaces; subtle 1px dividers; restrained
   shadow. Gradients are reserved for the public `/welcome` experience, not
   operational workspace screens.
-- **Motion:** 150–220ms opacity/transform transitions only. No decorative
-  continuous motion; all motion respects `prefers-reduced-motion`.
+- **Motion:** route, drawer, modal, toast and status feedback use the shared
+  140/220/420ms token family with opacity/transform only; all non-essential
+  motion respects `prefers-reduced-motion`.
 
 ## Navigation model
 

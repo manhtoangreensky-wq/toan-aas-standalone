@@ -232,19 +232,21 @@ glassmorphism in the signed workspace.
 
 ---
 
-## Motion
+## Motion ownership
 
-**Scroll Reveal** (Subtle) — Trigger: scroll (viewport enter) | Duration: 300-400ms | Easing: `power1.out`
+`static/portal/portal-theme.css` owns the shared teal–sky motion tokens,
+keyframes and reduced-motion rules. `static/portal/portal-motion.js` is the
+small browser-only lifecycle utility: it may enhance a completed shell render,
+but never owns routing, authority, data, storage or requests.
 
-```js
-gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' } });
-```
+Route, drawer, modal, toast and status feedback use the 140/220/420ms token
+family with opacity and transform only. All non-essential motion respects
+`prefers-reduced-motion`; no route content depends on animation to become
+visible.
 
-**Framework notes:** Requires the ScrollTrigger plugin registered once via gsap.registerPlugin(ScrollTrigger)
-
-- ✅ Keep the y offset small (8-16px) so it reads as a fade, not a slide
-- ❌ Don't reveal below-the-fold content needed for SEO/crawlers as invisible-by-default without a no-JS fallback
-- ⚡ toggleActions 'play none none reverse' avoids re-triggering on every scroll direction change
+Customer Workspace and Internal ERP will use distinct visual shells while
+server-issued access remains canonical. Browser presentation can style an
+already granted route, but cannot discover, manufacture or authorize one.
 
 ---
 
