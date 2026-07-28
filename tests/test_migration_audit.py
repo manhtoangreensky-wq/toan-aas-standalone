@@ -338,6 +338,17 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     assert f"`{parity_gap['workflow_equivalence']['status']}` ({workflow_coverage}%)" in evidence
 
 
+def test_webapp_quality_workflow_uses_current_migration_audit_smoke_name() -> None:
+    """The bounded CI suite must track the renamed Finance authority test."""
+
+    workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
+    current = "tests/test_migration_audit.py::test_static_audit_preserves_finance_planning_authority_and_redacts_secret_literals"
+    legacy = "tests/test_migration_audit.py::test_static_audit_never_imports_source_and_redacts_secret_literals"
+
+    assert current in workflow
+    assert legacy not in workflow
+
+
 def test_static_audit_uses_requested_git_baseline_snapshot_not_dirty_worktree(tmp_path: Path) -> None:
     """A requested Git SHA must be the only Bot source evidence for the audit."""
 
