@@ -174,6 +174,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert "menu\\|admin_packages_catalog" in admin_erp_contract
     assert "menu\\|provider_custom_help" in admin_erp_contract
     assert "menu\\|finance_revenue_month" in admin_erp_contract
+    assert "menu\\|finance_revenue_custom_help" in admin_erp_contract
     assert "menu\\|finance_expense_month" in admin_erp_contract
     assert "menu\\|finance_expense_categories" in admin_erp_contract
     assert "menu\\|finance_profit" in admin_erp_contract
@@ -187,6 +188,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
         "menu|finance_revenue_this_month",
         "menu|finance_revenue_last_month",
         "menu|finance_revenue_year",
+        "menu|finance_revenue_custom_help",
         "menu|finance_expense_this_month",
         "menu|finance_expense_last_month",
         "menu|finance_expense_year",
@@ -200,7 +202,6 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
         assert callback.replace("|", "\\|") in admin_erp_contract
         assert f"`{callback}` remains source-review-required" not in admin_erp_contract
     for callback in (
-        "menu|finance_revenue_custom_help",
         "menu|finance_compliance",
         "menu|finance_compliance_update",
     ):
@@ -1913,6 +1914,7 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|finance": ("/admin/finance", "admin_finance"),
         "menu|finance_overview": ("/admin/finance", "admin_finance"),
         "menu|finance_revenue": ("/admin/finance", "admin_finance"),
+        "menu|finance_revenue_custom_help": ("/admin/finance", "admin_finance"),
         "menu|admin_packages": ("/admin/packages", "admin_packages"),
         "menu|admin_packages_catalog": ("/admin/packages", "admin_packages"),
         "menu|admin_provider": ("/admin/providers", "admin_providers"),
@@ -1984,6 +1986,19 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
     ):
         assert disposition in finance_revenue_month["source_dispositions"]
+
+    finance_revenue_custom_help = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS[
+        "menu|finance_revenue_custom_help"
+    ]
+    for disposition in (
+        "BOT_FINANCE_REVENUE_CUSTOM_PERIOD_GUIDANCE_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_OR_COMMAND_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in finance_revenue_custom_help["source_dispositions"]
 
     finance_expense_month = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS["menu|finance_expense_month"]
     for disposition in (
@@ -2100,10 +2115,12 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Only the finite read selectors above may navigate. Custom report help
-    # and every spelling/suffix variant remain source review.
+    # Only the finite read selectors above may navigate. Case and suffix
+    # variants of custom-period guidance remain source review; the exact
+    # lower-case guidance literal is separately reviewed above.
     for callback in (
-        "menu|finance_revenue_custom_help",
+        "MENU|FINANCE_REVENUE_CUSTOM_HELP",
+        "menu|finance_revenue_custom_help|future",
         "menu|finance_revenue_month_future",
         "menu|finance_revenue_month|future",
         "MENU|FINANCE_REVENUE_MONTH",
