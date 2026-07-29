@@ -267,3 +267,35 @@ def test_finance_planning_ui_keeps_period_pagination_conflict_and_focus_safe() -
         "finance-planning-field",
     ):
         assert requirement in portal
+
+
+def test_finance_planning_fixed_chrome_uses_reviewed_interface_locale_only() -> None:
+    """Finance Planning copy follows the signed UI locale, never planner data."""
+
+    portal = _read("static/portal/portal.js")
+    money = _function_source(portal, "financePlanningMoney")
+    state_label = _function_source(portal, "financePlanningStateLabel")
+    transitions = _function_source(portal, "financePlanningStateActions")
+    period_control = _function_source(portal, "financePlanningPeriodControl")
+    pagination = _function_source(portal, "financePlanningPagination")
+    status = _function_source(portal, "financePlanningLiveStatus")
+    renderer = _function_source(portal, "renderAdminFinancePlanning")
+
+    assert "function financePlanningText(key, fallback, params)" in portal
+    assert "uiText(`financePlanning.${key}`, fallback, params)" in portal
+    assert "localizedNumber(amount)" in money
+    assert 'new Intl.NumberFormat("vi-VN"' not in money
+    for state in ("active", "archived", "draft", "review", "approved"):
+        assert f'{state}: "{state}"' in state_label
+    assert '|| "guarded"' in state_label
+    assert 'financePlanningText(`state.${key}`, fallback)' in state_label
+    for source in (transitions, period_control, pagination, status, renderer):
+        assert "financePlanningText(" in source
+
+    # Dynamic planner values remain escaped server data. They must never be
+    # treated as locale-catalogue keys or cause a browser-side integration.
+    for value in ("item.category_label", "item.vendor_label", "item.purpose", "item.period"):
+        assert f"safeText({value}" in renderer
+    assert "safeText(financePlanningRevision(item.revision))" in renderer
+    for forbidden in ("fetch(", "/internal/", "localStorage", "sessionStorage", "translate("):
+        assert forbidden not in renderer
