@@ -42,8 +42,9 @@ def test_portal_sidebar_directory_and_palette_use_the_server_manifest_not_browse
     assert "function serverAuthorizesAdminRoute(context, route)" in portal
     assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in portal
     assert "if (candidate.access === \"admin\" && !authorizedAdminRoutes.has(path)) return;" in portal
-    assert "const erp = adminErpNavigation(context);" in portal
-    assert "erp.groups.forEach" in portal
+    assert "function adminNavigationModules(context)" in portal
+    assert "function adminDesktopNavGroups(context, currentPage)" in portal
+    assert "if (adminSurface && (candidate.access !== \"admin\" || !authorizedAdminRoutes.has(path))) return;" in portal
     assert "context.isAdmin) {\n      groups.push({\n        label: \"Admin ERP\"" not in portal
 
 
@@ -66,6 +67,10 @@ def test_admin_navigation_does_not_create_direct_provider_or_payment_authority()
 
 def test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_routes() -> None:
     portal = _read("static/portal/portal.js")
+    shared = portal[
+        portal.index("function adminNavigationModules(context)"):
+        portal.index("function navGroups(context, currentPage)")
+    ]
     helpers = portal[
         portal.index("function isAdminMobileSurface(page)"):
         portal.index("function normalizeCommandSearch(value)")
@@ -73,12 +78,13 @@ def test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_r
 
     # The compact ERP dock is a presentation of the signed server manifest,
     # never a browser-owned role map or a customer-nav fallback.
-    assert "const navigation = adminErpNavigation(context);" in helpers
-    assert "if (!navigation.groups.length) return [];" in helpers
+    assert "const navigation = adminErpNavigation(context);" in shared
+    assert "if (!navigation.groups.length) return [];" in shared
     assert "const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;" in helpers
-    assert "navigation.routes.has(module.route)" in helpers
+    assert "navigation.routes.has(module.route)" in shared
     assert "serverAuthorizesAdminRoute(context, path)" in helpers
-    assert "group.modules.forEach" in helpers
+    assert "group.modules.forEach" in shared
+    assert "const modules = adminNavigationModules(context);" in helpers
     assert "renderAdminMobileNav(page, context)" in helpers
     assert 'href="${safeText(item.route)}"' in helpers
     assert "safeText(item.title)" in helpers
@@ -103,3 +109,29 @@ def test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_r
     assert 'path.startsWith("/admin/jobs/")' in current
     assert 'path.startsWith("/admin/support/")' in current
     assert 'module.route === "/admin" && path.startsWith("/admin/")' not in current
+
+
+def test_admin_desktop_sidebar_uses_only_server_authorized_groups() -> None:
+    portal = _read("static/portal/portal.js")
+
+    assert "function isAdminPortalSurface(page)" in portal
+    assert "function adminNavigationModules(context)" in portal
+    assert "function currentAdminNavigationModule(page, context, modules)" in portal
+    assert "function adminDesktopNavGroups(context, currentPage)" in portal
+
+    helpers = portal[
+        portal.index("function adminNavigationModules(context)"):
+        portal.index("function navGroups(context, currentPage)")
+    ]
+    navigation = portal[
+        portal.index("function navGroups(context, currentPage)"):
+        portal.index("function matchesRouteFamily(path, root)")
+    ]
+
+    assert "const navigation = adminErpNavigation(context);" in helpers
+    assert "navigation.routes.has(module.route)" in helpers
+    assert "const issuedRoutes = new Set(issued.map((module) => module.route));" in helpers
+    assert "context.isAdmin" not in helpers
+    assert '"/dashboard"' not in helpers
+    assert '"/features"' not in helpers
+    assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation

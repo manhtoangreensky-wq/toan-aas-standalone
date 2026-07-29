@@ -786,6 +786,8 @@
     vi: {
       "chrome.newWorkflow": "Luồng công việc mới",
       "chrome.searchWorkspace": "Tìm trong workspace",
+      "chrome.adminAppCaption": "Admin ERP",
+      "chrome.searchAdmin": "Tìm điều hướng ERP",
       "chrome.bridgeReady": "Kết nối nội bộ sẵn sàng",
       "chrome.safeMode": "Chế độ an toàn",
       "chrome.legalPrivacy": "Pháp lý & quyền riêng tư",
@@ -803,6 +805,7 @@
       "chrome.commandResults": "Kết quả chuyển nhanh",
       "chrome.commandEmpty": "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
       "chrome.commandCount": "{count} workspace có thể mở trong phiên này.",
+      "chrome.adminCommandCount": "{count} mục ERP có thể mở trong phiên này.",
       "chrome.bridgeReadyDetail": "Tính năng được cấp theo phiên hiện tại",
       "chrome.safeModeDetail": "Không gọi provider, Xu hoặc payment từ browser",
 
@@ -1118,6 +1121,8 @@
     en: {
       "chrome.newWorkflow": "New workflow",
       "chrome.searchWorkspace": "Search workspace",
+      "chrome.adminAppCaption": "Admin ERP",
+      "chrome.searchAdmin": "Search ERP navigation",
       "chrome.bridgeReady": "Internal connection ready",
       "chrome.safeMode": "Safe mode",
       "chrome.legalPrivacy": "Legal & privacy",
@@ -1135,6 +1140,7 @@
       "chrome.commandResults": "Quick-switch results",
       "chrome.commandEmpty": "No matching workspace found. Try a feature name or another path.",
       "chrome.commandCount": "{count} workspaces are available in this session.",
+      "chrome.adminCommandCount": "{count} ERP destinations available in this session.",
       "chrome.bridgeReadyDetail": "Features are granted for the current session",
       "chrome.safeModeDetail": "No provider, credits or payment calls from the browser",
 
@@ -1450,6 +1456,8 @@
     zh: {
       "chrome.newWorkflow": "新建工作流",
       "chrome.searchWorkspace": "搜索工作台",
+      "chrome.adminAppCaption": "管理 ERP",
+      "chrome.searchAdmin": "搜索 ERP 导航",
       "chrome.bridgeReady": "内部连接已就绪",
       "chrome.safeMode": "安全模式",
       "chrome.legalPrivacy": "法律与隐私",
@@ -1467,6 +1475,7 @@
       "chrome.commandResults": "快速切换结果",
       "chrome.commandEmpty": "未找到匹配的工作台。请尝试功能名称或其他路径。",
       "chrome.commandCount": "本次会话可打开 {count} 个工作台。",
+      "chrome.adminCommandCount": "此会话可打开 {count} 个 ERP 入口。",
       "chrome.bridgeReadyDetail": "当前会话已获授权使用相应功能",
       "chrome.safeModeDetail": "浏览器不会调用提供方、Xu 或支付",
 
