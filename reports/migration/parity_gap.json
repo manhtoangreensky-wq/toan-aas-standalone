@@ -18825,25 +18825,32 @@
       "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121534
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_expense_last_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_EXPENSE_LAST_MONTH_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a previous-month expense report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18872,46 +18879,60 @@
       "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121534
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_expense_this_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_EXPENSE_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-month expense report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121535
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_expense_year",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_EXPENSE_YEAR_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-year expense report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18940,46 +18961,60 @@
       "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121545
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_export_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_EXPORT_MONTH_COMMAND_GUIDANCE_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch formats export-month command guidance before it redraws the Telegram export selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot command text, selected period, export request/file, finance data, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121545
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_export_year",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_EXPORT_YEAR_COMMAND_GUIDANCE_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch formats export-year command guidance before it redraws the Telegram export selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot command text, selected period, export request/file, finance data, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "classification": "admin",
@@ -19010,25 +19045,32 @@
       "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121502
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_overview",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_OVERVIEW_SNAPSHOT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-month Finance overview snapshot before it renders a Telegram keyboard. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot snapshot, selected period, report/export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -19057,67 +19099,88 @@
       "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121541
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_profit_this_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_PROFIT_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-month profit/loss report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121541
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_profit_year",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_PROFIT_YEAR_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-year profit/loss report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121502
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_revenue",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_REVENUE_SNAPSHOT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-month revenue snapshot before it renders its period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot snapshot, selected period, report/export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "classification": "admin",
@@ -19141,25 +19204,32 @@
       "target": "MENU_SOURCE_REVIEW_REQUIRED"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121528
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_revenue_last_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_REVENUE_LAST_MONTH_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a previous-month revenue report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -19188,46 +19258,60 @@
       "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121528
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_revenue_this_month",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_REVENUE_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-month revenue report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
+      "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "admin_erp_feature_key": "admin_finance",
+      "admin_erp_launch_mode": "WEB_NAVIGATION",
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121529
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_admin_erp_fresh_web_navigation",
       "source": "menu|finance_revenue_year",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "BOT_FINANCE_REVENUE_YEAR_REPORT_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot branch computes and formats a current-year revenue report before it redraws the Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, runtime or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
       "classification": "admin",
@@ -74251,7 +74335,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 79,
+      "count": 67,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -74267,7 +74351,7 @@
         "menu|admin_provider_test",
         "menu|finance_compliance",
         "menu|finance_compliance_update",
-        "menu|finance_expense_last_month"
+        "menu|finance_revenue_custom_help"
       ],
       "source_kinds": [
         "callback_data",
@@ -74826,11 +74910,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 805,
+      "count": 793,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 79,
+          "count": 67,
           "family": "menu",
           "priority": "P0"
         },
@@ -75118,12 +75202,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.14,
+  "mapping_coverage_percent": 80.43,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1569,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 881,
-    "NEEDS_FEATURE_DISPOSITION": 805,
+    "NAVIGATION_ONLY": 893,
+    "NEEDS_FEATURE_DISPOSITION": 793,
     "TELEGRAM_ONLY": 791,
     "WEB_NATIVE_READ_ONLY": 5
   },
@@ -75146,7 +75230,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.14,
+  "safe_disposition_coverage_percent": 80.43,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75156,13 +75240,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3248,
+    "resolved_static_source_count": 3260,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
-    "unresolved_source_count": 805
+    "unresolved_source_count": 793
   },
   "static_web_surface_coverage_percent": 38.71,
   "telegram_link_callback_contract": {

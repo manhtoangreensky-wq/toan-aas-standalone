@@ -2,7 +2,7 @@
 
 ## Intent
 
-Give canonical administrators a clean Web ERP starting point for the frozen Bot's finite Finance overview, period-summary and export-guidance menus. This is fresh navigation to the existing signed `/admin/finance` read surface, never a transfer of Bot finance data, filter state, command text, export request, file or authority.
+Give canonical administrators a clean Web ERP starting point for the frozen Bot's twelve finite Finance overview, period-summary and export-guidance menus. This is fresh navigation to the existing signed `/admin/finance` read surface, never a transfer of Bot finance data, filter state, command text, export request, file or authority.
 
 ## Chosen approach
 
@@ -26,7 +26,7 @@ The mapping cannot send a Telegram identity/role, ledger/Xu/PayOS/payment data, 
 
 ## Verification
 
-- Assert exactly the eleven new keys plus the existing private Finance registry entries.
+- Assert exactly the twelve new keys plus the 15 existing private Finance registry entries (27 total).
 - Assert every reviewed action has a fresh `/admin/finance` target, canonical admin authority, navigation-only status and no-transfer dispositions.
 - Assert case variants, suffixes, custom-help, compliance and tax values stay fail-closed.
 - Regenerate static evidence from frozen Bot SHA `b29d0d474974075f4cba963d2c510f49d2d1b3e4`.

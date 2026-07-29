@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let eleven reviewed frozen Bot Finance menu literals open only a fresh signed-admin `/admin/finance` read route without replaying Bot financial state.
+**Goal:** Let twelve reviewed frozen Bot Finance menu literals open only a fresh signed-admin `/admin/finance` read route without replaying Bot financial state.
 
 **Architecture:** Extend the existing exact private Admin ERP navigation registry. Every descriptor has a fixed target, `admin` classification, `SIGNED_CANONICAL_ADMIN_READ`, `WEB_NAVIGATION`, and no-transfer dispositions. The generic `menu|*` fallback continues to reject every value outside the finite raw-key list.
 
@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `tests/test_migration_audit.py`
 
-- [ ] **Step 1: Add the eleven exact expected descriptors to `test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact`.**
+- [ ] **Step 1: Add the twelve exact expected descriptors to `test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact`.**
 
 ```python
 finance_period_navigation = {
@@ -38,13 +38,13 @@ For every descriptor, require target `/admin/finance`, `NAVIGATION_ONLY`, `SIGNE
 
 - [ ] **Step 2: Add boundary cases.**
 
-Require `MENU|FINANCE_OVERVIEW`, `menu|finance_revenue_year|future`, `menu|finance_revenue_custom_help`, `menu|finance_compliance`, `menu|finance_compliance_update`, `menu|tax_estimate`, and `menu|tax_export_month` to remain `MENU_SOURCE_REVIEW_REQUIRED` with `NEEDS_FEATURE_DISPOSITION`.
+Require `MENU|FINANCE_OVERVIEW`, `menu|finance_revenue_year|future`, `menu|finance_revenue_custom_help`, `menu|finance_compliance`, and `menu|finance_compliance_update` to remain `MENU_SOURCE_REVIEW_REQUIRED` with `NEEDS_FEATURE_DISPOSITION`. Preserve the existing stronger canonical-finance source-review boundary for `menu|tax_estimate` and `menu|tax_export_month`.
 
 - [ ] **Step 3: Run the focused test red.**
 
 Run: `python -m pytest -q tests/test_migration_audit.py::test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact`
 
-Expected: FAIL because the eleven descriptors do not exist yet.
+Expected: FAIL because the twelve descriptors do not exist yet: the existing 15-entry registry is not the required finite 27-entry registry.
 
 ### Task 2: Implement exact read-navigation evidence
 
@@ -52,7 +52,7 @@ Expected: FAIL because the eleven descriptors do not exist yet.
 - Modify: `scripts/migration/audit_bot_to_web.py`
 - Regenerate: `docs/migration/*`, `reports/migration/*`
 
-- [ ] **Step 1: Add the eleven raw descriptors to `ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS`.**
+- [ ] **Step 1: Add the twelve raw descriptors to `ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS`.**
 
 Each descriptor uses the existing `/admin/finance` `admin_finance` metadata and a source-specific no-transfer disposition. Do not lower/casefold/split/prefix-match source keys.
 
@@ -66,7 +66,7 @@ Describe the entries as fresh Finance reads. State that no Bot data, selected pe
 python scripts/migration/audit_bot_to_web.py --bot-root C:\Users\toann\Documents\Codex\2026-05-31\files-mentioned-by-the-user-bot\toanaas-hotfix-28ff87f --web-root . --bot-baseline-sha b29d0d474974075f4cba963d2c510f49d2d1b3e4 --report-dir reports/migration --docs-dir docs/migration
 ```
 
-Expected: the exact eleven new literals have `NAVIGATION_ONLY`; all boundary cases remain fail-closed.
+Expected: the exact twelve new literals have `NAVIGATION_ONLY`; all boundary cases remain fail-closed.
 
 ### Task 3: Verify and integrate
 
