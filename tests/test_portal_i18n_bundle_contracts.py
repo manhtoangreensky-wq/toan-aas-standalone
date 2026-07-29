@@ -216,6 +216,20 @@ for (const locale of expected) {
   }
 }
 
+const adminFinanceWorkspaceKeys = [
+  "adminFinance.hub.kicker", "adminFinance.hub.title",
+  "adminFinance.stream.payments.title",
+  "adminFinance.stream.financePlanning.description",
+  "adminFinance.tax.checkpoint.source.title",
+  "adminFinance.tax.handoff.title",
+  "adminFinance.tax.boundary.noLedger.title"
+];
+for (const locale of expected) {
+  for (const key of adminFinanceWorkspaceKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 if (api.normalizeLocale("zh-CN") !== "zh") throw new Error("Chinese display alias did not normalize");
 if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese must not masquerade as Simplified Chinese");
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");

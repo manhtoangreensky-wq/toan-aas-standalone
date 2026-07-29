@@ -70,6 +70,10 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  function adminFinanceText(key, fallback, params) {
+    return uiText(`adminFinance.${key}`, fallback, params);
+  }
+
   // These helpers apply the active reviewed interface locale only to UI
   // presentation. They never normalize customer/workflow data or alter a
   // stored timestamp, amount, currency/Xu value, source/target language or
@@ -8961,6 +8965,8 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
+    if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
+    if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
@@ -8983,6 +8989,8 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
+    if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
+    if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
@@ -23680,31 +23688,47 @@
     </article>`;
   }
 
+  function renderAdminFinanceTaxNotes() {
+    const notes = [
+      {
+        icon: ICONS.legal,
+        title: adminFinanceText("tax.notes.integration.title", "Trạng thái tích hợp"),
+        body: adminFinanceText("tax.notes.integration.body", "Hướng dẫn này không tải dữ liệu tài chính, trạng thái adapter hoặc ghi chú từ server.")
+      },
+      {
+        icon: ICONS.security,
+        title: adminFinanceText("tax.notes.safety.title", "Nguyên tắc an toàn"),
+        body: adminFinanceText("tax.notes.safety.body", "Chỉ dùng quy trình nội bộ đã được phê duyệt; không nhập hoặc gửi dữ liệu nhạy cảm qua trang này.")
+      }
+    ];
+    return `<div class="portal-panel-list">${notes.map((note) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(note.icon)}</span><div><strong>${safeText(note.title)}</strong><span>${safeText(note.body)}</span></div></div>`).join("")}</div>`;
+  }
+
   function renderAdminTaxReadiness(page, context) {
     // Guidance is intentionally literal and data-free. The server already
     // applies canonical-admin authorization to this exact route; this
     // renderer must never turn a checklist into a finance read model, tax
     // calculator, record exporter, or accounting mutation surface.
     const checkpoints = [
-      { icon: ICONS.document, title: "Xác định nguồn hồ sơ", text: "Ghi nhận nơi lưu hồ sơ được phê duyệt và chủ sở hữu phụ trách trước khi bắt đầu review." },
-      { icon: ICONS.reports, title: "Chuẩn bị đối chiếu", text: "Sắp xếp câu hỏi, kỳ cần rà soát và các điểm cần làm rõ để người có thẩm quyền xử lý." },
-      { icon: ICONS.security, title: "Chuyển đúng người phụ trách", text: "Handoff theo quy trình nội bộ tới kế toán hoặc tư vấn được ủy quyền; không gửi dữ liệu nhạy cảm qua màn hình này." }
+      { icon: ICONS.document, title: adminFinanceText("tax.checkpoint.source.title", "Xác định nguồn hồ sơ"), text: adminFinanceText("tax.checkpoint.source.text", "Ghi nhận nơi lưu hồ sơ được phê duyệt và chủ sở hữu phụ trách trước khi bắt đầu review.") },
+      { icon: ICONS.reports, title: adminFinanceText("tax.checkpoint.reconcile.title", "Chuẩn bị đối chiếu"), text: adminFinanceText("tax.checkpoint.reconcile.text", "Sắp xếp câu hỏi, kỳ cần rà soát và các điểm cần làm rõ để người có thẩm quyền xử lý.") },
+      { icon: ICONS.security, title: adminFinanceText("tax.checkpoint.handoff.title", "Chuyển đúng người phụ trách"), text: adminFinanceText("tax.checkpoint.handoff.text", "Handoff theo quy trình nội bộ tới kế toán hoặc tư vấn được ủy quyền; không gửi dữ liệu nhạy cảm qua màn hình này.") }
     ];
     const boundaries = [
-      { icon: ICONS.reports, title: "Không tính hoặc ước tính thuế", text: "Không có biểu mẫu, công thức, số tiền, kỳ kê khai, hồ sơ tài chính hoặc kết luận nghiệp vụ trong browser." },
-      { icon: ICONS.document, title: "Không tạo hoặc xuất chứng từ", text: "Không tạo CSV/PDF, báo cáo, file bàn giao hay tải dữ liệu từ Bot, Core Bridge hoặc kho lưu trữ." },
-      { icon: ICONS.payments, title: "Không thay đổi financial authority", text: "Không đọc hoặc ghi Xu, payment, PayOS, refund, revenue, pricing, ledger hay cấu hình tài chính." }
+      { icon: ICONS.reports, title: adminFinanceText("tax.boundary.noTax.title", "Không tính hoặc ước tính thuế"), text: adminFinanceText("tax.boundary.noTax.text", "Không có biểu mẫu, công thức, số tiền, kỳ kê khai, hồ sơ tài chính hoặc kết luận nghiệp vụ trong browser.") },
+      { icon: ICONS.document, title: adminFinanceText("tax.boundary.noExport.title", "Không tạo hoặc xuất chứng từ"), text: adminFinanceText("tax.boundary.noExport.text", "Không tạo CSV/PDF, báo cáo, file bàn giao hay tải dữ liệu từ Bot, Core Bridge hoặc kho lưu trữ.") },
+      { icon: ICONS.payments, title: adminFinanceText("tax.boundary.noLedger.title", "Không thay đổi financial authority"), text: adminFinanceText("tax.boundary.noLedger.text", "Không đọc hoặc ghi Xu, payment, PayOS, refund, revenue, pricing, ledger hay cấu hình tài chính.") }
     ];
     const financeLink = serverAuthorizesAdminRoute(context, "/admin/finance")
-      ? '<a class="portal-button portal-button--quiet" href="/admin/finance">Về Finance &amp; Revenue</a>'
+      ? '<a class="portal-button portal-button--quiet" href="/admin/finance">' + safeText(adminFinanceText("tax.link.finance", "Về Finance & Revenue")) + '</a>'
       : "";
     const checkpointCards = checkpoints.map((item) => `<article class="portal-tax-readiness-card"><span class="portal-tax-readiness-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
     const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
     return `<article class="portal-page portal-admin-tax-readiness">${renderHero(page, context)}
-      <section class="portal-tax-readiness-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Chuẩn bị review accounting có cấu trúc, không biến Web thành công cụ tính thuế</h2><p>Trang này giúp đội vận hành chuẩn bị checklist và handoff rõ ràng. Mọi xác minh dữ liệu, phân loại nghiệp vụ và kết luận vẫn thuộc quy trình nội bộ cùng người có thẩm quyền.</p></div><div class="portal-tax-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Route được bảo vệ riêng</strong><small>Chỉ signed canonical admin được mở hướng dẫn này</small></span></div></section>
-      <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="tax-readiness-checklist-title">Ba điểm kiểm tra trước khi handoff</h2><p>Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính.</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
-      <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Chuẩn bị phạm vi review</strong><span>Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ.</span></li><li><strong>Xác thực ở hệ thống được phê duyệt</strong><span>Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép.</span></li><li><strong>Ghi nhận handoff có kiểm soát</strong><span>Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm.</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
-      <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+      <section class="portal-tax-readiness-intro"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.intro.kicker", "Canonical admin guidance · read-only"))}</span><h2>${safeText(adminFinanceText("tax.intro.title", "Chuẩn bị review accounting có cấu trúc, không biến Web thành công cụ tính thuế"))}</h2><p>${safeText(adminFinanceText("tax.intro.body", "Trang này giúp đội vận hành chuẩn bị checklist và handoff rõ ràng. Mọi xác minh dữ liệu, phân loại nghiệp vụ và kết luận vẫn thuộc quy trình nội bộ cùng người có thẩm quyền."))}</p></div><div class="portal-tax-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(adminFinanceText("tax.intro.statusTitle", "Route được bảo vệ riêng"))}</strong><small>${safeText(adminFinanceText("tax.intro.statusBody", "Chỉ signed canonical admin được mở hướng dẫn này"))}</small></span></div></section>
+      <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.section.kicker", "Preparation checklist"))}</span><h2 id="tax-readiness-checklist-title">${safeText(adminFinanceText("tax.section.title", "Ba điểm kiểm tra trước khi handoff"))}</h2><p>${safeText(adminFinanceText("tax.section.body", "Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính."))}</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.handoff.kicker", "Safe handoff"))}</span><h2 class="portal-card-title">${safeText(adminFinanceText("tax.handoff.title", "Trình tự đề xuất"))}</h2><p class="portal-card-subtitle">${safeText(adminFinanceText("tax.handoff.body", "Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser."))}</p></div>${badge("read_only")}</div><ol><li><strong>${safeText(adminFinanceText("tax.handoff.itemOne.title", "Chuẩn bị phạm vi review"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemOne.body", "Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ."))}</span></li><li><strong>${safeText(adminFinanceText("tax.handoff.itemTwo.title", "Xác thực ở hệ thống được phê duyệt"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemTwo.body", "Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép."))}</span></li><li><strong>${safeText(adminFinanceText("tax.handoff.itemThree.title", "Ghi nhận handoff có kiểm soát"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemThree.body", "Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm."))}</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.limit.kicker", "Deliberate limits"))}</span><h2 class="portal-card-title">${safeText(adminFinanceText("tax.limit.title", "Ranh giới được giữ cố ý"))}</h2><p class="portal-card-subtitle">${safeText(adminFinanceText("tax.limit.body", "Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ."))}</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderAdminFinanceTaxNotes()}</section>
     </article>`;
   }
 
@@ -24057,6 +24081,28 @@
 
   // These are first-class navigation centers, not new Bot adapters. Their
   // routes are fixed below and every destination remains server role-protected.
+  function adminFinanceDomain() {
+    return {
+      kicker: adminFinanceText("hub.kicker", "Finance & revenue control center"),
+      title: adminFinanceText("hub.title", "Nhìn rõ financial operations mà không sinh ledger thứ hai"),
+      description: adminFinanceText("hub.description", "Gom các bề mặt đọc tài chính vào một nơi để đội vận hành truy cập đúng workflow, trong khi PayOS và Xu tiếp tục có một authority canonical duy nhất."),
+      streams: [
+        { title: adminFinanceText("stream.payments.title", "Payments"), text: adminFinanceText("stream.payments.description", "Theo dõi payment canonical; Web không thêm webhook hoặc ký request PayOS."), route: "/admin/payments", icon: ICONS.payments },
+        { title: adminFinanceText("stream.topups.title", "Topups"), text: adminFinanceText("stream.topups.description", "Review nạp Xu và đối soát qua server, không cấp credit trực tiếp."), route: "/admin/topups", icon: ICONS.payments },
+        { title: adminFinanceText("stream.revenue.title", "Revenue"), text: adminFinanceText("stream.revenue.description", "Mở revenue projection đã redaction và không tính toán thay backend."), route: "/admin/revenue", icon: ICONS.reports },
+        { title: adminFinanceText("stream.refunds.title", "Refunds"), text: adminFinanceText("stream.refunds.description", "Review refund canonical; write chỉ mở khi có approval/idempotency/audit adapter."), route: "/admin/refunds", icon: ICONS.payments },
+        { title: adminFinanceText("stream.pricing.title", "Giá & packages"), text: adminFinanceText("stream.pricing.description", "Đi tới catalog pricing/package để review chứ không thay rate ở client."), route: "/admin/pricing", icon: ICONS.pricing },
+        { title: adminFinanceText("stream.financePlanning.title", "Finance planning"), text: adminFinanceText("stream.financePlanning.description", "Lập ngân sách và kế hoạch chi phí vận hành Web-native có revision/audit; không phải ledger hay payment."), route: "/admin/finance/planning", icon: ICONS.payments },
+        { title: adminFinanceText("stream.taxReadiness.title", "Tax readiness"), text: adminFinanceText("stream.taxReadiness.description", "Mở checklist và handoff accounting chỉ đọc; không tính thuế, xuất file hay đọc ledger."), route: "/admin/finance/tax-readiness", icon: ICONS.document }
+      ],
+      boundaries: [
+        adminFinanceText("boundary.itemOne", "Không cộng/trừ Xu, finalize PayOS hoặc đối soát thanh toán từ browser."),
+        adminFinanceText("boundary.itemTwo", "Không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thủ công ở shell này."),
+        adminFinanceText("boundary.itemThree", "Mọi write tài chính cần canonical role, CSRF, confirmation, idempotency và audit.")
+      ]
+    };
+  }
+
   const ADMIN_DOMAIN_CENTERS = Object.freeze({
     "/admin/publishing": {
       kicker: "Publishing control center",
@@ -24083,21 +24129,6 @@
       ],
       boundaries: ["Không payout affiliate, sửa referral attribution hoặc cấp reward từ browser.", "Không gửi campaign, scrape trend hay tạo report AI thay thế.", "Payout, Xu, payment và entitlement tiếp tục do canonical authority quyết định."]
     },
-    "/admin/finance": {
-      kicker: "Finance & revenue control center",
-      title: "Nhìn rõ financial operations mà không sinh ledger thứ hai",
-      description: "Gom các bề mặt đọc tài chính vào một nơi để đội vận hành truy cập đúng workflow, trong khi PayOS và Xu tiếp tục có một authority canonical duy nhất.",
-      streams: [
-        { title: "Payments", text: "Theo dõi payment canonical; Web không thêm webhook hoặc ký request PayOS.", route: "/admin/payments", icon: ICONS.payments },
-        { title: "Topups", text: "Review nạp Xu và đối soát qua server, không cấp credit trực tiếp.", route: "/admin/topups", icon: ICONS.payments },
-        { title: "Revenue", text: "Mở revenue projection đã redaction và không tính toán thay backend.", route: "/admin/revenue", icon: ICONS.reports },
-        { title: "Refunds", text: "Review refund canonical; write chỉ mở khi có approval/idempotency/audit adapter.", route: "/admin/refunds", icon: ICONS.payments },
-        { title: "Giá & packages", text: "Đi tới catalog pricing/package để review chứ không thay rate ở client.", route: "/admin/pricing", icon: ICONS.pricing },
-        { title: "Finance planning", text: "Lập ngân sách và kế hoạch chi phí vận hành Web-native có revision/audit; không phải ledger hay payment.", route: "/admin/finance/planning", icon: ICONS.payments },
-        { title: "Tax readiness", text: "Mở checklist và handoff accounting chỉ đọc; không tính thuế, xuất file hay đọc ledger.", route: "/admin/finance/tax-readiness", icon: ICONS.document }
-      ],
-      boundaries: ["Không cộng/trừ Xu, finalize PayOS hoặc đối soát thanh toán từ browser.", "Không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thủ công ở shell này.", "Mọi write tài chính cần canonical role, CSRF, confirmation, idempotency và audit."]
-    },
     "/admin/trends": {
       kicker: "Trend & reference control center",
       title: "Biến research thành brief có kiểm soát, không biến Web thành scraper",
@@ -24113,24 +24144,39 @@
   });
 
   function renderAdminDomain(page, context) {
-    const domain = ADMIN_DOMAIN_CENTERS[normalizePath(page.path)] || null;
+    const domainPath = normalizePath(page.path);
+    const isFinanceDomain = domainPath === "/admin/finance";
+    const domain = isFinanceDomain ? adminFinanceDomain() : (ADMIN_DOMAIN_CENTERS[domainPath] || null);
     if (!domain) return renderAdmin(page, context);
     const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
+    const adapterTitle = isFinanceDomain ? adminFinanceText("adapter.title", "Trạng thái adapter") : "Trạng thái adapter";
     const adapterMessage = typeof data.message === "string" && data.message
-      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Trạng thái adapter</strong><p>${safeText(data.message)}</p></div></div>`
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adapterTitle)}</strong><p>${safeText(data.message)}</p></div></div>`
       : "";
     // Domain centers are a convenience view, never a browser-side permission
     // inference.  Keep only the routes the signed server manifest issued.
     const streams = domain.streams.filter((stream) => serverAuthorizesAdminRoute(context, stream.route));
     const cards = streams.length
       ? streams.map((stream) => `<a class="portal-admin-domain-card" href="${safeText(stream.route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(stream.icon || ICONS.default)}</span><span><h3>${safeText(stream.title)}</h3><p>${safeText(stream.text)}</p></span><span class="portal-module-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`).join("")
-      : renderEmpty("Chưa có workflow quản trị được cấp", "Role và manifest từ server chưa cấp route nào cho center này. Web không đoán quyền từ URL hoặc browser state.", ICONS.admin);
+      : renderEmpty(
+        isFinanceDomain ? adminFinanceText("empty.title", "Chưa có workflow quản trị được cấp") : "Chưa có workflow quản trị được cấp",
+        isFinanceDomain ? adminFinanceText("empty.body", "Role và manifest từ server chưa cấp route nào cho center này. Web không đoán quyền từ URL hoặc browser state.") : "Role và manifest từ server chưa cấp route nào cho center này. Web không đoán quyền từ URL hoặc browser state.",
+        ICONS.admin
+      );
+    const adminOverviewLabel = isFinanceDomain ? adminFinanceText("footer.admin", "Về Admin Overview") : "Về Admin Overview";
+    const operationsLabel = isFinanceDomain ? adminFinanceText("footer.operations", "Operations") : "Operations";
     const footerLinks = [
-      serverAuthorizesAdminRoute(context, "/admin") ? '<a class="portal-button portal-button--quiet" href="/admin">Về Admin Overview</a>' : "",
-      serverAuthorizesAdminRoute(context, "/admin/operations") ? '<a class="portal-button portal-button--quiet" href="/admin/operations">Operations</a>' : ""
+      serverAuthorizesAdminRoute(context, "/admin") ? '<a class="portal-button portal-button--quiet" href="/admin">' + safeText(adminOverviewLabel) + '</a>' : "",
+      serverAuthorizesAdminRoute(context, "/admin/operations") ? '<a class="portal-button portal-button--quiet" href="/admin/operations">' + safeText(operationsLabel) + '</a>' : ""
     ].filter(Boolean).join("");
     const boundaries = domain.boundaries.map((item) => `<li>${safeText(item)}</li>`).join("");
-    return `<article class="portal-page portal-admin-domain">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-domain-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span><div><span class="portal-section-kicker">${safeText(domain.kicker)}</span><h2>${safeText(domain.title)}</h2><p>${safeText(domain.description)}</p><div class="portal-state-meta"><span>Server-side role check</span><span>Read-only by default</span><span>Không có action giả</span></div></div>${badge("read_only")}</div></section>${adapterMessage}<section class="portal-admin-domain-grid" aria-label="${safeText(domain.kicker)}">${cards}</section><section class="portal-card portal-card-pad portal-admin-domain-boundaries"><div class="portal-card-header"><div><span class="portal-section-kicker">Authority boundary</span><h2 class="portal-card-title">Các giới hạn được giữ cố ý</h2><p class="portal-card-subtitle">Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.</p></div>${badge("guarded")}</div><ul>${boundaries}</ul>${footerLinks ? `<div class="portal-form-footer">${footerLinks}</div>` : ""}</section></article>`;
+    const roleCheck = isFinanceDomain ? adminFinanceText("meta.roleCheck", "Server-side role check") : "Server-side role check";
+    const readOnly = isFinanceDomain ? adminFinanceText("meta.readOnly", "Read-only by default") : "Read-only by default";
+    const noActions = isFinanceDomain ? adminFinanceText("meta.noActions", "Không có action giả") : "Không có action giả";
+    const boundaryKicker = isFinanceDomain ? adminFinanceText("boundary.kicker", "Authority boundary") : "Authority boundary";
+    const boundaryTitle = isFinanceDomain ? adminFinanceText("boundary.title", "Các giới hạn được giữ cố ý") : "Các giới hạn được giữ cố ý";
+    const boundaryBody = isFinanceDomain ? adminFinanceText("boundary.body", "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.") : "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.";
+    return `<article class="portal-page portal-admin-domain">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-domain-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span><div><span class="portal-section-kicker">${safeText(domain.kicker)}</span><h2>${safeText(domain.title)}</h2><p>${safeText(domain.description)}</p><div class="portal-state-meta"><span>${safeText(roleCheck)}</span><span>${safeText(readOnly)}</span><span>${safeText(noActions)}</span></div></div>${badge("read_only")}</div></section>${adapterMessage}<section class="portal-admin-domain-grid" aria-label="${safeText(domain.kicker)}">${cards}</section><section class="portal-card portal-card-pad portal-admin-domain-boundaries"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(boundaryKicker)}</span><h2 class="portal-card-title">${safeText(boundaryTitle)}</h2><p class="portal-card-subtitle">${safeText(boundaryBody)}</p></div>${badge("guarded")}</div><ul>${boundaries}</ul>${footerLinks ? `<div class="portal-form-footer">${footerLinks}</div>` : ""}</section></article>`;
   }
 
   function renderAdmin(page, context) {
