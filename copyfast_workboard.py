@@ -119,6 +119,7 @@ SCHEDULE_MAX_AHEAD = timedelta(days=366)
 IANA_TIMEZONE_PATTERN = re.compile(r"^(?:UTC|[A-Za-z0-9._+-]+(?:/[A-Za-z0-9._+-]+)+)$")
 LOCAL_TRIGGER_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$")
 SNAPSHOT_HASH_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+CONTENT_HANDOFF_FOLLOWUP_ELIGIBLE_STATUSES = frozenset({"approved_for_handoff", "handed_off"})
 
 
 def _require_enabled() -> None:
@@ -126,6 +127,46 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Workboard & Review Queue đang tạm dừng để bảo trì. WEBAPP_WORKBOARD_ENABLED chưa được bật.",
+        )
+
+
+def _ensure_content_handoff_followup_schema() -> None:
+    """Create only the additive owner-scoped follow-up relation.
+
+    The source schema stays owned by the Content Handoff module. Importing its
+    narrow schema initializer neither starts the Bot nor grants bridge,
+    provider, job, wallet, payment, webhook, delivery, or publish authority.
+    """
+
+    from copyfast_content_handoff import _ensure_schema as ensure_content_handoff_schema
+
+    ensure_content_handoff_schema()
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_handoff_workboard_followups (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                handoff_id TEXT NOT NULL,
+                handoff_revision INTEGER NOT NULL,
+                workboard_item_id TEXT NOT NULL,
+                link_state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                superseded_at TEXT,
+                CHECK(link_state IN ('active', 'superseded')),
+                UNIQUE(handoff_id, handoff_revision),
+                UNIQUE(workboard_item_id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(handoff_id) REFERENCES web_content_handoff_records(id),
+                FOREIGN KEY(workboard_item_id) REFERENCES web_workboard_items(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_content_handoff_workboard_followups_owner_item "
+            "ON web_content_handoff_workboard_followups(account_id, workboard_item_id)"
         )
 
 
@@ -406,6 +447,70 @@ class ItemCreateRequest(ItemPayload):
         return _idempotency_key(value)
 
 
+class ContentHandoffFollowupChecklistInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    body: str
+    is_done: bool = False
+
+    @field_validator("body")
+    @classmethod
+    def _body(cls, value: str) -> str:
+        return _line(value, label="Checklist", minimum=2, maximum=360)
+
+
+class ContentHandoffFollowupCreateRequest(BaseModel):
+    """Closed owner input for a new private follow-up card.
+
+    Source Handoff content is intentionally absent. The customer supplies new
+    Workboard metadata instead of replaying a purpose, staff note, recipient,
+    source reference, path, provider value, payment value, or Bot context.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    handoff_id: str
+    expected_handoff_revision: int = Field(ge=1)
+    title: str
+    checklist: list[ContentHandoffFollowupChecklistInput] = Field(default_factory=list)
+    priority: str = "normal"
+    due_at: str | None = None
+    confirm: bool
+    idempotency_key: str
+
+    @field_validator("handoff_id")
+    @classmethod
+    def _handoff_id(cls, value: str) -> str:
+        return _uuid(value, label="Content Handoff ID")
+
+    @field_validator("title")
+    @classmethod
+    def _title(cls, value: str) -> str:
+        return _line(value, label="Tên công việc", minimum=3, maximum=180)
+
+    @field_validator("checklist")
+    @classmethod
+    def _checklist(cls, value: list[ContentHandoffFollowupChecklistInput]) -> list[ContentHandoffFollowupChecklistInput]:
+        if len(value) > MAX_CHECKLIST_PER_ITEM:
+            raise ValueError(f"Tối đa {MAX_CHECKLIST_PER_ITEM} checklist cho mỗi work item")
+        return value
+
+    @field_validator("priority")
+    @classmethod
+    def _priority(cls, value: str) -> str:
+        return ItemPayload._priority(value)
+
+    @field_validator("due_at")
+    @classmethod
+    def _due(cls, value: str | None) -> str | None:
+        return _due_at(value)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def _key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 class ItemUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -647,6 +752,7 @@ def _item_public(
     checklist_total: int = 0,
     checklist_done: int = 0,
     include_description: bool = False,
+    content_handoff_followup: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "id": str(row[0]), "title": str(row[2]), "priority": str(row[4]),
@@ -662,6 +768,8 @@ def _item_public(
         result["description_excerpt"] = compact[:240] + ("…" if len(compact) > 240 else "")
     if references is not None:
         result["references"] = references
+    if content_handoff_followup is not None:
+        result["content_handoff_followup"] = content_handoff_followup
     return result
 
 
@@ -833,6 +941,13 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
             "revision": int(schedule_intent.get("revision") or 0),
             "delivery": "in_app_record_only",
         }
+    followup = source.get("content_handoff_followup")
+    if isinstance(followup, dict) and isinstance(followup.get("handoff_id"), str):
+        data["content_handoff_followup"] = {
+            "handoff_id": str(followup["handoff_id"]),
+            "handoff_revision": int(followup.get("handoff_revision") or 0),
+            "link_state": str(followup.get("link_state") or ""),
+        }
     for key in ("version_recorded", "checklist_total", "checklist_done"):
         if key in source:
             data[key] = source[key]
@@ -911,6 +1026,188 @@ def _item_receipt(conn: Any, *, item_id: str, account_id: str, include_descripti
     total, done = _item_counts(conn, item_id=item_id, account_id=account_id)
     references = _references_public(_reference_rows(conn, item_id=item_id, account_id=account_id))
     return _item_public(item, references=references, checklist_total=total, checklist_done=done, include_description=include_description)
+
+
+def _content_handoff_followup_source(
+    conn: Any,
+    *,
+    handoff_id: str,
+    account_id: str,
+    expected_revision: int,
+) -> dict[str, Any]:
+    """Read only the source ID, lifecycle status, and revision inside a write.
+
+    Purpose, staff note, references, recipient/destination material, assets,
+    and other Content Handoff details never cross into Workboard.
+    """
+
+    row = conn.execute(
+        """SELECT id, handoff_status, record_state, revision
+           FROM web_content_handoff_records WHERE id=? AND account_id=?""",
+        (handoff_id, account_id),
+    ).fetchone()
+    if not row:
+        return _guarded("Không tìm thấy Content Handoff thuộc Web account hiện tại.", "WEB_WORKBOARD_HANDOFF_NOT_FOUND")
+    if str(row[2]) != "active":
+        return _guarded("Content Handoff đã archive nên không thể tạo follow-up.", "WEB_WORKBOARD_HANDOFF_ARCHIVED")
+    if int(row[3]) != expected_revision:
+        return _guarded(
+            "Content Handoff đã có revision mới. Hãy tải lại trước khi tạo follow-up.",
+            "WEB_WORKBOARD_HANDOFF_REVISION_CONFLICT",
+        )
+    if str(row[1]) not in CONTENT_HANDOFF_FOLLOWUP_ELIGIBLE_STATUSES:
+        return _guarded(
+            "Content Handoff chưa sẵn sàng để tạo follow-up Workboard.",
+            "WEB_WORKBOARD_HANDOFF_NOT_ELIGIBLE",
+        )
+    return {"id": str(row[0]), "revision": int(row[3]), "handoff_status": str(row[1])}
+
+
+def _content_handoff_followup_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    return {
+        "handoff_id": str(row[2]),
+        "handoff_revision": int(row[3]),
+        "link_state": str(row[5]),
+    }
+
+
+def _is_content_handoff_followup_unique_conflict(exc: sqlite3.IntegrityError) -> bool:
+    """Match only the two declared Content Handoff follow-up relations."""
+
+    return str(exc) in {
+        "UNIQUE constraint failed: web_content_handoff_workboard_followups.handoff_id, web_content_handoff_workboard_followups.handoff_revision",
+        "UNIQUE constraint failed: web_content_handoff_workboard_followups.workboard_item_id",
+    }
+
+
+def _content_handoff_followup_tables_available(conn: Any) -> bool:
+    rows = conn.execute(
+        """SELECT name FROM sqlite_schema
+           WHERE type='table' AND name IN ('web_content_handoff_records', 'web_content_handoff_workboard_followups')"""
+    ).fetchall()
+    return {str(row[0]) for row in rows} == {
+        "web_content_handoff_records",
+        "web_content_handoff_workboard_followups",
+    }
+
+
+def _content_handoff_followups_for_items(
+    conn: Any,
+    *,
+    account_id: str,
+    item_ids: list[str],
+) -> tuple[dict[str, dict[str, Any]], list[str]]:
+    """Batch-read safe relation projections and identify stale active links.
+
+    Source purpose, staff notes, references, recipients, destinations, and
+    other Content Handoff detail are neither selected nor copied.
+    """
+
+    if not item_ids or not _content_handoff_followup_tables_available(conn):
+        return {}, []
+    placeholders = ",".join("?" for _ in item_ids)
+    rows = conn.execute(
+        f"""SELECT r.id, r.account_id, r.handoff_id, r.handoff_revision, r.workboard_item_id, r.link_state,
+                   r.created_at, r.updated_at, r.superseded_at,
+                   h.handoff_status, h.record_state, h.revision
+            FROM web_content_handoff_workboard_followups r
+            LEFT JOIN web_content_handoff_records h
+              ON h.id=r.handoff_id AND h.account_id=r.account_id
+            WHERE r.account_id=? AND r.workboard_item_id IN ({placeholders})""",
+        (account_id, *item_ids),
+    ).fetchall()
+    followups: dict[str, dict[str, Any]] = {}
+    stale_active_relation_ids: list[str] = []
+    for row in rows:
+        source_is_current = bool(
+            row[9] is not None
+            and str(row[10]) == "active"
+            and str(row[9]) in CONTENT_HANDOFF_FOLLOWUP_ELIGIBLE_STATUSES
+            and int(row[11]) == int(row[3])
+        )
+        followup = _content_handoff_followup_public(tuple(row[:9]))
+        if not source_is_current and followup["link_state"] == "active":
+            followup["link_state"] = "superseded"
+            stale_active_relation_ids.append(str(row[0]))
+        followups[str(row[4])] = followup
+    return followups, stale_active_relation_ids
+
+
+def _supersede_content_handoff_followups(*, account_id: str, relation_ids: list[str]) -> None:
+    """Persist only active-to-superseded relation changes in a short write."""
+
+    if not relation_ids:
+        return
+    placeholders = ",".join("?" for _ in relation_ids)
+    now = utc_now()
+    with transaction() as conn:
+        conn.execute(
+            f"""UPDATE web_content_handoff_workboard_followups
+                SET link_state='superseded', updated_at=?, superseded_at=?
+                WHERE account_id=? AND link_state='active' AND id IN ({placeholders})""",
+            (now, now, account_id, *relation_ids),
+        )
+
+
+def _create_item_in_transaction(
+    conn: Any,
+    *,
+    account: dict,
+    request: Request,
+    payload: ItemPayload,
+    audit_action: str,
+    audit_detail: str,
+) -> dict[str, Any]:
+    """Persist a normal Workboard card without granting any external authority."""
+
+    account_id = str(account["id"])
+    active_count = conn.execute(
+        "SELECT COUNT(*) FROM web_workboard_items WHERE account_id=? AND state!='archived'",
+        (account_id,),
+    ).fetchone()
+    if int(active_count[0] or 0) >= MAX_ITEMS_PER_ACCOUNT:
+        return _guarded("Bạn đã đạt giới hạn work item đang hoạt động.", "WEB_WORKBOARD_ITEM_LIMIT")
+    if not _references_are_owned(conn, account_id=account_id, references=payload.references):
+        return _guarded("Reference Workboard không tồn tại hoặc không thuộc Web account hiện tại.", "WEB_WORKBOARD_REFERENCE_NOT_FOUND")
+    item_id = str(uuid.uuid4())
+    now = utc_now()
+    conn.execute(
+        """INSERT INTO web_workboard_items
+           (id, account_id, title, description, priority, due_at, state, revision, created_at, updated_at, archived_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'backlog', 1, ?, ?, NULL)""",
+        (item_id, account_id, payload.title, payload.description, payload.priority, payload.due_at, now, now),
+    )
+    _write_references(conn, item_id=item_id, account_id=account_id, references=payload.references)
+    for ordinal, entry in enumerate(payload.checklist, start=1):
+        completed_at = now if entry.is_done else None
+        conn.execute(
+            """INSERT INTO web_workboard_checklist_items
+               (id, item_id, account_id, ordinal, body, is_done, state, revision, completed_at, created_at, updated_at, archived_at)
+               VALUES (?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, NULL)""",
+            (str(uuid.uuid4()), item_id, account_id, ordinal, entry.body, int(entry.is_done), completed_at, now, now),
+        )
+    item = _refresh_item(conn, item_id=item_id, account_id=account_id)
+    rows = _checklist_rows(conn, item_id=item_id, account_id=account_id, include_archived=True)
+    for row in rows:
+        _insert_checklist_version(conn, row=row, account_id=account_id)
+    _insert_item_version(conn, item=item, account_id=account_id, checklist=rows)
+    _event(conn, account_id=account_id, item_id=item_id, entity_type="item", action="item_created", item_revision=1)
+    _record_audit(
+        conn,
+        account_id=account_id,
+        canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+        action=audit_action,
+        request_id=_request_id(request),
+        target=item_id,
+        outcome="ok",
+        detail=audit_detail[:320],
+    )
+    return {
+        "item_id": item_id,
+        "item": _item_receipt(conn, item_id=item_id, account_id=account_id),
+        "checklist_total": len(rows),
+        "checklist_done": sum(1 for row in rows if bool(row[4])),
+    }
 
 
 def _item_snapshot_for_fingerprint(payload: ItemPayload) -> dict[str, Any]:
@@ -1085,7 +1382,6 @@ async def list_items(
         where.append("EXISTS (SELECT 1 FROM web_workboard_item_references r WHERE r.item_id=i.id AND r.account_id=i.account_id AND r.ref_type=? AND r.ref_id=?)")
         params.extend([requested_ref_type, requested_ref_id])
     predicate = " AND ".join(where)
-    ensure_copyfast_schema()
     with read_transaction() as conn:
         rows = conn.execute(
             f"""SELECT i.id, i.account_id, i.title, i.description, i.priority, i.due_at, i.state, i.revision,
@@ -1115,8 +1411,20 @@ async def list_items(
             ).fetchall()
             for ref_row in ref_rows:
                 ref_map.setdefault(str(ref_row[0]), []).append({"ref_type": str(ref_row[1]), "ref_id": str(ref_row[2])})
+        followup_map, stale_followup_ids = _content_handoff_followups_for_items(
+            conn,
+            account_id=account_id,
+            item_ids=item_ids,
+        )
+    _supersede_content_handoff_followups(account_id=account_id, relation_ids=stale_followup_ids)
     items = [
-        _item_public(tuple(row[:11]), references=ref_map.get(str(row[0]), []), checklist_total=int(row[11] or 0), checklist_done=int(row[12] or 0))
+        _item_public(
+            tuple(row[:11]),
+            references=ref_map.get(str(row[0]), []),
+            checklist_total=int(row[11] or 0),
+            checklist_done=int(row[12] or 0),
+            content_handoff_followup=followup_map.get(str(row[0])),
+        )
         for row in page_rows
     ]
     return envelope(
@@ -1135,37 +1443,150 @@ async def create_item(payload: ItemCreateRequest, request: Request, account: dic
     fingerprint = _fingerprint(_item_snapshot_for_fingerprint(payload))
 
     def operation(conn: Any) -> dict[str, Any]:
-        active_count = conn.execute("SELECT COUNT(*) FROM web_workboard_items WHERE account_id=? AND state!='archived'", (account_id,)).fetchone()
-        if int(active_count[0] or 0) >= MAX_ITEMS_PER_ACCOUNT:
-            return _guarded("Bạn đã đạt giới hạn work item đang hoạt động.", "WEB_WORKBOARD_ITEM_LIMIT")
-        if not _references_are_owned(conn, account_id=account_id, references=payload.references):
-            return _guarded("Reference Workboard không tồn tại hoặc không thuộc Web account hiện tại.", "WEB_WORKBOARD_REFERENCE_NOT_FOUND")
-        item_id = str(uuid.uuid4())
-        now = utc_now()
-        conn.execute(
-            """INSERT INTO web_workboard_items
-               (id, account_id, title, description, priority, due_at, state, revision, created_at, updated_at, archived_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'backlog', 1, ?, ?, NULL)""",
-            (item_id, account_id, payload.title, payload.description, payload.priority, payload.due_at, now, now),
+        created = _create_item_in_transaction(
+            conn,
+            account=account,
+            request=request,
+            payload=payload,
+            audit_action="web.workboard.item.create",
+            audit_detail="web-native workboard item created",
         )
-        _write_references(conn, item_id=item_id, account_id=account_id, references=payload.references)
-        for ordinal, entry in enumerate(payload.checklist, start=1):
-            completed_at = now if entry.is_done else None
-            conn.execute(
-                """INSERT INTO web_workboard_checklist_items
-                   (id, item_id, account_id, ordinal, body, is_done, state, revision, completed_at, created_at, updated_at, archived_at)
-                   VALUES (?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, NULL)""",
-                (str(uuid.uuid4()), item_id, account_id, ordinal, entry.body, int(entry.is_done), completed_at, now, now),
+        if created.get("ok") is False:
+            return created
+        return envelope(
+            True,
+            "Đã tạo work item trong Workboard Web-native.",
+            data=_boundary(
+                item=created["item"],
+                checklist_total=int(created["checklist_total"]),
+                checklist_done=int(created["checklist_done"]),
+                version_recorded=True,
+            ),
+            status_name="completed",
+        )
+
+    return _idempotent(scope, account_id, payload.idempotency_key, fingerprint, operation)
+
+
+@router.post("/content-handoff-followups")
+async def create_content_handoff_followup(
+    payload: ContentHandoffFollowupCreateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Create one owner-confirmed Workboard card for an eligible Handoff revision."""
+
+    _require_enabled()
+    from copyfast_content_handoff import content_handoff_enabled
+
+    if not content_handoff_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Content Handoff đang tạm dừng để bảo trì. WEBAPP_CONTENT_HANDOFF_ENABLED chưa được bật.",
+        )
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần xác nhận rõ ràng trước khi tạo follow-up Workboard")
+    _ensure_content_handoff_followup_schema()
+    account_id = str(account["id"])
+    fingerprint = _fingerprint(
+        {
+            "handoff_id": payload.handoff_id,
+            "expected_handoff_revision": payload.expected_handoff_revision,
+            "title": payload.title,
+            "checklist": [{"body": entry.body, "is_done": entry.is_done} for entry in payload.checklist],
+            "priority": payload.priority,
+            "due_at": payload.due_at,
+        }
+    )
+    scope = f"web-workboard:{account_id}:content-handoff:{payload.handoff_id}:followup:create"
+
+    def operation(conn: Any) -> dict[str, Any]:
+        source = _content_handoff_followup_source(
+            conn,
+            handoff_id=payload.handoff_id,
+            account_id=account_id,
+            expected_revision=payload.expected_handoff_revision,
+        )
+        if source.get("ok") is False:
+            return source
+        existing = conn.execute(
+            """SELECT id, account_id, handoff_id, handoff_revision, workboard_item_id, link_state,
+                      created_at, updated_at, superseded_at
+               FROM web_content_handoff_workboard_followups
+               WHERE handoff_id=? AND handoff_revision=? AND account_id=?""",
+            (source["id"], source["revision"], account_id),
+        ).fetchone()
+        if existing:
+            return _guarded(
+                "Revision Content Handoff này đã có follow-up Workboard.",
+                "WEB_WORKBOARD_HANDOFF_FOLLOWUP_EXISTS",
             )
-        item = _refresh_item(conn, item_id=item_id, account_id=account_id)
-        rows = _checklist_rows(conn, item_id=item_id, account_id=account_id, include_archived=True)
-        for row in rows:
-            _insert_checklist_version(conn, row=row, account_id=account_id)
-        _insert_item_version(conn, item=item, account_id=account_id, checklist=rows)
-        _event(conn, account_id=account_id, item_id=item_id, entity_type="item", action="item_created", item_revision=1)
-        _record_audit(conn, account_id=account_id, canonical_user_id=str(account.get("canonical_user_id") or "") or None, action="web.workboard.item.create", request_id=_request_id(request), target=item_id, outcome="ok", detail="web-native workboard item created")
-        receipt = _item_receipt(conn, item_id=item_id, account_id=account_id)
-        return envelope(True, "Đã tạo work item trong Workboard Web-native.", data=_boundary(item=receipt, checklist_total=len(rows), checklist_done=sum(1 for row in rows if bool(row[4])), version_recorded=True), status_name="completed")
+        card_payload = ItemPayload(
+            title=payload.title,
+            description="",
+            priority=payload.priority,
+            due_at=payload.due_at,
+            references=[],
+            checklist=[ChecklistInput(body=entry.body, is_done=entry.is_done) for entry in payload.checklist],
+        )
+        conn.execute("SAVEPOINT content_handoff_followup_create")
+        try:
+            created = _create_item_in_transaction(
+                conn,
+                account=account,
+                request=request,
+                payload=card_payload,
+                audit_action="web.workboard.content_handoff_followup.create",
+                audit_detail="owner-created private follow-up from eligible content handoff revision",
+            )
+            if created.get("ok") is False:
+                conn.execute("RELEASE SAVEPOINT content_handoff_followup_create")
+                return created
+            followup_id = str(uuid.uuid4())
+            now = utc_now()
+            conn.execute(
+                """INSERT INTO web_content_handoff_workboard_followups
+                   (id, account_id, handoff_id, handoff_revision, workboard_item_id, link_state, created_at, updated_at, superseded_at)
+                   VALUES (?, ?, ?, ?, ?, 'active', ?, ?, NULL)""",
+                (followup_id, account_id, source["id"], source["revision"], created["item_id"], now, now),
+            )
+        except sqlite3.IntegrityError as exc:
+            if not _is_content_handoff_followup_unique_conflict(exc):
+                raise
+            conn.execute("ROLLBACK TO SAVEPOINT content_handoff_followup_create")
+            conn.execute("RELEASE SAVEPOINT content_handoff_followup_create")
+            return _guarded(
+                "Revision Content Handoff này đã có follow-up Workboard.",
+                "WEB_WORKBOARD_HANDOFF_FOLLOWUP_EXISTS",
+            )
+        conn.execute("RELEASE SAVEPOINT content_handoff_followup_create")
+        followup = {
+            "handoff_id": source["id"],
+            "handoff_revision": source["revision"],
+            "link_state": "active",
+        }
+        _event(
+            conn,
+            account_id=account_id,
+            item_id=created["item_id"],
+            entity_type="content_handoff_followup",
+            entity_id=source["id"],
+            action="content_handoff_followup_created",
+            item_revision=1,
+            entity_revision=source["revision"],
+        )
+        return envelope(
+            True,
+            "Đã tạo follow-up Workboard riêng tư từ revision Content Handoff hiện tại.",
+            data=_boundary(
+                item=created["item"],
+                checklist_total=int(created["checklist_total"]),
+                checklist_done=int(created["checklist_done"]),
+                content_handoff_followup=followup,
+                version_recorded=True,
+            ),
+            status_name="completed",
+        )
 
     return _idempotent(scope, account_id, payload.idempotency_key, fingerprint, operation)
 
@@ -1536,7 +1957,6 @@ async def item_detail(item_id: str, account: dict = Depends(require_account)):
     _require_enabled()
     item_id = _uuid(item_id, label="Work item ID")
     account_id = str(account["id"])
-    ensure_copyfast_schema()
     with read_transaction() as conn:
         item = _item_row(conn, item_id=item_id, account_id=account_id)
         if not item:
@@ -1544,16 +1964,31 @@ async def item_detail(item_id: str, account: dict = Depends(require_account)):
         checklist_rows = _checklist_rows(conn, item_id=item_id, account_id=account_id)
         total, done = _item_counts(conn, item_id=item_id, account_id=account_id)
         references = _references_public(_reference_rows(conn, item_id=item_id, account_id=account_id))
+        followup_map, stale_followup_ids = _content_handoff_followups_for_items(
+            conn,
+            account_id=account_id,
+            item_ids=[item_id],
+        )
+        followup = followup_map.get(item_id)
         versions = conn.execute("SELECT revision, created_at FROM web_workboard_item_versions WHERE item_id=? AND account_id=? ORDER BY revision DESC LIMIT 60", (item_id, account_id)).fetchall()
         events = conn.execute("SELECT entity_type, entity_id, action, item_revision, entity_revision, created_at FROM web_workboard_events WHERE item_id=? AND account_id=? ORDER BY created_at DESC, id DESC LIMIT 60", (item_id, account_id)).fetchall()
+    _supersede_content_handoff_followups(account_id=account_id, relation_ids=stale_followup_ids)
     return envelope(
         True,
         "Work item đã được nạp từ Web Workspace.",
         data=_boundary(
-            item=_item_public(item, references=references, checklist_total=total, checklist_done=done, include_description=True),
+            item=_item_public(
+                item,
+                references=references,
+                checklist_total=total,
+                checklist_done=done,
+                include_description=True,
+                content_handoff_followup=followup,
+            ),
             checklist=[_checklist_public(row) for row in checklist_rows],
             versions=[{"revision": int(row[0]), "created_at": str(row[1])} for row in versions],
             events=[{"entity_type": str(row[0]), "entity_id": str(row[1]) if row[1] else None, "action": str(row[2]), "item_revision": int(row[3]), "entity_revision": int(row[4]) if row[4] is not None else None, "created_at": str(row[5])} for row in events],
+            content_handoff_followup=followup,
         ),
         status_name="read_only",
     )

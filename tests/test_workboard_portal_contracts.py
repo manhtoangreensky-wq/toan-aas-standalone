@@ -243,3 +243,50 @@ def test_workboard_schedule_uses_the_retained_profile_timezone() -> None:
     assert "profile.timezone" in helper
     assert "context.account" not in helper
     assert 'return "Asia/Ho_Chi_Minh";' in helper
+
+
+def _content_handoff_followup_portal_form() -> str:
+    start = PORTAL.index("function contentHandoffEligibleForWorkboardFollowup")
+    return PORTAL[start:PORTAL.index("function renderContentHandoffDetail", start)]
+
+
+def _content_handoff_followup_action() -> str:
+    start = INTEGRATION.index('if (action === "content-handoff-workboard-followup")')
+    return INTEGRATION[start:INTEGRATION.index('if (action === "content-handoff-create")', start)]
+
+
+def test_content_handoff_followup_portal_is_eligible_only_and_keeps_the_source_boundary() -> None:
+    form = _content_handoff_followup_portal_form()
+    actions = _content_handoff_followup_action()
+
+    for needle in (
+        "function contentHandoffEligibleForWorkboardFollowup",
+        "function contentHandoffWorkboardFollowupForm",
+        'data-portal-action="content-handoff-workboard-followup"',
+        'name="title"',
+        'name="checklist"',
+        'name="priority"',
+        'name="due_at"',
+        'name="confirm"',
+        "approved_for_handoff",
+        "handed_off",
+        'record_state) === "active"',
+    ):
+        assert needle in form
+
+    for forbidden in ("purpose", "staff_note", "references", "localStorage", "sessionStorage"):
+        assert forbidden not in form
+        assert forbidden not in actions
+
+    for needle in (
+        'action === "content-handoff-workboard-followup"',
+        'path: "/workboard/content-handoff-followups"',
+        "contentHandoffWorkboardFollowupPayload",
+        "workboardMutation({",
+        "content-handoff-workboard-followup",
+        "window.location.assign(\"/workboard/\"",
+    ):
+        assert needle in actions
+
+    assert '"content-handoff-workboard-followup": Boolean(account && me.csrf_token && contentHandoffEnabled && workboardEnabled)' in INTEGRATION
+    assert '"/" + "api/v1/workboard"' in SERVICE_WORKER
