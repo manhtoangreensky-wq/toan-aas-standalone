@@ -17334,7 +17334,15 @@
     // Tables deliberately keep their semantic HTML. The wrapper only exposes
     // the horizontal overflow as a named, keyboard-focusable region; it never
     // changes the records, access scope, or action semantics inside the table.
-    return `<div class="portal-data-table-wrap" data-portal-table-scroll tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang. Dùng phím mũi tên trái và phải để xem toàn bộ cột."><p class="portal-data-table-scroll-hint">Cuộn ngang để xem các cột còn lại.</p>${tableMarkup}</div>`;
+    const region = safeText(uiText(
+      "table.horizontalScroll.region",
+      "Bảng dữ liệu có thể cuộn ngang. Dùng phím mũi tên trái và phải để xem toàn bộ cột."
+    ));
+    const hint = safeText(uiText(
+      "table.horizontalScroll.hint",
+      "Cuộn ngang để xem các cột còn lại."
+    ));
+    return `<div class="portal-data-table-wrap" data-portal-table-scroll tabindex="0" role="region" aria-label="${region}"><p class="portal-data-table-scroll-hint">${hint}</p>${tableMarkup}</div>`;
   }
 
   function renderTable(columns, emptyTitle, emptyText) {
@@ -23602,15 +23610,23 @@
     // Use the signed server manifest when it is available. It makes the
     // difference between canonical Bot-admin modules and Web-native Support
     // roles explicit, instead of granting a directory from a browser role.
+    const adminText = (key, fallback, params) => uiText(`adminHome.${key}`, fallback, params);
     const authorized = adminErpNavigation(context);
     const groups = authorized.groups;
     if (!groups.length) return "";
     const mode = authorized.canonicalAdmin
-      ? "Canonical admin đã xác minh"
+      ? adminText("directory.mode.canonicalAdmin", "Canonical admin đã xác minh")
       : (authorized.supportRole !== "none"
-        ? "Web Support role đã xác minh"
-        : (authorized.webLocalAdmin ? "Web CRM authority đã xác minh" : "Server-authorized"));
-    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">All apps</span><h2 class="portal-card-title">Danh mục Admin ERP</h2><p class="portal-card-subtitle">${safeText(mode)}. Mỗi module tiếp tục kiểm tra signed session, authority, CSRF và redaction ở máy chủ.</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group, index) => `<details class="portal-admin-directory-group"${index === 0 ? " open" : ""}><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(String(group.modules.length))} module</span></summary><div class="portal-module-grid">${group.modules.map((entry) => moduleCard(entry, context, "Mở module")).join("")}</div></details>`).join("")}</div></section>`;
+        ? adminText("directory.mode.supportRole", "Web Support role đã xác minh")
+        : (authorized.webLocalAdmin
+          ? adminText("directory.mode.webLocalAdmin", "Web CRM authority đã xác minh")
+          : adminText("directory.mode.serverAuthorized", "Được máy chủ cấp quyền")));
+    const description = adminText(
+      "directory.description",
+      "{mode}. Mỗi module tiếp tục kiểm tra signed session, authority, CSRF và redaction ở máy chủ.",
+      { mode }
+    );
+    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục Admin ERP"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group, index) => `<details class="portal-admin-directory-group"${index === 0 ? " open" : ""}><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} module", { count: String(group.modules.length) }))}</span></summary><div class="portal-module-grid">${group.modules.map((entry) => moduleCard(entry, context, adminText("directory.openAction", "Mở module"))).join("")}</div></details>`).join("")}</div></section>`;
   }
 
   function renderAdminWorkQueues(context) {
@@ -23620,12 +23636,12 @@
     const authorized = adminErpNavigation(context);
     const adminText = (key, fallback, params) => uiText(`adminHome.${key}`, fallback, params);
     const candidates = [
-      ["/admin/support", "CSKH & Support", "Case cần triage hoặc phản hồi Web", ICONS.support],
-      ["/admin/jobs/failed", "Job cần xem", "Các job canonical cần kiểm tra", ICONS.jobs],
-      ["/admin/jobs", "Job Center", "Theo dõi queue đã được server cấp", ICONS.jobs],
-      ["/admin/payments", "Thanh toán", "Payment, topup và refund canonical", ICONS.payments],
-      ["/admin/users", "Người dùng", "Quản lý user theo quyền máy chủ", ICONS.users],
-      ["/admin/audit", "Audit & Governance", "Nhật ký và kiểm soát hệ thống", ICONS.security]
+      ["/admin/support", adminText("queues.support.title", "CSKH & Support"), adminText("queues.support.body", "Case cần triage hoặc phản hồi Web"), ICONS.support],
+      ["/admin/jobs/failed", adminText("queues.failedJobs.title", "Job cần xem"), adminText("queues.failedJobs.body", "Các job canonical cần kiểm tra"), ICONS.jobs],
+      ["/admin/jobs", adminText("queues.jobs.title", "Job Center"), adminText("queues.jobs.body", "Theo dõi queue đã được server cấp"), ICONS.jobs],
+      ["/admin/payments", adminText("queues.payments.title", "Thanh toán"), adminText("queues.payments.body", "Payment, topup và refund canonical"), ICONS.payments],
+      ["/admin/users", adminText("queues.users.title", "Người dùng"), adminText("queues.users.body", "Quản lý user theo quyền máy chủ"), ICONS.users],
+      ["/admin/audit", adminText("queues.audit.title", "Audit & Governance"), adminText("queues.audit.body", "Nhật ký và kiểm soát hệ thống"), ICONS.security]
     ];
     const cards = candidates.filter(([route]) => authorized.routes.has(route)).slice(0, 4);
     if (!cards.length) return "";
@@ -23640,11 +23656,11 @@
     const counts = data.counts || {};
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
     const readyCount = readiness.filter(([, item]) => item && item.public_ready).length;
-    const metrics = [[adminText("metrics.users", "Users"), String(counts.users || "—"), "Dữ liệu cần role check"], [adminText("metrics.engineJobs", "Engine jobs"), String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], [adminText("metrics.workerJobs", "Worker jobs"), String(counts.worker_jobs || "—"), "Queue worker canonical"], [adminText("metrics.payments", "Payments"), String(counts.payments || "—"), "Không có ledger client"], [adminText("metrics.readiness", "Readiness"), readiness.length ? `${readyCount}/${readiness.length}` : "—", "Feature public-ready"]];
+    const metrics = [[adminText("metrics.users", "Users"), String(counts.users || "—"), adminText("metrics.usersNote", "Dữ liệu cần role check")], [adminText("metrics.engineJobs", "Engine jobs"), String(counts.engine_jobs || "—"), adminText("metrics.engineJobsNote", "Đọc từ queue canonical")], [adminText("metrics.workerJobs", "Worker jobs"), String(counts.worker_jobs || "—"), adminText("metrics.workerJobsNote", "Queue worker canonical")], [adminText("metrics.payments", "Payments"), String(counts.payments || "—"), adminText("metrics.paymentsNote", "Không có ledger client")], [adminText("metrics.readiness", "Readiness"), readiness.length ? `${readyCount}/${readiness.length}` : "—", adminText("metrics.readinessNote", "Feature public-ready")]];
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
     const readinessRows = readiness.slice(0, 8);
     const authority = `<details class="portal-admin-authority"><summary>${safeText(adminText("authority.summary", "Authority & ranh giới quản trị"))}</summary>${renderSummary(page, context)}</details>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm Admin ERP"))}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${safeText(adminText("guard.kicker", "ERP control center"))}</span><h2>${safeText(canonicalAdmin ? adminText("guard.verifiedTitle", "Canonical admin đã được server xác nhận") : adminText("guard.pendingTitle", "Admin ERP đang chờ signed authority"))}</h2><p>${canonicalAdmin ? "Tất cả read/write vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị." : "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session và canonical authority trước khi render dữ liệu."}</p></div></div></section><section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Readiness"))}</span><h2 class="portal-card-title">${safeText(adminText("readiness.title", "Trạng thái hệ thống"))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái Bot đã redaction; không bật/tắt provider từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tính năng", "Trạng thái", "Adapter"], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, "Chưa có readiness được cấp", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực.")}</section>${authority}</div>${renderAdminDirectory(context)}</article>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm Admin ERP"))}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${safeText(adminText("guard.kicker", "ERP control center"))}</span><h2>${safeText(canonicalAdmin ? adminText("guard.verifiedTitle", "Canonical admin đã được server xác nhận") : adminText("guard.pendingTitle", "Admin ERP đang chờ signed authority"))}</h2><p>${safeText(canonicalAdmin ? adminText("guard.verifiedBody", "Mọi thao tác đọc/ghi vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị.") : adminText("guard.pendingBody", "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session và canonical authority trước khi render dữ liệu."))}</p></div></div></section><section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Readiness"))}</span><h2 class="portal-card-title">${safeText(adminText("readiness.title", "Trạng thái hệ thống"))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái Bot đã redaction; không bật/tắt provider từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Adapter")], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, adminText("readiness.emptyTitle", "Chưa có readiness được cấp"), adminText("readiness.emptyBody", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực."))}</section>${authority}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
