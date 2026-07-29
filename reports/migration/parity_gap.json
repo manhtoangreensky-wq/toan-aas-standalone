@@ -18678,20 +18678,28 @@
         "file": "bot.py",
         "line": 59205
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "finance_compliance_readiness_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "finance_compliance_readiness_feature_key": "admin_tax_readiness",
+      "finance_compliance_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
       "source": "menu|finance_compliance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness"
     },
     {
       "classification": "admin",
@@ -18699,20 +18707,28 @@
         "file": "bot.py",
         "line": 121505
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "finance_compliance_readiness_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "finance_compliance_readiness_feature_key": "admin_tax_readiness",
+      "finance_compliance_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
       "source": "menu|finance_compliance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness"
     },
     {
       "classification": "admin",
@@ -18720,20 +18736,28 @@
         "file": "bot.py",
         "line": 121787
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "finance_compliance_readiness_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "finance_compliance_readiness_feature_key": "admin_tax_readiness",
+      "finance_compliance_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
       "source": "menu|finance_compliance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness"
     },
     {
       "classification": "admin",
@@ -18741,20 +18765,28 @@
         "file": "bot.py",
         "line": 121797
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "finance_compliance_readiness_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "finance_compliance_readiness_feature_key": "admin_tax_readiness",
+      "finance_compliance_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
       "source": "menu|finance_compliance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness"
     },
     {
       "classification": "admin",
@@ -18762,20 +18794,28 @@
         "file": "bot.py",
         "line": 121836
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "finance_compliance_readiness_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "finance_compliance_readiness_feature_key": "admin_tax_readiness",
+      "finance_compliance_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
       "source": "menu|finance_compliance",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+        "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, ledger, provider or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance/tax-readiness"
     },
     {
       "classification": "admin",
@@ -18784,19 +18824,24 @@
         "line": 121842
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
       "source": "menu|finance_compliance_update",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_COMPLIANCE_STATE",
+        "CANONICAL_BOT_FINANCE_COMPLIANCE_NOTE_MUTATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot pending-note path enters a per-Telegram compliance-note flow before it writes a canonical finance-compliance record. The Web must not accept/replay the pending input, note, status or mutation without a separately approved canonical finance contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "target": "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -74350,7 +74395,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 66,
+      "count": 61,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -74364,9 +74409,9 @@
         "menu|admin_packages_grant_monthly",
         "menu|admin_packages_user",
         "menu|admin_provider_test",
-        "menu|finance_compliance",
         "menu|finance_compliance_update",
-        "menu|guide_guided_video"
+        "menu|guide_guided_video",
+        "menu|guide_video_ai"
       ],
       "source_kinds": [
         "callback_data",
@@ -74925,11 +74970,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 788,
+      "count": 783,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 66,
+          "count": 61,
           "family": "menu",
           "priority": "P0"
         },
@@ -75217,12 +75262,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.56,
+  "mapping_coverage_percent": 80.68,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1569,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 898,
-    "NEEDS_FEATURE_DISPOSITION": 788,
+    "NAVIGATION_ONLY": 903,
+    "NEEDS_FEATURE_DISPOSITION": 783,
     "TELEGRAM_ONLY": 791,
     "WEB_NATIVE_READ_ONLY": 5
   },
@@ -75245,7 +75290,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.56,
+  "safe_disposition_coverage_percent": 80.68,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75255,13 +75300,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3265,
+    "resolved_static_source_count": 3270,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
-    "unresolved_source_count": 788
+    "unresolved_source_count": 783
   },
   "static_web_surface_coverage_percent": 38.71,
   "telegram_link_callback_contract": {

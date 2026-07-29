@@ -201,11 +201,9 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     for callback in finance_fresh_read_callbacks:
         assert callback.replace("|", "\\|") in admin_erp_contract
         assert f"`{callback}` remains source-review-required" not in admin_erp_contract
-    for callback in (
-        "menu|finance_compliance",
-        "menu|finance_compliance_update",
-    ):
-        assert f"`{callback}` remains source-review-required" in admin_erp_contract
+    assert "FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md" in admin_erp_contract
+    assert "`menu|finance_compliance` remains source-review-required" not in admin_erp_contract
+    assert "`menu|finance_compliance_update` remains source-review-required" in admin_erp_contract
     assert (
         "`menu|tax_estimate` and `menu|tax_export_month` retain their separate "
         "canonical-finance source-review contract"
@@ -2184,18 +2182,33 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Compliance menus and spelling/suffix variants can create pending state
-    # or mutate a profile. They must not inherit the Finance read destination.
+    # The exact Compliance status literal has its own finite, data-free
+    # readiness handoff. Its update branch, spelling/suffix variants and every
+    # other Finance selector remain source review and cannot inherit the
+    # general Finance read destination.
+    compliance_status = audit._map_callback("menu|finance_compliance", "callback_data", evidence, routes)
+    assert compliance_status["target"] == "/admin/finance/tax-readiness"
+    assert compliance_status["status"] == "NAVIGATION_ONLY"
+    assert compliance_status["resolution"] == "reviewed_finance_compliance_readiness_fresh_web_navigation"
+    assert compliance_status["finance_compliance_readiness_feature_key"] == "admin_tax_readiness"
+    assert "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED" in compliance_status["source_dispositions"]
+    assert "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION" in compliance_status["source_dispositions"]
+
     for callback in (
-        "menu|finance_compliance",
         "menu|finance_compliance_update",
         "MENU|FINANCE_OVERVIEW",
         "menu|finance_revenue_year|future",
     ):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
-        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["target"] in {
+            "MENU_SOURCE_REVIEW_REQUIRED",
+            "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED",
+        }
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert mapped["resolution"] in {
+            "menu_callback_requires_finite_exact_web_contract",
+            "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
+        }
         assert "admin_erp_feature_key" not in mapped
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
@@ -5032,7 +5045,6 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
         "menu|finance_overview",
         "menu|finance_export",
         "menu|finance_add_expense",
-        "menu|finance_compliance",
         "archive|dept|tax_invoice",
         "menu|tax_future",
     ):
