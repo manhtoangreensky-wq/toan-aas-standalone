@@ -3,7 +3,7 @@
 This note records the local, non-live verification carried out for the two
 separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
-## Current static-audit rebaseline (2026-07-29)
+## Current static-audit rebaseline (2026-07-28)
 
 The current migration evidence is the generated bundle in `docs/migration/`
 and `reports/migration/`, produced from the sole frozen Bot baseline
