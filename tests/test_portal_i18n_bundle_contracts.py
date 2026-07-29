@@ -441,6 +441,36 @@ def test_i18n_bundle_has_equal_reviewed_vi_en_zh_coverage_at_runtime() -> None:
     assert snapshot["documentLocale"] == "en"
 
 
+def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "table.horizontalScroll.region": (
+            "Bảng dữ liệu có thể cuộn ngang. Dùng phím mũi tên trái và phải để xem toàn bộ cột.",
+            "This data table scrolls horizontally. Use the Left and Right Arrow keys to view all columns.",
+            "此数据表可水平滚动。使用左右箭头键查看所有列。",
+        ),
+        "table.horizontalScroll.hint": (
+            "Cuộn ngang để xem các cột còn lại.",
+            "Scroll horizontally to view the remaining columns.",
+            "水平滚动以查看其余列。",
+        ),
+        "adminHome.directory.title": (
+            "Danh mục Admin ERP",
+            "Admin ERP directory",
+            "Admin ERP 目录",
+        ),
+        "adminHome.queues.support.title": (
+            "CSKH & Support",
+            "Customer support",
+            "客户支持",
+        ),
+        "adminHome.readiness.refresh": ("Làm mới", "Refresh", "刷新"),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+
 def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration() -> None:
     snapshot = _node_portal_first_mount_snapshot()
     assert snapshot["firstMount"] == "zh"

@@ -19,18 +19,57 @@ ADMIN_HOME_KEYS = (
     "adminHome.guard.kicker",
     "adminHome.guard.verifiedTitle",
     "adminHome.guard.pendingTitle",
+    "adminHome.guard.verifiedBody",
+    "adminHome.guard.pendingBody",
     "adminHome.metrics.users",
     "adminHome.metrics.engineJobs",
     "adminHome.metrics.workerJobs",
     "adminHome.metrics.payments",
     "adminHome.metrics.readiness",
+    "adminHome.metrics.usersNote",
+    "adminHome.metrics.engineJobsNote",
+    "adminHome.metrics.workerJobsNote",
+    "adminHome.metrics.paymentsNote",
+    "adminHome.metrics.readinessNote",
+    "adminHome.directory.kicker",
+    "adminHome.directory.title",
+    "adminHome.directory.mode.canonicalAdmin",
+    "adminHome.directory.mode.supportRole",
+    "adminHome.directory.mode.webLocalAdmin",
+    "adminHome.directory.mode.serverAuthorized",
+    "adminHome.directory.description",
+    "adminHome.directory.moduleCount",
+    "adminHome.directory.openAction",
     "adminHome.queues.kicker",
     "adminHome.queues.title",
     "adminHome.queues.body",
+    "adminHome.queues.support.title",
+    "adminHome.queues.support.body",
+    "adminHome.queues.failedJobs.title",
+    "adminHome.queues.failedJobs.body",
+    "adminHome.queues.jobs.title",
+    "adminHome.queues.jobs.body",
+    "adminHome.queues.payments.title",
+    "adminHome.queues.payments.body",
+    "adminHome.queues.users.title",
+    "adminHome.queues.users.body",
+    "adminHome.queues.audit.title",
+    "adminHome.queues.audit.body",
     "adminHome.readiness.kicker",
     "adminHome.readiness.title",
     "adminHome.readiness.body",
+    "adminHome.readiness.refresh",
+    "adminHome.readiness.table.feature",
+    "adminHome.readiness.table.status",
+    "adminHome.readiness.table.adapter",
+    "adminHome.readiness.emptyTitle",
+    "adminHome.readiness.emptyBody",
     "adminHome.authority.summary",
+)
+
+TABLE_HORIZONTAL_SCROLL_KEYS = (
+    "table.horizontalScroll.region",
+    "table.horizontalScroll.hint",
 )
 
 
@@ -167,15 +206,38 @@ def test_product_harmony_repairs_catalog_context_customer_canvas() -> None:
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", harmony)
 
 
-def test_admin_overview_uses_reviewed_copy_and_a_closed_svg_icon() -> None:
-    overview = _section(PORTAL, "function renderAdminOverview(page, context)", "function renderAdminSystemStewardship")
+def test_admin_home_and_table_chrome_keys_exist_in_each_locale() -> None:
+    for key in (*ADMIN_HOME_KEYS, *TABLE_HORIZONTAL_SCROLL_KEYS):
+        assert I18N.count(f'"{key}"') == 3
 
-    assert "const adminText" in overview
-    assert "adminHome.title" in overview
+
+def test_admin_home_fixed_chrome_uses_i18n_without_translating_server_data() -> None:
+    directory = _section(PORTAL, "function renderAdminDirectory(context)", "function renderAdminWorkQueues(context)")
+    queues = _section(PORTAL, "function renderAdminWorkQueues(context)", "function renderAdminOverview(page, context)")
+    overview = _section(PORTAL, "function renderAdminOverview(page, context)", "function renderAdminSystemStewardship")
+    scoped_chrome = "\n".join((directory, queues, overview))
+
+    for renderer in (directory, queues, overview):
+        assert "const adminText" in renderer
+    for key in ADMIN_HOME_KEYS:
+        chrome_key = re.escape(key.removeprefix("adminHome."))
+        assert re.search(rf'adminText\(\s*"{chrome_key}"', scoped_chrome)
     assert "portalIcon(ICONS.security)" in overview
     assert 'aria-hidden="true">⌘</span>' not in overview
-    for key in ADMIN_HOME_KEYS:
-        assert I18N.count(f'"{key}"') == 3
+
+    # Only fixed browser chrome belongs in this catalog. The signed manifest's
+    # group/module titles, descriptions, readiness keys, and adapter values
+    # remain data supplied by the server and must stay untouched.
+    assert "safeText(group.title)" in directory
+    assert "safeText(group.description)" in directory
+    assert "safeText(entry" not in directory
+    assert "safeText(key)" in overview
+    assert "safeText(item && item.adapter" in overview
+
+    # Vietnamese fallback values remain deliberate when the tiny local i18n
+    # bundle has not loaded. The rendered path, including every fixed Admin
+    # label above, still goes through adminText rather than directly emitting
+    # a browser-owned string.
 
 
 def test_admin_erp_final_layer_is_light_teal_sky_and_keeps_authority_unchanged() -> None:
