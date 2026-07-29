@@ -70,3 +70,11 @@ The goal is not just menus. The web app should help users move from need to outc
 - connect back to Telegram only where helpful
 
 The web app should stay clean and clear, especially for non-technical customers.
+
+## Deferred media-platform research
+
+The post-UI/UX research triage is recorded in
+[`POST_UI_UX_MEDIA_PLATFORM_RESEARCH_TRIAGE.md`](POST_UI_UX_MEDIA_PLATFORM_RESEARCH_TRIAGE.md).
+It is intentionally not an execution authorization: current reviewed Web/Bot
+boundaries remain in force until the UI/UX phase is accepted and a later
+capability-specific contract is approved.
