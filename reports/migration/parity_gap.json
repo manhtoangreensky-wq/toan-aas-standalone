@@ -13320,31 +13320,6 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
-        "line": 40550
-      },
-      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
-      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
-      "resolution": "reviewed_imgtool_fresh_web_navigation",
-      "source": "imgtool|editor_logo",
-      "source_dispositions": [
-        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
-        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
-        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
-        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
-        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
-        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
-      "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/image/brand-overlay",
-      "web_image_tool_intent": "web_image_brand_overlay"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
         "line": 40709
       },
       "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
@@ -13565,31 +13540,6 @@
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 40535
-      },
-      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
-      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
-      "resolution": "reviewed_imgtool_fresh_web_navigation",
-      "source": "imgtool|editor_overlays",
-      "source_dispositions": [
-        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
-        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
-        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
-        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
-        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
-        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
-      "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/image/brand-overlay",
-      "web_image_tool_intent": "web_image_brand_overlay"
     },
     {
       "classification": "customer",
@@ -13940,31 +13890,6 @@
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "IMGTOOL_SOURCE_REVIEW_REQUIRED"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 40543
-      },
-      "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
-      "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
-      "resolution": "reviewed_imgtool_fresh_web_navigation",
-      "source": "imgtool|editor_text",
-      "source_dispositions": [
-        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
-        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
-        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
-        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
-        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
-        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action.",
-      "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/image/brand-overlay",
-      "web_image_tool_intent": "web_image_brand_overlay"
     },
     {
       "classification": "customer",
@@ -75193,11 +75118,11 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.15,
+  "mapping_coverage_percent": 80.14,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1569,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 884,
+    "NAVIGATION_ONLY": 881,
     "NEEDS_FEATURE_DISPOSITION": 805,
     "TELEGRAM_ONLY": 791,
     "WEB_NATIVE_READ_ONLY": 5
@@ -75207,7 +75132,7 @@
     "excluded_unreferenced_handler_package_records": 57,
     "note": "Coverage is calculated only from concrete source actions reachable from the observed bot.py entrypoint. CallbackQueryHandler registrations are transport metadata, and unreferenced handlers-package records remain evidence only. This changes the denominator; it does not add a Web feature or runtime-parity claim.",
     "numeric_tuple_non_action_rule": "Bare N:N aspect-ratio tuple values are configuration data, not callback actions; numeric-leading structured callbacks remain inventoried.",
-    "product_action_denominator": 4056
+    "product_action_denominator": 4053
   },
   "notes": [
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
@@ -75221,25 +75146,25 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.15,
+  "safe_disposition_coverage_percent": 80.14,
   "schema_version": "2.0",
   "source_counts": {
-    "callback_data": 2865,
+    "callback_data": 2862,
     "callback_handler_dispatchers": 54,
     "callback_handlers": 54,
     "callback_templates": 475,
     "commands": 773,
     "conversations": 0,
-    "observed_runtime_product_action_mappings": 4056,
-    "resolved_static_source_count": 3251,
+    "observed_runtime_product_action_mappings": 4053,
+    "resolved_static_source_count": 3248,
     "telegram_transport_handler_records": 54,
-    "total_audited_source_records": 4167,
-    "total_mappings": 4056,
+    "total_audited_source_records": 4164,
+    "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
     "unresolved_source_count": 805
   },
-  "static_web_surface_coverage_percent": 38.68,
+  "static_web_surface_coverage_percent": 38.71,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

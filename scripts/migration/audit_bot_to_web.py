@@ -4041,27 +4041,6 @@ CALLBACK_DATA_RE = re.compile(r"\bcallback_data\s*=\s*(['\"])(?P<token>[^'\"\r\n
 CALLBACK_DYNAMIC_DATA_RE = re.compile(
     r"\bcallback_data\s*=\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)"
 )
-# The frozen Image Tools editor uses one literal parameter default as a back
-# button callback.  The large-file extractor cannot resolve generic callback
-# variables, so keep this source-only derivation deliberately narrower: only
-# a reviewed default literal that is passed unchanged as ``callback_data`` in
-# its own function may be recorded.
-IMGTOOL_DEFAULT_CALLBACK_FUNCTION_RE = re.compile(
-    r"(?ms)^(?P<indent>[ \t]*)(?:async\s+)?def\s+(?P<function>[A-Za-z_]\w*)\s*\("
-    r"(?P<parameters>.*?)\)\s*(?:->[^:\r\n]+)?[ \t]*:[ \t]*(?:\r?\n)?"
-    r"(?P<body>.*?)(?=^(?P=indent)(?:async\s+)?def\s|\Z)"
-)
-IMGTOOL_LITERAL_DEFAULT_CALLBACK_PARAMETER_RE = re.compile(
-    r"(?<![A-Za-z0-9_])(?P<parameter>[A-Za-z_]\w*)"
-    r"(?:\s*:\s*[^=,\r\n]+)?\s*=\s*"
-    r"(?P<quote>['\"])(?P<token>[^'\"\r\n]+)(?P=quote)"
-)
-IMGTOOL_DIRECT_CALLBACK_PARAMETER_RE = re.compile(
-    r"\bcallback_data\s*=\s*(?P<parameter>[A-Za-z_]\w*)\b(?=\s*(?:[,\)\]\r\n#]|$))"
-)
-IMGTOOL_NESTED_FUNCTION_RE = re.compile(
-    r"(?m)^[ \t]+(?:async\s+)?def\s+[A-Za-z_]\w*\s*\("
-)
 # The Bot's keyboard builders also accept ``(label, callback_token)`` rows.
 # Its canonical monolithic source is deliberately handled by the bounded regex
 # extractor below, so inventorying only ``callback_data=...`` would omit most
@@ -5252,67 +5231,6 @@ def _resolve_reviewed_creative_motion_guide_callbacks(
             _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
 
 
-def _resolve_reviewed_imgtool_default_callbacks(
-    *,
-    text: str,
-    root: Path,
-    path: Path,
-    callback_data: list[dict[str, Any]],
-    seen: dict[str, set[tuple[Any, ...]]],
-) -> None:
-    """Record the frozen reviewed Image Tools default callback without evaluation.
-
-    This is intentionally not a general variable resolver.  A callback is
-    added only when its quoted default is already in the finite Image Tools
-    navigation allow-list and the exact parameter name appears directly as a
-    ``callback_data`` keyword in that same function body.  It does not inspect
-    callers, aliases, reassignment, templates or other callback namespaces. A
-    nested function starts an opaque scope boundary, so its callback uses (and
-    later source) are not attributed to the enclosing function.
-    """
-
-    relative_path = _relative(path, root)
-    for function_match in IMGTOOL_DEFAULT_CALLBACK_FUNCTION_RE.finditer(text):
-        parameters = str(function_match.group("parameters") or "")
-        body = str(function_match.group("body") or "")
-        body_offset = function_match.start("body")
-        nested_function = IMGTOOL_NESTED_FUNCTION_RE.search(body)
-        direct_matches = [
-            match
-            for match in IMGTOOL_DIRECT_CALLBACK_PARAMETER_RE.finditer(body)
-            if nested_function is None or match.start() < nested_function.start()
-        ]
-        direct_parameters = {str(match.group("parameter") or "") for match in direct_matches}
-        if not direct_parameters:
-            continue
-
-        for default_match in IMGTOOL_LITERAL_DEFAULT_CALLBACK_PARAMETER_RE.finditer(parameters):
-            parameter = str(default_match.group("parameter") or "")
-            token = str(default_match.group("token") or "")
-            if parameter not in direct_parameters or token not in IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS:
-                continue
-            direct_match = next(
-                (
-                    match
-                    for match in direct_matches
-                    if match.group("parameter") == parameter
-                ),
-                None,
-            )
-            if direct_match is None:
-                continue
-            record = {
-                "token": token,
-                "resolution": "reviewed_imgtool_literal_default_callback_parameter",
-                "function": str(function_match.group("function") or ""),
-                "callback_parameter": parameter,
-                "default_callback": token,
-                "file": relative_path,
-                "line": _line_for_offset(text, body_offset + direct_match.start()),
-            }
-            _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
-
-
 def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
     commands: list[dict[str, Any]] = []
     callback_handlers: list[dict[str, Any]] = []
@@ -5486,14 +5404,6 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
             callback_data=callback_data,
             seen=seen,
         )
-        _resolve_reviewed_imgtool_default_callbacks(
-            text=_read_source(path),
-            root=root,
-            path=path,
-            callback_data=callback_data,
-            seen=seen,
-        )
-
     return {
         "commands": sorted(commands, key=lambda item: (item["command"], item["file"], item["line"])),
         "callback_handlers": sorted(callback_handlers, key=lambda item: (item["pattern"], item["file"], item["line"])),
@@ -7068,10 +6978,6 @@ IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, str]] = {
     "imgtool|editor_preset|food_vivid": {
         "target": "/image/edit",
         "web_image_tool_intent": "web_image_enhance",
-    },
-    "imgtool|editor_overlays": {
-        "target": "/image/brand-overlay",
-        "web_image_tool_intent": "web_image_brand_overlay",
     },
     "imgtool|editor_text": {
         "target": "/image/brand-overlay",
@@ -11943,7 +11849,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`](SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md) — exact ShopAI Video Job callbacks remain canonical Bot-only; no task/job identifier can become a Web top-up, video/jobs route, browser action, provider poll, billing mutation or output-delivery claim.\n"
         + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
         + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
-        + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — eighteen exact Bot Image Tools picker literals may only begin fresh signed Web-native Image routes; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a browser input or runtime action, and every unlisted callback remains source-review-required.\n"
+        + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — seventeen exact Bot Image Tools picker literals may only begin fresh signed Web-native Image routes; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a browser input or runtime action, and every unlisted callback remains source-review-required.\n"
         + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket/Feedback callbacks remain owner/role/source-review boundaries apart from seven exact Support/Ticket entries and nine exact Feedback entries that may only start fresh signed Web navigation; no Telegram ticket, lead, attachment, pending text, admin preview or delivery state becomes a Web portal action.\n"
         + "- [`FEEDBACK_MENU_CALLBACK_CONTRACT.md`](FEEDBACK_MENU_CALLBACK_CONTRACT.md) — nine exact Bot feedback entry literals may only open a fresh signed Web Support Desk form; no callback/category is sent to the browser and no Bot ticket/refund/payment/runtime behavior is replayed.\n"
         + "- [`WORKBOARD_TASK_CALLBACK_CONTRACT.md`](WORKBOARD_TASK_CALLBACK_CONTRACT.md) — Bot Workboard/Task callbacks remain Telegram-admin/source-review boundaries; no production job/task ID, stage/status or handoff prompt becomes a generic Web Workboard or Admin action.\n"
@@ -12801,7 +12707,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Web App role: signed-session caller of the private bridge; it must never credit Xu, finalize PayOS, or add a second payment webhook.\n"
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Eighteen exact picker literals may only begin fresh signed Web-native Image navigation with no source-state transfer; every other value must not route or replay them. See `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Seventeen exact picker literals may only begin fresh signed Web-native Image navigation with no source-state transfer; every other value must not route or replay them. See `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks are a Telegram state-machine boundary and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance. None may route/replay into Web. The classification does not add a Web feature or runtime-equivalence claim; fresh Web-native alternatives are non-executable for raw callbacks. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. The seven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions: they may only start fresh signed `/support` or `/tickets` navigation, with no raw callback/category or Bot state transfer, category preselection, Bot ticket fetch, or case creation from the Bot entry. Every unlisted value stays source-review-required. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
@@ -12961,7 +12867,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. Eighteen exact picker literals may only begin fresh signed `/image/prompt-composer`, `/image/edit`, `/image/resize` or `/image/brand-overlay` navigation; they transfer no callback/image/prompt/preset/pending/result state and invoke no Web provider/job/wallet/payment/output/delivery behavior. Every unlisted value remains source-review-required; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. Seventeen exact picker literals may only begin fresh signed `/image/prompt-composer`, `/image/edit`, `/image/resize` or `/image/brand-overlay` navigation; they transfer no callback/image/prompt/preset/pending/result state and invoke no Web provider/job/wallet/payment/output/delivery behavior. Every unlisted value remains source-review-required; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks stay outside the Web route layer and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior. The classification does not add a Web feature or runtime-equivalence claim; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. The seven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions, which may only begin fresh signed `/support` or `/tickets` navigation without forwarding a callback/category or invoking Bot ticket, ledger, provider, job or delivery behavior. There is no category preselection, Bot ticket fetch, or case creation from the Bot entry. Every unlisted value remains source-review-required; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"

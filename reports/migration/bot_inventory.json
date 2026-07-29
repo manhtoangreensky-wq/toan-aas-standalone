@@ -4888,15 +4888,6 @@
       "token": "imgtool|editor_custom"
     },
     {
-      "callback_parameter": "back_callback",
-      "default_callback": "imgtool|editor_logo",
-      "file": "bot.py",
-      "function": "image_editor_logo_upload_keyboard",
-      "line": 40550,
-      "resolution": "reviewed_imgtool_literal_default_callback_parameter",
-      "token": "imgtool|editor_logo"
-    },
-    {
       "file": "bot.py",
       "line": 40709,
       "token": "imgtool|editor_logo"
@@ -4940,15 +4931,6 @@
       "file": "bot.py",
       "line": 40734,
       "token": "imgtool|editor_logo_overlay"
-    },
-    {
-      "callback_parameter": "back_callback",
-      "default_callback": "imgtool|editor_overlays",
-      "file": "bot.py",
-      "function": "image_editor_position_keyboard",
-      "line": 40535,
-      "resolution": "reviewed_imgtool_literal_default_callback_parameter",
-      "token": "imgtool|editor_overlays"
     },
     {
       "file": "bot.py",
@@ -5019,15 +5001,6 @@
       "file": "bot.py",
       "line": 40745,
       "token": "imgtool|editor_save"
-    },
-    {
-      "callback_parameter": "back_callback",
-      "default_callback": "imgtool|editor_text",
-      "file": "bot.py",
-      "function": "image_editor_text_input_keyboard",
-      "line": 40543,
-      "resolution": "reviewed_imgtool_literal_default_callback_parameter",
-      "token": "imgtool|editor_text"
     },
     {
       "file": "bot.py",
@@ -27635,7 +27608,7 @@
   "conversations": [],
   "counts": {
     "background_jobs": 194,
-    "callback_data": 2865,
+    "callback_data": 2862,
     "callback_handlers": 54,
     "callback_templates": 475,
     "commands": 773,
