@@ -25,7 +25,7 @@ The static migration auditor will use an exact dictionary lookup, before the gen
 | `imgtool|edit_need_image` | `/image/edit` | Start Image Enhance with a separately selected private Asset Vault image. |
 | `imgtool|resize_need_image`, `imgtool|resize_task|ratio`, `imgtool|resize_task|pixels`, `imgtool|resize_method|blur`, `imgtool|resize_method|pad`, `imgtool|resize_method|crop`, `imgtool|editor_resize` | `/image/resize` | Start a new deterministic resize/canvas request. |
 | `imgtool|editor_presets`, `imgtool|editor_preset|photo_clear_detail`, `imgtool|editor_preset|product_clean`, `imgtool|editor_preset|cinematic_warm`, `imgtool|editor_preset|fresh_blue`, `imgtool|editor_preset|food_vivid` | `/image/edit` | Start a new Image Enhance request; no Bot preset is preselected. |
-| `imgtool|editor_overlays`, `imgtool|editor_text`, `imgtool|editor_logo` | `/image/brand-overlay` | Start a new private text/logo overlay request. |
+| `imgtool|editor_text`, `imgtool|editor_logo` | `/image/brand-overlay` | Start a new private text/logo overlay request. |
 
 Every mapping is `NAVIGATION_ONLY`, customer-classified, and recorded only in static audit evidence. The Web server independently enforces its signed-session, ownership, feature-flag, CSRF, idempotency, private Asset Vault, output validation, and download rules.
 
@@ -33,7 +33,7 @@ Every mapping is `NAVIGATION_ONLY`, customer-classified, and recorded only in st
 
 No mapping may put the source literal, Telegram identity, file ID, asset/result ID, prompt, goal, ratio, method, preset, note, draft, tier, confirmation token, price, Xu balance, provider choice, job ID, output, or delivery URL into a browser query, form, storage entry, API payload, or database row.
 
-The following stay on the existing generic `IMGTOOL_SOURCE_REVIEW_REQUIRED` boundary: any uppercase, suffix, template, or future value; all `prompt_*` values other than `prompt_manual`; `edit_ai*`, `ai_upscale*`, `edit_from_last`, `resize_continue`, `editor_save`, tier/confirmation, generated-variant, request, result, and back-navigation values. No provider, Bot, wallet/Xu, PayOS, job, output, or Telegram delivery operation is introduced.
+The following stay on the existing generic `IMGTOOL_SOURCE_REVIEW_REQUIRED` boundary: any uppercase, suffix, template, or future value; all `prompt_*` values other than `prompt_manual`; `edit_ai*`, `ai_upscale*`, `edit_from_last`, `resize_continue`, `editor_overlays`, `editor_save`, tier/confirmation, generated-variant, request, result, and back-navigation values. In the frozen baseline `editor_overlays` is an indirect mutable Bot-state/back-callback value rather than a concrete picker literal, so it cannot be promoted into Web navigation evidence. No provider, Bot, wallet/Xu, PayOS, job, output, or Telegram delivery operation is introduced.
 
 ## Verification
 

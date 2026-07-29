@@ -3195,7 +3195,6 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "imgtool|editor_preset|cinematic_warm": ("/image/edit", "web_image_enhance"),
         "imgtool|editor_preset|fresh_blue": ("/image/edit", "web_image_enhance"),
         "imgtool|editor_preset|food_vivid": ("/image/edit", "web_image_enhance"),
-        "imgtool|editor_overlays": ("/image/brand-overlay", "web_image_brand_overlay"),
         "imgtool|editor_text": ("/image/brand-overlay", "web_image_brand_overlay"),
         "imgtool|editor_logo": ("/image/brand-overlay", "web_image_brand_overlay"),
     }
@@ -3228,6 +3227,7 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "imgtool|edit_ai",
         "imgtool|ai_upscale_start",
         "imgtool|edit_from_last",
+        "imgtool|editor_overlays",
         "imgtool|editor_save",
         "IMGTOOL|EDITOR_RESIZE",
         "imgtool|resize_method|pad|future",
@@ -3282,8 +3282,17 @@ def image_tools_keyboard(
     InlineKeyboardButton("ratio", callback_data=f"imgtool|resize_ratio|{ratio}")
     InlineKeyboardButton("confirm", callback_data=f"imgtool|prompt_confirm_change|{token}")
     InlineKeyboardButton("edit", callback_data="imgtool|edit_ai")
+    back_callback = f"imgtool|editor_preset|{token}"
     InlineKeyboardButton("back", callback_data=back_callback)
     InlineKeyboardButton("unreviewed back", callback_data=unreviewed_back_callback)
+
+
+def caller_override():
+    return image_tools_keyboard("tier", "ratio", "token", back_callback="imgtool|editor_overlays")
+
+
+# A source comment mentioning imgtool|editor_overlays is not callback evidence.
+overlay_note = "imgtool|editor_overlays is a mutable Bot-state marker"
 
 
 def nested_image_tools_keyboard(back_callback="imgtool|editor_text"):
@@ -3291,7 +3300,7 @@ def nested_image_tools_keyboard(back_callback="imgtool|editor_text"):
         InlineKeyboardButton("nested back", callback_data=back_callback)
 '''
     # The frozen Bot exceeds MAX_AST_PARSE_BYTES, so exercise the bounded
-    # source-only path that must recognize this reviewed default callback.
+    # source-only path that must not promote a mutable default callback.
     (bot_root / "bot.py").write_text(
         bot_source + "\n#" + ("x" * audit.MAX_AST_PARSE_BYTES),
         encoding="utf-8",
@@ -3319,9 +3328,21 @@ def brand_overlay(): pass
     assert callbacks["imgtool|resize_task|ratio"]["target"] == "/image/resize"
     assert callbacks["imgtool|editor_preset|photo_clear_detail"]["target"] == "/image/edit"
     assert callbacks["imgtool|editor_logo"]["target"] == "/image/brand-overlay"
-    assert callbacks["imgtool|editor_overlays"]["target"] == "/image/brand-overlay"
+    assert "imgtool|editor_overlays" not in callbacks
     assert "imgtool|editor_overlays_future" not in callbacks
     assert "imgtool|editor_text" not in callbacks
+    assert {
+        item["source"]
+        for item in result["parity_gap"]["callback_mappings"]
+        if item["resolution"] == "reviewed_imgtool_fresh_web_navigation"
+    } == {
+        "imgtool|prompt_manual",
+        "imgtool|edit_need_image",
+        "imgtool|resize_task|ratio",
+        "imgtool|resize_method|pad",
+        "imgtool|editor_preset|photo_clear_detail",
+        "imgtool|editor_logo",
+    }
     assert callbacks["imgtool|prompt_need_image"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert callbacks["imgtool|edit_ai"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert templates["imgtool|prompt_tier|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
