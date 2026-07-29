@@ -196,6 +196,26 @@ for (const locale of expected) {
   }
 }
 
+const financePlanningKeys = [
+  "financePlanning.currency", "financePlanning.state.active",
+  "financePlanning.state.archived", "financePlanning.state.draft",
+  "financePlanning.state.review", "financePlanning.state.approved",
+  "financePlanning.state.guarded", "financePlanning.transition.none",
+  "financePlanning.period.label", "financePlanning.period.view",
+  "financePlanning.pagination.previous", "financePlanning.pagination.next",
+  "financePlanning.status.guarded", "financePlanning.status.loading",
+  "financePlanning.status.ready", "financePlanning.status.failed",
+  "financePlanning.guard.retry", "financePlanning.guard.back",
+  "financePlanning.metrics.activeBudget", "financePlanning.metrics.planned",
+  "financePlanning.metrics.remaining", "financePlanning.metrics.review",
+  "financePlanning.budget.title", "financePlanning.cost.title"
+];
+for (const locale of expected) {
+  for (const key of financePlanningKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 if (api.normalizeLocale("zh-CN") !== "zh") throw new Error("Chinese display alias did not normalize");
 if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese must not masquerade as Simplified Chinese");
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");
