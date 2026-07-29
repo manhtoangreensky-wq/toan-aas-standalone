@@ -4600,6 +4600,54 @@
     return { title, purpose, references };
   }
 
+  function contentHandoffWorkboardFollowupEligible(record) {
+    return Boolean(
+      record
+      && validContentHandoffId(record.id)
+      && validContentHandoffRevision(record.revision)
+      && String(record.record_state) === "active"
+      && ["approved_for_handoff", "handed_off"].includes(String(record.handoff_status || ""))
+    );
+  }
+
+  function contentHandoffWorkboardFollowupPayload(fields) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const handoffId = validContentHandoffId(source.__contentHandoffId) ? String(source.__contentHandoffId) : "";
+    const revision = validContentHandoffRevision(source.expected_handoff_revision);
+    const confirmed = ["1", "true", "on", "yes"].includes(String(source.confirm || "").trim().toLowerCase());
+    const priority = String(source.priority || "normal").trim().toLowerCase();
+    if (!handoffId || !revision) throw new Error("Mã hoặc revision Content Handoff không hợp lệ. Hãy tải lại trước khi tiếp tục.");
+    if (!confirmed) throw new Error("Cần xác nhận rõ ràng trước khi tạo follow-up Workboard.");
+    if (!WORKBOARD_PRIORITIES.has(priority)) throw new Error("Ưu tiên Workboard không hợp lệ.");
+    return {
+      handoff_id: handoffId,
+      expected_handoff_revision: revision,
+      title: workboardText(source.title, "Tên công việc", 3, 180, false),
+      checklist: workboardChecklistPayload(source.checklist),
+      priority,
+      due_at: workboardDueAt(source.due_at),
+      confirm: true
+    };
+  }
+
+  function contentHandoffWorkboardFollowupReceiptIsSafe(data, handoffId, revision) {
+    const source = data && typeof data === "object" ? data : {};
+    const item = source.item && typeof source.item === "object" ? source.item : {};
+    const followup = source.content_handoff_followup && typeof source.content_handoff_followup === "object"
+      ? source.content_handoff_followup
+      : {};
+    return Boolean(
+      workboardBoundaryIsSafe(source)
+      && validWorkboardId(item.id)
+      && validWorkboardRevision(item.revision)
+      && WORKBOARD_STATES.has(String(item.state || "").toLowerCase())
+      && String(followup.handoff_id || "") === String(handoffId || "")
+      && Number(followup.handoff_revision) === Number(revision)
+      && followup.link_state === "active"
+      && Object.keys(followup).every((key) => ["handoff_id", "handoff_revision", "link_state"].includes(key))
+    );
+  }
+
   // Partner & Lead CRM uses an Odoo-style pipeline, but records remain
   // private Web metadata. Browser actions cannot contact leads, emit a
   // notification, create a referral/payout or move a Bot/ledger state.
@@ -12555,6 +12603,7 @@
       "content-handoff-submit-review": Boolean(account && me.csrf_token && contentHandoffEnabled),
       "content-handoff-archive": Boolean(account && me.csrf_token && contentHandoffEnabled),
       "content-handoff-restore": Boolean(account && me.csrf_token && contentHandoffEnabled),
+      "content-handoff-workboard-followup": Boolean(account && me.csrf_token && contentHandoffEnabled && workboardEnabled),
       "partner-crm-view": Boolean(account && partnerCrmEnabled),
       "partner-crm-refresh": Boolean(account && partnerCrmEnabled),
       "partner-crm-create": Boolean(account && me.csrf_token && partnerCrmEnabled),
@@ -26868,6 +26917,38 @@
         if (!(base().capabilities && base().capabilities["content-handoff-view"] === true)) throw new Error("Cần signed Web session để xem hàng Customer Care.");
         await hydrateContentHandoffStaffQueue(fields.__contentHandoffStaffStatus, contentHandoffListOffset(fields.__contentHandoffStaffOffset));
         toast("Đã tải thêm record trong hàng Customer Care.");
+        return;
+      }
+      if (action === "content-handoff-workboard-followup") {
+        if (!(base().capabilities && base().capabilities["content-handoff-workboard-followup"] === true)) {
+          throw new Error("Cần signed Web session, CSRF và Workboard đang hoạt động để tạo follow-up.");
+        }
+        const recordId = contentHandoffIdFromPath(route);
+        const detail = base().contentHandoffDetail && typeof base().contentHandoffDetail === "object" ? base().contentHandoffDetail : {};
+        const record = detail.record && typeof detail.record === "object" ? detail.record : {};
+        if (!recordId || !contentHandoffRecordIsSafe(record, true) || String(record.id) !== recordId || !contentHandoffWorkboardFollowupEligible(record)) {
+          throw new Error("Content Handoff hiện tại không còn đủ điều kiện. Hãy tải lại trước khi tạo follow-up.");
+        }
+        const payload = contentHandoffWorkboardFollowupPayload(fields);
+        if (payload.handoff_id !== recordId || payload.expected_handoff_revision !== validContentHandoffRevision(record.revision)) {
+          throw new Error("Revision Content Handoff đã thay đổi. Hãy tải lại trước khi tạo follow-up.");
+        }
+        await workboardMutation({
+          action, route,
+          scope: `content-handoff:${recordId}:revision:${payload.expected_handoff_revision}:workboard-followup`,
+          path: "/workboard/content-handoff-followups",
+          payload,
+          onSuccess: async (result) => {
+            const data = result && result.data && typeof result.data === "object" ? result.data : {};
+            if (!contentHandoffWorkboardFollowupReceiptIsSafe(data, recordId, payload.expected_handoff_revision)) {
+              throw new Error("Máy chủ chưa trả receipt follow-up Workboard an toàn.");
+            }
+            const itemId = String(data.item.id);
+            await hydrateContentHandoffRecord(recordId);
+            toast(result.message || "Đã tạo follow-up Workboard riêng tư.");
+            window.location.assign("/workboard/" + encodeURIComponent(itemId));
+          }
+        });
         return;
       }
       if (action === "content-handoff-create") {
