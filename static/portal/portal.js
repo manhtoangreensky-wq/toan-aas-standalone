@@ -8965,6 +8965,8 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
+    if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
+    if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
@@ -8987,6 +8989,8 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
+    if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
+    if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
@@ -23684,6 +23688,22 @@
     </article>`;
   }
 
+  function renderAdminFinanceTaxNotes() {
+    const notes = [
+      {
+        icon: ICONS.legal,
+        title: adminFinanceText("tax.notes.integration.title", "Trạng thái tích hợp"),
+        body: adminFinanceText("tax.notes.integration.body", "Hướng dẫn này không tải dữ liệu tài chính, trạng thái adapter hoặc ghi chú từ server.")
+      },
+      {
+        icon: ICONS.security,
+        title: adminFinanceText("tax.notes.safety.title", "Nguyên tắc an toàn"),
+        body: adminFinanceText("tax.notes.safety.body", "Chỉ dùng quy trình nội bộ đã được phê duyệt; không nhập hoặc gửi dữ liệu nhạy cảm qua trang này.")
+      }
+    ];
+    return `<div class="portal-panel-list">${notes.map((note) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(note.icon)}</span><div><strong>${safeText(note.title)}</strong><span>${safeText(note.body)}</span></div></div>`).join("")}</div>`;
+  }
+
   function renderAdminTaxReadiness(page, context) {
     // Guidance is intentionally literal and data-free. The server already
     // applies canonical-admin authorization to this exact route; this
@@ -23708,7 +23728,7 @@
       <section class="portal-tax-readiness-intro"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.intro.kicker", "Canonical admin guidance · read-only"))}</span><h2>${safeText(adminFinanceText("tax.intro.title", "Chuẩn bị review accounting có cấu trúc, không biến Web thành công cụ tính thuế"))}</h2><p>${safeText(adminFinanceText("tax.intro.body", "Trang này giúp đội vận hành chuẩn bị checklist và handoff rõ ràng. Mọi xác minh dữ liệu, phân loại nghiệp vụ và kết luận vẫn thuộc quy trình nội bộ cùng người có thẩm quyền."))}</p></div><div class="portal-tax-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(adminFinanceText("tax.intro.statusTitle", "Route được bảo vệ riêng"))}</strong><small>${safeText(adminFinanceText("tax.intro.statusBody", "Chỉ signed canonical admin được mở hướng dẫn này"))}</small></span></div></section>
       <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.section.kicker", "Preparation checklist"))}</span><h2 id="tax-readiness-checklist-title">${safeText(adminFinanceText("tax.section.title", "Ba điểm kiểm tra trước khi handoff"))}</h2><p>${safeText(adminFinanceText("tax.section.body", "Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính."))}</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
       <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.handoff.kicker", "Safe handoff"))}</span><h2 class="portal-card-title">${safeText(adminFinanceText("tax.handoff.title", "Trình tự đề xuất"))}</h2><p class="portal-card-subtitle">${safeText(adminFinanceText("tax.handoff.body", "Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser."))}</p></div>${badge("read_only")}</div><ol><li><strong>${safeText(adminFinanceText("tax.handoff.itemOne.title", "Chuẩn bị phạm vi review"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemOne.body", "Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ."))}</span></li><li><strong>${safeText(adminFinanceText("tax.handoff.itemTwo.title", "Xác thực ở hệ thống được phê duyệt"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemTwo.body", "Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép."))}</span></li><li><strong>${safeText(adminFinanceText("tax.handoff.itemThree.title", "Ghi nhận handoff có kiểm soát"))}</strong><span>${safeText(adminFinanceText("tax.handoff.itemThree.body", "Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm."))}</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
-      <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.limit.kicker", "Deliberate limits"))}</span><h2 class="portal-card-title">${safeText(adminFinanceText("tax.limit.title", "Ranh giới được giữ cố ý"))}</h2><p class="portal-card-subtitle">${safeText(adminFinanceText("tax.limit.body", "Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ."))}</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+      <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminFinanceText("tax.limit.kicker", "Deliberate limits"))}</span><h2 class="portal-card-title">${safeText(adminFinanceText("tax.limit.title", "Ranh giới được giữ cố ý"))}</h2><p class="portal-card-subtitle">${safeText(adminFinanceText("tax.limit.body", "Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ."))}</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderAdminFinanceTaxNotes()}</section>
     </article>`;
   }
 

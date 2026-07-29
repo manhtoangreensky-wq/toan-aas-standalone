@@ -34,6 +34,10 @@ def test_admin_finance_workspace_fixed_copy_uses_reviewed_locale_catalogue() -> 
         "adminFinance.stream.payments.title",
         "adminFinance.tax.checkpoint.source.title",
         "adminFinance.tax.boundary.noLedger.title",
+        "adminFinance.hero.finance.title",
+        "adminFinance.hero.taxReadiness.description",
+        "adminFinance.tax.notes.integration.title",
+        "adminFinance.tax.notes.safety.body",
     ):
         assert f'"{key}"' in i18n
 
@@ -44,10 +48,23 @@ def test_admin_finance_workspace_fixed_copy_uses_reviewed_locale_catalogue() -> 
     finance_domain = _function_source(portal, "adminFinanceDomain")
     tax_readiness = _function_source(portal, "renderAdminTaxReadiness")
     admin_domain = _function_source(portal, "renderAdminDomain")
+    localized_title = _function_source(portal, "localizedPageTitle")
+    localized_description = _function_source(portal, "localizedPageDescription")
+    tax_notes = _function_source(portal, "renderAdminFinanceTaxNotes")
 
     assert "adminFinanceText(" in finance_domain
     assert "adminFinanceText(" in tax_readiness
     assert "adminFinanceDomain()" in admin_domain
+    assert 'path === "/admin/finance"' in localized_title
+    assert 'path === "/admin/finance/tax-readiness"' in localized_title
+    assert 'adminFinanceText("hero.finance.title"' in localized_title
+    assert 'adminFinanceText("hero.taxReadiness.title"' in localized_title
+    assert 'path === "/admin/finance"' in localized_description
+    assert 'path === "/admin/finance/tax-readiness"' in localized_description
+    assert 'adminFinanceText("hero.finance.description"' in localized_description
+    assert 'adminFinanceText("hero.taxReadiness.description"' in localized_description
+    assert "adminFinanceText(" in tax_notes
+    assert "page.notes" not in tax_notes
 
     # The static translation surface must not become a network client, a
     # bridge, browser persistence or a second financial action path.
@@ -56,5 +73,5 @@ def test_admin_finance_workspace_fixed_copy_uses_reviewed_locale_catalogue() -> 
             assert forbidden not in source
     assert "safeText(data.message)" in admin_domain
     assert "serverAuthorizesAdminRoute(context, stream.route)" in admin_domain
-    assert "renderNotes(page)" in tax_readiness
-
+    assert "renderAdminFinanceTaxNotes()" in tax_readiness
+    assert "renderNotes(page)" not in tax_readiness
