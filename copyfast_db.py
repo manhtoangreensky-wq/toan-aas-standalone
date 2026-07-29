@@ -2332,6 +2332,37 @@ def ensure_copyfast_schema() -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_support_case_control_events_case_created ON web_support_case_control_events(case_id, created_at ASC, id ASC)"
         )
+        # Resolution feedback is an immutable, Web-native receipt for one
+        # terminal Support Desk revision.  It deliberately does not add
+        # mutable feedback columns to the case lifecycle or touch Bot ticket,
+        # payment, wallet, provider, job, or notification tables.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_case_resolution_feedback (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                terminal_revision INTEGER NOT NULL,
+                terminal_state TEXT NOT NULL,
+                rating INTEGER NOT NULL,
+                comment TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                CHECK(terminal_revision >= 1),
+                CHECK(terminal_state IN ('resolved', 'closed')),
+                CHECK(rating BETWEEN 1 AND 5),
+                CHECK(length(comment) <= 600),
+                UNIQUE(case_id, terminal_revision),
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_feedback_owner_created ON web_support_case_resolution_feedback(account_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_feedback_terminal_created ON web_support_case_resolution_feedback(terminal_state, created_at DESC, id DESC)"
+        )
         # Prompt Library is a private Web-owned template vault.  It does not
         # reuse the frozen Bot's global prompt seed or mutable JSON path:
         # every record belongs to a signed Web account and every change has a

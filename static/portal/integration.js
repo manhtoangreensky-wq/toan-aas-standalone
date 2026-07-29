@@ -1519,7 +1519,7 @@
     if (context.session && context.session.csrfToken && options && options.method && options.method !== "GET") {
       headers.set("X-CSRF-Token", context.session.csrfToken);
     }
-    const response = await fetch(`${API}${path}`, { credentials: "same-origin", ...options, headers });
+    const response = await fetch(`${API}${path}`, { credentials: "same-origin", ...options, cache: "no-store", headers });
     let payload = {};
     try { payload = await response.json(); } catch (_) { /* safe generic error below */ }
     if (!response.ok || !payload.ok) {
@@ -1565,6 +1565,7 @@
   const SUPPORT_CARE_SLA_STATUSES = new Set(["all", "unavailable", "pending", "within_target", "breached", "overdue_unacknowledged"]);
   const SUPPORT_CARE_ESCALATION_STATES = new Set(["none", "requested", "acknowledged", "resolved", "cancelled"]);
   const SUPPORT_CARE_STAFF_ROLES = new Set(["manager", "operator"]);
+  const SUPPORT_FEEDBACK_TERMINAL_STATES = new Set(["resolved", "closed"]);
 
   function validSupportCaseId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
@@ -1709,6 +1710,23 @@
     return items;
   }
 
+  function supportResolutionFeedbackProjection(value, caseItem) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!item || !caseItem) return null;
+    const id = validSupportCaseId(item.id) ? String(item.id) : "";
+    const rating = supportReadPositiveInteger(item.rating);
+    const revision = supportReadPositiveInteger(item.terminal_revision);
+    const state = String(item.terminal_state || "").trim().toLowerCase();
+    const submittedAt = supportReadTimestamp(item.submitted_at, false);
+    const allowedKeys = new Set(["id", "rating", "terminal_revision", "terminal_state", "submitted_at"]);
+    if (!id || !rating || rating > 5 || revision !== caseItem.revision || state !== caseItem.state
+      || !SUPPORT_FEEDBACK_TERMINAL_STATES.has(state) || !submittedAt
+      || Object.keys(item).some((key) => !allowedKeys.has(key))
+      || Object.prototype.hasOwnProperty.call(item, "comment")
+      || !Object.prototype.hasOwnProperty.call(item, "id")) return null;
+    return { id, rating, terminal_revision: revision, terminal_state: state, submitted_at: submittedAt };
+  }
+
   function supportCustomerCaseDetailProjection(result, expectedCaseId) {
     const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
       ? result.data
@@ -1717,10 +1735,15 @@
     const caseItem = supportCasePublicProjection(data.case, true);
     const messages = data.messages.map(supportCustomerMessageProjection);
     const attachments = supportEvidenceProjection(data.attachments);
+    const resolutionFeedback = data.resolution_feedback === null
+      ? null
+      : supportResolutionFeedbackProjection(data.resolution_feedback, caseItem);
     if (!caseItem || caseItem.id !== String(expectedCaseId) || data.messages.length > 500 || data.events.length > 300
-      || messages.some((item) => !item) || !data.events.every(supportEventIsSafe) || !attachments) return null;
+      || messages.some((item) => !item) || !data.events.every(supportEventIsSafe) || !attachments
+      || !Object.prototype.hasOwnProperty.call(data, "resolution_feedback")
+      || (data.resolution_feedback !== null && !resolutionFeedback)) return null;
     return {
-      detail: { case: caseItem, messages, events: data.events, attachments, delivery: "web_view_only" },
+      detail: { case: caseItem, messages, events: data.events, attachments, resolution_feedback: resolutionFeedback, delivery: "web_view_only" },
       attachments
     };
   }
@@ -2401,6 +2424,69 @@
     const safetyError = validateWebSupportText(subject, detail);
     if (safetyError) throw new Error(safetyError);
     return { category, priority, subject, detail };
+  }
+
+  function supportResolutionFeedbackPayload(fields) {
+    const rating = Number(fields.rating);
+    const comment = String(fields.comment || "").replace(/\r\n?/g, "\n").trim();
+    const confirmed = String(fields.feedback_confirmed || "").trim() === "true";
+    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) throw new Error("Hãy chọn mức đánh giá từ 1 đến 5.");
+    if (comment.length > 600 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(comment)) {
+      throw new Error("Nhận xét tối đa 600 ký tự hợp lệ và không chứa ký tự điều khiển.");
+    }
+    const safetyError = comment ? validateWebSupportText(comment) : "";
+    if (safetyError) throw new Error(safetyError);
+    if (!confirmed) throw new Error("Cần xác nhận trước khi gửi đánh giá cho revision hiện tại.");
+    return { rating, comment };
+  }
+
+  function supportRoundResolutionFeedbackAverage(value) {
+    // Match the Python server's round(value, 2): retain enough precision to
+    // distinguish binary values around a half-cent, then break exact ties even.
+    const [whole, fraction = ""] = value.toFixed(20).split(".");
+    const cents = Number(whole) * 100 + Number(fraction.slice(0, 2));
+    const roundingDigit = Number(fraction[2] || "0");
+    const hasRemainder = /[1-9]/.test(fraction.slice(3));
+    return roundingDigit > 5 || (roundingDigit === 5 && (hasRemainder || cents % 2 !== 0))
+      ? (cents + 1) / 100
+      : cents / 100;
+  }
+
+  function supportResolutionFeedbackSummaryProjection(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data)
+      ? result.data
+      : null;
+    if (!data || data.delivery !== "internal_metadata_only") return null;
+    const allowedKeys = new Set(["window_days", "total_responses", "rating_counts", "average_rating", "comments_count", "delivery"]);
+    if (Object.keys(data).some((key) => !allowedKeys.has(key))) return null;
+    const windowDays = supportReadPositiveInteger(data.window_days);
+    const totalResponses = supportReadNonNegativeInteger(data.total_responses);
+    const commentsCount = supportReadNonNegativeInteger(data.comments_count);
+    const counts = data.rating_counts && typeof data.rating_counts === "object" && !Array.isArray(data.rating_counts)
+      ? data.rating_counts
+      : null;
+    if (!windowDays || windowDays > 365 || totalResponses === null || commentsCount === null || commentsCount > totalResponses || !counts) return null;
+    const ratingCounts = {};
+    for (let rating = 1; rating <= 5; rating += 1) {
+      const count = supportReadNonNegativeInteger(counts[String(rating)]);
+      if (count === null) return null;
+      ratingCounts[String(rating)] = count;
+    }
+    if (Object.keys(counts).length !== 5 || Object.keys(counts).some((key) => !/^[1-5]$/.test(key))
+      || Object.values(ratingCounts).reduce((sum, value) => sum + value, 0) !== totalResponses) return null;
+    const weightedTotal = [1, 2, 3, 4, 5].reduce((sum, rating) => sum + rating * ratingCounts[String(rating)], 0);
+    const expectedAverage = totalResponses > 0 ? supportRoundResolutionFeedbackAverage(weightedTotal / totalResponses) : null;
+    const average = data.average_rating;
+    if ((totalResponses === 0 && average !== null)
+      || (totalResponses > 0 && (typeof average !== "number" || !Number.isFinite(average) || average !== expectedAverage))) return null;
+    return {
+      window_days: windowDays,
+      total_responses: totalResponses,
+      rating_counts: ratingCounts,
+      average_rating: average,
+      comments_count: commentsCount,
+      delivery: "internal_metadata_only"
+    };
   }
 
   function supportReplyPayload(fields) {
@@ -12827,6 +12913,7 @@
       "support-case-create": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-reply": Boolean(account && me.csrf_token && supportDeskEnabled),
       "support-case-transition": Boolean(account && me.csrf_token && supportDeskEnabled),
+      "support-resolution-feedback-submit": Boolean(account && me.csrf_token && supportDeskEnabled),
       // Evidence is a link to an already private, owner-scoped Asset Vault
       // item. It cannot create a raw Support upload, payment proof, OCR run
       // or external notification in the browser.
@@ -13703,6 +13790,7 @@
       supportAdminCareQueues: [],
       supportAdminCareStaff: [],
       supportAdminCareHistory: [],
+      supportAdminResolutionFeedbackSummary: {},
       supportAdminReadState: account && supportDeskEnabled ? "loading" : "guarded",
       // Operation projections are cleared before any signed read so an old
       // account's incident, triage or approval metadata cannot survive a
@@ -14362,7 +14450,7 @@
         supportCaseFilter: { q: "", state: "all", category: "" },
         supportCaseListing: supportCaseListingProjection({ q: "", state: "all", category: "" }, 0, {}, 0),
         supportReadState: "guarded",
-        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {},
+        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminResolutionFeedbackSummary: {},
         supportAdminCaseFilter: { q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" },
         supportAdminCaseListing: supportAdminCaseListingProjection({ q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" }, 0, {}, 0),
         supportAdminReadState: "guarded",
@@ -18183,6 +18271,9 @@
       : {};
     const filter = supportAdminCaseFilterPayload(filterValue === undefined ? base().supportAdminCaseFilter : filterValue);
     const offset = supportCaseListOffset(offsetValue === undefined ? currentPagination.offset : offsetValue);
+    // Aggregate quality is manager-only and must never survive a fresh staff
+    // read while the server role/source is being re-verified.
+    merge({ supportAdminResolutionFeedbackSummary: {} });
     try {
       const [summaryResult, casesResult, queuesResult] = await Promise.all([
         api("/support/admin/summary"),
@@ -18195,6 +18286,15 @@
       const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
       const role = String(summary.operator_role || "").trim();
       if (!["manager", "operator"].includes(role)) throw new Error("Máy chủ chưa cấp role Support Desk cho account này.");
+      // The summary response is the only browser evidence for manager role.
+      // Operators never request this aggregate, and a failed manager read
+      // remains empty instead of reusing stale quality information.
+      const feedbackResult = role === "manager"
+        ? await api("/support/admin/care/resolution-feedback-summary?days=30").catch(() => null)
+        : null;
+      const resolutionFeedbackSummary = feedbackResult
+        ? supportResolutionFeedbackSummaryProjection(feedbackResult)
+        : null;
       const casesData = casesResult.data && typeof casesResult.data === "object" ? casesResult.data : {};
       const cases = Array.isArray(casesData.items)
         ? casesData.items.filter((item) => item && validSupportCaseId(item.id)).slice(0, SUPPORT_ADMIN_CASE_LIST_LIMIT)
@@ -18211,6 +18311,7 @@
         // survive a list refresh for another signed staff account.
         supportAdminCareStaff: [],
         supportAdminCareHistory: [],
+        supportAdminResolutionFeedbackSummary: resolutionFeedbackSummary || {},
         supportAdminReadState: "ready",
         pageStates: { ...(base().pageStates || {}), "/admin/support": "read_only" }
       });
@@ -18220,7 +18321,7 @@
       merge({
         supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminCaseFilter: filter,
         supportAdminCaseListing: supportAdminCaseListingProjection(filter, offset, {}, 0),
-        supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminReadState: "failed",
+        supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminResolutionFeedbackSummary: {}, supportAdminReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/admin/support": "guarded" }
       });
       return null;
@@ -18267,6 +18368,7 @@
         supportAdminCareQueues: queues,
         supportAdminCareStaff: staff,
         supportAdminCareHistory: careHistory,
+        supportAdminResolutionFeedbackSummary: {},
         supportAdminReadState: "ready",
         pageStates: { ...(base().pageStates || {}), [`/admin/support/${caseId}`]: "read_only" }
       });
@@ -18274,7 +18376,7 @@
     } catch (_) {
       if (!supportRequestIsCurrent(requestEpoch, supportAdminDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        supportAdminCaseDetail: {}, supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminReadState: "failed",
+        supportAdminCaseDetail: {}, supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminResolutionFeedbackSummary: {}, supportAdminReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [`/admin/support/${caseId}`]: "guarded" }
       });
       return null;
@@ -31623,6 +31725,37 @@
           acknowledged = true;
           await hydrateSupportCase(caseId);
           toast(result.message || "Đã thêm phản hồi trong Web Support Desk.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-case-resolution-feedback") {
+        if (!(base().capabilities && base().capabilities["support-resolution-feedback-submit"] === true)) {
+          throw new Error("Cần signed Web session và CSRF để gửi đánh giá hỗ trợ.");
+        }
+        const caseId = String(detail.supportCaseId || "").trim();
+        const revision = validSupportRevision(detail.supportCaseRevision);
+        if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc revision yêu cầu Support Desk không hợp lệ.");
+        const payload = supportResolutionFeedbackPayload(fields);
+        const scope = `support:case:${caseId}:resolution-feedback:${revision}`;
+        const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/support/cases/${encodeURIComponent(caseId)}/resolution-feedback`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, expected_revision: revision, confirm: true, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateSupportCase(caseId);
+          toast(result.message || "Đã ghi nhận đánh giá cho yêu cầu Web.");
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
           throw error;

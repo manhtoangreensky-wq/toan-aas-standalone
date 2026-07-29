@@ -448,6 +448,9 @@ SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS = frozenset({
     "/api/v1/support/consultation-brief/compose",
     "/api/v1/support/consultation-brief/compose/",
 })
+# Resolution feedback is a compact, revision-pinned receipt with an optional
+# short comment. Bound it before FastAPI/Pydantic can parse a malformed body.
+SUPPORT_RESOLUTION_FEEDBACK_BODY_MAX_BYTES = 8 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -501,6 +504,7 @@ class PromptLibraryBodyLimitMiddleware:
         auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
         interface_locale_max_bytes: int = INTERFACE_LOCALE_BODY_MAX_BYTES,
         support_consultation_brief_max_bytes: int = SUPPORT_CONSULTATION_BRIEF_BODY_MAX_BYTES,
+        support_resolution_feedback_max_bytes: int = SUPPORT_RESOLUTION_FEEDBACK_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -541,6 +545,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.auth_credential_max_bytes = int(auth_credential_max_bytes)
         self.interface_locale_max_bytes = int(interface_locale_max_bytes)
         self.support_consultation_brief_max_bytes = int(support_consultation_brief_max_bytes)
+        self.support_resolution_feedback_max_bytes = int(support_resolution_feedback_max_bytes)
 
     @staticmethod
     def _is_admin_document_archive_upload_path(path: str) -> bool:
@@ -550,6 +555,12 @@ class PromptLibraryBodyLimitMiddleware:
             path.startswith("/api/v1/admin/internal-documents/documents/")
             and path.endswith("/versions/upload")
         )
+
+    @staticmethod
+    def _is_support_resolution_feedback_path(path: str) -> bool:
+        """Match the feedback route family without validating an opaque case ID."""
+
+        return path.startswith("/api/v1/support/cases/") and path.rstrip("/").endswith("/resolution-feedback")
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -599,6 +610,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(path)
                 or path == INTERFACE_LOCALE_API_PATH
                 or path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
+                or PromptLibraryBodyLimitMiddleware._is_support_resolution_feedback_path(path)
                 or path in {
                     "/api/v1/auth/login",
                     "/api/v1/auth/register",
@@ -690,6 +702,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.interface_locale_max_bytes
         if path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS:
             return self.support_consultation_brief_max_bytes
+        if self._is_support_resolution_feedback_path(path):
+            return self.support_resolution_feedback_max_bytes
         if path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -749,6 +763,12 @@ class PromptLibraryBodyLimitMiddleware:
         is_admin_document_archive_upload = self._is_admin_document_archive_upload_path(path)
         is_interface_locale = path == INTERFACE_LOCALE_API_PATH
         is_support_consultation_brief = path in SUPPORT_CONSULTATION_BRIEF_COMPOSE_API_PATHS
+        is_support_resolution_feedback = self._is_support_resolution_feedback_path(path)
+        if is_support_resolution_feedback:
+            # The rate middleware wraps this raw-body guard. Mark this
+            # pre-router rejection so its provisional rate token can be
+            # released once the response returns through that middleware.
+            scope.setdefault("state", {})["support_resolution_feedback_body_rejected"] = True
         is_auth_credential = path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -823,7 +843,9 @@ class PromptLibraryBodyLimitMiddleware:
             envelope(
                 False,
                 (
-                    "Bản nháp tư vấn vượt giới hạn kích thước an toàn."
+                    "Dữ liệu đánh giá hỗ trợ vượt giới hạn kích thước an toàn."
+                    if is_support_resolution_feedback
+                    else "Bản nháp tư vấn vượt giới hạn kích thước an toàn."
                     if is_support_consultation_brief
                     else "Lựa chọn ngôn ngữ giao diện vượt giới hạn kích thước an toàn."
                     if is_interface_locale
@@ -906,7 +928,9 @@ class PromptLibraryBodyLimitMiddleware:
                 data=boundary,
                 status_name="guarded",
                 error_code=(
-                    "WEB_SUPPORT_CONSULTATION_BRIEF_BODY_TOO_LARGE"
+                    "WEB_SUPPORT_RESOLUTION_FEEDBACK_BODY_TOO_LARGE"
+                    if is_support_resolution_feedback
+                    else "WEB_SUPPORT_CONSULTATION_BRIEF_BODY_TOO_LARGE"
                     if is_support_consultation_brief
                     else "WEB_INTERFACE_LOCALE_BODY_TOO_LARGE"
                     if is_interface_locale
@@ -1118,6 +1142,7 @@ app.add_middleware(
     auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
     interface_locale_max_bytes=INTERFACE_LOCALE_BODY_MAX_BYTES,
     support_consultation_brief_max_bytes=SUPPORT_CONSULTATION_BRIEF_BODY_MAX_BYTES,
+    support_resolution_feedback_max_bytes=SUPPORT_RESOLUTION_FEEDBACK_BODY_MAX_BYTES,
 )
 
 
@@ -1602,6 +1627,10 @@ async def security_headers(request: Request, call_next):
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
     # checks and does not affect the legacy Bot bridge ticket endpoint.
+    support_resolution_feedback_write = (
+        request.method == "POST"
+        and PromptLibraryBodyLimitMiddleware._is_support_resolution_feedback_path(request.url.path)
+    )
     support_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/cases")
     support_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/admin/cases")
     # Consultation Brief only returns a transient, Web-owned draft, but it
@@ -1789,7 +1818,9 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if campaign_schedule_read:
         rate_limit = 120
-    if support_write:
+    if support_resolution_feedback_write:
+        rate_limit = 12
+    elif support_write:
         rate_limit = 20
     if support_admin_write:
         rate_limit = 30
@@ -1811,6 +1842,7 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if inbox_read:
         rate_limit = 120
+    rate_window_entry: tuple[str, float] | None = None
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -1819,7 +1851,8 @@ async def security_headers(request: Request, call_next):
         # family bucket prevents arbitrary 404/405 suffixes from bypassing
         # the gate or allocating one in-memory key per requested path.
         rate_scope = (
-            "prompt-library-export" if prompt_library_export
+            "support-resolution-feedback-write" if support_resolution_feedback_write
+            else "prompt-library-export" if prompt_library_export
             else "prompt-library-write" if prompt_library_write
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
             else "subtitle-asset-operation-download" if subtitle_asset_operation_download
@@ -2015,6 +2048,7 @@ async def security_headers(request: Request, call_next):
             return response
         window.append(now)
         _auth_rate_windows[rate_key] = window
+        rate_window_entry = (rate_key, now)
     try:
         response = await call_next(request)
     except Exception:
@@ -2025,6 +2059,20 @@ async def security_headers(request: Request, call_next):
         # original exception path.
         copyfast_reliability.record_runtime_failure(request, status_code=500)
         raise
+    if (
+        rate_window_entry is not None
+        and support_resolution_feedback_write
+        and bool(getattr(request.state, "support_resolution_feedback_body_rejected", False))
+    ):
+        rate_key, rate_timestamp = rate_window_entry
+        rate_window = _auth_rate_windows.get(rate_key)
+        if rate_window:
+            try:
+                rate_window.remove(rate_timestamp)
+            except ValueError:
+                pass
+            if not rate_window:
+                _auth_rate_windows.pop(rate_key, None)
     if response.status_code >= 500 and not bool(getattr(request.state, "reliability_expected_failure", False)):
         # Deliberately do not record planned HTTPException maintenance/config
         # guards as runtime faults. The exception handler marks those paths
