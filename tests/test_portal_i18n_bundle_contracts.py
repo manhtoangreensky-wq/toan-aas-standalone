@@ -91,7 +91,7 @@ for (const locale of expected) {
   if (JSON.stringify(keys) !== JSON.stringify(referenceKeys)) {
     throw new Error(`Locale keyset diverged for ${locale}`);
   }
-  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "nav.currentWorkflow", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install", "shellNav.billing", "shellNav.contentStudio", "shellNav.scriptToSeries", "shellNav.serviceStatus"]) {
+  for (const key of ["chrome.newWorkflow", "chrome.installApp", "chrome.adminAppCaption", "chrome.searchAdmin", "chrome.adminCommandCount", "mobile.workspace", "nav.currentWorkflow", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install", "shellNav.billing", "shellNav.contentStudio", "shellNav.scriptToSeries", "shellNav.serviceStatus"]) {
     if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
   }
 }
@@ -465,6 +465,13 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
             "客户支持",
         ),
         "adminHome.readiness.refresh": ("Làm mới", "Refresh", "刷新"),
+        "chrome.adminAppCaption": ("Admin ERP", "Admin ERP", "管理 ERP"),
+        "chrome.searchAdmin": ("Tìm điều hướng ERP", "Search ERP navigation", "搜索 ERP 导航"),
+        "chrome.adminCommandCount": (
+            "{count} mục ERP có thể mở trong phiên này.",
+            "{count} ERP destinations available in this session.",
+            "此会话可打开 {count} 个 ERP 入口。",
+        ),
     }
     for key, translations in expected.items():
         for translation in translations:

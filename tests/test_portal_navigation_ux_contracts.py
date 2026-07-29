@@ -108,7 +108,7 @@ const runtime = [
   extract("function adminErpNavigation(context)", "function adminRouteIcon(route)"),
   extract("function adminRouteIcon(route)", "function hasLiveCanonicalAdmin(context)"),
   extract("function serverAuthorizesAdminRoute(context, route)", "const CUSTOMER_APPLICATION_ROUTE"),
-  extract("function isAdminMobileSurface(page)", "function normalizeCommandSearch(value)")
+  extract("function isAdminPortalSurface(page)", "function normalizeCommandSearch(value)")
 ].join("\n");
 eval(runtime);
 
@@ -138,6 +138,9 @@ const nonInheritingItems = adminMobileNavItems({ routePath: "/admin/users/user-4
 const supportItems = adminMobileNavItems({ routePath: "/admin/support/ticket-42" }, context);
 const unavailable = adminMobileNavItems({ routePath: "/admin/jobs/job-42" }, { adminErpNavigation: { read_state: "loading", groups: context.adminErpNavigation.groups } });
 const markup = renderAdminMobileNav({ routePath: "/admin/support/ticket-42" }, context);
+const desktopGroups = adminDesktopNavGroups(context, { routePath: "/admin/jobs/job-42" });
+const desktopLinks = desktopGroups.flatMap((group) => group.links);
+const unavailableDesktop = adminDesktopNavGroups({ adminErpNavigation: { read_state: "loading", groups: context.adminErpNavigation.groups } }, { routePath: "/admin/jobs/job-42" });
 
 if (jobItems.length !== 5 || jobItems[0].route !== "/admin/jobs" || jobItems[1].route !== "/admin") {
   throw new Error(`current job and issued overview were not retained: ${JSON.stringify(jobItems)}`);
@@ -163,7 +166,19 @@ if (!isAdminMobileSurface({ routePath: "/admin/jobs" }) || isAdminMobileSurface(
 if (!markup.includes('href="/admin/support"') || !markup.includes("Support &amp; &lt;Ops&gt;")) {
   throw new Error(`server-issued route/title were not safely rendered: ${markup}`);
 }
-process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.route), supportMarkup: markup }));
+if (desktopGroups.length !== 3 || desktopLinks.some((link) => link[0] === "/dashboard" || link[0] === "/features")) {
+  throw new Error(`desktop ERP sidebar included a customer route or lost a granted group: ${JSON.stringify(desktopGroups)}`);
+}
+if (desktopLinks.filter((link) => link[3] === true).map((link) => link[0]).join(",") !== "/admin/jobs") {
+  throw new Error(`desktop ERP sidebar did not announce exactly the current issued job route: ${JSON.stringify(desktopLinks)}`);
+}
+if (!desktopGroups[2].current || !desktopGroups[2].defaultOpen || unavailableDesktop.length !== 0) {
+  throw new Error(`desktop ERP sidebar did not open only the current group or fail closed: ${JSON.stringify({ desktopGroups, unavailableDesktop })}`);
+}
+if (!isAdminPortalSurface({ routePath: "/admin/jobs" }) || isAdminPortalSurface({ routePath: "/dashboard", isAdmin: true })) {
+  throw new Error("desktop Admin surface selection did not use only the normalized path");
+}
+process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.route), supportMarkup: markup, desktopRoutes: desktopLinks.map((link) => link[0]) }));
 '''
     try:
         result = subprocess.run(
@@ -183,6 +198,7 @@ def test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_i
     result = _run_admin_mobile_nav_harness(ROOT / "static" / "portal" / "portal.js")
 
     assert result["jobRoutes"] == ["/admin/jobs", "/admin", "/admin/support", "/admin/users", "/admin/crm"]
+    assert result["desktopRoutes"] == ["/admin/support", "/admin/users", "/admin/crm", "/admin/reports", "/admin", "/admin/jobs", "/admin/providers"]
     assert 'aria-current="page"' in result["supportMarkup"]
 
 
@@ -195,6 +211,29 @@ def test_admin_mobile_mount_portal_selects_the_admin_dock_only_for_admin_routes(
     assert "isAdminMobileSurface(page) ? renderAdminMobileNav(page, context) : renderMobileNav(page)" in mount
     assert "mobileNav.hidden = !mobileNavMarkup;" in mount
     assert "mobileNav.innerHTML = mobileNavMarkup;" in mount
+
+
+def test_desktop_admin_shell_uses_the_same_issued_projection_without_customer_shortcuts() -> None:
+    navigation = _section("function navGroups(context, currentPage)", "function matchesRouteFamily(path, root)")
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+    header = _section("function renderHeader(page, context)", "function renderFields(fields, enabled, context, fieldValues, idNamespace)")
+    palette = _section("function commandPaletteItems(context, page)", "function renderCommandPalette(page, context)")
+    dialog = _section("function renderCommandPalette(page, context)", "function renderSidebar(page, context)")
+
+    assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
+    assert "const currentOverride = link.length > 3 ? link[3] : null;" in sidebar
+    assert "const adminSurface = isAdminPortalSurface(page);" in sidebar
+    assert 'adminRoutes.has("/admin")' in sidebar
+    assert "const sidebarPrimaryAction = adminSurface" in sidebar
+    assert 'href="/features"' in sidebar
+    assert "const adminSurface = isAdminPortalSurface(page);" in header
+    assert "chrome.searchAdmin" in header
+    assert "const adminSurface = isAdminPortalSurface(page);" in palette
+    assert 'candidate.access !== "admin"' in palette
+    assert "chrome.adminCommandCount" in dialog
+    assert "const commandKicker = adminSurface" in dialog
+    assert "const commandTitle = adminSurface" in dialog
+    assert "const commandEmpty = adminSurface" in dialog
 
 
 def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() -> None:
@@ -249,7 +288,7 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     assert "const videoStudioNavGroups = [" in navigation
     assert "groups.splice(3, 0, ...videoStudioNavGroups);" in navigation
     assert 'if (matchesRouteFamily(currentRoute, "/video-studio")) {' in navigation
-    assert 'if (currentRoute === "/admin" || currentRoute.startsWith("/admin/")) {' in navigation
+    assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
     assert '<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>' in sidebar
     assert 'const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);' in sidebar
     assert 'class="portal-nav-summary"' in sidebar

@@ -9099,7 +9099,65 @@
     };
   }
 
+  function isAdminPortalSurface(page) {
+    const sourcePath = page && (page.routePath || page.path);
+    if (typeof sourcePath !== "string" || !sourcePath) return false;
+    const path = normalizePath(sourcePath);
+    return path === "/admin" || path.startsWith("/admin/");
+  }
+
+  function adminNavigationModules(context) {
+    const navigation = adminErpNavigation(context);
+    if (!navigation.groups.length) return [];
+    const seen = new Set();
+    const modules = [];
+    navigation.groups.forEach((group) => {
+      if (!group || !Array.isArray(group.modules)) return;
+      group.modules.forEach((module) => {
+        if (!module || !navigation.routes.has(module.route) || seen.has(module.route)) return;
+        seen.add(module.route);
+        modules.push(module);
+      });
+    });
+    return modules;
+  }
+
+  function currentAdminNavigationModule(page, context, modules) {
+    const sourcePath = page && (page.routePath || page.path);
+    const path = typeof sourcePath === "string" && sourcePath ? normalizePath(sourcePath) : "";
+    return modules.reduce((matched, module) => (
+      isAdminMobileNavCurrent(module, path, context) && (!matched || module.route.length > matched.route.length)
+        ? module
+        : matched
+    ), null);
+  }
+
+  function adminDesktopNavGroups(context, currentPage) {
+    const navigation = adminErpNavigation(context);
+    if (!navigation.groups.length) return [];
+    const issued = adminNavigationModules(context);
+    if (!issued.length) return [];
+    const issuedRoutes = new Set(issued.map((module) => module.route));
+    const current = currentAdminNavigationModule(currentPage, context, issued);
+    const seen = new Set();
+    return navigation.groups.map((group) => {
+      const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => {
+        if (!module || !issuedRoutes.has(module.route) || seen.has(module.route)) return false;
+        seen.add(module.route);
+        return true;
+      });
+      const groupCurrent = Boolean(current && modules.some((module) => module.route === current.route));
+      return {
+        label: `ERP · ${group.title}`,
+        defaultOpen: groupCurrent,
+        current: groupCurrent,
+        links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
+      };
+    }).filter((group) => group.links.length);
+  }
+
   function navGroups(context, currentPage) {
+    if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);
     const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
@@ -9181,17 +9239,6 @@
     ];
     if (matchesRouteFamily(currentRoute, "/video-studio")) {
       groups.splice(3, 0, ...videoStudioNavGroups);
-    }
-    const erp = adminErpNavigation(context);
-    // A support operator is deliberately not promoted to canonical admin. The
-    // API returns only the module routes its server-side authority permits.
-    if (currentRoute === "/admin" || currentRoute.startsWith("/admin/")) {
-      erp.groups.forEach((group) => {
-        groups.push({
-          label: `ERP · ${group.title}`,
-          links: group.modules.map((module) => [module.route, module.title, module.icon])
-        });
-      });
     }
     return groups;
   }
@@ -9324,10 +9371,7 @@
   }
 
   function isAdminMobileSurface(page) {
-    const sourcePath = page && (page.routePath || page.path);
-    if (typeof sourcePath !== "string" || !sourcePath) return false;
-    const path = normalizePath(sourcePath);
-    return path === "/admin" || path.startsWith("/admin/");
+    return isAdminPortalSurface(page);
   }
 
   function isAdminMobileNavCurrent(module, path, context) {
@@ -9341,26 +9385,9 @@
   const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;
 
   function adminMobileNavItems(page, context) {
-    const navigation = adminErpNavigation(context);
-    if (!navigation.groups.length) return [];
-    const seen = new Set();
-    const modules = [];
-    navigation.groups.forEach((group) => {
-      if (!group || !Array.isArray(group.modules)) return;
-      group.modules.forEach((module) => {
-        if (!module || !navigation.routes.has(module.route) || seen.has(module.route)) return;
-        seen.add(module.route);
-        modules.push(module);
-      });
-    });
+    const modules = adminNavigationModules(context);
     if (!modules.length) return [];
-    const sourcePath = page && (page.routePath || page.path);
-    const path = typeof sourcePath === "string" && sourcePath ? normalizePath(sourcePath) : "";
-    const current = modules.reduce((matched, module) => (
-      isAdminMobileNavCurrent(module, path, context) && (!matched || module.route.length > matched.route.length)
-        ? module
-        : matched
-    ), null);
+    const current = currentAdminNavigationModule(page, context, modules);
     const compact = [];
     const include = (module) => {
       if (module && !compact.some((item) => item.route === module.route) && compact.length < MAX_ADMIN_MOBILE_NAV_ITEMS) compact.push(module);
@@ -9394,6 +9421,7 @@
     const items = [];
     const seen = new Set();
     const authorizedAdminRoutes = adminErpNavigation(context).routes;
+    const adminSurface = isAdminPortalSurface(page);
     Object.values(manifest).forEach((candidate) => {
       const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
       if (!path || seen.has(path) || candidate.access === "public") return;
@@ -9401,6 +9429,10 @@
       // server-issued route manifest as the sidebar. A cached account role or
       // current page never makes an admin destination discoverable by itself.
       if (candidate.access === "admin" && !authorizedAdminRoutes.has(path)) return;
+      // The internal ERP shell is intentionally a separate application
+      // surface. A signed staff member may still own a customer workspace,
+      // but customer routes are not mixed into the Admin quick switch.
+      if (adminSurface && (candidate.access !== "admin" || !authorizedAdminRoutes.has(path))) return;
       seen.add(path);
       items.push({
         path,
@@ -9418,6 +9450,20 @@
 
   function renderCommandPalette(page, context) {
     const items = commandPaletteItems(context, page);
+    const adminSurface = isAdminPortalSurface(page);
+    const searchKey = adminSurface ? "chrome.searchAdmin" : "chrome.searchWorkspace";
+    const searchFallback = adminSurface ? "Tìm điều hướng ERP" : "Tìm workspace";
+    const countKey = adminSurface ? "chrome.adminCommandCount" : "chrome.commandCount";
+    const countFallback = adminSurface ? "{count} mục ERP có thể mở trong phiên này." : "{count} workspace có thể mở trong phiên này.";
+    const commandKicker = adminSurface
+      ? uiText("chrome.adminAppCaption", "Admin ERP")
+      : uiText("chrome.commandKicker", "TOAN AAS workspace");
+    const commandTitle = adminSurface
+      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      : uiText("chrome.commandTitle", "Chuyển nhanh");
+    const commandEmpty = adminSurface
+      ? uiText("chrome.no_results", "Không tìm thấy kết quả.")
+      : uiText("chrome.commandEmpty", "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.");
     const markup = items.map((item) => {
       const search = normalizeCommandSearch(`${item.title} ${item.section} ${item.path}`);
       return `<a class="portal-command-item" href="${safeText(item.path)}" data-portal-command-item data-command-search="${safeText(search)}"${item.current ? ' aria-current="page"' : ""}>
@@ -9428,20 +9474,34 @@
     }).join("");
     return `<div class="portal-command-palette-backdrop" data-portal-command-close></div>
       <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title">
-        <header class="portal-command-header"><div><span class="portal-command-kicker">${safeText(uiText("chrome.commandKicker", "TOAN AAS workspace"))}</span><h2 id="portal-command-title">${safeText(uiText("chrome.commandTitle", "Chuyển nhanh"))}</h2></div><button class="portal-command-close" type="button" aria-label="${safeText(uiText("chrome.closeQuickSwitch", "Đóng chuyển nhanh"))}" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
-        <label class="portal-command-search"><span class="portal-sr-only">${safeText(uiText("chrome.searchWorkspace", "Tìm workspace"))}</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="${safeText(uiText("chrome.searchWorkspacePlaceholder", "Tìm công cụ, jobs, tài sản, tài khoản…"))}" autocomplete="off" data-portal-command-search></label>
+        <header class="portal-command-header"><div><span class="portal-command-kicker">${safeText(commandKicker)}</span><h2 id="portal-command-title">${safeText(commandTitle)}</h2></div><button class="portal-command-close" type="button" aria-label="${safeText(uiText("chrome.closeQuickSwitch", "Đóng chuyển nhanh"))}" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
+        <label class="portal-command-search"><span class="portal-sr-only">${safeText(uiText(searchKey, searchFallback))}</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="${safeText(uiText(searchKey, searchFallback))}" autocomplete="off" data-portal-command-search></label>
         <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> ${safeText(uiText("chrome.commandHintOpen", "để mở"))}</span><span><kbd>Esc</kbd> ${safeText(uiText("chrome.commandHintClose", "để đóng"))}</span></p>
         <div class="portal-command-results" aria-label="${safeText(uiText("chrome.commandResults", "Kết quả chuyển nhanh"))}" data-portal-command-results>${markup}</div>
-        <p class="portal-command-empty" data-portal-command-empty hidden>${safeText(uiText("chrome.commandEmpty", "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác."))}</p>
-        <p class="portal-command-count" aria-live="polite" data-portal-command-count>${safeText(uiText("chrome.commandCount", "{count} workspace có thể mở trong phiên này.", { count: String(items.length) }))}</p>
+        <p class="portal-command-empty" data-portal-command-empty hidden>${safeText(commandEmpty)}</p>
+        <p class="portal-command-count" aria-live="polite" data-portal-command-count>${safeText(uiText(countKey, countFallback, { count: String(items.length) }))}</p>
       </section>`;
   }
 
   function renderSidebar(page, context) {
     const bridgeReady = context.bridge.available === true;
+    const adminSurface = isAdminPortalSurface(page);
+    const adminRoutes = adminSurface ? adminErpNavigation(context).routes : new Set();
+    const adminOverview = adminSurface ? adminNavigationModules(context).find((module) => module.route === "/admin") : null;
+    const sidebarCaption = adminSurface ? uiText("chrome.adminAppCaption", "Admin ERP") : "AI Workspace";
+    const sidebarSearchLabel = adminSurface
+      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      : uiText("chrome.searchWorkspace", "Tìm mọi workspace");
+    const sidebarPrimaryAction = adminSurface
+      ? (adminRoutes.has("/admin") && adminOverview
+        ? `<a class="portal-sidebar-create" href="/admin"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(adminOverview.icon || ICONS.admin)}</span><span>${safeText(adminOverview.title)}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`
+        : "")
+      : `<a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`;
     const groups = navGroups(context, page).map((group) => {
-      const preparedLinks = group.links.map(([path, label, linkIcon]) => {
-        const current = isNavCurrent(path, page);
+      const preparedLinks = group.links.map((link) => {
+        const [path, label, linkIcon] = link;
+        const currentOverride = link.length > 3 ? link[3] : null;
+        const current = currentOverride === true ? true : (currentOverride === false ? false : isNavCurrent(path, page));
         return { path, label: localizedNavigationLabel(label), linkIcon, current };
       });
       const links = preparedLinks.map(({ path, label, linkIcon, current }) => {
@@ -9462,14 +9522,14 @@
     }).join("");
     return `<div class="portal-brand">
       <span class="portal-brand-mark" aria-hidden="true">TA</span>
-      <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">AI Workspace</span></span>
+      <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">${safeText(sidebarCaption)}</span></span>
       <button class="portal-sidebar-close" type="button" aria-label="${safeText(uiText("chrome.closeNavigation", "Đóng điều hướng"))}" data-portal-close-menu>${portalIcon(ICONS.close)}</button>
     </div>
     <div class="portal-sidebar-action-row">
-      <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
+      ${sidebarPrimaryAction}
       <button class="portal-sidebar-focus-toggle" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Bật chế độ tập trung nội dung"))}" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>${safeText(uiText("chrome.closeNavigation", "Thu gọn điều hướng"))}</span></button>
     </div>
-    <button class="portal-sidebar-search" type="button" aria-label="${safeText(uiText("chrome.searchWorkspace", "Tìm mọi workspace"))}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>${safeText(uiText("chrome.searchWorkspace", "Tìm mọi workspace"))}</span><kbd aria-hidden="true">Ctrl K</kbd></button>
+    <button class="portal-sidebar-search" type="button" aria-label="${safeText(sidebarSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>${safeText(sidebarSearchLabel)}</span><kbd aria-hidden="true">Ctrl K</kbd></button>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
@@ -9481,6 +9541,10 @@
 
   function renderHeader(page, context) {
     const name = displayName(context);
+    const adminSurface = isAdminPortalSurface(page);
+    const commandSearchLabel = adminSurface
+      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbs = ["TOAN AAS", page.section, localizedPageTitle(page, context)].filter(Boolean).map((piece) => `<span>${safeText(localizedNavigationLabel(piece))}</span>`).join("");
     const accountHref = context.session.authenticated === true ? "/account" : "/login";
     const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;
@@ -9488,7 +9552,7 @@
       <div class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</div>
       <div class="portal-header-actions">
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
-        <button class="portal-command-trigger" type="button" aria-label="${safeText(uiText("chrome.quickSwitch", "Mở chuyển nhanh"))}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace"))}</span><kbd>Ctrl K</kbd></button>
+        <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
         ${pageStatusBadge(page, context)}
         <a class="portal-session-chip" href="${accountHref}" aria-label="${safeText(uiText("chrome.openAccount", "Mở tài khoản"))}">
           <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>

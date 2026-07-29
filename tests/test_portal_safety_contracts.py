@@ -359,10 +359,11 @@ def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> No
     assert 'if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");' in PORTAL
     assert 'if (linkPath === "/subtitle") return matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path);' in PORTAL
     assert 'if (linkPath === "/admin") {' in PORTAL
-    # ERP navigation is not a static client-side directory. It is appended
-    # only from the signed, server-issued module projection.
-    assert "erp.groups.forEach((group) =>" in PORTAL
-    assert "serverAuthorizesAdminRoute(context, page.routePath || page.path)" in PORTAL
+    # ERP navigation is not a static client-side directory. It is a separate
+    # signed, server-issued projection and never falls back to customer groups.
+    assert "function adminDesktopNavGroups(context, currentPage)" in PORTAL
+    assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in PORTAL
+    assert "serverAuthorizesAdminRoute(context, path)" in PORTAL
     # Video remains a catalog/deep-link workflow; the compact customer rail
     # must not promote it as a permanent shortcut outside Video Studio.
     assert 'featurePage("/video/create", "Video nhanh"' in PORTAL
