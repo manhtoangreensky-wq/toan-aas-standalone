@@ -211,7 +211,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
         "canonical-finance source-review contract"
     ) in admin_erp_contract
     tax_accounting_contract = (docs_dir / "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
-    assert "The twelve exact Admin ERP Finance fresh-read literals" in tax_accounting_contract
+    assert "The thirteen exact Admin ERP Finance fresh-read literals" in tax_accounting_contract
     assert "every other `menu|finance_*` value" not in tax_accounting_contract
     assert "every other unlisted `menu|finance_*` value" in tax_accounting_contract
     for callback in finance_fresh_read_callbacks:

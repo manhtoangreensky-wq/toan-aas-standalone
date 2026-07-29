@@ -1911,6 +1911,31 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "runtime or write authority."
         ),
     },
+    "menu|finance_revenue_custom_help": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_REVENUE_CUSTOM_PERIOD_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_OR_COMMAND_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot-admin-only literal redraws static custom-revenue-period guidance and a Telegram selector. "
+            "Its separate custom-month control is not consumed by this callback. The Web opens a fresh canonical-"
+            "admin Finance read route and receives no Telegram identity, Bot snapshot, selected period, command, "
+            "report/export context, ledger/Xu, payment, PayOS, provider, runtime or write authority."
+        ),
+    },
     "menu|finance_revenue_this_month": {
         "target": "/admin/finance",
         "classification": "admin",
@@ -12565,17 +12590,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|admin_confirm_provider_freeze_image` remains Telegram-only; and "
         "`menu|admin_confirm_provider_unfreeze_shopaikey` remains Telegram-only. Case variants, suffixes "
         "and all other `menu|admin_*` or `menu|provider_custom*` values remain fail-closed source-review records and "
-        "cannot inherit one of these routes. The twelve exact lower-case Finance literals "
+        "cannot inherit one of these routes. The thirteen exact lower-case Finance literals "
         "`menu|finance_overview`, `menu|finance_revenue`, `menu|finance_revenue_this_month`, "
         "`menu|finance_revenue_last_month`, `menu|finance_revenue_year`, "
+        "`menu|finance_revenue_custom_help`, "
         "`menu|finance_expense_this_month`, `menu|finance_expense_last_month`, "
         "`menu|finance_expense_year`, `menu|finance_profit_this_month`, `menu|finance_profit_year`, "
         "`menu|finance_export_month`, and `menu|finance_export_year` each start only one of these fresh Finance "
         "reads. None transfers a Bot snapshot, selected period, report, command, export request/file, calculation, "
         "tax/compliance state, payment/provider state, wallet/Xu/PayOS context or write authority. They do not "
         "preselect a Web filter, calculate Finance/tax data, invoke an export, deliver a file or imply a runtime "
-        "result. `menu|finance_revenue_custom_help` remains source-review-required; "
-        "`menu|finance_compliance` remains source-review-required; and "
+        "result. `menu|finance_compliance` remains source-review-required; and "
         "`menu|finance_compliance_update` remains source-review-required. `menu|tax_estimate` and "
         "`menu|tax_export_month` retain their separate canonical-finance source-review contract. Any case variant, "
         "suffix or other unlisted `menu|finance_*` value remains source-review-required and cannot inherit a Finance "
@@ -12732,9 +12757,10 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             tax_accounting_source_review_contract_rows,
         )
-        + "\n\nThe guidance rows and canonical-source-review rows above are the complete finite tax contracts. The twelve exact "
+        + "\n\nThe guidance rows and canonical-source-review rows above are the complete finite tax contracts. The thirteen exact "
         "Admin ERP Finance fresh-read literals—`menu|finance_overview`, `menu|finance_revenue`, "
         "`menu|finance_revenue_this_month`, `menu|finance_revenue_last_month`, `menu|finance_revenue_year`, "
+        "`menu|finance_revenue_custom_help`, "
         "`menu|finance_expense_this_month`, `menu|finance_expense_last_month`, `menu|finance_expense_year`, "
         "`menu|finance_profit_this_month`, `menu|finance_profit_year`, `menu|finance_export_month`, and "
         "`menu|finance_export_year`—belong only to the separate Admin ERP fresh-read contract, never either tax "
