@@ -16,6 +16,23 @@ def _section(source: str, start: str, end: str) -> str:
     return source[offset:source.index(end, offset + len(start))]
 
 
+def _css_block(source: str, marker: str) -> tuple[int, int, str]:
+    """Return one balanced CSS block so breakpoint contracts cannot leak."""
+
+    start = source.index(marker)
+    opening = source.index("{", start)
+    depth = 0
+    for position in range(opening, len(source)):
+        if source[position] == "{":
+            depth += 1
+        elif source[position] == "}":
+            depth -= 1
+            if depth == 0:
+                end = position + 1
+                return start, end, source[start:end]
+    raise AssertionError(f"Unclosed CSS block: {marker}")
+
+
 def test_access_screen_uses_one_compact_app_entry_without_repeating_the_brand() -> None:
     auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
 
@@ -65,6 +82,31 @@ def test_access_screen_uses_a_balanced_desktop_rail_and_single_column_mobile_fal
     assert '@media (max-width: 1080px)' in redesign
     assert 'grid-template-areas: "intro" "card";' in redesign
     assert ".portal-auth-context { display: none; }" in redesign
+
+
+def test_desktop_access_geometry_cannot_leak_into_mobile_cascade() -> None:
+    """The desktop rail must be scoped so mobile keeps its compact typography."""
+
+    foundation_start = "/* Teal–Sky Product Redesign foundation rules."
+    semantic_start = "/* Teal–Sky Product Redesign -- final semantic layer. */"
+    foundation = THEME[THEME.index(foundation_start):THEME.index(semantic_start)]
+    redesign = THEME[THEME.index(semantic_start):]
+    desktop_start, desktop_end, desktop = _css_block(
+        THEME, "@media (min-width: 1081px) {"
+    )
+    outside_desktop = THEME[:desktop_start] + THEME[desktop_end:]
+
+    # These values establish the large two-column access composition.  If
+    # they escape their desktop query they override the earlier 600px rules
+    # and make the phone entry screen look clipped or cramped.
+    for desktop_only in (
+        "grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);",
+        "font-size: clamp(38px, 4vw, 56px);",
+        "max-width: 14ch;",
+    ):
+        assert desktop_only not in foundation
+        assert desktop_only in desktop
+        assert desktop_only not in outside_desktop
 
 
 def test_access_screen_compacts_mobile_rhythm_without_shrinking_controls() -> None:
