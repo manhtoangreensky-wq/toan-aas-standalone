@@ -181,15 +181,40 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
     assert "`menu|admin_provider_test` remains source-review-required" in admin_erp_contract
-    for callback in (
+    finance_fresh_read_callbacks = (
+        "menu|finance_overview",
         "menu|finance_revenue",
-        "menu|finance_expense",
+        "menu|finance_revenue_this_month",
+        "menu|finance_revenue_last_month",
+        "menu|finance_revenue_year",
+        "menu|finance_expense_this_month",
+        "menu|finance_expense_last_month",
+        "menu|finance_expense_year",
         "menu|finance_profit_this_month",
         "menu|finance_profit_year",
         "menu|finance_export_month",
         "menu|finance_export_year",
+    )
+    assert "fresh Finance reads" in admin_erp_contract
+    for callback in finance_fresh_read_callbacks:
+        assert callback.replace("|", "\\|") in admin_erp_contract
+        assert f"`{callback}` remains source-review-required" not in admin_erp_contract
+    for callback in (
+        "menu|finance_revenue_custom_help",
+        "menu|finance_compliance",
+        "menu|finance_compliance_update",
     ):
         assert f"`{callback}` remains source-review-required" in admin_erp_contract
+    assert (
+        "`menu|tax_estimate` and `menu|tax_export_month` retain their separate "
+        "canonical-finance source-review contract"
+    ) in admin_erp_contract
+    tax_accounting_contract = (docs_dir / "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "The twelve exact Admin ERP Finance fresh-read literals" in tax_accounting_contract
+    assert "every other `menu|finance_*` value" not in tax_accounting_contract
+    assert "every other unlisted `menu|finance_*` value" in tax_accounting_contract
+    for callback in finance_fresh_read_callbacks:
+        assert f"`{callback}`" in tax_accounting_contract
     finance_add_expense_count = len(audit.FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS)
     assert f"— {finance_add_expense_count} exact Bot Finance Add-Expense help disposition" in readme
     finance_add_expense_contract = (docs_dir / "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
@@ -1886,15 +1911,27 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         "menu|admin": ("/admin", "admin_overview"),
         "menu|operator": ("/admin", "admin_overview"),
         "menu|finance": ("/admin/finance", "admin_finance"),
+        "menu|finance_overview": ("/admin/finance", "admin_finance"),
+        "menu|finance_revenue": ("/admin/finance", "admin_finance"),
         "menu|admin_packages": ("/admin/packages", "admin_packages"),
         "menu|admin_packages_catalog": ("/admin/packages", "admin_packages"),
         "menu|admin_provider": ("/admin/providers", "admin_providers"),
         "menu|provider_custom_help": ("/admin/providers", "admin_providers"),
         "menu|finance_revenue_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_revenue_this_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_revenue_last_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_revenue_year": ("/admin/finance", "admin_finance"),
         "menu|finance_expense_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_expense_this_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_expense_last_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_expense_year": ("/admin/finance", "admin_finance"),
         "menu|finance_expense_categories": ("/admin/finance", "admin_finance"),
         "menu|finance_profit": ("/admin/finance", "admin_finance"),
+        "menu|finance_profit_this_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_profit_year": ("/admin/finance", "admin_finance"),
         "menu|finance_export": ("/admin/finance", "admin_finance"),
+        "menu|finance_export_month": ("/admin/finance", "admin_finance"),
+        "menu|finance_export_year": ("/admin/finance", "admin_finance"),
         "menu|admin_overview": ("/admin", "admin_overview"),
         "menu|admin_provider_status": ("/admin/providers", "admin_providers"),
         "menu|admin_provider_usage": ("/admin/provider-cost", "admin_provider_cost"),
@@ -1990,6 +2027,43 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
     ):
         assert disposition in finance_export["source_dispositions"]
 
+    finance_fresh_read_no_replay_dispositions = {
+        "menu|finance_overview": "BOT_FINANCE_OVERVIEW_SNAPSHOT_NOT_REPLAYED",
+        "menu|finance_revenue": "BOT_FINANCE_REVENUE_SNAPSHOT_NOT_REPLAYED",
+        "menu|finance_revenue_this_month": "BOT_FINANCE_REVENUE_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "menu|finance_revenue_last_month": "BOT_FINANCE_REVENUE_LAST_MONTH_REPORT_NOT_REPLAYED",
+        "menu|finance_revenue_year": "BOT_FINANCE_REVENUE_YEAR_REPORT_NOT_REPLAYED",
+        "menu|finance_expense_this_month": "BOT_FINANCE_EXPENSE_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "menu|finance_expense_last_month": "BOT_FINANCE_EXPENSE_LAST_MONTH_REPORT_NOT_REPLAYED",
+        "menu|finance_expense_year": "BOT_FINANCE_EXPENSE_YEAR_REPORT_NOT_REPLAYED",
+        "menu|finance_profit_this_month": "BOT_FINANCE_PROFIT_THIS_MONTH_REPORT_NOT_REPLAYED",
+        "menu|finance_profit_year": "BOT_FINANCE_PROFIT_YEAR_REPORT_NOT_REPLAYED",
+        "menu|finance_export_month": "BOT_FINANCE_EXPORT_MONTH_COMMAND_GUIDANCE_NOT_REPLAYED",
+        "menu|finance_export_year": "BOT_FINANCE_EXPORT_YEAR_COMMAND_GUIDANCE_NOT_REPLAYED",
+    }
+    assert len(finance_fresh_read_no_replay_dispositions) == 12
+    for callback, no_replay_disposition in finance_fresh_read_no_replay_dispositions.items():
+        descriptor = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert descriptor["target"] == "/admin/finance"
+        assert descriptor["feature_key"] == "admin_finance"
+        assert descriptor["classification"] == "admin"
+        assert descriptor["authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert descriptor["launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["target"] == "/admin/finance"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        dispositions = audit.ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS[callback]["source_dispositions"]
+        assert "BOT_ADMIN_ONLY" in dispositions
+        assert "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION" in dispositions
+        assert no_replay_disposition in dispositions
+        assert "NO_CANONICAL_FINANCE_DATA_TRANSFER" in dispositions
+        assert "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER" in dispositions
+        assert "NO_REPORT_EXPORT_OR_FILE_DELIVERY" in dispositions
+        assert "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION" in dispositions
+        assert "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION" in dispositions
+        assert "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION" in dispositions
+        assert "NO_RUNTIME_CLAIM" in dispositions
+
     # Exact identifiers are source evidence only. Case changes, suffixes and
     # sensitive child actions must not inherit an ERP route or a Web control.
     for callback in (
@@ -2026,16 +2100,10 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # The reviewed selector must not widen into a finance-data, period,
-    # report or export read/action. Those Bot paths remain source review.
+    # Only the finite read selectors above may navigate. Custom report help
+    # and every spelling/suffix variant remain source review.
     for callback in (
-        "menu|finance_revenue",
-        "menu|finance_revenue_this_month",
-        "menu|finance_revenue_last_month",
-        "menu|finance_revenue_year",
         "menu|finance_revenue_custom_help",
-        "menu|finance_export_month",
-        "menu|finance_export_year",
         "menu|finance_revenue_month_future",
         "menu|finance_revenue_month|future",
         "MENU|FINANCE_REVENUE_MONTH",
@@ -2048,11 +2116,9 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Export Guidance is limited to the static Bot parent. Its period-specific
-    # command guidance and all variants stay source review, never file delivery.
+    # Export Guidance only opens a fresh read route. Its variants stay source
+    # review and no selector may trigger file delivery.
     for callback in (
-        "menu|finance_export_month",
-        "menu|finance_export_year",
         "menu|finance_export_future",
         "menu|finance_export|future",
         "MENU|FINANCE_EXPORT",
@@ -2065,15 +2131,12 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Expense Month is limited to its static Bot selector. Data reads,
+    # Only the reviewed expense periods open a fresh read route. The parent,
     # categories, writes and any spelling/suffix variant stay source review.
     # The distinct Add-Expense help literal is covered by its own private
     # Planning contract below and cannot inherit this canonical read mapping.
     for callback in (
         "menu|finance_expense",
-        "menu|finance_expense_this_month",
-        "menu|finance_expense_last_month",
-        "menu|finance_expense_year",
         "menu|finance_expense_month_future",
         "menu|finance_expense_month|future",
         "MENU|FINANCE_EXPENSE_MONTH",
@@ -2089,11 +2152,9 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Profit is limited to its static Bot selector. Period data reads and any
-    # spelling/suffix variant stay source review.
+    # Only the reviewed profit periods open a fresh read route. Variants stay
+    # source review.
     for callback in (
-        "menu|finance_profit_this_month",
-        "menu|finance_profit_year",
         "menu|finance_profit_future",
         "menu|finance_profit|future",
         "MENU|FINANCE_PROFIT",
@@ -2102,6 +2163,34 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
         assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "admin_erp_feature_key" not in mapped
+        assert "admin_erp_authority" not in mapped
+        assert "admin_erp_launch_mode" not in mapped
+
+    # Compliance menus and spelling/suffix variants can create pending state
+    # or mutate a profile. They must not inherit the Finance read destination.
+    for callback in (
+        "menu|finance_compliance",
+        "menu|finance_compliance_update",
+        "MENU|FINANCE_OVERVIEW",
+        "menu|finance_revenue_year|future",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "MENU_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "menu_callback_requires_finite_exact_web_contract"
+        assert "admin_erp_feature_key" not in mapped
+        assert "admin_erp_authority" not in mapped
+        assert "admin_erp_launch_mode" not in mapped
+
+    # Tax calculation/export branches have their own stricter canonical-
+    # finance source-review contract and must not be downgraded to a generic
+    # menu fallback or inherit Admin ERP navigation metadata.
+    for callback in ("menu|tax_estimate", "menu|tax_export_month"):
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["target"] == "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
         assert "admin_erp_feature_key" not in mapped
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
@@ -2196,14 +2285,11 @@ def test_static_audit_maps_finance_add_expense_help_to_private_planning_entry() 
     assert categories["resolution"] == "reviewed_admin_erp_fresh_web_navigation"
     assert "finance_add_expense_planning_feature_key" not in categories
 
-    # Only the lower-case literal is reviewed. Generic finance expense
-    # actions, Bot commands/pending state and spelling/suffix variants remain
-    # fail-closed until they receive their own source contract.
+    # The parent and Add-Expense spelling/suffix variants remain fail-closed
+    # until they receive their own source contract. The finite period-report
+    # selectors are covered by the separate Admin ERP fresh-read contract.
     for callback in (
         "menu|finance_expense",
-        "menu|finance_expense_this_month",
-        "menu|finance_expense_last_month",
-        "menu|finance_expense_year",
         "menu|finance_add_expense_future",
         "menu|finance_add_expense|future",
         "MENU|FINANCE_ADD_EXPENSE",

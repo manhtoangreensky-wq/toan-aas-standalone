@@ -1838,6 +1838,56 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "or report/export parameter."
         ),
     },
+    "menu|finance_overview": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_OVERVIEW_SNAPSHOT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-month Finance overview snapshot before it renders "
+            "a Telegram keyboard. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot snapshot, selected period, report/export context, ledger/Xu, payment, PayOS, "
+            "provider, runtime or write authority."
+        ),
+    },
+    "menu|finance_revenue": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_REVENUE_SNAPSHOT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-month revenue snapshot before it renders its "
+            "period selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram "
+            "identity, Bot snapshot, selected period, report/export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
     "menu|finance_revenue_month": {
         "target": "/admin/finance",
         "classification": "admin",
@@ -1858,6 +1908,81 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "The Bot-admin-only literal renders static revenue-period command guidance and a Telegram selector. "
             "The Web opens a fresh canonical-admin Finance read route; it receives no Telegram identity, finance "
             "summary, period/report parameter, transaction, ledger/Xu, payment, PayOS, export/file, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_revenue_this_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_REVENUE_THIS_MONTH_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-month revenue report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_revenue_last_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_REVENUE_LAST_MONTH_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a previous-month revenue report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_revenue_year": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_REVENUE_YEAR_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-year revenue report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
             "runtime or write authority."
         ),
     },
@@ -1882,6 +2007,81 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "The Web opens a fresh canonical-admin Finance read route; it receives no Telegram identity, expense "
             "summary, period/category/vendor/note parameter, transaction, ledger/Xu, payment, PayOS, export/file, "
             "provider, runtime or write authority."
+        ),
+    },
+    "menu|finance_expense_this_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPENSE_THIS_MONTH_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-month expense report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_expense_last_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPENSE_LAST_MONTH_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a previous-month expense report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_expense_year": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPENSE_YEAR_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-year expense report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
         ),
     },
     "menu|finance_expense_categories": {
@@ -1930,6 +2130,56 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "authority."
         ),
     },
+    "menu|finance_profit_this_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_PROFIT_THIS_MONTH_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-month profit/loss report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
+    "menu|finance_profit_year": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_PROFIT_YEAR_REPORT_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch computes and formats a current-year profit/loss report before it redraws the "
+            "Telegram period selector. The Web starts a fresh canonical-admin Finance read route and receives no "
+            "Telegram identity, Bot report, selected period, export context, ledger/Xu, payment, PayOS, provider, "
+            "runtime or write authority."
+        ),
+    },
     "menu|finance_export": {
         "target": "/admin/finance",
         "classification": "admin",
@@ -1951,6 +2201,56 @@ ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "a fresh canonical-admin Finance read route; it receives no Telegram identity, finance summary, export "
             "period/command, file request/delivery, transaction, ledger/Xu, payment, PayOS, provider, runtime or "
             "write authority."
+        ),
+    },
+    "menu|finance_export_month": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPORT_MONTH_COMMAND_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch formats export-month command guidance before it redraws the Telegram export "
+            "selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, "
+            "Bot command text, selected period, export request/file, finance data, ledger/Xu, payment, PayOS, "
+            "provider, runtime or write authority."
+        ),
+    },
+    "menu|finance_export_year": {
+        "target": "/admin/finance",
+        "classification": "admin",
+        "feature_key": "admin_finance",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+            "BOT_FINANCE_EXPORT_YEAR_COMMAND_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_FINANCE_PERIOD_REPORT_OR_EXPORT_CONTEXT_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot branch formats export-year command guidance before it redraws the Telegram export "
+            "selector. The Web starts a fresh canonical-admin Finance read route and receives no Telegram identity, "
+            "Bot command text, selected period, export request/file, finance data, ledger/Xu, payment, PayOS, "
+            "provider, runtime or write authority."
         ),
     },
     "menu|admin_packages": {
@@ -12242,8 +12542,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "ADMIN_ERP_MENU_CALLBACK_CONTRACT.md",
         "# Admin ERP menu callback disposition contract\n\n"
-        f"The {admin_erp_menu_action_count} exact Bot menu values below are administrator-only category, summary or status screens. "
-        "They are static source evidence for a **fresh** Web Admin ERP read navigation only. The standalone Web "
+        f"The {admin_erp_menu_action_count} exact Bot menu values below are static source evidence for a **fresh** "
+        "Web Admin ERP read navigation only. The standalone Web "
         "never receives a raw callback token, Telegram identity/role, Bot menu or pending state, command snippet, "
         "finance/provider snapshot, package code/user ID, payment/ledger/Xu/PayOS state, job/runtime state, secret "
         "or write authority.\n\n"
@@ -12265,27 +12565,23 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|admin_confirm_provider_freeze_image` remains Telegram-only; and "
         "`menu|admin_confirm_provider_unfreeze_shopaikey` remains Telegram-only. Case variants, suffixes "
         "and all other `menu|admin_*` or `menu|provider_custom*` values remain fail-closed source-review records and "
-        "cannot inherit one of these routes. `menu|finance_revenue_month` only mirrors the static period-selector "
-        "guidance as a fresh Finance read route; `menu|finance_revenue` remains source-review-required; "
-        "`menu|finance_revenue_this_month` remains source-review-required; "
-        "`menu|finance_revenue_last_month` remains source-review-required; "
-        "`menu|finance_revenue_year` remains source-review-required; "
-        "`menu|finance_revenue_custom_help` remains source-review-required. Unlisted `menu|finance_revenue*` values cannot "
-        "inherit a Finance route. `menu|finance_export` only mirrors the static export-command guidance as a fresh "
-        "Finance read route; `menu|finance_export_month` remains source-review-required; and "
-        "`menu|finance_export_year` remains source-review-required. Unlisted `menu|finance_export*` values cannot "
-        "inherit a Finance route. `menu|finance_expense_month` only mirrors the static expense-period/add-expense "
-        "guidance as a fresh Finance read route; `menu|finance_expense` remains source-review-required; "
-        "`menu|finance_expense_this_month` remains source-review-required; "
-        "`menu|finance_expense_last_month` remains source-review-required; "
-        "`menu|finance_expense_year` remains source-review-required; "
-        "`menu|finance_expense_categories` only mirrors the static category-list guidance as a fresh Finance read "
-        "route; `menu|finance_add_expense` has the separate `FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md` and cannot "
-        "inherit this canonical Finance route. Unlisted `menu|finance_expense*` and `menu|finance_add_expense*` values "
-        "cannot inherit a Finance route. `menu|finance_profit` only mirrors the "
-        "static profit-period guidance as a fresh Finance read route; `menu|finance_profit_this_month` remains "
-        "source-review-required; and `menu|finance_profit_year` remains source-review-required. Unlisted "
-        "`menu|finance_profit*` values cannot inherit a Finance route.\n",
+        "cannot inherit one of these routes. The twelve exact lower-case Finance literals "
+        "`menu|finance_overview`, `menu|finance_revenue`, `menu|finance_revenue_this_month`, "
+        "`menu|finance_revenue_last_month`, `menu|finance_revenue_year`, "
+        "`menu|finance_expense_this_month`, `menu|finance_expense_last_month`, "
+        "`menu|finance_expense_year`, `menu|finance_profit_this_month`, `menu|finance_profit_year`, "
+        "`menu|finance_export_month`, and `menu|finance_export_year` each start only one of these fresh Finance "
+        "reads. None transfers a Bot snapshot, selected period, report, command, export request/file, calculation, "
+        "tax/compliance state, payment/provider state, wallet/Xu/PayOS context or write authority. They do not "
+        "preselect a Web filter, calculate Finance/tax data, invoke an export, deliver a file or imply a runtime "
+        "result. `menu|finance_revenue_custom_help` remains source-review-required; "
+        "`menu|finance_compliance` remains source-review-required; and "
+        "`menu|finance_compliance_update` remains source-review-required. `menu|tax_estimate` and "
+        "`menu|tax_export_month` retain their separate canonical-finance source-review contract. Any case variant, "
+        "suffix or other unlisted `menu|finance_*` value remains source-review-required and cannot inherit a Finance "
+        "route. `menu|finance_add_expense` has the separate `FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md`; no other "
+        "`menu|finance_add_expense*` value inherits this canonical Finance route. Tax literals never inherit this "
+        "Admin ERP route and retain their separate finite tax-guidance or canonical source-review contract.\n",
     )
     write(
         "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md",
@@ -12436,7 +12732,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             tax_accounting_source_review_contract_rows,
         )
-        + "\n\nThe four rows above are the complete finite allow-list. `finance_compliance*`, every other `menu|finance_*` or `menu|tax_*` value, `archive|dept|tax_invoice`, and all case variants or suffixed values remain outside both finite registries. They require separately reviewed canonical finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",
+        + "\n\nThe guidance rows and canonical-source-review rows above are the complete finite tax contracts. The twelve exact "
+        "Admin ERP Finance fresh-read literals—`menu|finance_overview`, `menu|finance_revenue`, "
+        "`menu|finance_revenue_this_month`, `menu|finance_revenue_last_month`, `menu|finance_revenue_year`, "
+        "`menu|finance_expense_this_month`, `menu|finance_expense_last_month`, `menu|finance_expense_year`, "
+        "`menu|finance_profit_this_month`, `menu|finance_profit_year`, `menu|finance_export_month`, and "
+        "`menu|finance_export_year`—belong only to the separate Admin ERP fresh-read contract, never either tax "
+        "registry. `finance_compliance*`, every other unlisted `menu|finance_*` value, every unlisted "
+        "`menu|tax_*` value, `archive|dept|tax_invoice`, and all case variants or suffixed values remain "
+        "source-review-required outside the finite contracts. They require separately reviewed canonical "
+        "finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",
     )
     write(
         "JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md",
