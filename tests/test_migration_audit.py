@@ -3470,8 +3470,22 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     assert not any(prefix in {"support|", "ticket|", "feedback|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
 
     customer_identifiers = (
+        "support|bot",
+        "support|bot_type|shop",
         "support|premium_type|business",
         "support|consult_need|video|0",
+        "support|consult_need|image|0",
+        "support|consult_input|image",
+        "support|consult_type|video",
+        "support|consult_type|frame_video",
+        "support|consult_type|image|future",
+        "SUPPORT|CONSULT_TYPE|IMAGE",
+        "support|consult_type|document|future",
+        "SUPPORT|CONSULT_TYPE|DOCUMENT",
+        "support|consult_type|voice|future",
+        "SUPPORT|CONSULT_TYPE|VOICE",
+        "support|consult_type|package|future",
+        "SUPPORT|CONSULT_TYPE|PACKAGE",
         "ticket|cat|refund",
         "ticket|pv|42",
         "ticket|reply_user|42",
@@ -3505,6 +3519,22 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
     support_ticket_navigation = {
         "support|start": {"target": "/support", "web_support_ticket_intent": "web_support_start"},
         "support|consult": {"target": "/support", "web_support_ticket_intent": "web_support_consultation"},
+        "support|consult_type|image": {
+            "target": "/support",
+            "web_support_ticket_intent": "web_support_consultation_image",
+        },
+        "support|consult_type|document": {
+            "target": "/support",
+            "web_support_ticket_intent": "web_support_consultation_document",
+        },
+        "support|consult_type|voice": {
+            "target": "/support",
+            "web_support_ticket_intent": "web_support_consultation_voice",
+        },
+        "support|consult_type|package": {
+            "target": "/support",
+            "web_support_ticket_intent": "web_support_consultation_package",
+        },
         "support|premium": {"target": "/support", "web_support_ticket_intent": "web_support_premium_consultation"},
         "support|admin_contact": {"target": "/support", "web_support_ticket_intent": "web_support_admin_contact"},
         "ticket|start": {"target": "/support", "web_support_ticket_intent": "web_support_ticket_start"},
@@ -3621,6 +3651,7 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
 
     for template, classification in (
         ("support|consult|{*}", "customer"),
+        ("support|consult_type|{*}", "customer"),
         ("support|ticket|{*}", "customer"),
         ("support|premium_type|{*}", "customer"),
         ("support|consult_need|{*}|{*}", "customer"),
@@ -3649,12 +3680,19 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
 def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     InlineKeyboardButton("support start", callback_data="support|start")
     InlineKeyboardButton("support consult", callback_data="support|consult")
+    InlineKeyboardButton("support bot", callback_data="support|bot")
+    InlineKeyboardButton("support bot type", callback_data="support|bot_type|shop")
+    InlineKeyboardButton("consult image", callback_data="support|consult_type|image")
+    InlineKeyboardButton("consult document", callback_data="support|consult_type|document")
+    InlineKeyboardButton("consult voice", callback_data="support|consult_type|voice")
+    InlineKeyboardButton("consult package", callback_data="support|consult_type|package")
     InlineKeyboardButton("support premium", callback_data="support|premium")
     InlineKeyboardButton("support admin contact", callback_data="support|admin_contact")
     InlineKeyboardButton("ticket start", callback_data="ticket|start")
     InlineKeyboardButton("support", callback_data="support|ticket")
     InlineKeyboardButton("ticket mine", callback_data="ticket|mine")
     InlineKeyboardButton("consult", callback_data=f"support|consult_need|{service_type}|0")
+    InlineKeyboardButton("consult type", callback_data=f"support|consult_type|{service_type}")
     InlineKeyboardButton("consult suffix", callback_data=f"support|consult|{service_type}")
     InlineKeyboardButton("support ticket suffix", callback_data=f"support|ticket|{ticket_id}")
     InlineKeyboardButton("ticket", callback_data=f"ticket|pv|{ticket_id}")
@@ -3677,7 +3715,13 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
         assert callbacks[identifier]["target"] == action["target"]
         assert callbacks[identifier]["resolution"] == "reviewed_support_ticket_fresh_web_navigation"
         assert callbacks[identifier]["web_support_ticket_intent"] == action["web_support_ticket_intent"]
+    for identifier in ("support|bot", "support|bot_type|shop"):
+        assert callbacks[identifier]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert callbacks[identifier]["classification"] == "customer"
+        assert callbacks[identifier]["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert callbacks[identifier]["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
     assert templates["support|consult|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert templates["support|consult_type|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["support|ticket|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["ticket|mine|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["support|consult_need|{*}|0"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
@@ -3696,14 +3740,87 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert "feedback\\|*" in contract
     assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
     assert "reviewed_support_ticket_fresh_web_navigation" in contract
-    assert "seven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions" in contract
+    assert "eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions" in contract
     assert "no category preselection, Bot ticket fetch, or case creation from the Bot entry" in contract
     assert "feedback\\|cat\\|refund" in feedback_contract
     assert "NO_RAW_BOT_CALLBACK_OR_CATEGORY_TO_BROWSER" in feedback_contract
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "FEEDBACK_MENU_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
-    assert "seven exact Support/Ticket entry literals plus nine Feedback literals" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
+    assert "eleven exact Support/Ticket entry literals plus nine Feedback literals" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Support/Ticket/Feedback callbacks are separate from the Web Support Desk" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_maps_only_reviewed_support_consultation_details_to_fresh_web_support() -> None:
+    """Only frozen consultation-detail menu entries may start fresh Web support navigation."""
+
+    audit = _load_audit_module()
+    routes = {"/support", "/tickets", "/admin", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    consultation_detail_navigation = {
+        "support|consult_type|image": "web_support_consultation_image",
+        "support|consult_type|document": "web_support_consultation_document",
+        "support|consult_type|voice": "web_support_consultation_voice",
+        "support|consult_type|package": "web_support_consultation_package",
+    }
+    expected_support_ticket_dispositions = (
+        "FRESH_SIGNED_WEB_SUPPORT_TICKET_NAVIGATION",
+        "FINITE_BOT_SUPPORT_TICKET_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_TICKET_TO_BROWSER",
+        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE_NOT_REPLAYED",
+        "BOT_TICKET_LEAD_ATTACHMENT_ADMIN_OR_TELEGRAM_DELIVERY_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_SUPPORT_CASES_ONLY",
+        "NO_TELEGRAM_TICKET_LEAD_ATTACHMENT_NOTIFICATION_PROVIDER_JOB_WALLET_PAYMENT_REFUND_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    assert {
+        identifier: audit.SUPPORT_TICKET_FRESH_WEB_NAVIGATION_ACTIONS[identifier]
+        for identifier in consultation_detail_navigation
+    } == {
+        identifier: {
+            "target": "/support",
+            "web_support_ticket_intent": intent,
+        }
+        for identifier, intent in consultation_detail_navigation.items()
+    }
+    for identifier, intent in consultation_detail_navigation.items():
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "/support"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_support_ticket_fresh_web_navigation"
+        assert mapped["support_ticket_navigation_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
+        assert mapped["support_ticket_navigation_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["web_support_ticket_intent"] == intent
+        assert mapped["source_dispositions"] == expected_support_ticket_dispositions
+
+    for identifier in (
+        "support|bot",
+        "support|bot_type|shop",
+        "support|consult_type|video",
+        "support|consult_type|frame_video",
+        "support|consult_type|image|future",
+        "SUPPORT|CONSULT_TYPE|IMAGE",
+        "support|consult_type|document|future",
+        "SUPPORT|CONSULT_TYPE|DOCUMENT",
+        "support|consult_type|voice|future",
+        "SUPPORT|CONSULT_TYPE|VOICE",
+        "support|consult_type|package|future",
+        "SUPPORT|CONSULT_TYPE|PACKAGE",
+        "support|consult_need|image|0",
+        "support|consult_input|image",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
+
+    mapped_template = audit._map_callback_template("support|consult_type|{*}", evidence, routes)
+    assert mapped_template is not None
+    assert mapped_template["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+    assert mapped_template["classification"] == "customer"
+    assert mapped_template["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert mapped_template["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
 
 
 def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(tmp_path: Path) -> None:
