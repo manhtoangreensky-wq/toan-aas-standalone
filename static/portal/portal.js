@@ -9323,6 +9323,65 @@
     }).join("");
   }
 
+  function isAdminMobileSurface(page) {
+    const sourcePath = page && (page.routePath || page.path);
+    if (typeof sourcePath !== "string" || !sourcePath) return false;
+    const path = normalizePath(sourcePath);
+    return path === "/admin" || path.startsWith("/admin/");
+  }
+
+  function isAdminMobileNavCurrent(module, path, context) {
+    if (!module || !module.route || !path) return false;
+    if (path === module.route) return true;
+    if (!serverAuthorizesAdminRoute(context, path)) return false;
+    return (module.route === "/admin/jobs" && path.startsWith("/admin/jobs/"))
+      || (module.route === "/admin/support" && path.startsWith("/admin/support/"));
+  }
+
+  const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;
+
+  function adminMobileNavItems(page, context) {
+    const navigation = adminErpNavigation(context);
+    if (!navigation.groups.length) return [];
+    const seen = new Set();
+    const modules = [];
+    navigation.groups.forEach((group) => {
+      if (!group || !Array.isArray(group.modules)) return;
+      group.modules.forEach((module) => {
+        if (!module || !navigation.routes.has(module.route) || seen.has(module.route)) return;
+        seen.add(module.route);
+        modules.push(module);
+      });
+    });
+    if (!modules.length) return [];
+    const sourcePath = page && (page.routePath || page.path);
+    const path = typeof sourcePath === "string" && sourcePath ? normalizePath(sourcePath) : "";
+    const current = modules.reduce((matched, module) => (
+      isAdminMobileNavCurrent(module, path, context) && (!matched || module.route.length > matched.route.length)
+        ? module
+        : matched
+    ), null);
+    const compact = [];
+    const include = (module) => {
+      if (module && !compact.some((item) => item.route === module.route) && compact.length < MAX_ADMIN_MOBILE_NAV_ITEMS) compact.push(module);
+    };
+    include(current);
+    include(modules.find((module) => module.route === "/admin"));
+    modules.forEach(include);
+    return compact.map((module) => ({ ...module, current: Boolean(current && current.route === module.route) }));
+  }
+
+  function renderAdminMobileNav(page, context) {
+    const items = adminMobileNavItems(page, context);
+    if (!items.length) return "";
+    return items.map((item) => {
+      return `<a class="portal-mobile-nav-link" href="${safeText(item.route)}"${item.current ? ' aria-current="page"' : ""}>
+        <span class="portal-mobile-nav-icon" aria-hidden="true">${portalIcon(item.icon)}</span>
+        <span class="portal-mobile-nav-label">${safeText(item.title)}</span>
+      </a>`;
+    }).join("");
+  }
+
   function normalizeCommandSearch(value) {
     const raw = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
     return typeof raw.normalize === "function"
@@ -27957,8 +28016,11 @@
     if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
     if (mobileNav) {
       mobileNav.setAttribute("aria-label", uiText("chrome.quick_navigation", "Điều hướng nhanh"));
-      mobileNav.hidden = !showMobileNav;
-      mobileNav.innerHTML = showMobileNav ? renderMobileNav(page) : "";
+      const mobileNavMarkup = showMobileNav
+        ? (isAdminMobileSurface(page) ? renderAdminMobileNav(page, context) : renderMobileNav(page))
+        : "";
+      mobileNav.hidden = !mobileNavMarkup;
+      mobileNav.innerHTML = mobileNavMarkup;
     }
     if (commandPalette && !showMobileNav) {
       commandPalette.hidden = true;

@@ -311,7 +311,8 @@ def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> N
     assert "fetch(" not in dock
     assert "dispatchAction(" not in dock
     assert "const showMobileNav = !minimalShell && context.session && context.session.authenticated === true;" in PORTAL
-    assert "mobileNav.hidden = !showMobileNav;" in PORTAL
+    assert "const mobileNavMarkup = showMobileNav" in PORTAL
+    assert "mobileNav.hidden = !mobileNavMarkup;" in PORTAL
     assert ".portal-mobile-nav" in PORTAL_CSS
     assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in PORTAL_CSS
     assert "calc(92px + var(--portal-safe-bottom))" in PORTAL_CSS

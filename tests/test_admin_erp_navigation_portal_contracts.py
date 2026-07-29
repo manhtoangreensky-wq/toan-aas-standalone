@@ -62,3 +62,44 @@ def test_admin_navigation_does_not_create_direct_provider_or_payment_authority()
     assert "@router.post" not in backend
     assert '"/" + "api/v1/admin"' in worker
     assert '"/admin"' in worker
+
+
+def test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_routes() -> None:
+    portal = _read("static/portal/portal.js")
+    helpers = portal[
+        portal.index("function isAdminMobileSurface(page)"):
+        portal.index("function normalizeCommandSearch(value)")
+    ]
+
+    # The compact ERP dock is a presentation of the signed server manifest,
+    # never a browser-owned role map or a customer-nav fallback.
+    assert "const navigation = adminErpNavigation(context);" in helpers
+    assert "if (!navigation.groups.length) return [];" in helpers
+    assert "const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;" in helpers
+    assert "navigation.routes.has(module.route)" in helpers
+    assert "serverAuthorizesAdminRoute(context, path)" in helpers
+    assert "group.modules.forEach" in helpers
+    assert "renderAdminMobileNav(page, context)" in helpers
+    assert 'href="${safeText(item.route)}"' in helpers
+    assert "safeText(item.title)" in helpers
+    assert "portalIcon(item.icon)" in helpers
+    assert "if (!items.length) return \"\";" in helpers
+    assert "fetch(" not in helpers
+    assert "dispatchAction(" not in helpers
+    assert "context.isAdmin" not in helpers
+    assert "context.role" not in helpers
+    assert "renderMobileNav(" not in helpers
+    assert '"/dashboard"' not in helpers
+    assert '"/features"' not in helpers
+
+    current = helpers[
+        helpers.index("function isAdminMobileNavCurrent(module, path, context)"):
+        helpers.index("const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;")
+    ]
+    # A detail route can only inherit the two server-defined staff roots;
+    # there is deliberately no general `/admin/*` current-state shortcut.
+    assert 'module.route === "/admin/jobs"' in current
+    assert 'module.route === "/admin/support"' in current
+    assert 'path.startsWith("/admin/jobs/")' in current
+    assert 'path.startsWith("/admin/support/")' in current
+    assert 'module.route === "/admin" && path.startsWith("/admin/")' not in current

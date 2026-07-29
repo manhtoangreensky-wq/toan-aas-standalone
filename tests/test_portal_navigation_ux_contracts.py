@@ -82,6 +82,121 @@ process.stdout.write(JSON.stringify({ videoCuePath: videoCue.links[0][0], videoC
     return json.loads(result.stdout)
 
 
+def _run_admin_mobile_nav_harness(source_path: Path) -> dict:
+    """Exercise the real fail-closed ERP mobile helpers without exporting them."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required to exercise the Portal Admin mobile navigation helper")
+    script = r'''
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+const runtime = [
+  'const window = { location: { pathname: "/admin" } };',
+  'const ICONS = Object.freeze({ admin: "admin", support: "support", users: "users", payments: "payments", jobs: "jobs", providers: "providers", security: "security", reports: "reports", system: "system", default: "default" });',
+  'const ALLOWED_STATES = new Set(["ready", "guarded", "read_only"]);',
+  'function safeText(value, fallback) { if (typeof value !== "string") return fallback || ""; return value.replace(/[&<>\'\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\'": "&#39;", \'"\': "&quot;" }[character])); }',
+  'function portalIcon(icon) { return `<svg data-icon="${icon}"></svg>`; }',
+  extract("function normalizePath(path)", "const CAPABILITY_HUB_FAMILY_KEYS"),
+  extract("function safeCatalogRoute(value)", "function catalogEntryRoute(entry)"),
+  extract("function adminErpNavigation(context)", "function adminRouteIcon(route)"),
+  extract("function adminRouteIcon(route)", "function hasLiveCanonicalAdmin(context)"),
+  extract("function serverAuthorizesAdminRoute(context, route)", "const CUSTOMER_APPLICATION_ROUTE"),
+  extract("function isAdminMobileSurface(page)", "function normalizeCommandSearch(value)")
+].join("\n");
+eval(runtime);
+
+const context = {
+  adminErpNavigation: {
+    read_state: "ready",
+    groups: [
+      { id: "support", modules: [
+        { route: "/admin/support", title: "Support & <Ops>", state: "available" },
+        { route: "/admin/users", title: "Users", state: "available" }
+      ] },
+      { id: "web-local", modules: [
+        { route: "/admin/crm", title: "CRM", state: "available" },
+        { route: "/admin/reports", title: "Reports", state: "guarded" }
+      ] },
+      { id: "canonical", modules: [
+        { route: "/admin", title: "ERP overview", state: "available" },
+        { route: "/admin/jobs", title: "Jobs", state: "available" },
+        { route: "/admin/providers", title: "Providers", state: "available" }
+      ] }
+    ]
+  }
+};
+const jobItems = adminMobileNavItems({ routePath: "/admin/jobs/job-42" }, context);
+const exactItems = adminMobileNavItems({ routePath: "/admin/users" }, context);
+const nonInheritingItems = adminMobileNavItems({ routePath: "/admin/users/user-42" }, context);
+const supportItems = adminMobileNavItems({ routePath: "/admin/support/ticket-42" }, context);
+const unavailable = adminMobileNavItems({ routePath: "/admin/jobs/job-42" }, { adminErpNavigation: { read_state: "loading", groups: context.adminErpNavigation.groups } });
+const markup = renderAdminMobileNav({ routePath: "/admin/support/ticket-42" }, context);
+
+if (jobItems.length !== 5 || jobItems[0].route !== "/admin/jobs" || jobItems[1].route !== "/admin") {
+  throw new Error(`current job and issued overview were not retained: ${JSON.stringify(jobItems)}`);
+}
+if (jobItems.filter((item) => item.current).length !== 1 || !jobItems[0].current) {
+  throw new Error(`job detail did not receive one inherited current state: ${JSON.stringify(jobItems)}`);
+}
+if (exactItems.filter((item) => item.current).map((item) => item.route).join(",") !== "/admin/users") {
+  throw new Error(`exact issued route was not current: ${JSON.stringify(exactItems)}`);
+}
+if (nonInheritingItems.some((item) => item.current)) {
+  throw new Error(`non-job/support detail inherited an unauthorized current state: ${JSON.stringify(nonInheritingItems)}`);
+}
+if (supportItems.filter((item) => item.current).map((item) => item.route).join(",") !== "/admin/support") {
+  throw new Error(`support detail did not inherit its issued module: ${JSON.stringify(supportItems)}`);
+}
+if (unavailable.length !== 0 || renderAdminMobileNav({ routePath: "/admin" }, { adminErpNavigation: { read_state: "loading", groups: [] } }) !== "") {
+  throw new Error("an unavailable server grant did not fail closed");
+}
+if (!isAdminMobileSurface({ routePath: "/admin/jobs" }) || isAdminMobileSurface({ routePath: "/dashboard", isAdmin: true }) || isAdminMobileSurface({})) {
+  throw new Error("Admin surface selection did not use only the normalized path");
+}
+if (!markup.includes('href="/admin/support"') || !markup.includes("Support &amp; &lt;Ops&gt;")) {
+  throw new Error(`server-issued route/title were not safely rendered: ${markup}`);
+}
+process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.route), supportMarkup: markup }));
+'''
+    try:
+        result = subprocess.run(
+            [node, "-e", script, str(source_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except OSError as exc:
+        pytest.skip(f"Node subprocess is unavailable in this test runner: {exc}")
+    assert result.returncode == 0, result.stderr or result.stdout
+    return json.loads(result.stdout)
+
+
+def test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items() -> None:
+    result = _run_admin_mobile_nav_harness(ROOT / "static" / "portal" / "portal.js")
+
+    assert result["jobRoutes"] == ["/admin/jobs", "/admin", "/admin/support", "/admin/users", "/admin/crm"]
+    assert 'aria-current="page"' in result["supportMarkup"]
+
+
+def test_admin_mobile_mount_portal_selects_the_admin_dock_only_for_admin_routes() -> None:
+    mount = PORTAL[PORTAL.index("function mountPortal(override)"):]
+
+    # The same signed-session guard still protects every mobile dock.  The
+    # route projection changes only after the signed page is selected.
+    assert "const mobileNavMarkup = showMobileNav" in mount
+    assert "isAdminMobileSurface(page) ? renderAdminMobileNav(page, context) : renderMobileNav(page)" in mount
+    assert "mobileNav.hidden = !mobileNavMarkup;" in mount
+    assert "mobileNav.innerHTML = mobileNavMarkup;" in mount
+
+
 def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() -> None:
     nav = _section("function isNavCurrent(linkPath, page)", "function isMobileNavCurrent(key, page)")
 
