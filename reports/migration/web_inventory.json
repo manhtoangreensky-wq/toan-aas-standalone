@@ -16,13 +16,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 2930,
+      "line": 2955,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6966,
+      "line": 6991,
       "target": "_map_shopai_video_job_callback"
     },
     {
@@ -82,13 +82,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6935,
+      "line": 6960,
       "target": "_shopai_video_job_source_review_mapping"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 6897,
+      "line": 6922,
       "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
@@ -197,37 +197,37 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5268,
+      "line": 5293,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5312,
+      "line": 5337,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5327,
+      "line": 5352,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5676,
+      "line": 5701,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5684,
+      "line": 5709,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5692,
+      "line": 5717,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5700,
+      "line": 5725,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -263,25 +263,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6992,
+      "line": 7017,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7643,
+      "line": 7668,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12435,
+      "line": 12460,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13018,
+      "line": 13044,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -293,7 +293,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12749,
+      "line": 12775,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -335,7 +335,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12420,
+      "line": 12445,
       "operation": "UPDATE",
       "table": "bot"
     },
@@ -365,37 +365,37 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6905,
+      "line": 6930,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6927,
+      "line": 6952,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7715,
+      "line": 7740,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12380,
+      "line": 12405,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12445,
+      "line": 12470,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9597,
+      "line": 9622,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -665,13 +665,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13019,
+      "line": 13045,
       "operation": "UPDATE",
       "table": "linked"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13179,
+      "line": 13205,
       "operation": "UPDATE",
       "table": "linked"
     },
@@ -737,19 +737,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12156,
+      "line": 12181,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12455,
+      "line": 12480,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12993,
+      "line": 13019,
       "operation": "UPDATE",
       "table": "or"
     },
@@ -7621,7 +7621,7 @@
         "copyfast_video_studio.py",
         "copyfast_video_transform_operations.py"
       ],
-      "occurrences": 806,
+      "occurrences": 830,
       "provider": "PayOS"
     },
     {
@@ -7778,7 +7778,7 @@
         "copyfast_storyboard_grid.py",
         "copyfast_subtitle_asset_operations.py"
       ],
-      "occurrences": 1740,
+      "occurrences": 1742,
       "provider": "Telegram"
     }
   ],
@@ -13761,10 +13761,10 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 193,
-  "source_files_scanned": 193,
-  "source_fingerprint_sha256": "265aae5e6cf5ab7bf2cc24f319a826e87b5b8fda581af53e4ee4559656f32bd0",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast161-support-ticket-entry-parity",
+  "source_files_discovered": 197,
+  "source_files_scanned": 197,
+  "source_fingerprint_sha256": "032b3da93e4271ea9e81fa73d66666fc97c8dc06b7e2da5cd786f8fee4e6549d",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast168-finance-custom-revenue-guidance",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
