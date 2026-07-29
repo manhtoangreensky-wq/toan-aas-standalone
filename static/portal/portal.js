@@ -323,7 +323,7 @@
   const WEB_LOCAL_ACTIONS = new Set([
     "campaign-create", "campaign-update", "campaign-update-status",
     "campaign-schedule-create", "campaign-schedule-cancel", "campaign-schedule-reconfirm",
-    "support-case-create", "support-case-reply", "support-case-attachment", "support-case-close", "support-case-reopen",
+    "support-case-create", "support-case-reply", "support-case-resolution-feedback", "support-case-attachment", "support-case-close", "support-case-reopen",
     "support-admin-case-reply", "support-admin-case-update"
   ]);
 
@@ -8217,6 +8217,9 @@
       supportAdminCareQueues: Array.isArray(source.supportAdminCareQueues) ? source.supportAdminCareQueues.slice(0, 12) : [],
       supportAdminCareStaff: Array.isArray(source.supportAdminCareStaff) ? source.supportAdminCareStaff.slice(0, 200) : [],
       supportAdminCareHistory: Array.isArray(source.supportAdminCareHistory) ? source.supportAdminCareHistory.slice(0, 200) : [],
+      supportAdminResolutionFeedbackSummary: source.supportAdminResolutionFeedbackSummary && typeof source.supportAdminResolutionFeedbackSummary === "object" && !Array.isArray(source.supportAdminResolutionFeedbackSummary)
+        ? source.supportAdminResolutionFeedbackSummary
+        : {},
       supportAdminReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.supportAdminReadState || ""))
         ? String(source.supportAdminReadState)
         : "guarded",
@@ -20866,6 +20869,38 @@
     return `<article class="portal-page portal-support-cases">${renderHero(page, context)}${supportStateStats(context.supportSummary)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lọc yêu cầu Web</h2><p class="portal-card-subtitle">Bộ lọc chỉ truy vấn case thuộc signed account hiện tại, không tìm trong Bot ticket hoặc nội dung của account khác.</p></div>${badge(state)}</div>${filterForm}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${hasFilter ? "Kết quả yêu cầu của tôi" : "Yêu cầu của tôi"}</h2><p class="portal-card-subtitle">Mở từng case để xem timeline, phản hồi hoặc đóng/mở lại theo revision server-side.</p></div><a class="portal-button portal-button--primary" href="/support">Tạo yêu cầu</a></div>${listMarkup}</section></article>`;
   }
 
+  function renderSupportResolutionFeedback(context, caseItem, revision, page) {
+    const state = supportCaseState(caseItem && caseItem.state);
+    const terminal = state === "resolved" || state === "closed";
+    if (!terminal) return "";
+    const detail = context && context.supportCaseDetail && typeof context.supportCaseDetail === "object"
+      ? context.supportCaseDetail
+      : {};
+    const rawReceipt = Object.prototype.hasOwnProperty.call(detail, "resolution_feedback")
+      ? detail.resolution_feedback
+      : undefined;
+    const receipt = rawReceipt && typeof rawReceipt === "object" && !Array.isArray(rawReceipt)
+      && Object.keys(rawReceipt).length === 5
+      && supportCaseId(rawReceipt.id)
+      && typeof rawReceipt.rating === "number" && Number.isSafeInteger(rawReceipt.rating) && rawReceipt.rating >= 1 && rawReceipt.rating <= 5
+      && typeof rawReceipt.terminal_revision === "number" && Number.isSafeInteger(rawReceipt.terminal_revision) && rawReceipt.terminal_revision === revision
+      && String(rawReceipt.terminal_state || "").trim().toLowerCase() === state
+      && String(rawReceipt.submitted_at || "").trim() && !Number.isNaN(Date.parse(String(rawReceipt.submitted_at)))
+      ? rawReceipt
+      : null;
+    if (rawReceipt === undefined || (rawReceipt !== null && !receipt)) {
+      return `<section class="portal-card portal-card-pad" data-support-resolution-feedback-guarded><div class="portal-state" data-state="guarded" role="status" aria-live="polite"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Đánh giá đang chờ xác minh</h2><p>Receipt đánh giá chưa khớp với revision hiện tại, nên form được giữ khóa. Hãy làm mới case trước khi thao tác tiếp.</p></div></div></section>`;
+    }
+    if (receipt) {
+      return `<section class="portal-card portal-card-pad" data-support-resolution-feedback-receipt role="status" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Đánh giá đã ghi nhận</h2><p class="portal-card-subtitle">Máy chủ đã xác nhận đánh giá cho revision ${safeText(String(revision))}. Nhận xét riêng tư không hiển thị lại trong Portal.</p></div>${badge("completed")}</div><dl class="portal-support-case-meta"><div><dt>Mức đánh giá</dt><dd>${safeText(String(Number(receipt.rating)))} / 5</dd></div><div><dt>Gửi lúc</dt><dd>${safeText(supportCaseTimestamp(receipt.submitted_at))}</dd></div></dl></section>`;
+    }
+    const canSubmit = Boolean(context && context.capabilities && context.capabilities["support-resolution-feedback-submit"] === true);
+    const disabled = canSubmit ? "" : " disabled";
+    const ratingOptions = [1, 2, 3, 4, 5].map((rating) => `<label class="portal-checkbox"><input type="radio" name="rating" value="${rating}"${rating === 1 ? " required" : ""}${disabled}><span>${rating} / 5</span></label>`).join("");
+    const route = page && (page.routePath || page.path) ? String(page.routePath || page.path) : pagePathForSupportCase(caseItem.id);
+    return `<section class="portal-card portal-card-pad" data-support-resolution-feedback-form><div class="portal-card-header"><div><h2 class="portal-card-title">Đánh giá trải nghiệm hỗ trợ</h2><p class="portal-card-subtitle">Đánh giá chỉ áp dụng cho revision hiện tại và không thay đổi trạng thái case, thanh toán hoặc workflow khác.</p></div>${badge(canSubmit ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="support-case-resolution-feedback" data-portal-route="${safeText(route)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Gửi đánh giá cho revision Support Desk hiện tại? Bạn chỉ có thể gửi một lần cho revision này." novalidate><fieldset class="portal-field"><legend>Đánh giá trải nghiệm hỗ trợ <span class="portal-required-mark" aria-hidden="true">*</span></legend><div class="portal-inline-actions">${ratingOptions}</div></fieldset><label class="portal-field"><span>Nhận xét (không bắt buộc)</span><textarea class="portal-textarea" name="comment" maxlength="600" placeholder="Chia sẻ ngắn gọn về trải nghiệm, không nhập secret hoặc thông tin thanh toán."${disabled}></textarea><span class="portal-field-help">Tối đa 600 ký tự; server lọc secret, OTP/CVV, số thẻ và dữ liệu thanh toán.</span></label><label class="portal-checkbox"><input type="checkbox" name="feedback_confirmed" value="true" required${disabled}><span>Tôi xác nhận gửi đánh giá cho revision hiện tại.</span></label><div class="portal-form-footer"><span class="portal-form-note">Sau khi máy chủ xác nhận, form sẽ được thay bằng receipt chỉ đọc. Không có email, Telegram hoặc notification ngoài Web.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Gửi đánh giá</button></div></form></section>`;
+  }
+
   function renderSupportCaseDetail(page, context) {
     const detail = supportDetail(context, false);
     const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
@@ -20891,7 +20926,7 @@
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-reopen" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Mở lại yêu cầu này để Web Support Desk tiếp tục rà soát? Không có Telegram, email hay thay đổi payment nào được gửi."${canTransition ? "" : " disabled"}>Mở lại yêu cầu</button>`
       : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-close" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Đóng yêu cầu Web này? Bạn có thể mở lại sau; thao tác không gửi Telegram, email hay thay đổi payment."${canTransition ? "" : " disabled"}>Đóng yêu cầu</button>`;
     const messageTimeline = messages.length ? `<ol class="portal-support-thread">${messages.map((message) => `<li class="portal-support-message portal-support-message--${safeText(String(message.author_role || "customer"))}"><div class="portal-support-message-meta"><strong>${message.author_role === "operator" ? "Web Support Desk" : "Bạn"}</strong><span>${safeText(supportCaseTimestamp(message.created_at))}</span></div><p>${safeText(String(message.body || ""))}</p></li>`).join("")}</ol>` : renderEmpty("Chưa có nội dung hiển thị", "Case này chưa có phản hồi an toàn để hiển thị.", "·");
-    return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(caseItem.updated_at || caseItem.created_at))}</dd></div><div><dt>Phiên bản</dt><dd>${safeText(String(revision))}</dd></div></dl></section>${renderSupportRecoveryPlan(context, caseItem)}<div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trao đổi</h2><p class="portal-card-subtitle">Chỉ hiển thị các phản hồi public của Web Support Desk.</p></div>${badge("read_only")}</div>${messageTimeline}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin case</h2><p class="portal-card-subtitle">Mọi trạng thái được server cập nhật theo revision.</p></div></div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Phản hồi public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Case ID</dt><dd><code>${safeText(String(caseItem.id).slice(0, 8))}</code></dd></div></dl><div class="portal-form-footer">${transition}<a class="portal-button portal-button--quiet" href="/tickets">Danh sách yêu cầu</a></div></aside></div>${renderSupportCaseTriage(context, caseItem)}${renderSupportEvidence(detail, context, caseItem, revision, false)}${replyForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline trạng thái</h2><p class="portal-card-subtitle">Timeline không hiển thị nội dung audit riêng tư hoặc hoạt động ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
+    return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(caseItem.updated_at || caseItem.created_at))}</dd></div><div><dt>Phiên bản</dt><dd>${safeText(String(revision))}</dd></div></dl></section>${renderSupportRecoveryPlan(context, caseItem)}<div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trao đổi</h2><p class="portal-card-subtitle">Chỉ hiển thị các phản hồi public của Web Support Desk.</p></div>${badge("read_only")}</div>${messageTimeline}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin case</h2><p class="portal-card-subtitle">Mọi trạng thái được server cập nhật theo revision.</p></div></div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Phản hồi public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Case ID</dt><dd><code>${safeText(String(caseItem.id).slice(0, 8))}</code></dd></div></dl><div class="portal-form-footer">${transition}<a class="portal-button portal-button--quiet" href="/tickets">Danh sách yêu cầu</a></div></aside></div>${renderSupportCaseTriage(context, caseItem)}${renderSupportResolutionFeedback(context, caseItem, revision, page)}${renderSupportEvidence(detail, context, caseItem, revision, false)}${replyForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline trạng thái</h2><p class="portal-card-subtitle">Timeline không hiển thị nội dung audit riêng tư hoặc hoạt động ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
   }
 
   function operationsDisplayState(value, type) {
@@ -21880,6 +21915,63 @@
     return `<section class="portal-support-care-controls"><div class="portal-support-care-heading"><div><span class="portal-section-kicker">Customer Care ERP</span><h2>Điều phối case, không tạo hành động ngoài Web</h2><p>Form, activity và queue được tổ chức như một nghiệp vụ ERP; server vẫn là authority duy nhất cho role và revision.</p></div><dl><div><dt>Lane</dt><dd>${safeText(supportCareQueueLabel(care.team_queue))}</dd></div><div><dt>Assignee</dt><dd>${safeText(care.assignee ? care.assignee.display_name : "Chưa phân công")}</dd></div><div><dt>SLA</dt><dd>${safeText(care.sla.status || "unavailable")}</dd></div></dl></div><div class="portal-support-admin-forms">${routingPanel}${escalationPanel}</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Activity Customer Care</h2><p class="portal-card-subtitle">Nhật ký staff-only đã redaction; không hiển thị account ID, email, raw audit target hay payload ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportCareHistory(context)}</section></section>`;
   }
 
+  function supportRoundResolutionFeedbackAverage(value) {
+    // Match the Python server's round(value, 2): retain enough precision to
+    // distinguish binary values around a half-cent, then break exact ties even.
+    const [whole, fraction = ""] = value.toFixed(20).split(".");
+    const cents = Number(whole) * 100 + Number(fraction.slice(0, 2));
+    const roundingDigit = Number(fraction[2] || "0");
+    const hasRemainder = /[1-9]/.test(fraction.slice(3));
+    return roundingDigit > 5 || (roundingDigit === 5 && (hasRemainder || cents % 2 !== 0))
+      ? (cents + 1) / 100
+      : cents / 100;
+  }
+
+  function supportResolutionFeedbackSummary(context) {
+    const source = context && context.supportAdminResolutionFeedbackSummary && typeof context.supportAdminResolutionFeedbackSummary === "object"
+      ? context.supportAdminResolutionFeedbackSummary
+      : null;
+    if (!source || source.delivery !== "internal_metadata_only") return null;
+    const allowed = new Set(["window_days", "total_responses", "rating_counts", "average_rating", "comments_count", "delivery"]);
+    if (Object.keys(source).some((key) => !allowed.has(key))) return null;
+    const whole = (value, minimum, maximum) => Number.isInteger(Number(value)) && Number(value) >= minimum && Number(value) <= maximum
+      ? Number(value)
+      : null;
+    const windowDays = whole(source.window_days, 1, 365);
+    const total = whole(source.total_responses, 0, 1000000);
+    const commentsCount = whole(source.comments_count, 0, 1000000);
+    const sourceCounts = source.rating_counts && typeof source.rating_counts === "object" && !Array.isArray(source.rating_counts)
+      ? source.rating_counts
+      : null;
+    if (windowDays === null || total === null || commentsCount === null || commentsCount > total || !sourceCounts
+      || Object.keys(sourceCounts).length !== 5 || Object.keys(sourceCounts).some((key) => !/^[1-5]$/.test(key))) return null;
+    const ratingCounts = {};
+    for (let rating = 1; rating <= 5; rating += 1) {
+      const count = whole(sourceCounts[String(rating)], 0, 1000000);
+      if (count === null) return null;
+      ratingCounts[String(rating)] = count;
+    }
+    if (Object.values(ratingCounts).reduce((sum, value) => sum + value, 0) !== total) return null;
+    const weightedTotal = [1, 2, 3, 4, 5].reduce((sum, rating) => sum + rating * ratingCounts[String(rating)], 0);
+    const expectedAverage = total > 0 ? supportRoundResolutionFeedbackAverage(weightedTotal / total) : null;
+    const average = source.average_rating;
+    if ((total === 0 && average !== null)
+      || (total > 0 && (typeof average !== "number" || !Number.isFinite(average) || average !== expectedAverage))) return null;
+    return { windowDays, total, commentsCount, ratingCounts, average };
+  }
+
+  function renderSupportResolutionFeedbackSummary(context) {
+    const role = supportCareStaffRole(context && context.supportAdminSummary);
+    if (role !== "manager") return "";
+    const summary = supportResolutionFeedbackSummary(context);
+    if (!summary) {
+      return `<section class="portal-card portal-card-pad" data-support-resolution-feedback-summary data-state="guarded"><div class="portal-card-header"><div><h2 class="portal-card-title">Customer Care Quality</h2><p class="portal-card-subtitle">Tổng hợp đánh giá đang tạm chưa xác minh; Portal không dùng số cũ hoặc chi tiết khách hàng thay thế.</p></div>${badge("guarded")}</div></section>`;
+    }
+    const average = summary.average === null ? "Chưa có dữ liệu" : `${summary.average.toFixed(2)} / 5`;
+    const histogram = [1, 2, 3, 4, 5].map((rating) => `<li><strong>${rating} / 5</strong><span>${safeText(String(summary.ratingCounts[String(rating)]))} phản hồi</span></li>`).join("");
+    return `<section class="portal-card portal-card-pad" data-support-resolution-feedback-summary><div class="portal-card-header"><div><h2 class="portal-card-title">Customer Care Quality</h2><p class="portal-card-subtitle">Tổng hợp ${safeText(String(summary.windowDays))} ngày cho Manager. Chỉ có số liệu đã redaction; không có case, khách hàng hoặc nội dung nhận xét.</p></div>${badge("read_only")}</div><section class="portal-operations-metrics" aria-label="Chỉ số Customer Care Quality"><div class="portal-metric"><span>Phản hồi</span><strong>${safeText(String(summary.total))}</strong><em>Đã gửi trong cửa sổ chọn</em></div><div class="portal-metric"><span>Điểm trung bình</span><strong>${safeText(average)}</strong><em>Không suy diễn khi chưa có dữ liệu</em></div><div class="portal-metric"><span>Có nhận xét</span><strong>${safeText(String(summary.commentsCount))}</strong><em>Chỉ đếm aggregate</em></div></section><ul class="portal-project-steps" aria-label="Phân bố mức đánh giá">${histogram}</ul></section>`;
+  }
+
   function renderSupportAdminBase(page, context) {
     const summary = context.supportAdminSummary && typeof context.supportAdminSummary === "object" ? context.supportAdminSummary : {};
     const listing = supportAdminCaseListing(context);
@@ -21905,7 +21997,7 @@
       `<label class="portal-field portal-support-filter-search"><span>Tìm case</span><input class="portal-input" name="q" type="search" maxlength="80" value="${safeText(String(filter.q || ""))}" placeholder="Tên, chủ đề hoặc nội dung…"></label>`
     ].join("");
     const careFilterForm = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lọc hàng đợi</h2><p class="portal-card-subtitle">Chỉ hiển thị case Web Support Desk. Email được mask; không có Bot ticket history hoặc ledger/payment data.</p></div>${badge("read_only")}</div><form class="portal-support-filter" data-portal-form data-portal-no-transient data-portal-action="support-admin-cases-filter" data-portal-route="/admin/support" novalidate>${filterFields}<div class="portal-form-footer"><span class="portal-form-note">Chỉ enum queue/SLA/trạng thái SLA/escalation và query hẹp được gửi tới Web Support Desk. Trạng thái SLA là mốc tiếp nhận nội bộ do máy chủ tính, không phải cam kết giao hàng; browser không gửi account ID, giờ hệ thống hoặc external state.</span><button class="portal-button portal-button--quiet" type="submit">Áp dụng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-admin-cases-filter-clear" data-portal-route="/admin/support">Xóa lọc</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-admin-cases-refresh" data-portal-route="/admin/support">Làm mới</button></div></form></section>`;
-    return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-support-admin-intro"><div><span class="portal-section-kicker">Web-native operations</span><h2>Hỗ trợ có triage, không có đường tắt</h2><p>Operator xử lý đúng case, đúng revision và đúng phạm vi. Mọi thay đổi cần CSRF, confirmation, idempotency và audit do server thực hiện.</p></div><dl><div><dt>${safeText(staffRole === "manager" ? "Manager" : "Operator")}</dt><dd>Role do máy chủ xác minh</dd></div><div><dt>Web-only</dt><dd>Không gửi external delivery</dd></div></dl></section>${renderSupportAdminSummary(summary)}${careFilterForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hàng đợi yêu cầu</h2><p class="portal-card-subtitle">Sắp theo ưu tiên và cập nhật gần nhất; mở case để phản hồi public, ghi chú nội bộ hoặc cập nhật triage.</p></div><span class="portal-form-note">${safeText(String(items.length))} case ở trang này</span></div>${renderSupportCaseCards(items, true)}${renderSupportAdminCasePagination(listing, allowed)}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ranh giới nghiệp vụ</strong><p>Support Desk không thay đổi wallet/Xu, PayOS, refund ledger, job, provider hoặc file delivery. Nếu cần một workflow khác, case chỉ ghi nhận thông tin rõ ràng trong Web.</p></div></div></section></article>`;
+    return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-support-admin-intro"><div><span class="portal-section-kicker">Web-native operations</span><h2>Hỗ trợ có triage, không có đường tắt</h2><p>Operator xử lý đúng case, đúng revision và đúng phạm vi. Mọi thay đổi cần CSRF, confirmation, idempotency và audit do server thực hiện.</p></div><dl><div><dt>${safeText(staffRole === "manager" ? "Manager" : "Operator")}</dt><dd>Role do máy chủ xác minh</dd></div><div><dt>Web-only</dt><dd>Không gửi external delivery</dd></div></dl></section>${renderSupportAdminSummary(summary)}${renderSupportResolutionFeedbackSummary(context)}${careFilterForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hàng đợi yêu cầu</h2><p class="portal-card-subtitle">Sắp theo ưu tiên và cập nhật gần nhất; mở case để phản hồi public, ghi chú nội bộ hoặc cập nhật triage.</p></div><span class="portal-form-note">${safeText(String(items.length))} case ở trang này</span></div>${renderSupportCaseCards(items, true)}${renderSupportAdminCasePagination(listing, allowed)}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ranh giới nghiệp vụ</strong><p>Support Desk không thay đổi wallet/Xu, PayOS, refund ledger, job, provider hoặc file delivery. Nếu cần một workflow khác, case chỉ ghi nhận thông tin rõ ràng trong Web.</p></div></div></section></article>`;
   }
 
   function renderSupportAdmin(page, context) {

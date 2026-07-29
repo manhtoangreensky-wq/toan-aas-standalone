@@ -351,6 +351,7 @@ CASE_STATES = frozenset({
     "new", "reviewing", "waiting_user", "waiting_provider",
     "refund_pending", "resolved", "closed",
 })
+TERMINAL_FEEDBACK_STATES = frozenset({"resolved", "closed"})
 CARE_TEAM_QUEUES = frozenset({
     "general", "technical", "account", "creative", "document", "product",
 })
@@ -442,6 +443,8 @@ MAX_DETAIL = 4_000
 MAX_REPLY = 4_000
 MAX_OPERATION_NOTE = 360
 MAX_CARE_REASON = 360
+MAX_RESOLUTION_FEEDBACK_COMMENT = 600
+MAX_RESOLUTION_FEEDBACK_WINDOW_DAYS = 365
 STAFF_ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 MAX_SUPPORT_ATTACHMENTS_PER_CASE = 3
 MAX_SUPPORT_ATTACHMENT_BYTES = 5 * 1024 * 1024
@@ -722,6 +725,54 @@ def _state_timestamps(current: tuple[Any, ...], next_state: str, now: str) -> tu
 
 def _case_not_found() -> dict[str, Any]:
     return envelope(False, "Không tìm thấy yêu cầu thuộc Web account hiện tại.", status_name="guarded", error_code="WEB_SUPPORT_CASE_NOT_FOUND")
+
+
+def _resolution_feedback_receipt(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project one safe receipt without retaining the customer's comment."""
+
+    return {
+        "id": str(row[0]),
+        "rating": int(row[1]),
+        "terminal_revision": int(row[2]),
+        "terminal_state": str(row[3]),
+        "submitted_at": str(row[4]),
+    }
+
+
+def _current_resolution_feedback(
+    conn: Any,
+    *,
+    case_id: str,
+    account_id: str,
+    revision: int,
+    state: str,
+) -> dict[str, Any] | None:
+    """Return only a receipt for this exact current terminal revision."""
+
+    if state not in TERMINAL_FEEDBACK_STATES:
+        return None
+    row = conn.execute(
+        """SELECT id, rating, terminal_revision, terminal_state, created_at
+             FROM web_support_case_resolution_feedback
+             WHERE case_id=? AND account_id=? AND terminal_revision=? AND terminal_state=?""",
+        (case_id, account_id, revision, state),
+    ).fetchone()
+    return _resolution_feedback_receipt(tuple(row)) if row else None
+
+
+def _feedback_window_days(value: int) -> int:
+    """Keep Customer Care aggregation bounded and server-clock based."""
+
+    try:
+        days = int(value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Khoảng thời gian đánh giá không hợp lệ") from exc
+    if isinstance(value, bool) or days < 1 or days > MAX_RESOLUTION_FEEDBACK_WINDOW_DAYS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Khoảng thời gian đánh giá chỉ từ 1 đến {MAX_RESOLUTION_FEEDBACK_WINDOW_DAYS} ngày",
+        )
+    return days
 
 
 def _case_row(conn: Any, *, case_id: str, account_id: str | None = None) -> tuple[Any, ...] | None:
@@ -1125,6 +1176,40 @@ class CaseTransitionRequest(SupportRequestModel):
     expected_revision: int = Field(ge=1, le=1_000_000)
     idempotency_key: str = Field(min_length=12, max_length=160)
     confirm: bool = False
+
+
+class ResolutionFeedbackRequest(BaseModel):
+    """Strict, owner-scoped quality feedback for one terminal case revision."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(default="", max_length=MAX_RESOLUTION_FEEDBACK_COMMENT)
+    expected_revision: int = Field(ge=1, le=1_000_000)
+    confirm: bool = False
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("comment")
+    @classmethod
+    def validate_comment(cls, value: str) -> str:
+        text = _safe_text(
+            value,
+            label="Nhận xét",
+            minimum=0,
+            maximum=MAX_RESOLUTION_FEEDBACK_COMMENT,
+            allow_empty=True,
+        )
+        # _safe_text has normalized CRLF/CR to LF.  Preserve intentional
+        # line breaks but reject every remaining C0/C1 control character so
+        # terminal/control sequences cannot be stored in a case receipt.
+        if any((ord(char) < 32 and char != "\n") or 127 <= ord(char) <= 159 for char in text):
+            raise ValueError("Nhận xét không chứa ký tự điều khiển")
+        return text
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
 
 
 class AdminReplyRequest(CaseReplyRequest):
@@ -1658,6 +1743,17 @@ def _case_detail(
         "attachments": _case_attachments(conn, case_id=case_id),
         "delivery": "web_view_only",
     }
+    if not admin:
+        # A receipt is visible only to its owner and only while it belongs to
+        # the current terminal revision. Older resolution cycles are never
+        # copied into the reopened/current case projection.
+        result["resolution_feedback"] = _current_resolution_feedback(
+            conn,
+            case_id=str(row[0]),
+            account_id=str(row[1]),
+            revision=int(row[7]),
+            state=str(row[6]),
+        )
     if admin:
         control_events = conn.execute(
             """SELECT e.id, e.kind, e.action, e.previous_value, e.next_value, e.reason, e.created_at,
@@ -2030,6 +2126,126 @@ async def reopen_case(case_id: str, payload: CaseTransitionRequest, request: Req
     return _customer_transition(case_id=_uuid(case_id, label="Mã yêu cầu"), payload=payload, request=request, account=account, action="reopen")
 
 
+@router.post("/cases/{case_id}/resolution-feedback")
+async def create_resolution_feedback(
+    case_id: str,
+    payload: ResolutionFeedbackRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist one confirmed quality receipt for a current terminal revision."""
+
+    _require_support_enabled()
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần xác nhận trước khi gửi đánh giá hỗ trợ")
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    key = _idempotency_key(payload.idempotency_key)
+    account_id = str(account["id"])
+    fingerprint = _fingerprint({
+        "rating": payload.rating,
+        "comment_sha256": _content_hash(payload.comment),
+        "expected_revision": payload.expected_revision,
+        "confirm": True,
+    })
+
+    def operation(conn: Any) -> dict[str, Any]:
+        current = _case_row(conn, case_id=case_id, account_id=account_id)
+        if not current:
+            return _case_not_found()
+        current_revision = int(current[7])
+        current_state = str(current[6])
+        if current_revision != payload.expected_revision:
+            return envelope(
+                False,
+                "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi đánh giá.",
+                data={"current_revision": current_revision},
+                status_name="guarded",
+                error_code="WEB_SUPPORT_CASE_CONFLICT",
+            )
+        if current_state not in TERMINAL_FEEDBACK_STATES:
+            return envelope(
+                False,
+                "Chỉ yêu cầu đã được giải quyết hoặc đã đóng mới có thể đánh giá.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_FEEDBACK_NOT_TERMINAL",
+            )
+        existing = _current_resolution_feedback(
+            conn,
+            case_id=case_id,
+            account_id=account_id,
+            revision=current_revision,
+            state=current_state,
+        )
+        if existing:
+            return envelope(
+                False,
+                "Revision yêu cầu này đã có đánh giá.",
+                data={"resolution_feedback": existing, "delivery": "web_view_only"},
+                status_name="guarded",
+                error_code="WEB_SUPPORT_FEEDBACK_EXISTS",
+            )
+        now = utc_now()
+        feedback_id = str(uuid.uuid4())
+        inserted = conn.execute(
+            """INSERT INTO web_support_case_resolution_feedback
+               (id, case_id, account_id, terminal_revision, terminal_state, rating, comment, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(case_id, terminal_revision) DO NOTHING""",
+            (
+                feedback_id,
+                case_id,
+                account_id,
+                current_revision,
+                current_state,
+                payload.rating,
+                payload.comment,
+                now,
+            ),
+        )
+        if inserted.rowcount != 1:
+            # The unique pair is the final concurrency guard.  Do not reveal
+            # a receipt belonging to another account and do not mutate the
+            # pre-existing record or case lifecycle.
+            return envelope(
+                False,
+                "Revision yêu cầu này đã có đánh giá.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_FEEDBACK_EXISTS",
+            )
+        receipt = {
+            "id": feedback_id,
+            "rating": payload.rating,
+            "terminal_revision": current_revision,
+            "terminal_state": current_state,
+            "submitted_at": now,
+        }
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.support.case.resolution_feedback",
+            request_id=_request_id(request),
+            target=case_id,
+            detail=(
+                f"web support resolution feedback recorded rating:{payload.rating} "
+                f"revision:{current_revision}; comment_not_in_audit"
+            ),
+        )
+        return envelope(
+            True,
+            "Đã ghi nhận đánh giá cho revision yêu cầu hiện tại.",
+            data={"resolution_feedback": receipt, "delivery": "web_view_only"},
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-support:{account_id}:case:{case_id}:resolution-feedback",
+        key,
+        fingerprint,
+        operation,
+    )
+
+
 @router.get("/events")
 async def support_events(limit: int = 40, account: dict = Depends(require_account)):
     _require_support_enabled()
@@ -2067,6 +2283,56 @@ async def admin_summary(account: dict = Depends(require_account)):
         if str(state) in states:
             states[str(state)] = int(count)
     return envelope(True, "Tổng quan Web Support Desk cho operator.", data={"states": states, "overdue": int(overdue[0] or 0) if overdue else 0, "operator_role": role, "delivery": "web_view_only"}, status_name="read_only")
+
+
+@router.get("/admin/care/resolution-feedback-summary")
+async def admin_resolution_feedback_summary(
+    days: int = 30,
+    account: dict = Depends(require_account),
+):
+    """Return a manager-only aggregate without customer or case disclosure."""
+
+    _require_support_enabled()
+    _require_support_manager(account)
+    window_days = _feedback_window_days(days)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat(timespec="seconds")
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            """SELECT rating, COUNT(*)
+                 FROM web_support_case_resolution_feedback
+                 WHERE created_at>=?
+                 GROUP BY rating""",
+            (cutoff,),
+        ).fetchall()
+        comments = conn.execute(
+            """SELECT COUNT(*) FROM web_support_case_resolution_feedback
+                 WHERE created_at>=? AND comment<>''""",
+            (cutoff,),
+        ).fetchone()
+    rating_counts = {str(rating): 0 for rating in range(1, 6)}
+    for rating, count in rows:
+        parsed_rating = int(rating)
+        if parsed_rating in range(1, 6):
+            rating_counts[str(parsed_rating)] = int(count)
+    total = sum(rating_counts.values())
+    average = round(
+        sum(int(rating) * count for rating, count in rating_counts.items()) / total,
+        2,
+    ) if total else None
+    return envelope(
+        True,
+        "Tổng hợp chất lượng Customer Care đã được redaction.",
+        data={
+            "window_days": window_days,
+            "total_responses": total,
+            "rating_counts": rating_counts,
+            "average_rating": average,
+            "comments_count": int(comments[0] or 0) if comments else 0,
+            "delivery": "internal_metadata_only",
+        },
+        status_name="read_only",
+    )
 
 
 def _active_support_staff(conn: Any, *, account_id: str) -> dict[str, str] | None:
