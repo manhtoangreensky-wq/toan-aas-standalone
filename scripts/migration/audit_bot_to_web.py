@@ -2524,6 +2524,75 @@ def _postback_configuration_source_review_dispositions(entry: dict[str, str]) ->
         )
     )
 
+# The frozen Bot's exact Finance Compliance status menu reads Bot-owned
+# compliance-note state and renders a Telegram keyboard.  The standalone Web
+# cannot safely mirror that status or its note lifecycle, but the one static
+# status literal may open the already data-free canonical-admin readiness
+# guidance.  The separate pending-note callback below remains a canonical
+# mutation source-review record.  Both registries are raw-token allow-lists: casing,
+# suffixes and future Finance callbacks must not inherit this Web route.
+FINANCE_COMPLIANCE_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|finance_compliance": {
+        "target": "/admin/finance/tax-readiness",
+        "classification": "admin",
+        "feature_key": "admin_tax_readiness",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED",
+            "BOT_FINANCE_COMPLIANCE_NOTES_NOT_REPLAYED",
+            "BOT_FINANCE_COMPLIANCE_KEYBOARD_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot status branch reads its canonical finance-compliance notes and renders a Telegram "
+            "keyboard. The Web opens only the independently authorized, data-free readiness guidance; it receives "
+            "no callback context, Telegram identity, compliance status/note, command, period, finance row, payment, "
+            "ledger, provider or mutation authority."
+        ),
+    },
+}
+
+FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS = (
+    "BOT_ADMIN_ONLY",
+    "CANONICAL_BOT_FINANCE_COMPLIANCE_STATE",
+    "SOURCE_STATE_MACHINE_REQUIRED",
+    "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+    "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+    "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+    "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+    "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    "NO_RUNTIME_CLAIM",
+)
+
+FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_ACTIONS: dict[str, dict[str, str]] = {
+    "menu|finance_compliance_update": {
+        "operation_disposition": "CANONICAL_BOT_FINANCE_COMPLIANCE_NOTE_MUTATION",
+        "source_evidence": (
+            "The frozen Bot pending-note path enters a per-Telegram compliance-note flow before it writes "
+            "a canonical finance-compliance record. The Web must not accept/replay the pending input, note, status "
+            "or mutation without a separately approved canonical finance contract."
+        ),
+    },
+}
+
+
+def _finance_compliance_source_review_dispositions(action: dict[str, str]) -> tuple[str, ...]:
+    """Preserve the Finance Compliance mutation boundary in static audit output."""
+
+    return (
+        FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS[:2]
+        + (str(action["operation_disposition"]),)
+        + FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS[2:]
+    )
+
 # The frozen Bot's reviewed finance-command-help and tax menu branches render
 # administrative guidance, choices and Telegram delivery paths. Only these
 # four explanatory buttons may open a fresh, independently authorized Web
@@ -9130,6 +9199,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     admin_erp_navigation_entry = ADMIN_ERP_FRESH_WEB_NAVIGATION_ACTIONS.get(identifier)
     finance_add_expense_planning_entry = FINANCE_ADD_EXPENSE_FRESH_WEB_PLANNING_ACTIONS.get(identifier)
     postback_readiness_navigation_entry = POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
+    finance_compliance_readiness_navigation_entry = FINANCE_COMPLIANCE_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
+    finance_compliance_source_review_entry = FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_ACTIONS.get(identifier)
     tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(identifier)
     job_lock_recovery_navigation_entry = JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
@@ -9157,6 +9228,40 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "postback_readiness_feature_key": str(postback_readiness_navigation_entry["feature_key"]),
             "postback_readiness_authority": str(postback_readiness_navigation_entry["authority"]),
             "postback_readiness_launch_mode": str(postback_readiness_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if finance_compliance_readiness_navigation_entry is not None:
+        # The exact Bot status callback only begins a fresh, independently
+        # authorized readiness guide. It does not replay the Bot compliance
+        # status/note, Telegram state or any finance/tax/payment mutation.
+        target = str(finance_compliance_readiness_navigation_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(finance_compliance_readiness_navigation_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_finance_compliance_readiness_fresh_web_navigation",
+            "source_dispositions": tuple(finance_compliance_readiness_navigation_entry["source_dispositions"]),
+            "source_evidence": str(finance_compliance_readiness_navigation_entry["source_evidence"]),
+            "finance_compliance_readiness_feature_key": str(finance_compliance_readiness_navigation_entry["feature_key"]),
+            "finance_compliance_readiness_authority": str(finance_compliance_readiness_navigation_entry["authority"]),
+            "finance_compliance_readiness_launch_mode": str(finance_compliance_readiness_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if finance_compliance_source_review_entry is not None:
+        # The pending-note callback enters a Bot pending-note state and can mutate
+        # canonical Finance Compliance records. It remains an explicit source
+        # review boundary rather than borrowing the static readiness route.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
+            "source_dispositions": _finance_compliance_source_review_dispositions(finance_compliance_source_review_entry),
+            "source_evidence": str(finance_compliance_source_review_entry["source_evidence"]),
             "evidence": evidence,
         }
     if billing_menu_navigation_entry is not None:
@@ -11740,6 +11845,30 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
     ]
+    finance_compliance_readiness_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_finance_compliance_readiness_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in FINANCE_COMPLIANCE_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
+    ]
+    finance_compliance_source_review_contract_rows = [
+        [
+            source,
+            "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED",
+            "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "admin",
+            "Canonical Bot finance-compliance operation",
+            ", ".join(_finance_compliance_source_review_dispositions(action)),
+        ]
+        for source, action in sorted(FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_ACTIONS.items())
+    ]
     tax_accounting_source_review_contract_rows = [
         [
             source,
@@ -12180,6 +12309,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
         + "- [`VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md`](VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md) — six residual Video/worker/status/admin-hint menu callbacks plus unknown menu values are fail-closed source-review boundaries; they never fall back to Dashboard/Admin/history/reset behavior.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
+        + "- [`FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md`](FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md) — exact Bot Finance Compliance status navigation: a fresh canonical-admin readiness handoff only; Bot status/note state and the pending-note mutation remain outside the browser.\n"
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot finance-command-help/tax-menu dispositions: fresh canonical-admin guidance navigation with no Bot command text, finance data, calculation, export, file, ledger, payment or profile action replay.\n"
         + "- [`POSTBACK_READINESS_CALLBACK_CONTRACT.md`](POSTBACK_READINESS_CALLBACK_CONTRACT.md) — exact Bot postback-hint disposition: fresh canonical-admin readiness guidance only; configuration, connection material, ingress, attribution and financial effects stay Bot-canonical.\n"
         + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
@@ -12616,8 +12746,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "reads. None transfers a Bot snapshot, selected period, report, command, export request/file, calculation, "
         "tax/compliance state, payment/provider state, wallet/Xu/PayOS context or write authority. They do not "
         "preselect a Web filter, calculate Finance/tax data, invoke an export, deliver a file or imply a runtime "
-        "result. `menu|finance_compliance` remains source-review-required; and "
-        "`menu|finance_compliance_update` remains source-review-required. `menu|tax_estimate` and "
+        "result. `menu|finance_compliance` has the separate "
+        "`FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md` and opens only its fresh, data-free readiness "
+        "handoff; `menu|finance_compliance_update` remains source-review-required. `menu|tax_estimate` and "
         "`menu|tax_export_month` retain their separate canonical-finance source-review contract. Any case variant, "
         "suffix or other unlisted `menu|finance_*` value remains source-review-required and cannot inherit a Finance "
         "route. `menu|finance_add_expense` has the separate `FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md`; no other "
@@ -12760,6 +12891,22 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|billing` has its own finite canonical-admin Billing menu contract and still does not inherit System/Data authority. `menu|tax_*` and every Video/menu production action remain outside this finite registry. `menu|clear_stale_jobs_help` has its own finite Job-Lock Recovery Safety contract. No namespace fallback grants a Web route.\n",
     )
     write(
+        "FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md",
+        "# Finance Compliance readiness callback contract\n\n"
+        "The frozen Bot Finance Compliance status callback reads Bot-owned compliance-note state and renders a Telegram keyboard. The standalone Web never receives a callback token, Telegram identity, status/note, pending input, command text, finance row, profile, period, calculation, report, export request, CSV/file, payment reference, wallet/Xu ledger, PayOS state, provider state, archive row, attachment or output-delivery claim.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            finance_compliance_readiness_contract_rows,
+        )
+        + "\n\nThe exact status literal opens only the independently authorized, data-free `/admin/finance/tax-readiness` guidance page. It does not read the Bot compliance status, render a Bot compliance note, calculate tax, query finance data, create an export/file, perform a payment/ledger/PayOS/provider action or claim a completed compliance outcome.\n\n"
+        + "The following exact Bot callback remains a canonical finance-compliance source-review record, not fresh Web navigation or a browser form:\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            finance_compliance_source_review_contract_rows,
+        )
+        + "\n\nThe Web does not create, update, or mutate a compliance note. Case variants, suffixes, and `menu|finance_compliance_update` cannot inherit the readiness route; they require a separately reviewed canonical finance mutation contract. This guidance is not tax/legal advice or a runtime-equivalence claim.\n",
+    )
+    write(
         "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md",
         "# Finance command help & tax readiness guidance callback contract\n\n"
         "The frozen Bot finance-command-help and tax menu branches are Telegram administrative guidance and can continue into Bot-local command, tax-profile, period, calculation, report or CSV-delivery flows. The standalone Web never receives a callback token, Telegram identity, command snippet, finance row, tax profile, date range, period, estimate, calculation, report, export request, CSV/file, payment reference, wallet/Xu ledger, PayOS state, provider state, archive row, attachment or output-delivery claim.\n\n"
@@ -12780,7 +12927,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|finance_expense_this_month`, `menu|finance_expense_last_month`, `menu|finance_expense_year`, "
         "`menu|finance_profit_this_month`, `menu|finance_profit_year`, `menu|finance_export_month`, and "
         "`menu|finance_export_year`—belong only to the separate Admin ERP fresh-read contract, never either tax "
-        "registry. `finance_compliance*`, every other unlisted `menu|finance_*` value, every unlisted "
+        "registry. The exact `menu|finance_compliance` literal belongs only to the separate Finance Compliance "
+        "readiness contract; `menu|finance_compliance_update`, every other unlisted `menu|finance_*` value, every unlisted "
         "`menu|tax_*` value, `archive|dept|tax_invoice`, and all case variants or suffixed values remain "
         "source-review-required outside the finite contracts. They require separately reviewed canonical "
         "finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",

@@ -106,10 +106,29 @@ state to the browser.
 | --- | --- | --- | --- |
 | `menu|finance_help`, `menu|finance_tax`, `menu|tax_checklist`, `menu|tax_custom_help` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh command/checklist guidance only; no Bot command text, calculation, finance read, export/file, tax profile/compliance mutation, payment/ledger/provider action or runtime claim |
 
-The four literals above are the complete allow-list. Every other
+The four literals above are the complete Tax/Accounting allow-list. The exact
+Finance Compliance status literal is documented separately below. Every other
 `menu|finance_*` or `menu|tax_*` value, including case variants, suffixes,
 period selectors and export actions, remains fail-closed and cannot inherit
 this route.
+
+## Separately guarded Finance Compliance readiness
+
+The exact Bot `menu|finance_compliance` callback is a canonical-admin status
+branch over Bot-owned Finance Compliance records. It opens only a fresh,
+data-free `/admin/finance/tax-readiness` readiness guide after canonical
+signed-admin authorization. The guide does not read the Bot compliance status,
+notes, pending update state, finance data, period, tax calculation, report,
+export/file, payment/wallet/Xu ledger, PayOS/provider or delivery state.
+
+| Bot source action | Web destination | Web authority | Boundary preserved |
+| --- | --- | --- | --- |
+| `menu|finance_compliance` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh readiness handoff only; no Bot status/note replay, finance/tax calculation, compliance mutation, export/file, payment/ledger/provider action or runtime claim |
+
+Only this exact lower-case literal is reviewed. Case variants, suffixes and
+`menu|finance_compliance_update` remain fail-closed; the update enters
+Bot-owned pending-note and canonical mutation state and cannot become a Web
+form or action.
 
 ## Separately guarded Postback Readiness
 
@@ -157,10 +176,13 @@ is generated in `BILLING_MENU_CALLBACK_CONTRACT.md`.
   and the Web route does not clean Bot storage, inspect quota or map to archive
   or Asset Vault retention.
 - `menu|tax_estimate`, `menu|tax_config`, period-specific tax estimate/export
-  actions, `finance_compliance*`, `archive|dept|tax_invoice`, every other
-  `menu|finance_*` or `menu|tax_*` value and `menu|clear_stale_jobs_help` remain
-  outside this catalog. They need separate canonical finance/job/private-file
-  contracts and never inherit a browser route from a namespace or label.
+  actions; the exact `menu|finance_compliance` literal has its dedicated Finance
+  Compliance readiness contract. `menu|finance_compliance_update`, every case
+  variant, suffix, or other unlisted Finance Compliance value,
+  `archive|dept|tax_invoice`, every other `menu|finance_*` or `menu|tax_*` value
+  and `menu|clear_stale_jobs_help` remain outside this catalog. They need
+  separate canonical finance/job/private-file contracts and never inherit a
+  browser route from a namespace or label.
 - Translation, payment/admin writes, provider controls and any other dynamic
   menu template remain source-state/authority reviewed or `TELEGRAM_ONLY`;
   none receive a fallback browser route.
