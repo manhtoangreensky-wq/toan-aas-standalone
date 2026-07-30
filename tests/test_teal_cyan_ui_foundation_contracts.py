@@ -3049,3 +3049,89 @@ def test_light_voice_direction_composer_keeps_text_only_receipts_readable() -> N
     assert "color: var(--portal-muted);" in receipt_copy
     assert "font-size: 13px;" in receipt_copy
     assert not re.search(r"(?m)^\s*\.portal-voice-direction-composer", theme_source)
+
+
+def test_light_account_data_and_workspace_care_keep_private_actions_readable() -> None:
+    """Privacy-facing account work keeps hierarchy readable on the light app shell."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    workspace_route = ".portal-page.portal-workspace-care"
+    data_route = ".portal-page.portal-account-data-controls"
+    for selector in (
+        ".portal-workspace-care-intro",
+        ".portal-workspace-care-status",
+        ".portal-workspace-care-card",
+        ".portal-workspace-care-boundary",
+        ".portal-panel-row",
+        ".portal-project-steps",
+    ):
+        assert selector in PORTAL_CATALOGUE
+    assert "function renderWorkspaceCare(page, context)" in PORTAL_CLIENT
+    assert "function renderAccountDataControls(page, context)" in PORTAL_CLIENT
+
+    intro = declarations(f"{workspace_route} .portal-workspace-care-intro")
+    status = declarations(f"{workspace_route} .portal-workspace-care-status")
+    card = declarations(f"{workspace_route} .portal-workspace-care-card")
+    card_hover = declarations(
+        f"{workspace_route} .portal-workspace-care-card:hover,\n"
+        f"{workspace_route} .portal-workspace-care-card:focus-visible"
+    )
+    card_meta = declarations(f"{workspace_route} .portal-workspace-care-card-copy small")
+    card_copy = declarations(f"{workspace_route} .portal-workspace-care-card-copy > span")
+    boundary_item = declarations(f"{workspace_route} .portal-workspace-care-boundary li")
+    boundary_label = declarations(f"{workspace_route} .portal-workspace-care-boundary strong")
+    boundary_copy = declarations(f"{workspace_route} .portal-workspace-care-boundary small")
+    data_row = declarations(f"{data_route} .portal-panel-row")
+    data_row_icon = declarations(f"{data_route} .portal-panel-row-icon")
+    data_row_label = declarations(f"{data_route} .portal-panel-row strong")
+    data_row_copy_selector = f"{data_route} .portal-panel-row > div > span:not(.portal-badge)"
+    data_row_copy = declarations(data_row_copy_selector)
+    data_step = declarations(f"{data_route} .portal-project-steps li")
+    data_step_label = declarations(f"{data_route} .portal-project-steps strong")
+    data_step_copy = declarations(f"{data_route} .portal-project-steps span")
+
+    assert "background: var(--portal-surface-light);" in intro
+    assert "box-shadow: none;" in intro
+    assert "background: var(--portal-surface-soft);" in status
+    assert "background: var(--portal-surface-light);" in card
+    assert "box-shadow: none;" in card
+    assert "background: var(--portal-light-hover-surface);" in card_hover
+    assert "transform: none;" in card_hover
+    assert "color: var(--portal-action);" in card_meta
+    assert "font-size: 13px;" in card_meta
+    assert "color: var(--portal-muted);" in card_copy
+    assert "font-size: 13px;" in card_copy
+    assert "background: var(--portal-surface-soft);" in boundary_item
+    assert "color: var(--portal-ink);" in boundary_label
+    assert "color: var(--portal-muted);" in boundary_copy
+    assert "font-size: 13px;" in boundary_copy
+    assert "background: var(--portal-surface-soft);" in data_row
+    assert "color: var(--portal-action);" in data_row_icon
+    assert "color: var(--portal-ink);" in data_row_label
+    assert "color: var(--portal-muted);" in data_row_copy
+    assert "font-size: 13px;" in data_row_copy
+    assert f"{data_route} .portal-panel-row span {{" not in theme_source
+    assert "border-top-color: var(--portal-border);" in data_step
+    assert "color: var(--portal-ink);" in data_step_label
+    assert "color: var(--portal-muted);" in data_step_copy
+    assert "font-size: 13px;" in data_step_copy
+
+    mobile_status = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(workspace_route)} \.portal-workspace-care-status\s*"
+        rf"\{{(?P<declarations>.*?)\n\s*\}}\s*\}}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    assert mobile_status is not None
+    assert "flex: 0 1 auto;" in mobile_status.group("declarations")

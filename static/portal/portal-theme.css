@@ -5953,3 +5953,146 @@ body {
 .portal-page.portal-voice-direction-composer .portal-voice-direction-composer-review > div {
   border-top-color: color-mix(in srgb, var(--portal-warning) 26%, var(--portal-border));
 }
+
+/* Account care stays a calm, legible control surface. These routes only guide
+   signed Web-owned data actions; the light treatment must not imply a Bot,
+   ledger, provider, or automatic-cleanup capability. */
+.portal-page.portal-workspace-care .portal-workspace-care-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-intro h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-intro p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-status {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-status-icon,
+.portal-page.portal-workspace-care .portal-workspace-care-card-icon {
+  border-color: color-mix(in srgb, var(--portal-action) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-status strong {
+  color: var(--portal-ink);
+  font-size: 14px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-status small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card:hover,
+.portal-page.portal-workspace-care .portal-workspace-care-card:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  outline: none;
+  transform: none;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-focus) 28%, transparent);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card-copy small {
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card-copy strong {
+  color: var(--portal-ink);
+  font-size: 15px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card-copy > span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-card-copy em {
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-boundary li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-boundary li > span:first-child {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-boundary strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-workspace-care .portal-workspace-care-boundary small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-account-data-controls .portal-panel-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-account-data-controls .portal-panel-row-icon {
+  border: 1px solid color-mix(in srgb, var(--portal-action) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-data-controls .portal-panel-row strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-account-data-controls .portal-panel-row > div > span:not(.portal-badge) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-account-data-controls .portal-project-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page.portal-account-data-controls .portal-project-steps li::before {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+.portal-page.portal-account-data-controls .portal-project-steps strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-account-data-controls .portal-project-steps span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-workspace-care .portal-workspace-care-status {
+    flex: 0 1 auto;
+  }
+}
