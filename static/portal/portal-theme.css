@@ -4683,6 +4683,164 @@ body {
   color: var(--portal-ink);
 }
 
+/* Admin ERP is a role-gated operational surface, not a dark monitoring wall.
+   Preserve every server-owned capability and audit boundary while letting an
+   operator distinguish metrics, queues and disclosure states at a glance. */
+.portal-page .portal-admin-home > .portal-admin-guard {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-admin-home > .portal-admin-guard .portal-state h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-home > .portal-admin-guard .portal-state p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-home > .portal-admin-grid .portal-metric {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-admin-home > .portal-admin-grid .portal-metric span,
+.portal-page .portal-admin-home > .portal-admin-grid .portal-metric em {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-home > .portal-admin-grid .portal-metric strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-work-queues {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-admin-work-queues .portal-section-heading h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-work-queues .portal-section-heading p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-work-queue {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-admin-work-queue > .portal-module-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-admin-work-queue strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-work-queue small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-work-queue > b {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-admin-work-queue:hover,
+.portal-page .portal-admin-work-queue:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  transform: none;
+}
+
+.portal-page .portal-admin-work-queue:hover > b,
+.portal-page .portal-admin-work-queue:focus-visible > b {
+  color: var(--portal-action);
+  transform: none;
+}
+
+.portal-page .portal-admin-authority {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-admin-authority > summary {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-authority > summary::after {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-admin-authority > summary:hover {
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-authority[open] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-admin-authority[open] > summary {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page .portal-admin-authority > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-admin-directory-group {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-admin-directory-group > summary {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-directory-group > summary small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-directory-group > summary::after {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-admin-directory-group > summary:hover {
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-admin-directory-group[open] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-admin-directory-group[open] > summary {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page .portal-admin-directory-group .portal-module-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-admin-directory-group .portal-module-card:hover,
+.portal-page .portal-admin-directory-group .portal-module-card:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {

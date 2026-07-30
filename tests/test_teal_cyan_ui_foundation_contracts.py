@@ -2475,3 +2475,67 @@ def test_light_account_security_keeps_signed_session_and_mfa_states_readable() -
     assert "color: var(--portal-muted);" in declarations(".portal-page .portal-security-posture-facts em")
     assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-account-security .portal-security-assurance")
     assert "color: var(--portal-ink);" in declarations(".portal-page .portal-account-security .portal-security-assurance summary")
+
+
+def test_light_admin_home_keeps_erp_authority_and_work_queues_readable() -> None:
+    """Admin ERP stays role-gated while its queues and disclosures use a calm light hierarchy."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    for marker in (
+        "portal-admin-home",
+        "portal-admin-guard",
+        'class="portal-admin-work-queues"',
+        'class="portal-admin-work-queue"',
+        'class="portal-admin-authority"',
+        "portal-admin-directory",
+        'class="portal-admin-directory-group"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert "Authority & ranh giới quản trị" in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-admin-home > .portal-admin-guard",
+            ".portal-admin-work-queues",
+            ".portal-admin-work-queue",
+            ".portal-admin-authority",
+            ".portal-admin-directory-group",
+        )
+    )
+
+    guard = declarations(".portal-page .portal-admin-home > .portal-admin-guard")
+    assert "border-color: var(--portal-warning);" in guard
+    assert "background: var(--portal-surface-light);" in guard
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-home > .portal-admin-guard .portal-state h2")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-admin-home > .portal-admin-guard .portal-state p")
+    metric = declarations(".portal-page .portal-admin-home > .portal-admin-grid .portal-metric")
+    assert "border-color: var(--portal-border);" in metric
+    assert "background: var(--portal-surface-light);" in metric
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-home > .portal-admin-grid .portal-metric strong")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-work-queues")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-work-queues .portal-section-heading h2")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-admin-work-queues .portal-section-heading p")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-work-queue")
+    queue_hover = declarations(".portal-page .portal-admin-work-queue:hover,\n.portal-page .portal-admin-work-queue:focus-visible")
+    assert "background: var(--portal-surface-soft);" in queue_hover
+    assert "transform: none;" in queue_hover
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-work-queue strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-admin-work-queue small")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-authority")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-authority > summary")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-authority > .portal-card")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-directory-group")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-admin-directory-group > summary")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-admin-directory-group > summary small")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-admin-directory-group[open]")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-directory-group .portal-module-card")
