@@ -2785,6 +2785,8 @@ def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_read
     collection_hover = declarations(f"{route} .portal-media-collection-card:hover,\n{route} .portal-media-collection-card:focus-visible")
     media_filter = declarations(f"{route} .portal-media-filter")
     event_row = declarations(f"{route} .portal-media-events > div")
+    field_help = declarations(f"{route} .portal-field-help")
+    policy_flag = declarations(f"{route} .portal-media-policy-flag")
 
     assert "border-color: var(--portal-border);" in overview
     assert "background: var(--portal-surface-light);" in overview
@@ -2799,6 +2801,10 @@ def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_read
     assert "background: var(--portal-light-hover-surface);" in collection_hover
     assert "background: var(--portal-surface-soft);" in media_filter
     assert "border-top-color: var(--portal-border);" in event_row
+    assert "color: var(--portal-muted);" in field_help
+    assert "border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));" in policy_flag
+    assert "background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));" in policy_flag
+    assert "color: var(--portal-warning);" in policy_flag
     assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-hub-overview-copy h2")
     assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-hub-overview-copy p")
     assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-hub-lanes strong")
