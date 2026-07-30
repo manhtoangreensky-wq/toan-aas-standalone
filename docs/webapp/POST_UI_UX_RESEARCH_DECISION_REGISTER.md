@@ -33,6 +33,7 @@ và rollback; không nhận một stack hay một flow chỉ vì nó “trông �
 | --- | --- | --- |
 | Một `approved snapshot` bất biến, lifecycle monotonic và evidence/receipt sau delivery | **Nhận sau UI/UX** | Đây là contract trung lập nền tảng: refresh, retry hoặc restart không được đổi asset, scene, output policy hay quyết định đã xác nhận. `completed` chỉ có sau validation và owner-checked delivery. |
 | Local deterministic media lane, allow-list, `ffprobe` + full decode | **Nhận cho lane đầu tiên** | Một output nhỏ, có fixture thật, dễ chứng minh hơn provider-first hoặc một “studio” rộng. Không tạo engine thứ hai; chỉ dùng runtime Web-native đã được chứng minh. |
+| `EditPlan` versioned, một mapping công khai → một operation thực thi đã biết | **Nhận cho lane đầu tiên** | Snapshot phải ghi asset fingerprint, preset/operation allow-list, output profile, output policy và version. Không có execution mapping thì capability giữ `guarded`; không được hiển thị như đã chạy. |
 | Shared Semantic Master, Translation Master, `segment_id` ổn định và offset theo timeline gốc | **Pilot sau local lane** | Có giá trị khi cùng một nguồn thực sự fan-out sang subtitle, dịch, dub hoặc combo. Pilot chỉ ở fixture/approved-artifact shadow/replay, không public route, provider, settlement hoặc delivery. |
 | Subtitle copy tách dub copy; profile theo ngôn ngữ/đích xuất; QC có ngữ cảnh | **Nhận như invariant V2** | Tránh dịch lặp, drift giữa subtitle/dub, VAD làm lệch timestamp và “một CPS/LUFS dùng cho mọi ngôn ngữ”. Chưa có nghĩa là công khai hứa chất lượng engine chưa kiểm chứng. |
 | Per-stage idempotency, durable manifest và exclusive recovery lease | **Điều kiện** | Chỉ thêm khi job thật sự dài hơn request hoặc cần restart/concurrency recovery. Mọi confirm/delivery/receipt trùng lặp phải trả lại outcome cũ, không tạo side effect mới. |
@@ -78,6 +79,74 @@ Bot bridge hay ledger mới. Tuy vậy, nó vẫn chứng minh được toàn b�
 5. Download tạm thời kiểm tra owner lần nữa; và
 6. Receipt trung thực, không suy ra hay copy chính sách `0 Xu` từ Bot.
 
+Lane đầu tiên chỉ nhận asset đã qua owner check. Không mở URL import tuỳ ý cho
+đến khi có policy SSRF, redirect, egress, content type, quota và retention
+được review riêng.
+
+## Addendum contract — Web-native execution và Semantic DAG V2
+
+Các chi tiết dưới đây được rút ra từ ba nguồn nghiên cứu để dùng **sau** khi
+UI/UX được nghiệm thu. Chúng khóa điều kiện chấp nhận được; không bật một
+runtime, route hay provider mới trong PR UI hiện tại.
+
+### 1. `EditPlan` Web-native cho lane chạy thật đầu tiên
+
+Mỗi control public phải biên dịch một-một sang operation allow-listed. Bản
+`EditPlan` đã xác nhận cần tối thiểu có `job_id`, owner, input asset
+fingerprint, operation/preset version, expected output profile, output policy,
+config hash và confirmation receipt. Retry hay refresh phải quay lại cùng
+snapshot; nếu mapping không tồn tại, trạng thái là `guarded`, không phải
+`completed` giả.
+
+Receipt Web là evidence riêng: artifact attestation, thời điểm tạo delivery
+tạm thời, owner check tại thời điểm download và receipt dedupe. Nó không dùng
+Telegram acknowledgment, raw path/object key, permanent URL, Xu, PayOS hay
+lịch sử Bot làm authority.
+
+### 2. Semantic DAG V2 cho Subtitle, Translation và Dubbing
+
+Pilot chỉ dùng fixture/shadow replay. `ApprovedSnapshot` cần khóa lane, ngôn
+ngữ nguồn/đích, subtitle/audio profile, voice policy, glossary version,
+runtime/config hash và confirmation receipt. `SourceSemanticMaster` giữ
+`segment_id` ổn định cùng timestamp của video gốc; VAD chỉ tối ưu batching,
+tuyệt đối không co timeline. Thứ tự transcript là timed subtitle do khách tải
+lên, embedded subtitle đã kiểm tra, rồi mới tới ASR; trạng thái alignment phải
+trung thực là `word_aligned`, `segment_timed` hoặc `alignment_unavailable`.
+
+Chỉ tạo một `TranslationMaster`, sau đó sinh `subtitle_copy` và `dub_copy`
+riêng. Hai copy cùng lineage ngữ nghĩa nhưng không buộc trùng câu chữ.
+Profile theo ngôn ngữ/đích xuất quyết định CPL, CPS, số dòng, duration, gap,
+loudness và true peak; không dùng một hằng số chung cho mọi ngôn ngữ hoặc
+nền tảng. Diarization chỉ được bật khi cần speaker label hoặc voice casting,
+và audio master dùng để mix phải tách với input ASR mono/16 kHz.
+
+Stage manifest dùng các trạng thái `PENDING`, `RUNNING`, `PASS`, `FAIL`,
+`WAITING_REVIEW`, `CANCELLED`, kèm input/output fingerprints, attempt,
+runtime/provider version, timestamps và external task ID chỉ cho Admin. Khóa
+idempotency là `job + stage + segment + config_hash`: confirm hay recovery lặp
+trả lại outcome cũ. Nếu duration dubbing lệch lớn hoặc validation không đạt,
+job dừng ở `WAITING_REVIEW`/`FAIL`; không time-stretch quá mức để báo thành
+công giả.
+
+### 3. Evidence gate trước bất kỳ public execution nào
+
+Một capability chỉ được mở sau khi fixture chứng minh được:
+
+1. duplicate confirm, retry và recovery không tạo submit/delivery/receipt
+   thứ hai;
+2. asset/output lỗi dừng trước delivery; `completed` chỉ sau inspect,
+   `ffprobe`, full decode và owner-scoped delivery;
+3. cross-account access, temporary URL hết hạn và audit evidence đã redacted
+   đều bị chặn đúng;
+4. subtitle QC có timestamp tăng dần, không overlap/duration âm, profile
+   CPS/CPL/số dòng, line break tự nhiên và low-confidence flag; và
+5. combo QC giữ nhất quán về nghĩa, speaker, tên riêng, số/ngày/đơn vị giữa
+   subtitle và dub, dù hai copy không cần trùng chữ.
+
+Trong fixture/shadow milestone, provider calls, payment/wallet/Xu mutation,
+Bot/webhook mutation đều phải bằng `0`. `ACCEPTANCE_UNKNOWN` là fail-closed:
+chỉ poll/retrieve task đã lưu ở future gate, không auto-resubmit paid task.
+
 ## PR đầu tiên của Semantic DAG khi đã đủ điều kiện
 
 PR đầu tiên không chạy media. Nó chỉ thêm versioned schema và legal replay
@@ -105,6 +174,11 @@ riêng chỉ được tính tiếp sau owner review.
       policy.
 - [ ] Fixture-only test plan bao gồm duplicate confirmation, invalid output,
       cross-account access, expired delivery và receipt dedupe.
+- [ ] `EditPlan` mapping/preflight, quota và retention/deletion policy được
+      owner review; lane đầu tiên không nhận URL import tuỳ ý.
+- [ ] Nếu mở Semantic DAG pilot: stable segment ID, source timeline offsets,
+      separate subtitle/dub copy, profile QC và zero-side-effect shadow replay
+      đều có fixture evidence.
 - [ ] Không có provider/payment/webhook/Bot mutation trong design hoặc fixture
       milestone.
 - [ ] Support evidence đã redacted, role-scoped và không có mutable override.
