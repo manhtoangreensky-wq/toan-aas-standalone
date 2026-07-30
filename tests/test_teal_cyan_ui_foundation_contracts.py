@@ -1383,3 +1383,134 @@ def test_light_artifact_cards_keep_icons_and_private_metadata_readable() -> None
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0369a1", "#e6f8f7") >= 4.5
     assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
+
+
+def test_light_workboard_cards_keep_kanban_and_list_metadata_readable() -> None:
+    """Workboard must not retain dark-panel ink after the shared card reset."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    tabs = re.search(
+        r"\.portal-page \.portal-workboard-tabs a\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    active_tab = re.search(
+        r"\.portal-page \.portal-workboard-tabs a:hover,\s*"
+        r"\.portal-page \.portal-workboard-tabs a\[aria-current=\"page\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    column = re.search(
+        r"\.portal-page \.portal-workboard-column\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    column_label = re.search(
+        r"\.portal-page \.portal-workboard-column > header span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    card_hover = re.search(
+        r"\.portal-page \.portal-workboard-card:hover\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    card_title = re.search(
+        r"\.portal-page \.portal-workboard-card h3,\s*"
+        r"\.portal-page \.portal-workboard-card h3 a\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    card_metadata = re.search(
+        r"\.portal-page \.portal-workboard-card :is\(p, footer\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    list_row = re.search(
+        r"\.portal-page \.portal-workboard-list-row\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    list_title = re.search(
+        r"\.portal-page \.portal-workboard-list-title b\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    list_metadata = re.search(
+        r"\.portal-page :is\(\.portal-workboard-list-title small, "
+        r"\.portal-workboard-list-meta small\)\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    priority = re.search(
+        r"\.portal-page \.portal-workboard-priority\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    urgent_priority = re.search(
+        r"\.portal-page \.portal-workboard-priority\[data-priority=\"urgent\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-workboard-card"',
+        'class="portal-workboard-list-row"',
+        'class="portal-workboard-priority"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-workboard-column",
+            ".portal-workboard-card h3",
+            ".portal-workboard-list-row",
+            ".portal-workboard-priority",
+        )
+    )
+    for match in (
+        tabs,
+        active_tab,
+        column,
+        column_label,
+        card_hover,
+        card_title,
+        card_metadata,
+        list_row,
+        list_title,
+        list_metadata,
+        priority,
+        urgent_priority,
+    ):
+        assert match is not None
+    assert "border-color: var(--portal-border);" in tabs.group("declarations")
+    assert "background: var(--portal-surface-light);" in tabs.group("declarations")
+    assert "color: var(--portal-muted);" in tabs.group("declarations")
+    assert "background: var(--portal-surface-soft);" in active_tab.group("declarations")
+    assert "color: var(--portal-action);" in active_tab.group("declarations")
+    assert "border-color: var(--portal-border);" in column.group("declarations")
+    assert "background: var(--portal-surface-soft);" in column.group("declarations")
+    assert "color: var(--portal-ink);" in column_label.group("declarations")
+    assert "border-color: var(--portal-border-strong);" in card_hover.group("declarations")
+    assert "background: var(--portal-surface-soft);" in card_hover.group("declarations")
+    assert "color: var(--portal-ink);" in card_title.group("declarations")
+    assert "color: var(--portal-muted);" in card_metadata.group("declarations")
+    assert "border-color: var(--portal-border);" in list_row.group("declarations")
+    assert "background: var(--portal-surface-light);" in list_row.group("declarations")
+    assert "color: var(--portal-ink);" in list_title.group("declarations")
+    assert "color: var(--portal-muted);" in list_metadata.group("declarations")
+    assert "border-color: var(--portal-border);" in priority.group("declarations")
+    assert "background: var(--portal-surface-light);" in priority.group("declarations")
+    assert "color: var(--portal-muted);" in priority.group("declarations")
+    assert "color: var(--portal-danger);" in urgent_priority.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0f766e", "#e6f8f7") >= 4.5
+    assert _contrast_ratio("#b91c1c", "#ffffff") >= 4.5
