@@ -1112,3 +1112,43 @@ def test_light_catalogue_card_icons_and_engine_labels_preserve_status_meaning() 
     assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
     assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
     assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
+
+
+def test_light_canonical_suggestions_keep_generated_text_readable() -> None:
+    """Suggestion cards inherit the light card system without retaining dark-panel ink."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    heading = re.search(
+        r"\.portal-page \.portal-suggestion-card-head strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    label = re.search(
+        r"\.portal-page \.portal-suggestion-card-head span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    generated_text = re.search(
+        r"\.portal-page \.portal-suggestion-card \.portal-result-text\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert '<article class="portal-suggestion-card">' in PORTAL_CLIENT
+    assert '<strong>${safeText(String(item.name || `Gợi ý ${index + 1}`))}</strong>' in PORTAL_CLIENT
+    assert '<div class="portal-result-text">${safeText(prompt)}</div>' in PORTAL_CLIENT
+    assert ".portal-suggestion-card-head strong" in PORTAL_CATALOGUE
+    assert ".portal-result-text" in PORTAL_CATALOGUE
+    assert heading is not None
+    assert label is not None
+    assert generated_text is not None
+    assert "color: var(--portal-ink);" in heading.group("declarations")
+    assert "color: var(--portal-action);" in label.group("declarations")
+    assert "border-color: var(--portal-border);" in generated_text.group("declarations")
+    assert "background: var(--portal-surface-soft);" in generated_text.group("declarations")
+    assert "color: var(--portal-ink);" in generated_text.group("declarations")
+    assert _contrast_ratio("#073a45", "#e6f8f7") >= 4.5
+    assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
