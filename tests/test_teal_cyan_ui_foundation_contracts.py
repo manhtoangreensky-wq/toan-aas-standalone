@@ -2416,3 +2416,62 @@ def test_light_onboarding_keeps_optional_telegram_linking_clear_and_readable() -
     assert "color: var(--portal-muted);" in declarations(".portal-page .portal-onboarding-route p")
     assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-onboarding-page > .portal-onboarding-assurance")
     assert "color: var(--portal-ink);" in declarations(".portal-page .portal-onboarding-page > .portal-onboarding-assurance > summary")
+
+
+def test_light_account_security_keeps_signed_session_and_mfa_states_readable() -> None:
+    """Account and MFA posture stay server-owned while their UI gains a clear light hierarchy."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    for marker in (
+        'class="portal-settings-nav"',
+        'class="portal-account-command"',
+        "portal-account-session",
+        'class="portal-security-posture"',
+        'class="portal-security-posture-facts"',
+        "portal-security-assurance",
+    ):
+        assert marker in PORTAL_CLIENT
+    assert "Signed session hợp lệ" in PORTAL_CLIENT
+    assert "Tình trạng bảo mật" in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-account-page .portal-settings-nav",
+            ".portal-account-page .portal-account-command",
+            ".portal-security-posture",
+            ".portal-security-posture-facts > div",
+            ".portal-account-security .portal-security-assurance",
+        )
+    )
+
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-settings-nav")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-settings-nav a")
+    current = declarations(".portal-page .portal-settings-nav a[aria-current=\"page\"]")
+    assert "border-color: var(--portal-context);" in current
+    assert "background: var(--portal-surface-soft);" in current
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-account-command")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-account-command-copy h2")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-account-command-copy p")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-account-command-facts > div")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-account-command-facts dt")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-account-command-facts dd")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-account-session")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-security-posture")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-security-posture-head h2")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-security-posture-head p")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-security-posture-facts > div")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-security-posture-facts small")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-security-posture-facts strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-security-posture-facts em")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-account-security .portal-security-assurance")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-account-security .portal-security-assurance summary")
