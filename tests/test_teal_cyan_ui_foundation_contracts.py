@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SHELL_TEMPLATE = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
 PORTAL_THEME = ROOT / "static" / "portal" / "portal-theme.css"
 PORTAL_CATALOGUE = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+PORTAL_CLIENT = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 MANIFEST = ROOT / "static" / "portal" / "manifest.webmanifest"
@@ -320,6 +321,75 @@ def test_light_support_and_operations_intros_replace_legacy_dark_panel_ink() -> 
     assert "color: var(--portal-muted);" in domain_meta.group("declarations")
     assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
     assert _contrast_ratio("#456b77", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+
+
+def test_light_core_workspace_intros_keep_their_metric_hierarchy_readable() -> None:
+    """Core authoring surfaces keep labels and values distinct on the light theme."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    standard_intros = (
+        ".portal-project-intro",
+        ".portal-project-package-intro",
+        ".portal-document-operation-intro",
+        ".portal-vault-intro",
+        ".portal-memory-intro",
+    )
+    metric_intros = (*standard_intros, ".portal-project-summary")
+    metric_cards = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-memory-intro[^)]*)\) dl > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    standard_primary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-memory-intro[^)]*)\) :is\(h2, dt\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    standard_secondary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-memory-intro[^)]*)\) :is\(p, dd\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    summary_primary = re.search(
+        r"\.portal-page \.portal-project-summary :is\(h2, dd\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    summary_secondary = re.search(
+        r"\.portal-page \.portal-project-summary :is\(p, dt\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert all(selector in PORTAL_CATALOGUE for selector in metric_intros)
+    assert '<section class="portal-project-summary">' in PORTAL_CLIENT
+    assert '<dt>Mục tiêu</dt><dd>${safeText(String(project.objective || "Chưa đặt"))}</dd>' in PORTAL_CLIENT
+    assert '<dt>Trạng thái</dt><dd>${badge(projectState(project.state))}</dd>' in PORTAL_CLIENT
+    assert metric_cards is not None
+    assert standard_primary is not None
+    assert standard_secondary is not None
+    assert summary_primary is not None
+    assert summary_secondary is not None
+    for selector in metric_intros:
+        assert selector in metric_cards.group("selectors")
+    for selector in standard_intros:
+        assert selector in standard_primary.group("selectors")
+        assert selector in standard_secondary.group("selectors")
+    assert "border-color: var(--portal-border);" in metric_cards.group("declarations")
+    assert "background: var(--portal-surface-light);" in metric_cards.group("declarations")
+    assert "color: var(--portal-ink);" in standard_primary.group("declarations")
+    assert "color: var(--portal-muted);" in standard_secondary.group("declarations")
+    assert "color: var(--portal-ink);" in summary_primary.group("declarations")
+    assert "color: var(--portal-muted);" in summary_secondary.group("declarations")
+    assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
 
 

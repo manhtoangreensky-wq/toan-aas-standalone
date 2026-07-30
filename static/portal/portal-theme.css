@@ -3012,6 +3012,49 @@ body {
   color: var(--portal-muted);
 }
 
+/* Project, Document/Image Operations, Vault and Memory began as dark feature
+   surfaces. Their outer panels now inherit the shared light canvas, while
+   Project detail deliberately keeps dt as its label and dd as its value. */
+.portal-page :is(
+  .portal-project-intro,
+  .portal-project-package-intro,
+  .portal-document-operation-intro,
+  .portal-vault-intro,
+  .portal-memory-intro,
+  .portal-project-summary
+) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-project-intro,
+  .portal-project-package-intro,
+  .portal-document-operation-intro,
+  .portal-vault-intro,
+  .portal-memory-intro
+) :is(h2, dt) {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-project-intro,
+  .portal-project-package-intro,
+  .portal-document-operation-intro,
+  .portal-vault-intro,
+  .portal-memory-intro
+) :is(p, dd) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-project-summary :is(h2, dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-project-summary :is(p, dt) {
+  color: var(--portal-muted);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
