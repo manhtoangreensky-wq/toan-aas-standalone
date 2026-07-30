@@ -6442,3 +6442,121 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Document & PDF Workspace surface */
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro dd, .portal-document-workspace-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-create, .portal-document-workspace-editor, .portal-document-plan-create, .portal-document-workspace-boundary, .portal-document-workspace-estimate, .portal-document-workspace-activity, .portal-document-plan-card, .portal-document-plan-handoff, .portal-document-plan-version-list > article, .portal-document-version-list > article, .portal-document-workspace-events > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-guard-list em {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-meta span, .portal-document-plan-meta span, .portal-document-workspace-tags span, .portal-document-workspace-pagination) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-estimate-grid span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-estimate-grid strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-plan-handoff h4, .portal-document-plan-version-list strong, .portal-document-version-list strong, .portal-document-workspace-events strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-plan-handoff p, .portal-document-plan-handoff small, .portal-document-plan-version-list small, .portal-document-version-list p, .portal-document-version-list small, .portal-document-workspace-events small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) .portal-document-workspace-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+.portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-document-workspace, .portal-document-workspace-detail) :is(.portal-document-workspace-intro dl, .portal-document-workspace-detail-summary dl, .portal-document-workspace-estimate-grid, .portal-document-workspace-guard-list, .portal-document-workspace-layout, .portal-document-workspace-detail-grid, .portal-document-workspace-history-grid, .portal-document-workspace-grid, .portal-document-plan-grid) {
+    grid-template-columns: 1fr;
+  }
+}
