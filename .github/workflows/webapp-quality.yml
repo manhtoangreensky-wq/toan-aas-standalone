@@ -86,6 +86,7 @@ jobs:
             tests/test_interface_locale_navigator_portal_contracts.py \
             tests/test_workspace_menu_portal_contracts.py \
             tests/test_portal_navigation_ux_contracts.py \
+            tests/test_teal_cyan_ui_foundation_contracts.py \
             tests/test_copyfast_music_directions.py \
             tests/test_music_directions_portal_contracts.py \
             tests/test_copyfast_sfx_cue_sheet.py \

@@ -1651,3 +1651,159 @@ def test_light_operations_cards_keep_erp_evidence_and_severity_readable() -> Non
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
     assert _contrast_ratio("#b91c1c", "#ffffff") >= 4.5
+
+
+def test_light_inbox_cards_keep_private_notification_states_readable() -> None:
+    """Inbox must retain a calm, truthful customer surface after the light reset."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    intro = re.search(
+        r"\.portal-page :is\(\.portal-inbox, \.portal-notification-automation\) "
+        r"\.portal-inbox-intro :is\(h2, dt\)\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    intro_copy = re.search(
+        r"\.portal-page :is\(\.portal-inbox, \.portal-notification-automation\) "
+        r"\.portal-inbox-intro :is\(p, dd\)\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metrics = re.search(
+        r"\.portal-page \.portal-inbox \.portal-inbox-metrics \.portal-metric\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metric_value = re.search(
+        r"\.portal-page \.portal-inbox \.portal-inbox-metrics \.portal-metric > strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    filter_surface = re.search(
+        r"\.portal-page \.portal-inbox-filter\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    notification = re.search(
+        r"\.portal-page \.portal-inbox-item\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    notification_hover = re.search(
+        r"\.portal-page \.portal-inbox-item:hover,\s*"
+        r"\.portal-page \.portal-inbox-item:focus-within\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    urgent_notification = re.search(
+        r"\.portal-page \.portal-inbox-item\[data-severity=\"urgent\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    dismissed_notification = re.search(
+        r"\.portal-page \.portal-inbox-item\[data-state=\"dismissed\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    kind = re.search(
+        r"\.portal-page \.portal-inbox-kind\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    notification_heading = re.search(
+        r"\.portal-page \.portal-inbox-item h3\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    notification_copy = re.search(
+        r"\.portal-page \.portal-inbox-item p\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_card = re.search(
+        r"\.portal-page \.portal-inbox-item-meta > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_label = re.search(
+        r"\.portal-page \.portal-inbox-item-meta dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_value = re.search(
+        r"\.portal-page \.portal-inbox-item-meta dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    run_title = re.search(
+        r"\.portal-page \.portal-inbox-run strong\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-inbox-metrics"',
+        'class="portal-inbox-filter"',
+        'class="portal-inbox-item"',
+        'class="portal-inbox-item-meta"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-inbox-metrics .portal-metric",
+            ".portal-inbox-filter",
+            ".portal-inbox-item",
+            ".portal-inbox-item-meta > div",
+        )
+    )
+    for match in (
+        intro,
+        intro_copy,
+        metrics,
+        metric_value,
+        filter_surface,
+        notification,
+        notification_hover,
+        urgent_notification,
+        dismissed_notification,
+        kind,
+        notification_heading,
+        notification_copy,
+        metadata_card,
+        metadata_label,
+        metadata_value,
+        run_title,
+    ):
+        assert match is not None
+    assert "color: var(--portal-ink);" in intro.group("declarations")
+    assert "color: var(--portal-muted);" in intro_copy.group("declarations")
+    assert "border-color: var(--portal-border);" in metrics.group("declarations")
+    assert "background: var(--portal-surface-light);" in metrics.group("declarations")
+    assert "color: var(--portal-ink);" in metric_value.group("declarations")
+    assert "border-color: var(--portal-border);" in filter_surface.group("declarations")
+    assert "background: var(--portal-surface-soft);" in filter_surface.group("declarations")
+    assert "border-color: var(--portal-border);" in notification.group("declarations")
+    assert "background: var(--portal-surface-light);" in notification.group("declarations")
+    assert "border-color: var(--portal-border-strong);" in notification_hover.group("declarations")
+    assert "background: var(--portal-surface-soft);" in notification_hover.group("declarations")
+    assert "border-color: var(--portal-warning);" in urgent_notification.group("declarations")
+    assert "opacity: 1;" in dismissed_notification.group("declarations")
+    assert "color: var(--portal-context);" in kind.group("declarations")
+    assert "color: var(--portal-ink);" in notification_heading.group("declarations")
+    assert "color: var(--portal-muted);" in notification_copy.group("declarations")
+    assert "border-color: var(--portal-border);" in metadata_card.group("declarations")
+    assert "background: var(--portal-surface-soft);" in metadata_card.group("declarations")
+    assert "color: var(--portal-muted);" in metadata_label.group("declarations")
+    assert "color: var(--portal-ink);" in metadata_value.group("declarations")
+    assert "color: var(--portal-ink);" in run_title.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
+    assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
