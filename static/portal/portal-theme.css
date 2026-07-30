@@ -3405,6 +3405,42 @@ body {
   color: var(--portal-ink);
 }
 
+/* Support case cards are displayed in both customer and operator queues. The
+   case hero can retain its deliberate dark treatment, while list cards and
+   their metadata inherit the shared light application surface. */
+.portal-page .portal-support-case-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-support-case-card .portal-support-case-category {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-support-case-card h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-support-case-card > p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-support-case-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-support-case-meta dt,
+.portal-page .portal-support-case-meta dd small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-support-case-meta dd {
+  color: var(--portal-ink);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */

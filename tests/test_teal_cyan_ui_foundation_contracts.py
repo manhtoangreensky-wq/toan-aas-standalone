@@ -1152,3 +1152,74 @@ def test_light_canonical_suggestions_keep_generated_text_readable() -> None:
     assert "color: var(--portal-ink);" in generated_text.group("declarations")
     assert _contrast_ratio("#073a45", "#e6f8f7") >= 4.5
     assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
+
+
+def test_light_support_case_cards_keep_customer_and_operator_metadata_readable() -> None:
+    """The shared light-card rule must not leave Support Desk's old pale ink behind."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    card_hover = re.search(
+        r"\.portal-page \.portal-support-case-card:hover\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    category = re.search(
+        r"\.portal-page \.portal-support-case-card \.portal-support-case-category\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    heading = re.search(
+        r"\.portal-page \.portal-support-case-card h3\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    excerpt = re.search(
+        r"\.portal-page \.portal-support-case-card > p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    meta_card = re.search(
+        r"\.portal-page \.portal-support-case-meta > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    meta_label = re.search(
+        r"\.portal-page \.portal-support-case-meta dt,\s*"
+        r"\.portal-page \.portal-support-case-meta dd small\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    meta_value = re.search(
+        r"\.portal-page \.portal-support-case-meta dd\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert '<article class="portal-support-case-card">' in PORTAL_CLIENT
+    assert '<span class="portal-support-case-category">' in PORTAL_CLIENT
+    assert '<dl class="portal-support-case-meta">' in PORTAL_CLIENT
+    assert ".portal-support-case-card h3" in PORTAL_CATALOGUE
+    assert ".portal-support-case-meta dd" in PORTAL_CATALOGUE
+    for match in (card_hover, category, heading, excerpt, meta_card, meta_label, meta_value):
+        assert match is not None
+    assert "border-color: var(--portal-border-strong);" in card_hover.group("declarations")
+    assert "background: var(--portal-surface-soft);" in card_hover.group("declarations")
+    assert "border-color: var(--portal-border);" in category.group("declarations")
+    assert "background: var(--portal-surface-soft);" in category.group("declarations")
+    assert "color: var(--portal-context);" in category.group("declarations")
+    assert "color: var(--portal-ink);" in heading.group("declarations")
+    assert "color: var(--portal-muted);" in excerpt.group("declarations")
+    assert "border-color: var(--portal-border);" in meta_card.group("declarations")
+    assert "background: var(--portal-surface-light);" in meta_card.group("declarations")
+    assert "color: var(--portal-muted);" in meta_label.group("declarations")
+    assert "color: var(--portal-ink);" in meta_value.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0369a1", "#e6f8f7") >= 4.5
