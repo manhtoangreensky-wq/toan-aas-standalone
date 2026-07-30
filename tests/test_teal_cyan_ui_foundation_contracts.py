@@ -1514,3 +1514,140 @@ def test_light_workboard_cards_keep_kanban_and_list_metadata_readable() -> None:
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0f766e", "#e6f8f7") >= 4.5
     assert _contrast_ratio("#b91c1c", "#ffffff") >= 4.5
+
+
+def test_light_operations_cards_keep_erp_evidence_and_severity_readable() -> None:
+    """Operations metrics and incidents must not retain the dark control-room palette."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    metrics = re.search(
+        r"\.portal-page :is\(\.portal-operations, \.portal-operations-admin\) "
+        r"\.portal-operations-metrics \.portal-metric\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metric_label = re.search(
+        r"\.portal-page :is\(\.portal-operations, \.portal-operations-admin\) "
+        r"\.portal-operations-metrics \.portal-metric > span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metric_value = re.search(
+        r"\.portal-page :is\(\.portal-operations, \.portal-operations-admin\) "
+        r"\.portal-operations-metrics \.portal-metric > strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    incident = re.search(
+        r"\.portal-page \.portal-operations-incident\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    high_incident = re.search(
+        r"\.portal-page \.portal-operations-incident\[data-severity=\"high\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    critical_incident = re.search(
+        r"\.portal-page \.portal-operations-incident\[data-severity=\"critical\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    incident_heading = re.search(
+        r"\.portal-page \.portal-operations-incident h3\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    incident_copy = re.search(
+        r"\.portal-page \.portal-operations-incident p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_card = re.search(
+        r"\.portal-page \.portal-operations-meta > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_label = re.search(
+        r"\.portal-page \.portal-operations-meta dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_value = re.search(
+        r"\.portal-page \.portal-operations-meta dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    code = re.search(
+        r"\.portal-page \.portal-operations-code\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    approval = re.search(
+        r"\.portal-page \.portal-operations-approval\[data-state=\"awaiting_approval\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-operations-metrics"',
+        'class="portal-operations-incident"',
+        'class="portal-operations-meta"',
+        'class="portal-operations-code"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-operations-metrics .portal-metric",
+            ".portal-operations-incident",
+            ".portal-operations-meta > div",
+            ".portal-operations-code",
+        )
+    )
+    for match in (
+        metrics,
+        metric_label,
+        metric_value,
+        incident,
+        high_incident,
+        critical_incident,
+        incident_heading,
+        incident_copy,
+        metadata_card,
+        metadata_label,
+        metadata_value,
+        code,
+        approval,
+    ):
+        assert match is not None
+    assert "border-color: var(--portal-border);" in metrics.group("declarations")
+    assert "background: var(--portal-surface-light);" in metrics.group("declarations")
+    assert "color: var(--portal-muted);" in metric_label.group("declarations")
+    assert "color: var(--portal-ink);" in metric_value.group("declarations")
+    assert "border-color: var(--portal-border);" in incident.group("declarations")
+    assert "background: var(--portal-surface-light);" in incident.group("declarations")
+    assert "border-color: var(--portal-warning);" in high_incident.group("declarations")
+    assert "border-color: var(--portal-danger);" in critical_incident.group("declarations")
+    assert "color: var(--portal-ink);" in incident_heading.group("declarations")
+    assert "color: var(--portal-muted);" in incident_copy.group("declarations")
+    assert "border-color: var(--portal-border);" in metadata_card.group("declarations")
+    assert "background: var(--portal-surface-soft);" in metadata_card.group("declarations")
+    assert "color: var(--portal-muted);" in metadata_label.group("declarations")
+    assert "color: var(--portal-ink);" in metadata_value.group("declarations")
+    assert "background: var(--portal-surface-soft);" in code.group("declarations")
+    assert "color: var(--portal-context);" in code.group("declarations")
+    assert "border-color: var(--portal-warning);" in approval.group("declarations")
+    assert "background: var(--portal-surface-light);" in approval.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
+    assert _contrast_ratio("#b91c1c", "#ffffff") >= 4.5

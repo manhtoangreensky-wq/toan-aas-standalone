@@ -3217,6 +3217,127 @@ body {
   color: var(--portal-muted);
 }
 
+/* Operations is an evidence and approval surface, not a dark monitoring
+   console. Keep its status colors while moving metrics, incidents and records
+   onto the same calm light hierarchy as the rest of Admin ERP. */
+.portal-page :is(.portal-operations, .portal-operations-admin) .portal-operations-metrics .portal-metric {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page :is(.portal-operations, .portal-operations-admin) .portal-operations-metrics .portal-metric > span {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(.portal-operations, .portal-operations-admin) .portal-operations-metrics .portal-metric > em {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(.portal-operations, .portal-operations-admin) .portal-operations-metrics .portal-metric > strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-operations-incident {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-operations-incident[data-severity="high"] {
+  border-color: var(--portal-warning);
+  background: color-mix(in srgb, var(--portal-warning) 7%, var(--portal-surface-light));
+}
+
+.portal-page .portal-operations-incident[data-severity="critical"] {
+  border-color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 7%, var(--portal-surface-light));
+}
+
+.portal-page .portal-operations-incident h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-operations-incident p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-operations-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-operations-meta dt {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-operations-meta dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-operations-code {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-operations-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-operations-boundary :is(h2, .portal-card-title) {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-operations-boundary p,
+.portal-page .portal-operations-boundary-list li {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-operations-boundary-list li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page .portal-operations-boundary-list li::before {
+  background: color-mix(in srgb, var(--portal-action) 10%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page :is(
+  .portal-operations-row,
+  .portal-operations-run,
+  .portal-operations-approval,
+  .portal-reliability-row
+) strong {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-operations-row,
+  .portal-operations-run,
+  .portal-operations-approval,
+  .portal-reliability-row
+) small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-operations-approval[data-state="awaiting_approval"] {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-operations-approval-form .portal-button--danger {
+  border-color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 8%, var(--portal-surface-light));
+  color: var(--portal-danger);
+}
+
+.portal-page .portal-operations-approval-form .portal-button--danger:hover {
+  border-color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 14%, var(--portal-surface-light));
+  color: var(--portal-danger);
+}
+
 /* Every Admin domain intro reuses the shared light state surface. Its legacy
    pale meta pills need a bordered light treatment instead of low-contrast
    text inherited from the former dark panel. */
