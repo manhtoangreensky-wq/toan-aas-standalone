@@ -3135,3 +3135,165 @@ def test_light_account_data_and_workspace_care_keep_private_actions_readable() -
     )
     assert mobile_status is not None
     assert "flex: 0 1 auto;" in mobile_status.group("declarations")
+
+
+def test_light_image_operations_hub_keeps_artboard_review_readable() -> None:
+    """Image Hub keeps its owner-scoped review surfaces on the shared light system."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    hub_route = ".portal-page.portal-image-hub"
+    detail_route = ".portal-page.portal-image-hub-detail"
+    for selector in (
+        ".portal-image-hub-overview",
+        ".portal-image-hub-detail-board",
+        ".portal-image-hub-next-steps",
+        ".portal-image-hub-step",
+        ".portal-image-studio-editor",
+        ".portal-image-direction-create",
+        ".portal-image-studio-estimate",
+        ".portal-image-reference-library",
+        ".portal-image-direction-card",
+        ".portal-image-reference-picker",
+    ):
+        assert selector in PORTAL_CATALOGUE
+    assert "function renderImageHubOverview(summary)" in PORTAL_CLIENT
+    assert "function renderImageHubDetailBoard(artboard, directions)" in PORTAL_CLIENT
+    assert "function renderImageStudioDetail(page, context)" in PORTAL_CLIENT
+
+    overview = declarations(f"{hub_route} .portal-image-hub-overview")
+    detail_board = declarations(f"{detail_route} .portal-image-hub-detail-board")
+    detail_summary = declarations(f"{detail_route} .portal-image-studio-detail-summary")
+    shared_heading = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ":is(.portal-image-hub-overview, .portal-image-hub-detail-board, "
+        ".portal-image-studio-detail-summary) :is(h2, h3)"
+    )
+    shared_copy = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ":is(.portal-image-hub-overview, .portal-image-hub-detail-board, "
+        ".portal-image-studio-detail-summary) p"
+    )
+    metric_cards = declarations(
+        f"{hub_route} .portal-image-hub-overview dl > div,\n"
+        f"{detail_route} .portal-image-hub-detail-board dl > div"
+    )
+    metric_copy = declarations(
+        f"{hub_route} .portal-image-hub-overview dd,\n"
+        f"{detail_route} .portal-image-hub-detail-board dd"
+    )
+    detail_summary_label = declarations(f"{detail_route} .portal-image-studio-detail-summary dt")
+    detail_summary_value = declarations(f"{detail_route} .portal-image-studio-detail-summary dd")
+    step_board = declarations(f"{hub_route} .portal-image-hub-next-steps")
+    step = declarations(f"{hub_route} .portal-image-hub-step")
+    step_hover = declarations(f"{hub_route} .portal-image-hub-step:hover")
+    step_focus = declarations(f"{hub_route} .portal-image-hub-step:focus-visible")
+    step_copy = declarations(f"{hub_route} .portal-image-hub-step span")
+    hub_authoring_panels = declarations(
+        f"{hub_route} :is(.portal-image-studio-create, .portal-image-studio-boundary, "
+        ".portal-image-studio-filter, .portal-image-artboard-card, "
+        ".portal-image-reference-library, .portal-image-reference-picker)"
+    )
+    hub_artboard_hover = declarations(f"{hub_route} .portal-image-artboard-card:hover")
+    hub_metadata = declarations(
+        f"{hub_route} .portal-image-artboard-meta span,\n"
+        f"{hub_route} .portal-image-studio-tags span"
+    )
+    authoring_panels = declarations(
+        f"{detail_route} :is(.portal-image-studio-editor, .portal-image-direction-create, "
+        ".portal-image-studio-estimate, .portal-image-studio-activity, "
+        ".portal-image-reference-library, .portal-image-reference-picker)"
+    )
+    direction_card = declarations(f"{detail_route} .portal-image-direction-card")
+    direction_card_hover = declarations(f"{detail_route} .portal-image-direction-card:hover")
+    direction_metadata = declarations(
+        f"{detail_route} .portal-image-direction-meta span,\n"
+        f"{detail_route} .portal-image-studio-tags span"
+    )
+    reference_item = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ".portal-image-reference-list > :is(li, article, a, button)"
+    )
+    guard = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ".portal-image-studio-guard-list span"
+    )
+    guard_label = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ".portal-image-studio-guard-list strong"
+    )
+    guard_status = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ".portal-image-studio-guard-list em"
+    )
+    estimate = declarations(f"{detail_route} .portal-image-studio-estimate-grid span")
+    activity_copy = declarations(f"{detail_route} .portal-image-studio-events small")
+    pagination = declarations(
+        ".portal-page:is(.portal-image-hub, .portal-image-hub-detail) "
+        ":is(.portal-image-studio-pagination, .portal-image-reference-pagination)"
+    )
+    mobile_metrics = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(f'{hub_route} .portal-image-hub-overview dl,')}\s*"
+        rf"{re.escape(f'{detail_route} .portal-image-hub-detail-board dl')}\s*"
+        rf"\{{(?P<declarations>.*?)\n\s*\}}\s*\}}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert "background: var(--portal-surface-light);" in overview
+    assert "box-shadow: none;" in overview
+    assert "background: var(--portal-surface-light);" in detail_board
+    assert "box-shadow: none;" in detail_board
+    assert "background: var(--portal-surface-light) !important;" in detail_summary
+    assert "box-shadow: none;" in detail_summary
+    assert "color: var(--portal-ink);" in shared_heading
+    assert "color: var(--portal-muted);" in shared_copy
+    assert "background: var(--portal-surface-soft);" in metric_cards
+    assert "color: var(--portal-muted);" in metric_copy
+    assert "font-size: 13px;" in metric_copy
+    assert "color: var(--portal-muted);" in detail_summary_label
+    assert "color: var(--portal-ink);" in detail_summary_value
+    assert "font-size: 13px;" in detail_summary_value
+    assert "background: var(--portal-surface-light);" in step_board
+    assert "background: var(--portal-surface-light);" in step
+    assert "box-shadow: none;" in step
+    assert "background: var(--portal-light-hover-surface);" in step_hover
+    assert "transform: none;" in step_hover
+    assert "outline: 3px solid var(--portal-focus) !important;" in step_focus
+    assert "color: var(--portal-muted);" in step_copy
+    assert "font-size: 13px;" in step_copy
+    assert "background: var(--portal-surface-light);" in hub_authoring_panels
+    assert "box-shadow: none;" in hub_authoring_panels
+    assert "background: var(--portal-light-hover-surface);" in hub_artboard_hover
+    assert "transform: none;" in hub_artboard_hover
+    assert "background: var(--portal-surface-soft);" in hub_metadata
+    assert "font-size: 13px;" in hub_metadata
+    assert "background: var(--portal-surface-light);" in authoring_panels
+    assert "box-shadow: none;" in authoring_panels
+    assert "background: var(--portal-surface-light);" in direction_card
+    assert "background: var(--portal-light-hover-surface);" in direction_card_hover
+    assert "transform: none;" in direction_card_hover
+    assert "background: var(--portal-surface-soft);" in direction_metadata
+    assert "font-size: 13px;" in direction_metadata
+    assert "background: var(--portal-surface-soft);" in reference_item
+    assert "background: var(--portal-surface-soft);" in guard
+    assert "color: var(--portal-ink);" in guard_label
+    assert "background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));" in guard_status
+    assert "background: var(--portal-surface-soft);" in estimate
+    assert "color: var(--portal-muted);" in activity_copy
+    assert "font-size: 13px;" in activity_copy
+    assert "border-color: var(--portal-border);" in pagination
+    assert "color: var(--portal-muted);" in pagination
+    assert "font-size: 13px;" in pagination
+    assert mobile_metrics is not None
+    assert "grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));" in mobile_metrics.group("declarations")

@@ -6096,3 +6096,248 @@ body {
     flex: 0 1 auto;
   }
 }
+
+/* Image Operations Hub is a Web-native artboard workspace. Keep its
+   owner-scoped direction/review data on the same quiet light canvas as the
+   rest of the signed app; this does not create an image, provider request, or
+   asset preview. */
+.portal-page.portal-image-hub .portal-image-hub-overview {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-hub-detail-board {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-detail-summary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) :is(.portal-image-hub-overview, .portal-image-hub-detail-board, .portal-image-studio-detail-summary) :is(h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) :is(.portal-image-hub-overview, .portal-image-hub-detail-board, .portal-image-studio-detail-summary) p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-image-hub .portal-image-hub-overview dl > div,
+.portal-page.portal-image-hub-detail .portal-image-hub-detail-board dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-image-hub .portal-image-hub-overview dt,
+.portal-page.portal-image-hub-detail .portal-image-hub-detail-board dt {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-image-hub .portal-image-hub-overview dd,
+.portal-page.portal-image-hub-detail .portal-image-hub-detail-board dd {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-detail-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-detail-summary dt {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-next-steps {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step:focus-visible {
+  border-color: var(--portal-focus);
+  outline: 3px solid var(--portal-focus) !important;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub .portal-image-hub-step b {
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub :is(.portal-image-studio-create, .portal-image-studio-boundary, .portal-image-studio-filter, .portal-image-artboard-card, .portal-image-reference-library, .portal-image-reference-picker) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub .portal-image-artboard-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  transform: none;
+}
+
+.portal-page.portal-image-hub .portal-image-artboard-meta span,
+.portal-page.portal-image-hub .portal-image-studio-tags span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail :is(.portal-image-studio-editor, .portal-image-direction-create, .portal-image-studio-estimate, .portal-image-studio-activity, .portal-image-reference-library, .portal-image-reference-picker) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-picker :is(h3, h4, legend, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-picker p {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-list > :is(li, article, a, button) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-list > :is(a, button):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-list strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-list :is(b, em) {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-reference-list small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) :is(.portal-image-studio-pagination, .portal-image-reference-pagination) {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-direction-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-direction-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  transform: none;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-direction-meta span,
+.portal-page.portal-image-hub-detail .portal-image-studio-tags span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-studio-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-studio-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-hub, .portal-image-hub-detail) .portal-image-studio-guard-list em {
+  border-color: color-mix(in srgb, var(--portal-action) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-estimate-grid span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-estimate-grid strong,
+.portal-page.portal-image-hub-detail .portal-image-direction-history > strong,
+.portal-page.portal-image-hub-detail .portal-image-version-list strong,
+.portal-page.portal-image-hub-detail .portal-image-studio-events strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-image-hub-detail :is(.portal-image-direction-history > div, .portal-image-version-list > article, .portal-image-studio-events > div) {
+  border-color: var(--portal-border);
+}
+
+.portal-page.portal-image-hub-detail :is(.portal-image-direction-history > div, .portal-image-version-list p) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-events small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-image-hub-detail .portal-image-direction-history em {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-image-hub-detail .portal-image-studio-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-image-hub .portal-image-hub-overview dl,
+  .portal-page.portal-image-hub-detail .portal-image-hub-detail-board dl {
+    grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+  }
+}
