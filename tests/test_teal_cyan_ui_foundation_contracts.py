@@ -2364,3 +2364,55 @@ def test_light_music_library_keeps_private_metadata_and_guard_states_readable() 
     assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-boundary strong")
     assert "color: var(--portal-muted);" in declarations(".portal-page .portal-music-library-boundary span")
     assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-guard")
+
+
+def test_light_onboarding_keeps_optional_telegram_linking_clear_and_readable() -> None:
+    """Onboarding must keep Web-first choice and signed Telegram linking equally legible."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    for marker in (
+        'class="portal-onboarding-choice"',
+        'class="portal-onboarding-steps"',
+        'class="portal-onboarding-route"',
+        'class="portal-onboarding-assurance"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert "Web hoạt động độc lập" in PORTAL_CLIENT
+    assert "Telegram là tùy chọn" in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-onboarding-action > .portal-notice",
+            ".portal-onboarding-choice-icon",
+            ".portal-onboarding-steps",
+            ".portal-onboarding-route",
+            ".portal-onboarding-page > .portal-onboarding-assurance",
+        )
+    )
+
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-onboarding-action > .portal-notice")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-onboarding-action .portal-onboarding-choice-icon")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-onboarding-action .portal-onboarding-choice strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-onboarding-action .portal-onboarding-choice p")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-onboarding-steps")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-onboarding-steps li > span")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-onboarding-steps strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-onboarding-steps small")
+    current = declarations(".portal-page .portal-onboarding-steps li[data-state=\"current\"]")
+    assert "border-left-color: var(--portal-action);" in current
+    assert "background: var(--portal-surface-soft);" in current
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-onboarding-route")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-onboarding-route strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-onboarding-route p")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-onboarding-page > .portal-onboarding-assurance")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-onboarding-page > .portal-onboarding-assurance > summary")
