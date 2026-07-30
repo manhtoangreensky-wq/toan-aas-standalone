@@ -1304,3 +1304,82 @@ def test_light_campaign_cards_keep_planning_metadata_and_actions_readable() -> N
     assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
     assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
     assert _contrast_ratio("#115e59", "#ffffff") >= 4.5
+
+
+def test_light_artifact_cards_keep_icons_and_private_metadata_readable() -> None:
+    """Project exports, document operations, vault files and reminders share light cards."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    icons = re.search(
+        r"\.portal-page :is\(\s*\.portal-project-package-icon,\s*"
+        r"\.portal-document-operation-icon,\s*\.portal-vault-file-icon\s*\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_cards = re.search(
+        r"\.portal-page :is\(\s*\.portal-project-package-meta,\s*"
+        r"\.portal-document-operation-meta,\s*\.portal-vault-meta,\s*"
+        r"\.portal-memory-reminder-meta\s*\) > div\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_labels = re.search(
+        r"\.portal-page :is\(\s*\.portal-project-package-meta,\s*"
+        r"\.portal-document-operation-meta,\s*\.portal-vault-meta,\s*"
+        r"\.portal-memory-reminder-meta\s*\) dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    metadata_values = re.search(
+        r"\.portal-page :is\(\s*\.portal-project-package-meta,\s*"
+        r"\.portal-document-operation-meta,\s*\.portal-vault-meta,\s*"
+        r"\.portal-memory-reminder-meta\s*\) dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    overdue = re.search(
+        r"\.portal-page \.portal-memory-overdue\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    reminder_edit = re.search(
+        r"\.portal-page \.portal-memory-reminder-edit > summary\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-project-package-icon"',
+        'class="portal-document-operation-icon"',
+        'class="portal-vault-file-icon"',
+        'class="portal-memory-reminder-meta"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-project-package-icon",
+            ".portal-document-operation-icon",
+            ".portal-vault-file-icon",
+            ".portal-memory-reminder-meta",
+        )
+    )
+    for match in (icons, metadata_cards, metadata_labels, metadata_values, overdue, reminder_edit):
+        assert match is not None
+    assert "border-color: var(--portal-border);" in icons.group("declarations")
+    assert "background: var(--portal-surface-soft);" in icons.group("declarations")
+    assert "color: var(--portal-context);" in icons.group("declarations")
+    assert "border-color: var(--portal-border);" in metadata_cards.group("declarations")
+    assert "background: var(--portal-surface-light);" in metadata_cards.group("declarations")
+    assert "color: var(--portal-muted);" in metadata_labels.group("declarations")
+    assert "color: var(--portal-ink);" in metadata_values.group("declarations")
+    assert "border-color: var(--portal-warning);" in overdue.group("declarations")
+    assert "background: var(--portal-surface-light);" in overdue.group("declarations")
+    assert "color: var(--portal-warning);" in overdue.group("declarations")
+    assert "color: var(--portal-context);" in reminder_edit.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0369a1", "#e6f8f7") >= 4.5
+    assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
