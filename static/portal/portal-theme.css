@@ -2977,6 +2977,7 @@ body {
 .portal-main :focus-visible {
   outline: 3px solid var(--portal-focus) !important;
   outline-offset: 3px;
+  box-shadow: 0 0 0 2px var(--portal-surface-light), 0 0 0 5px var(--portal-focus);
 }
 
 .portal-account-page [data-portal-action="auth-logout"] {

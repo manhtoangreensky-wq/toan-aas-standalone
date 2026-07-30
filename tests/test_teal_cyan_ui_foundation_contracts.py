@@ -229,6 +229,13 @@ def test_light_workspace_intros_replace_dark_catalogue_text_and_metric_cards_wit
         theme_source,
         flags=re.DOTALL,
     )
+    shared_light_surfaces = re.search(
+        r'\.portal-page :is\(\[class\$="-intro"\], \[class\$="-summary"\], '
+        r'\.portal-action-center, \.portal-start-guide, \.portal-capability-hub, \.portal-state\) '
+        r'\{(?P<declarations>.*?)\n\}',
+        theme_source,
+        flags=re.DOTALL,
+    )
     primary_text = re.search(
         r"\.portal-page :is\((?P<selectors>.*?)\) :is\(h2, dt\),\s*"
         r"\.portal-page \.portal-workboard-detail-summary :is\(h2, dd\)\s*\{(?P<declarations>.*?)\n\}",
@@ -244,8 +251,11 @@ def test_light_workspace_intros_replace_dark_catalogue_text_and_metric_cards_wit
 
     assert all(selector in PORTAL_CATALOGUE for selector in light_intro_selectors)
     assert metric_cards is not None
+    assert shared_light_surfaces is not None
     assert primary_text is not None
     assert secondary_text is not None
+    assert all(selector.endswith(("-intro", "-summary")) for selector in light_intro_selectors)
+    assert "background: var(--portal-surface-strong) !important;" in shared_light_surfaces.group("declarations")
     for selector in light_intro_selectors:
         assert selector in metric_cards.group("selectors")
     for selector in light_intro_selectors[:3]:
@@ -268,6 +278,7 @@ def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> N
     assert workspace_focus is not None
     assert "outline: 3px solid var(--portal-focus) !important;" in workspace_focus.group("declarations")
     assert "outline-offset: 3px;" in workspace_focus.group("declarations")
+    assert "box-shadow: 0 0 0 2px var(--portal-surface-light), 0 0 0 5px var(--portal-focus);" in workspace_focus.group("declarations")
     assert _contrast_ratio("#0369a1", "#ffffff") >= 3
     assert _contrast_ratio("#0369a1", "#f3fbfc") >= 3
 
