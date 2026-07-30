@@ -2635,3 +2635,59 @@ def test_light_coordination_and_crm_surfaces_keep_private_workflows_readable() -
     assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
+
+
+def test_light_job_recovery_guide_keeps_admin_safety_guidance_readable() -> None:
+    """The canonical-admin guide stays read-only while its legacy dark panels become light."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    guide = ".portal-page.portal-admin-job-recovery-guide"
+    renderer_match = re.search(
+        r"function renderAdminJobRecoveryGuide\(page, context\) \{(?P<body>.*?)\n  \}",
+        PORTAL_CLIENT,
+        flags=re.DOTALL,
+    )
+    assert renderer_match is not None
+    renderer = renderer_match.group("body")
+
+    assert "Job-Lock Recovery Safety Guide" in PORTAL_CLIENT
+    assert "Không clear, retry hoặc refund" in renderer
+    assert "Không điều khiển runtime" in renderer
+    assert "Không có financial side effect" in renderer
+    assert "data-portal-action" not in renderer
+    assert "/admin/jobs" in renderer
+    assert ".portal-job-recovery-card" in PORTAL_CATALOGUE
+    assert ".portal-job-recovery-process li" in PORTAL_CATALOGUE
+    assert ".portal-job-recovery-boundary li" in PORTAL_CATALOGUE
+
+    intro = declarations(f"{guide} .portal-job-recovery-intro")
+    card = declarations(f"{guide} .portal-job-recovery-card")
+    card_icon = declarations(f"{guide} .portal-job-recovery-card-icon")
+    heading_title = declarations(f"{guide} .portal-job-recovery-section .portal-section-heading h2")
+    heading_body = declarations(f"{guide} .portal-job-recovery-section .portal-section-heading p")
+    process_item = declarations(f"{guide} .portal-job-recovery-process li")
+    boundary_item = declarations(f"{guide} .portal-job-recovery-boundary li")
+
+    assert "border-color: var(--portal-border);" in intro
+    assert "background: var(--portal-surface-light) !important;" in intro
+    assert "border-color: var(--portal-border);" in card
+    assert "background: var(--portal-surface-light);" in card
+    assert "box-shadow: none;" in card
+    assert "border-color: var(--portal-border-strong);" in card_icon
+    assert "background: var(--portal-surface-soft);" in card_icon
+    assert "color: var(--portal-ink);" in heading_title
+    assert "color: var(--portal-muted);" in heading_body
+    assert "border-color: var(--portal-border);" in process_item
+    assert "background: var(--portal-surface-soft);" in process_item
+    assert "border-color: var(--portal-border);" in boundary_item
+    assert "background: var(--portal-surface-soft);" in boundary_item

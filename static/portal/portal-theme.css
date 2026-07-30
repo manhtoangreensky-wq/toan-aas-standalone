@@ -4948,6 +4948,65 @@ body {
   }
 }
 
+/* Job-Lock Recovery is a protected, read-only safety guide. Its legacy
+   dark cards should not imply a second operations console; use the same
+   quiet light hierarchy as the rest of the Admin ERP without changing any
+   route gate, canonical link or read-only boundary. */
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-card-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-card h3,
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-process li strong,
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-boundary li strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-card p,
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-process li span,
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-boundary li small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-section .portal-section-heading h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-section .portal-section-heading p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-process li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-boundary li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-process li::before,
+.portal-page.portal-admin-job-recovery-guide .portal-job-recovery-boundary li > span:first-child {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
