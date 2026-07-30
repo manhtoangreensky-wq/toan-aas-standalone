@@ -267,6 +267,62 @@ def test_light_workspace_intros_replace_dark_catalogue_text_and_metric_cards_wit
     assert "color: var(--portal-muted);" in secondary_text.group("declarations")
 
 
+def test_light_support_and_operations_intros_replace_legacy_dark_panel_ink() -> None:
+    """Shared Support/Operations intros inherit the light surface and matching ink."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    affected_intros = (
+        ".portal-support-intro",
+        ".portal-support-admin-intro",
+        ".portal-operations-intro",
+        ".portal-operations-admin-intro",
+    )
+    metric_cards = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-support-admin-intro[^)]*)\) dl > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    primary_text = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-support-admin-intro[^)]*)\) :is\(h2, dt\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    secondary_text = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-support-admin-intro[^)]*)\) :is\(p, dd\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    domain_meta = re.search(
+        r"\.portal-page \.portal-admin-domain-intro \.portal-state-meta span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert all(selector in PORTAL_CATALOGUE for selector in affected_intros)
+    assert metric_cards is not None
+    assert primary_text is not None
+    assert secondary_text is not None
+    assert domain_meta is not None
+    for selector in affected_intros:
+        assert selector in metric_cards.group("selectors")
+        assert selector in primary_text.group("selectors")
+        assert selector in secondary_text.group("selectors")
+    assert "border-color: var(--portal-border);" in metric_cards.group("declarations")
+    assert "background: var(--portal-surface-light);" in metric_cards.group("declarations")
+    assert "color: var(--portal-ink);" in primary_text.group("declarations")
+    assert "color: var(--portal-muted);" in secondary_text.group("declarations")
+    assert "border: 1px solid var(--portal-border);" in domain_meta.group("declarations")
+    assert "background: var(--portal-surface-light);" in domain_meta.group("declarations")
+    assert "color: var(--portal-muted);" in domain_meta.group("declarations")
+    assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+
+
 def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     workspace_focus = re.search(
