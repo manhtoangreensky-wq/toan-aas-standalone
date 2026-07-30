@@ -6749,3 +6749,202 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Subtitle Studio surface */
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro dd, .portal-subtitle-studio-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-create, .portal-subtitle-studio-editor, .portal-subtitle-cue-create, .portal-subtitle-studio-boundary, .portal-subtitle-runtime-estimate, .portal-subtitle-studio-activity, .portal-subtitle-text-preview) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source.is-guarded {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source-facts span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source-facts strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source-pager {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-language-source-pager.is-capped {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-guard-list em {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-project-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-project-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-project-meta span, .portal-subtitle-cue-meta span, .portal-subtitle-studio-tags span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-estimate-grid span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-estimate-grid strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-cue-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-cue-card.is-archived {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  opacity: 1;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-cue-translation {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-cue-form, .portal-subtitle-cue-history) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-cue-history > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-version-list > article {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-preview-text {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-cue-history > strong, .portal-subtitle-version-list strong, .portal-subtitle-studio-events strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-cue-history > div, .portal-subtitle-cue-history em, .portal-subtitle-version-list p, .portal-subtitle-version-list small, .portal-subtitle-studio-events small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-events > div {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-studio-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) :is(.portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-studio-guard-list, .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid, .portal-subtitle-project-grid, .portal-subtitle-cue-grid, .portal-subtitle-estimate-grid, .portal-subtitle-language-source-facts) {
+    grid-template-columns: 1fr;
+  }
+}
