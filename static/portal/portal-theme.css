@@ -2971,6 +2971,220 @@ body {
   color: var(--portal-muted);
 }
 
+/* Workboard retains its existing board, list and revision behavior. These
+   scoped rules only replace the legacy dark panel palette now that the shared
+   portal surface is light, so status, title and metadata remain readable. */
+.portal-page .portal-workboard-tabs a {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-tabs a:hover,
+.portal-page .portal-workboard-tabs a[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-workboard-tabs .portal-workboard-tabs-new,
+.portal-page .portal-workboard-tabs .portal-workboard-tabs-new:hover,
+.portal-page .portal-workboard-tabs .portal-workboard-tabs-new:focus-visible {
+  border-color: var(--portal-action);
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
+.portal-page .portal-workboard-board-card {
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-workboard-column {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-workboard-column > header span {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-workboard-column > header b {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-workboard-column-empty {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-workboard-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-workboard-card h3,
+.portal-page .portal-workboard-card h3 a {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-workboard-card h3 a:hover {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-workboard-card :is(p, footer) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-card-move,
+.portal-page .portal-workboard-progress {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-workboard-card-move:hover {
+  color: var(--portal-action-hover);
+}
+
+.portal-page .portal-workboard-priority {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-priority[data-priority="low"] {
+  border-color: color-mix(in srgb, var(--portal-context) 36%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-context) 7%, var(--portal-surface-light));
+  color: var(--portal-context);
+}
+
+.portal-page .portal-workboard-priority[data-priority="normal"] {
+  border-color: color-mix(in srgb, var(--portal-action) 36%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 7%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page .portal-workboard-priority[data-priority="high"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-workboard-priority[data-priority="urgent"] {
+  border-color: color-mix(in srgb, var(--portal-danger) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-danger) 8%, var(--portal-surface-light));
+  color: var(--portal-danger);
+}
+
+.portal-page .portal-workboard-reference-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-reference-list b {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-workboard-list-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-workboard-list-row:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-workboard-list-title b {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(.portal-workboard-list-title small, .portal-workboard-list-meta small) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-reference-picker {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-workboard-reference-picker :is(legend, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-workboard-reference-picker p,
+.portal-page .portal-workboard-reference-options span {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-reference-options label {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-workboard-reference-options b {
+  color: var(--portal-context);
+}
+
+.portal-page :is(.portal-workboard-state-form label, .portal-workboard-checklist-add label) {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(.portal-workboard-state-form select, .portal-workboard-checklist-add input) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page :is(.portal-workboard-state-form select, .portal-workboard-checklist-add input):focus {
+  border-color: var(--portal-context);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 16%, transparent);
+}
+
+.portal-page .portal-workboard-checklist li {
+  border-top-color: var(--portal-border);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-workboard-checklist li.is-done span:last-child {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(.portal-workboard-checklist button, .portal-workboard-checkmark) {
+  border-color: color-mix(in srgb, var(--portal-action) 34%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page .portal-workboard-checklist button:hover {
+  border-color: var(--portal-action);
+  background: color-mix(in srgb, var(--portal-action) 14%, var(--portal-surface-light));
+}
+
+.portal-page :is(.portal-workboard-version-list > article, .portal-workboard-events > div) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page :is(.portal-workboard-version-list b, .portal-workboard-events b) {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(.portal-workboard-version-list small, .portal-workboard-version-list p, .portal-workboard-events small) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-workboard-events > div > span:first-child {
+  background: var(--portal-brand);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-brand) 12%, transparent);
+}
+
 /* Support and Operations share legacy dark-gradient intros. The semantic
    theme already gives their outer panels the light application surface, so
    their metrics and text need the same readable token pair. Operations also
