@@ -6560,3 +6560,192 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Analytics Workspace surface */
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro, .portal-analytics-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro, .portal-analytics-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro, .portal-analytics-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro, .portal-analytics-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro dd, .portal-analytics-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-create, .portal-analytics-editor, .portal-analytics-metric-create, .portal-analytics-finding-create, .portal-analytics-boundary, .portal-analytics-activity, .portal-analytics-filters, .portal-analytics-metric-card, .portal-analytics-finding-card, .portal-analytics-snapshot-create, .portal-analytics-snapshot-card) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-guard-list em {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-report-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-report-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-meta span, .portal-analytics-tags span, .portal-analytics-references span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-filters {
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-pagination {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-metric-form, .portal-analytics-finding-form, .portal-analytics-snapshot-form) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-version-list > article {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-comparison {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-comparison > div {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-comparison span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-comparison strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-comparison p {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-metric-card, .portal-analytics-finding-card, .portal-analytics-snapshot-card).is-archived {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  opacity: 1;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-empty {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-empty-icon {
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-empty h3 {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-empty p {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-snapshot-card h4 {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-version-list strong, .portal-analytics-event-list strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-snapshot-note, .portal-analytics-finding-body, .portal-analytics-version-list p, .portal-analytics-version-list small, .portal-analytics-event-list small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-event-list > div {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) .portal-analytics-event-list > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+.portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail) :is(.portal-analytics-intro dl, .portal-analytics-detail-summary dl, .portal-analytics-guard-list, .portal-analytics-layout, .portal-analytics-detail-grid, .portal-analytics-history-grid, .portal-analytics-report-grid, .portal-analytics-metric-grid, .portal-analytics-finding-grid, .portal-analytics-metric-form .portal-fields, .portal-analytics-snapshot-form .portal-fields, .portal-analytics-comparison) {
+    grid-template-columns: 1fr;
+  }
+}

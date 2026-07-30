@@ -3523,3 +3523,165 @@ def test_light_document_workspace_final_surface_keeps_private_planning_readable(
     assert ".portal-document-workspace-guard-list" in mobile_selectors
     assert ".portal-document-workspace-layout" in mobile_selectors
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+
+
+def test_light_analytics_workspace_final_surface_keeps_manual_measurement_readable() -> None:
+    """Manual Analytics records retain truthfulness while leaving the legacy dark palette behind."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Analytics Workspace surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    analytics_css = layer.group("css")
+    route = ".portal-page:is(.portal-analytics-workspace, .portal-analytics-workspace-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            analytics_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(f"{route} :is(.portal-analytics-intro, .portal-analytics-detail-summary)")
+    summary_heading = declarations(
+        f"{route} :is(.portal-analytics-intro, .portal-analytics-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-analytics-intro, .portal-analytics-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-analytics-intro, .portal-analytics-detail-summary) dl > div"
+    )
+    summary_metric_value = declarations(f"{route} .portal-analytics-intro dt")
+    summary_label = declarations(
+        f"{route} :is(.portal-analytics-intro dd, .portal-analytics-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-analytics-detail-summary dd")
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-analytics-create, .portal-analytics-editor, "
+        ".portal-analytics-metric-create, .portal-analytics-finding-create, "
+        ".portal-analytics-boundary, .portal-analytics-activity, .portal-analytics-filters, "
+        ".portal-analytics-metric-card, .portal-analytics-finding-card, "
+        ".portal-analytics-snapshot-create, .portal-analytics-snapshot-card)"
+    )
+    guard_surface = declarations(f"{route} .portal-analytics-guard-list span")
+    guard_label = declarations(f"{route} .portal-analytics-guard-list strong")
+    guard_status = declarations(f"{route} .portal-analytics-guard-list em")
+    report_card = declarations(f"{route} .portal-analytics-report-card")
+    report_hover = declarations(f"{route} .portal-analytics-report-card:hover")
+    metadata = declarations(
+        f"{route} :is(.portal-analytics-meta span, .portal-analytics-tags span, "
+        ".portal-analytics-references span)"
+    )
+    filters = declarations(f"{route} .portal-analytics-filters")
+    pagination = declarations(f"{route} .portal-analytics-pagination")
+    form_dividers = declarations(
+        f"{route} :is(.portal-analytics-metric-form, .portal-analytics-finding-form, "
+        ".portal-analytics-snapshot-form)"
+    )
+    version_row = declarations(f"{route} .portal-analytics-version-list > article")
+    comparison = declarations(f"{route} .portal-analytics-comparison")
+    comparison_item = declarations(f"{route} .portal-analytics-comparison > div")
+    comparison_label = declarations(f"{route} .portal-analytics-comparison span")
+    comparison_value = declarations(f"{route} .portal-analytics-comparison strong")
+    comparison_copy = declarations(f"{route} .portal-analytics-comparison p")
+    archived_card = declarations(
+        f"{route} :is(.portal-analytics-metric-card, .portal-analytics-finding-card, "
+        ".portal-analytics-snapshot-card).is-archived"
+    )
+    empty_state = declarations(f"{route} .portal-empty")
+    empty_icon = declarations(f"{route} .portal-empty-icon")
+    empty_heading = declarations(f"{route} .portal-empty h3")
+    empty_copy = declarations(f"{route} .portal-empty p")
+    snapshot_heading = declarations(f"{route} .portal-analytics-snapshot-card h4")
+    primary_text = declarations(
+        f"{route} :is(.portal-analytics-version-list strong, .portal-analytics-event-list strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-analytics-snapshot-note, .portal-analytics-finding-body, "
+        ".portal-analytics-version-list p, .portal-analytics-version-list small, "
+        ".portal-analytics-event-list small, .portal-card-subtitle, .portal-form-note)"
+    )
+    event_dot = declarations(f"{route} .portal-analytics-event-list > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        analytics_css,
+        flags=re.DOTALL,
+    )
+
+    assert "background: var(--portal-surface-light);" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "font-size: 14px;" in summary_copy
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-action);" in summary_metric_value
+    assert "color: var(--portal-muted);" in summary_label
+    assert "font-size: 13px;" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "font-size: 13px;" in summary_value
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-muted);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "background: var(--portal-surface-light);" in report_card
+    assert "background: var(--portal-light-hover-surface);" in report_hover
+    assert "transform: none;" in report_hover
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "background: var(--portal-surface-light);" in filters
+    assert "border-color: var(--portal-border);" in pagination
+    assert "color: var(--portal-muted);" in pagination
+    assert "font-size: 13px;" in pagination
+    assert "border-top-color: var(--portal-border);" in form_dividers
+    assert "border-color: var(--portal-border);" in version_row
+    assert "background: var(--portal-surface-soft);" in comparison
+    assert "background: var(--portal-surface-light);" in comparison_item
+    assert "color: var(--portal-muted);" in comparison_label
+    assert "font-size: 13px;" in comparison_label
+    assert "color: var(--portal-ink);" in comparison_value
+    assert "font-size: 13px;" in comparison_value
+    assert "color: var(--portal-muted);" in comparison_copy
+    assert "font-size: 13px;" in comparison_copy
+    assert "background: var(--portal-surface-soft);" in archived_card
+    assert "opacity: 1;" in archived_card
+    assert "border-color: var(--portal-border);" in empty_state
+    assert "background: var(--portal-surface-soft);" in empty_state
+    assert "background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));" in empty_icon
+    assert "color: var(--portal-action);" in empty_icon
+    assert "color: var(--portal-ink);" in empty_heading
+    assert "font-size: 16px;" in empty_heading
+    assert "color: var(--portal-muted);" in empty_copy
+    assert "font-size: 13px;" in empty_copy
+    assert "color: var(--portal-ink);" in snapshot_heading
+    assert "font-size: 16px;" in snapshot_heading
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-analytics-intro dl" in mobile_selectors
+    assert ".portal-analytics-detail-summary dl" in mobile_selectors
+    assert ".portal-analytics-guard-list" in mobile_selectors
+    assert ".portal-analytics-layout" in mobile_selectors
+    assert ".portal-analytics-report-grid" in mobile_selectors
+    assert ".portal-analytics-comparison" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
