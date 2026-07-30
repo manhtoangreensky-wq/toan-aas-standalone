@@ -3012,9 +3012,9 @@ body {
   color: var(--portal-muted);
 }
 
-/* Project, Document, Vault and Memory began as dark feature surfaces. Their
-   outer panels now inherit the shared light canvas, while Project detail
-   deliberately keeps dt as its label and dd as its value. */
+/* Project, Document/Image Operations, Vault and Memory began as dark feature
+   surfaces. Their outer panels now inherit the shared light canvas, while
+   Project detail deliberately keeps dt as its label and dd as its value. */
 .portal-page :is(
   .portal-project-intro,
   .portal-project-package-intro,

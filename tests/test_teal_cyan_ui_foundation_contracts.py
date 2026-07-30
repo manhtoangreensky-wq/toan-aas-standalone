@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SHELL_TEMPLATE = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
 PORTAL_THEME = ROOT / "static" / "portal" / "portal-theme.css"
 PORTAL_CATALOGUE = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+PORTAL_CLIENT = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 MANIFEST = ROOT / "static" / "portal" / "manifest.webmanifest"
@@ -367,6 +368,9 @@ def test_light_core_workspace_intros_keep_their_metric_hierarchy_readable() -> N
     )
 
     assert all(selector in PORTAL_CATALOGUE for selector in metric_intros)
+    assert '<section class="portal-project-summary">' in PORTAL_CLIENT
+    assert '<dt>Mục tiêu</dt><dd>${safeText(String(project.objective || "Chưa đặt"))}</dd>' in PORTAL_CLIENT
+    assert '<dt>Trạng thái</dt><dd>${badge(projectState(project.state))}</dd>' in PORTAL_CLIENT
     assert metric_cards is not None
     assert standard_primary is not None
     assert standard_secondary is not None
