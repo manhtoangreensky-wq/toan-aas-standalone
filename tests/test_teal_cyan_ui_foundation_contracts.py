@@ -2539,3 +2539,99 @@ def test_light_admin_home_keeps_erp_authority_and_work_queues_readable() -> None
     assert "color: var(--portal-muted);" in declarations(".portal-page .portal-admin-directory-group > summary small")
     assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-admin-directory-group[open]")
     assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-admin-directory-group .portal-module-card")
+
+
+def test_light_coordination_and_crm_surfaces_keep_private_workflows_readable() -> None:
+    """Private handoff and CRM preserve their contracts while shedding dark legacy panels."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    workspace = (
+        ".portal-page:is(.portal-coordination-workspace, .portal-coordination-detail, "
+        ".portal-crm-workspace, .portal-crm-detail)"
+    )
+    for marker in (
+        "portal-coordination-summary",
+        "portal-coordination-card",
+        "portal-crm-kanban",
+        "portal-crm-lane",
+        "portal-crm-card",
+    ):
+        assert marker in PORTAL_CLIENT
+    assert "Internal human handoff only" in PORTAL_CLIENT
+    assert "Odoo-style private pipeline" in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-coordination-summary",
+            ".portal-coordination-card",
+            ".portal-crm-lane",
+            ".portal-crm-card",
+        )
+    )
+
+    summary = declarations(f"{workspace} .portal-coordination-summary")
+    summary_primary = declarations(f"{workspace} .portal-coordination-summary :is(h2, dt)")
+    summary_secondary = declarations(f"{workspace} .portal-coordination-summary :is(p, dd)")
+    summary_metric = declarations(f"{workspace} .portal-coordination-summary dl > div")
+    coordination_card = declarations(".portal-page .portal-coordination-card")
+    coordination_hover = declarations(".portal-page .portal-coordination-card:hover")
+    lane = declarations(".portal-page .portal-crm-lane")
+    lane_header = declarations(".portal-page .portal-crm-lane header")
+    lane_count = declarations(".portal-page .portal-crm-lane header span")
+    crm_card = declarations(".portal-page .portal-crm-card")
+    crm_card_hover = declarations(".portal-page .portal-crm-card:hover,\n.portal-page .portal-crm-card:focus-visible")
+    crm_card_focus_match = re.search(
+        r"(?<!\,\n)^\.portal-page \.portal-crm-card:focus-visible\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL | re.MULTILINE,
+    )
+    assert crm_card_focus_match is not None
+    crm_card_focus = crm_card_focus_match.group("declarations")
+    crm_card_title = declarations(".portal-page .portal-crm-card b")
+    crm_card_metadata = declarations(".portal-page .portal-crm-card :is(span, small, em)")
+
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light);" in summary
+    assert "color: var(--portal-ink);" in summary_primary
+    assert "color: var(--portal-muted);" in summary_secondary
+    assert "border-color: var(--portal-border);" in summary_metric
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "border-color: var(--portal-border);" in coordination_card
+    assert "background: var(--portal-surface-light);" in coordination_card
+    assert "border-color: var(--portal-border-strong);" in coordination_hover
+    assert "background: var(--portal-surface-soft);" in coordination_hover
+    assert "border-color: var(--portal-border);" in lane
+    assert "background: var(--portal-surface-soft);" in lane
+    assert "color: var(--portal-ink);" in lane_header
+    assert "background: var(--portal-surface-light);" in lane_count
+    assert "color: var(--portal-action);" in lane_count
+    assert "border-color: var(--portal-border);" in crm_card
+    assert "background: var(--portal-surface-light);" in crm_card
+    assert "border-color: var(--portal-border-strong);" in crm_card_hover
+    assert "background: var(--portal-light-hover-surface);" in crm_card_hover
+    assert "outline: 3px solid var(--portal-focus) !important;" in crm_card_focus
+    assert "outline-offset: 3px;" in crm_card_focus
+    assert "color: var(--portal-ink);" in crm_card_title
+    assert "color: var(--portal-muted);" in crm_card_metadata
+    mobile_kanban = re.search(
+        r"@media \(max-width: 740px\) \{\s*"
+        r"\.portal-page \.portal-crm-kanban\s*\{(?P<declarations>.*?)\n\s*\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    assert mobile_kanban is not None
+    assert "grid-auto-columns: minmax(min(84vw, 308px), 1fr);" in mobile_kanban.group("declarations")
+    assert "scroll-padding-inline: 1px;" in mobile_kanban.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
