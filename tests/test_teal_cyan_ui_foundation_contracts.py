@@ -2301,3 +2301,66 @@ def test_delivery_light_surface_keeps_live_states_and_manual_handoff_readable() 
     assert "background: var(--portal-surface-light);" in manual_guarded.group("declarations")
     assert "background: var(--portal-surface-soft);" in manual_status.group("declarations")
     assert "color: var(--portal-context);" in manual_code.group("declarations")
+
+
+def test_light_music_library_keeps_private_metadata_and_guard_states_readable() -> None:
+    """Music/SFX remains a readable private library, never a faux player or delivery flow."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    for marker in (
+        'class="portal-music-library-intro"',
+        'class="portal-music-library-read-badge"',
+        'class="portal-music-library-filter"',
+        'class="portal-music-library-card"',
+        'class="portal-music-library-meta"',
+        'class="portal-music-library-boundary"',
+        "portal-music-library-guard",
+    ):
+        assert marker in PORTAL_CLIENT
+    assert "Không mở player/preview" in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-music-library-intro",
+            ".portal-music-library-filter",
+            ".portal-music-library-card",
+            ".portal-music-library-meta > div",
+            ".portal-music-library-boundary",
+            ".portal-music-library-guard",
+        )
+    )
+
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-intro")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-intro h2")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-music-library-intro p")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-music-library-read-badge")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-board")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-music-library-filter")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-card")
+    hover = declarations(".portal-page .portal-music-library-card:hover,\n.portal-page .portal-music-library-card:focus-within")
+    assert "border-color: var(--portal-border-strong);" in hover
+    assert "background: var(--portal-surface-soft);" in hover
+    assert "transform: none;" in hover
+    assert "color: var(--portal-action);" in declarations(".portal-page .portal-music-library-role")
+    assert "color: var(--portal-warning);" in declarations(".portal-page .portal-music-library-favorite")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-card-copy h3")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-music-library-card-copy p")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-card-copy strong")
+    assert "background: var(--portal-surface-soft);" in declarations(".portal-page .portal-music-library-meta > div")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-music-library-meta dt")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-meta dd")
+    assert "color: var(--portal-context);" in declarations(".portal-page .portal-music-library-tags span")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-boundary")
+    assert "color: var(--portal-ink);" in declarations(".portal-page .portal-music-library-boundary strong")
+    assert "color: var(--portal-muted);" in declarations(".portal-page .portal-music-library-boundary span")
+    assert "background: var(--portal-surface-light);" in declarations(".portal-page .portal-music-library-guard")

@@ -4371,6 +4371,125 @@ body {
   color: var(--portal-muted);
 }
 
+/* Music and SFX Library stays a private metadata index. It deliberately does
+   not imply playback, preview, generation or delivery; these overrides only
+   make its existing read-only hierarchy legible on the shared light canvas. */
+.portal-page .portal-music-library-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-music-library-intro h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-music-library-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-read-badge {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-board {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-music-library-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-music-library-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-music-library-card:hover,
+.portal-page .portal-music-library-card:focus-within {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page .portal-music-library-role {
+  border-color: color-mix(in srgb, var(--portal-action) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-music-library-favorite {
+  border-color: color-mix(in srgb, var(--portal-warning) 46%, var(--portal-border));
+  background: var(--portal-surface-light);
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-music-library-card-copy h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-music-library-card-copy p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-card-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-music-library-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-music-library-meta dt {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-meta dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-music-library-tags span {
+  border-color: color-mix(in srgb, var(--portal-context) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-music-library-muted,
+.portal-page .portal-music-library-card-footer > span,
+.portal-page .portal-music-library-pagination {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-music-library-boundary strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-music-library-boundary span {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-music-library-guard {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-music-library :is(a, button, input):focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
