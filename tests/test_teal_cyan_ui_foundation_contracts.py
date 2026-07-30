@@ -1807,3 +1807,289 @@ def test_light_inbox_cards_keep_private_notification_states_readable() -> None:
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
     assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
+
+
+def test_light_billing_surfaces_keep_canonical_wallet_decisions_readable() -> None:
+    """Canonical billing projections need the same calm hierarchy as the workspace."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    wallet_facts = re.search(
+        r"\.portal-page \.portal-wallet-facts\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    wallet_label = re.search(
+        r"\.portal-page \.portal-wallet-facts dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    wallet_value = re.search(
+        r"\.portal-page \.portal-wallet-facts dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    wallet_status = re.search(
+        r"\.portal-page \.portal-wallet-read-status\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    journey = re.search(
+        r"\.portal-page \.portal-billing-journey\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    journey_heading = re.search(
+        r"\.portal-page \.portal-billing-journey h2\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    journey_copy = re.search(
+        r"\.portal-page \.portal-billing-journey p\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    journey_lane = re.search(
+        r"\.portal-page \.portal-billing-journey-lanes li\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    entry = re.search(
+        r"\.portal-page \.portal-billing-entrypoints \.portal-payment-entry\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    catalog_intro = re.search(
+        r"\.portal-page \.portal-billing-catalog-intro\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    catalog_heading = re.search(
+        r"\.portal-page \.portal-billing-catalog-intro h2\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    billing_nav = re.search(
+        r"\.portal-page \.portal-billing-nav\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    billing_nav_link = re.search(
+        r"\.portal-page \.portal-billing-nav a\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    billing_nav_current = re.search(
+        r"\.portal-page \.portal-billing-nav a\[aria-current=\"page\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-wallet-facts"',
+        'class="portal-wallet-read-status"',
+        'class="portal-billing-journey"',
+        'class="portal-billing-catalog-intro"',
+        'class="portal-billing-nav"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-wallet-facts",
+            ".portal-wallet-read-status",
+            ".portal-billing-journey",
+            ".portal-billing-catalog-intro",
+            ".portal-billing-nav",
+        )
+    )
+    for match in (
+        wallet_facts,
+        wallet_label,
+        wallet_value,
+        wallet_status,
+        journey,
+        journey_heading,
+        journey_copy,
+        journey_lane,
+        entry,
+        catalog_intro,
+        catalog_heading,
+        billing_nav,
+        billing_nav_link,
+        billing_nav_current,
+    ):
+        assert match is not None
+    assert "border-color: var(--portal-border);" in wallet_facts.group("declarations")
+    assert "background: var(--portal-surface-light);" in wallet_facts.group("declarations")
+    assert "color: var(--portal-muted);" in wallet_label.group("declarations")
+    assert "color: var(--portal-ink);" in wallet_value.group("declarations")
+    assert "background: var(--portal-surface-soft);" in wallet_status.group("declarations")
+    assert "color: var(--portal-muted);" in wallet_status.group("declarations")
+    assert "background: var(--portal-surface-light);" in journey.group("declarations")
+    assert "color: var(--portal-ink);" in journey_heading.group("declarations")
+    assert "color: var(--portal-muted);" in journey_copy.group("declarations")
+    assert "background: var(--portal-surface-soft);" in journey_lane.group("declarations")
+    assert "background: var(--portal-surface-light);" in entry.group("declarations")
+    assert "background: var(--portal-surface-light);" in catalog_intro.group("declarations")
+    assert "color: var(--portal-ink);" in catalog_heading.group("declarations")
+    assert "background: var(--portal-surface-light);" in billing_nav.group("declarations")
+    assert "color: var(--portal-muted);" in billing_nav_link.group("declarations")
+    assert "border-color: var(--portal-context);" in billing_nav_current.group("declarations")
+    assert "background: var(--portal-surface-soft);" in billing_nav_current.group("declarations")
+
+
+def test_light_delivery_surfaces_keep_private_job_and_asset_metadata_readable() -> None:
+    """Job and asset records stay owner-scoped while their light cards keep state legible."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    summary = re.search(
+        r"\.portal-page \.portal-delivery-summary-card\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    summary_label = re.search(
+        r"\.portal-page \.portal-delivery-summary-card > span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    summary_value = re.search(
+        r"\.portal-page \.portal-delivery-summary-card > strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    source_vault = re.search(
+        r"\.portal-page \.portal-record-source\[data-record-source=\"web_vault\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    source_output = re.search(
+        r"\.portal-page \.portal-record-source\[data-record-source=\"web_native_output\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    source_delivery = re.search(
+        r"\.portal-page \.portal-record-source\[data-record-source=\"canonical_delivery\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    lifecycle_item = re.search(
+        r"\.portal-page \.portal-delivery-lifecycle-list li\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    lifecycle_title = re.search(
+        r"\.portal-page \.portal-delivery-lifecycle-list strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    lifecycle_copy = re.search(
+        r"\.portal-page \.portal-delivery-lifecycle-list p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    next_action = re.search(
+        r"\.portal-page \.portal-delivery-next-action\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    mobile_card = re.search(
+        r"\.portal-page \.portal-delivery-mobile-card\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    mobile_title = re.search(
+        r"\.portal-page \.portal-delivery-mobile-card-head strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    mobile_value = re.search(
+        r"\.portal-page \.portal-delivery-mobile-meta dd\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_nav = re.search(
+        r"\.portal-page \.portal-delivery-nav\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_nav_link = re.search(
+        r"\.portal-page \.portal-delivery-nav a\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_nav_current = re.search(
+        r"\.portal-page \.portal-delivery-nav a\[aria-current=\"page\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-delivery-summary"',
+        'class="portal-record-source"',
+        'class="portal-delivery-lifecycle-list"',
+        'class="portal-delivery-next-action"',
+        'class="portal-delivery-mobile-card"',
+        'class="portal-delivery-nav"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-delivery-summary-card",
+            ".portal-record-source",
+            ".portal-delivery-lifecycle-list",
+            ".portal-delivery-next-action",
+            ".portal-delivery-mobile-card",
+            ".portal-delivery-nav",
+        )
+    )
+    for match in (
+        summary,
+        summary_label,
+        summary_value,
+        source_vault,
+        source_output,
+        source_delivery,
+        lifecycle_item,
+        lifecycle_title,
+        lifecycle_copy,
+        next_action,
+        mobile_card,
+        mobile_title,
+        mobile_value,
+        delivery_nav,
+        delivery_nav_link,
+        delivery_nav_current,
+    ):
+        assert match is not None
+    assert "border-color: var(--portal-border);" in summary.group("declarations")
+    assert "background: var(--portal-surface-light);" in summary.group("declarations")
+    assert "color: var(--portal-muted);" in summary_label.group("declarations")
+    assert "color: var(--portal-ink);" in summary_value.group("declarations")
+    assert "color: var(--portal-context);" in source_vault.group("declarations")
+    assert "color: var(--portal-action);" in source_output.group("declarations")
+    assert "color: var(--portal-warning);" in source_delivery.group("declarations")
+    assert "background: var(--portal-surface-light);" in lifecycle_item.group("declarations")
+    assert "color: var(--portal-ink);" in lifecycle_title.group("declarations")
+    assert "color: var(--portal-muted);" in lifecycle_copy.group("declarations")
+    assert "background: var(--portal-surface-light);" in next_action.group("declarations")
+    assert "background: var(--portal-surface-light);" in mobile_card.group("declarations")
+    assert "color: var(--portal-ink);" in mobile_title.group("declarations")
+    assert "color: var(--portal-ink);" in mobile_value.group("declarations")
+    assert "background: var(--portal-surface-light);" in delivery_nav.group("declarations")
+    assert "color: var(--portal-muted);" in delivery_nav_link.group("declarations")
+    assert "border-color: var(--portal-context);" in delivery_nav_current.group("declarations")
+    assert "background: var(--portal-surface-soft);" in delivery_nav_current.group("declarations")
