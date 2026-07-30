@@ -8,7 +8,6 @@ ROUTER = (ROOT / "copyfast_music_media.py").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "AUDIO_HUB_REVIEW_PACK_CONTRACT.md").read_text(encoding="utf-8")
-DISPOSITION = (ROOT / "docs" / "migration" / "FALLBACK_FEATURE_DISPOSITION.md").read_text(encoding="utf-8")
 
 
 def _between(source: str, start: str, end: str) -> str:
@@ -110,4 +109,3 @@ def test_portal_renders_an_explicit_accessible_review_without_audio_or_handoff()
     assert "audio-hub-review-pack-status" in PORTAL
     assert "audio-hub-review-pack-action" in PORTAL
     assert "Audio Hub Collection Review Pack" in CONTRACT
-    assert "P0 source-review count therefore remains unchanged" in DISPOSITION

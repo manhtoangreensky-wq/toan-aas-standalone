@@ -2738,3 +2738,81 @@ def test_light_audio_asset_operations_keeps_private_utility_surfaces_readable() 
     assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-asset-empty strong")
     assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-asset-empty span")
     assert not re.search(r"(?m)^\s*\.portal-audio-(?:assets|asset)-", theme_source)
+
+
+def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_readable() -> None:
+    """The main Hub becomes a calm workspace without changing its media authority."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    route = ".portal-page.portal-audio-hub"
+    for marker in (
+        "Audio production board",
+        "Hub dùng collection Media Workspace đã có thay vì tạo thêm kho dữ liệu.",
+        "Handoff có chủ đích",
+        "Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment",
+    ):
+        assert marker in PORTAL_CLIENT
+    for selector in (
+        ".portal-audio-hub-overview",
+        ".portal-audio-hub-lanes li",
+        ".portal-audio-hub-next-steps",
+        ".portal-audio-hub-next-card",
+        ".portal-media-create",
+        ".portal-media-policy",
+        ".portal-media-collection-card",
+        ".portal-media-filter",
+        ".portal-media-events > div",
+    ):
+        assert selector in PORTAL_CATALOGUE
+
+    overview = declarations(f"{route} .portal-audio-hub-overview")
+    lane = declarations(f"{route} .portal-audio-hub-lanes li")
+    next_steps = declarations(f"{route} .portal-audio-hub-next-steps")
+    next_card = declarations(f"{route} .portal-audio-hub-next-card")
+    create = declarations(f"{route} .portal-media-create")
+    policy = declarations(f"{route} .portal-media-policy")
+    collection_card = declarations(f"{route} .portal-media-collection-card")
+    collection_hover = declarations(f"{route} .portal-media-collection-card:hover,\n{route} .portal-media-collection-card:focus-visible")
+    media_filter = declarations(f"{route} .portal-media-filter")
+    event_row = declarations(f"{route} .portal-media-events > div")
+    field_help = declarations(f"{route} .portal-field-help")
+    policy_flag = declarations(f"{route} .portal-media-policy-flag")
+
+    assert "border-color: var(--portal-border);" in overview
+    assert "background: var(--portal-surface-light);" in overview
+    assert "box-shadow: none;" in overview
+    assert "background: var(--portal-surface-soft);" in lane
+    assert "background: var(--portal-surface-light);" in next_steps
+    assert "background: var(--portal-surface-light);" in next_card
+    assert "background: var(--portal-surface-light);" in create
+    assert "background: var(--portal-surface-soft);" in policy
+    assert "background: var(--portal-surface-light);" in collection_card
+    assert "border-color: var(--portal-border-strong);" in collection_hover
+    assert "background: var(--portal-light-hover-surface);" in collection_hover
+    assert "background: var(--portal-surface-soft);" in media_filter
+    assert "border-top-color: var(--portal-border);" in event_row
+    assert "color: var(--portal-muted);" in field_help
+    assert "border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));" in policy_flag
+    assert "background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));" in policy_flag
+    assert "color: var(--portal-warning);" in policy_flag
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-hub-overview-copy h2")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-hub-overview-copy p")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-hub-lanes strong")
+    assert "color: var(--portal-action);" in declarations(f"{route} .portal-audio-hub-lanes b")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-hub-lanes small")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-hub-next-card strong")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-hub-next-card span")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-media-policy .portal-project-steps strong")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-media-policy .portal-project-steps span")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-media-events small")
+    assert not re.search(r"(?m)^\s*\.portal-audio-hub(?!-detail)", theme_source)
