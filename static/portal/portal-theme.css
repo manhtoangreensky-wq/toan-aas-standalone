@@ -2971,6 +2971,47 @@ body {
   color: var(--portal-muted);
 }
 
+/* Support and Operations share legacy dark-gradient intros. The semantic
+   theme already gives their outer panels the light application surface, so
+   their metrics and text need the same readable token pair. Operations also
+   powers Finance Planning, Reliability, Security and Access Admin views. */
+.portal-page :is(
+  .portal-support-intro,
+  .portal-support-admin-intro,
+  .portal-operations-intro,
+  .portal-operations-admin-intro
+) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-support-intro,
+  .portal-support-admin-intro,
+  .portal-operations-intro,
+  .portal-operations-admin-intro
+) :is(h2, dt) {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-support-intro,
+  .portal-support-admin-intro,
+  .portal-operations-intro,
+  .portal-operations-admin-intro
+) :is(p, dd) {
+  color: var(--portal-muted);
+}
+
+/* Every Admin domain intro reuses the shared light state surface. Its legacy
+   pale meta pills need a bordered light treatment instead of low-contrast
+   text inherited from the former dark panel. */
+.portal-page .portal-admin-domain-intro .portal-state-meta span {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
