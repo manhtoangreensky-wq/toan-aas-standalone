@@ -78,3 +78,9 @@ The post-UI/UX research triage is recorded in
 It is intentionally not an execution authorization: current reviewed Web/Bot
 boundaries remain in force until the UI/UX phase is accepted and a later
 capability-specific contract is approved.
+
+The companion decision record
+[`POST_UI_UX_PRODUCT_SERVICE_RESEARCH_TRIAGE.md`](POST_UI_UX_PRODUCT_SERVICE_RESEARCH_TRIAGE.md)
+extends this with Web/App product, service, mobile and Admin ERP boundaries.
+It likewise defers runtime work until UI/UX acceptance and an evidence-backed
+capability decision.
