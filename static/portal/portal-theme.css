@@ -3388,6 +3388,23 @@ body {
   color: var(--portal-warning);
 }
 
+/* Canonical planning suggestions are read-only reference material. Keep the
+   title, source label and generated prompt readable when their legacy card
+   container inherits the light application surface. */
+.portal-page .portal-suggestion-card-head strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-suggestion-card-head span {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-suggestion-card .portal-result-text {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
