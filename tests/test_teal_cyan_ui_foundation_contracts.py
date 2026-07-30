@@ -3400,3 +3400,126 @@ def test_light_chat_workspace_final_surface_keeps_private_authoring_readable() -
     assert ".portal-chat-execution-layout" in mobile_selectors
     assert ".portal-chat-workspace-guard-list" in mobile_selectors
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+
+
+def test_light_document_workspace_final_surface_keeps_private_planning_readable() -> None:
+    """Document planning stays truthful while its signed surfaces use the light app system."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Document & PDF Workspace surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    document_css = layer.group("css")
+    route = ".portal-page:is(.portal-document-workspace, .portal-document-workspace-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            document_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-document-workspace-intro, .portal-document-workspace-detail-summary) dl > div"
+    )
+    summary_label = declarations(
+        f"{route} :is(.portal-document-workspace-intro dd, .portal-document-workspace-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-document-workspace-detail-summary dd")
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-document-workspace-create, .portal-document-workspace-editor, "
+        ".portal-document-plan-create, .portal-document-workspace-boundary, "
+        ".portal-document-workspace-estimate, .portal-document-workspace-activity, "
+        ".portal-document-plan-card, .portal-document-plan-handoff, "
+        ".portal-document-plan-version-list > article, .portal-document-version-list > article, "
+        ".portal-document-workspace-events > div)"
+    )
+    guard_surface = declarations(f"{route} .portal-document-workspace-guard-list span")
+    guard_label = declarations(f"{route} .portal-document-workspace-guard-list strong")
+    guard_status = declarations(f"{route} .portal-document-workspace-guard-list em")
+    brief_card = declarations(f"{route} .portal-document-workspace-card")
+    brief_card_hover = declarations(f"{route} .portal-document-workspace-card:hover")
+    metadata = declarations(
+        f"{route} :is(.portal-document-workspace-meta span, .portal-document-plan-meta span, "
+        ".portal-document-workspace-tags span, .portal-document-workspace-pagination)"
+    )
+    estimate = declarations(f"{route} .portal-document-workspace-estimate-grid span")
+    estimate_value = declarations(f"{route} .portal-document-workspace-estimate-grid strong")
+    primary_text = declarations(
+        f"{route} :is(.portal-document-plan-handoff h4, .portal-document-plan-version-list strong, "
+        ".portal-document-version-list strong, .portal-document-workspace-events strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-document-plan-handoff p, .portal-document-plan-handoff small, "
+        ".portal-document-plan-version-list small, .portal-document-version-list p, "
+        ".portal-document-version-list small, .portal-document-workspace-events small, "
+        ".portal-card-subtitle, .portal-form-note)"
+    )
+    event_dot = declarations(f"{route} .portal-document-workspace-events > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        document_css,
+        flags=re.DOTALL,
+    )
+
+    assert "background: var(--portal-surface-light);" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "font-size: 14px;" in summary_copy
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-muted);" in summary_label
+    assert "font-size: 13px;" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "font-size: 13px;" in summary_value
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-muted);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "background: var(--portal-surface-light);" in brief_card
+    assert "background: var(--portal-light-hover-surface);" in brief_card_hover
+    assert "transform: none;" in brief_card_hover
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "background: var(--portal-surface-soft);" in estimate
+    assert "color: var(--portal-muted);" in estimate
+    assert "font-size: 13px;" in estimate
+    assert "color: var(--portal-ink);" in estimate_value
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-document-workspace-intro dl" in mobile_selectors
+    assert ".portal-document-workspace-detail-summary dl" in mobile_selectors
+    assert ".portal-document-workspace-estimate-grid" in mobile_selectors
+    assert ".portal-document-workspace-guard-list" in mobile_selectors
+    assert ".portal-document-workspace-layout" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
