@@ -1223,3 +1223,84 @@ def test_light_support_case_cards_keep_customer_and_operator_metadata_readable()
     assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0369a1", "#e6f8f7") >= 4.5
+
+
+def test_light_campaign_cards_keep_planning_metadata_and_actions_readable() -> None:
+    """Campaign list, detail and self-review cards share the same light card surface."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    card_hover = re.search(
+        r"\.portal-page \.portal-campaign-card:hover\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    heading = re.search(
+        r"\.portal-page \.portal-campaign-card h3,\s*"
+        r"\.portal-page \.portal-campaign-card h3 a\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    eyebrow = re.search(
+        r"\.portal-page \.portal-campaign-card \.portal-eyebrow\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    card_copy = re.search(
+        r"\.portal-page \.portal-campaign-card-head p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    destination = re.search(
+        r"\.portal-page \.portal-campaign-destination\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    destination_hover = re.search(
+        r"\.portal-page \.portal-campaign-destination:hover,\s*"
+        r"\.portal-page \.portal-campaign-destination:focus-visible\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    edit = re.search(
+        r"\.portal-page \.portal-campaign-edit\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    edit_summary = re.search(
+        r"\.portal-page \.portal-campaign-edit > summary\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert '<article class="portal-campaign-card"' in PORTAL_CLIENT
+    assert '<dl class="portal-campaign-facts">' in PORTAL_CLIENT
+    assert ".portal-campaign-card h3" in PORTAL_CATALOGUE
+    assert ".portal-campaign-destination" in PORTAL_CATALOGUE
+    for match in (
+        card_hover,
+        heading,
+        eyebrow,
+        card_copy,
+        destination,
+        destination_hover,
+        edit,
+        edit_summary,
+    ):
+        assert match is not None
+    assert "border-color: var(--portal-border-strong);" in card_hover.group("declarations")
+    assert "background: var(--portal-surface-soft);" in card_hover.group("declarations")
+    assert "color: var(--portal-ink);" in heading.group("declarations")
+    assert "color: var(--portal-action);" in eyebrow.group("declarations")
+    assert "color: var(--portal-muted);" in card_copy.group("declarations")
+    assert "color: var(--portal-action);" in destination.group("declarations")
+    assert "color: var(--portal-action-hover);" in destination_hover.group("declarations")
+    assert "border-top-color: var(--portal-border);" in edit.group("declarations")
+    assert "border-bottom-color: var(--portal-border);" in edit.group("declarations")
+    assert "color: var(--portal-ink);" in edit_summary.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
+    assert _contrast_ratio("#115e59", "#ffffff") >= 4.5

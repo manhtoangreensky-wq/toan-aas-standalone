@@ -3441,6 +3441,49 @@ body {
   color: var(--portal-ink);
 }
 
+/* Campaign planning cards appear in the owner-scoped list, self-review queue
+   and editable detail screen. They retain their planning semantics while
+   their former dark-only headings and links adopt the shared light surface. */
+.portal-page .portal-campaign-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-campaign-card h3,
+.portal-page .portal-campaign-card h3 a {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-campaign-card .portal-eyebrow {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-campaign-card-head p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-campaign-destination {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-campaign-destination:hover,
+.portal-page .portal-campaign-destination:focus-visible {
+  color: var(--portal-action-hover);
+}
+
+.portal-page .portal-campaign-edit {
+  border-top-color: var(--portal-border);
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page .portal-campaign-edit > summary {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-campaign-edit > summary::after {
+  color: var(--portal-action);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
