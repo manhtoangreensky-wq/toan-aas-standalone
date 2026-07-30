@@ -4243,6 +4243,134 @@ body {
   color: var(--portal-ink);
 }
 
+/* The delivery views have more live states than their summary cards. Keep
+   filters, signed-download affordances and canonical manual-top-up handoff
+   readable without changing any ledger, payment or download decision. */
+.portal-page .portal-filter-button {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-filter-button:hover,
+.portal-page .portal-filter-button.is-active {
+  border-color: var(--portal-context);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-filter-button span {
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-delivery-state {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-state[data-delivery="reported"] {
+  border-color: color-mix(in srgb, var(--portal-action) 46%, var(--portal-border));
+  color: var(--portal-action);
+}
+
+.portal-page .portal-delivery-state[data-delivery="pending"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 46%, var(--portal-border));
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-delivery-state[data-delivery="validated"] {
+  border-color: color-mix(in srgb, var(--portal-action) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-delivery-state[data-delivery="unavailable"] {
+  border-color: color-mix(in srgb, var(--portal-danger) 46%, var(--portal-border));
+  color: var(--portal-danger);
+}
+
+.portal-page .portal-delivery-link:hover {
+  border-color: var(--portal-action);
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
+.portal-page .portal-delivery-link:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
+.portal-page .portal-job-cost strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-payment-entry {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-payment-entry h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-payment-entry p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-payment-entry-note {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-entrypoints .portal-link-code {
+  border-color: color-mix(in srgb, var(--portal-context) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-manual-topup-route {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-manual-topup-route h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-manual-topup-route p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-manual-topup-route > span:last-child {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-manual-topup-route.is-guarded {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-manual-topup-route.is-guarded .portal-module-icon {
+  border-color: color-mix(in srgb, var(--portal-warning) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-manual-topup-status > span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-manual-topup-status code {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-manual-topup-status small {
+  color: var(--portal-muted);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
