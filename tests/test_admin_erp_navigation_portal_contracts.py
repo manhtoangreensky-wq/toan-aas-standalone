@@ -34,6 +34,10 @@ def test_portal_hydrates_a_server_authorized_admin_manifest_and_fails_closed() -
 
 def test_portal_sidebar_directory_and_palette_use_the_server_manifest_not_browser_role() -> None:
     portal = _read("static/portal/portal.js")
+    palette = portal[
+        portal.index("function commandPaletteItems(context, page)"):
+        portal.index("function renderCommandPalette(page, context)")
+    ]
 
     assert "function adminErpNavigation(context)" in portal
     assert "webLocalAdmin" in portal
@@ -44,7 +48,9 @@ def test_portal_sidebar_directory_and_palette_use_the_server_manifest_not_browse
     assert "if (candidate.access === \"admin\" && !authorizedAdminRoutes.has(path)) return;" in portal
     assert "function adminNavigationModules(context)" in portal
     assert "function adminDesktopNavGroups(context, currentPage)" in portal
-    assert "if (adminSurface && (candidate.access !== \"admin\" || !authorizedAdminRoutes.has(path))) return;" in portal
+    assert "if (adminSurface)" in palette
+    assert "adminErpNavigation(context).groups.forEach" in palette
+    assert "authorizedAdminRoutes.has(path)" in palette
     assert "context.isAdmin) {\n      groups.push({\n        label: \"Admin ERP\"" not in portal
 
 
@@ -135,3 +141,21 @@ def test_admin_desktop_sidebar_uses_only_server_authorized_groups() -> None:
     assert '"/dashboard"' not in helpers
     assert '"/features"' not in helpers
     assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
+
+
+def test_full_admin_manifest_uses_a_shared_bounded_group_limit_not_a_ten_group_truncation() -> None:
+    integration = _read("static/portal/integration.js")
+    portal = _read("static/portal/portal.js")
+
+    assert "const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;" in integration
+    assert "rawGroups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS)" in integration
+    assert "rawGroups.slice(0, 10)" not in integration
+
+    assert "const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;" in portal
+    assert "source.adminErpNavigation.groups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS)" in portal
+    assert "source.groups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS)" in portal
+    assert "source.adminErpNavigation.groups.slice(0, 10)" not in portal
+    assert "source.groups.slice(0, 10)" not in portal
+    # The mobile dock deliberately stays compact even when desktop/sidebar and
+    # command palette retain every group that the signed server manifest grants.
+    assert "const MAX_ADMIN_MOBILE_NAV_ITEMS = 5;" in portal
