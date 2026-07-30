@@ -2093,3 +2093,211 @@ def test_light_delivery_surfaces_keep_private_job_and_asset_metadata_readable() 
     assert "color: var(--portal-muted);" in delivery_nav_link.group("declarations")
     assert "border-color: var(--portal-context);" in delivery_nav_current.group("declarations")
     assert "background: var(--portal-surface-soft);" in delivery_nav_current.group("declarations")
+
+
+def test_delivery_light_surface_keeps_live_states_and_manual_handoff_readable() -> None:
+    """Every real delivery state must remain readable without changing its authority."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    filter_button = re.search(
+        r"\.portal-page \.portal-filter-button\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    filter_active = re.search(
+        r"\.portal-page \.portal-filter-button:hover,\s*"
+        r"\.portal-page \.portal-filter-button\.is-active\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    filter_count = re.search(
+        r"\.portal-page \.portal-filter-button span\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_state = re.search(
+        r"\.portal-page \.portal-delivery-state\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_reported = re.search(
+        r"\.portal-page \.portal-delivery-state\[data-delivery=\"reported\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_pending = re.search(
+        r"\.portal-page \.portal-delivery-state\[data-delivery=\"pending\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_validated = re.search(
+        r"\.portal-page \.portal-delivery-state\[data-delivery=\"validated\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_unavailable = re.search(
+        r"\.portal-page \.portal-delivery-state\[data-delivery=\"unavailable\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_link_hover = re.search(
+        r"\.portal-page \.portal-delivery-link:hover\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    delivery_link_focus = re.search(
+        r"\.portal-page \.portal-delivery-link:focus-visible\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    job_cost = re.search(
+        r"\.portal-page \.portal-job-cost strong\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    payment_entry = re.search(
+        r"\.portal-page \.portal-payment-entry\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    payment_heading = re.search(
+        r"\.portal-page \.portal-payment-entry h3\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    payment_note = re.search(
+        r"\.portal-page \.portal-payment-entry-note\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    payment_code = re.search(
+        r"\.portal-page \.portal-billing-entrypoints \.portal-link-code\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_route = re.search(
+        r"\.portal-page \.portal-manual-topup-route\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_heading = re.search(
+        r"\.portal-page \.portal-manual-topup-route h3\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_copy = re.search(
+        r"\.portal-page \.portal-manual-topup-route p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_status_copy = re.search(
+        r"\.portal-page \.portal-manual-topup-route > span:last-child\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_guarded = re.search(
+        r"\.portal-page \.portal-manual-topup-route\.is-guarded\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_status = re.search(
+        r"\.portal-page \.portal-manual-topup-status > span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    manual_code = re.search(
+        r"\.portal-page \.portal-manual-topup-status code\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    for marker in (
+        'class="portal-filter-button',
+        'class="portal-delivery-state"',
+        'class="portal-delivery-state portal-delivery-link"',
+        'class="portal-job-cost"',
+        'class="portal-payment-entry',
+        'class="portal-manual-topup-route',
+        'class="portal-manual-topup-status"',
+    ):
+        assert marker in PORTAL_CLIENT
+    assert all(
+        selector in PORTAL_CATALOGUE
+        for selector in (
+            ".portal-filter-button",
+            ".portal-delivery-state",
+            ".portal-delivery-link",
+            ".portal-job-cost strong",
+            ".portal-payment-entry",
+            ".portal-manual-topup-route",
+            ".portal-manual-topup-status > span",
+        )
+    )
+    for match in (
+        filter_button,
+        filter_active,
+        filter_count,
+        delivery_state,
+        delivery_reported,
+        delivery_pending,
+        delivery_validated,
+        delivery_unavailable,
+        delivery_link_hover,
+        delivery_link_focus,
+        job_cost,
+        payment_entry,
+        payment_heading,
+        payment_note,
+        payment_code,
+        manual_route,
+        manual_heading,
+        manual_copy,
+        manual_status_copy,
+        manual_guarded,
+        manual_status,
+        manual_code,
+    ):
+        assert match is not None
+    assert "background: var(--portal-surface-light);" in filter_button.group("declarations")
+    assert "color: var(--portal-muted);" in filter_button.group("declarations")
+    assert "border-color: var(--portal-context);" in filter_active.group("declarations")
+    assert "background: var(--portal-surface-soft);" in filter_active.group("declarations")
+    assert "color: var(--portal-ink);" in filter_active.group("declarations")
+    assert "color: var(--portal-context);" in filter_count.group("declarations")
+    assert "background: var(--portal-surface-light);" in delivery_state.group("declarations")
+    assert "color: var(--portal-muted);" in delivery_state.group("declarations")
+    assert "color: var(--portal-action);" in delivery_reported.group("declarations")
+    assert "color: var(--portal-warning);" in delivery_pending.group("declarations")
+    assert "background: var(--portal-surface-soft);" in delivery_validated.group("declarations")
+    assert "color: var(--portal-action);" in delivery_validated.group("declarations")
+    assert "color: var(--portal-danger);" in delivery_unavailable.group("declarations")
+    assert "background: var(--portal-action);" in delivery_link_hover.group("declarations")
+    assert "color: var(--portal-on-action);" in delivery_link_hover.group("declarations")
+    assert "outline: 3px solid var(--portal-focus);" in delivery_link_focus.group("declarations")
+    assert "color: var(--portal-ink);" in job_cost.group("declarations")
+    assert "background: var(--portal-surface-light);" in payment_entry.group("declarations")
+    assert "color: var(--portal-ink);" in payment_heading.group("declarations")
+    assert "color: var(--portal-muted);" in payment_note.group("declarations")
+    assert "background: var(--portal-surface-soft);" in payment_code.group("declarations")
+    assert "color: var(--portal-context);" in payment_code.group("declarations")
+    assert "background: var(--portal-surface-light);" in manual_route.group("declarations")
+    assert "color: var(--portal-ink);" in manual_heading.group("declarations")
+    assert "color: var(--portal-muted);" in manual_copy.group("declarations")
+    assert "color: var(--portal-muted);" in manual_status_copy.group("declarations")
+    assert "border-color: var(--portal-warning);" in manual_guarded.group("declarations")
+    assert "background: var(--portal-surface-light);" in manual_guarded.group("declarations")
+    assert "background: var(--portal-surface-soft);" in manual_status.group("declarations")
+    assert "color: var(--portal-context);" in manual_code.group("declarations")
