@@ -267,7 +267,7 @@ def test_light_workspace_intros_replace_dark_catalogue_text_and_metric_cards_wit
     assert "color: var(--portal-muted);" in secondary_text.group("declarations")
 
 
-def test_light_support_and_operations_intros_replace_legacy_dark_panel_ink_without_behavior_changes() -> None:
+def test_light_support_and_operations_intros_replace_legacy_dark_panel_ink() -> None:
     """Shared Support/Operations intros inherit the light surface and matching ink."""
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
@@ -319,6 +319,7 @@ def test_light_support_and_operations_intros_replace_legacy_dark_panel_ink_witho
     assert "background: var(--portal-surface-light);" in domain_meta.group("declarations")
     assert "color: var(--portal-muted);" in domain_meta.group("declarations")
     assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#e8f6f7") >= 4.5
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
 
 
