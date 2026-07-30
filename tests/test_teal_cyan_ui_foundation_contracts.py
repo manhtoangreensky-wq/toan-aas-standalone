@@ -2691,3 +2691,50 @@ def test_light_job_recovery_guide_keeps_admin_safety_guidance_readable() -> None
     assert "background: var(--portal-surface-soft);" in process_item
     assert "border-color: var(--portal-border);" in boundary_item
     assert "background: var(--portal-surface-soft);" in boundary_item
+
+
+def test_light_audio_asset_operations_keeps_private_utility_surfaces_readable() -> None:
+    """Audio asset work stays owner-scoped while its operational surfaces become light and legible."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    route = ".portal-page.portal-audio-asset-operations"
+    intro = declarations(f"{route} .portal-audio-assets-intro")
+    form = declarations(f"{route} .portal-audio-assets-form")
+    boundary = declarations(f"{route} .portal-audio-assets-boundary")
+    history = declarations(f"{route} .portal-audio-assets-history")
+    guard_row = declarations(f"{route} .portal-audio-assets-guard-list > span")
+    pager = declarations(f"{route} .portal-audio-assets-source-pager")
+    operation = declarations(f"{route} .portal-audio-asset-operation-list > li")
+    empty = declarations(f"{route} .portal-audio-asset-empty")
+
+    assert "border-color: var(--portal-border);" in intro
+    assert "background: var(--portal-surface-light) !important;" in intro
+    assert "box-shadow: none;" in intro
+    assert "background: var(--portal-surface-light);" in form
+    assert "background: var(--portal-surface-light);" in boundary
+    assert "background: var(--portal-surface-light);" in history
+    assert "background: var(--portal-surface-soft);" in guard_row
+    assert "border-top-color: var(--portal-border);" in pager
+    assert "color: var(--portal-muted);" in pager
+    assert "background: var(--portal-surface-light);" in operation
+    assert "background: var(--portal-surface-soft);" in empty
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-assets-intro h2")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-assets-intro p")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-assets-form label.portal-field")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-asset-operation-meta strong")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-asset-operation-meta span")
+    assert "color: var(--portal-context);" in declarations(f"{route} .portal-audio-asset-operation-meta small")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-asset-operation-actions")
+    assert "color: var(--portal-ink);" in declarations(f"{route} .portal-audio-asset-empty strong")
+    assert "color: var(--portal-muted);" in declarations(f"{route} .portal-audio-asset-empty span")
+    assert not re.search(r"(?m)^\s*\.portal-audio-(?:assets|asset)-", theme_source)

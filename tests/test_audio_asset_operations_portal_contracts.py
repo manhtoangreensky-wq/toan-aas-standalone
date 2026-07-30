@@ -25,7 +25,12 @@ def test_audio_asset_operations_is_a_distinct_private_portal_route() -> None:
     assert 'layout: "audio-asset-operations", type: "audio-asset-operations"' in PORTAL
     assert "function renderAudioAssetOperations(page, context)" in PORTAL
     assert 'case "audio-asset-operations": return renderAudioAssetOperations(page, context);' in PORTAL
-    assert '["/audio/assets", "Audio Asset Operations", ICONS.music]' in PORTAL
+    # The compact customer rail now keeps deep workflows discoverable through
+    # the current-workflow cue and command palette, rather than permanently
+    # listing every tool.  Keep the route's own icon contract without reviving
+    # the removed legacy sidebar entry.
+    declaration = _between(PORTAL, 'customerPage("/audio/assets", "Audio Asset Operations"', "});")
+    assert "ICONS.music" in declaration
     assert '"/audio/assets": "audio_asset_operations"' in INTEGRATION
     assert 'const AUDIO_ASSET_OPERATIONS_ROUTE = "/audio/assets";' in INTEGRATION
 

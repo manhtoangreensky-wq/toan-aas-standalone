@@ -5055,3 +5055,121 @@ body {
     transition: none !important;
   }
 }
+
+/* Audio Asset Operations remains a signed, owner-scoped utility. These final
+   route-local overrides replace the inherited dark legacy panels with the
+   shared light working-surface hierarchy without changing its controls. */
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-intro dd {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-form {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-history {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-asset-operations .portal-card-title {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-card-subtitle,
+.portal-page.portal-audio-asset-operations .portal-audio-assets-form .portal-form-note,
+.portal-page.portal-audio-asset-operations .portal-audio-assets-form .portal-field small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-form .portal-field > label {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-form label.portal-field {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-guard-list > span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-guard-list strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-guard-list em {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-assets-source-pager {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-operation-list > li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-operation-meta strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-operation-meta span {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-operation-meta small {
+  color: var(--portal-context);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-operation-actions {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-empty {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-empty strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-asset-operations .portal-audio-asset-empty span {
+  color: var(--portal-muted);
+}
