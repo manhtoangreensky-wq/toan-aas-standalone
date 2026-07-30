@@ -2816,3 +2816,81 @@ def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_read
     assert "color: var(--portal-muted);" in declarations(f"{route} .portal-media-policy .portal-project-steps span")
     assert "color: var(--portal-muted);" in declarations(f"{route} .portal-media-events small")
     assert not re.search(r"(?m)^\s*\.portal-audio-hub(?!-detail)", theme_source)
+
+
+def test_light_audio_production_hub_detail_keeps_review_and_change_requests_readable() -> None:
+    """A private collection detail uses the same calm light system as its Hub."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    route = ".portal-page.portal-audio-hub-detail"
+    for selector in (
+        ".portal-media-detail-summary",
+        ".portal-audio-hub-collection-board",
+        ".portal-media-editor",
+        ".portal-media-composer",
+        ".portal-media-item-card",
+        ".portal-audio-change-requests",
+        ".portal-audio-change-request-row",
+    ):
+        assert selector in PORTAL_CATALOGUE
+    assert "portal-audio-hub-review-pack" in PORTAL_CLIENT
+
+    summary = declarations(f"{route} .portal-media-detail-summary")
+    detail_surfaces = declarations(
+        f"{route} .portal-audio-hub-collection-board,\n"
+        f"{route} .portal-media-editor,\n"
+        f"{route} .portal-media-item-card,\n"
+        f"{route} .portal-audio-change-requests,\n"
+        f"{route} .portal-audio-change-request-row"
+    )
+    review_pack = declarations(f"{route} :is(.portal-media-composer, .portal-media-detail-boundary, .portal-audio-hub-review-pack)")
+    field_help = declarations(f"{route} :is(.portal-field-help, .portal-form-note)")
+    field_label = declarations(f"{route} :is(.portal-media-attach-form, .portal-media-filter, .portal-media-editor, .portal-media-composer, .portal-media-detail-boundary, .portal-media-item-card, .portal-audio-change-request-form) label.portal-field > span")
+    warning_stage = declarations(f'{route} .portal-audio-change-request-stage[data-stage="awaiting_confirmation"]')
+    media_filter = declarations(f"{route} .portal-media-filter")
+    pagination = declarations(f"{route} .portal-media-pagination")
+    tags = declarations(f"{route} .portal-media-tags span")
+    version_row = declarations(f"{route} .portal-version-row")
+    version_title = declarations(f"{route} .portal-version-row strong")
+    version_note = declarations(f"{route} .portal-version-row small")
+    policy_notice = declarations(f"{route} .portal-notice--warning")
+    staged = declarations(f"{route} .portal-field-staged")
+    mobile_checkbox = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{(?P<rules>.*?{re.escape(route)} \.portal-media-checkbox\s*\{{.*?\n\}}.*?)\n\}}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light);" in summary
+    assert "box-shadow: none;" in summary
+    assert "background: var(--portal-surface-light);" in detail_surfaces
+    assert "background: var(--portal-surface-soft);" in review_pack
+    assert "color: var(--portal-muted);" in field_help
+    assert "color: var(--portal-ink);" in field_label
+    assert "border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));" in warning_stage
+    assert "background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));" in warning_stage
+    assert "color: var(--portal-warning);" in warning_stage
+    assert "background: var(--portal-surface-soft);" in media_filter
+    assert "border-top-color: var(--portal-border);" in pagination
+    assert "color: var(--portal-muted);" in pagination
+    assert "background: var(--portal-surface-soft);" in tags
+    assert "color: var(--portal-muted);" in tags
+    assert "border-top-color: var(--portal-border);" in version_row
+    assert "color: var(--portal-ink);" in version_title
+    assert "color: var(--portal-muted);" in version_note
+    assert "background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));" in policy_notice
+    assert "color: var(--portal-muted);" in staged
+    assert mobile_checkbox is not None
+    assert "min-height: 44px;" in mobile_checkbox.group("rules")
+    assert not re.search(r"(?m)^\s*\.portal-audio-hub-detail", theme_source)
