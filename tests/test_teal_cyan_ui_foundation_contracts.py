@@ -393,6 +393,112 @@ def test_light_core_workspace_intros_keep_their_metric_hierarchy_readable() -> N
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
 
 
+def test_light_studio_intros_and_detail_summaries_keep_their_distinct_metric_roles() -> None:
+    """Studio indexes present values first, while detail summaries present labels first."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    studio_intros = (
+        ".portal-prompt-library-intro",
+        ".portal-content-studio-intro",
+        ".portal-voice-studio-intro",
+        ".portal-media-workspace-intro",
+        ".portal-video-studio-intro",
+        ".portal-image-studio-intro",
+        ".portal-document-workspace-intro",
+        ".portal-chat-workspace-intro",
+    )
+    detail_summaries = (
+        ".portal-prompt-library-detail-summary",
+        ".portal-content-studio-detail-summary",
+        ".portal-voice-studio-detail-summary",
+        ".portal-media-detail-summary",
+        ".portal-video-studio-detail-summary",
+        ".portal-image-studio-detail-summary",
+        ".portal-document-workspace-detail-summary",
+        ".portal-chat-thread-summary",
+    )
+    metric_cards = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-chat-thread-summary[^)]*)\) > dl > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    intro_primary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-chat-workspace-intro[^)]*)\) > div > h2,\s*"
+        r"\.portal-page :is\([^)]*\) > dl > div > dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    intro_secondary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-chat-workspace-intro[^)]*)\) > div > p,\s*"
+        r"\.portal-page :is\([^)]*\) > dl > div > dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    detail_primary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-chat-thread-summary[^)]*)\) > div > h2,\s*"
+        r"\.portal-page :is\([^)]*\) > dl > div > dd\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    detail_secondary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-chat-thread-summary[^)]*)\) > div > p,\s*"
+        r"\.portal-page :is\([^)]*\) > dl > div > dt\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    detail_tags = re.search(
+        r"\.portal-page :is\((?P<summaries>[^)]*\.portal-chat-thread-summary[^)]*)\) > div > :is\("
+        r"(?P<tags>[^)]*\.portal-chat-workspace-tags[^)]*)\) > span\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    detail_tag_lists = (
+        ".portal-prompt-library-tags",
+        ".portal-content-studio-tags",
+        ".portal-voice-studio-tags",
+        ".portal-voice-reference-list",
+        ".portal-media-tags",
+        ".portal-video-studio-tags",
+        ".portal-image-studio-tags",
+        ".portal-document-workspace-tags",
+        ".portal-chat-workspace-tags",
+    )
+
+    assert all(selector in PORTAL_CATALOGUE for selector in (*studio_intros, *detail_summaries, *detail_tag_lists))
+    assert metric_cards is not None
+    assert intro_primary is not None
+    assert intro_secondary is not None
+    assert detail_primary is not None
+    assert detail_secondary is not None
+    assert detail_tags is not None
+    for selector in (*studio_intros, *detail_summaries):
+        assert selector in metric_cards.group("selectors")
+    for selector in studio_intros:
+        assert selector in intro_primary.group("selectors")
+        assert selector in intro_secondary.group("selectors")
+    for selector in detail_summaries:
+        assert selector in detail_primary.group("selectors")
+        assert selector in detail_secondary.group("selectors")
+        assert selector in detail_tags.group("summaries")
+    for selector in detail_tag_lists:
+        assert selector in detail_tags.group("tags")
+    assert "border-color: var(--portal-border);" in metric_cards.group("declarations")
+    assert "background: var(--portal-surface-light);" in metric_cards.group("declarations")
+    assert "color: var(--portal-ink);" in intro_primary.group("declarations")
+    assert "color: var(--portal-muted);" in intro_secondary.group("declarations")
+    assert "color: var(--portal-ink);" in detail_primary.group("declarations")
+    assert "color: var(--portal-muted);" in detail_secondary.group("declarations")
+    assert "border-color: var(--portal-border);" in detail_tags.group("declarations")
+    assert "background: var(--portal-surface-light);" in detail_tags.group("declarations")
+    assert "color: var(--portal-muted);" in detail_tags.group("declarations")
+    assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+
+
 def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     workspace_focus = re.search(

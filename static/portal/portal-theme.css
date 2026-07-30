@@ -3055,6 +3055,148 @@ body {
   color: var(--portal-muted);
 }
 
+/* Studio indexes use dt for their headline metric and dd for its caption.
+   Their detail summaries intentionally reverse that relationship, so direct
+   child selectors keep nested tags and reference panels in their own context. */
+.portal-page :is(
+  .portal-prompt-library-intro,
+  .portal-content-studio-intro,
+  .portal-voice-studio-intro,
+  .portal-media-workspace-intro,
+  .portal-video-studio-intro,
+  .portal-image-studio-intro,
+  .portal-document-workspace-intro,
+  .portal-chat-workspace-intro,
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-prompt-library-intro,
+  .portal-content-studio-intro,
+  .portal-voice-studio-intro,
+  .portal-media-workspace-intro,
+  .portal-video-studio-intro,
+  .portal-image-studio-intro,
+  .portal-document-workspace-intro,
+  .portal-chat-workspace-intro
+) > div > h2,
+.portal-page :is(
+  .portal-prompt-library-intro,
+  .portal-content-studio-intro,
+  .portal-voice-studio-intro,
+  .portal-media-workspace-intro,
+  .portal-video-studio-intro,
+  .portal-image-studio-intro,
+  .portal-document-workspace-intro,
+  .portal-chat-workspace-intro
+) > dl > div > dt {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-prompt-library-intro,
+  .portal-content-studio-intro,
+  .portal-voice-studio-intro,
+  .portal-media-workspace-intro,
+  .portal-video-studio-intro,
+  .portal-image-studio-intro,
+  .portal-document-workspace-intro,
+  .portal-chat-workspace-intro
+) > div > p,
+.portal-page :is(
+  .portal-prompt-library-intro,
+  .portal-content-studio-intro,
+  .portal-voice-studio-intro,
+  .portal-media-workspace-intro,
+  .portal-video-studio-intro,
+  .portal-image-studio-intro,
+  .portal-document-workspace-intro,
+  .portal-chat-workspace-intro
+) > dl > div > dd {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > div > h2,
+.portal-page :is(
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > dl > div > dd {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > div > p,
+.portal-page :is(
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > dl > div > dt {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(
+  .portal-prompt-library-detail-summary,
+  .portal-content-studio-detail-summary,
+  .portal-voice-studio-detail-summary,
+  .portal-media-detail-summary,
+  .portal-video-studio-detail-summary,
+  .portal-image-studio-detail-summary,
+  .portal-document-workspace-detail-summary,
+  .portal-chat-thread-summary
+) > div > :is(
+  .portal-prompt-library-tags,
+  .portal-content-studio-tags,
+  .portal-voice-studio-tags,
+  .portal-voice-reference-list,
+  .portal-media-tags,
+  .portal-video-studio-tags,
+  .portal-image-studio-tags,
+  .portal-document-workspace-tags,
+  .portal-chat-workspace-tags
+) > span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
