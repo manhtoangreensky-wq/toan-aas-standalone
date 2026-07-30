@@ -4490,6 +4490,88 @@ body {
   outline-offset: 3px;
 }
 
+/* Onboarding makes the Web-first route and optional signed Telegram link
+   equally clear. This is presentation-only: link expiry, callback verification
+   and account authority continue to live on the server and Bot boundary. */
+.portal-page .portal-onboarding-action > .portal-notice {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-onboarding-action .portal-onboarding-choice-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-onboarding-action .portal-onboarding-choice strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-onboarding-action .portal-onboarding-choice p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-onboarding-steps {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-onboarding-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page .portal-onboarding-steps li > span {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-onboarding-steps strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-onboarding-steps small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-onboarding-steps li[data-state="current"] {
+  border-left-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-onboarding-steps li[data-state="current"] > span {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-onboarding-route {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-onboarding-route strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-onboarding-route p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-onboarding-route-state {
+  color: var(--portal-action);
+}
+
+.portal-page .portal-onboarding-page > .portal-onboarding-assurance {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-onboarding-page > .portal-onboarding-assurance > summary {
+  color: var(--portal-ink);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
