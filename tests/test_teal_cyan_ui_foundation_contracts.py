@@ -3297,3 +3297,106 @@ def test_light_image_operations_hub_keeps_artboard_review_readable() -> None:
     assert "font-size: 13px;" in pagination
     assert mobile_metrics is not None
     assert "grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));" in mobile_metrics.group("declarations")
+
+
+def test_light_chat_workspace_final_surface_keeps_private_authoring_readable() -> None:
+    """The Chat routes end with their own scoped light-surface override layer."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light AI Chat Workspace surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    chat_css = layer.group("css")
+    route = ".portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            chat_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, "
+        ".portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, "
+        ".portal-chat-version-list > article, .portal-chat-event-list > div, "
+        ".portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card)"
+    )
+    guard_surface = declarations(f"{route} .portal-chat-workspace-guard-list span")
+    guard_label = declarations(f"{route} .portal-chat-workspace-guard-list strong")
+    guard_status = declarations(f"{route} .portal-chat-workspace-guard-list em")
+    thread = declarations(f"{route} .portal-chat-thread-card")
+    thread_hover = declarations(f"{route} .portal-chat-thread-card:hover")
+    metadata = declarations(
+        f"{route} :is(.portal-chat-workspace-meta span, .portal-chat-workspace-tags span, "
+        ".portal-chat-workspace-pagination, .portal-chat-turn small, .portal-chat-version-list small, "
+        ".portal-chat-event-list small, .portal-chat-run-card small)"
+    )
+    context_copy = declarations(f"{route} .portal-chat-context-card > p")
+    execution_status = declarations(f"{route} .portal-chat-execution-status > span")
+    execution_status_label = declarations(f"{route} .portal-chat-execution-status strong")
+    execution_status_value = declarations(f"{route} .portal-chat-execution-status em")
+    card_titles = declarations(f"{route} .portal-card-title")
+    primary_text = declarations(
+        f"{route} :is(.portal-chat-execution-heading, .portal-chat-run-card h3, "
+        ".portal-chat-version-list strong, .portal-chat-event-list strong)"
+    )
+    thread_summary_label = declarations(f"{route} .portal-chat-thread-summary dt")
+    secondary_text = declarations(
+        f"{route} :is(.portal-chat-turn p, .portal-chat-version-list p, .portal-chat-run-card p, "
+        ".portal-card-subtitle, .portal-form-note)"
+    )
+    event_dot = declarations(f"{route} .portal-chat-event-list > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        chat_css,
+        flags=re.DOTALL,
+    )
+
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "color: var(--portal-muted);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "background: var(--portal-surface-light);" in thread
+    assert "background: var(--portal-light-hover-surface);" in thread_hover
+    assert "transform: none;" in thread_hover
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "color: var(--portal-muted);" in context_copy
+    assert "font-size: 13px;" in context_copy
+    assert "background: var(--portal-surface-soft);" in execution_status
+    assert "color: var(--portal-ink);" in execution_status_label
+    assert "font-size: 13px;" in execution_status_label
+    assert "color: var(--portal-muted);" in execution_status_value
+    assert "font-size: 13px;" in execution_status_value
+    assert "color: var(--portal-ink);" in card_titles
+    assert "font-size: 16px;" in card_titles
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "font-size: 13px;" in thread_summary_label
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-chat-workspace-intro dl" in mobile_selectors
+    assert ".portal-chat-thread-summary dl" in mobile_selectors
+    assert ".portal-chat-execution-status" in mobile_selectors
+    assert ".portal-chat-execution-layout" in mobile_selectors
+    assert ".portal-chat-workspace-guard-list" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
