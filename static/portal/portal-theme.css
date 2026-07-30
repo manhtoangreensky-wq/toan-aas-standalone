@@ -3323,6 +3323,71 @@ body {
   color: var(--portal-context);
 }
 
+/* Dashboard launch cards and the feature catalogue reuse the shared light
+   card surface. Their rendered markup uses plain strong/h3 elements and
+   engine labels, so explicitly map that real hierarchy rather than relying on
+   legacy alias classes that are no longer present in the DOM. */
+.portal-page .portal-action-card > strong,
+.portal-page .portal-action-card h3,
+.portal-page .portal-module-card h3,
+.portal-page .portal-studio-card h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-action-card,
+  .portal-module-card,
+  .portal-studio-card
+):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-studio-tags span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-studio-open,
+.portal-page .portal-studio-open b {
+  color: var(--portal-action);
+}
+
+.portal-page :is(
+  .portal-action-card,
+  .portal-module-card
+) .portal-module-icon,
+.portal-page .portal-studio-card .portal-studio-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-module-card .portal-engine-label {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-module-card .portal-engine-label[data-engine-mode="web_native"] {
+  border-color: color-mix(in srgb, var(--portal-action) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-module-card .portal-engine-label[data-engine-mode="bot_companion"] {
+  border-color: color-mix(in srgb, var(--portal-context) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-module-card .portal-engine-label[data-engine-mode="guarded"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));
+  background: var(--portal-surface-light);
+  color: var(--portal-warning);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */

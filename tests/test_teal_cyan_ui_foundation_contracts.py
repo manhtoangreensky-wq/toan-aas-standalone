@@ -1006,3 +1006,109 @@ def test_light_media_and_bot_companion_surfaces_replace_dark_panel_ink() -> None
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
     assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
     assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
+
+
+def test_light_dashboard_and_catalogue_cards_keep_their_actual_heading_hierarchy() -> None:
+    """Dashboard markup uses plain strong/h3 elements, not the legacy title aliases."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    headings = re.search(
+        r"\.portal-page \.portal-action-card > strong,\s*"
+        r"\.portal-page \.portal-action-card h3,\s*"
+        r"\.portal-page \.portal-module-card h3,\s*"
+        r"\.portal-page \.portal-studio-card h3\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    hover = re.search(
+        r"\.portal-page :is\(\s*\.portal-action-card,\s*\.portal-module-card,\s*"
+        r"\.portal-studio-card\s*\):hover\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    studio_tags = re.search(
+        r"\.portal-page \.portal-studio-tags span\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    studio_open = re.search(
+        r"\.portal-page \.portal-studio-open,\s*\.portal-page \.portal-studio-open b\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert '<a class="portal-action-card"' in PORTAL_CLIENT
+    assert '<strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3>' in PORTAL_CLIENT
+    assert '<a class="portal-module-card"' in PORTAL_CLIENT
+    assert '<a class="portal-studio-card"' in PORTAL_CLIENT
+    assert headings is not None
+    assert hover is not None
+    assert studio_tags is not None
+    assert studio_open is not None
+    assert "color: var(--portal-ink);" in headings.group("declarations")
+    assert "border-color: var(--portal-border-strong);" in hover.group("declarations")
+    assert "background: var(--portal-surface-soft);" in hover.group("declarations")
+    assert "border-color: var(--portal-border);" in studio_tags.group("declarations")
+    assert "background: var(--portal-surface-light);" in studio_tags.group("declarations")
+    assert "color: var(--portal-muted);" in studio_tags.group("declarations")
+    assert "color: var(--portal-action);" in studio_open.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
+
+
+def test_light_catalogue_card_icons_and_engine_labels_preserve_status_meaning() -> None:
+    """Native, companion and guarded labels remain distinct on a light card."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    icon_surfaces = re.search(
+        r"\.portal-page :is\(\s*\.portal-action-card,\s*\.portal-module-card\s*\) "
+        r"\.portal-module-icon,\s*\.portal-page \.portal-studio-card \.portal-studio-icon\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    engine_label = re.search(
+        r"\.portal-page \.portal-module-card \.portal-engine-label\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    web_native = re.search(
+        r"\.portal-page \.portal-module-card \.portal-engine-label\[data-engine-mode=\"web_native\"\] "
+        r"\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    bot_companion = re.search(
+        r"\.portal-page \.portal-module-card \.portal-engine-label\[data-engine-mode=\"bot_companion\"\] "
+        r"\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    guarded = re.search(
+        r"\.portal-page \.portal-module-card \.portal-engine-label\[data-engine-mode=\"guarded\"\] "
+        r"\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert 'class="portal-engine-label" data-engine-mode="${safeText(engine.mode)}"' in PORTAL_CLIENT
+    assert icon_surfaces is not None
+    assert engine_label is not None
+    assert web_native is not None
+    assert bot_companion is not None
+    assert guarded is not None
+    assert "border-color: var(--portal-border);" in icon_surfaces.group("declarations")
+    assert "background: var(--portal-surface-soft);" in icon_surfaces.group("declarations")
+    assert "color: var(--portal-context);" in icon_surfaces.group("declarations")
+    assert "border-color: var(--portal-border);" in engine_label.group("declarations")
+    assert "background: var(--portal-surface-light);" in engine_label.group("declarations")
+    assert "color: var(--portal-muted);" in engine_label.group("declarations")
+    assert "color: var(--portal-action);" in web_native.group("declarations")
+    assert "color: var(--portal-context);" in bot_companion.group("declarations")
+    assert "background: var(--portal-surface-light);" in guarded.group("declarations")
+    assert "color: var(--portal-warning);" in guarded.group("declarations")
+    assert _contrast_ratio("#0f766e", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
+    assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
