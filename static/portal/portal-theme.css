@@ -3256,6 +3256,21 @@ body {
   color: var(--portal-muted);
 }
 
+/* Guide Center shares the light intro surface, so its compact metrics cannot
+   retain the dark inset panel or low-contrast legacy ink. */
+.portal-page .portal-guide-center-intro > dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-guide-center-intro > dl > div > dt {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-guide-center-intro > dl > div > dd {
+  color: var(--portal-muted);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
