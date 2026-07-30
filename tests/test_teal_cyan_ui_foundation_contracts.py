@@ -580,6 +580,41 @@ def test_light_readiness_intros_keep_admin_status_context_legible() -> None:
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
 
 
+def test_light_guide_center_metrics_do_not_keep_the_legacy_dark_subpanel() -> None:
+    """Guide Center metrics stay readable inside its shared light intro surface."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    metrics = re.search(
+        r"\.portal-page \.portal-guide-center-intro > dl > div\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    primary = re.search(
+        r"\.portal-page \.portal-guide-center-intro > dl > div > dt\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    secondary = re.search(
+        r"\.portal-page \.portal-guide-center-intro > dl > div > dd\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert ".portal-guide-center-intro" in PORTAL_CATALOGUE
+    assert metrics is not None
+    assert primary is not None
+    assert secondary is not None
+    assert "border-color: var(--portal-border);" in metrics.group("declarations")
+    assert "background: var(--portal-surface-light);" in metrics.group("declarations")
+    assert "color: var(--portal-ink);" in primary.group("declarations")
+    assert "color: var(--portal-muted);" in secondary.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+
+
 def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     workspace_focus = re.search(
