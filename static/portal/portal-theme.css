@@ -3484,6 +3484,57 @@ body {
   color: var(--portal-action);
 }
 
+/* Private artifact cards share the same output policy even when their source
+   workflows differ. Keep file-type marks and compact metadata readable after
+   those legacy dark cards inherit the light workspace surface. */
+.portal-page :is(
+  .portal-project-package-icon,
+  .portal-document-operation-icon,
+  .portal-vault-file-icon
+) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page :is(
+  .portal-project-package-meta,
+  .portal-document-operation-meta,
+  .portal-vault-meta,
+  .portal-memory-reminder-meta
+) > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-project-package-meta,
+  .portal-document-operation-meta,
+  .portal-vault-meta,
+  .portal-memory-reminder-meta
+) dt {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(
+  .portal-project-package-meta,
+  .portal-document-operation-meta,
+  .portal-vault-meta,
+  .portal-memory-reminder-meta
+) dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-memory-overdue {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-light);
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-memory-reminder-edit > summary {
+  color: var(--portal-context);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
