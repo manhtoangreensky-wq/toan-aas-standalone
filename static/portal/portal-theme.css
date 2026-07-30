@@ -3271,6 +3271,58 @@ body {
   color: var(--portal-muted);
 }
 
+/* Media finalization and Bot companion cards keep their read-only boundary,
+   but their outer panels and cards now inherit the shared light system.  Move
+   the former dark-only text, icon and command-chip treatments to semantic
+   light-surface tokens without altering route, job or Bot handoff behavior. */
+.portal-page :is(
+  .portal-finalization-intro,
+  .portal-media-studio-intro,
+  .portal-bot-companion-intro
+) .portal-state-meta span {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page :is(
+  .portal-media-studio-intro,
+  .portal-bot-companion-intro
+) .portal-state-icon {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-finalization-intro .portal-state-icon {
+  color: var(--portal-warning);
+}
+
+.portal-page :is(
+  .portal-finalization-card,
+  .portal-bot-companion-card
+) h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-finalization-card .portal-module-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-finalization-number {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-finalization-guard {
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-bot-companion-card .portal-link-code {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
