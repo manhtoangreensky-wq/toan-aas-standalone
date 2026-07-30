@@ -42,6 +42,7 @@ repository and do not override a reviewed source contract.
 | Shared semantic source master for subtitle/translation/dubbing | One aligned source transcript and one translation master reduce drift, duplicate ASR/translation cost and debugging effort.  Subtitle copy and spoken dub copy must stay distinct. | A V2 lane run only in shadow/replay with legal fixtures or owner-approved artifacts. |
 | Profile-driven quality controls | Subtitle CPS/CPL, line length, timing, loudness and true peak differ by language and delivery target; fixed global values would be misleading. | New subtitle/dubbing render profiles. |
 | Observability based on evidence | Job/stage counters, artifact hashes, validation reports, delivery receipts and recovery events make a production claim auditable. | Before enabling any long-running or paid Web-native execution lane. |
+| Support-readable evidence bundle | A redacted immutable view of snapshot, stage, validation, recovery and delivery facts supports safe resolution without a mutable job override. | Before exposing support recovery for a long-running lane. |
 
 ## Source-derived implementation invariants
 
@@ -73,9 +74,11 @@ provider call, billing change or Bot integration.
    its saved external task.  It must never create an unreviewed replacement
    charge or duplicate provider submission.
 9. The terminal delivery sequence is artifact creation, `ffprobe` plus full
-   decode, promised-output validation, owner-scoped delivery, receipt
-   persistence, then exactly-once charge.  Invalid output remains a truthful
-   failure with no charge; a local no-cost outcome records `0 Xu` and a receipt.
+   decode, promised-output validation, owner-scoped delivery and receipt
+   persistence. When a separately authorized canonical settlement policy
+   applies, it follows exactly once; a local no-cost outcome may end at its
+   receipt with `0 Xu`. Invalid output remains a truthful failure with no
+   charge.
 10. Normalize every multi-scene artifact to one output profile (resolution,
     pixel format, FPS, timebase and audio profile) before concat or `xfade`.
 11. Treat storage as an artifact policy: private object storage, retention by
@@ -84,6 +87,8 @@ provider call, billing change or Bot integration.
 12. Start any V2 semantic-DAG lane in shadow/replay mode with approved fixtures
     or retained artifacts.  Promote it only after artifact lineage, validation,
     receipt behavior and authority boundaries are reviewed.
+13. Any recovery or support decision records the actor, reason, input
+    fingerprint and whether a provider or settlement side effect was blocked.
 
 ## Explicit non-decisions and guardrails
 
@@ -123,6 +128,9 @@ design explicitly separates ownership:
    records.
 4. The customer Web, mobile app and optional Telegram adapter should consume a
    platform-neutral orchestration API, not each other's UI state.
+5. The authority matrix must also identify which role may inspect redacted
+   evidence, approve a bounded recovery, resolve a delivery ambiguity and
+   authorize settlement/refund without receiving a mutable Bot ledger.
 
 Until that matrix is approved, the current guarded boundaries remain the
 source of truth.
@@ -185,6 +193,9 @@ not a copied Telegram callback flow.
 - Feature flag defaults remain safe/off until a reviewed release gate exists.
 - Tests cover duplicate confirmation, restart/recovery, invalid output,
   cross-account access and delivery/receipt duplication.
+- Fixture tests cover support visibility, evidence redaction, immutable history
+  and a recovery action that cannot create a provider, delivery or settlement
+  side effect twice.
 - A job may become `completed` only after the promised artifact passes its
   validation policy.  Any guarded or uncertain state remains visibly guarded.
 - A PR must name the one capability it makes real; planning previews cannot
