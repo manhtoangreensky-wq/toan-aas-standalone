@@ -43,6 +43,48 @@ repository and do not override a reviewed source contract.
 | Profile-driven quality controls | Subtitle CPS/CPL, line length, timing, loudness and true peak differ by language and delivery target; fixed global values would be misleading. | New subtitle/dubbing render profiles. |
 | Observability based on evidence | Job/stage counters, artifact hashes, validation reports, delivery receipts and recovery events make a production claim auditable. | Before enabling any long-running or paid Web-native execution lane. |
 
+## Source-derived implementation invariants
+
+The following are deferred acceptance constraints distilled from the supplied
+research.  They refine the roadmap above; they do not authorize a new runtime,
+provider call, billing change or Bot integration.
+
+1. VAD may group speech for processing, but every offset must remain on the
+   original media timeline.  It must never remove silence or rebase timestamps.
+2. Choose and persist one transcript source in this order: user-supplied timed
+   subtitles, validated embedded subtitles, then ASR.  Do not silently replace
+   an available timed source with an inferior derivative.
+3. Keep a high-quality `audio_master` for mix/mastering separate from the
+   provider-specific `asr_input`.  A downsampled ASR derivative is never the
+   final audio source.
+4. Describe alignment honestly as `word_aligned`, `segment_timed` or
+   `alignment_unavailable`; segment timing must not be presented as word-level
+   truth.  Run diarization only for an actual multi-speaker, casting, label or
+   dub/combo need.
+5. Preserve a stable `segment_id` through subtitle, translation, dub and combo
+   derivatives.  Each stage must retain its fingerprint, model/provider version,
+   runtime revision and idempotency key.
+6. Derive subtitle adaptation and spoken-dub adaptation separately from one
+   translation master.  A subtitle line-break change must not rerun TTS, and a
+   combo uses one final render/mux rather than competing final outputs.
+7. Apply subtitle and audio quality profiles by language and delivery target;
+   no global CPS, LUFS or true-peak constant is acceptable for every output.
+8. After a paid provider task is accepted, recovery may only poll or retrieve
+   its saved external task.  It must never create an unreviewed replacement
+   charge or duplicate provider submission.
+9. The terminal delivery sequence is artifact creation, `ffprobe` plus full
+   decode, promised-output validation, owner-scoped delivery, receipt
+   persistence, then exactly-once charge.  Invalid output remains a truthful
+   failure with no charge; a local no-cost outcome records `0 Xu` and a receipt.
+10. Normalize every multi-scene artifact to one output profile (resolution,
+    pixel format, FPS, timebase and audio profile) before concat or `xfade`.
+11. Treat storage as an artifact policy: private object storage, retention by
+    artifact class and signed/temporary owner-checked downloads.  Browser file
+    paths, public buckets and provider tokens are never delivery mechanisms.
+12. Start any V2 semantic-DAG lane in shadow/replay mode with approved fixtures
+    or retained artifacts.  Promote it only after artifact lineage, validation,
+    receipt behavior and authority boundaries are reviewed.
+
 ## Explicit non-decisions and guardrails
 
 The following must **not** be introduced merely because they appear in the
