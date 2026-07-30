@@ -2894,3 +2894,71 @@ def test_light_audio_production_hub_detail_keeps_review_and_change_requests_read
     assert mobile_checkbox is not None
     assert "min-height: 44px;" in mobile_checkbox.group("rules")
     assert not re.search(r"(?m)^\s*\.portal-audio-hub-detail", theme_source)
+
+
+def test_light_music_prompt_composer_keeps_native_direction_receipts_readable() -> None:
+    """Music planning receipts remain readable without implying audio delivery."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    route = ".portal-page.portal-music-prompt-composer"
+    for selector in (
+        ".portal-music-prompt-composer-intro",
+        ".portal-music-prompt-composer-form",
+        ".portal-music-prompt-composer-boundary",
+        ".portal-music-prompt-composer-result",
+        ".portal-music-prompt-composer-suggestions",
+        ".portal-music-prompt-composer-usage",
+        ".portal-music-prompt-composer-review",
+    ):
+        assert selector in PORTAL_CATALOGUE
+    assert "function renderMusicPromptComposer(page, context)" in PORTAL_CLIENT
+
+    intro = declarations(f"{route} .portal-music-prompt-composer-intro")
+    form = declarations(f"{route} .portal-music-prompt-composer-form")
+    boundary_and_result = declarations(
+        f"{route} .portal-music-prompt-composer-boundary,\n"
+        f"{route} .portal-music-prompt-composer-result"
+    )
+    suggestion_list = declarations(f"{route} .portal-music-prompt-composer-suggestions li")
+    selected_suggestion = declarations(f'{route} .portal-music-prompt-composer-suggestions li[data-selected="true"]')
+    usage = declarations(f"{route} .portal-music-prompt-composer-usage")
+    review = declarations(f"{route} .portal-music-prompt-composer-review")
+    intro_metric_label = declarations(f"{route} .portal-music-prompt-composer-intro dd")
+    standard_field_label = declarations(
+        f"{route} .portal-music-prompt-composer-form .portal-field > label"
+    )
+    receipt_copy = declarations(
+        f"{route} :is(.portal-music-prompt-composer-suggestions dd, "
+        ".portal-music-prompt-composer-suggestions pre, "
+        ".portal-music-prompt-composer-usage p, "
+        ".portal-music-prompt-composer-usage dd, "
+        ".portal-music-prompt-composer-review p, "
+        ".portal-music-prompt-composer-review li)"
+    )
+
+    assert "background: var(--portal-surface-light);" in intro
+    assert "box-shadow: none;" in intro
+    assert "background: var(--portal-surface-light);" in form
+    assert "background: var(--portal-surface-soft);" in boundary_and_result
+    assert "background: var(--portal-surface-light);" in suggestion_list
+    assert "border-color: var(--portal-border-strong);" in selected_suggestion
+    assert "background: var(--portal-light-hover-surface);" in selected_suggestion
+    assert "background: var(--portal-surface-soft);" in usage
+    assert "background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));" in review
+    assert "color: var(--portal-muted);" in intro_metric_label
+    assert "font-size: 13px;" in intro_metric_label
+    assert "color: var(--portal-ink);" in standard_field_label
+    assert "font-size: 13px;" in standard_field_label
+    assert "color: var(--portal-muted);" in receipt_copy
+    assert "font-size: 13px;" in receipt_copy
+    assert not re.search(r"(?m)^\s*\.portal-music-prompt-composer", theme_source)

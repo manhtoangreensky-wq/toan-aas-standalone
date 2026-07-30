@@ -5643,3 +5643,156 @@ body {
     min-height: 44px;
   }
 }
+
+/* Music Prompt Composer is a Web-native planning receipt.  Keep its short
+   lived directions readable and calm without making them look like audio,
+   a provider response, a job, or a delivery. */
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro h2,
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-form, .portal-music-prompt-composer-boundary, .portal-music-prompt-composer-result) .portal-card-title,
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestion-head strong,
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-usage h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro p,
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-form, .portal-music-prompt-composer-boundary, .portal-music-prompt-composer-result) .portal-card-subtitle,
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-usage p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-intro dd {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-form {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-form .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-boundary,
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-result {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-form, .portal-music-prompt-composer-result) .portal-field small,
+.portal-page.portal-music-prompt-composer :is(.portal-form-note, .portal-field-help) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-guard-list em {
+  border-color: color-mix(in srgb, var(--portal-action) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-meta, .portal-music-prompt-composer-tags) span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestions {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestions li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestions li[data-selected="true"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-index {
+  border-color: color-mix(in srgb, var(--portal-action) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestion-head em {
+  border-color: color-mix(in srgb, var(--portal-context) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));
+  color: var(--portal-context);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-suggestions dl > div,
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-usage > dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-suggestions, .portal-music-prompt-composer-usage) dt {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page.portal-music-prompt-composer :is(.portal-music-prompt-composer-suggestions dd, .portal-music-prompt-composer-suggestions pre, .portal-music-prompt-composer-usage p, .portal-music-prompt-composer-usage dd, .portal-music-prompt-composer-review p, .portal-music-prompt-composer-review li) {
+  color: var(--portal-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-usage {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-review {
+  border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));
+  box-shadow: none;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-review strong {
+  color: var(--portal-warning);
+  font-size: 13px;
+}
+
+.portal-page.portal-music-prompt-composer .portal-music-prompt-composer-review > div {
+  border-top-color: color-mix(in srgb, var(--portal-warning) 26%, var(--portal-border));
+}
