@@ -3685,3 +3685,157 @@ def test_light_analytics_workspace_final_surface_keeps_manual_measurement_readab
     assert ".portal-analytics-report-grid" in mobile_selectors
     assert ".portal-analytics-comparison" in mobile_selectors
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+
+
+def test_light_subtitle_studio_final_surface_keeps_authored_cues_readable() -> None:
+    """Authored transcript work remains truthful while using the shared light app system."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Subtitle Studio surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    subtitle_css = layer.group("css")
+    route = ".portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            subtitle_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary) dl > div"
+    )
+    summary_metric_value = declarations(f"{route} .portal-subtitle-studio-intro dt")
+    summary_label = declarations(
+        f"{route} :is(.portal-subtitle-studio-intro dd, .portal-subtitle-studio-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-subtitle-studio-detail-summary dd")
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-subtitle-studio-create, .portal-subtitle-studio-editor, "
+        ".portal-subtitle-cue-create, .portal-subtitle-studio-boundary, "
+        ".portal-subtitle-runtime-estimate, .portal-subtitle-studio-activity, "
+        ".portal-subtitle-text-preview)"
+    )
+    source = declarations(f"{route} .portal-subtitle-language-source")
+    source_guarded = declarations(f"{route} .portal-subtitle-language-source.is-guarded")
+    source_facts = declarations(f"{route} .portal-subtitle-language-source-facts span")
+    source_pager = declarations(f"{route} .portal-subtitle-language-source-pager")
+    guard_surface = declarations(f"{route} .portal-subtitle-studio-guard-list span")
+    guard_label = declarations(f"{route} .portal-subtitle-studio-guard-list strong")
+    guard_status = declarations(f"{route} .portal-subtitle-studio-guard-list em")
+    project_card = declarations(f"{route} .portal-subtitle-project-card")
+    project_hover = declarations(f"{route} .portal-subtitle-project-card:hover")
+    metadata = declarations(
+        f"{route} :is(.portal-subtitle-project-meta span, .portal-subtitle-cue-meta span, "
+        ".portal-subtitle-studio-tags span)"
+    )
+    estimate = declarations(f"{route} .portal-subtitle-estimate-grid span")
+    estimate_value = declarations(f"{route} .portal-subtitle-estimate-grid strong")
+    cue_card = declarations(f"{route} .portal-subtitle-cue-card")
+    cue_archived = declarations(f"{route} .portal-subtitle-cue-card.is-archived")
+    cue_translation = declarations(f"{route} .portal-subtitle-cue-translation")
+    cue_dividers = declarations(
+        f"{route} :is(.portal-subtitle-cue-form, .portal-subtitle-cue-history)"
+    )
+    version_row = declarations(f"{route} .portal-subtitle-version-list > article")
+    preview = declarations(f"{route} .portal-subtitle-preview-text")
+    primary_text = declarations(
+        f"{route} :is(.portal-subtitle-cue-history > strong, .portal-subtitle-version-list strong, "
+        ".portal-subtitle-studio-events strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-subtitle-cue-history > div, .portal-subtitle-cue-history em, "
+        ".portal-subtitle-version-list p, .portal-subtitle-version-list small, "
+        ".portal-subtitle-studio-events small, .portal-card-subtitle, .portal-form-note)"
+    )
+    event_dot = declarations(f"{route} .portal-subtitle-studio-events > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        subtitle_css,
+        flags=re.DOTALL,
+    )
+
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light);" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "font-size: clamp(24px, 2.4vw, 32px);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "font-size: 14px;" in summary_copy
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-action);" in summary_metric_value
+    assert "color: var(--portal-muted);" in summary_label
+    assert "font-size: 13px;" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "font-size: 13px;" in summary_value
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "background: var(--portal-surface-soft);" in source
+    assert "background: var(--portal-surface-soft);" in source_guarded
+    assert "border-color: var(--portal-border);" in source_facts
+    assert "background: var(--portal-surface-light);" in source_facts
+    assert "border-color: var(--portal-border);" in source_pager
+    assert "color: var(--portal-muted);" in source_pager
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-muted);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "border-color: var(--portal-border);" in project_card
+    assert "background: var(--portal-surface-light);" in project_card
+    assert "background: var(--portal-light-hover-surface);" in project_hover
+    assert "transform: none;" in project_hover
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "background: var(--portal-surface-soft);" in estimate
+    assert "color: var(--portal-muted);" in estimate
+    assert "font-size: 13px;" in estimate
+    assert "color: var(--portal-ink);" in estimate_value
+    assert "border-color: var(--portal-border);" in cue_card
+    assert "background: var(--portal-surface-light);" in cue_card
+    assert "background: var(--portal-surface-soft);" in cue_archived
+    assert "opacity: 1;" in cue_archived
+    assert "color: var(--portal-muted);" in cue_translation
+    assert "border-top-color: var(--portal-border);" in cue_dividers
+    assert "border-color: var(--portal-border);" in version_row
+    assert "border-color: var(--portal-border);" in preview
+    assert "background: var(--portal-surface-soft);" in preview
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-subtitle-studio-intro dl" in mobile_selectors
+    assert ".portal-subtitle-studio-detail-summary dl" in mobile_selectors
+    assert ".portal-subtitle-studio-guard-list" in mobile_selectors
+    assert ".portal-subtitle-studio-layout" in mobile_selectors
+    assert ".portal-subtitle-studio-detail-grid" in mobile_selectors
+    assert ".portal-subtitle-project-grid" in mobile_selectors
+    assert ".portal-subtitle-cue-grid" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
