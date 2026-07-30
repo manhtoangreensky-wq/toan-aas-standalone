@@ -3892,6 +3892,112 @@ body {
   background: color-mix(in srgb, var(--portal-danger) 12%, var(--portal-surface-light));
 }
 
+/* Inbox and Automation Center reuse the same owner-scoped record model. Their
+   original dark-only cards are intentionally flattened into the established
+   light workspace hierarchy without changing a notification's state or action. */
+.portal-page :is(.portal-inbox, .portal-notification-automation) .portal-inbox-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page :is(.portal-inbox, .portal-notification-automation) .portal-inbox-intro :is(h2, dt) {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(.portal-inbox, .portal-notification-automation) .portal-inbox-intro :is(p, dd) {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(.portal-inbox, .portal-notification-automation) .portal-inbox-intro dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-inbox .portal-inbox-metrics .portal-metric {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-inbox .portal-inbox-metrics .portal-metric > :is(span, em) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-inbox .portal-inbox-metrics .portal-metric > strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-inbox-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-inbox-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-inbox-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-inbox-item {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-inbox-item:hover,
+.portal-page .portal-inbox-item:focus-within {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page .portal-inbox-item[data-severity="urgent"] {
+  border-color: var(--portal-warning);
+  background: color-mix(in srgb, var(--portal-warning) 7%, var(--portal-surface-light));
+}
+
+.portal-page .portal-inbox-item[data-state="dismissed"] {
+  opacity: 1;
+}
+
+.portal-page .portal-inbox-kind {
+  color: var(--portal-context);
+}
+
+.portal-page .portal-inbox-item h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-inbox-item p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-inbox-item-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-inbox-item-meta dt {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-inbox-item-meta dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-inbox-run strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-inbox-run small {
+  color: var(--portal-muted);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
