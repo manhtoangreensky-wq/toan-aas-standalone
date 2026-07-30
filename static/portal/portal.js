@@ -12,6 +12,11 @@
   const ACTION_EVENT = "toanaas:portal-action";
   const PUBLIC_BUILD_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/;
   const LOCAL_PUBLIC_BUILD_ID = "local";
+  // The signed Admin ERP directory can contain support, Web-local and
+  // canonical groups at once. Preserve its complete, bounded projection for
+  // desktop navigation and the command palette; the separate mobile dock
+  // remains deliberately capped at five modules.
+  const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;
 
   function publicBuildId(value) {
     // Build IDs are public cache names, not a route, session value or generic
@@ -8411,7 +8416,7 @@
       // every group/module before it can become an HTML link.
       adminErpNavigation: source.adminErpNavigation && typeof source.adminErpNavigation === "object"
         ? {
-            groups: Array.isArray(source.adminErpNavigation.groups) ? source.adminErpNavigation.groups.slice(0, 10) : [],
+            groups: Array.isArray(source.adminErpNavigation.groups) ? source.adminErpNavigation.groups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS) : [],
             canonical_admin: source.adminErpNavigation.canonical_admin === true,
             support_role: typeof source.adminErpNavigation.support_role === "string" ? source.adminErpNavigation.support_role.slice(0, 32) : "none",
             web_local_admin: source.adminErpNavigation.web_local_admin === true,
@@ -9019,7 +9024,7 @@
     if (source.read_state !== "ready" || !Array.isArray(source.groups)) return { groups: [], routes: new Set(), canonicalAdmin: false, supportRole: "none", webLocalAdmin: false };
     const groups = [];
     const routes = new Set();
-    source.groups.slice(0, 10).forEach((candidate, groupIndex) => {
+    source.groups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS).forEach((candidate, groupIndex) => {
       if (!candidate || typeof candidate !== "object") return;
       const id = String(candidate.id || `group-${groupIndex}`).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 60);
       const title = String(candidate.title || "Admin ERP").trim().slice(0, 96);
@@ -9425,26 +9430,46 @@
     const seen = new Set();
     const authorizedAdminRoutes = adminErpNavigation(context).routes;
     const adminSurface = isAdminPortalSurface(page);
-    Object.values(manifest).forEach((candidate) => {
-      const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
-      if (!path || seen.has(path) || candidate.access === "public") return;
-      // The command palette is only a convenience UI, but it follows the same
-      // server-issued route manifest as the sidebar. A cached account role or
-      // current page never makes an admin destination discoverable by itself.
-      if (candidate.access === "admin" && !authorizedAdminRoutes.has(path)) return;
-      // The internal ERP shell is intentionally a separate application
-      // surface. A signed staff member may still own a customer workspace,
-      // but customer routes are not mixed into the Admin quick switch.
-      if (adminSurface && (candidate.access !== "admin" || !authorizedAdminRoutes.has(path))) return;
-      seen.add(path);
-      items.push({
-        path,
-        title: localizedNavigationLabel(String(candidate.title || "TOAN AAS")),
-        section: localizedNavigationLabel(String(candidate.section || "Workspace")),
-        icon: candidate.icon || ICONS.default,
-        current: normalizePath(path) === activePath
+    if (adminSurface) {
+      // The ERP shell can expose exact server-issued routes that are dynamic
+      // Portal pages rather than entries in the static public catalog. Build
+      // the palette from that same validated projection as the sidebar so a
+      // signed Admin never loses an authorized destination in Ctrl+K.
+      adminErpNavigation(context).groups.forEach((group) => {
+        if (!group || !Array.isArray(group.modules)) return;
+        const section = localizedNavigationLabel(`ERP · ${String(group.title || "Admin ERP")}`);
+        group.modules.forEach((module) => {
+          const path = module && typeof module.route === "string" ? module.route : "";
+          if (!path || seen.has(path) || !authorizedAdminRoutes.has(path)) return;
+          seen.add(path);
+          items.push({
+            path,
+            title: localizedNavigationLabel(String(module.title || "Admin ERP")),
+            section,
+            icon: module.icon || adminRouteIcon(path),
+            current: normalizePath(path) === activePath
+          });
+        });
       });
-    });
+    } else {
+      Object.values(manifest).forEach((candidate) => {
+        const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
+        if (!path || seen.has(path) || candidate.access === "public") return;
+        // The command palette is only a convenience UI, but it follows the
+        // same server-issued route manifest as the sidebar. A cached account
+        // role or current page never makes an admin destination discoverable
+        // by itself.
+        if (candidate.access === "admin" && !authorizedAdminRoutes.has(path)) return;
+        seen.add(path);
+        items.push({
+          path,
+          title: localizedNavigationLabel(String(candidate.title || "TOAN AAS")),
+          section: localizedNavigationLabel(String(candidate.section || "Workspace")),
+          icon: candidate.icon || ICONS.default,
+          current: normalizePath(path) === activePath
+        });
+      });
+    }
     return items.sort((left, right) => {
       if (left.current !== right.current) return left.current ? -1 : 1;
       return localizedCompareText(`${left.section} ${left.title}`, `${right.section} ${right.title}`);

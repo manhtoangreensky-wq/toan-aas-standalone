@@ -190,6 +190,51 @@ def test_canonical_groups_require_flag_and_live_authority(monkeypatch) -> None:
     assert bridge_checks == []
 
 
+def test_fully_authorized_admin_manifest_keeps_all_authority_domains(monkeypatch) -> None:
+    """A live admin can receive 13 groups; clients must not lose the tail."""
+
+    account = {"id": "full-admin", "role": "admin", "canonical_user_id": "canonical-admin"}
+
+    async def canonical_ok(_request):
+        return account
+
+    monkeypatch.setattr(navigation, "require_canonical_admin", canonical_ok)
+    monkeypatch.setattr(navigation, "require_support_staff", lambda _account: "manager")
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "true")
+
+    with _client_for(account) as client:
+        response = client.get("/api/v1/admin/navigation")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "read_only"
+    assert body["data"]["access"] == {
+        "canonical_admin": True,
+        "web_support": True,
+        "web_support_scope": "manager",
+        "web_local_admin": True,
+    }
+    groups = body["data"]["groups"]
+    assert [group["id"] for group in groups] == [
+        "support_operations",
+        "web_private_crm",
+        "web_finance_operations_planning",
+        "web_governance_documents",
+        "web_internal_document_archive",
+        "web_automation_monitor",
+        "web_system_stewardship",
+        "web_security_access_posture",
+        "command_center",
+        "commerce",
+        "delivery_runtime",
+        "content_growth",
+        "governance",
+    ]
+    assert len(groups) == 13
+    assert groups[-1]["id"] == "governance"
+    assert any(module["route"] == "/admin/backups" for module in groups[-1]["modules"])
+
+
 def test_erp_kill_switch_hides_web_native_staff_navigation_too(monkeypatch) -> None:
     """The admin-directory switch cannot leave staff shortcuts discoverable."""
 

@@ -7,6 +7,11 @@
   "use strict";
 
   const API = "/api/v1";
+  // A fully authorized account currently receives 13 small, server-issued
+  // ERP groups (support, Web-local and canonical). Keep a bounded ceiling so
+  // an unexpected response cannot grow without limit, but never truncate a
+  // legitimate tail group before the Portal can validate it.
+  const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;
   const CAMPAIGN_CREATE_ROUTE = "/campaigns/new";
   const PROJECT_CREATE_ROUTE = "/projects/new";
   const IMAGE_OCR_ROUTE = "/documents/ocr";
@@ -14665,7 +14670,7 @@
     const source = data && typeof data === "object" && data.navigation && typeof data.navigation === "object" ? data.navigation : (data && typeof data === "object" ? data : {});
     const groups = [];
     const rawGroups = Array.isArray(source.groups) ? source.groups : [];
-    rawGroups.slice(0, 10).forEach((group, groupIndex) => {
+    rawGroups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS).forEach((group, groupIndex) => {
       if (!group || typeof group !== "object") return;
       const id = String(group.id || `group-${groupIndex}`).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 60);
       const title = String(group.title || "Admin ERP").trim().slice(0, 96);

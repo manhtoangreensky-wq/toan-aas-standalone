@@ -101,14 +101,19 @@ const runtime = [
   'const window = { location: { pathname: "/admin" } };',
   'const ICONS = Object.freeze({ admin: "admin", support: "support", users: "users", payments: "payments", jobs: "jobs", providers: "providers", security: "security", reports: "reports", system: "system", default: "default" });',
   'const ALLOWED_STATES = new Set(["ready", "guarded", "read_only"]);',
+  'const manifest = Object.freeze({});',
+  extract("const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;", "function publicBuildId(value)"),
   'function safeText(value, fallback) { if (typeof value !== "string") return fallback || ""; return value.replace(/[&<>\'\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\'": "&#39;", \'"\': "&quot;" }[character])); }',
+  'function localizedNavigationLabel(value) { return String(value || ""); }',
+  'function localizedCompareText(left, right) { return String(left || "").localeCompare(String(right || "")); }',
   'function portalIcon(icon) { return `<svg data-icon="${icon}"></svg>`; }',
   extract("function normalizePath(path)", "const CAPABILITY_HUB_FAMILY_KEYS"),
   extract("function safeCatalogRoute(value)", "function catalogEntryRoute(entry)"),
   extract("function adminErpNavigation(context)", "function adminRouteIcon(route)"),
   extract("function adminRouteIcon(route)", "function hasLiveCanonicalAdmin(context)"),
   extract("function serverAuthorizesAdminRoute(context, route)", "const CUSTOMER_APPLICATION_ROUTE"),
-  extract("function isAdminPortalSurface(page)", "function normalizeCommandSearch(value)")
+  extract("function isAdminPortalSurface(page)", "function normalizeCommandSearch(value)"),
+  extract("function normalizeCommandSearch(value)", "function renderCommandPalette(page, context)")
 ].join("\n");
 eval(runtime);
 
@@ -118,16 +123,47 @@ const context = {
     groups: [
       { id: "support", modules: [
         { route: "/admin/support", title: "Support & <Ops>", state: "available" },
-        { route: "/admin/users", title: "Users", state: "available" }
+        { route: "/admin/users", title: "Users", state: "available" },
+        { route: "/admin/content-handoffs", title: "Content handoffs", state: "available" }
       ] },
-      { id: "web-local", modules: [
-        { route: "/admin/crm", title: "CRM", state: "available" },
-        { route: "/admin/reports", title: "Reports", state: "guarded" }
+      { id: "web-crm", modules: [
+        { route: "/admin/crm/leads", title: "CRM", state: "available" }
       ] },
-      { id: "canonical", modules: [
+      { id: "web-finance", modules: [
+        { route: "/admin/finance/planning", title: "Finance planning", state: "available" }
+      ] },
+      { id: "web-governance", modules: [
+        { route: "/admin/governance", title: "Governance documents", state: "available" }
+      ] },
+      { id: "web-archive", modules: [
+        { route: "/admin/internal-documents", title: "Internal archive", state: "guarded" }
+      ] },
+      { id: "web-automation", modules: [
+        { route: "/admin/automation", title: "Automation", state: "available" }
+      ] },
+      { id: "web-system", modules: [
+        { route: "/admin/system-stewardship", title: "System stewardship", state: "available" }
+      ] },
+      { id: "web-security", modules: [
+        { route: "/admin/security", title: "Security", state: "available" },
+        { route: "/admin/access", title: "Access", state: "available" }
+      ] },
+      { id: "command-center", modules: [
         { route: "/admin", title: "ERP overview", state: "available" },
+        { route: "/admin/tickets", title: "Tickets", state: "available" }
+      ] },
+      { id: "commerce", modules: [
+        { route: "/admin/payments", title: "Payments", state: "available" }
+      ] },
+      { id: "delivery", modules: [
         { route: "/admin/jobs", title: "Jobs", state: "available" },
         { route: "/admin/providers", title: "Providers", state: "available" }
+      ] },
+      { id: "content-growth", modules: [
+        { route: "/admin/campaigns", title: "Campaigns", state: "guarded" }
+      ] },
+      { id: "governance", modules: [
+        { route: "/admin/backups", title: "Backups", state: "available" }
       ] }
     ]
   }
@@ -141,6 +177,8 @@ const markup = renderAdminMobileNav({ routePath: "/admin/support/ticket-42" }, c
 const desktopGroups = adminDesktopNavGroups(context, { routePath: "/admin/jobs/job-42" });
 const desktopLinks = desktopGroups.flatMap((group) => group.links);
 const unavailableDesktop = adminDesktopNavGroups({ adminErpNavigation: { read_state: "loading", groups: context.adminErpNavigation.groups } }, { routePath: "/admin/jobs/job-42" });
+const paletteItems = commandPaletteItems(context, { routePath: "/admin/jobs/job-42" });
+const paletteRoutes = paletteItems.map((item) => item.path);
 
 if (jobItems.length !== 5 || jobItems[0].route !== "/admin/jobs" || jobItems[1].route !== "/admin") {
   throw new Error(`current job and issued overview were not retained: ${JSON.stringify(jobItems)}`);
@@ -166,19 +204,22 @@ if (!isAdminMobileSurface({ routePath: "/admin/jobs" }) || isAdminMobileSurface(
 if (!markup.includes('href="/admin/support"') || !markup.includes("Support &amp; &lt;Ops&gt;")) {
   throw new Error(`server-issued route/title were not safely rendered: ${markup}`);
 }
-if (desktopGroups.length !== 3 || desktopLinks.some((link) => link[0] === "/dashboard" || link[0] === "/features")) {
+if (desktopGroups.length !== 13 || !desktopLinks.some((link) => link[0] === "/admin/backups") || desktopLinks.some((link) => link[0] === "/dashboard" || link[0] === "/features")) {
   throw new Error(`desktop ERP sidebar included a customer route or lost a granted group: ${JSON.stringify(desktopGroups)}`);
 }
 if (desktopLinks.filter((link) => link[3] === true).map((link) => link[0]).join(",") !== "/admin/jobs") {
   throw new Error(`desktop ERP sidebar did not announce exactly the current issued job route: ${JSON.stringify(desktopLinks)}`);
 }
-if (!desktopGroups[2].current || !desktopGroups[2].defaultOpen || unavailableDesktop.length !== 0) {
+if (!desktopGroups[10].current || !desktopGroups[10].defaultOpen || unavailableDesktop.length !== 0) {
   throw new Error(`desktop ERP sidebar did not open only the current group or fail closed: ${JSON.stringify({ desktopGroups, unavailableDesktop })}`);
+}
+if (!paletteRoutes.includes("/admin/content-handoffs") || !paletteRoutes.includes("/admin/crm/leads") || paletteRoutes.includes("/dashboard")) {
+  throw new Error(`Admin command palette did not retain every server-issued route: ${JSON.stringify(paletteRoutes)}`);
 }
 if (!isAdminPortalSurface({ routePath: "/admin/jobs" }) || isAdminPortalSurface({ routePath: "/dashboard", isAdmin: true })) {
   throw new Error("desktop Admin surface selection did not use only the normalized path");
 }
-process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.route), supportMarkup: markup, desktopRoutes: desktopLinks.map((link) => link[0]) }));
+process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.route), supportMarkup: markup, desktopRoutes: desktopLinks.map((link) => link[0]), paletteRoutes }));
 '''
     try:
         result = subprocess.run(
@@ -197,8 +238,28 @@ process.stdout.write(JSON.stringify({ jobRoutes: jobItems.map((item) => item.rou
 def test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items() -> None:
     result = _run_admin_mobile_nav_harness(ROOT / "static" / "portal" / "portal.js")
 
-    assert result["jobRoutes"] == ["/admin/jobs", "/admin", "/admin/support", "/admin/users", "/admin/crm"]
-    assert result["desktopRoutes"] == ["/admin/support", "/admin/users", "/admin/crm", "/admin/reports", "/admin", "/admin/jobs", "/admin/providers"]
+    assert result["jobRoutes"] == ["/admin/jobs", "/admin", "/admin/support", "/admin/users", "/admin/content-handoffs"]
+    assert result["desktopRoutes"] == [
+        "/admin/support",
+        "/admin/users",
+        "/admin/content-handoffs",
+        "/admin/crm/leads",
+        "/admin/finance/planning",
+        "/admin/governance",
+        "/admin/internal-documents",
+        "/admin/automation",
+        "/admin/system-stewardship",
+        "/admin/security",
+        "/admin/access",
+        "/admin",
+        "/admin/tickets",
+        "/admin/payments",
+        "/admin/jobs",
+        "/admin/providers",
+        "/admin/campaigns",
+        "/admin/backups",
+    ]
+    assert {"/admin/content-handoffs", "/admin/crm/leads"} <= set(result["paletteRoutes"])
     assert 'aria-current="page"' in result["supportMarkup"]
 
 
@@ -229,7 +290,8 @@ def test_desktop_admin_shell_uses_the_same_issued_projection_without_customer_sh
     assert "const adminSurface = isAdminPortalSurface(page);" in header
     assert "chrome.searchAdmin" in header
     assert "const adminSurface = isAdminPortalSurface(page);" in palette
-    assert 'candidate.access !== "admin"' in palette
+    assert "adminErpNavigation(context).groups.forEach" in palette
+    assert "authorizedAdminRoutes.has(path)" in palette
     assert "chrome.adminCommandCount" in dialog
     assert "const commandKicker = adminSurface" in dialog
     assert "const commandTitle = adminSurface" in dialog
