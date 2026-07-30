@@ -216,6 +216,75 @@ def test_light_surface_focus_ring_overrides_the_catalogue_important_outline_with
     assert SHELL_TEMPLATE.index(BASE_STYLESHEET) < SHELL_TEMPLATE.index(THEME_STYLESHEET)
 
 
+def test_light_workspace_intros_replace_dark_catalogue_text_and_metric_cards_with_semantic_tokens() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    light_intro_selectors = (
+        ".portal-image-prompt-composer-intro",
+        ".portal-video-prompt-planner-intro",
+        ".portal-workboard-intro",
+        ".portal-workboard-detail-summary",
+    )
+    metric_cards = re.search(
+        r"\.portal-page :is\((?P<selectors>.*?)\) dl > div\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    primary_text = re.search(
+        r"\.portal-page :is\((?P<selectors>.*?)\) :is\(h2, dt\),\s*"
+        r"\.portal-page \.portal-workboard-detail-summary :is\(h2, dd\)\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    secondary_text = re.search(
+        r"\.portal-page :is\((?P<selectors>.*?)\) :is\(p, dd\),\s*"
+        r"\.portal-page \.portal-workboard-detail-summary :is\(p, dt\)\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert all(selector in PORTAL_CATALOGUE for selector in light_intro_selectors)
+    assert metric_cards is not None
+    assert primary_text is not None
+    assert secondary_text is not None
+    for selector in light_intro_selectors:
+        assert selector in metric_cards.group("selectors")
+    for selector in light_intro_selectors[:3]:
+        assert selector in primary_text.group("selectors")
+        assert selector in secondary_text.group("selectors")
+    assert "border-color: var(--portal-border);" in metric_cards.group("declarations")
+    assert "background: var(--portal-surface-light);" in metric_cards.group("declarations")
+    assert "color: var(--portal-ink);" in primary_text.group("declarations")
+    assert "color: var(--portal-muted);" in secondary_text.group("declarations")
+
+
+def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    workspace_focus = re.search(
+        r"\.portal-main :focus-visible\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert workspace_focus is not None
+    assert "outline: 3px solid var(--portal-focus) !important;" in workspace_focus.group("declarations")
+    assert "outline-offset: 3px;" in workspace_focus.group("declarations")
+    assert _contrast_ratio("#0369a1", "#ffffff") >= 3
+    assert _contrast_ratio("#0369a1", "#f3fbfc") >= 3
+
+
+def test_account_logout_uses_the_semantic_danger_token_on_the_light_surface() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    logout = re.search(
+        r'\.portal-account-page \[data-portal-action="auth-logout"\]\s*\{(?P<declarations>.*?)\n\}',
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert logout is not None
+    assert "color: var(--portal-danger);" in logout.group("declarations")
+    assert _contrast_ratio("#b91c1c", "#ffffff") >= 4.5
+
+
 def test_pwa_metadata_and_offline_shell_share_the_canonical_portal_background() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     offline_shell = OFFLINE_SHELL.read_text(encoding="utf-8")

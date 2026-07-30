@@ -2938,6 +2938,60 @@ body {
   }
 }
 
+/* These legacy studios authored their intro metrics for dark gradient panels.
+   The shared light-surface rule now owns their outer panel, so their nested
+   metric cards and text must move to the same semantic light palette instead
+   of retaining low-contrast pastel ink.  Execution, form and route behavior
+   stay unchanged. */
+.portal-page :is(
+  .portal-image-prompt-composer-intro,
+  .portal-video-prompt-planner-intro,
+  .portal-workboard-intro,
+  .portal-workboard-detail-summary
+) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-image-prompt-composer-intro,
+  .portal-video-prompt-planner-intro,
+  .portal-workboard-intro
+) :is(h2, dt),
+.portal-page .portal-workboard-detail-summary :is(h2, dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-image-prompt-composer-intro,
+  .portal-video-prompt-planner-intro,
+  .portal-workboard-intro
+) :is(p, dd),
+.portal-page .portal-workboard-detail-summary :is(p, dt) {
+  color: var(--portal-muted);
+}
+
+/* The catalogue's global mint rule is important and was only corrected for
+   access/landing pages.  Workspace controls need the same visible focus ring
+   against the light canvas without changing their behavior. */
+.portal-main :focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 3px;
+}
+
+.portal-account-page [data-portal-action="auth-logout"] {
+  border-color: color-mix(in srgb, var(--portal-danger) 55%, var(--portal-border));
+  color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 7%, var(--portal-surface-light));
+}
+
+.portal-account-page [data-portal-action="auth-logout"]:hover,
+.portal-account-page [data-portal-action="auth-logout"]:focus-visible {
+  border-color: var(--portal-danger);
+  color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 12%, var(--portal-surface-light));
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
