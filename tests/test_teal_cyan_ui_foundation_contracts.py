@@ -499,6 +499,87 @@ def test_light_studio_intros_and_detail_summaries_keep_their_distinct_metric_rol
     assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
 
 
+def test_light_readiness_intros_keep_admin_status_context_legible() -> None:
+    """Read-only readiness guidance keeps its status panel distinct and readable."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    readiness_intros = (
+        ".portal-stewardship-intro",
+        ".portal-tax-readiness-intro",
+        ".portal-postback-readiness-intro",
+        ".portal-job-recovery-intro",
+    )
+    status_panels = (
+        ".portal-stewardship-intro-status",
+        ".portal-tax-readiness-intro-status",
+        ".portal-postback-readiness-intro-status",
+        ".portal-job-recovery-intro-status",
+    )
+    headings = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro[^)]*)\) > div:first-child > h2\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    body_copy = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro[^)]*)\) > div:first-child > p\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    status_surface = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro-status[^)]*)\)\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    status_primary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro-status[^)]*)\) strong\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    status_secondary = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro-status[^)]*)\) small\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    status_icon = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-job-recovery-intro-status[^)]*)\) > span:first-child\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert all(selector in PORTAL_CATALOGUE for selector in (*readiness_intros, *status_panels))
+    assert headings is not None
+    assert body_copy is not None
+    assert status_surface is not None
+    assert status_primary is not None
+    assert status_secondary is not None
+    assert status_icon is not None
+    for selector in readiness_intros:
+        assert selector in headings.group("selectors")
+        assert selector in body_copy.group("selectors")
+    for selector in status_panels:
+        assert selector in status_surface.group("selectors")
+        assert selector in status_primary.group("selectors")
+        assert selector in status_secondary.group("selectors")
+        assert selector in status_icon.group("selectors")
+    assert "color: var(--portal-ink);" in headings.group("declarations")
+    assert "color: var(--portal-muted);" in body_copy.group("declarations")
+    assert "border-color: var(--portal-border);" in status_surface.group("declarations")
+    assert "background: var(--portal-surface-light);" in status_surface.group("declarations")
+    assert "color: var(--portal-ink);" in status_primary.group("declarations")
+    assert "color: var(--portal-muted);" in status_secondary.group("declarations")
+    assert "border-color: var(--portal-border-strong);" in status_icon.group("declarations")
+    assert "background: var(--portal-surface-soft);" in status_icon.group("declarations")
+    assert "color: var(--portal-action);" in status_icon.group("declarations")
+    assert _contrast_ratio("#073a45", "#e8f6f7") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+
+
 def test_workspace_focus_ring_overrides_the_legacy_important_mint_outline() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     workspace_focus = re.search(

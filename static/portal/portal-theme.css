@@ -3197,6 +3197,65 @@ body {
   color: var(--portal-muted);
 }
 
+/* Readiness guides stay read-only, but their heading and status context must
+   remain legible after the shared light surface replaces legacy dark panels. */
+.portal-page :is(
+  .portal-stewardship-intro,
+  .portal-tax-readiness-intro,
+  .portal-postback-readiness-intro,
+  .portal-job-recovery-intro
+) > div:first-child > h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-stewardship-intro,
+  .portal-tax-readiness-intro,
+  .portal-postback-readiness-intro,
+  .portal-job-recovery-intro
+) > div:first-child > p {
+  color: var(--portal-muted);
+}
+
+.portal-page :is(
+  .portal-stewardship-intro-status,
+  .portal-tax-readiness-intro-status,
+  .portal-postback-readiness-intro-status,
+  .portal-job-recovery-intro-status
+) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page :is(
+  .portal-stewardship-intro-status,
+  .portal-tax-readiness-intro-status,
+  .portal-postback-readiness-intro-status,
+  .portal-job-recovery-intro-status
+) > span:first-child {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page :is(
+  .portal-stewardship-intro-status,
+  .portal-tax-readiness-intro-status,
+  .portal-postback-readiness-intro-status,
+  .portal-job-recovery-intro-status
+) strong {
+  color: var(--portal-ink);
+}
+
+.portal-page :is(
+  .portal-stewardship-intro-status,
+  .portal-tax-readiness-intro-status,
+  .portal-postback-readiness-intro-status,
+  .portal-job-recovery-intro-status
+) small {
+  color: var(--portal-muted);
+}
+
 /* The catalogue's global mint rule is important and was only corrected for
    access/landing pages.  Workspace controls need the same visible focus ring
    against the light canvas without changing their behavior. */
