@@ -97,6 +97,7 @@ and support. Existing Bot records remain unchanged.
 | Artifact lineage and durable stage state | Input/output fingerprints, runtime revision, status and receipt evidence support diagnosis, recovery and customer support. | Long-running jobs that may outlive a request. |
 | Private owner-checked storage policy | Asset bytes stay private; the server grants a short-lived delivery action only after owner/lifecycle checks. | Any upload, import or generated output. |
 | Shared semantic master where one source feeds multiple media outputs | One source transcript and translation master reduce drift and duplicate ASR/translation work; subtitle copy and dub copy remain separate derivatives. | Subtitle/translate/dub work in shadow or replay mode only. |
+| Evidence-led support resolution | Immutable stage, validation and delivery facts let support diagnose/recover truthfully without changing a customer job or ledger by hand. | The first long-running Web-native lane, after role/redaction rules are reviewed. |
 | Admin ERP as a separate operational surface | Customer work and internal decisions have different permissions, audit needs and navigation density. | Continue current `/admin`-family hardening without merging it into customer routes. |
 | Evidence-led rollout | Fixtures, shadow/replay, canary and rollback prevent a UI claim from outrunning a proven engine. | Every new runtime or provider lane. |
 
@@ -155,7 +156,12 @@ Bot changes remain off.
 Add durable stage state only for that proven lane. Its contract must show a
 monotonic lifecycle such as:
 
-`draft -> reviewed -> confirmed -> queued -> processing -> validated -> delivered -> receipted -> settled`
+`draft -> reviewed -> confirmed -> queued -> processing -> validated -> delivered -> receipted`
+
+`settled` is an optional later branch only when a separately authorized
+canonical settlement authority records it. A local/no-cost job can truthfully
+remain terminal at `receipted`; Web UI or support work never manufactures a
+financial mutation.
 
 `failed`, `guarded`, `cancelled` and `waiting_review` are truthful terminal or
 review states; no state may regress after a durable terminal decision. Duplicate
@@ -176,6 +182,11 @@ asset library, review, job center, support context and saved evidence. Keep
 Admin ERP separately role-protected for readiness, failures, recovery review,
 customer support and audit. UI labels must describe the real state, not a
 future provider capability.
+
+Support follows an evidence-led resolution path rather than a mutable job
+override: ownership check, redacted immutable evidence, bounded recovery
+decision, truthful customer update and audit closure. An internal action never
+creates a second wallet, receipt or historical-job authority.
 
 ### 5. Mobile companion
 
@@ -204,6 +215,9 @@ Future implementation PRs must translate research into testable rules:
   delivery; file existence is insufficient.
 - Persist audit evidence for approval, stage transition, validation, delivery,
   duplicate suppression and any settlement decision.
+- Restrict support evidence by role, customer ownership and retention policy;
+  use short-lived access for private artifacts and redact provider handles,
+  storage paths and secrets.
 - Verify ownership again when creating a temporary delivery URL; expiry reduces
   exposure but does not replace authorization.
 - Exercise duplicate confirmation, restart/recovery, invalid output,
@@ -226,6 +240,8 @@ These questions must be answered per capability rather than assumed globally:
    truthful when an execution is delayed, guarded or needs review?
 5. What provider data-processing, regional, pricing and retry guarantees are
    acceptable before any paid adapter is enabled?
+6. What support SLA wording, evidence retention/legal-hold policy and
+   settlement/refund authority are appropriate for a Web-native capability?
 
 ## Relationship to the UI/UX phase
 

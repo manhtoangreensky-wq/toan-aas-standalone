@@ -6,10 +6,13 @@ Date: 2026-07-11 (superseded prototype notes corrected)
 
 This repository is the standalone web app for `app.toanaas.vn`.
 
-The Telegram bot remains the canonical production authority for identity,
-wallet/Xu, PayOS, jobs, providers and delivery. This Web App provides a clean,
-clear customer workflow using signed sessions and a private bridge; it does
-not reproduce those writers locally.
+Existing Bot-owned production records remain canonical for identity, wallet/Xu,
+PayOS, jobs, providers and delivery. This Web App provides a clean, clear
+customer workflow using signed sessions and a private bridge; it does not
+reproduce those writers locally. A future isolated Web-native product namespace
+is possible only after a capability-specific authority matrix assigns its
+identity binding, assets, lifecycle, delivery, receipts and settlement; see the
+deferred post-UI/UX research records below.
 
 ## Core Flow
 
@@ -84,3 +87,8 @@ The companion decision record
 extends this with Web/App product, service, mobile and Admin ERP boundaries.
 It likewise defers runtime work until UI/UX acceptance and an evidence-backed
 capability decision.
+
+[`POST_UI_UX_MEDIA_ORCHESTRATION_RESEARCH_TRIAGE.md`](POST_UI_UX_MEDIA_ORCHESTRATION_RESEARCH_TRIAGE.md)
+adds the selected orchestration, delivery-evidence and support-resolution
+principles. It is also deliberately deferred and does not change the current
+runtime or Bot boundary.
