@@ -5796,3 +5796,160 @@ body {
 .portal-page.portal-music-prompt-composer .portal-music-prompt-composer-review > div {
   border-top-color: color-mix(in srgb, var(--portal-warning) 26%, var(--portal-border));
 }
+
+/* Voice Direction Composer is a text-only planning receipt.  Keep it calm and
+   readable without making its three directions resemble a voice preview,
+   provider result, generated audio, job, or delivery. */
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro h2,
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-form, .portal-voice-direction-composer-boundary, .portal-voice-direction-composer-result) .portal-card-title,
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestion-head strong,
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-delivery h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro p,
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-form, .portal-voice-direction-composer-boundary, .portal-voice-direction-composer-result) .portal-card-subtitle,
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-delivery p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-intro dd {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-form {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-form .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-boundary,
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-result {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-form, .portal-voice-direction-composer-result) .portal-field small,
+.portal-page.portal-voice-direction-composer :is(.portal-form-note, .portal-field-help) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-guard-list em {
+  border-color: color-mix(in srgb, var(--portal-action) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-meta, .portal-voice-direction-composer-tags) span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestion-head strong {
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestions {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestions li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestions li[data-selected="true"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-index {
+  border-color: color-mix(in srgb, var(--portal-action) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestion-head em {
+  border-color: color-mix(in srgb, var(--portal-context) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));
+  color: var(--portal-context);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestions dl > div,
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-delivery > dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-suggestions, .portal-voice-direction-composer-delivery) dt {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-suggestions dd, .portal-voice-direction-composer-suggestions pre, .portal-voice-direction-composer-delivery p, .portal-voice-direction-composer-delivery dd, .portal-voice-direction-composer-review p, .portal-voice-direction-composer-review li) {
+  color: var(--portal-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-delivery {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-review {
+  border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));
+  box-shadow: none;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-review strong {
+  color: var(--portal-warning);
+  font-size: 13px;
+}
+
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-review > div {
+  border-top-color: color-mix(in srgb, var(--portal-warning) 26%, var(--portal-border));
+}

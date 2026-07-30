@@ -6715,13 +6715,20 @@
       && value.every((item) => Boolean(voiceDirectionComposerText(item, 2, itemMaximum, false)));
   }
 
-  function voiceDirectionComposerSafetyError(...values) {
+  function voiceDirectionComposerContentSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
     if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Voice Direction Composer không nhận ký tự điều khiển không an toàn.";
     const sensitiveKind = supportSensitiveContentKind(text);
     if (sensitiveKind === "manual-payment") return "Voice Direction Composer không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
     if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Voice Direction Composer không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
     if (VOICE_DIRECTION_COMPOSER_MARKUP_PATTERN.test(text)) return "Voice Direction Composer không nhận markup hoặc chỉ dẫn thực thi.";
+    return "";
+  }
+
+  function voiceDirectionComposerSafetyError(...values) {
+    const contentSafety = voiceDirectionComposerContentSafetyError(...values);
+    if (contentSafety) return contentSafety;
+    const text = values.map((value) => String(value || "")).join("\n");
     if (VOICE_STUDIO_IMITATION_PATTERN.test(text)) return "Voice Direction Composer không nhận yêu cầu mô phỏng, nhái hoặc clone giọng của một người cụ thể.";
     return "";
   }
@@ -6797,14 +6804,15 @@
     const selectedFromSuggestions = suggestions.find((item) => item && item.choice === selectedSuggestion);
     const safety = voiceDirectionComposerSafetyError(
       title, text, ...suggestions.filter(Boolean).flatMap((item) => [item.name, item.tone, item.pace, item.use_case, item.direction, item.style_prompt]),
-      ...VOICE_DIRECTION_COMPOSER_DELIVERY_NOTE_KEYS.map((key) => deliveryNotesSource[key]), ...(composer.cautions || []), ...(composer.review_before_use || [])
+      ...VOICE_DIRECTION_COMPOSER_DELIVERY_NOTE_KEYS.map((key) => deliveryNotesSource[key])
     );
+    const receiptSafety = voiceDirectionComposerContentSafetyError(...(composer.cautions || []), ...(composer.review_before_use || []));
     return Boolean(
       title && text && VOICE_DIRECTION_COMPOSER_LANGUAGES.has(language) && VOICE_DIRECTION_COMPOSER_SUGGESTION_SETS.has(suggestionSet)
       && Number.isInteger(selectedSuggestion) && selectedSuggestion >= 1 && selectedSuggestion <= 3 && VOICE_DIRECTION_COMPOSER_READING_SPEEDS.has(readingSpeed)
       && suggestions.length === 3 && suggestions.every(Boolean) && selectedDirection && selectedFromSuggestions
       && voiceDirectionComposerSameSuggestion(selectedFromSuggestions, selectedDirection) && deliveryNotesAreSafe && cautionsAreSafe && reviewAreSafe
-      && !safety && data.execution === "web_native_deterministic_voice_direction_only"
+      && !safety && !receiptSafety && data.execution === "web_native_deterministic_voice_direction_only"
       && data.input_persisted === false && data.raw_audio_stored === false && data.consent_attestation_recorded === false
       && data.provider_called === false && data.provider_voice_id_stored === false && data.tts_called === false
       && data.voice_clone_called === false && data.preview_created === false && data.audio_created === false

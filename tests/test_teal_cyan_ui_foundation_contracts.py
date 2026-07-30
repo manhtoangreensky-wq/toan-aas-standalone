@@ -2962,3 +2962,90 @@ def test_light_music_prompt_composer_keeps_native_direction_receipts_readable() 
     assert "color: var(--portal-muted);" in receipt_copy
     assert "font-size: 13px;" in receipt_copy
     assert not re.search(r"(?m)^\s*\.portal-music-prompt-composer", theme_source)
+
+
+def test_light_voice_direction_composer_keeps_text_only_receipts_readable() -> None:
+    """Voice planning stays text-only while its receipt remains readable."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            theme_source,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    route = ".portal-page.portal-voice-direction-composer"
+    for selector in (
+        ".portal-voice-direction-composer-intro",
+        ".portal-voice-direction-composer-form",
+        ".portal-voice-direction-composer-boundary",
+        ".portal-voice-direction-composer-result",
+        ".portal-voice-direction-composer-suggestions",
+        ".portal-voice-direction-composer-delivery",
+        ".portal-voice-direction-composer-review",
+    ):
+        assert selector in PORTAL_CATALOGUE
+    assert "function renderVoiceDirectionComposer(page, context)" in PORTAL_CLIENT
+    assert "web_native_deterministic_voice_direction_only" in PORTAL_CLIENT
+
+    intro = declarations(f"{route} .portal-voice-direction-composer-intro")
+    form = declarations(f"{route} .portal-voice-direction-composer-form")
+    boundary_and_result = declarations(
+        f"{route} .portal-voice-direction-composer-boundary,\n"
+        f"{route} .portal-voice-direction-composer-result"
+    )
+    suggestion_list = declarations(f"{route} .portal-voice-direction-composer-suggestions li")
+    selected_suggestion = declarations(
+        f'{route} .portal-voice-direction-composer-suggestions li[data-selected="true"]'
+    )
+    delivery = declarations(f"{route} .portal-voice-direction-composer-delivery")
+    review = declarations(f"{route} .portal-voice-direction-composer-review")
+    intro_metric_label = declarations(f"{route} .portal-voice-direction-composer-intro dd")
+    standard_field_label = declarations(
+        f"{route} .portal-voice-direction-composer-form .portal-field > label"
+    )
+    guard_label = declarations(f"{route} .portal-voice-direction-composer-guard-list strong")
+    guard_status = declarations(f"{route} .portal-voice-direction-composer-guard-list em")
+    receipt_metadata = declarations(
+        f"{route} :is(.portal-voice-direction-composer-meta, .portal-voice-direction-composer-tags) span"
+    )
+    suggestion_heading = declarations(
+        f"{route} .portal-voice-direction-composer-suggestion-head strong"
+    )
+    receipt_field_label = declarations(
+        f"{route} :is(.portal-voice-direction-composer-suggestions, .portal-voice-direction-composer-delivery) dt"
+    )
+    receipt_copy = declarations(
+        f"{route} :is(.portal-voice-direction-composer-suggestions dd, "
+        ".portal-voice-direction-composer-suggestions pre, "
+        ".portal-voice-direction-composer-delivery p, "
+        ".portal-voice-direction-composer-delivery dd, "
+        ".portal-voice-direction-composer-review p, "
+        ".portal-voice-direction-composer-review li)"
+    )
+
+    assert "background: var(--portal-surface-light);" in intro
+    assert "box-shadow: none;" in intro
+    assert "background: var(--portal-surface-light);" in form
+    assert "background: var(--portal-surface-soft);" in boundary_and_result
+    assert "background: var(--portal-surface-light);" in suggestion_list
+    assert "border-color: var(--portal-border-strong);" in selected_suggestion
+    assert "background: var(--portal-light-hover-surface);" in selected_suggestion
+    assert "background: var(--portal-surface-soft);" in delivery
+    assert "background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));" in review
+    assert "color: var(--portal-muted);" in intro_metric_label
+    assert "font-size: 13px;" in intro_metric_label
+    assert "color: var(--portal-ink);" in standard_field_label
+    assert "font-size: 13px;" in standard_field_label
+    assert "font-size: 13px;" in guard_label
+    assert "font-size: 13px;" in guard_status
+    assert "font-size: 13px;" in receipt_metadata
+    assert "font-size: 13px;" in suggestion_heading
+    assert "font-size: 13px;" in receipt_field_label
+    assert "color: var(--portal-muted);" in receipt_copy
+    assert "font-size: 13px;" in receipt_copy
+    assert not re.search(r"(?m)^\s*\.portal-voice-direction-composer", theme_source)

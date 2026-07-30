@@ -31,6 +31,18 @@ def _integration_result_validator() -> str:
     return INTEGRATION[start:end]
 
 
+def _integration_content_safety() -> str:
+    start = INTEGRATION.index("function voiceDirectionComposerContentSafetyError(...values)")
+    end = INTEGRATION.index("function voiceDirectionComposerSafetyError(...values)", start)
+    return INTEGRATION[start:end]
+
+
+def _integration_input_safety() -> str:
+    start = INTEGRATION.index("function voiceDirectionComposerSafetyError(...values)")
+    end = INTEGRATION.index("function voiceDirectionComposerPayload(fields)", start)
+    return INTEGRATION[start:end]
+
+
 def _integration_action() -> str:
     start = INTEGRATION.index('if (action === "voice-direction-compose")')
     end = INTEGRATION.index('if (action === "voice-studio-filter" ||', start)
@@ -119,6 +131,23 @@ def test_voice_direction_composer_normalizer_and_validator_require_exact_flat_bo
         "provider_voice_id",
     ):
         assert forbidden not in renderer
+
+
+def test_voice_direction_composer_keeps_identity_guard_for_input_but_accepts_safe_negative_copy() -> None:
+    """A receipt may explain that cloning is forbidden without being rejected as a clone request."""
+
+    content_safety = _integration_content_safety()
+    input_safety = _integration_input_safety()
+    validator = _integration_result_validator()
+
+    assert "const safety = voiceDirectionComposerSafetyError(" in validator
+    assert "const receiptSafety = voiceDirectionComposerContentSafetyError(" in validator
+    assert "&& !safety && !receiptSafety" in validator
+    assert "VOICE_STUDIO_IMITATION_PATTERN" not in content_safety
+    assert "VOICE_STUDIO_IMITATION_PATTERN" in input_safety
+    assert "voiceDirectionComposerContentSafetyError(...values)" in input_safety
+    assert '"Không dùng để mô phỏng, clone hoặc gắn với danh tính giọng' in ROUTER
+    assert "voiceDirectionComposerSafetyError(text, language, suggestionSet, readingSpeed)" in INTEGRATION
 
 
 def test_voice_direction_composer_uses_only_signed_csrf_native_api_without_browser_persistence() -> None:
