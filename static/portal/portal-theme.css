@@ -4841,6 +4841,113 @@ body {
   background: var(--portal-surface-soft);
 }
 
+/* Private coordination and CRM remain structured workspaces, not dark
+   dashboards. These selectors preserve their signed ownership, revision and
+   role contracts while returning the legacy panels to the shared light canvas. */
+.portal-page:is(.portal-coordination-workspace, .portal-coordination-detail, .portal-crm-workspace, .portal-crm-detail) .portal-coordination-summary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-coordination-workspace, .portal-coordination-detail, .portal-crm-workspace, .portal-crm-detail) .portal-coordination-summary :is(h2, dt) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-coordination-workspace, .portal-coordination-detail, .portal-crm-workspace, .portal-crm-detail) .portal-coordination-summary :is(p, dd) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-coordination-workspace, .portal-coordination-detail, .portal-crm-workspace, .portal-crm-detail) .portal-coordination-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-coordination-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-coordination-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page .portal-coordination-card .portal-card-title {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-coordination-card .portal-card-subtitle,
+.portal-page .portal-coordination-card .portal-form-note {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-coordination-references {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page .portal-crm-kanban {
+  scroll-snap-type: x proximity;
+  scrollbar-color: var(--portal-border-strong) transparent;
+}
+
+.portal-page .portal-crm-lane {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  scroll-snap-align: start;
+}
+
+.portal-page .portal-crm-lane header {
+  border-bottom-color: var(--portal-border);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-crm-lane header span {
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-crm-lane > p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-crm-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page .portal-crm-card:hover,
+.portal-page .portal-crm-card:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-ink);
+  transform: none;
+}
+
+.portal-page .portal-crm-card:focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 3px;
+}
+
+.portal-page .portal-crm-card b {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-crm-card :is(span, small, em) {
+  color: var(--portal-muted);
+}
+
+@media (max-width: 740px) {
+  .portal-page .portal-crm-kanban {
+    grid-auto-columns: minmax(min(84vw, 308px), 1fr);
+    scroll-padding-inline: 1px;
+  }
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
