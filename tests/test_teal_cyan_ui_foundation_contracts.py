@@ -898,3 +898,111 @@ def test_light_auth_password_toggle_and_music_direction_presets_override_dark_ca
     assert "color: var(--portal-ink);" in preset_title.group("declarations")
     assert "color: var(--portal-muted);" in preset_detail.group("declarations")
     assert "background: var(--portal-light-soft);" in selected_preset.group("declarations")
+
+
+def test_light_media_and_bot_companion_surfaces_replace_dark_panel_ink() -> None:
+    """Legacy media cards remain readable after the shared light-card override."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    shared_light_cards = re.search(
+        r"\.portal-card,.*?\.portal-page \[class\$=\"-card\"\]\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    intro_meta = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-bot-companion-intro[^)]*)\) "
+        r"\.portal-state-meta span\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    state_icons = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-bot-companion-intro[^)]*)\) "
+        r"\.portal-state-icon\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    finalization_state_icon = re.search(
+        r"\.portal-page \.portal-finalization-intro \.portal-state-icon\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    card_headings = re.search(
+        r"\.portal-page :is\((?P<selectors>[^)]*\.portal-bot-companion-card[^)]*)\) h3\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    finalization_icon = re.search(
+        r"\.portal-page \.portal-finalization-card \.portal-module-icon\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    finalization_number = re.search(
+        r"\.portal-page \.portal-finalization-number\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    finalization_guard = re.search(
+        r"\.portal-page \.portal-finalization-guard\s*\{(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    bot_command = re.search(
+        r"\.portal-page \.portal-bot-companion-card \.portal-link-code\s*\{"
+        r"(?P<declarations>.*?)\n\}",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    legacy_selectors = (
+        ".portal-finalization-intro",
+        ".portal-media-studio-intro",
+        ".portal-bot-companion-intro",
+        ".portal-finalization-card h3",
+        ".portal-bot-companion-card h3",
+        ".portal-link-code",
+    )
+    assert all(selector in PORTAL_CATALOGUE for selector in legacy_selectors)
+    assert shared_light_cards is not None
+    assert intro_meta is not None
+    assert state_icons is not None
+    assert finalization_state_icon is not None
+    assert card_headings is not None
+    assert finalization_icon is not None
+    assert finalization_number is not None
+    assert finalization_guard is not None
+    assert bot_command is not None
+    for selector in (
+        ".portal-finalization-intro",
+        ".portal-media-studio-intro",
+        ".portal-bot-companion-intro",
+    ):
+        assert selector in intro_meta.group("selectors")
+    for selector in (".portal-media-studio-intro", ".portal-bot-companion-intro"):
+        assert selector in state_icons.group("selectors")
+    for selector in (".portal-finalization-card", ".portal-bot-companion-card"):
+        assert selector in card_headings.group("selectors")
+    assert "border-color: var(--portal-border);" in shared_light_cards.group("declarations")
+    assert "background: var(--portal-surface);" in shared_light_cards.group("declarations")
+    assert ".portal-finalization-card.is-guarded { border-style: dashed;" in PORTAL_CATALOGUE
+    assert "border: 1px solid var(--portal-border);" in intro_meta.group("declarations")
+    assert "background: var(--portal-surface-light);" in intro_meta.group("declarations")
+    assert "color: var(--portal-muted);" in intro_meta.group("declarations")
+    assert "color: var(--portal-context);" in state_icons.group("declarations")
+    assert "color: var(--portal-warning);" in finalization_state_icon.group("declarations")
+    assert "color: var(--portal-ink);" in card_headings.group("declarations")
+    assert "border-color: var(--portal-border);" in finalization_icon.group("declarations")
+    assert "background: var(--portal-surface-soft);" in finalization_icon.group("declarations")
+    assert "color: var(--portal-context);" in finalization_icon.group("declarations")
+    assert "color: var(--portal-context);" in finalization_number.group("declarations")
+    assert "color: var(--portal-warning);" in finalization_guard.group("declarations")
+    assert "border-color: var(--portal-border);" in bot_command.group("declarations")
+    assert "background: var(--portal-surface-soft);" in bot_command.group("declarations")
+    assert "color: var(--portal-context);" in bot_command.group("declarations")
+    assert _contrast_ratio("#073a45", "#ffffff") >= 4.5
+    assert _contrast_ratio("#456b77", "#ffffff") >= 4.5
+    assert _contrast_ratio("#0369a1", "#ffffff") >= 4.5
+    assert _contrast_ratio("#a16207", "#ffffff") >= 4.5
