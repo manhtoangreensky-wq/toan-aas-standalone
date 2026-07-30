@@ -3998,6 +3998,251 @@ body {
   color: var(--portal-muted);
 }
 
+/* Billing and Delivery project only canonical, owner-scoped records. Keep the
+   established boundary while replacing the legacy dark treatment with the
+   same calm decision hierarchy used throughout the signed workspace. */
+.portal-page .portal-wallet-facts {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-wallet-facts > div {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page .portal-wallet-facts dt {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-wallet-facts dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-wallet-read-status {
+  border-color: color-mix(in srgb, var(--portal-context) 32%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-journey {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-billing-journey h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-billing-journey p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-journey-lanes li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page .portal-billing-journey-lanes li > span {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-billing-journey-lanes strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-billing-entrypoints .portal-payment-entry {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-billing-entrypoints .portal-payment-entry--manual {
+  border-color: var(--portal-warning);
+}
+
+.portal-page .portal-billing-entrypoints .portal-payment-entry :is(h3, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-billing-entrypoints .portal-payment-entry :is(p, .portal-payment-entry-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-catalog-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-billing-catalog-intro h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-billing-catalog-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-catalog-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-billing-catalog-card .portal-module-card-footer {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-billing-nav a {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-billing-nav a:hover,
+.portal-page .portal-billing-nav a:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-billing-nav a[aria-current="page"] {
+  border-color: var(--portal-context);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-summary-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-delivery-summary-card > span {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-summary-card > small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-summary-card > strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-record-source {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-record-source[data-record-source="web_vault"] {
+  border-color: color-mix(in srgb, var(--portal-context) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-record-source[data-record-source="web_native_output"] {
+  border-color: color-mix(in srgb, var(--portal-action) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-record-source[data-record-source="canonical_delivery"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 46%, var(--portal-border));
+  background: var(--portal-surface-light);
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-delivery-state[data-delivery="vault"] {
+  border-color: color-mix(in srgb, var(--portal-context) 46%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-delivery-lifecycle-list {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-delivery-lifecycle-list li {
+  border-bottom-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-delivery-lifecycle-list li > span:first-child {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-delivery-lifecycle-list strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-lifecycle-list p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-next-action {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-delivery-next-action strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-next-action p {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-mobile-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page .portal-delivery-mobile-card-head strong {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-mobile-source,
+.portal-page .portal-delivery-mobile-meta dt {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-mobile-meta dd {
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-delivery-nav a {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-delivery-nav a:hover,
+.portal-page .portal-delivery-nav a:focus-visible {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page .portal-delivery-nav a[aria-current="page"] {
+  border-color: var(--portal-context);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
 /* Shared portal lifecycle motion stays presentation-only: a short, one-shot
    opacity/transform cue preserves continuity without moving layout or data. */
 @keyframes portal-motion-enter {
