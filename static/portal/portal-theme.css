@@ -5356,3 +5356,290 @@ body {
 .portal-page.portal-audio-hub .portal-media-pagination {
   border-top-color: var(--portal-border);
 }
+
+/* Audio Hub collection detail is the focused continuation of the light Hub.
+   These route-local rules deliberately style the existing review and change
+   request surfaces only; their signed ownership, lifecycle and side effects
+   remain entirely in the existing client/server contracts. */
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary p,
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary dt {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-detail-summary dd {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-board,
+.portal-page.portal-audio-hub-detail .portal-media-editor,
+.portal-page.portal-audio-hub-detail .portal-media-item-card,
+.portal-page.portal-audio-hub-detail .portal-audio-change-requests,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail :is(.portal-media-composer, .portal-media-detail-boundary, .portal-audio-hub-review-pack) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-heading h2,
+.portal-page.portal-audio-hub-detail .portal-media-item-head h3,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-heading h3,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-history h4,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-row-copy strong,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-empty strong,
+.portal-page.portal-audio-hub-detail :is(.portal-media-editor, .portal-media-composer, .portal-media-detail-boundary, .portal-audio-hub-review-pack) .portal-card-title {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-heading p,
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-lane p,
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-lane li,
+.portal-page.portal-audio-hub-detail .portal-media-item-head p,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-heading p,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-history-heading span,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-row-copy :is(span, small),
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-empty span,
+.portal-page.portal-audio-hub-detail :is(.portal-field-help, .portal-form-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-lane {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-lane strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-collection-lane b {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail :is(.portal-media-attach-form, .portal-media-filter, .portal-media-editor, .portal-media-composer, .portal-media-detail-boundary, .portal-audio-change-request-form) label.portal-field,
+.portal-page.portal-audio-hub-detail .portal-media-checkbox {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail :is(.portal-media-attach-form, .portal-media-filter, .portal-media-editor, .portal-media-composer, .portal-media-detail-boundary, .portal-media-item-card, .portal-audio-change-request-form) label.portal-field > span {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail :is(.portal-media-attach-form, .portal-media-filter, .portal-media-item-card, .portal-audio-change-request-form) .portal-field small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-file-mark {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-favorite {
+  border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-checkbox input {
+  accent-color: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-composer-result article,
+.portal-page.portal-audio-hub-detail .portal-media-composer-result pre {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-composer-result h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-card-meta span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-project-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-project-steps li::before {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-project-steps strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-project-steps span,
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-project-steps small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-media-policy {
+  border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-media-policy :is(strong, li) {
+  color: var(--portal-muted-strong);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages > div,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-form,
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-empty {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages span {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages > div::before {
+  background: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages > div[data-stage="draft"]::before {
+  background: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages > div[data-stage="estimate"]::before {
+  background: var(--portal-context);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stages > div[data-stage="awaiting_confirmation"]::before {
+  background: var(--portal-warning);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted-strong);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage[data-stage="draft"] {
+  border-color: color-mix(in srgb, var(--portal-action) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 8%, var(--portal-surface-light));
+  color: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage[data-stage="estimate"] {
+  border-color: color-mix(in srgb, var(--portal-context) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-context) 8%, var(--portal-surface-light));
+  color: var(--portal-context);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage[data-stage="awaiting_confirmation"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 8%, var(--portal-surface-light));
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage[data-stage="completed"] {
+  border-color: color-mix(in srgb, var(--portal-success) 42%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-success) 8%, var(--portal-surface-light));
+  color: var(--portal-success);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-stage:is([data-stage="linked_operation_guarded"], [data-stage="guarded"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted-strong);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-attach-form {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-media-tags span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-hub-lane-index {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-audio-hub-detail .portal-version-row {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page.portal-audio-hub-detail .portal-version-row strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-audio-hub-detail .portal-version-row small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-audio-change-request-next {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-field-staged {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-audio-hub-detail .portal-notice--warning {
+  border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));
+  box-shadow: none;
+}
+
+.portal-page.portal-audio-hub-detail .portal-notice--warning strong {
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-audio-hub-detail .portal-notice--warning p {
+  color: var(--portal-muted-strong);
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-audio-hub-detail .portal-media-checkbox {
+    min-height: 44px;
+  }
+}
