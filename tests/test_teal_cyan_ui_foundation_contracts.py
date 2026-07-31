@@ -3692,7 +3692,7 @@ def test_light_subtitle_studio_final_surface_keeps_authored_cues_readable() -> N
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Subtitle Studio surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Subtitle Studio surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -3839,3 +3839,170 @@ def test_light_subtitle_studio_final_surface_keeps_authored_cues_readable() -> N
     assert ".portal-subtitle-project-grid" in mobile_selectors
     assert ".portal-subtitle-cue-grid" in mobile_selectors
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+
+
+def test_light_content_studio_final_surface_keeps_private_authoring_readable() -> None:
+    """Content briefs retain readable, owner-scoped authoring surfaces on the light app system."""
+
+    content_detail = re.search(
+        r"function renderContentStudioDetail\(page, context\).*?"
+        r'return `<article class="(?P<classes>[^"]*)"',
+        PORTAL_CLIENT,
+        flags=re.DOTALL,
+    )
+    channel_strategy_detail = re.search(
+        r"function renderChannelStrategyDetail\(page, context\).*?"
+        r'return `<article class="(?P<classes>[^"]*)"',
+        PORTAL_CLIENT,
+        flags=re.DOTALL,
+    )
+
+    assert content_detail is not None
+    assert channel_strategy_detail is not None
+    assert "portal-content-studio-workspace-detail" in content_detail.group("classes")
+    assert "portal-content-studio-workspace-detail" not in channel_strategy_detail.group("classes")
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Content Studio surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    content_css = layer.group("css")
+    route = (
+        ".portal-page:is(.portal-content-operations-board, "
+        ".portal-content-studio-authoring, .portal-content-studio-workspace-detail)"
+    )
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            content_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-content-operations-summary, "
+        ".portal-content-operations-authoring-intro, .portal-content-studio-detail-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-content-operations-summary, "
+        ".portal-content-operations-authoring-intro, .portal-content-studio-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-content-operations-summary, "
+        ".portal-content-operations-authoring-intro, .portal-content-studio-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-content-operations-summary, "
+        ".portal-content-studio-detail-summary) dl > div"
+    )
+    summary_metric_value = declarations(f"{route} .portal-content-operations-summary dt")
+    summary_label = declarations(
+        f"{route} :is(.portal-content-operations-summary dd, "
+        ".portal-content-studio-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-content-studio-detail-summary dd")
+    surfaces = declarations(
+        f"{route} :is(.portal-content-operations-primary, .portal-content-operations-kinds, "
+        ".portal-content-operations-briefs, .portal-content-operations-activity-card, "
+        ".portal-content-operations-boundary, .portal-content-studio-create, "
+        ".portal-content-studio-policy, .portal-content-studio-editor, "
+        ".portal-content-variant-create, .portal-content-studio-activity)"
+    )
+    field_label = declarations(f"{route} .portal-field > label")
+    metadata = declarations(
+        f"{route} :is(.portal-content-studio-meta span, .portal-content-studio-tags span, "
+        ".portal-content-selected)"
+    )
+    selected_variant = declarations(f"{route} .portal-content-variant-card.is-selected")
+    policy_step = declarations(f"{route} .portal-content-studio-policy .portal-project-steps li")
+    policy_heading = declarations(
+        f"{route} .portal-content-studio-policy .portal-project-steps strong"
+    )
+    policy_copy = declarations(f"{route} .portal-content-studio-policy .portal-project-steps span")
+    dividers = declarations(
+        f"{route} :is(.portal-content-variant-form, .portal-content-variant-history)"
+    )
+    history_row = declarations(f"{route} .portal-content-variant-history > div")
+    version_row = declarations(f"{route} .portal-content-version-list > article")
+    activity_row = declarations(f"{route} .portal-content-activity-list > div")
+    primary_text = declarations(
+        f"{route} :is(.portal-content-variant-history > strong, "
+        ".portal-content-version-list strong, .portal-content-activity-list strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-content-variant-history > div, "
+        ".portal-content-variant-history em, .portal-content-version-list p, "
+        ".portal-content-version-list small, .portal-content-activity-list small, "
+        ".portal-card-subtitle, .portal-form-note, .portal-content-studio-pagination)"
+    )
+    hover = declarations(
+        f"{route} :is(.portal-content-operations-kind-card, .portal-content-studio-card):hover"
+    )
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        content_css,
+        flags=re.DOTALL,
+    )
+
+    assert route in content_css
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light) !important;" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "border-color: var(--portal-border);" in summary_metric
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-action);" in summary_metric_value
+    assert "color: var(--portal-muted);" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "border-color: var(--portal-border);" in surfaces
+    assert "background: var(--portal-surface-light);" in surfaces
+    assert "box-shadow: none;" in surfaces
+    assert "color: var(--portal-ink);" in field_label
+    assert "font-size: 13px;" in field_label
+    assert "border-color: var(--portal-border);" in metadata
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "border-color: var(--portal-border-strong);" in selected_variant
+    assert "background: var(--portal-surface-soft);" in selected_variant
+    assert "border-top-color: var(--portal-border);" in policy_step
+    assert "color: var(--portal-ink);" in policy_heading
+    assert "color: var(--portal-muted);" in policy_copy
+    assert "border-top-color: var(--portal-border);" in dividers
+    assert "border-top-color: var(--portal-border);" in history_row
+    assert "border-color: var(--portal-border);" in version_row
+    assert "border-top-color: var(--portal-border);" in activity_row
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "border-color: var(--portal-border-strong);" in hover
+    assert "background: var(--portal-light-hover-surface);" in hover
+    assert "box-shadow: none;" in hover
+    assert "transform: none;" in hover
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-content-operations-summary dl" in mobile_selectors
+    assert ".portal-content-studio-detail-summary dl" in mobile_selectors
+    assert ".portal-content-operations-workspace" in mobile_selectors
+    assert ".portal-content-operations-boundary-grid" in mobile_selectors
+    assert ".portal-content-operations-kind-grid" in mobile_selectors
+    assert ".portal-content-operations-authoring-layout" in mobile_selectors
+    assert ".portal-content-studio-detail-grid" in mobile_selectors
+    assert ".portal-content-studio-history-grid" in mobile_selectors
+    assert ".portal-content-studio-grid" in mobile_selectors
+    assert ".portal-content-variant-grid" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", content_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", content_css)

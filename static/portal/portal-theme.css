@@ -6948,3 +6948,127 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Content Studio surface */
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary, .portal-content-operations-authoring-intro, .portal-content-studio-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary, .portal-content-operations-authoring-intro, .portal-content-studio-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary, .portal-content-operations-authoring-intro, .portal-content-studio-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary, .portal-content-studio-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-operations-summary dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary dd, .portal-content-studio-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-studio-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-primary, .portal-content-operations-kinds, .portal-content-operations-briefs, .portal-content-operations-activity-card, .portal-content-operations-boundary, .portal-content-studio-create, .portal-content-studio-policy, .portal-content-studio-editor, .portal-content-variant-create, .portal-content-studio-activity) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-studio-meta span, .portal-content-studio-tags span, .portal-content-selected) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-variant-card.is-selected {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--portal-border-strong);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-studio-policy .portal-project-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-studio-policy .portal-project-steps li::before {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-studio-policy .portal-project-steps strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-studio-policy .portal-project-steps span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-variant-form, .portal-content-variant-history) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-variant-history > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-version-list > article {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) .portal-content-activity-list > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-variant-history > strong, .portal-content-version-list strong, .portal-content-activity-list strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-variant-history > div, .portal-content-variant-history em, .portal-content-version-list p, .portal-content-version-list small, .portal-content-activity-list small, .portal-card-subtitle, .portal-form-note, .portal-content-studio-pagination) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-kind-card, .portal-content-studio-card):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-content-operations-board, .portal-content-studio-authoring, .portal-content-studio-workspace-detail) :is(.portal-content-operations-summary dl, .portal-content-studio-detail-summary dl, .portal-content-operations-workspace, .portal-content-operations-boundary-grid, .portal-content-operations-kind-grid, .portal-content-operations-authoring-layout, .portal-content-studio-detail-grid, .portal-content-studio-history-grid, .portal-content-studio-grid, .portal-content-variant-grid, .portal-content-variant-form .portal-fields) {
+    grid-template-columns: 1fr;
+  }
+}
