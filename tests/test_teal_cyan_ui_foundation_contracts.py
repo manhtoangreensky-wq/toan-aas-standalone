@@ -4890,3 +4890,43 @@ def test_light_memory_and_prompt_library_final_surface_keeps_private_work_readab
     assert "linear-gradient" not in memory_prompt_css.lower()
     assert "radial-gradient" not in memory_prompt_css.lower()
     assert not re.search(r"var\(--(?!portal-)", memory_prompt_css)
+
+
+def test_light_support_desk_final_surface_keeps_customer_and_operator_cases_readable() -> None:
+    """Customer support and internal CSKH remain distinct, readable and truthful."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Support Desk surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    support_css = layer.group("css")
+    required = (
+        ".portal-support-desk",
+        ".portal-support-cases",
+        ".portal-support-case-detail",
+        ".portal-support-admin",
+        ".portal-support-admin-case-detail",
+        ".portal-support-intro",
+        ".portal-support-case-hero",
+        ".portal-support-case-card",
+        ".portal-support-recovery",
+        ".portal-support-message",
+        ".portal-support-advisor",
+        ".portal-support-consultation",
+        ".portal-support-filter",
+        ".portal-support-care-lane",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in support_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", support_css)
+    assert "rgba(" not in support_css.lower()
+    assert "linear-gradient" not in support_css.lower()
+    assert "radial-gradient" not in support_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", support_css)
