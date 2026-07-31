@@ -7280,3 +7280,199 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Image Studio surface */
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro dd, .portal-image-studio-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-create, .portal-image-studio-editor, .portal-image-direction-create, .portal-image-studio-estimate, .portal-image-reference-library, .portal-image-reference-picker, .portal-image-studio-activity, .portal-image-studio-boundary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-estimate-grid span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-artboard-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-direction-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-artboard-card, .portal-image-direction-card) .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-artboard-card, .portal-image-direction-card) .portal-card-subtitle {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-artboard-card, .portal-image-direction-card, .portal-image-reference-list > :is(a, button)):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-direction-card.is-archived {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  opacity: 1;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-artboard-meta span, .portal-image-direction-meta span, .portal-image-studio-tags span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-direction-history em {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-guard-list em {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-reference-list > :is(li, article, a, button) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-reference-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-reference-list small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-reference-list > .is-unavailable strong {
+  color: var(--portal-danger);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-filter, .portal-image-reference-filter) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-pagination, .portal-image-reference-pagination) {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-direction-form, .portal-image-direction-history) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-direction-history > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-version-list > article {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-events > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-direction-history > strong, .portal-image-version-list strong, .portal-image-studio-events strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-direction-history > div, .portal-image-version-list p, .portal-image-version-list small, .portal-image-studio-events small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-image-studio, .portal-image-studio-detail) :is(.portal-image-studio-intro dl, .portal-image-studio-detail-summary dl, .portal-image-studio-layout, .portal-image-studio-detail-grid, .portal-image-studio-history-grid, .portal-image-artboard-grid, .portal-image-direction-grid, .portal-image-reference-library-grid, .portal-image-studio-estimate-grid, .portal-image-studio-guard-list, .portal-image-direction-form .portal-fields) {
+    grid-template-columns: 1fr;
+  }
+}

@@ -4013,7 +4013,7 @@ def test_light_voice_studio_final_surface_keeps_direction_and_consent_readable()
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Voice Studio surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Voice Studio surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4173,3 +4173,200 @@ def test_light_voice_studio_final_surface_keeps_direction_and_consent_readable()
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", voice_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", voice_css)
+
+
+def test_light_image_studio_final_surface_keeps_artboards_truthful_and_readable() -> None:
+    """Image Studio remains metadata-only while artboards use the shared light surface."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Image Studio surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    image_css = layer.group("css")
+    route = ".portal-page:is(.portal-image-studio, .portal-image-studio-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            image_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-image-studio-intro, .portal-image-studio-detail-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-image-studio-intro, .portal-image-studio-detail-summary) dl > div"
+    )
+    summary_metric_value = declarations(f"{route} .portal-image-studio-intro dt")
+    summary_label = declarations(
+        f"{route} :is(.portal-image-studio-intro dd, .portal-image-studio-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-image-studio-detail-summary dd")
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-image-studio-create, .portal-image-studio-editor, "
+        ".portal-image-direction-create, .portal-image-studio-estimate, "
+        ".portal-image-reference-library, .portal-image-reference-picker, "
+        ".portal-image-studio-activity, .portal-image-studio-boundary)"
+    )
+    field_label = declarations(f"{route} .portal-field > label")
+    estimate = declarations(f"{route} .portal-image-studio-estimate-grid span")
+    artboard_card = declarations(f"{route} .portal-image-artboard-card")
+    direction_card = declarations(f"{route} .portal-image-direction-card")
+    card_title = declarations(
+        f"{route} :is(.portal-image-artboard-card, .portal-image-direction-card) .portal-card-title"
+    )
+    card_copy = declarations(
+        f"{route} :is(.portal-image-artboard-card, .portal-image-direction-card) .portal-card-subtitle"
+    )
+    hover = declarations(
+        f"{route} :is(.portal-image-artboard-card, .portal-image-direction-card, "
+        ".portal-image-reference-list > :is(a, button)):hover"
+    )
+    archived_direction = declarations(f"{route} .portal-image-direction-card.is-archived")
+    metadata = declarations(
+        f"{route} :is(.portal-image-artboard-meta span, .portal-image-direction-meta span, "
+        ".portal-image-studio-tags span)"
+    )
+    selected_metadata = declarations(f"{route} .portal-image-direction-history em")
+    guard_surface = declarations(f"{route} .portal-image-studio-guard-list span")
+    guard_label = declarations(f"{route} .portal-image-studio-guard-list strong")
+    guard_status = declarations(f"{route} .portal-image-studio-guard-list em")
+    reference_row = declarations(
+        f"{route} .portal-image-reference-list > :is(li, article, a, button)"
+    )
+    reference_title = declarations(f"{route} .portal-image-reference-list strong")
+    reference_copy = declarations(f"{route} .portal-image-reference-list small")
+    unavailable_reference = declarations(
+        f"{route} .portal-image-reference-list > .is-unavailable strong"
+    )
+    filter_surface = declarations(
+        f"{route} :is(.portal-image-studio-filter, .portal-image-reference-filter)"
+    )
+    pagination = declarations(
+        f"{route} :is(.portal-image-studio-pagination, .portal-image-reference-pagination)"
+    )
+    dividers = declarations(
+        f"{route} :is(.portal-image-direction-form, .portal-image-direction-history)"
+    )
+    history_row = declarations(f"{route} .portal-image-direction-history > div")
+    version_row = declarations(f"{route} .portal-image-version-list > article")
+    activity_row = declarations(f"{route} .portal-image-studio-events > div")
+    primary_text = declarations(
+        f"{route} :is(.portal-image-direction-history > strong, .portal-image-version-list strong, "
+        ".portal-image-studio-events strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-image-direction-history > div, .portal-image-version-list p, "
+        ".portal-image-version-list small, .portal-image-studio-events small, "
+        ".portal-card-subtitle, .portal-form-note)"
+    )
+    event_dot = declarations(f"{route} .portal-image-studio-events > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        image_css,
+        flags=re.DOTALL,
+    )
+
+    selector_lines = re.findall(r"(?m)^\s*(?!@)(?P<selector>[^\n{}]+)\s*\{", image_css)
+    assert selector_lines
+    assert all(selector.startswith(route) for selector in selector_lines)
+    assert route in image_css
+    assert ".portal-image-hub" not in image_css
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light) !important;" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "font-size: clamp(24px, 2.4vw, 32px);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "font-size: 14px;" in summary_copy
+    assert "border-color: var(--portal-border);" in summary_metric
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-action);" in summary_metric_value
+    assert "color: var(--portal-muted);" in summary_label
+    assert "font-size: 13px;" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "font-size: 13px;" in summary_value
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "color: var(--portal-ink);" in field_label
+    assert "font-size: 13px;" in field_label
+    assert "background: var(--portal-surface-soft);" in estimate
+    assert "color: var(--portal-muted);" in estimate
+    assert "font-size: 13px;" in estimate
+    assert "background: var(--portal-surface-light);" in artboard_card
+    assert "box-shadow: none;" in artboard_card
+    assert "background: var(--portal-surface-light);" in direction_card
+    assert "box-shadow: none;" in direction_card
+    assert "color: var(--portal-ink);" in card_title
+    assert "color: var(--portal-muted);" in card_copy
+    assert "font-size: 13px;" in card_copy
+    assert "border-color: var(--portal-border-strong);" in hover
+    assert "background: var(--portal-light-hover-surface);" in hover
+    assert "box-shadow: none;" in hover
+    assert "transform: none;" in hover
+    assert "background: var(--portal-surface-soft);" in archived_direction
+    assert "color: var(--portal-muted);" in archived_direction
+    assert "opacity: 1;" in archived_direction
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "color: var(--portal-action);" in selected_metadata
+    assert "font-size: 13px;" in selected_metadata
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-action);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "background: var(--portal-surface-soft);" in reference_row
+    assert "color: var(--portal-ink);" in reference_title
+    assert "color: var(--portal-muted);" in reference_copy
+    assert "font-size: 13px;" in reference_copy
+    assert "color: var(--portal-danger);" in unavailable_reference
+    assert "background: var(--portal-surface-light);" in filter_surface
+    assert "border-color: var(--portal-border);" in pagination
+    assert "color: var(--portal-muted);" in pagination
+    assert "font-size: 13px;" in pagination
+    assert "border-top-color: var(--portal-border);" in dividers
+    assert "border-top-color: var(--portal-border);" in history_row
+    assert "border-color: var(--portal-border);" in version_row
+    assert "border-top-color: var(--portal-border);" in activity_row
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-image-studio-intro dl" in mobile_selectors
+    assert ".portal-image-studio-detail-summary dl" in mobile_selectors
+    assert ".portal-image-studio-layout" in mobile_selectors
+    assert ".portal-image-studio-detail-grid" in mobile_selectors
+    assert ".portal-image-studio-history-grid" in mobile_selectors
+    assert ".portal-image-artboard-grid" in mobile_selectors
+    assert ".portal-image-direction-grid" in mobile_selectors
+    assert ".portal-image-reference-library-grid" in mobile_selectors
+    assert ".portal-image-studio-estimate-grid" in mobile_selectors
+    assert ".portal-image-studio-guard-list" in mobile_selectors
+    assert ".portal-image-direction-form .portal-fields" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", image_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", image_css)
