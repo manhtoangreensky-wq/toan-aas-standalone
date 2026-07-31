@@ -10038,3 +10038,124 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Admin readiness guides surface */
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro, .portal-postback-readiness-intro, .portal-job-recovery-intro) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-process, .portal-postback-readiness-process, .portal-job-recovery-process, .portal-tax-readiness-boundary, .portal-postback-readiness-boundary, .portal-job-recovery-boundary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro h2, .portal-postback-readiness-intro h2, .portal-job-recovery-intro h2, .portal-tax-readiness-section .portal-section-heading h2, .portal-postback-readiness-section .portal-section-heading h2, .portal-job-recovery-section .portal-section-heading h2, .portal-tax-readiness-process .portal-card-title, .portal-postback-readiness-process .portal-card-title, .portal-job-recovery-process .portal-card-title, .portal-tax-readiness-boundary .portal-card-title, .portal-postback-readiness-boundary .portal-card-title, .portal-job-recovery-boundary .portal-card-title) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro p, .portal-postback-readiness-intro p, .portal-job-recovery-intro p, .portal-tax-readiness-section .portal-section-heading p, .portal-postback-readiness-section .portal-section-heading p, .portal-job-recovery-section .portal-section-heading p, .portal-tax-readiness-process .portal-card-subtitle, .portal-postback-readiness-process .portal-card-subtitle, .portal-job-recovery-process .portal-card-subtitle, .portal-tax-readiness-boundary .portal-card-subtitle, .portal-postback-readiness-boundary .portal-card-subtitle, .portal-job-recovery-boundary .portal-card-subtitle) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-section-kicker {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro-status, .portal-postback-readiness-intro-status, .portal-job-recovery-intro-status) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro-status > span:first-child, .portal-postback-readiness-intro-status > span:first-child, .portal-job-recovery-intro-status > span:first-child, .portal-tax-readiness-card-icon, .portal-postback-readiness-card-icon, .portal-job-recovery-card-icon) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro-status strong, .portal-postback-readiness-intro-status strong, .portal-job-recovery-intro-status strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro-status small, .portal-postback-readiness-intro-status small, .portal-job-recovery-intro-status small) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-card, .portal-postback-readiness-card, .portal-job-recovery-card) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-card h3, .portal-postback-readiness-card h3, .portal-job-recovery-card h3, .portal-tax-readiness-process li strong, .portal-postback-readiness-process li strong, .portal-job-recovery-process li strong, .portal-tax-readiness-boundary li strong, .portal-postback-readiness-boundary li strong, .portal-job-recovery-boundary li strong, .portal-panel-row strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-card p, .portal-postback-readiness-card p, .portal-job-recovery-card p, .portal-tax-readiness-process li span, .portal-postback-readiness-process li span, .portal-job-recovery-process li span, .portal-tax-readiness-boundary li small, .portal-postback-readiness-boundary li small, .portal-job-recovery-boundary li small, .portal-panel-row > div > span) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-process li, .portal-postback-readiness-process li, .portal-job-recovery-process li, .portal-tax-readiness-boundary li, .portal-postback-readiness-boundary li, .portal-job-recovery-boundary li, .portal-panel-row) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-process li, .portal-postback-readiness-process li, .portal-job-recovery-process li)::before,
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-boundary li, .portal-postback-readiness-boundary li, .portal-job-recovery-boundary li) > span:first-child,
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-panel-row-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-badge[data-status="read_only"] {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro, .portal-postback-readiness-intro, .portal-job-recovery-intro, .portal-tax-readiness-section .portal-section-heading, .portal-postback-readiness-section .portal-section-heading, .portal-job-recovery-section .portal-section-heading) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-intro-status, .portal-postback-readiness-intro-status, .portal-job-recovery-intro-status) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) :is(.portal-tax-readiness-grid, .portal-postback-readiness-grid, .portal-job-recovery-grid, .portal-tax-readiness-process ol, .portal-postback-readiness-process ol, .portal-job-recovery-process ol, .portal-tax-readiness-boundary ul, .portal-postback-readiness-boundary ul, .portal-job-recovery-boundary ul) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide) .portal-button--quiet {
+    min-height: 44px;
+  }
+}
