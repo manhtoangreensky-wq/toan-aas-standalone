@@ -4377,7 +4377,7 @@ def test_light_music_sfx_final_surface_keeps_audio_planning_truthful_and_readabl
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Music and SFX surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Music and SFX surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4509,3 +4509,127 @@ def test_light_music_sfx_final_surface_keeps_audio_planning_truthful_and_readabl
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", music_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", music_css)
+
+
+def test_light_project_center_final_surface_keeps_authoring_and_history_readable() -> None:
+    """Private Project authoring stays explicit while its final surface becomes light and legible."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Project Center surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    project_css = layer.group("css")
+    route = ".portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            project_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary) p"
+    )
+    operation_metrics = declarations(f"{route} .portal-project-operations-summary dl > div")
+    operation_metric_value = declarations(f"{route} .portal-project-operations-summary dt")
+    detail_metrics = declarations(f"{route} .portal-project-summary dl > div")
+    detail_metric_value = declarations(f"{route} .portal-project-summary dd")
+    working_panels = declarations(
+        f"{route} :is(.portal-project-operations-primary, .portal-project-operations-library, "
+        ".portal-project-operations-boundary, .portal-project-operations-create)"
+    )
+    filter_panel = declarations(f"{route} .portal-project-filter")
+    pagination = declarations(f"{route} .portal-project-pagination")
+    project_card = declarations(f"{route} .portal-project-card")
+    document_row = declarations(f"{route} .portal-project-document")
+    document_text = declarations(f"{route} :is(.portal-project-document strong, .portal-project-editor .portal-card-title)")
+    document_metadata = declarations(f"{route} .portal-project-document small")
+    step_row = declarations(f"{route} .portal-project-steps li")
+    step_title = declarations(f"{route} .portal-project-steps strong")
+    step_copy = declarations(f"{route} .portal-project-steps span")
+    step_marker = declarations(f"{route} .portal-project-steps li::before")
+    authoring_regions = declarations(f"{route} :is(.portal-project-new-document, .portal-project-history)")
+    editor = declarations(f"{route} .portal-project-editor")
+    version_list = declarations(f"{route} .portal-version-list")
+    version_row = declarations(f"{route} .portal-version-row")
+    package_panel = declarations(f"{route} :is(.portal-project-package-panel, .portal-project-package-actions)")
+    package_card = declarations(f"{route} .portal-project-package-card")
+    package_meta = declarations(f"{route} .portal-project-package-meta > div")
+    package_metadata = declarations(f"{route} :is(.portal-project-package-meta dt, .portal-project-package-meta dd)")
+    hover = declarations(f"{route} :is(.portal-project-card, .portal-project-document, .portal-project-package-card):hover")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        project_css,
+        flags=re.DOTALL,
+    )
+
+    selector_lines = re.findall(r"(?m)^\s*(?!@)(?P<selector>[^\n{}]+)\s*\{", project_css)
+    assert selector_lines
+    assert all(selector.startswith(route) for selector in selector_lines)
+    assert "background: var(--portal-surface-light) !important;" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "background: var(--portal-surface-soft);" in operation_metrics
+    assert "color: var(--portal-action);" in operation_metric_value
+    assert "background: var(--portal-surface-soft);" in detail_metrics
+    assert "color: var(--portal-ink);" in detail_metric_value
+    assert "background: var(--portal-surface-light);" in working_panels
+    assert "border-color: var(--portal-border);" in working_panels
+    assert "box-shadow: none;" in working_panels
+    assert "background: var(--portal-surface-light);" in filter_panel
+    assert "color: var(--portal-muted);" in pagination
+    assert "background: var(--portal-surface-light);" in project_card
+    assert "background: var(--portal-surface-light);" in document_row
+    assert "color: var(--portal-ink);" in document_text
+    assert "color: var(--portal-muted);" in document_metadata
+    assert "border-top-color: var(--portal-border);" in step_row
+    assert "color: var(--portal-ink);" in step_title
+    assert "font-size: 13px;" in step_title
+    assert "color: var(--portal-muted);" in step_copy
+    assert "font-size: 13px;" in step_copy
+    assert "background: var(--portal-action);" in step_marker
+    assert "box-shadow: none;" in step_marker
+    assert "border-top-color: var(--portal-border);" in authoring_regions
+    assert "background: var(--portal-surface-light);" in editor
+    assert "background: var(--portal-surface-soft);" in version_list
+    assert "border-color: var(--portal-border);" in version_row
+    assert "background: var(--portal-surface-light);" in package_panel
+    assert "background: var(--portal-surface-light);" in package_card
+    assert "background: var(--portal-surface-soft);" in package_meta
+    assert "color: var(--portal-muted);" in package_metadata
+    assert "border-color: var(--portal-border-strong);" in hover
+    assert "background: var(--portal-light-hover-surface);" in hover
+    assert "transform: none;" in hover
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-project-operations-summary" in mobile_selectors
+    assert ".portal-project-operations-authoring-intro" in mobile_selectors
+    assert ".portal-project-operations-workspace" in mobile_selectors
+    assert ".portal-project-operations-authoring-layout" in mobile_selectors
+    assert ".portal-project-grid" in mobile_selectors
+    assert ".portal-project-filter .portal-fields" in mobile_selectors
+    assert ".portal-project-detail-grid" in mobile_selectors
+    assert ".portal-project-package-grid" in mobile_selectors
+    assert ".portal-project-package-meta" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert "min-height: 44px;" in project_css
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", project_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", project_css)
