@@ -120,6 +120,12 @@ loudness và true peak; không dùng một hằng số chung cho mọi ngôn ng�
 nền tảng. Diarization chỉ được bật khi cần speaker label hoặc voice casting,
 và audio master dùng để mix phải tách với input ASR mono/16 kHz.
 
+Với lane dub/combo, M&E phải có provenance theo thứ tự: khách cung cấp →
+embedded đã kiểm tra → source separation → voice-over/ducking. Source
+separation không được coi là M&E sạch. AV QC phải kiểm tra vocal bleed, music
+damage, phasing, missing ambience và pumping; không đạt hoặc không chắc chắn
+phải là `WAITING_REVIEW`/`FAIL`, không phải `PASS`.
+
 Stage manifest dùng các trạng thái `PENDING`, `RUNNING`, `PASS`, `FAIL`,
 `WAITING_REVIEW`, `CANCELLED`, kèm input/output fingerprints, attempt,
 runtime/provider version, timestamps và external task ID chỉ cho Admin. Khóa
