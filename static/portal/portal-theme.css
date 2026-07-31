@@ -11120,3 +11120,194 @@ body {
     transition: none;
   }
 }
+
+/* Final light Onboarding surface */
+.portal-page.portal-onboarding-page {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page > .portal-hero {
+  margin-bottom: 4px;
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-layout {
+  gap: 24px;
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-action > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-action > .portal-notice {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-action > .portal-notice strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-action > .portal-notice p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-action > .portal-notice .portal-notice-icon {
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-onboarding-page .portal-empty {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-onboarding-page .portal-empty-icon {
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-onboarding-page .portal-empty h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page .portal-empty p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-choice {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-accent-soft);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-choice-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-choice strong,
+.portal-page.portal-onboarding-page .portal-onboarding-route strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page :is(.portal-onboarding-choice p, .portal-onboarding-route p) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps li > span {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps li[data-state="current"] {
+  border-left-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-steps li[data-state="current"] > span {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-route {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-route-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-onboarding-page .portal-onboarding-route-state {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-onboarding-page > .portal-onboarding-assurance {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-onboarding-page > .portal-onboarding-assurance > summary {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-onboarding-page .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-onboarding-page .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-onboarding-page .portal-button:disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page.portal-onboarding-page :is(button, a, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 820px) {
+  .portal-page.portal-onboarding-page .portal-onboarding-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "action" "progress";
+    gap: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .portal-page.portal-onboarding-page .portal-onboarding-action > .portal-card {
+    padding: 16px;
+  }
+
+  .portal-page.portal-onboarding-page :is(.portal-onboarding-choice .portal-button, .portal-button) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-onboarding-page :is(.portal-onboarding-choice, .portal-onboarding-route, .portal-button) {
+    transition: none;
+  }
+}
