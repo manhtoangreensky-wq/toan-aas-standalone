@@ -5668,3 +5668,145 @@ def test_light_account_hub_final_surface_keeps_signed_account_actions_clear() ->
     assert "conic-gradient" not in account_css.lower()
     assert "transparent" not in account_css.lower()
     assert not re.search(r"var\(--(?!portal-)", account_css)
+
+
+def test_light_onboarding_final_surface_keeps_web_first_path_and_guarded_link_clear() -> None:
+    """The optional Bot bridge stays honest while Web-first onboarding remains easy to use."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Onboarding surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    onboarding_css = layer.group("css")
+    root_scope = ".portal-page.portal-onboarding-page"
+    required = (
+        ".portal-onboarding-layout",
+        ".portal-onboarding-action > .portal-card",
+        ".portal-onboarding-action > .portal-notice",
+        ".portal-onboarding-action > .portal-notice strong",
+        ".portal-onboarding-action > .portal-notice p",
+        ".portal-onboarding-action > .portal-notice .portal-notice-icon",
+        ".portal-empty",
+        ".portal-empty-icon",
+        ".portal-onboarding-choice",
+        ".portal-onboarding-choice-icon",
+        ".portal-onboarding-steps",
+        'li[data-state="current"]',
+        ".portal-onboarding-route",
+        ".portal-onboarding-route-state",
+        ".portal-onboarding-assurance",
+        ".portal-button--quiet",
+        ":disabled",
+        ":focus-visible",
+        "@media (max-width: 820px)",
+        "@media (max-width: 520px)",
+        "@media (prefers-reduced-motion: reduce)",
+        "min-height: 44px;",
+    )
+
+    for evidence in required:
+        assert evidence in onboarding_css
+
+    def at_rule_body(at_rule: str) -> str:
+        start = onboarding_css.index(at_rule)
+        opening_brace = onboarding_css.index("{", start)
+        depth = 0
+        for index in range(opening_brace, len(onboarding_css)):
+            if onboarding_css[index] == "{":
+                depth += 1
+            elif onboarding_css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return onboarding_css[opening_brace + 1 : index]
+        raise AssertionError(f"unclosed {at_rule}")
+
+    def declarations_for(selector: str, css: str = onboarding_css) -> str:
+        rule = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>[^}}]*)\}}",
+            css,
+            flags=re.DOTALL,
+        )
+        assert rule is not None, selector
+        return rule.group("declarations")
+
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-onboarding-action > .portal-card"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-onboarding-action > .portal-notice"
+    )
+    assert "color: var(--portal-ink);" in declarations_for(
+        f"{root_scope} .portal-onboarding-action > .portal-notice strong"
+    )
+    assert "color: var(--portal-muted);" in declarations_for(
+        f"{root_scope} .portal-onboarding-action > .portal-notice p"
+    )
+    assert "color: var(--portal-warning);" in declarations_for(
+        f"{root_scope} .portal-onboarding-action > .portal-notice .portal-notice-icon"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-empty"
+    )
+    assert "color: var(--portal-action);" in declarations_for(
+        f"{root_scope} .portal-empty-icon"
+    )
+    assert "background: var(--portal-light-accent-soft);" in declarations_for(
+        f"{root_scope} .portal-onboarding-choice"
+    )
+    assert "color: var(--portal-action);" in declarations_for(
+        f"{root_scope} .portal-onboarding-choice-icon"
+    )
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-onboarding-steps"
+    )
+    assert "border-left-color: var(--portal-action);" in declarations_for(
+        f'{root_scope} .portal-onboarding-steps li[data-state="current"]'
+    )
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-onboarding-route"
+    )
+    assert "color: var(--portal-action);" in declarations_for(
+        f"{root_scope} .portal-onboarding-route-state"
+    )
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} > .portal-onboarding-assurance"
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)"
+    )
+    assert "opacity: 0.64;" in declarations_for(
+        f"{root_scope} .portal-button:disabled"
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button:disabled"
+    )
+    assert "outline: 3px solid var(--portal-focus) !important;" in declarations_for(
+        f"{root_scope} :is(button, a, summary):focus-visible"
+    )
+    assert "grid-template-areas: \"action\" \"progress\";" in declarations_for(
+        f"{root_scope} .portal-onboarding-layout",
+        at_rule_body("@media (max-width: 820px)"),
+    )
+    assert "min-height: 44px;" in declarations_for(
+        f"{root_scope} :is(.portal-onboarding-choice .portal-button, .portal-button)",
+        at_rule_body("@media (max-width: 520px)"),
+    )
+    assert "transition: none;" in declarations_for(
+        f"{root_scope} :is(.portal-onboarding-choice, .portal-onboarding-route, .portal-button)",
+        at_rule_body("@media (prefers-reduced-motion: reduce)"),
+    )
+
+    selectors = _final_light_layer_selectors(onboarding_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", onboarding_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", onboarding_css.lower())
+    assert "linear-gradient" not in onboarding_css.lower()
+    assert "radial-gradient" not in onboarding_css.lower()
+    assert "conic-gradient" not in onboarding_css.lower()
+    assert "transparent" not in onboarding_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", onboarding_css)
