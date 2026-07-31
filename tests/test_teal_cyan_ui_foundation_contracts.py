@@ -4981,10 +4981,107 @@ def test_light_admin_erp_core_final_surface_keeps_protected_control_center_reada
     assert not re.search(r"var\(--(?!portal-)", admin_css)
 
 
-def _final_light_layer_selectors(css: str) -> list[str]:
-    """Return every selector line, including the first rule nested in media."""
+def test_light_admin_readiness_guides_final_surface_keeps_static_handoffs_readable() -> None:
+    """Read-only readiness guides share the protected Admin ERP light hierarchy."""
 
-    return re.findall(r"(?m)^[ \t]*(?!@)([^{}\s][^{}]*)\{", css)
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Admin readiness guides surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    readiness_css = layer.group("css")
+    root_scope = ".portal-page:is(.portal-admin-tax-readiness, .portal-admin-postback-readiness, .portal-admin-job-recovery-guide)"
+    required = (
+        ".portal-admin-tax-readiness",
+        ".portal-admin-postback-readiness",
+        ".portal-admin-job-recovery-guide",
+        ".portal-tax-readiness-intro",
+        ".portal-tax-readiness-card",
+        ".portal-tax-readiness-process",
+        ".portal-tax-readiness-boundary",
+        ".portal-postback-readiness-intro",
+        ".portal-postback-readiness-card",
+        ".portal-postback-readiness-process",
+        ".portal-postback-readiness-boundary",
+        ".portal-job-recovery-intro",
+        ".portal-job-recovery-card",
+        ".portal-job-recovery-process",
+        ".portal-job-recovery-boundary",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in readiness_css
+    selectors = _final_light_layer_selectors(readiness_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert "background: var(--portal-surface-light) !important;" in readiness_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", readiness_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", readiness_css.lower())
+    assert "linear-gradient" not in readiness_css.lower()
+    assert "radial-gradient" not in readiness_css.lower()
+    assert "conic-gradient" not in readiness_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", readiness_css)
+
+
+def _final_light_layer_selectors(css: str) -> list[str]:
+    """Return each top-level selector branch, including nested mobile rules."""
+
+    selector_groups = re.findall(r"(?m)^[ \t]*(?!@)([^{}\s][^{}]*)\{", css)
+    return [
+        branch
+        for group in selector_groups
+        for branch in _split_top_level_css_selector_list(group)
+    ]
+
+
+def _split_top_level_css_selector_list(selector_group: str) -> list[str]:
+    """Split a selector list without treating commas inside :is(...) as branches."""
+
+    branches: list[str] = []
+    current: list[str] = []
+    parenthesis_depth = 0
+    bracket_depth = 0
+    quote = ""
+    escaped = False
+
+    for character in selector_group:
+        if quote:
+            current.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = ""
+            continue
+
+        if character in {"'", '"'}:
+            quote = character
+        elif character == "(":
+            parenthesis_depth += 1
+        elif character == ")":
+            parenthesis_depth = max(0, parenthesis_depth - 1)
+        elif character == "[":
+            bracket_depth += 1
+        elif character == "]":
+            bracket_depth = max(0, bracket_depth - 1)
+        elif character == "," and parenthesis_depth == 0 and bracket_depth == 0:
+            branch = "".join(current).strip()
+            if branch:
+                branches.append(branch)
+            current = []
+            continue
+        current.append(character)
+
+    final_branch = "".join(current).strip()
+    if final_branch:
+        branches.append(final_branch)
+    return branches
 
 
 def test_admin_erp_scope_selector_contract_captures_first_mobile_nested_selector() -> None:
@@ -4997,7 +5094,18 @@ def test_admin_erp_scope_selector_contract_captures_first_mobile_nested_selector
   }}
 }}"""
 
-    assert _final_light_layer_selectors(css) == [f"{root_scope} .portal-admin-grid "]
+    assert _final_light_layer_selectors(css) == [f"{root_scope} .portal-admin-grid"]
+
+
+def test_admin_erp_scope_selector_contract_splits_top_level_selector_lists() -> None:
+    """An unscoped sibling selector cannot hide behind a scoped branch."""
+
+    root_scope = ".portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship)"
+    css = f"""{root_scope} .safe, .unscoped {{
+  color: var(--portal-ink);
+}}"""
+
+    assert _final_light_layer_selectors(css) == [f"{root_scope} .safe", ".unscoped"]
 
 
 def test_light_workspace_menu_final_surface_keeps_customer_directory_readable() -> None:
