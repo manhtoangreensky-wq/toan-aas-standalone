@@ -4930,3 +4930,42 @@ def test_light_support_desk_final_surface_keeps_customer_and_operator_cases_read
     assert "linear-gradient" not in support_css.lower()
     assert "radial-gradient" not in support_css.lower()
     assert not re.search(r"var\(--(?!portal-)", support_css)
+
+
+def test_light_admin_erp_core_final_surface_keeps_protected_control_center_readable() -> None:
+    """The Odoo-like control center remains clear without implying browser authority."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Admin ERP core surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    admin_css = layer.group("css")
+    required = (
+        ".portal-admin-home",
+        ".portal-admin-domain",
+        ".portal-admin-system-stewardship",
+        ".portal-admin-guard",
+        ".portal-admin-grid",
+        ".portal-admin-work-queues",
+        ".portal-admin-work-queue",
+        ".portal-admin-authority",
+        ".portal-admin-directory",
+        ".portal-admin-directory-group",
+        ".portal-admin-domain-intro",
+        ".portal-admin-domain-card",
+        ".portal-stewardship-intro",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in admin_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", admin_css)
+    assert "rgba(" not in admin_css.lower()
+    assert "linear-gradient" not in admin_css.lower()
+    assert "radial-gradient" not in admin_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", admin_css)
