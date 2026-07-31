@@ -9777,6 +9777,80 @@ body {
   color: var(--portal-muted);
 }
 
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-grid {
+  gap: 12px;
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card:not(.portal-stewardship-card--guarded):is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card-copy small {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card-copy > span {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card-copy em {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card--guarded {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card--guarded .portal-stewardship-card-icon,
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-card--guarded .portal-stewardship-card-copy em {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-section .portal-section-heading h2,
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-boundary :is(h2, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-section .portal-section-heading p,
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-boundary :is(p, small) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-boundary li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) .portal-stewardship-boundary li > span:first-child {
+  color: var(--portal-action);
+}
+
 .portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) {
   border-color: var(--portal-border-strong);
   background: var(--portal-surface-soft);
@@ -9803,7 +9877,7 @@ body {
 }
 
 @media (max-width: 700px) {
-  .portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) :is(.portal-admin-grid, .portal-admin-work-queue-grid, .portal-admin-domain-grid, .portal-work-grid) {
+  .portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship) :is(.portal-admin-grid, .portal-admin-work-queue-grid, .portal-admin-domain-grid, .portal-work-grid, .portal-stewardship-grid, .portal-stewardship-boundary ul) {
     grid-template-columns: 1fr;
   }
 

@@ -94,3 +94,27 @@ Expected: all commands pass. The UI change cannot grant a role, mutate canonical
 git add docs/superpowers/plans/2026-07-31-admin-erp-core-light-surface.md tests/test_teal_cyan_ui_foundation_contracts.py static/portal/portal-theme.css
 git commit -m "Refine Admin ERP core light control center"
 ```
+
+### Task 4: Review follow-up — Stewardship card contrast and selector guard
+
+**Files:**
+- Modify: `static/portal/portal-theme.css`
+- Modify: `tests/test_teal_cyan_ui_foundation_contracts.py`
+
+- [x] **Step 1: Reproduce the review finding with a failing contract**
+
+Require the final layer to cover System Stewardship cards, their copy,
+section/boundary rows and mobile grid. The contract must also reject unscoped
+selectors, raw `rgb()`/`hsl()` values and conic gradients.
+
+- [x] **Step 2: Add the smallest scoped token-only fix**
+
+Override the legacy dark card children only beneath the protected Admin ERP
+root. Restore readable ink/muted/action hierarchy, keep guarded truth, and
+remove layout-shifting hover/focus transforms without changing any renderer,
+authority or runtime behavior.
+
+- [x] **Step 3: Re-run the Admin contracts and update the existing PR**
+
+Run the UI foundation and protected-navigation contracts, JS syntax checks and
+`git diff --check`; then push the follow-up commit to the existing PR.
