@@ -10903,3 +10903,220 @@ body {
     transition: none;
   }
 }
+
+/* Final light Account Hub surface */
+.portal-page.portal-account-page {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-settings-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-page .portal-settings-nav a {
+  border-color: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-settings-nav a:is(:hover, :focus-visible) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-page .portal-settings-nav a[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-page .portal-account-command {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-page .portal-account-command-copy h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-account-command-copy p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-account-command-facts > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-account-page .portal-account-command-facts dt {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-account-command-facts dd {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-account-session {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-account-page .portal-summary-item {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page.portal-account-page .portal-summary-key {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-summary-value {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-oauth-method {
+  padding: 12px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-account-page .portal-oauth-method strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-oauth-method :is(span, .portal-form-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-bot-companion-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-page .portal-bot-companion-card h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-bot-companion-card p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-link-code {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-context);
+}
+
+.portal-page.portal-account-page .portal-account-assurance {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-account-page .portal-account-assurance summary {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-account-assurance summary::after {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-page .portal-account-assurance[open] {
+  border-color: var(--portal-border-strong);
+}
+
+.portal-page.portal-account-page .portal-notice {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-page .portal-notice strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-page .portal-notice p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-page .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-page .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-account-page [data-portal-action="auth-logout"] {
+  border-color: var(--portal-danger);
+  background: var(--portal-surface-light);
+  color: var(--portal-danger);
+}
+
+.portal-page.portal-account-page [data-portal-action="auth-logout"]:is(:hover, :focus-visible) {
+  border-color: var(--portal-danger);
+  background: var(--portal-surface-soft);
+  color: var(--portal-danger);
+  transform: none;
+}
+
+.portal-page.portal-account-page .portal-button:disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page.portal-account-page :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1040px) {
+  .portal-page.portal-account-page .portal-account-command {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .portal-page.portal-account-page .portal-account-command-facts {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-account-page :is(.portal-account-command, .portal-account-overview, .portal-bot-companion-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-account-page .portal-summary-item {
+    align-items: start;
+    display: grid;
+    gap: 4px;
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-account-page :is(.portal-settings-nav a, .portal-button) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-account-page :is(.portal-settings-nav a, .portal-button) {
+    transition: none;
+  }
+
+  .portal-page.portal-account-page .portal-account-assurance {
+    transition: none;
+  }
+}
