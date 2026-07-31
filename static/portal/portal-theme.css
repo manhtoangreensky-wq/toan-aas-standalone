@@ -9241,3 +9241,327 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Support Desk surface */
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-care-heading) {
+  gap: 24px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro h2, .portal-support-admin-intro h2, .portal-support-case-hero h2, .portal-support-care-heading h2) {
+  color: var(--portal-ink);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.16;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro p, .portal-support-admin-intro p, .portal-support-case-hero p, .portal-support-care-heading p) {
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro dl, .portal-support-admin-intro dl, .portal-support-case-hero dl, .portal-support-care-heading dl) {
+  gap: 10px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro dl > div, .portal-support-admin-intro dl > div, .portal-support-case-hero dl > div, .portal-support-care-heading dl > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro dt, .portal-support-admin-intro dt, .portal-support-case-hero dt, .portal-support-care-heading dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro dd, .portal-support-admin-intro dd, .portal-support-case-hero dd, .portal-support-case-hero dd small, .portal-support-care-heading dt) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-metrics .portal-metric {
+  min-height: 120px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-metrics .portal-metric :is(span, em) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-metrics .portal-metric strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intake, .portal-support-boundary, .portal-support-advisor, .portal-support-consultation, .portal-support-care-board) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-form, .portal-support-consultation-form, .portal-support-filter) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-result, .portal-support-consultation-result) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-result[data-state="ready"], .portal-support-consultation-result[data-state="ready"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-result[data-state="guarded"], .portal-support-consultation-result[data-state="guarded"]) {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-result h3, .portal-support-consultation-result h3, .portal-support-consultation-result h4) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-result p, .portal-support-consultation-result p, .portal-support-advisor-actions > span, .portal-support-consultation-actions > span) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-consultation-result pre {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-advisor-checklist li, .portal-support-advisor-checklist li::before) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-advisor-checklist li::before {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-pagination .portal-button {
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-category {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-card h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-card > p {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-case-meta dt, .portal-support-case-meta dd small) {
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-case-meta dd {
+  color: var(--portal-ink);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-activity li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-activity-dot {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-activity strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-activity small {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-recovery {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-recovery[data-support-state="waiting_user"], .portal-support-recovery[data-support-state="refund_pending"]) {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-recovery[data-support-state="closed"] {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-recovery-copy .portal-card-title, .portal-support-recovery-copy strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-recovery-copy p, .portal-support-recovery-copy p + p) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-message {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-message--operator {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-message.is-internal {
+  border-color: var(--portal-warning);
+  border-style: dashed;
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-message-meta strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-message-meta span, .portal-support-message > small, .portal-support-message p) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-lane {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-lane-head {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-lane-head strong {
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-care-lane dl > div, .portal-support-care-detail-grid > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-care-lane dt, .portal-support-care-detail-grid dt) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-care-lane dd, .portal-support-care-detail-grid dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-reason {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-activity li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-care-activity strong, .portal-support-care-activity p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-care-activity small {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) :is(h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(button, input, select, textarea):disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-care-heading, .portal-support-layout, .portal-support-detail-layout, .portal-support-admin-forms, .portal-support-advisor-form, .portal-support-consultation-form .portal-fields, .portal-support-filter, .portal-support-case-grid, .portal-support-metrics) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-support-intro dl, .portal-support-admin-intro dl, .portal-support-case-hero dl, .portal-support-care-heading dl, .portal-support-case-meta, .portal-support-care-lane dl, .portal-support-care-detail-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-recovery {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) .portal-support-recovery-actions {
+    justify-content: flex-start;
+  }
+
+  .portal-page:is(.portal-support-desk, .portal-support-cases, .portal-support-case-detail, .portal-support-admin, .portal-support-admin-case-detail) :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-support-filter input, .portal-support-filter select) {
+    min-height: 44px;
+  }
+}
