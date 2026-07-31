@@ -9897,3 +9897,144 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Workspace Menu surface */
+.portal-page.portal-workspace-menu {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro-status {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro-status > span:first-child,
+.portal-page.portal-workspace-menu .portal-workspace-menu-card .portal-module-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro-status strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-intro-status small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-directory {
+  gap: 20px;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-group {
+  gap: 12px;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-group-head h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-group-head p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-group-head > span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-grid {
+  gap: 12px;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card:active {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card-state small,
+.portal-page.portal-workspace-menu .portal-workspace-menu-card-copy > span {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card-copy > small,
+.portal-page.portal-workspace-menu .portal-workspace-menu-card-footer {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-card-copy > strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-boundary-list > li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-boundary-list strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-workspace-menu .portal-workspace-menu-boundary-list small {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-workspace-menu :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-workspace-menu :is(.portal-workspace-menu-grid, .portal-workspace-menu-boundary-list) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-workspace-menu .portal-workspace-menu-group-head {
+    align-items: flex-start;
+  }
+
+  .portal-page.portal-workspace-menu .portal-workspace-menu-intro-status {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .portal-page.portal-workspace-menu :is(.portal-button, .portal-workspace-menu-card) {
+    min-height: 44px;
+  }
+}
