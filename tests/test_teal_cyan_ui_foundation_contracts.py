@@ -4970,7 +4970,7 @@ def test_light_admin_erp_core_final_surface_keeps_protected_control_center_reada
 
     for evidence in required:
         assert evidence in admin_css
-    selectors = re.findall(r"(?:^|\})\s*([^@{}\s][^{]+)\{", admin_css)
+    selectors = _admin_final_layer_selectors(admin_css)
     assert selectors
     assert all(root_scope in selector for selector in selectors)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", admin_css)
@@ -4979,3 +4979,22 @@ def test_light_admin_erp_core_final_surface_keeps_protected_control_center_reada
     assert "radial-gradient" not in admin_css.lower()
     assert "conic-gradient" not in admin_css.lower()
     assert not re.search(r"var\(--(?!portal-)", admin_css)
+
+
+def _admin_final_layer_selectors(css: str) -> list[str]:
+    """Return every selector line, including the first rule nested in media."""
+
+    return re.findall(r"(?m)^[ \t]*(?!@)([^{}\s][^{}]*)\{", css)
+
+
+def test_admin_erp_scope_selector_contract_captures_first_mobile_nested_selector() -> None:
+    """A scoped mobile selector must not evade the Admin CSS contract."""
+
+    root_scope = ".portal-page:is(.portal-admin-home, .portal-admin-domain, .portal-admin-system-stewardship)"
+    css = f"""@media (max-width: 700px) {{
+  {root_scope} .portal-admin-grid {{
+    grid-template-columns: 1fr;
+  }}
+}}"""
+
+    assert _admin_final_layer_selectors(css) == [f"{root_scope} .portal-admin-grid "]

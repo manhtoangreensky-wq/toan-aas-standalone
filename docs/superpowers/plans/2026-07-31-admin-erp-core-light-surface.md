@@ -118,3 +118,21 @@ authority or runtime behavior.
 
 Run the UI foundation and protected-navigation contracts, JS syntax checks and
 `git diff --check`; then push the follow-up commit to the existing PR.
+
+### Task 5: Review follow-up — mobile selector scope extraction
+
+**Files:**
+- Modify: `tests/test_teal_cyan_ui_foundation_contracts.py`
+
+- [x] **Step 1: Add the failing nested-media selector test**
+
+The scope guard must collect the first selector inside an `@media` block, not
+only selectors following a closing brace.
+
+- [x] **Step 2: Use the tested selector extractor for the Admin contract**
+
+Keep the contract route-scoped while making the extraction robust for the
+existing mobile block. No runtime asset, route, authority or request code is
+changed.
+
+- [x] **Step 3: Re-run the full targeted Admin checks and update PR #237**
