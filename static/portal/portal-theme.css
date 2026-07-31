@@ -8929,3 +8929,315 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Memory and Prompt Library surface */
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro, .portal-prompt-library-intro, .portal-prompt-library-detail-summary) {
+  gap: 24px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro h2, .portal-prompt-library-intro h2, .portal-prompt-library-detail-summary h2) {
+  color: var(--portal-ink);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.16;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro p, .portal-prompt-library-intro p, .portal-prompt-library-detail-summary p) {
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro dl, .portal-prompt-library-intro dl, .portal-prompt-library-detail-summary dl) {
+  gap: 10px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro dl > div, .portal-prompt-library-intro dl > div, .portal-prompt-library-detail-summary dl > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro dt, .portal-prompt-library-intro dt, .portal-prompt-library-detail-summary dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro dd, .portal-prompt-library-intro dd, .portal-prompt-library-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-create, .portal-memory-boundary, .portal-memory-editor, .portal-prompt-library-create, .portal-prompt-library-editor, .portal-prompt-library-boundary, .portal-prompt-library-preview) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-filter, .portal-prompt-library-filter) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-pagination, .portal-prompt-library-pagination) {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-pagination .portal-button, .portal-prompt-library-pagination .portal-button) {
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-note {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-note:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-note strong {
+  color: var(--portal-ink);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-note small, .portal-memory-note-excerpt) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-note-footer > b {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-tags span, .portal-memory-priority, .portal-prompt-library-meta span, .portal-prompt-library-tags span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-priority[data-priority="urgent"] {
+  border-color: var(--portal-danger);
+  color: var(--portal-danger);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-priority[data-priority="important"] {
+  border-color: var(--portal-warning);
+  color: var(--portal-warning);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-linked {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-linked:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-linked strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-linked small {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-meta dt {
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-meta dd {
+  color: var(--portal-ink);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-overdue {
+  border-color: var(--portal-warning);
+  background: var(--portal-surface-soft);
+  color: var(--portal-warning);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-edit {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-reminder-edit > summary {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-event {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-event > span:first-child {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-event strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-memory-event small {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-card :is(.portal-card-title, .portal-card-title a) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-card .portal-card-subtitle {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-preview-result {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-preview-result :is(h3, h4) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-preview-result p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-preview-result pre {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-import {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-prompt-library-import summary, .portal-prompt-library-import code) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-import > p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-provenance dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-provenance dt {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-provenance dd {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-events > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-events strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-events small {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) :is(h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(button, input, select, textarea):disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro, .portal-prompt-library-intro, .portal-prompt-library-detail-summary, .portal-memory-layout, .portal-memory-content, .portal-memory-filter .portal-fields, .portal-prompt-library-layout, .portal-prompt-library-detail-grid, .portal-memory-reminder-grid, .portal-prompt-library-grid, .portal-prompt-library-provenance dl) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-memory-intro dl, .portal-prompt-library-intro dl, .portal-prompt-library-detail-summary dl, .portal-memory-reminder-meta) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) .portal-prompt-library-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-memory-center, .portal-memory-reminders, .portal-prompt-library, .portal-prompt-library-detail) :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-memory-filter input, .portal-memory-filter select) {
+    min-height: 44px;
+  }
+}
