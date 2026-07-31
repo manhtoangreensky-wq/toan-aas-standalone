@@ -5150,3 +5150,115 @@ def test_light_workspace_menu_final_surface_keeps_customer_directory_readable() 
     assert "radial-gradient" not in workspace_css.lower()
     assert "conic-gradient" not in workspace_css.lower()
     assert not re.search(r"var\(--(?!portal-)", workspace_css)
+
+
+def test_light_interface_locale_navigator_final_surface_keeps_preferences_clear() -> None:
+    """The Web-only locale preference stays light, scoped and keyboard-accessible."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Interface Locale Navigator surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    locale_css = layer.group("css")
+    root_scope = ".portal-page.portal-interface-locale-navigator"
+    required = (
+        ".portal-interface-locale-intro",
+        ".portal-interface-locale-current",
+        ".portal-settings-nav",
+        ".portal-interface-locale-choice-body",
+        ":checked",
+        ":focus-within",
+        ":focus-visible",
+        ":disabled",
+        ".portal-interface-locale-boundary",
+        ".portal-interface-locale-support",
+        ".portal-interface-locale-unsupported-code",
+        ".portal-button--quiet",
+        "@media (max-width: 980px)",
+        "@media (max-width: 700px)",
+        "@media (prefers-reduced-motion: reduce)",
+        "min-height: 44px;",
+    )
+
+    for evidence in required:
+        assert evidence in locale_css
+
+    def at_rule_body(at_rule: str) -> str:
+        start = locale_css.index(at_rule)
+        opening_brace = locale_css.index("{", start)
+        depth = 0
+        for index in range(opening_brace, len(locale_css)):
+            if locale_css[index] == "{":
+                depth += 1
+            elif locale_css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return locale_css[opening_brace + 1 : index]
+        raise AssertionError(f"unclosed {at_rule}")
+
+    def declarations_for(selector: str, css: str = locale_css) -> str:
+        rule = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>[^}}]*)\}}",
+            css,
+            flags=re.DOTALL,
+        )
+        assert rule is not None, selector
+        return rule.group("declarations")
+
+    hover_choice = declarations_for(
+        f"{root_scope} .portal-interface-locale-choice:hover .portal-interface-locale-choice-body"
+    )
+    assert "transform: none;" in hover_choice
+
+    focus_choice = declarations_for(
+        f"{root_scope} .portal-interface-locale-choice:focus-within .portal-interface-locale-choice-body,\n"
+        f"{root_scope} .portal-interface-locale-input:focus-visible + .portal-interface-locale-choice-body"
+    )
+    assert "border-color: var(--portal-focus);" in focus_choice
+    assert "box-shadow: 0 0 0 3px var(--portal-focus-soft);" in focus_choice
+
+    checked_choice = declarations_for(
+        f"{root_scope} .portal-interface-locale-input:checked + .portal-interface-locale-choice-body"
+    )
+    assert "background: var(--portal-light-accent-soft);" in checked_choice
+
+    disabled_choice = declarations_for(
+        f"{root_scope} .portal-interface-locale-input:disabled + .portal-interface-locale-choice-body"
+    )
+    assert "background: var(--portal-surface-soft);" in disabled_choice
+    disabled_hover_choice = declarations_for(
+        f"{root_scope} .portal-interface-locale-choice:has(.portal-interface-locale-input:disabled):hover .portal-interface-locale-choice-body"
+    )
+    assert "transform: none;" in disabled_hover_choice
+
+    medium_grid = declarations_for(
+        f"{root_scope} :is(.portal-interface-locale-grid, .portal-interface-locale-boundary)",
+        at_rule_body("@media (max-width: 980px)"),
+    )
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in medium_grid
+    mobile_controls = declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-interface-locale-choice-body, .portal-button--quiet)",
+        at_rule_body("@media (max-width: 700px)"),
+    )
+    assert "min-height: 44px;" in mobile_controls
+    reduced_motion = declarations_for(
+        f"{root_scope} .portal-interface-locale-choice-body",
+        at_rule_body("@media (prefers-reduced-motion: reduce)"),
+    )
+    assert "transition: none;" in reduced_motion
+
+    assert "background: var(--portal-surface-light) !important;" in locale_css
+    selectors = _final_light_layer_selectors(locale_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", locale_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", locale_css.lower())
+    assert "linear-gradient" not in locale_css.lower()
+    assert "radial-gradient" not in locale_css.lower()
+    assert "conic-gradient" not in locale_css.lower()
+    assert "transparent" not in locale_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", locale_css)
