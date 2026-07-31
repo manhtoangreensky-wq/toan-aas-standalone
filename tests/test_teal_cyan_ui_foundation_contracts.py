@@ -4180,7 +4180,7 @@ def test_light_image_studio_final_surface_keeps_artboards_truthful_and_readable(
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Image Studio surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Image Studio surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4370,3 +4370,142 @@ def test_light_image_studio_final_surface_keeps_artboards_truthful_and_readable(
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", image_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", image_css)
+
+
+def test_light_music_sfx_final_surface_keeps_audio_planning_truthful_and_readable() -> None:
+    """Music planning stays explicit while legacy dark audio panels become light workspace surfaces."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Music and SFX surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    music_css = layer.group("css")
+    route = ".portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            music_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, "
+        ".portal-music-directions-intro, .portal-sfx-cue-sheet-intro)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, "
+        ".portal-music-directions-intro, .portal-sfx-cue-sheet-intro) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, "
+        ".portal-music-directions-intro, .portal-sfx-cue-sheet-intro) p"
+    )
+    metrics = declarations(
+        f"{route} :is(.portal-music-prompt-composer-intro, .portal-music-directions-intro, "
+        ".portal-sfx-cue-sheet-intro) dl > div"
+    )
+    metric_value = declarations(
+        f"{route} :is(.portal-music-prompt-composer-intro, .portal-music-directions-intro, "
+        ".portal-sfx-cue-sheet-intro) dt"
+    )
+    working_surfaces = declarations(
+        f"{route} :is(.portal-music-library-board, .portal-music-library-filter, .portal-music-library-guard, "
+        ".portal-music-library-boundary, .portal-music-prompt-composer-form, "
+        ".portal-music-prompt-composer-boundary, .portal-music-prompt-composer-result, "
+        ".portal-music-directions-form, .portal-music-directions-boundary, "
+        ".portal-music-directions-result, .portal-sfx-cue-sheet-form, "
+        ".portal-sfx-cue-sheet-boundary, .portal-sfx-cue-sheet-result)"
+    )
+    library_card = declarations(f"{route} .portal-music-library-card")
+    library_hover = declarations(f"{route} .portal-music-library-card:hover")
+    picker_card = declarations(
+        f"{route} :is(.portal-music-directions-preset-card, .portal-sfx-cue-sheet-preset-card)"
+    )
+    picker_selected = declarations(
+        f"{route} :is(.portal-music-directions-preset-card, .portal-sfx-cue-sheet-preset-card)[data-selected=\"true\"]"
+    )
+    guard_surface = declarations(
+        f"{route} :is(.portal-music-prompt-composer-guard-list span, "
+        ".portal-music-directions-guard-list span, .portal-sfx-cue-sheet-guard-list span)"
+    )
+    guard_status = declarations(
+        f"{route} :is(.portal-music-prompt-composer-guard-list em, "
+        ".portal-music-directions-guard-list em, .portal-sfx-cue-sheet-guard-list em)"
+    )
+    metadata = declarations(
+        f"{route} :is(.portal-music-prompt-composer-meta span, .portal-music-prompt-composer-tags span, "
+        ".portal-music-directions-meta span, .portal-sfx-cue-sheet-meta span, .portal-music-library-tags span)"
+    )
+    direction_rows = declarations(
+        f"{route} :is(.portal-music-prompt-composer-suggestions li, .portal-music-directions-list li, "
+        ".portal-sfx-cue-sheet-list li)"
+    )
+    detail_cells = declarations(
+        f"{route} :is(.portal-music-prompt-composer-suggestions dl > div, "
+        ".portal-music-prompt-composer-usage > dl > div, .portal-music-directions-list dl > div, "
+        ".portal-sfx-cue-sheet-list dl > div)"
+    )
+    selected_direction = declarations(f"{route} .portal-music-prompt-composer-suggestions li[data-selected=\"true\"]")
+    review = declarations(
+        f"{route} :is(.portal-music-prompt-composer-review, .portal-music-directions-review, .portal-sfx-cue-sheet-review)"
+    )
+    review_heading = declarations(
+        f"{route} :is(.portal-music-prompt-composer-review, .portal-music-directions-review, .portal-sfx-cue-sheet-review) strong"
+    )
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        music_css,
+        flags=re.DOTALL,
+    )
+
+    selector_lines = re.findall(r"(?m)^\s*(?!@)(?P<selector>[^\n{}]+)\s*\{", music_css)
+    assert selector_lines
+    assert all(selector.startswith(route) for selector in selector_lines)
+    assert "background: var(--portal-surface-light) !important;" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "background: var(--portal-surface-soft);" in metrics
+    assert "color: var(--portal-action);" in metric_value
+    assert "background: var(--portal-surface-light);" in working_surfaces
+    assert "box-shadow: none;" in working_surfaces
+    assert "background: var(--portal-surface-light);" in library_card
+    assert "background: var(--portal-light-hover-surface);" in library_hover
+    assert "transform: none;" in library_hover
+    assert "background: var(--portal-surface-light);" in picker_card
+    assert "border-color: var(--portal-border-strong);" in picker_selected
+    assert "background: var(--portal-surface-soft);" in picker_selected
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-action);" in guard_status
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "background: var(--portal-surface-light);" in direction_rows
+    assert "border-color: var(--portal-border);" in detail_cells
+    assert "background: var(--portal-surface-light);" in detail_cells
+    assert "border-color: var(--portal-border-strong);" in selected_direction
+    assert "background: var(--portal-light-hover-surface);" in selected_direction
+    assert "background: var(--portal-surface-soft);" in review
+    assert "color: var(--portal-warning);" in review_heading
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-music-library-grid" in mobile_selectors
+    assert ".portal-music-prompt-composer-layout" in mobile_selectors
+    assert ".portal-music-directions-layout" in mobile_selectors
+    assert ".portal-sfx-cue-sheet-layout" in mobile_selectors
+    assert ".portal-music-directions-preset-grid" in mobile_selectors
+    assert ".portal-sfx-cue-sheet-preset-grid" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", music_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", music_css)

@@ -7476,3 +7476,207 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Music and SFX surface */
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, .portal-music-directions-intro, .portal-sfx-cue-sheet-intro) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, .portal-music-directions-intro, .portal-sfx-cue-sheet-intro) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-intro, .portal-music-prompt-composer-intro, .portal-music-directions-intro, .portal-sfx-cue-sheet-intro) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-intro, .portal-music-directions-intro, .portal-sfx-cue-sheet-intro) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-intro, .portal-music-directions-intro, .portal-sfx-cue-sheet-intro) dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-intro dd, .portal-music-directions-intro dd, .portal-sfx-cue-sheet-intro dd) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-board, .portal-music-library-filter, .portal-music-library-guard, .portal-music-library-boundary, .portal-music-prompt-composer-form, .portal-music-prompt-composer-boundary, .portal-music-prompt-composer-result, .portal-music-directions-form, .portal-music-directions-boundary, .portal-music-directions-result, .portal-sfx-cue-sheet-form, .portal-sfx-cue-sheet-boundary, .portal-sfx-cue-sheet-result) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-music-library-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-music-library-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-card-copy h3, .portal-music-library-boundary strong, .portal-music-library-meta dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-card-copy p, .portal-music-library-card-footer > span, .portal-music-library-boundary span, .portal-music-library-meta dt, .portal-music-library-pagination) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-music-library-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-preset-card, .portal-sfx-cue-sheet-preset-card) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-preset-card, .portal-sfx-cue-sheet-preset-card):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-preset-card, .portal-sfx-cue-sheet-preset-card)[data-selected="true"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--portal-border-strong);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-picker legend, .portal-sfx-cue-sheet-picker legend, .portal-music-directions-preset-copy strong, .portal-sfx-cue-sheet-preset-copy strong, .portal-music-directions-list-head strong, .portal-sfx-cue-sheet-list-head strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-preset-copy small, .portal-sfx-cue-sheet-preset-copy small, .portal-music-directions-selection, .portal-sfx-cue-sheet-selection, .portal-music-directions-list p, .portal-sfx-cue-sheet-list p, .portal-music-directions-list dd, .portal-sfx-cue-sheet-list dd) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-guard-list span, .portal-music-directions-guard-list span, .portal-sfx-cue-sheet-guard-list span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-guard-list strong, .portal-music-directions-guard-list strong, .portal-sfx-cue-sheet-guard-list strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-guard-list em, .portal-music-directions-guard-list em, .portal-sfx-cue-sheet-guard-list em) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-meta span, .portal-music-prompt-composer-tags span, .portal-music-directions-meta span, .portal-sfx-cue-sheet-meta span, .portal-music-library-tags span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-suggestions, .portal-music-prompt-composer-usage) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-suggestions li, .portal-music-directions-list li, .portal-sfx-cue-sheet-list li) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-suggestions dl > div, .portal-music-prompt-composer-usage > dl > div, .portal-music-directions-list dl > div, .portal-sfx-cue-sheet-list dl > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-music-prompt-composer-suggestions li[data-selected="true"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: inset 0 0 0 1px var(--portal-border-strong);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-index, .portal-music-directions-index, .portal-sfx-cue-sheet-index, .portal-music-prompt-composer-suggestion-head em, .portal-music-directions-list-head em, .portal-sfx-cue-sheet-list-head em) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-suggestion-head strong, .portal-music-prompt-composer-usage h3, .portal-music-prompt-composer-suggestions dd, .portal-music-prompt-composer-usage dd, .portal-music-directions-list dd, .portal-sfx-cue-sheet-list dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-suggestions dt, .portal-music-prompt-composer-usage dt, .portal-music-directions-list dt, .portal-sfx-cue-sheet-list dt, .portal-music-prompt-composer-suggestions pre, .portal-music-prompt-composer-usage p) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-review, .portal-music-directions-review, .portal-sfx-cue-sheet-review) {
+  border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-review, .portal-music-directions-review, .portal-sfx-cue-sheet-review) strong {
+  color: var(--portal-warning);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-prompt-composer-review p, .portal-music-prompt-composer-review ul, .portal-music-directions-review ul, .portal-sfx-cue-sheet-review ul, .portal-sfx-cue-sheet-notice, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) .portal-sfx-cue-sheet-notice {
+  border-left-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-result[data-stale="true"], .portal-sfx-cue-sheet-result[data-stale="true"]) {
+  border-color: color-mix(in srgb, var(--portal-warning) 45%, var(--portal-border));
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-result[data-stale="true"]::after, .portal-sfx-cue-sheet-result[data-stale="true"]::after) {
+  color: var(--portal-warning);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-music-library, .portal-music-prompt-composer, .portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-library-grid, .portal-music-library-meta, .portal-music-prompt-composer-intro dl, .portal-music-prompt-composer-layout, .portal-music-prompt-composer-guard-list, .portal-music-prompt-composer-suggestions dl, .portal-music-prompt-composer-usage, .portal-music-prompt-composer-usage > dl, .portal-music-directions-intro dl, .portal-music-directions-layout, .portal-music-directions-preset-grid, .portal-music-directions-guard-list, .portal-sfx-cue-sheet-intro dl, .portal-sfx-cue-sheet-layout, .portal-sfx-cue-sheet-preset-grid, .portal-sfx-cue-sheet-guard-list) {
+    grid-template-columns: 1fr;
+  }
+}
