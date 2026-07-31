@@ -7680,3 +7680,244 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Project Center surface */
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-operations-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-operations-summary dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-operations-summary dd {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-summary dt {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-primary, .portal-project-operations-library, .portal-project-operations-boundary, .portal-project-operations-create) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-detail-grid > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-primary h2, .portal-project-operations-library .portal-card-title, .portal-project-operations-boundary .portal-card-title, .portal-project-operations-create .portal-card-title, .portal-project-detail-grid > .portal-card .portal-card-title) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-primary p, .portal-project-operations-create-guard span, .portal-project-operations-library .portal-card-subtitle, .portal-project-operations-boundary .portal-card-subtitle, .portal-project-operations-create .portal-card-subtitle, .portal-project-detail-grid > .portal-card .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-operations-create-guard {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-operations-create-guard strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-card .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-document strong, .portal-project-editor .portal-card-title) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-card .portal-card-subtitle, .portal-project-card .portal-summary-key, .portal-project-card .portal-summary-value) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-document small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-document {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-document-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-steps strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-steps span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-steps li::before {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-new-document, .portal-project-history) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-editor {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-version-list {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-version-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-version-row strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-version-row small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-package-panel, .portal-project-package-actions) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-package-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-package-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-package-meta dt, .portal-project-package-meta dd) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-package-meta dd {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) .portal-project-package-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-package-actions strong, .portal-project-package-card .portal-card-title) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-package-actions span, .portal-project-package-card .portal-card-subtitle) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-card, .portal-project-document, .portal-project-package-card):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-button, .portal-input, .portal-select, .portal-textarea) {
+  min-height: 44px;
+}
+
+.portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-project-center, .portal-project-center-authoring, .portal-project-detail) :is(.portal-project-operations-summary, .portal-project-operations-authoring-intro, .portal-project-operations-summary dl, .portal-project-summary dl, .portal-project-operations-workspace, .portal-project-operations-authoring-layout, .portal-project-grid, .portal-project-filter .portal-fields, .portal-project-detail-grid, .portal-project-package-grid, .portal-project-package-meta) {
+    grid-template-columns: 1fr;
+  }
+}
