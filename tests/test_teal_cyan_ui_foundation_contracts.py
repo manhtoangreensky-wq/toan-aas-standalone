@@ -5454,3 +5454,104 @@ def test_light_account_activity_final_surface_keeps_owner_scoped_log_clear() -> 
     assert "conic-gradient" not in activity_css.lower()
     assert "transparent" not in activity_css.lower()
     assert not re.search(r"var\(--(?!portal-)", activity_css)
+
+
+def test_light_data_controls_final_surface_keeps_review_boundary_clear() -> None:
+    """Privacy review controls remain explicit without inventing deletion behavior."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Data Controls surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    controls_css = layer.group("css")
+    root_scope = ".portal-page.portal-account-data-controls"
+    required = (
+        ".portal-settings-nav",
+        ".portal-support-intro",
+        ".portal-state",
+        ".portal-panel-row",
+        ".portal-project-steps",
+        ".portal-notice",
+        ".portal-checkbox",
+        ".portal-button--quiet",
+        ":disabled",
+        ":focus-visible",
+        "@media (max-width: 980px)",
+        "@media (max-width: 700px)",
+        "@media (prefers-reduced-motion: reduce)",
+        "min-height: 44px;",
+    )
+
+    for evidence in required:
+        assert evidence in controls_css
+
+    def at_rule_body(at_rule: str) -> str:
+        start = controls_css.index(at_rule)
+        opening_brace = controls_css.index("{", start)
+        depth = 0
+        for index in range(opening_brace, len(controls_css)):
+            if controls_css[index] == "{":
+                depth += 1
+            elif controls_css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return controls_css[opening_brace + 1 : index]
+        raise AssertionError(f"unclosed {at_rule}")
+
+    def declarations_for(selector: str, css: str = controls_css) -> str:
+        rule = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>[^}}]*)\}}",
+            css,
+            flags=re.DOTALL,
+        )
+        assert rule is not None, selector
+        return rule.group("declarations")
+
+    assert "background: var(--portal-surface-light) !important;" in declarations_for(
+        f"{root_scope} .portal-support-intro"
+    )
+    assert "background: var(--portal-surface-light) !important;" in declarations_for(
+        f"{root_scope} .portal-state"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-panel-row"
+    )
+    assert "color: var(--portal-ink) !important;" in declarations_for(
+        f"{root_scope} .portal-checkbox"
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)"
+    )
+    assert "opacity: 0.64;" in declarations_for(
+        f"{root_scope} .portal-button:disabled"
+    )
+    assert "outline: 3px solid var(--portal-focus) !important;" in declarations_for(
+        f"{root_scope} :is(button, a, input, select, textarea, summary):focus-visible"
+    )
+    assert "grid-template-columns: 1fr;" in declarations_for(
+        f"{root_scope} .portal-support-intro",
+        at_rule_body("@media (max-width: 980px)"),
+    )
+    assert "min-height: 44px;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-button, .portal-checkbox)",
+        at_rule_body("@media (max-width: 700px)"),
+    )
+    assert "transition: none;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-button, .portal-checkbox)",
+        at_rule_body("@media (prefers-reduced-motion: reduce)"),
+    )
+
+    selectors = _final_light_layer_selectors(controls_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", controls_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", controls_css.lower())
+    assert "linear-gradient" not in controls_css.lower()
+    assert "radial-gradient" not in controls_css.lower()
+    assert "conic-gradient" not in controls_css.lower()
+    assert "transparent" not in controls_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", controls_css)
