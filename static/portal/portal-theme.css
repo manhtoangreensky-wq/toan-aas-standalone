@@ -7921,3 +7921,262 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Asset Vault surface */
+.portal-page.portal-asset-vault .portal-vault-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-intro h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page.portal-asset-vault .portal-vault-intro p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-intro dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-asset-vault .portal-vault-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page.portal-asset-vault .portal-vault-intro dd {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-card-title {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-asset-vault .portal-card-subtitle {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-field > :is(span, label) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault :is(.portal-field-help, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault :is(.portal-input, .portal-select, .portal-textarea) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-dropzone {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault :is(.portal-vault-dropzone:hover, .portal-vault-dropzone:focus-within) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-dropzone-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-asset-vault .portal-vault-dropzone strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-dropzone small {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-file-input {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-file-input::file-selector-button {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-asset-vault .portal-vault-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-asset-vault .portal-vault-card .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-card .portal-card-subtitle {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-file-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-asset-vault .portal-vault-meta > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-asset-vault .portal-vault-meta dt {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-vault-meta dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-project-steps li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page.portal-asset-vault .portal-project-steps strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-project-steps span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-project-steps li::before {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-asset-vault .portal-summary-item {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page.portal-asset-vault .portal-summary-key {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-summary-value {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-panel-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-asset-vault .portal-panel-row strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-panel-row span {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-panel-row-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-asset-vault .portal-empty {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-asset-vault .portal-empty h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-asset-vault .portal-empty p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-asset-vault .portal-state h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-asset-vault .portal-state p {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault .portal-state-meta span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page.portal-asset-vault :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-asset-vault :is(.portal-vault-intro, .portal-vault-intro dl, .portal-vault-layout, .portal-vault-grid, .portal-vault-meta, .portal-vault-filter .portal-fields) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-asset-vault :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-vault-file-input::file-selector-button) {
+    min-height: 44px;
+  }
+}

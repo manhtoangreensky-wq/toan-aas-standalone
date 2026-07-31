@@ -4516,7 +4516,7 @@ def test_light_project_center_final_surface_keeps_authoring_and_history_readable
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Project Center surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Project Center surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4633,3 +4633,147 @@ def test_light_project_center_final_surface_keeps_authoring_and_history_readable
     assert "min-height: 44px;" in project_css
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", project_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", project_css)
+
+
+def test_light_asset_vault_final_surface_keeps_private_storage_states_readable() -> None:
+    """Asset Vault stays owner-scoped and truthful while its legacy dark surface becomes light."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Asset Vault surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    asset_css = layer.group("css")
+    route = ".portal-page.portal-asset-vault"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            asset_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    intro = declarations(f"{route} .portal-vault-intro")
+    intro_heading = declarations(f"{route} .portal-vault-intro h2")
+    intro_copy = declarations(f"{route} .portal-vault-intro p")
+    intro_metric = declarations(f"{route} .portal-vault-intro dl > div")
+    intro_metric_value = declarations(f"{route} .portal-vault-intro dt")
+    intro_metric_label = declarations(f"{route} .portal-vault-intro dd")
+    card_surface = declarations(f"{route} .portal-card")
+    field_label = declarations(f"{route} .portal-field > :is(span, label)")
+    field_help = declarations(f"{route} :is(.portal-field-help, .portal-form-note)")
+    input_surface = declarations(f"{route} :is(.portal-input, .portal-select, .portal-textarea)")
+    dropzone = declarations(f"{route} .portal-vault-dropzone")
+    dropzone_interaction = declarations(f"{route} :is(.portal-vault-dropzone:hover, .portal-vault-dropzone:focus-within)")
+    dropzone_icon = declarations(f"{route} .portal-vault-dropzone-icon")
+    dropzone_text = declarations(f"{route} .portal-vault-dropzone strong")
+    dropzone_copy = declarations(f"{route} .portal-vault-dropzone small")
+    file_input = declarations(f"{route} .portal-vault-file-input")
+    file_button = declarations(f"{route} .portal-vault-file-input::file-selector-button")
+    filter_surface = declarations(f"{route} .portal-vault-filter")
+    pagination = declarations(f"{route} .portal-vault-pagination")
+    vault_card = declarations(f"{route} .portal-vault-card")
+    vault_hover = declarations(f"{route} .portal-vault-card:hover")
+    vault_title = declarations(f"{route} .portal-vault-card .portal-card-title")
+    vault_copy = declarations(f"{route} .portal-vault-card .portal-card-subtitle")
+    file_icon = declarations(f"{route} .portal-vault-file-icon")
+    vault_meta = declarations(f"{route} .portal-vault-meta > div")
+    vault_meta_key = declarations(f"{route} .portal-vault-meta dt")
+    vault_meta_value = declarations(f"{route} .portal-vault-meta dd")
+    step_row = declarations(f"{route} .portal-project-steps li")
+    step_title = declarations(f"{route} .portal-project-steps strong")
+    step_copy = declarations(f"{route} .portal-project-steps span")
+    step_marker = declarations(f"{route} .portal-project-steps li::before")
+    lifecycle_summary = declarations(f"{route} .portal-summary-item")
+    lifecycle_key = declarations(f"{route} .portal-summary-key")
+    lifecycle_value = declarations(f"{route} .portal-summary-value")
+    lifecycle_row = declarations(f"{route} .portal-panel-row")
+    lifecycle_title = declarations(f"{route} .portal-panel-row strong")
+    lifecycle_copy = declarations(f"{route} .portal-panel-row span")
+    lifecycle_icon = declarations(f"{route} .portal-panel-row-icon")
+    empty = declarations(f"{route} .portal-empty")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        asset_css,
+        flags=re.DOTALL,
+    )
+    mobile_controls = re.search(
+        r"@media \(max-width: 700px\)\s*\{(?P<css>.*)\}\s*\Z",
+        asset_css,
+        flags=re.DOTALL,
+    )
+
+    selector_lines = re.findall(r"(?m)^\s*(?!@)(?P<selector>[^\n{}]+)\s*\{", asset_css)
+    assert selector_lines
+    assert all(selector.startswith(route) for selector in selector_lines)
+    assert "background: var(--portal-surface-light) !important;" in intro
+    assert "box-shadow: none;" in intro
+    assert "color: var(--portal-ink);" in intro_heading
+    assert "color: var(--portal-muted);" in intro_copy
+    assert "background: var(--portal-surface-soft);" in intro_metric
+    assert "color: var(--portal-action);" in intro_metric_value
+    assert "color: var(--portal-muted);" in intro_metric_label
+    assert "background: var(--portal-surface-light);" in card_surface
+    assert "box-shadow: none;" in card_surface
+    assert "color: var(--portal-ink);" in field_label
+    assert "color: var(--portal-muted);" in field_help
+    assert "background: var(--portal-surface-light);" in input_surface
+    assert "color: var(--portal-ink);" in input_surface
+    assert "background: var(--portal-surface-soft);" in dropzone
+    assert "border-color: var(--portal-border-strong);" in dropzone_interaction
+    assert "transform: none;" in dropzone_interaction
+    assert "background: var(--portal-surface-light);" in dropzone_icon
+    assert "color: var(--portal-action);" in dropzone_icon
+    assert "color: var(--portal-ink);" in dropzone_text
+    assert "color: var(--portal-muted);" in dropzone_copy
+    assert "color: var(--portal-muted);" in file_input
+    assert "background: var(--portal-surface-light);" in file_button
+    assert "color: var(--portal-action);" in file_button
+    assert "background: var(--portal-surface-light);" in filter_surface
+    assert "color: var(--portal-muted);" in pagination
+    assert "background: var(--portal-surface-light);" in vault_card
+    assert "background: var(--portal-light-hover-surface);" in vault_hover
+    assert "transform: none;" in vault_hover
+    assert "color: var(--portal-ink);" in vault_title
+    assert "color: var(--portal-muted);" in vault_copy
+    assert "background: var(--portal-surface-soft);" in file_icon
+    assert "color: var(--portal-action);" in file_icon
+    assert "background: var(--portal-surface-soft);" in vault_meta
+    assert "color: var(--portal-muted);" in vault_meta_key
+    assert "color: var(--portal-ink);" in vault_meta_value
+    assert "border-top-color: var(--portal-border);" in step_row
+    assert "color: var(--portal-ink);" in step_title
+    assert "color: var(--portal-muted);" in step_copy
+    assert "background: var(--portal-action);" in step_marker
+    assert "box-shadow: none;" in step_marker
+    assert "border-bottom-color: var(--portal-border);" in lifecycle_summary
+    assert "color: var(--portal-muted);" in lifecycle_key
+    assert "color: var(--portal-ink);" in lifecycle_value
+    assert "background: var(--portal-surface-soft);" in lifecycle_row
+    assert "color: var(--portal-ink);" in lifecycle_title
+    assert "color: var(--portal-muted);" in lifecycle_copy
+    assert "background: var(--portal-surface-light);" in lifecycle_icon
+    assert "background: var(--portal-surface-soft);" in empty
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-vault-intro" in mobile_selectors
+    assert ".portal-vault-intro dl" in mobile_selectors
+    assert ".portal-vault-layout" in mobile_selectors
+    assert ".portal-vault-grid" in mobile_selectors
+    assert ".portal-vault-meta" in mobile_selectors
+    assert ".portal-vault-filter .portal-fields" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert mobile_controls is not None
+    assert f"{route} :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-vault-file-input::file-selector-button)" in mobile_controls.group("css")
+    assert "min-height: 44px;" in mobile_controls.group("css")
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", asset_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", asset_css)
