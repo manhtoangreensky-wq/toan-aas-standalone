@@ -10555,3 +10555,149 @@ body {
     transition: none;
   }
 }
+
+/* Final light Account Activity surface */
+.portal-page.portal-account-activity {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-activity .portal-settings-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-settings-nav a {
+  border-color: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-activity .portal-settings-nav a:is(:hover, :focus-visible) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-activity .portal-settings-nav a[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-activity .portal-campaign-boundary {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-state {
+  border-color: var(--portal-border) !important;
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-state-icon {
+  color: var(--portal-context);
+}
+
+.portal-page.portal-account-activity .portal-state h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-activity .portal-state p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-activity .portal-state-meta span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-activity .portal-data-table-wrap {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-data-table :is(th, td) {
+  border-bottom-color: var(--portal-table-divider);
+}
+
+.portal-page.portal-account-activity .portal-data-table th {
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-activity .portal-data-table td {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-activity .portal-data-table tbody tr:hover {
+  background: var(--portal-light-hover-surface);
+}
+
+.portal-page.portal-account-activity .portal-notice {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-notice strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-activity .portal-notice p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-activity .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-activity .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-account-activity .portal-button:disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page.portal-account-activity :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-account-activity .portal-inline-actions {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .portal-page.portal-account-activity :is(.portal-settings-nav a, .portal-button) {
+    min-height: 44px;
+  }
+
+  .portal-page.portal-account-activity .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-light-hover-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-account-activity :is(.portal-settings-nav a, .portal-button) {
+    transition: none;
+  }
+}
