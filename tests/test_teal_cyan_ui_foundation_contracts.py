@@ -5555,3 +5555,116 @@ def test_light_data_controls_final_surface_keeps_review_boundary_clear() -> None
     assert "conic-gradient" not in controls_css.lower()
     assert "transparent" not in controls_css.lower()
     assert not re.search(r"var\(--(?!portal-)", controls_css)
+
+
+def test_light_account_hub_final_surface_keeps_signed_account_actions_clear() -> None:
+    """Account presentation remains clear without changing signed ownership rules."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Account Hub surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    account_css = layer.group("css")
+    root_scope = ".portal-page.portal-account-page"
+    required = (
+        ".portal-settings-nav",
+        ".portal-account-command",
+        ".portal-account-command-facts",
+        ".portal-account-session",
+        ".portal-summary-item",
+        ".portal-oauth-method",
+        ".portal-bot-companion-card",
+        ".portal-account-assurance",
+        ".portal-notice",
+        "auth-logout",
+        ".portal-button--quiet",
+        ":disabled",
+        ":focus-visible",
+        "@media (max-width: 1040px)",
+        "@media (max-width: 700px)",
+        "@media (prefers-reduced-motion: reduce)",
+        "min-height: 44px;",
+    )
+
+    for evidence in required:
+        assert evidence in account_css
+
+    def at_rule_body(at_rule: str) -> str:
+        start = account_css.index(at_rule)
+        opening_brace = account_css.index("{", start)
+        depth = 0
+        for index in range(opening_brace, len(account_css)):
+            if account_css[index] == "{":
+                depth += 1
+            elif account_css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return account_css[opening_brace + 1 : index]
+        raise AssertionError(f"unclosed {at_rule}")
+
+    def declarations_for(selector: str, css: str = account_css) -> str:
+        rule = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>[^}}]*)\}}",
+            css,
+            flags=re.DOTALL,
+        )
+        assert rule is not None, selector
+        return rule.group("declarations")
+
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-account-command"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-account-command-facts > div"
+    )
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-account-session"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-oauth-method"
+    )
+    assert "color: var(--portal-danger);" in declarations_for(
+        f'{root_scope} [data-portal-action="auth-logout"]'
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)"
+    )
+    assert "opacity: 0.64;" in declarations_for(
+        f"{root_scope} .portal-button:disabled"
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button:disabled"
+    )
+    assert "transform: none;" in declarations_for(
+        f'{root_scope} [data-portal-action="auth-logout"]:is(:hover, :focus-visible)'
+    )
+    assert "outline: 3px solid var(--portal-focus) !important;" in declarations_for(
+        f"{root_scope} :is(button, a, input, select, textarea, summary):focus-visible"
+    )
+    assert "grid-template-columns: minmax(0, 1fr) auto;" in declarations_for(
+        f"{root_scope} .portal-account-command",
+        at_rule_body("@media (max-width: 1040px)"),
+    )
+    assert "min-height: 44px;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-button)",
+        at_rule_body("@media (max-width: 700px)"),
+    )
+    assert "transition: none;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-button)",
+        at_rule_body("@media (prefers-reduced-motion: reduce)"),
+    )
+
+    selectors = _final_light_layer_selectors(account_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", account_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", account_css.lower())
+    assert "linear-gradient" not in account_css.lower()
+    assert "radial-gradient" not in account_css.lower()
+    assert "conic-gradient" not in account_css.lower()
+    assert "transparent" not in account_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", account_css)
