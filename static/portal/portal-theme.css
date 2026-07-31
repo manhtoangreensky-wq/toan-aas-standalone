@@ -11311,3 +11311,322 @@ body {
     transition: none;
   }
 }
+
+/* Final light First-run Workspace surface */
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) > .portal-hero {
+  margin-bottom: 4px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps {
+  gap: 12px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps li > span {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps li[data-state="done"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-accent-soft);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps li[data-state="done"] > span {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps :is(strong, small) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps small {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context :is(h2, p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context-meta span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context-meta .portal-icon {
+  color: var(--portal-context);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-form {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-form .portal-select {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus > legend {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus > p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus > .portal-workspace-setup-focus-status {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card:is(:hover, :focus-within) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card:focus-within {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card:has(input:checked) {
+  border-color: var(--portal-action);
+  background: var(--portal-light-accent-soft);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card:has(input:disabled) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card:has(input:disabled):hover {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card :is(strong, small) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-focus-card small {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kits-layout {
+  gap: 20px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+  transition: border-color var(--portal-motion-fast), background var(--portal-motion-fast);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-detail-card,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-confirmation,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-scope {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-card:is(:hover, :focus-within) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-card:focus-within {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-heading .portal-module-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-outcome,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-scope-section li,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-back-link {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-counts > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-counts dt {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-counts dd,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-starter-kit-scope-section h3, .portal-starter-kit-creates h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-scope-section {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-scope-section li::before,
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-back-link:hover {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-confirm-check {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink) !important;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-confirm-check:focus-within {
+  border-color: var(--portal-border-strong);
+  box-shadow: none;
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-empty {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-empty :is(h3, p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-empty p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-empty-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-button:disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kits-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-scope {
+    position: static;
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-workspace-setup-context, .portal-workspace-setup-form, .portal-starter-kit-card, .portal-starter-kit-detail-card, .portal-starter-kit-confirmation, .portal-starter-kit-scope) {
+    padding: 16px;
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-workspace-setup-context {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-workspace-setup-steps, .portal-workspace-setup-form-grid, .portal-workspace-setup-focus-grid, .portal-starter-kit-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) .portal-starter-kit-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-workspace-setup-form .portal-select, .portal-workspace-setup-form .portal-button, .portal-starter-kit-actions .portal-button, .portal-starter-kit-confirmation .portal-button, .portal-button--quiet) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-workspace-setup-focus-card, .portal-starter-kit-card, .portal-button, .portal-starter-kit-confirm-check) {
+    transition: none;
+    transform: none;
+  }
+
+  .portal-page:is(.portal-workspace-setup, .portal-starter-kits) :is(.portal-workspace-setup-focus-card:hover, .portal-starter-kit-card:hover) {
+    transform: none;
+  }
+}

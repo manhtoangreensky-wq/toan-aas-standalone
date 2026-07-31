@@ -5039,6 +5039,139 @@ def _final_light_layer_selectors(css: str) -> list[str]:
     ]
 
 
+def _matching_css_brace(css: str, opening_brace: int) -> int:
+    """Return the closing brace while respecting CSS strings."""
+
+    depth = 0
+    quote = ""
+    escaped = False
+
+    for index in range(opening_brace, len(css)):
+        character = css[index]
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = ""
+            continue
+        if character in {"'", '"'}:
+            quote = character
+        elif character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                return index
+
+    raise AssertionError("unclosed CSS block")
+
+
+def _split_css_declarations(block: str) -> list[str]:
+    """Split declarations without treating semicolons in functions or strings as separators."""
+
+    declarations: list[str] = []
+    current: list[str] = []
+    parenthesis_depth = 0
+    bracket_depth = 0
+    quote = ""
+    escaped = False
+
+    for character in block:
+        if quote:
+            current.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = ""
+            continue
+        if character in {"'", '"'}:
+            quote = character
+        elif character == "(":
+            parenthesis_depth += 1
+        elif character == ")":
+            parenthesis_depth = max(0, parenthesis_depth - 1)
+        elif character == "[":
+            bracket_depth += 1
+        elif character == "]":
+            bracket_depth = max(0, bracket_depth - 1)
+        elif character == ";" and parenthesis_depth == 0 and bracket_depth == 0:
+            declaration = "".join(current).strip()
+            if declaration:
+                declarations.append(declaration)
+            current = []
+            continue
+        current.append(character)
+
+    final_declaration = "".join(current).strip()
+    if final_declaration:
+        declarations.append(final_declaration)
+    return declarations
+
+
+def _parse_css_declarations(block: str) -> dict[str, str]:
+    """Parse a declaration block into exact property/value pairs."""
+
+    parsed: dict[str, str] = {}
+    for declaration in _split_css_declarations(block):
+        property_name, separator, value = declaration.partition(":")
+        assert separator, declaration
+        property_name = property_name.strip()
+        assert property_name not in parsed, property_name
+        parsed[property_name] = " ".join(value.split())
+    return parsed
+
+
+def _parse_css_rules(css: str, at_rules: tuple[str, ...] = ()) -> list[dict[str, object]]:
+    """Parse selector rules and retain their enclosing at-rule path."""
+
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    rules: list[dict[str, object]] = []
+    cursor = 0
+    while cursor < len(css):
+        opening_brace = css.find("{", cursor)
+        if opening_brace < 0:
+            assert not css[cursor:].strip(), css[cursor:]
+            break
+        header = " ".join(css[cursor:opening_brace].split())
+        assert header, css[cursor:opening_brace]
+        closing_brace = _matching_css_brace(css, opening_brace)
+        body = css[opening_brace + 1 : closing_brace]
+        if header.startswith("@"):
+            rules.extend(_parse_css_rules(body, at_rules + (header,)))
+        else:
+            rules.append(
+                {
+                    "at_rules": at_rules,
+                    "selectors": _split_top_level_css_selector_list(header),
+                    "declarations": _parse_css_declarations(body),
+                }
+            )
+        cursor = closing_brace + 1
+    return rules
+
+
+def _css_declarations_for(
+    rules: list[dict[str, object]],
+    selector: str,
+    *,
+    at_rule: str | None = None,
+) -> dict[str, str]:
+    """Return one selector's declarations in the requested at-rule context."""
+
+    at_rules = () if at_rule is None else (at_rule,)
+    matches = [
+        rule["declarations"]
+        for rule in rules
+        if rule["at_rules"] == at_rules and selector in rule["selectors"]
+    ]
+    assert len(matches) == 1, (selector, at_rule, len(matches))
+    return matches[0]  # type: ignore[return-value]
+
+
 def _split_top_level_css_selector_list(selector_group: str) -> list[str]:
     """Split a selector list without treating commas inside :is(...) as branches."""
 
@@ -5810,3 +5943,162 @@ def test_light_onboarding_final_surface_keeps_web_first_path_and_guarded_link_cl
     assert "conic-gradient" not in onboarding_css.lower()
     assert "transparent" not in onboarding_css.lower()
     assert not re.search(r"var\(--(?!portal-)", onboarding_css)
+
+
+def test_light_first_run_workspace_final_surface_keeps_setup_and_starter_kits_clear() -> None:
+    """First-run choices remain readable without changing their signed Web workflow."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light First-run Workspace surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    first_run_css = layer.group("css")
+    root_scope = ".portal-page:is(.portal-workspace-setup, .portal-starter-kits)"
+    rules = _parse_css_rules(first_run_css)
+
+    def assert_declarations(
+        selector: str,
+        expected: dict[str, str],
+        *,
+        at_rule: str | None = None,
+    ) -> None:
+        declarations = _css_declarations_for(rules, selector, at_rule=at_rule)
+        assert {name: declarations.get(name) for name in expected} == expected
+
+    assert_declarations(root_scope, {"color": "var(--portal-ink)"})
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-form",
+        {"background": "var(--portal-surface-light)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-context-meta span",
+        {"background": "var(--portal-surface-soft)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-focus-card:is(:hover, :focus-within)",
+        {"transform": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-focus-card:has(input:checked)",
+        {"background": "var(--portal-light-accent-soft)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-focus-card:has(input:disabled)",
+        {"opacity": "0.64", "transform": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-card",
+        {"background": "var(--portal-surface-light)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-card:is(:hover, :focus-within)",
+        {"transform": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-counts > div",
+        {"background": "var(--portal-surface-soft)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-confirm-check",
+        {
+            "background": "var(--portal-surface-soft)",
+            "color": "var(--portal-ink) !important",
+        },
+    )
+    assert_declarations(
+        f"{root_scope} .portal-empty",
+        {"background": "var(--portal-surface-light)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)",
+        {"transform": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-button:disabled",
+        {"opacity": "0.64", "transform": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} :is(button, a, input, select, textarea):focus-visible",
+        {"outline": "3px solid var(--portal-focus) !important"},
+    )
+
+    medium = "@media (max-width: 980px)"
+    assert_declarations(
+        f"{root_scope} .portal-starter-kits-layout",
+        {"grid-template-columns": "minmax(0, 1fr)"},
+        at_rule=medium,
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-scope",
+        {"position": "static"},
+        at_rule=medium,
+    )
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-steps",
+        {"grid-template-columns": "repeat(2, minmax(0, 1fr))"},
+        at_rule=medium,
+    )
+
+    mobile = "@media (max-width: 700px)"
+    assert_declarations(
+        f"{root_scope} .portal-workspace-setup-context",
+        {"grid-template-columns": "minmax(0, 1fr)"},
+        at_rule=mobile,
+    )
+    assert_declarations(
+        f"{root_scope} :is(.portal-workspace-setup-steps, .portal-workspace-setup-form-grid, .portal-workspace-setup-focus-grid, .portal-starter-kit-grid)",
+        {"grid-template-columns": "1fr"},
+        at_rule=mobile,
+    )
+    assert_declarations(
+        f"{root_scope} .portal-starter-kit-counts",
+        {"grid-template-columns": "repeat(2, minmax(0, 1fr))"},
+        at_rule=mobile,
+    )
+    assert_declarations(
+        f"{root_scope} :is(.portal-workspace-setup-form .portal-select, .portal-workspace-setup-form .portal-button, .portal-starter-kit-actions .portal-button, .portal-starter-kit-confirmation .portal-button, .portal-button--quiet)",
+        {"min-height": "44px"},
+        at_rule=mobile,
+    )
+
+    reduced_motion = "@media (prefers-reduced-motion: reduce)"
+    assert_declarations(
+        f"{root_scope} :is(.portal-workspace-setup-focus-card, .portal-starter-kit-card, .portal-button, .portal-starter-kit-confirm-check)",
+        {"transition": "none", "transform": "none"},
+        at_rule=reduced_motion,
+    )
+    assert_declarations(
+        f"{root_scope} :is(.portal-workspace-setup-focus-card:hover, .portal-starter-kit-card:hover)",
+        {"transform": "none"},
+        at_rule=reduced_motion,
+    )
+
+    selectors = [selector for rule in rules for selector in rule["selectors"]]
+    assert selectors
+    scope_boundary = re.compile(rf"{re.escape(root_scope)}(?:$|(?=[\s>+~:#.\[]))")
+    assert all(scope_boundary.match(selector) for selector in selectors)
+    assert {rule["at_rules"] for rule in rules} == {
+        (),
+        (medium,),
+        (mobile,),
+        (reduced_motion,),
+    }
+
+    declaration_values = " ".join(
+        value
+        for rule in rules
+        for value in rule["declarations"].values()
+    )
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", declaration_values)
+    assert not re.search(r"\b(?:rgba?|hsla?)\s*\(", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(
+        r"\b(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(",
+        declaration_values,
+        flags=re.IGNORECASE,
+    )
+    assert not re.search(r"(?<![-\w])transparent(?![-\w])", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(r"var\(\s*--(?!portal-)", declaration_values)
