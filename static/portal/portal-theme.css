@@ -7072,3 +7072,211 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final light Voice Studio surface */
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) h2 {
+  color: var(--portal-ink);
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.18;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) p {
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-intro dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro dd, .portal-voice-studio-detail-summary dt) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-detail-summary dd {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-create, .portal-voice-studio-editor, .portal-voice-script-create, .portal-voice-studio-policy, .portal-voice-studio-composer, .portal-voice-studio-activity, .portal-voice-studio-boundary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-field > label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-guard-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-guard-list strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-guard-list em {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-vault-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-vault-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-vault-card.is-default {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--portal-border-strong);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-script-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-vault-meta span, .portal-voice-script-meta span, .portal-voice-studio-tags span, .portal-voice-reference-list span) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-default {
+  border-color: color-mix(in srgb, var(--portal-action) 35%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-policy-flag {
+  border-color: color-mix(in srgb, var(--portal-danger) 35%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-danger) 6%, var(--portal-surface-light));
+  color: var(--portal-danger);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-filter {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-pagination {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-sheet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-sheet h4 {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-sheet p {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-metrics span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-sheet li {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-cue-sheet li > span {
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-cue-sheet time, .portal-voice-cue-sheet small) {
+  color: var(--portal-muted);
+  font: 12px/1.5 var(--portal-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-script-form, .portal-voice-script-history) {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-script-history > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-version-list > article {
+  border-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-card-title {
+  color: var(--portal-ink);
+  font-size: 16px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-script-history > strong, .portal-voice-version-list strong, .portal-voice-studio-events strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-script-history > div, .portal-voice-script-history em, .portal-voice-version-list p, .portal-voice-version-list small, .portal-voice-studio-events small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-events > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) .portal-voice-studio-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-action) 12%, transparent);
+}
+
+.portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-voice-studio, .portal-voice-studio-detail) :is(.portal-voice-studio-intro dl, .portal-voice-studio-detail-summary dl, .portal-voice-studio-guard-list, .portal-voice-studio-layout, .portal-voice-studio-detail-grid, .portal-voice-studio-history-grid, .portal-voice-vault-grid, .portal-voice-script-grid, .portal-voice-script-form .portal-fields) {
+    grid-template-columns: 1fr;
+  }
+}

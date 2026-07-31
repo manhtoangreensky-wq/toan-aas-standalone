@@ -3864,7 +3864,7 @@ def test_light_content_studio_final_surface_keeps_private_authoring_readable() -
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Content Studio surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Content Studio surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4006,3 +4006,170 @@ def test_light_content_studio_final_surface_keeps_private_authoring_readable() -
     assert "grid-template-columns: 1fr;" in mobile.group("declarations")
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", content_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", content_css)
+
+
+def test_light_voice_studio_final_surface_keeps_direction_and_consent_readable() -> None:
+    """Voice direction stays truthful while the old orange/dark shell is removed."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Voice Studio surface \*/(?P<css>.*)\Z",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    voice_css = layer.group("css")
+    route = ".portal-page:is(.portal-voice-studio, .portal-voice-studio-detail)"
+
+    def declarations(selector: str) -> str:
+        match = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>.*?)\n\}}",
+            voice_css,
+            flags=re.DOTALL,
+        )
+        assert match is not None
+        return match.group("declarations")
+
+    summary = declarations(
+        f"{route} :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary)"
+    )
+    summary_heading = declarations(
+        f"{route} :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) h2"
+    )
+    summary_copy = declarations(
+        f"{route} :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) p"
+    )
+    summary_metric = declarations(
+        f"{route} :is(.portal-voice-studio-intro, .portal-voice-studio-detail-summary) dl > div"
+    )
+    summary_metric_value = declarations(f"{route} .portal-voice-studio-intro dt")
+    summary_label = declarations(
+        f"{route} :is(.portal-voice-studio-intro dd, .portal-voice-studio-detail-summary dt)"
+    )
+    summary_value = declarations(f"{route} .portal-voice-studio-detail-summary dd")
+    authoring_surfaces = declarations(
+        f"{route} :is(.portal-voice-studio-create, .portal-voice-studio-editor, "
+        ".portal-voice-script-create, .portal-voice-studio-policy, "
+        ".portal-voice-studio-composer, .portal-voice-studio-activity, "
+        ".portal-voice-studio-boundary)"
+    )
+    field_label = declarations(f"{route} .portal-field > label")
+    guard_surface = declarations(f"{route} .portal-voice-studio-guard-list span")
+    guard_label = declarations(f"{route} .portal-voice-studio-guard-list strong")
+    guard_status = declarations(f"{route} .portal-voice-studio-guard-list em")
+    vault_card = declarations(f"{route} .portal-voice-vault-card")
+    vault_hover = declarations(f"{route} .portal-voice-vault-card:hover")
+    default_vault = declarations(f"{route} .portal-voice-vault-card.is-default")
+    script_card = declarations(f"{route} .portal-voice-script-card")
+    metadata = declarations(
+        f"{route} :is(.portal-voice-vault-meta span, .portal-voice-script-meta span, "
+        ".portal-voice-studio-tags span, .portal-voice-reference-list span)"
+    )
+    default_tag = declarations(f"{route} .portal-voice-default")
+    policy_flag = declarations(f"{route} .portal-voice-policy-flag")
+    filter_surface = declarations(f"{route} .portal-voice-studio-filter")
+    pagination = declarations(f"{route} .portal-voice-studio-pagination")
+    cue_sheet = declarations(f"{route} .portal-voice-cue-sheet")
+    cue_heading = declarations(f"{route} .portal-voice-cue-sheet h4")
+    cue_copy = declarations(f"{route} .portal-voice-cue-sheet p")
+    cue_metadata = declarations(f"{route} .portal-voice-cue-metrics span")
+    cue_row = declarations(f"{route} .portal-voice-cue-sheet li")
+    cue_index = declarations(f"{route} .portal-voice-cue-sheet li > span")
+    cue_timing = declarations(f"{route} :is(.portal-voice-cue-sheet time, .portal-voice-cue-sheet small)")
+    dividers = declarations(f"{route} :is(.portal-voice-script-form, .portal-voice-script-history)")
+    history_row = declarations(f"{route} .portal-voice-script-history > div")
+    version_row = declarations(f"{route} .portal-voice-version-list > article")
+    primary_text = declarations(
+        f"{route} :is(.portal-voice-script-history > strong, .portal-voice-version-list strong, "
+        ".portal-voice-studio-events strong)"
+    )
+    secondary_text = declarations(
+        f"{route} :is(.portal-voice-script-history > div, .portal-voice-script-history em, "
+        ".portal-voice-version-list p, .portal-voice-version-list small, "
+        ".portal-voice-studio-events small, .portal-card-subtitle, .portal-form-note)"
+    )
+    event_row = declarations(f"{route} .portal-voice-studio-events > div")
+    event_dot = declarations(f"{route} .portal-voice-studio-events > div > span:first-child")
+    focus = declarations(f"{route} :is(button, a, input, select, textarea):focus-visible")
+    mobile = re.search(
+        rf"@media \(max-width: 700px\)\s*\{{\s*"
+        rf"{re.escape(route)} :is\((?P<selectors>[^{{}}]*)\)\s*\{{"
+        rf"(?P<declarations>.*?)\n\s*\}}\s*\}}\s*\Z",
+        voice_css,
+        flags=re.DOTALL,
+    )
+
+    assert route in voice_css
+    assert "border-color: var(--portal-border);" in summary
+    assert "background: var(--portal-surface-light) !important;" in summary
+    assert "box-shadow: none;" in summary
+    assert "color: var(--portal-ink);" in summary_heading
+    assert "font-size: clamp(24px, 2.4vw, 32px);" in summary_heading
+    assert "color: var(--portal-muted);" in summary_copy
+    assert "font-size: 14px;" in summary_copy
+    assert "background: var(--portal-surface-soft);" in summary_metric
+    assert "color: var(--portal-action);" in summary_metric_value
+    assert "color: var(--portal-muted);" in summary_label
+    assert "font-size: 13px;" in summary_label
+    assert "color: var(--portal-ink);" in summary_value
+    assert "font-size: 13px;" in summary_value
+    assert "border-color: var(--portal-border);" in authoring_surfaces
+    assert "background: var(--portal-surface-light);" in authoring_surfaces
+    assert "box-shadow: none;" in authoring_surfaces
+    assert "color: var(--portal-ink);" in field_label
+    assert "font-size: 13px;" in field_label
+    assert "background: var(--portal-surface-soft);" in guard_surface
+    assert "color: var(--portal-ink);" in guard_label
+    assert "font-size: 13px;" in guard_label
+    assert "background: var(--portal-surface-light);" in guard_status
+    assert "color: var(--portal-muted);" in guard_status
+    assert "font-size: 13px;" in guard_status
+    assert "background: var(--portal-surface-light);" in vault_card
+    assert "box-shadow: none;" in vault_card
+    assert "background: var(--portal-light-hover-surface);" in vault_hover
+    assert "transform: none;" in vault_hover
+    assert "border-color: var(--portal-border-strong);" in default_vault
+    assert "background: var(--portal-surface-soft);" in default_vault
+    assert "background: var(--portal-surface-light);" in script_card
+    assert "background: var(--portal-surface-soft);" in metadata
+    assert "color: var(--portal-muted);" in metadata
+    assert "font-size: 13px;" in metadata
+    assert "color: var(--portal-action);" in default_tag
+    assert "color: var(--portal-danger);" in policy_flag
+    assert "background: var(--portal-surface-light);" in filter_surface
+    assert "border-color: var(--portal-border);" in pagination
+    assert "color: var(--portal-muted);" in pagination
+    assert "font-size: 13px;" in pagination
+    assert "background: var(--portal-surface-soft);" in cue_sheet
+    assert "color: var(--portal-ink);" in cue_heading
+    assert "color: var(--portal-muted);" in cue_copy
+    assert "font-size: 13px;" in cue_copy
+    assert "background: var(--portal-surface-light);" in cue_metadata
+    assert "border-top-color: var(--portal-border);" in cue_row
+    assert "background: var(--portal-action);" in cue_index
+    assert "font-size: 12px;" in cue_index
+    assert "color: var(--portal-muted);" in cue_timing
+    assert "font: 12px/1.5 var(--portal-mono" in cue_timing
+    assert "border-top-color: var(--portal-border);" in dividers
+    assert "border-top-color: var(--portal-border);" in history_row
+    assert "border-color: var(--portal-border);" in version_row
+    assert "color: var(--portal-ink);" in primary_text
+    assert "font-size: 13px;" in primary_text
+    assert "color: var(--portal-muted);" in secondary_text
+    assert "font-size: 13px;" in secondary_text
+    assert "border-top-color: var(--portal-border);" in event_row
+    assert "background: var(--portal-action);" in event_dot
+    assert "outline: 3px solid var(--portal-focus) !important;" in focus
+    assert mobile is not None
+    mobile_selectors = mobile.group("selectors")
+    assert ".portal-voice-studio-intro dl" in mobile_selectors
+    assert ".portal-voice-studio-detail-summary dl" in mobile_selectors
+    assert ".portal-voice-studio-guard-list" in mobile_selectors
+    assert ".portal-voice-studio-layout" in mobile_selectors
+    assert ".portal-voice-studio-detail-grid" in mobile_selectors
+    assert ".portal-voice-vault-grid" in mobile_selectors
+    assert ".portal-voice-script-grid" in mobile_selectors
+    assert "grid-template-columns: 1fr;" in mobile.group("declarations")
+    assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", voice_css, re.I)
+    assert not re.search(r"var\(--(?!portal-)", voice_css)
