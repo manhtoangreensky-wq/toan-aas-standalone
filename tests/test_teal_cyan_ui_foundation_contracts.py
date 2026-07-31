@@ -4850,3 +4850,43 @@ def test_light_campaign_planner_final_surface_keeps_planning_calendar_and_review
     assert "linear-gradient" not in campaign_css.lower()
     assert "radial-gradient" not in campaign_css.lower()
     assert not re.search(r"var\(--(?!portal-)", campaign_css)
+
+
+def test_light_memory_and_prompt_library_final_surface_keeps_private_work_readable() -> None:
+    """Private notes, reminders and prompt recipes share the light workspace system."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Memory and Prompt Library surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    memory_prompt_css = layer.group("css")
+    required = (
+        ".portal-memory-center",
+        ".portal-memory-reminders",
+        ".portal-prompt-library",
+        ".portal-prompt-library-detail",
+        ".portal-memory-intro",
+        ".portal-memory-note",
+        ".portal-memory-reminder-card",
+        ".portal-memory-event",
+        ".portal-memory-filter .portal-fields",
+        ".portal-prompt-library-intro",
+        ".portal-prompt-library-card",
+        ".portal-prompt-library-filter",
+        ".portal-prompt-library-preview-result",
+        ".portal-prompt-library-events",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in memory_prompt_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", memory_prompt_css)
+    assert "rgba(" not in memory_prompt_css.lower()
+    assert "linear-gradient" not in memory_prompt_css.lower()
+    assert "radial-gradient" not in memory_prompt_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", memory_prompt_css)
