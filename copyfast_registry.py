@@ -537,7 +537,18 @@ def allowed_paths() -> set[str]:
     # `/welcome` is intentionally separate from the application root. The
     # root redirects into secure app access, while this explicit route keeps a
     # lightweight public product introduction available when needed.
-    result = {"/", "/welcome", "/login", "/register", "/onboarding", "/campaigns", "/calendar", "/approvals"}
+    result = {
+        "/",
+        "/welcome",
+        "/login",
+        "/register",
+        "/onboarding",
+        "/workspace/setup",
+        "/starter-kits",
+        "/campaigns",
+        "/calendar",
+        "/approvals",
+    }
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])
     return result

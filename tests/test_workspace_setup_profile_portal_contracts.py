@@ -1,6 +1,13 @@
 """Static contracts for the signed Web-native Workspace Setup experience."""
 
+import importlib
 from pathlib import Path
+import sys
+
+from fastapi.testclient import TestClient
+
+from copyfast_pages import render_portal
+from copyfast_registry import allowed_paths
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,12 +16,77 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 APP = (ROOT / "app.py").read_text(encoding="utf-8")
+APP_MODULES = [
+    "app", "copyfast_db", "copyfast_auth", "copyfast_bridge", "copyfast_registry", "copyfast_api",
+    "copyfast_pages", "copyfast_projects", "copyfast_assets", "copyfast_project_packages",
+    "copyfast_document_operations", "copyfast_image_runtime", "copyfast_image_operations", "copyfast_memory",
+    "copyfast_workspace_setup", "copyfast_starter_kits",
+]
 
 
 def _between(source: str, start: str, end: str) -> str:
     begin = source.index(start)
     finish = source.index(end, begin)
     return source[begin:finish]
+
+
+def _make_app_client(tmp_path, monkeypatch) -> TestClient:
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "portal-route-session-test.db"))
+    monkeypatch.setenv("WEB_SESSION_SECRET", "portal-route-test-session-secret")
+    for name in ("APP_ENV", "ENVIRONMENT", "RAILWAY_ENVIRONMENT", "RAILWAY_VOLUME_MOUNT_PATH"):
+        monkeypatch.delenv(name, raising=False)
+    for name in ("CORE_BRIDGE_BASE_URL", "CORE_BRIDGE_TOKEN", "CORE_BRIDGE_HMAC_SECRET"):
+        monkeypatch.delenv(name, raising=False)
+    for name in APP_MODULES:
+        sys.modules.pop(name, None)
+    return TestClient(importlib.import_module("app").app)
+
+
+def _register_and_login(client: TestClient) -> None:
+    credentials = {
+        "email": "first-run-portal-routes@example.com",
+        "password": "correct-horse-battery-staple",
+        "display_name": "First Run Owner",
+    }
+    registered = client.post("/api/v1/auth/register", json=credentials)
+    assert registered.status_code == 200
+    signed_in = client.post(
+        "/api/v1/auth/login",
+        json={"email": credentials["email"], "password": credentials["password"]},
+    )
+    assert signed_in.status_code == 200
+
+
+def test_first_run_app_routes_require_and_accept_a_real_signed_session(tmp_path, monkeypatch) -> None:
+    with _make_app_client(tmp_path, monkeypatch) as client:
+        for route in ("/workspace/setup", "/starter-kits"):
+            anonymous = client.get(route, follow_redirects=False)
+            assert anonymous.status_code == 307
+            assert anonymous.headers["location"] == f"/login?next={route}"
+
+        _register_and_login(client)
+
+        for route in ("/workspace/setup", "/starter-kits"):
+            signed = client.get(route)
+            assert signed.status_code == 200
+            assert b'<script id="portal-bootstrap" type="application/json">' in signed.content
+
+        detail = client.get("/starter-kits/project-foundation")
+        assert detail.status_code == 200
+        assert b'<script id="portal-bootstrap" type="application/json">' in detail.content
+
+
+def test_first_run_paths_are_server_allowlisted_and_render_the_portal_shell() -> None:
+    """Every signed first-run entrypoint must survive a direct browser request."""
+
+    paths = allowed_paths()
+    assert {"/workspace/setup", "/starter-kits"} <= paths
+    assert "/starter-kits/project-foundation" not in paths
+
+    for path in ("/workspace/setup", "/starter-kits", "/starter-kits/project-foundation"):
+        response = render_portal(path, interface_locale="vi")
+        assert response.status_code == 200
+        assert b'<script id="portal-bootstrap" type="application/json">' in response.body
 
 
 def test_workspace_setup_is_a_signed_app_route_not_a_video_or_landing_change() -> None:
@@ -59,7 +131,7 @@ def test_workspace_setup_bootstrap_is_allowlisted_and_hydration_is_session_fence
         "focusSeen",
         ".slice(0, 3)",
         "bootstrapSafeTimestamp",
-        'locale: ["vi", "en"].includes(locale)',
+        'locale: ["vi", "en", "zh"].includes(locale)',
     ):
         assert requirement in normalizer
     assert "workspaceSetup: normalizeWorkspaceSetupBootstrap(source.workspaceSetup)" in PORTAL
