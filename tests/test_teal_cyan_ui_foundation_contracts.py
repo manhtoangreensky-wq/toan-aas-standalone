@@ -4970,7 +4970,7 @@ def test_light_admin_erp_core_final_surface_keeps_protected_control_center_reada
 
     for evidence in required:
         assert evidence in admin_css
-    selectors = _admin_final_layer_selectors(admin_css)
+    selectors = _final_light_layer_selectors(admin_css)
     assert selectors
     assert all(root_scope in selector for selector in selectors)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", admin_css)
@@ -4981,7 +4981,7 @@ def test_light_admin_erp_core_final_surface_keeps_protected_control_center_reada
     assert not re.search(r"var\(--(?!portal-)", admin_css)
 
 
-def _admin_final_layer_selectors(css: str) -> list[str]:
+def _final_light_layer_selectors(css: str) -> list[str]:
     """Return every selector line, including the first rule nested in media."""
 
     return re.findall(r"(?m)^[ \t]*(?!@)([^{}\s][^{}]*)\{", css)
@@ -4997,4 +4997,48 @@ def test_admin_erp_scope_selector_contract_captures_first_mobile_nested_selector
   }}
 }}"""
 
-    assert _admin_final_layer_selectors(css) == [f"{root_scope} .portal-admin-grid "]
+    assert _final_light_layer_selectors(css) == [f"{root_scope} .portal-admin-grid "]
+
+
+def test_light_workspace_menu_final_surface_keeps_customer_directory_readable() -> None:
+    """The signed customer directory remains compact, readable and navigation-only."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Workspace Menu surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    workspace_css = layer.group("css")
+    root_scope = ".portal-page.portal-workspace-menu"
+    required = (
+        ".portal-workspace-menu",
+        ".portal-workspace-menu-intro",
+        ".portal-workspace-menu-intro-status",
+        ".portal-workspace-menu-directory",
+        ".portal-workspace-menu-group",
+        ".portal-workspace-menu-group-head",
+        ".portal-workspace-menu-grid",
+        ".portal-workspace-menu-card",
+        ".portal-workspace-menu-card-copy",
+        ".portal-workspace-menu-card-state",
+        ".portal-workspace-menu-card-footer",
+        ".portal-workspace-menu-boundary",
+        ".portal-workspace-menu-boundary-list",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in workspace_css
+    selectors = _final_light_layer_selectors(workspace_css)
+    assert selectors
+    assert all(root_scope in selector for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", workspace_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", workspace_css.lower())
+    assert "linear-gradient" not in workspace_css.lower()
+    assert "radial-gradient" not in workspace_css.lower()
+    assert "conic-gradient" not in workspace_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", workspace_css)
