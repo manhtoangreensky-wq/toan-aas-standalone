@@ -5262,3 +5262,101 @@ def test_light_interface_locale_navigator_final_surface_keeps_preferences_clear(
     assert "conic-gradient" not in locale_css.lower()
     assert "transparent" not in locale_css.lower()
     assert not re.search(r"var\(--(?!portal-)", locale_css)
+
+
+def test_light_account_security_final_surface_keeps_signed_actions_clear() -> None:
+    """Security presentation may change, but signed actions stay visually explicit."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Account Security Center surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    security_css = layer.group("css")
+    root_scope = ".portal-page.portal-account-security"
+    required = (
+        ".portal-settings-nav",
+        ".portal-security-posture",
+        ".portal-security-posture-facts",
+        ".portal-panel-row",
+        ".portal-security-assurance",
+        ".portal-notice",
+        ".portal-password-toggle",
+        ".portal-button--quiet",
+        ":disabled",
+        ":focus-visible",
+        "@media (max-width: 1040px)",
+        "@media (max-width: 700px)",
+        "@media (prefers-reduced-motion: reduce)",
+        "min-height: 44px;",
+    )
+
+    for evidence in required:
+        assert evidence in security_css
+
+    def at_rule_body(at_rule: str) -> str:
+        start = security_css.index(at_rule)
+        opening_brace = security_css.index("{", start)
+        depth = 0
+        for index in range(opening_brace, len(security_css)):
+            if security_css[index] == "{":
+                depth += 1
+            elif security_css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return security_css[opening_brace + 1 : index]
+        raise AssertionError(f"unclosed {at_rule}")
+
+    def declarations_for(selector: str, css: str = security_css) -> str:
+        rule = re.search(
+            rf"{re.escape(selector)}\s*\{{(?P<declarations>[^}}]*)\}}",
+            css,
+            flags=re.DOTALL,
+        )
+        assert rule is not None, selector
+        return rule.group("declarations")
+
+    assert "background: var(--portal-surface-light);" in declarations_for(
+        f"{root_scope} .portal-security-posture"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-security-posture-facts > div"
+    )
+    assert "background: var(--portal-surface-soft);" in declarations_for(
+        f"{root_scope} .portal-panel-row"
+    )
+    assert "transform: none;" in declarations_for(
+        f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)"
+    )
+    assert "opacity: 0.64;" in declarations_for(
+        f"{root_scope} :is(.portal-button, .portal-password-toggle):disabled"
+    )
+    assert "outline: 3px solid var(--portal-focus) !important;" in declarations_for(
+        f"{root_scope} :is(button, a, input, select, textarea, summary):focus-visible"
+    )
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in declarations_for(
+        f"{root_scope} .portal-security-posture-facts",
+        at_rule_body("@media (max-width: 1040px)"),
+    )
+    assert "min-height: 44px;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-button, .portal-password-toggle)",
+        at_rule_body("@media (max-width: 700px)"),
+    )
+    assert "transition: none;" in declarations_for(
+        f"{root_scope} :is(.portal-settings-nav a, .portal-password-toggle, .portal-button)",
+        at_rule_body("@media (prefers-reduced-motion: reduce)"),
+    )
+
+    selectors = _final_light_layer_selectors(security_css)
+    assert selectors
+    assert all(selector.startswith(root_scope) for selector in selectors)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", security_css)
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", security_css.lower())
+    assert "linear-gradient" not in security_css.lower()
+    assert "radial-gradient" not in security_css.lower()
+    assert "conic-gradient" not in security_css.lower()
+    assert "transparent" not in security_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", security_css)
