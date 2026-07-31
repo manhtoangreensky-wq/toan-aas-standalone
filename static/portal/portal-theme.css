@@ -10386,3 +10386,172 @@ body {
     transform: none;
   }
 }
+
+/* Final light Account Security Center surface */
+.portal-page.portal-account-security {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-security .portal-settings-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-settings-nav a {
+  border-color: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-security .portal-settings-nav a:is(:hover, :focus-visible) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-security .portal-settings-nav a[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-security .portal-security-posture {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-security-assurance {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-security-posture-head h2 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-security .portal-security-posture-head p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-security .portal-security-posture-facts > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-account-security .portal-security-posture-facts > div[data-state="ready"] {
+  border-color: var(--portal-action);
+}
+
+.portal-page.portal-account-security .portal-security-posture-facts > div[data-state="guarded"] {
+  border-color: var(--portal-warning);
+}
+
+.portal-page.portal-account-security .portal-security-posture-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-context);
+}
+
+.portal-page.portal-account-security :is(.portal-security-posture-facts small, .portal-security-posture-facts em, .portal-panel-row > div > span:not(.portal-badge), .portal-form-note, .portal-notice p, .portal-state p) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-account-security :is(.portal-security-posture-facts strong, .portal-panel-row strong, .portal-notice strong, .portal-state h2, .portal-security-assurance summary) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-account-security .portal-panel-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-notice {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-state {
+  border-color: var(--portal-border) !important;
+  background: var(--portal-surface-light) !important;
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-panel-row-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-security .portal-password-toggle {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page.portal-account-security .portal-password-toggle:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  transform: none;
+}
+
+.portal-page.portal-account-security .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-account-security .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page.portal-account-security :is(.portal-button, .portal-password-toggle):disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+.portal-page.portal-account-security :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1040px) {
+  .portal-page.portal-account-security .portal-security-posture-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-account-security .portal-security-posture-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portal-page.portal-account-security :is(.portal-security-posture-facts, .portal-work-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-account-security :is(.portal-settings-nav a, .portal-button, .portal-password-toggle) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-account-security :is(.portal-settings-nav a, .portal-password-toggle, .portal-button) {
+    transition: none;
+  }
+}
