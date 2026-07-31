@@ -4640,7 +4640,7 @@ def test_light_asset_vault_final_surface_keeps_private_storage_states_readable()
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Asset Vault surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Asset Vault surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -4777,3 +4777,37 @@ def test_light_asset_vault_final_surface_keeps_private_storage_states_readable()
     assert "min-height: 44px;" in mobile_controls.group("css")
     assert not re.search(r"(?:#[0-9a-f]{3,8}\b|(?:linear|radial)-gradient|rgba?\()", asset_css, re.I)
     assert not re.search(r"var\(--(?!portal-)", asset_css)
+
+
+def test_light_workboard_final_surface_keeps_lifecycle_workspace_readable() -> None:
+    """The planning workspace stays compact, owner-scoped and light without legacy colours."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Workboard surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    workboard_css = layer.group("css")
+    required = (
+        ".portal-workboard",
+        ".portal-workboard-new",
+        ".portal-workboard-detail",
+        ".portal-workboard-tabs",
+        ".portal-workboard-column",
+        ".portal-workboard-card",
+        ".portal-workboard-reference-picker",
+        ".portal-workboard-events",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in workboard_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", workboard_css)
+    assert "rgba(" not in workboard_css.lower()
+    assert "linear-gradient" not in workboard_css.lower()
+    assert "radial-gradient" not in workboard_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", workboard_css)

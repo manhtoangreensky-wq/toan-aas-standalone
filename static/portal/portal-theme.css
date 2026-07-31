@@ -8180,3 +8180,467 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Workboard surface */
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--portal-border);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs a:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs a[aria-current="page"] {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs .portal-workboard-tabs-new {
+  margin-left: auto;
+  border-color: var(--portal-action);
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro, .portal-workboard-detail-summary) {
+  gap: 24px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro h2, .portal-workboard-detail-summary h2) {
+  color: var(--portal-ink);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.16;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro p, .portal-workboard-detail-summary p) {
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro dl, .portal-workboard-detail-summary dl) {
+  gap: 10px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro dl > div, .portal-workboard-detail-summary dl > div) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro dt, .portal-workboard-detail-summary dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro dd, .portal-workboard-detail-summary dt) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-card, .portal-workboard-board-card, .portal-workboard-library) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-board-card {
+  overflow-x: auto;
+  scrollbar-color: var(--portal-border-strong) var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-board {
+  gap: 12px;
+  min-width: 1120px;
+  padding: 4px 2px 10px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-column {
+  gap: 12px;
+  min-height: 320px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-column > header span {
+  color: var(--portal-ink);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-column > header b {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-column-empty {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card {
+  gap: 11px;
+  min-height: 172px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-card h3, .portal-workboard-list-title b) {
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card h3 a:hover {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-card p, .portal-workboard-card footer, .portal-workboard-list-title small, .portal-workboard-list-meta small) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card-actions .portal-button {
+  min-height: 36px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card-move {
+  color: var(--portal-action);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-card-move:hover {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-priority {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 10px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-priority[data-priority="low"] {
+  border-color: var(--portal-context);
+  color: var(--portal-context);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-priority[data-priority="normal"] {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-priority[data-priority="high"] {
+  border-color: var(--portal-ink);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-priority[data-priority="urgent"] {
+  border-color: var(--portal-focus);
+  background: var(--portal-surface-soft);
+  color: var(--portal-focus);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-list span {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-list b {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-filter {
+  gap: 12px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-pagination {
+  border-top-color: var(--portal-border);
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-pagination .portal-button {
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-list-row {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-list-row:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-editor, .portal-workboard-guide, .portal-workboard-lifecycle, .portal-workboard-checklist-card) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-guide li::before {
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-guide li b {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-guide li span {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-picker {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-picker :is(legend, strong) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-picker p {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-options label {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-options input {
+  accent-color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-options span {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-reference-options b {
+  color: var(--portal-ink);
+  font-size: 10px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-state-form, .portal-workboard-checklist-add) label {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-state-form select, .portal-workboard-checklist-add input) {
+  min-height: 44px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-state-form select:focus, .portal-workboard-checklist-add input:focus) {
+  border-color: var(--portal-focus);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-checklist li {
+  border-top-color: var(--portal-border);
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-checklist li.is-done span:last-child {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-checklist button, .portal-workboard-checkmark) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-checklist button:hover {
+  border-color: var(--portal-action);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-progress {
+  color: var(--portal-action);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-history {
+  border-top: 1px solid var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-history > h3 {
+  color: var(--portal-ink);
+  font-size: 14px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-version-list > article {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-version-list b, .portal-workboard-events b) {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-version-list small, .portal-workboard-version-list p, .portal-workboard-events small) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-events > div {
+  border-top-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-events > div > span:first-child {
+  background: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-detail > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) :is(h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-card, .portal-workboard-list-row)[data-workboard-state="archived"] {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-card, .portal-workboard-list-row)[data-workboard-state="archived"] :is(h3, b, small, p, footer) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(button, input, select, textarea):disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs {
+    align-items: stretch;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs a {
+    flex: 1 1 auto;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs .portal-workboard-tabs-new {
+    margin-left: 0;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro, .portal-workboard-detail-summary, .portal-workboard-intro dl, .portal-workboard-detail-summary dl, .portal-workboard-editor-layout, .portal-workboard-detail-grid, .portal-workboard-history-grid, .portal-workboard-board, .portal-workboard-filter .portal-fields, .portal-workboard-reference-options, .portal-workboard-list-meta) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-board {
+    min-width: 0;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-board-card {
+    overflow-x: visible;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-list-row {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-state-form, .portal-workboard-checklist-add) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-workboard-tabs a, .portal-workboard-state-form select, .portal-workboard-checklist-add input) {
+    min-height: 44px;
+  }
+}
