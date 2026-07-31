@@ -11630,3 +11630,296 @@ body {
     transform: none;
   }
 }
+
+/* Final light Wallet and Billing surface */
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) > .portal-hero {
+  margin-bottom: 4px;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-wallet-command, .portal-billing-journey, .portal-billing-entrypoints, .portal-billing-catalog-intro, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-wallet-command, .portal-billing-entrypoints, [data-manual-topup-guide]) .portal-card-title,
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-wallet-command, .portal-billing-journey, .portal-billing-entrypoints, .portal-billing-catalog-intro, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) :is(h2, h3, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-wallet-command, .portal-billing-journey, .portal-billing-entrypoints, .portal-billing-catalog-intro, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) :is(p, small, .portal-card-subtitle, .portal-form-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-command {
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-facts {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-facts > div {
+  border-bottom-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-facts :is(dt, dd) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-facts dt {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-wallet-read-status {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey :is(h2, p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey-lanes li {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey-lanes li > span {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey-lanes :is(strong, p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-journey-lanes p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+  transition: border-color var(--portal-motion-fast), background var(--portal-motion-fast);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry--manual {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry:is(:hover, :focus-within) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry .portal-module-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry :is(h3, p, .portal-payment-entry-note) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-payment-entry :is(p, .portal-payment-entry-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-entrypoints .portal-link-code {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-intro :is(h2, p) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-page > .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+  transition: border-color var(--portal-motion-fast), background var(--portal-motion-fast);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-card:is(:hover, :focus-within) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-card .portal-module-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-card :is(h3, p, .portal-module-card-footer) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-card :is(p, .portal-module-card-footer) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-catalog-family {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav a {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+  box-shadow: none;
+  transition: color var(--portal-motion-fast), border-color var(--portal-motion-fast), background var(--portal-motion-fast);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav a:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav a[aria-current="page"] {
+  border-color: var(--portal-action);
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-empty, .portal-state, .portal-summary-list, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-empty, .portal-state, .portal-summary-list, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) :is(h2, h3, p, small, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-empty, .portal-state, .portal-summary-list, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) :is(p, small, .portal-form-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="ready"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="completed"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="approved"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="refunded"] {
+  color: var(--portal-success);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="read_only"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="awaiting_confirm"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="queued"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="processing"] {
+  color: var(--portal-info);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="guarded"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="disabled"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="waiting_user"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="waiting_provider"] {
+  color: var(--portal-warning);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="failed"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="failed_no_charge"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="error"],
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-badge[data-status="cancelled"] {
+  color: var(--portal-danger);
+}
+
+.portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-billing-journey-lanes, .portal-billing-entrypoints .portal-payment-entry-grid, .portal-module-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-billing-entrypoints .portal-button, .portal-button--primary, .portal-button--quiet) {
+    min-height: 44px;
+  }
+
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-billing-journey, .portal-billing-entrypoints, .portal-billing-catalog-intro, .portal-billing-catalog-page > .portal-card, .portal-wallet-command, .portal-wallet-assurance, .portal-wallet-secondary, [data-manual-topup-guide]) {
+    padding: 16px;
+  }
+
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) .portal-billing-nav a {
+    min-width: 0;
+    min-height: 44px;
+    justify-content: center;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page:is(.portal-wallet-page, .portal-billing-catalog-page) :is(.portal-billing-journey, .portal-billing-entrypoints .portal-payment-entry, .portal-billing-catalog-card, .portal-billing-nav a, .portal-button) {
+    transition: none;
+    transform: none;
+  }
+}
