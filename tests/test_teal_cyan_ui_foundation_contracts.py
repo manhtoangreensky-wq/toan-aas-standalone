@@ -4811,3 +4811,42 @@ def test_light_workboard_final_surface_keeps_lifecycle_workspace_readable() -> N
     assert "linear-gradient" not in workboard_css.lower()
     assert "radial-gradient" not in workboard_css.lower()
     assert not re.search(r"var\(--(?!portal-)", workboard_css)
+
+
+def test_light_campaign_planner_final_surface_keeps_planning_calendar_and_review_readable() -> None:
+    """Campaign planning stays light, compact and truthful across its linked routes."""
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Campaign Planner surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    campaign_css = layer.group("css")
+    required = (
+        ".portal-campaign-planner",
+        ".portal-campaign-detail",
+        ".portal-campaign-calendar",
+        ".portal-campaign-approvals",
+        ".portal-campaign-operations-summary",
+        ".portal-campaign-operations-primary",
+        ".portal-campaign-card",
+        ".portal-calendar",
+        ".portal-calendar-cell",
+        ".portal-calendar-event",
+        ".portal-calendar-agenda-item",
+        ".portal-campaign-metrics",
+        ".portal-campaign-boundary",
+        ":focus-visible",
+        "@media (max-width: 700px)",
+    )
+
+    for evidence in required:
+        assert evidence in campaign_css
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", campaign_css)
+    assert "rgba(" not in campaign_css.lower()
+    assert "linear-gradient" not in campaign_css.lower()
+    assert "radial-gradient" not in campaign_css.lower()
+    assert not re.search(r"var\(--(?!portal-)", campaign_css)

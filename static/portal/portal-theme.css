@@ -8644,3 +8644,288 @@ body {
     min-height: 44px;
   }
 }
+
+/* Final light Campaign Planner surface */
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-summary, .portal-campaign-operations-authoring-intro) {
+  gap: 24px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-summary h2, .portal-campaign-operations-authoring-intro h2) {
+  color: var(--portal-ink);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.16;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-summary p, .portal-campaign-operations-authoring-intro p) {
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-summary dl {
+  gap: 10px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-summary dl > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-summary dt {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-summary dd {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-primary, .portal-campaign-operations-create-guard, .portal-campaign-operations-library, .portal-campaign-operations-boundary, .portal-campaign-operations-authoring .portal-campaign-operations-create, .portal-campaign-boundary) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-primary h2 {
+  color: var(--portal-ink);
+  font-size: 18px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-primary p, .portal-campaign-operations-create-guard span, .portal-campaign-operations-authoring-actions > span) {
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-create-guard strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-quick-links a {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-quick-links a:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-quick-links strong {
+  color: var(--portal-ink);
+  font-size: 13px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-quick-links span {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-steps li, .portal-campaign-facts > div, .portal-campaign-edit, .portal-campaign-review) {
+  border-color: var(--portal-border);
+  border-top-color: var(--portal-border);
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-steps strong, .portal-campaign-facts dd, .portal-campaign-edit > summary) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-steps span, .portal-campaign-facts dt) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-card, .portal-campaign-timeline-item, .portal-calendar-agenda-item) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-card, .portal-campaign-timeline-item, .portal-calendar-agenda-item):hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-card h3, .portal-campaign-card h3 a, .portal-campaign-timeline-item strong, .portal-calendar-agenda-item strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-card .portal-eyebrow, .portal-campaign-timeline-item span, .portal-calendar-agenda-item b) {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-card-head p, .portal-campaign-timeline-item em, .portal-calendar-agenda-item em, .portal-calendar-agenda-item time) {
+  color: var(--portal-muted);
+  font-size: 12px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-destination {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-destination:hover {
+  color: var(--portal-action-hover);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-edit > summary::after {
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-metrics, .portal-campaign-timeline) {
+  gap: 12px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-metrics .portal-metric {
+  min-height: 120px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-metrics .portal-metric :is(span, em) {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-metrics .portal-metric strong {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-filter {
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar {
+  gap: 10px;
+  padding-bottom: 8px;
+  scrollbar-color: var(--portal-border-strong) var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-calendar-weekdays, .portal-calendar-grid) {
+  gap: 8px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-weekdays span {
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-cell {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-cell.is-today {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-day {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-cell.is-today .portal-calendar-day {
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-event {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-event:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-event[data-status="review"] {
+  border-color: var(--portal-warning);
+  color: var(--portal-warning);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-calendar-event[data-status="approved"], .portal-calendar-event[data-status="scheduled"]) {
+  border-color: var(--portal-success);
+  color: var(--portal-success);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-event[data-status="archived"] {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  opacity: 1;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar-overflow {
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) :is(h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-state[data-state="guarded"], .portal-state[data-state="failed"]) p {
+  color: var(--portal-muted);
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+.portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(button, input, select, textarea):disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-campaign-operations-summary, .portal-campaign-operations-authoring-intro, .portal-campaign-operations-authoring-layout, .portal-campaign-operations-workspace, .portal-work-grid, .portal-campaign-board, .portal-campaign-metrics, .portal-campaign-timeline, .portal-calendar-filter .portal-fields) {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-summary dl {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-campaign-operations-primary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) .portal-calendar {
+    overflow-x: auto;
+  }
+
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-calendar-weekdays, .portal-calendar-grid) {
+    min-width: 650px;
+  }
+
+  .portal-page:is(.portal-campaign-planner, .portal-campaign-detail, .portal-campaign-calendar, .portal-campaign-approvals) :is(.portal-button, .portal-input, .portal-select, .portal-textarea, .portal-calendar-filter input, .portal-calendar-filter select) {
+    min-height: 44px;
+  }
+}
