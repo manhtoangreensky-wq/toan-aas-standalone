@@ -6279,3 +6279,153 @@ def test_light_billing_final_surface_keeps_canonical_payment_truth_readable() ->
         for rule in rules
         for name in rule["declarations"]
     )
+
+
+def test_light_delivery_center_final_surface_keeps_canonical_states_clear() -> None:
+    """Jobs and Assets stay readable without blurring delivery truth or ownership."""
+
+    portal_source = PORTAL_CLIENT
+    root_markup = '<article class="portal-page portal-delivery-page">'
+    for renderer in ("renderJobs", "renderJobDetail", "renderAssets"):
+        start = portal_source.index(f"  function {renderer}(")
+        next_renderer = portal_source.find("\n  function ", start + 1)
+        renderer_source = portal_source[start : next_renderer if next_renderer >= 0 else None]
+        assert root_markup in renderer_source
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Delivery Center surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert layer is not None
+    delivery_css = layer.group("css")
+    rules = _parse_css_rules(delivery_css)
+    root_scope = ".portal-page.portal-delivery-page"
+    shared_nav_scope = ".portal-page:is(.portal-delivery-page, .portal-asset-vault)"
+
+    def assert_declarations(
+        selector: str,
+        expected: dict[str, str],
+        *,
+        at_rule: str | None = None,
+    ) -> None:
+        declarations = _css_declarations_for(rules, selector, at_rule=at_rule)
+        assert {name: declarations.get(name) for name in expected} == expected
+
+    assert_declarations(root_scope, {"color": "var(--portal-ink)"})
+    assert_declarations(
+        f"{root_scope} .portal-delivery-center",
+        {"background": "var(--portal-surface-light)", "box-shadow": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-delivery-read-status",
+        {"background": "var(--portal-surface-soft)", "color": "var(--portal-muted)"},
+    )
+    assert_declarations(
+        f'{root_scope} .portal-delivery-state[data-delivery="reported"]',
+        {"color": "var(--portal-info)"},
+    )
+    assert_declarations(
+        f'{root_scope} .portal-delivery-state[data-delivery="pending"]',
+        {"color": "var(--portal-warning)"},
+    )
+    assert_declarations(
+        f'{root_scope} .portal-delivery-state[data-delivery="validated"]',
+        {"color": "var(--portal-success)"},
+    )
+    assert_declarations(
+        f'{root_scope} .portal-delivery-state[data-delivery="unavailable"]',
+        {"color": "var(--portal-danger)"},
+    )
+    assert_declarations(
+        f'{root_scope} .portal-delivery-state[data-delivery="vault"]',
+        {"color": "var(--portal-context)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-filter-button:is(:hover, :focus-visible)",
+        {"transform": "none", "box-shadow": "none"},
+    )
+    assert_declarations(
+        f"{root_scope} :is(button, a, input, select, textarea):focus-visible",
+        {"outline": "3px solid var(--portal-focus) !important"},
+    )
+    assert_declarations(
+        f"{shared_nav_scope} .portal-delivery-nav",
+        {"background": "var(--portal-surface-soft)", "box-shadow": "none"},
+    )
+
+    medium = "@media (max-width: 980px)"
+    assert_declarations(
+        f"{root_scope} .portal-work-grid",
+        {"grid-template-columns": "minmax(0, 1fr)"},
+        at_rule=medium,
+    )
+
+    mobile = "@media (max-width: 700px)"
+    assert_declarations(
+        f"{shared_nav_scope} .portal-delivery-nav",
+        {
+            "display": "grid",
+            "grid-template-columns": "repeat(3, minmax(0, 1fr))",
+            "overflow-x": "visible",
+            "scroll-snap-type": "none",
+        },
+        at_rule=mobile,
+    )
+    assert_declarations(
+        f"{shared_nav_scope} .portal-delivery-nav a",
+        {"min-width": "0", "min-height": "44px", "white-space": "normal"},
+        at_rule=mobile,
+    )
+    assert_declarations(
+        f"{root_scope} :is(.portal-delivery-summary-grid, .portal-delivery-mobile-records)",
+        {"grid-template-columns": "1fr"},
+        at_rule=mobile,
+    )
+
+    reduced_motion = "@media (prefers-reduced-motion: reduce)"
+    assert_declarations(
+        f"{root_scope} :is(.portal-delivery-summary-card, .portal-delivery-center, .portal-delivery-mobile-card, .portal-filter-button, .portal-button)",
+        {"transition": "none", "transform": "none"},
+        at_rule=reduced_motion,
+    )
+    assert_declarations(
+        f"{shared_nav_scope} .portal-delivery-nav a",
+        {"transition": "none", "transform": "none"},
+        at_rule=reduced_motion,
+    )
+
+    selectors = [selector for rule in rules for selector in rule["selectors"]]
+    assert selectors
+    assert all(
+        selector.startswith(root_scope) or selector.startswith(shared_nav_scope)
+        for selector in selectors
+    )
+    assert {rule["at_rules"] for rule in rules} == {
+        (),
+        (medium,),
+        (mobile,),
+        (reduced_motion,),
+    }
+
+    declaration_values = " ".join(
+        value
+        for rule in rules
+        for value in rule["declarations"].values()
+    )
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", declaration_values)
+    assert not re.search(r"\b(?:rgba?|hsla?)\s*\(", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(
+        r"\b(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(",
+        declaration_values,
+        flags=re.IGNORECASE,
+    )
+    assert not re.search(r"(?<![-\w])transparent(?![-\w])", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(r"(?i:var)\(\s*--(?!portal-)", declaration_values)
+    assert all(
+        not name.startswith("--") or name.startswith("--portal-")
+        for rule in rules
+        for name in rule["declarations"]
+    )
