@@ -445,6 +445,10 @@ def _flags() -> dict[str, bool]:
         "provider_calls_enabled": enabled("WEBAPP_PROVIDER_CALLS_ENABLED", False),
         "payment_enabled": enabled("WEBAPP_PAYMENT_ENABLED", False),
         "admin_erp_enabled": enabled("WEBAPP_ADMIN_ERP_ENABLED", True),
+        # Partner Readiness is an isolated Web-native private profile. This
+        # status flag exposes only readiness, never profile data or any
+        # referral, matching, contact, payment, provider or Bot capability.
+        "partner_readiness_enabled": enabled("WEBAPP_PARTNER_READINESS_ENABLED", True),
         # Finance Operations Planning owns only Web-local budget/cost-plan
         # metadata. This flag never enables Bot finance reads, Xu/PayOS,
         # manual payment evidence, tax calculations, exports or provider work.

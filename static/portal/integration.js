@@ -499,6 +499,11 @@
   // account switch, dashboard navigation or a newer setup refresh.
   let workspaceSetupSessionEpoch = 0;
   let workspaceSetupHydrationEpoch = 0;
+  // Partner Readiness is one signed-account, Web-only preparation profile.
+  // Keep a dedicated fence so a delayed policy/profile/history response never
+  // crosses a logout, account switch, route change or newer refresh.
+  let partnerReadinessSessionEpoch = 0;
+  let partnerReadinessHydrationEpoch = 0;
   // Starter Kits have an independent owner-scoped catalog and install ledger.
   // Fence them separately so a delayed catalog/receipt can never cross a
   // logout, account switch, route transition or newer refresh.
@@ -1273,6 +1278,144 @@
       },
       readState: ["loading", "read_only", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded"
     };
+  }
+
+  const PARTNER_READINESS_STATES = new Set(["draft", "review", "submitted", "archived"]);
+  const PARTNER_READINESS_CAPABILITIES = new Set(["brief_review", "content_system", "creative_direction", "workflow_design", "quality_review", "handoff_documentation"]);
+  const PARTNER_READINESS_BRIEFS = new Set(["product_content", "campaign", "brand_system", "operations", "education"]);
+  const PARTNER_READINESS_AVAILABILITY = new Set(["open", "limited", "unavailable"]);
+  const PARTNER_READINESS_RATES = new Set(["on_request", "range_discussion", "not_shown"]);
+  const PARTNER_READINESS_VISIBILITY = new Set(["private", "handoff_ready"]);
+  const PARTNER_READINESS_EVENTS = new Set(["create", "update", "request_review", "interest_submitted", "archive", "restore"]);
+  const PARTNER_READINESS_BOUNDARY_FALSE_FIELDS = [
+    "bot_called", "telegram_called", "bridge_called", "provider_called", "job_created", "wallet_mutated",
+    "xu_mutated", "payment_started", "payos_called", "referral_created", "attribution_created",
+    "commission_created", "payout_created", "public_listing_created", "matching_started", "contact_released",
+    "crm_record_created", "notification_sent", "delivery_created"
+  ];
+
+  function partnerReadinessSafeText(value, minimum, maximum) {
+    const text = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function partnerReadinessTimestamp(value) {
+    const text = partnerReadinessSafeText(value, 1, 80);
+    return text && Number.isFinite(Date.parse(text)) ? text : "";
+  }
+
+  function partnerReadinessClosedList(raw, allowed, limit) {
+    const seen = new Set();
+    return Array.isArray(raw)
+      ? raw.map((item) => String(item || "").trim().toLowerCase())
+        .filter((item) => allowed.has(item) && !seen.has(item) && seen.add(item)).slice(0, limit)
+      : [];
+  }
+
+  function partnerReadinessExactList(raw, allowed) {
+    const list = partnerReadinessClosedList(raw, allowed, allowed.size);
+    return list.length === allowed.size ? list : [];
+  }
+
+  function partnerReadinessInteger(value, minimum) {
+    return Number.isSafeInteger(value) && value >= minimum && value <= 2147483647 ? value : null;
+  }
+
+  function partnerReadinessEmptyProfile() {
+    return { exists: false, service_focus: "", capabilities: [], availability: "open", rate_display_preference: "on_request", preferred_briefs: [], portfolio_summary: "", collaboration_note: "", visibility_draft: "private", state: "draft", revision: 0, created_at: "", updated_at: "", archived_at: "" };
+  }
+
+  function partnerReadinessEmptyPolicy() {
+    return { states: [], capabilities: [], availability: [], rate_display_preferences: [], preferred_briefs: [], visibility_drafts: [], interest_receipt_only: false };
+  }
+
+  function partnerReadinessEmptyHistory() {
+    return { versions: [], events: [] };
+  }
+
+  function partnerReadinessBoundaryIsSafe(raw, profilePersisted, interestSubmitted) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    return source.execution === "web_native_partner_readiness_profile_only"
+      && source.profile_persisted === profilePersisted
+      && source.interest_submitted === interestSubmitted
+      && PARTNER_READINESS_BOUNDARY_FALSE_FIELDS.every((field) => source[field] === false);
+  }
+
+  function partnerReadinessProfileProjection(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
+    if (!source) return partnerReadinessEmptyProfile();
+    const serviceFocus = partnerReadinessSafeText(source.service_focus, 4, 240);
+    const capabilities = partnerReadinessClosedList(source.capabilities, PARTNER_READINESS_CAPABILITIES, 8);
+    const preferredBriefs = partnerReadinessClosedList(source.preferred_briefs, PARTNER_READINESS_BRIEFS, 8);
+    const availability = String(source.availability || "").trim();
+    const rate = String(source.rate_display_preference || "").trim();
+    const visibility = String(source.visibility_draft || "").trim();
+    const state = String(source.state || "").trim();
+    const revision = partnerReadinessInteger(source.revision, 1);
+    const createdAt = partnerReadinessTimestamp(source.created_at);
+    const updatedAt = partnerReadinessTimestamp(source.updated_at);
+    const archivedAt = source.archived_at == null ? "" : partnerReadinessTimestamp(source.archived_at);
+    if (!serviceFocus || !PARTNER_READINESS_AVAILABILITY.has(availability) || !PARTNER_READINESS_RATES.has(rate)
+      || !PARTNER_READINESS_VISIBILITY.has(visibility) || !PARTNER_READINESS_STATES.has(state) || revision === null
+      || !createdAt || !updatedAt || (state === "archived" && !archivedAt) || (state !== "archived" && archivedAt)) return null;
+    const portfolioSummary = source.portfolio_summary == null ? "" : partnerReadinessSafeText(source.portfolio_summary, 0, 1200);
+    const collaborationNote = source.collaboration_note == null ? "" : partnerReadinessSafeText(source.collaboration_note, 0, 1200);
+    if (source.portfolio_summary != null && !portfolioSummary && String(source.portfolio_summary).trim()) return null;
+    if (source.collaboration_note != null && !collaborationNote && String(source.collaboration_note).trim()) return null;
+    return { exists: true, service_focus: serviceFocus, capabilities, availability, rate_display_preference: rate, preferred_briefs: preferredBriefs, portfolio_summary: portfolioSummary, collaboration_note: collaborationNote, visibility_draft: visibility, state, revision, created_at: createdAt, updated_at: updatedAt, archived_at: archivedAt };
+  }
+
+  function partnerReadinessPolicyProjection(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    if (!partnerReadinessBoundaryIsSafe(source, false, false)) return null;
+    const policy = {
+      states: partnerReadinessExactList(source.states, PARTNER_READINESS_STATES),
+      capabilities: partnerReadinessExactList(source.capabilities, PARTNER_READINESS_CAPABILITIES),
+      availability: partnerReadinessExactList(source.availability, PARTNER_READINESS_AVAILABILITY),
+      rate_display_preferences: partnerReadinessExactList(source.rate_display_preferences, PARTNER_READINESS_RATES),
+      preferred_briefs: partnerReadinessExactList(source.preferred_briefs, PARTNER_READINESS_BRIEFS),
+      visibility_drafts: partnerReadinessExactList(source.visibility_drafts, PARTNER_READINESS_VISIBILITY),
+      interest_receipt_only: source.interest_receipt_only === true
+    };
+    return policy.states.length && policy.capabilities.length && policy.availability.length && policy.rate_display_preferences.length
+      && policy.preferred_briefs.length && policy.visibility_drafts.length && policy.interest_receipt_only ? policy : null;
+  }
+
+  function partnerReadinessHistoryProjection(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    if (!partnerReadinessBoundaryIsSafe(source, false, false)) return null;
+    const versionSeen = new Set();
+    const versions = (Array.isArray(source.versions) ? source.versions : []).map((item) => {
+      const value = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const revision = partnerReadinessInteger(value.revision, 1);
+      const snapshot = value.snapshot && typeof value.snapshot === "object" && !Array.isArray(value.snapshot) ? value.snapshot : {};
+      const state = String(snapshot.state || "").trim();
+      const serviceFocus = partnerReadinessSafeText(snapshot.service_focus, 4, 240);
+      const createdAt = partnerReadinessTimestamp(value.created_at);
+      if (revision === null || versionSeen.has(revision) || !PARTNER_READINESS_STATES.has(state) || !serviceFocus || !createdAt) return null;
+      versionSeen.add(revision);
+      return { revision, state, service_focus: serviceFocus, created_at: createdAt };
+    }).filter(Boolean).slice(0, 100);
+    const events = (Array.isArray(source.events) ? source.events : []).map((item) => {
+      const value = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const action = String(value.action || "").trim();
+      const state = String(value.state || "").trim();
+      const revision = partnerReadinessInteger(value.revision, 1);
+      const createdAt = partnerReadinessTimestamp(value.created_at);
+      return PARTNER_READINESS_EVENTS.has(action) && PARTNER_READINESS_STATES.has(state) && revision !== null && createdAt
+        ? { action, state, revision, created_at: createdAt } : null;
+    }).filter(Boolean).slice(0, 100);
+    return { versions, events };
+  }
+
+  function partnerReadinessProjection(policy, profile, history, readState) {
+    const state = ["loading", "read_only", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    if (state !== "read_only") return { readState: state, policy: partnerReadinessEmptyPolicy(), profile: partnerReadinessEmptyProfile(), history: partnerReadinessEmptyHistory() };
+    const projectedPolicy = partnerReadinessPolicyProjection(policy);
+    const projectedProfile = partnerReadinessProfileProjection(profile);
+    const projectedHistory = partnerReadinessHistoryProjection(history);
+    if (!projectedPolicy || !projectedProfile || !projectedHistory) return partnerReadinessProjection({}, null, {}, "guarded");
+    return { readState: "read_only", policy: projectedPolicy, profile: projectedProfile, history: projectedHistory };
   }
 
   // Keep the browser catalog closed even when a deployment has stale assets.
@@ -12047,6 +12190,8 @@
     ++accountActivitySessionEpoch;
     ++accountSecuritySessionEpoch;
     ++workspaceSetupSessionEpoch;
+    ++partnerReadinessSessionEpoch;
+    ++partnerReadinessHydrationEpoch;
     ++starterKitsSessionEpoch;
     ++dataControlsSessionEpoch;
     ++governanceDocumentsSessionEpoch;
@@ -12112,6 +12257,11 @@
     // does not grant any external execution; the server still checks setup,
     // owner scope, Workboard readiness, CSRF and idempotency on every apply.
     const starterKitsEnabled = Boolean(status.flags && status.flags.starter_kits_enabled === true);
+    // Partner Readiness is an independent signed Web profile. This flag only
+    // permits its own local metadata route; it never enables Bot identity,
+    // bridge, provider, CRM, referral, matching, contact, wallet, payment,
+    // job, output or delivery behavior in the browser.
+    const partnerReadinessEnabled = Boolean(status.flags && status.flags.partner_readiness_enabled === true);
     // TOTP is a Web-only second factor. A true client flag merely permits
     // the Portal to request the narrow signed MFA routes; it never enables
     // Bot identity, Core Bridge, wallet, payment, provider or job behavior.
@@ -12489,6 +12639,12 @@
       "workspace-setup-save": Boolean(account && me.csrf_token),
       "starter-kits-view": Boolean(account && starterKitsEnabled),
       "starter-kit-apply": Boolean(account && me.csrf_token && starterKitsEnabled),
+      "partner-readiness-view": Boolean(account && partnerReadinessEnabled),
+      "partner-readiness-save": Boolean(account && me.csrf_token && partnerReadinessEnabled),
+      "partner-readiness-request-review": Boolean(account && me.csrf_token && partnerReadinessEnabled),
+      "partner-readiness-interest": Boolean(account && me.csrf_token && partnerReadinessEnabled),
+      "partner-readiness-archive": Boolean(account && me.csrf_token && partnerReadinessEnabled),
+      "partner-readiness-restore": Boolean(account && me.csrf_token && partnerReadinessEnabled),
       // SMTP availability is projected separately by the signed server. This
       // only enables the explicit consent control; it never claims delivery.
       "account-security-email-verification": Boolean(account && me.csrf_token),
@@ -13230,6 +13386,11 @@
       // revision on screen, and no browser-derived default is treated as a
       // saved profile.
       workspaceSetup: workspaceSetupProjection({}, account ? "loading" : "guarded"),
+      // Partner Readiness has a separate owner-scoped policy/profile/history
+      // projection. Clear all fields on every bootstrap so a prior account's
+      // authored text, revision or activity never survives a failed read.
+      partnerReadinessEnabled,
+      partnerReadiness: partnerReadinessProjection({}, {}, {}, account && partnerReadinessEnabled ? "loading" : "guarded"),
       // Starter Kit catalog/install receipts are independent private records.
       // Clear them before every account bootstrap so a prior user's catalog or
       // Project receipt can never survive a failed signed read.
@@ -13960,6 +14121,7 @@
         "/crm/leads/new": account && partnerCrmEnabled ? "processing" : "guarded",
         "/crm/consultations/new": account && partnerCrmEnabled ? "processing" : "guarded",
         "/admin/crm/leads": account && partnerCrmEnabled ? "processing" : "guarded",
+        "/partner-readiness": account && partnerReadinessEnabled ? "processing" : "guarded",
         ...contentPromptPackRouteStates(Boolean(account && contentPromptPackEnabled)),
         "/content/prompt-pack": account && contentPromptPackEnabled ? "ready" : "guarded",
         "/content/publish-review": account && publishReviewPackEnabled ? "ready" : "guarded",
@@ -14632,6 +14794,11 @@
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
     // the Bot bridge and cannot create a job, quote, payment or provider task.
     if (account && ["/workspace/setup", "/dashboard"].includes(currentPath)) await hydrateWorkspaceSetup();
+    if (account && partnerReadinessEnabled && isNativePartnerReadinessPath(currentPath)) await hydratePartnerReadiness();
+    else if (isNativePartnerReadinessPath(currentPath)) merge({
+      partnerReadiness: partnerReadinessProjection({}, null, {}, "guarded"),
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
     if (account && starterKitsEnabled && isNativeStarterKitsPath(currentPath)) await hydrateStarterKits();
     else if (isNativeStarterKitsPath(currentPath)) merge({
       starterKits: emptyStarterKitsProjection("guarded"),
@@ -14656,7 +14823,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeCommunityTrustPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeCommunityTrustPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath) && !isNativePartnerReadinessPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -22535,6 +22702,213 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function isNativePartnerReadinessPath(path) {
+    const normalized = String(path || "").split("?")[0].replace(/\/$/, "") || "/";
+    return normalized === "/partner-readiness";
+  }
+
+  function partnerReadinessRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === partnerReadinessHydrationEpoch
+      && sessionEpoch === partnerReadinessSessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativePartnerReadinessPath(expectedPath)
+      && base().partnerReadinessEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function partnerReadinessWriteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === partnerReadinessSessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativePartnerReadinessPath(expectedPath)
+      && base().partnerReadinessEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function setPartnerReadinessActionBusy(action, route, busy) {
+    const isBusy = Boolean(busy);
+    document.querySelectorAll("[data-portal-action]").forEach((control) => {
+      const matches = control.getAttribute("data-portal-action") === action
+        && (control.getAttribute("data-portal-route") || window.location.pathname) === route;
+      if (!matches) return;
+      control.setAttribute("aria-busy", String(isBusy));
+      if (control instanceof HTMLFormElement) {
+        control.querySelectorAll("button, input, select, textarea").forEach((field) => {
+          if (isBusy) {
+            if (!field.hasAttribute("data-partner-readiness-disabled-before-busy")) {
+              field.setAttribute("data-partner-readiness-disabled-before-busy", field.disabled ? "true" : "false");
+            }
+            field.disabled = true;
+          } else if (field.hasAttribute("data-partner-readiness-disabled-before-busy")) {
+            field.disabled = field.getAttribute("data-partner-readiness-disabled-before-busy") === "true";
+            field.removeAttribute("data-partner-readiness-disabled-before-busy");
+          }
+        });
+        return;
+      }
+      if ("disabled" in control) control.disabled = isBusy;
+    });
+  }
+
+  async function hydratePartnerReadiness() {
+    const requestEpoch = ++partnerReadinessHydrationEpoch;
+    const sessionEpoch = partnerReadinessSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativePartnerReadinessPath(expectedPath) || base().partnerReadinessEnabled !== true) return null;
+    merge({
+      partnerReadiness: partnerReadinessProjection({}, null, {}, "loading"),
+      pageStates: { ...(base().pageStates || {}), [expectedPath]: "processing" }
+    });
+    try {
+      const [policyResult, profileResult, historyResult] = await Promise.all([
+        api("/partner-readiness/policy"),
+        api("/partner-readiness/profile"),
+        api("/partner-readiness/profile/history")
+      ]);
+      if (!partnerReadinessRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const policyData = policyResult && policyResult.data;
+      const profileData = profileResult && profileResult.data;
+      const historyData = historyResult && historyResult.data;
+      if (!partnerReadinessBoundaryIsSafe(profileData, false, false)) throw new Error("Partner Readiness profile boundary không hợp lệ.");
+      const readiness = partnerReadinessProjection(policyData, profileData && profileData.profile, historyData, "read_only");
+      if (!partnerReadinessRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      if (readiness.readState !== "read_only") throw new Error("Partner Readiness response chưa đúng contract an toàn.");
+      merge({
+        partnerReadiness: readiness,
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+      });
+      return readiness;
+    } catch (_) {
+      // A failed signed read clears every authored field/version/event. The
+      // page must never show another account's profile or invent a local one.
+      if (!partnerReadinessRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        partnerReadiness: partnerReadinessProjection({}, null, {}, "guarded"),
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  function partnerReadinessCurrentProfile() {
+    const value = base().partnerReadiness && base().partnerReadiness.profile;
+    return value && typeof value === "object" ? value : partnerReadinessEmptyProfile();
+  }
+
+  function partnerReadinessCurrentRevision() {
+    const profile = partnerReadinessCurrentProfile();
+    const revision = profile.exists ? partnerReadinessInteger(profile.revision, 1) : 0;
+    return revision === null ? null : revision;
+  }
+
+  function partnerReadinessProfilePayload(fields) {
+    const readiness = base().partnerReadiness && typeof base().partnerReadiness === "object" ? base().partnerReadiness : {};
+    const policy = readiness.policy && typeof readiness.policy === "object" ? readiness.policy : null;
+    const expectedRevision = partnerReadinessCurrentRevision();
+    if (!policy || expectedRevision === null || readiness.readState !== "read_only") throw new Error("Hồ sơ Partner Readiness đã thay đổi. Hãy tải lại trang.");
+    const serviceFocus = partnerReadinessSafeText(fields.service_focus, 4, 240);
+    const portfolioSummary = partnerReadinessSafeText(fields.portfolio_summary || "", 0, 1200);
+    const collaborationNote = partnerReadinessSafeText(fields.collaboration_note || "", 0, 1200);
+    const capabilities = policy.capabilities.filter((key) => fields[`capability_${key}`] === true);
+    const preferredBriefs = policy.preferred_briefs.filter((key) => fields[`brief_${key}`] === true);
+    const availability = String(fields.availability || "").trim();
+    const rate = String(fields.rate_display_preference || "").trim();
+    const visibility = String(fields.visibility_draft || "").trim();
+    if (!serviceFocus || !policy.availability.includes(availability) || !policy.rate_display_preferences.includes(rate)
+      || !policy.visibility_drafts.includes(visibility) || capabilities.length > 8 || preferredBriefs.length > 8) {
+      throw new Error("Hãy kiểm tra trọng tâm, lựa chọn và nội dung hồ sơ trước khi lưu.");
+    }
+    return { service_focus: serviceFocus, capabilities, availability, rate_display_preference: rate, preferred_briefs: preferredBriefs, portfolio_summary: portfolioSummary, collaboration_note: collaborationNote, visibility_draft: visibility, expected_revision: expectedRevision };
+  }
+
+  function partnerReadinessTransitionPayload(fields, action) {
+    const profile = partnerReadinessCurrentProfile();
+    const expectedRevision = partnerReadinessCurrentRevision();
+    if (!profile.exists || expectedRevision === null || !PARTNER_READINESS_STATES.has(profile.state)) throw new Error("Hồ sơ Partner Readiness chưa sẵn sàng. Hãy tải lại trang.");
+    if (action === "partner-readiness-request-review" && profile.state !== "draft") throw new Error("Chỉ bản nháp mới có thể gửi self-review.");
+    if (action === "partner-readiness-interest") {
+      if (profile.state !== "review" || fields.confirm_interest !== true) throw new Error("Hãy xác nhận receipt quan tâm sau khi self-review.");
+      return { expected_revision: expectedRevision, confirm_interest: true };
+    }
+    if (action === "partner-readiness-archive" && !["draft", "review", "submitted"].includes(profile.state)) throw new Error("Trạng thái hiện tại chưa thể lưu trữ.");
+    if (action === "partner-readiness-restore" && profile.state !== "archived") throw new Error("Chỉ hồ sơ đã lưu trữ mới có thể khôi phục.");
+    return { expected_revision: expectedRevision };
+  }
+
+  function partnerReadinessWriteReceipt(raw, interest) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    if (!partnerReadinessBoundaryIsSafe(source, true, interest)) return null;
+    const profile = source.profile && typeof source.profile === "object" && !Array.isArray(source.profile) ? source.profile : {};
+    const revision = partnerReadinessInteger(profile.revision, 1);
+    const state = String(profile.state || "").trim();
+    if (revision === null || !PARTNER_READINESS_STATES.has(state)) return null;
+    if (interest) {
+      const receipt = source.interest_receipt && typeof source.interest_receipt === "object" ? source.interest_receipt : {};
+      if (receipt.kind !== "interest_receipt_only" || partnerReadinessInteger(receipt.revision, 1) !== revision) return null;
+    }
+    return { revision, state };
+  }
+
+  async function submitPartnerReadinessWrite({ action, route, fields }) {
+    const sessionEpoch = partnerReadinessSessionEpoch;
+    if (route !== "/partner-readiness" || currentPortalPath() !== route) throw new Error("Thao tác chỉ hợp lệ tại Partner Readiness đang mở.");
+    const settings = {
+      "partner-readiness-save": { capability: "partner-readiness-save", path: "/partner-readiness/profile", method: "PATCH", scope: "profile", interest: false },
+      "partner-readiness-request-review": { capability: "partner-readiness-request-review", path: "/partner-readiness/profile/request-review", method: "POST", scope: "review", interest: false },
+      "partner-readiness-interest": { capability: "partner-readiness-interest", path: "/partner-readiness/profile/interest", method: "POST", scope: "interest", interest: true },
+      "partner-readiness-archive": { capability: "partner-readiness-archive", path: "/partner-readiness/profile/archive", method: "POST", scope: "archive", interest: false },
+      "partner-readiness-restore": { capability: "partner-readiness-restore", path: "/partner-readiness/profile/restore", method: "POST", scope: "restore", interest: false }
+    }[action];
+    if (!settings || !(base().capabilities && base().capabilities[settings.capability] === true)) throw new Error("Cần signed Web session, CSRF và Partner Readiness đang bật.");
+    const payload = action === "partner-readiness-save"
+      ? partnerReadinessProfilePayload(fields)
+      : partnerReadinessTransitionPayload(fields, action);
+    const scope = `partner-readiness:${settings.scope}:${payload.expected_revision}`;
+    const submission = acquireSubmission(scope, featureFingerprint(payload));
+    if (!submission) {
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) {
+        toast("Partner Readiness đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      }
+      return;
+    }
+    let acknowledged = false;
+    if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) setPartnerReadinessActionBusy(action, route, true);
+    try {
+      const result = await api(settings.path, {
+        method: settings.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      // The URL can be identical after a sign-out/account switch. Session
+      // epoch, signed state and feature state must still belong to the writer.
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
+      acknowledged = true;
+      if (!partnerReadinessWriteReceipt(result.data, settings.interest)) {
+        throw new Error("Máy chủ trả receipt Partner Readiness không đúng boundary an toàn. Hãy tải lại trước khi tiếp tục.");
+      }
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
+      const refreshed = await hydratePartnerReadiness();
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
+      if (!refreshed) throw new Error("Máy chủ đã nhận yêu cầu nhưng Portal chưa tải lại được hồ sơ an toàn.");
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) toast(result.message || "Đã cập nhật Partner Readiness.");
+    } catch (error) {
+      // A stale failure belongs to the prior signed account and must not reach
+      // the current account's generic error toast or trigger its private read.
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
+      acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      // Keep the same idempotency key only for an ambiguous network failure.
+      // A server acknowledgement is always followed by an owner-scoped reread.
+      if (acknowledged && partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) await hydratePartnerReadiness();
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      // A stale account must not reuse this idempotency entry, and its late
+      // completion must never unlock controls rendered for the next account.
+      if (acknowledged || !partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) discardSubmission(scope, submission);
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) setPartnerReadinessActionBusy(action, route, false);
+    }
+  }
+
   function isNativeStarterKitsPath(path) {
     const normalized = String(path || "").split("?")[0].replace(/\/$/, "") || "/";
     if (normalized === "/starter-kits") return true;
@@ -25346,6 +25720,43 @@
       }
       if (action === "starter-kit-apply") {
         await applyStarterKit({ action, route, fields });
+        return;
+      }
+      if (action === "partner-readiness-refresh") {
+        if (route !== "/partner-readiness" || currentPortalPath() !== route) {
+          throw new Error("Chỉ có thể tải lại từ trang Partner Readiness đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["partner-readiness-view"] === true)) {
+          throw new Error("Cần signed Web session để xem Partner Readiness riêng tư.");
+        }
+        setPartnerReadinessActionBusy(action, route, true);
+        try {
+          const readiness = await hydratePartnerReadiness();
+          if (!readiness) throw new Error("Không thể tải Partner Readiness owner-scoped an toàn. Hãy thử lại.");
+          toast("Đã tải lại Partner Readiness từ server.");
+        } finally {
+          setPartnerReadinessActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "partner-readiness-save") {
+        await submitPartnerReadinessWrite({ action, route, fields });
+        return;
+      }
+      if (action === "partner-readiness-request-review") {
+        await submitPartnerReadinessWrite({ action, route, fields });
+        return;
+      }
+      if (action === "partner-readiness-interest") {
+        await submitPartnerReadinessWrite({ action, route, fields });
+        return;
+      }
+      if (action === "partner-readiness-archive") {
+        await submitPartnerReadinessWrite({ action, route, fields });
+        return;
+      }
+      if (action === "partner-readiness-restore") {
+        await submitPartnerReadinessWrite({ action, route, fields });
         return;
       }
       if (action === "workspace-setup-refresh") {

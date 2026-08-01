@@ -20,6 +20,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 
 ## Web implementation contracts
 
+- [`PARTNER_READINESS_WORKSPACE_CONTRACT.md`](PARTNER_READINESS_WORKSPACE_CONTRACT.md) — one private signed-account preparation profile with immutable versions and a local interest receipt; it does not expand referral, Bot, CRM, provider, payment or payout authority.
 - [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.
 - [`CALLBACK_HANDLER_DISPATCH_MAP.md`](CALLBACK_HANDLER_DISPATCH_MAP.md) — Bot callback dispatcher registrations, their source provenance and why they are not browser actions.
 - [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.

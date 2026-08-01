@@ -131,6 +131,12 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/content/handoffs",
   "/" + "api/v1/partner-crm",
   "/crm",
+  // Partner Readiness contains signed-owner authored profile text, revision
+  // history and a local interest receipt. Keep page and API outside Cache
+  // Storage so no private preparation record can survive sign-out or an
+  // account switch through a future public-shell expansion.
+  "/" + "api/v1/partner-readiness",
+  "/partner-readiness",
   "/content/prompt-pack",
   "/content/publish-review",
   "/content/contextual-prompt",

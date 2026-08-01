@@ -670,6 +670,11 @@ def notification_center_enabled() -> bool:
     return os.environ.get("WEBAPP_NOTIFICATION_CENTER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def partner_readiness_enabled() -> bool:
+    """Whether the private Web-native Partner Readiness profile is available."""
+    return os.environ.get("WEBAPP_PARTNER_READINESS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def notification_automation_enabled() -> bool:
     """Whether the isolated scheduler may materialize allowed inbox records."""
     return os.environ.get("WEBAPP_NOTIFICATION_AUTOMATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
@@ -5829,6 +5834,35 @@ def ensure_copyfast_schema() -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_events_document_created ON web_admin_archive_events(document_id, created_at DESC, id DESC)"
         )
+        # One Web-native authored readiness profile per signed account. No
+        # identity, contact, referral, payment, provider, job or delivery data
+        # belongs to this isolated metadata surface.
+        conn.execute("""CREATE TABLE IF NOT EXISTS web_partner_readiness_profiles (
+            account_id TEXT PRIMARY KEY, id TEXT NOT NULL UNIQUE, service_focus TEXT NOT NULL,
+            capabilities_json TEXT NOT NULL DEFAULT '[]', availability TEXT NOT NULL,
+            rate_display_preference TEXT NOT NULL, preferred_briefs_json TEXT NOT NULL DEFAULT '[]',
+            portfolio_summary TEXT NOT NULL DEFAULT '', collaboration_note TEXT NOT NULL DEFAULT '',
+            visibility_draft TEXT NOT NULL DEFAULT 'private', state TEXT NOT NULL DEFAULT 'draft',
+            revision INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+            archived_at TEXT, FOREIGN KEY(account_id) REFERENCES web_accounts(id))""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS web_partner_readiness_versions (
+            id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, account_id TEXT NOT NULL,
+            revision INTEGER NOT NULL, snapshot_json TEXT NOT NULL, created_at TEXT NOT NULL,
+            UNIQUE(profile_id, revision), FOREIGN KEY(profile_id) REFERENCES web_partner_readiness_profiles(id),
+            FOREIGN KEY(account_id) REFERENCES web_accounts(id))""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS web_partner_readiness_events (
+            id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, account_id TEXT NOT NULL, action TEXT NOT NULL,
+            state TEXT NOT NULL, revision INTEGER NOT NULL, created_at TEXT NOT NULL,
+            FOREIGN KEY(profile_id) REFERENCES web_partner_readiness_profiles(id),
+            FOREIGN KEY(account_id) REFERENCES web_accounts(id))""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS web_partner_readiness_interest_submissions (
+            id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, account_id TEXT NOT NULL,
+            profile_revision INTEGER NOT NULL, created_at TEXT NOT NULL, UNIQUE(profile_id, profile_revision),
+            FOREIGN KEY(profile_id) REFERENCES web_partner_readiness_profiles(id),
+            FOREIGN KEY(account_id) REFERENCES web_accounts(id))""")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_profiles_owner_updated ON web_partner_readiness_profiles(account_id, updated_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_versions_owner_revision ON web_partner_readiness_versions(account_id, revision DESC, profile_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_events_owner_created ON web_partner_readiness_events(account_id, created_at DESC, id DESC)")
 
 
 def as_row(row: sqlite3.Row | tuple | None, columns: tuple[str, ...]) -> dict | None:

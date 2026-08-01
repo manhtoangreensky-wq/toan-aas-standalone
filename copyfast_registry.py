@@ -56,6 +56,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
     WebFeature("account_security", "Bảo mật tài khoản", "account", "/account/security", description="Quản lý signed session, mật khẩu Web và phương thức OAuth theo signed account; không lộ credential hoặc state Bot."),
     WebFeature("workspace_care", "Chăm sóc dữ liệu Web", "account", "/account/workspace-care", description="Điểm bắt đầu an toàn để rà soát ghi chú, nhắc việc và Data Controls thuộc Web account; không dọn Bot storage, quota, add-on, job, Xu hoặc PayOS."),
+    WebFeature("partner_readiness", "Partner Readiness", "growth", "/partner-readiness", description="Hồ sơ hợp tác riêng tư có version, self-review và receipt quan tâm Web-owned; không tạo referral/link, commission, payout, Xu/PayOS, CRM, liên hệ, matching hay public listing."),
     # Memory Center is deliberately Web-owned: it gives the full portal a
     # professional notes/task surface without copying Bot Telegram state,
     # wallet, payment, job or provider data.

@@ -250,6 +250,28 @@ already granted route, but cannot discover, manufacture or authorize one.
 
 ---
 
+## Partner Readiness page rule
+
+`/partner-readiness` is a private customer workflow, not a lead-magnet,
+portfolio or referral page. Keep its authored profile editor, lifecycle state
+rail and immutable history aligned to the same 4/8px rhythm as the signed
+workspace: an open primary working surface, a compact secondary action rail
+and a two-column timeline that collapses to one clear column on mobile.
+
+- Reuse the light cyan canvas, white working surface, deep teal action and sky
+  focus tokens. Do not add raw colours, gradients, decorative profile imagery
+  or marketing-card grids.
+- Preserve visible labels, inline helper copy and the existing high-contrast
+  focus ring. Customer-confirmation controls and every mobile action remain at
+  least 44px high.
+- Use only opacity/transform enhancement in the page-specific interaction
+  rules, with the shared 150–220ms timing and the existing reduced-motion
+  fallback. State and history remain visible without motion.
+- Keep public discovery, contact, matching, referral, payout and CRM visual
+  language out of this page; it is one owner-scoped preparation record.
+
+---
+
 ## Anti-Patterns (Do NOT Use)
 
 - ❌ Complex onboarding
