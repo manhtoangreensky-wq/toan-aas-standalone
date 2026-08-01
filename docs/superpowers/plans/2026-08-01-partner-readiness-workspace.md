@@ -325,7 +325,7 @@ Run:
 
 ```powershell
 python -m compileall -q .
-python -m pytest -q tests/test_copyfast_partner_readiness.py tests/test_partner_readiness_portal_contracts.py tests/test_copyfast_workspace_setup_profile.py tests/test_copyfast_channel_strategy.py tests/test_portal_navigation_ux_contracts.py tests/test_pwa_scope_offline_contracts.py
+python -m pytest -q tests/test_copyfast_partner_readiness.py tests/test_partner_readiness_portal_contracts.py tests/test_workspace_setup_profile.py tests/test_copyfast_channel_strategy.py tests/test_portal_navigation_ux_contracts.py tests/test_pwa_scope_offline_contracts.py
 node --check static/portal/portal.js
 node --check static/portal/integration.js
 node --check static/portal/portal-motion.js

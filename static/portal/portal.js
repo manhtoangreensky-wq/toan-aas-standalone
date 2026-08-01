@@ -810,6 +810,10 @@
     layout: "workspace-setup", fields: [], action: "none", status: "ready",
     notes: ["Thiết lập này chỉ cá nhân hóa điều hướng Web; không kích hoạt Bot, bridge, provider, job, ví Xu, PayOS hay xuất bản.", "Lựa chọn được lưu theo signed Web account, có CSRF, revision và audit; không nhận Telegram ID từ browser."]
   });
+  customerPage("/partner-readiness", "Partner Readiness", "Chuẩn bị hồ sơ hợp tác riêng tư, tự review theo phiên bản và gửi một receipt quan tâm do Web App sở hữu.", ICONS.support, {
+    layout: "partner-readiness", fields: [], action: "none", status: "ready",
+    notes: ["Đây là workspace Web-native riêng tư theo signed account; không nhận Telegram ID, contact, referral code, URL, payment hay dữ liệu CRM từ browser.", "Submitted chỉ nghĩa là Web App đã ghi receipt quan tâm cục bộ; không phải duyệt, ghép khách, liên hệ, referral, hoa hồng, thanh toán hoặc payout."]
+  });
   customerPage("/workspace-menu", "Chuyển workspace", "Directory điều hướng gọn theo mục tiêu làm việc; mọi route đích vẫn kiểm tra signed session, ownership và trạng thái riêng.", ICONS.dashboard, {
     type: "workspace-menu", layout: "workspace-menu", fields: [], action: "none", status: "read_only",
     notes: ["Directory chỉ dùng catalogue điều hướng Web đã review. Nó không nhận callback, Telegram ID, message, pending state hoặc dữ liệu Bot.", "Không có action, bridge/read-model riêng, job, Xu, PayOS, payment, provider hay output được tạo từ trang này."]
@@ -6974,6 +6978,121 @@
     };
   }
 
+  const PARTNER_READINESS_BOOTSTRAP_READ_STATES = new Set(["loading", "read_only", "guarded"]);
+  const PARTNER_READINESS_BOOTSTRAP_STATES = new Set(["draft", "review", "submitted", "archived"]);
+  const PARTNER_READINESS_BOOTSTRAP_CAPABILITIES = new Set(["brief_review", "content_system", "creative_direction", "workflow_design", "quality_review", "handoff_documentation"]);
+  const PARTNER_READINESS_BOOTSTRAP_BRIEFS = new Set(["product_content", "campaign", "brand_system", "operations", "education"]);
+  const PARTNER_READINESS_BOOTSTRAP_AVAILABILITY = new Set(["open", "limited", "unavailable"]);
+  const PARTNER_READINESS_BOOTSTRAP_RATES = new Set(["on_request", "range_discussion", "not_shown"]);
+  const PARTNER_READINESS_BOOTSTRAP_VISIBILITY = new Set(["private", "handoff_ready"]);
+  const PARTNER_READINESS_BOOTSTRAP_EVENTS = new Set(["create", "update", "request_review", "interest_submitted", "archive", "restore"]);
+
+  function partnerReadinessSafeText(value, maximum) {
+    const text = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+    return text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function partnerReadinessSafeTimestamp(value) {
+    const text = partnerReadinessSafeText(value, 80);
+    return text && Number.isFinite(Date.parse(text)) ? text : "";
+  }
+
+  function partnerReadinessClosedList(raw, allowed, limit) {
+    const seen = new Set();
+    return Array.isArray(raw)
+      ? raw.map((item) => String(item || "").trim().toLowerCase())
+        .filter((item) => allowed.has(item) && !seen.has(item) && seen.add(item)).slice(0, limit)
+      : [];
+  }
+
+  function partnerReadinessEmptyProfile() {
+    return { exists: false, service_focus: "", capabilities: [], availability: "open", rate_display_preference: "on_request", preferred_briefs: [], portfolio_summary: "", collaboration_note: "", visibility_draft: "private", state: "draft", revision: 0, created_at: "", updated_at: "", archived_at: "" };
+  }
+
+  function partnerReadinessProfileBootstrap(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
+    if (!source) return partnerReadinessEmptyProfile();
+    const serviceFocus = partnerReadinessSafeText(source.service_focus, 240);
+    const capabilities = partnerReadinessClosedList(source.capabilities, PARTNER_READINESS_BOOTSTRAP_CAPABILITIES, 8);
+    const preferredBriefs = partnerReadinessClosedList(source.preferred_briefs, PARTNER_READINESS_BOOTSTRAP_BRIEFS, 8);
+    const availability = String(source.availability || "").trim();
+    const rate = String(source.rate_display_preference || "").trim();
+    const visibility = String(source.visibility_draft || "").trim();
+    const state = String(source.state || "").trim();
+    const revision = Number.isSafeInteger(source.revision) && source.revision >= 1 && source.revision <= 2147483647 ? source.revision : 0;
+    const createdAt = partnerReadinessSafeTimestamp(source.created_at);
+    const updatedAt = partnerReadinessSafeTimestamp(source.updated_at);
+    const archivedAt = source.archived_at == null ? "" : partnerReadinessSafeTimestamp(source.archived_at);
+    if (serviceFocus.length < 4 || !PARTNER_READINESS_BOOTSTRAP_AVAILABILITY.has(availability)
+      || !PARTNER_READINESS_BOOTSTRAP_RATES.has(rate) || !PARTNER_READINESS_BOOTSTRAP_VISIBILITY.has(visibility)
+      || !PARTNER_READINESS_BOOTSTRAP_STATES.has(state) || !revision || !createdAt || !updatedAt
+      || (state === "archived" && !archivedAt) || (state !== "archived" && archivedAt)) return null;
+    return {
+      exists: true, service_focus: serviceFocus, capabilities, availability, rate_display_preference: rate,
+      preferred_briefs: preferredBriefs, portfolio_summary: partnerReadinessSafeText(source.portfolio_summary, 1200),
+      collaboration_note: partnerReadinessSafeText(source.collaboration_note, 1200), visibility_draft: visibility,
+      state, revision, created_at: createdAt, updated_at: updatedAt, archived_at: archivedAt
+    };
+  }
+
+  function partnerReadinessPolicyBootstrap(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const exact = (value, allowed) => {
+      const list = partnerReadinessClosedList(value, allowed, allowed.size);
+      return list.length === allowed.size ? list : [];
+    };
+    const policy = {
+      states: exact(source.states, PARTNER_READINESS_BOOTSTRAP_STATES),
+      capabilities: exact(source.capabilities, PARTNER_READINESS_BOOTSTRAP_CAPABILITIES),
+      availability: exact(source.availability, PARTNER_READINESS_BOOTSTRAP_AVAILABILITY),
+      rate_display_preferences: exact(source.rate_display_preferences, PARTNER_READINESS_BOOTSTRAP_RATES),
+      preferred_briefs: exact(source.preferred_briefs, PARTNER_READINESS_BOOTSTRAP_BRIEFS),
+      visibility_drafts: exact(source.visibility_drafts, PARTNER_READINESS_BOOTSTRAP_VISIBILITY),
+      interest_receipt_only: source.interest_receipt_only === true
+    };
+    return policy.states.length && policy.capabilities.length && policy.availability.length && policy.rate_display_preferences.length
+      && policy.preferred_briefs.length && policy.visibility_drafts.length && policy.interest_receipt_only ? policy : null;
+  }
+
+  function partnerReadinessHistoryBootstrap(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const versionSeen = new Set();
+    const versions = (Array.isArray(source.versions) ? source.versions : []).map((item) => {
+      const value = item && typeof item === "object" ? item : {};
+      const revision = Number.isSafeInteger(value.revision) && value.revision >= 1 && value.revision <= 2147483647 ? value.revision : 0;
+      const snapshot = value.snapshot && typeof value.snapshot === "object" ? value.snapshot : {};
+      const state = String(snapshot.state || "").trim();
+      const serviceFocus = partnerReadinessSafeText(snapshot.service_focus, 240);
+      const createdAt = partnerReadinessSafeTimestamp(value.created_at);
+      if (!revision || versionSeen.has(revision) || !PARTNER_READINESS_BOOTSTRAP_STATES.has(state) || serviceFocus.length < 4 || !createdAt) return null;
+      versionSeen.add(revision);
+      return { revision, state, service_focus: serviceFocus, created_at: createdAt };
+    }).filter(Boolean).slice(0, 100);
+    const events = (Array.isArray(source.events) ? source.events : []).map((item) => {
+      const value = item && typeof item === "object" ? item : {};
+      const action = String(value.action || "").trim();
+      const state = String(value.state || "").trim();
+      const revision = Number.isSafeInteger(value.revision) && value.revision >= 1 && value.revision <= 2147483647 ? value.revision : 0;
+      const createdAt = partnerReadinessSafeTimestamp(value.created_at);
+      return PARTNER_READINESS_BOOTSTRAP_EVENTS.has(action) && PARTNER_READINESS_BOOTSTRAP_STATES.has(state) && revision && createdAt
+        ? { action, state, revision, created_at: createdAt } : null;
+    }).filter(Boolean).slice(0, 100);
+    return { versions, events };
+  }
+
+  function normalizePartnerReadinessBootstrap(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const readState = PARTNER_READINESS_BOOTSTRAP_READ_STATES.has(String(source.readState || "").trim().toLowerCase())
+      ? String(source.readState).trim().toLowerCase() : "guarded";
+    const profile = partnerReadinessProfileBootstrap(source.profile);
+    const policy = partnerReadinessPolicyBootstrap(source.policy);
+    const history = partnerReadinessHistoryBootstrap(source.history);
+    if (readState === "read_only" && (!profile || !policy)) {
+      return { readState: "guarded", profile: partnerReadinessEmptyProfile(), policy: null, history: { versions: [], events: [] } };
+    }
+    return { readState, profile: profile || partnerReadinessEmptyProfile(), policy, history };
+  }
+
   const STARTER_KITS_BOOTSTRAP_READ_STATES = new Set(["loading", "read_only", "guarded"]);
   const STARTER_KITS_BOOTSTRAP_STATES = new Set(["available", "installed", "setup_required", "maintenance"]);
 
@@ -8363,6 +8482,11 @@
       // display locale/timezone; it cannot inherit bridge, Bot, job, wallet,
       // payment, provider or arbitrary profile data through a render cycle.
       workspaceSetup: normalizeWorkspaceSetupBootstrap(source.workspaceSetup),
+      // Partner Readiness is a private, signed-account preparation profile.
+      // Keep only the closed authoring choices, state/revision and bounded
+      // activity summaries; it cannot inherit any Bot, bridge, provider,
+      // payment, CRM, referral, contact, matching or public-listing data.
+      partnerReadiness: normalizePartnerReadinessBootstrap(source.partnerReadiness),
       // Starter Kits retain only a closed local catalog, bounded counts and
       // owner-scoped receipt IDs. They cannot inherit Bot, bridge, provider,
       // job, wallet, payment, publication or notification state through a
@@ -23242,6 +23366,80 @@
     return renderStarterKitCatalog(page, context, catalog);
   }
 
+  function partnerReadinessStateLabel(state) {
+    return ({ draft: "Bản nháp", review: "Đang tự review", submitted: "Đã ghi nhận quan tâm", archived: "Đã lưu trữ" })[state] || "Được bảo vệ";
+  }
+
+  function partnerReadinessStateBadge(state) {
+    if (state === "submitted") return "ready";
+    if (state === "review") return "processing";
+    if (state === "draft") return "awaiting_confirm";
+    return "guarded";
+  }
+
+  function partnerReadinessEventLabel(action) {
+    return ({ create: "Tạo hồ sơ", update: "Cập nhật hồ sơ", request_review: "Gửi tự review", interest_submitted: "Ghi nhận quan tâm", archive: "Lưu trữ", restore: "Khôi phục bản nháp" })[action] || "Cập nhật";
+  }
+
+  function renderPartnerReadiness(page, context) {
+    const route = "/partner-readiness";
+    const readiness = context.partnerReadiness && typeof context.partnerReadiness === "object" ? context.partnerReadiness : {};
+    const profile = readiness.profile && typeof readiness.profile === "object" ? readiness.profile : partnerReadinessEmptyProfile();
+    const policy = readiness.policy && typeof readiness.policy === "object" ? readiness.policy : null;
+    const history = readiness.history && typeof readiness.history === "object" ? readiness.history : { versions: [], events: [] };
+    const readState = String(readiness.readState || "guarded");
+    const canView = Boolean(context.capabilities && context.capabilities["partner-readiness-view"] === true);
+    const writableState = profile.state === "draft" || profile.state === "review";
+    const canSave = Boolean(context.capabilities && context.capabilities["partner-readiness-save"] === true && readState === "read_only" && writableState);
+    const capability = (name) => Boolean(context.capabilities && context.capabilities[name] === true && readState === "read_only");
+    if (!canView) {
+      return `<article class="portal-page portal-partner-readiness">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite">${renderEmpty("Partner Readiness đang được bảo vệ", "Đăng nhập bằng signed Web session để xem hồ sơ chuẩn bị hợp tác riêng của chính tài khoản này.", ICONS.security)}</section></article>`;
+    }
+    if (readState === "loading") {
+      return `<article class="portal-page portal-partner-readiness">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite">${renderEmpty("Đang tải Partner Readiness", "Portal đang đọc policy, hồ sơ và lịch sử owner-scoped từ Web App. Không dùng dữ liệu Bot, CRM, browser storage hoặc phiên trước để thay thế.", ICONS.support)}</section></article>`;
+    }
+    if (readState !== "read_only" || !policy) {
+      return `<article class="portal-page portal-partner-readiness">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ chưa thể xác minh</h2><p class="portal-card-subtitle">Máy chủ chưa trả policy hoặc hồ sơ Partner Readiness đúng contract. Portal không tạo hồ sơ giả, không khôi phục dữ liệu cũ và không dùng fallback CRM.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-readiness-refresh" data-portal-route="${route}">Tải lại</button></div></section></article>`;
+    }
+    const capabilityLabels = {
+      brief_review: ["Review brief", "Rà soát phạm vi, mục tiêu và tiêu chí."],
+      content_system: ["Hệ thống nội dung", "Thiết kế cấu trúc biên tập có thể review."],
+      creative_direction: ["Creative direction", "Định hướng sáng tạo có căn cứ."],
+      workflow_design: ["Thiết kế workflow", "Làm rõ bước bàn giao và kiểm soát."],
+      quality_review: ["Quality review", "Thiết lập điểm kiểm tra chất lượng."],
+      handoff_documentation: ["Tài liệu bàn giao", "Chuẩn bị hướng dẫn và ghi chú rõ ràng."]
+    };
+    const briefLabels = {
+      product_content: "Nội dung sản phẩm", campaign: "Campaign", brand_system: "Hệ thống thương hiệu", operations: "Vận hành", education: "Đào tạo"
+    };
+    const availabilityLabels = { open: "Có thể trao đổi", limited: "Giới hạn thời gian", unavailable: "Chưa sẵn sàng" };
+    const rateLabels = { on_request: "Theo yêu cầu", range_discussion: "Trao đổi theo khoảng", not_shown: "Không hiển thị" };
+    const visibilityLabels = { private: "Chỉ riêng tư", handoff_ready: "Sẵn sàng self-review" };
+    const selectedCapabilities = new Set(Array.isArray(profile.capabilities) ? profile.capabilities : []);
+    const selectedBriefs = new Set(Array.isArray(profile.preferred_briefs) ? profile.preferred_briefs : []);
+    const disabled = canSave ? "" : " disabled";
+    const options = (items, selected, labels) => items.map((item) => `<option value="${safeText(item)}"${selected === item ? " selected" : ""}>${safeText(labels[item] || item)}</option>`).join("");
+    const capabilityCards = policy.capabilities.map((key) => {
+      const copy = capabilityLabels[key] || [key, ""];
+      return `<label class="portal-partner-readiness-choice"><input type="checkbox" name="capability_${safeText(key)}"${selectedCapabilities.has(key) ? " checked" : ""}${disabled}><span><strong>${safeText(copy[0])}</strong><small>${safeText(copy[1])}</small></span></label>`;
+    }).join("");
+    const briefCards = policy.preferred_briefs.map((key) => `<label class="portal-partner-readiness-choice"><input type="checkbox" name="brief_${safeText(key)}"${selectedBriefs.has(key) ? " checked" : ""}${disabled}><span><strong>${safeText(briefLabels[key] || key)}</strong><small>Ưu tiên định hướng, không tạo matching hoặc liên hệ.</small></span></label>`).join("");
+    const stateAction = profile.exists && profile.state === "draft"
+      ? `<form class="portal-form portal-partner-readiness-action" data-portal-form data-portal-no-transient data-portal-action="partner-readiness-request-review" data-portal-route="${route}" data-portal-confirm="Chuyển hồ sơ sang trạng thái tự review? Thao tác này chỉ đổi trạng thái hồ sơ riêng tư."><input type="hidden" name="expected_revision" value="${safeText(String(profile.revision))}"><p>Kiểm tra lại nội dung trước khi gửi self-review. Bạn vẫn có thể sửa, khi đó hồ sơ sẽ quay về bản nháp.</p><button class="portal-button portal-button--primary" type="submit"${capability("partner-readiness-request-review") ? "" : " disabled"}>Gửi self-review</button></form>`
+      : profile.exists && profile.state === "review"
+        ? `<form class="portal-form portal-partner-readiness-action" data-portal-form data-portal-no-transient data-portal-action="partner-readiness-interest" data-portal-route="${route}" data-portal-confirm="Ghi nhận quan tâm trong Web App? Thao tác này không tạo approval, matching, contact, referral, commission, payment hoặc payout."><input type="hidden" name="expected_revision" value="${safeText(String(profile.revision))}"><label class="portal-checkbox portal-partner-readiness-confirm"><input type="checkbox" name="confirm_interest" value="true" required${capability("partner-readiness-interest") ? "" : " disabled"}><span>Tôi xác nhận chỉ gửi một receipt quan tâm riêng tư để Web App lưu.</span></label><p>Đã ghi nhận quan tâm trong Web App; chưa có duyệt, ghép khách, liên hệ, referral, hoa hồng, thanh toán hoặc payout.</p><button class="portal-button portal-button--primary" type="submit"${capability("partner-readiness-interest") ? "" : " disabled"}>Ghi nhận quan tâm</button></form>`
+        : profile.exists && profile.state === "submitted"
+          ? `<div class="portal-partner-readiness-receipt" role="status" aria-live="polite"><strong>Đã ghi nhận receipt quan tâm cục bộ.</strong><p>Đã ghi nhận quan tâm trong Web App; chưa có duyệt, ghép khách, liên hệ, referral, hoa hồng, thanh toán hoặc payout.</p><form class="portal-form portal-partner-readiness-action" data-portal-form data-portal-no-transient data-portal-action="partner-readiness-archive" data-portal-route="${route}" data-portal-confirm="Lưu trữ hồ sơ Partner Readiness này?"><input type="hidden" name="expected_revision" value="${safeText(String(profile.revision))}"><button class="portal-button portal-button--quiet" type="submit"${capability("partner-readiness-archive") ? "" : " disabled"}>Lưu trữ hồ sơ</button></form></div>`
+          : profile.exists && profile.state === "archived"
+            ? `<form class="portal-form portal-partner-readiness-action" data-portal-form data-portal-no-transient data-portal-action="partner-readiness-restore" data-portal-route="${route}" data-portal-confirm="Khôi phục hồ sơ về bản nháp để tiếp tục self-review?"><input type="hidden" name="expected_revision" value="${safeText(String(profile.revision))}"><p>Khôi phục chỉ đưa hồ sơ private về bản nháp; không mở public listing, matching hoặc liên hệ.</p><button class="portal-button portal-button--primary" type="submit"${capability("partner-readiness-restore") ? "" : " disabled"}>Khôi phục bản nháp</button></form>`
+            : `<p class="portal-form-note">Lưu hồ sơ để bắt đầu self-review. Chưa có workflow bên ngoài được tạo.</p>`;
+    const versions = (Array.isArray(history.versions) ? history.versions : []).map((item) => `<li><strong>v${safeText(String(item.revision))} · ${safeText(partnerReadinessStateLabel(item.state))}</strong><span>${safeText(item.service_focus)}</span><small>${safeText(item.created_at)}</small></li>`).join("") || "<li><span>Chưa có version nào được lưu.</span></li>";
+    const events = (Array.isArray(history.events) ? history.events : []).map((item) => `<li><strong>${safeText(partnerReadinessEventLabel(item.action))}</strong><span>${safeText(partnerReadinessStateLabel(item.state))} · v${safeText(String(item.revision))}</span><small>${safeText(item.created_at)}</small></li>`).join("") || "<li><span>Chưa có activity nào.</span></li>";
+    return `<article class="portal-page portal-partner-readiness">${renderHero(page, context)}
+      <section class="portal-partner-readiness-state" aria-live="polite"><div><h2>Hồ sơ hợp tác của bạn</h2><p>${profile.exists ? "Hồ sơ private hiện được lưu theo signed Web account và có revision rõ ràng." : "Bắt đầu bằng một hồ sơ private. Portal chỉ gửi dữ liệu khi bạn chủ động lưu."}</p></div><dl><div><dt>Trạng thái</dt><dd>${safeText(partnerReadinessStateLabel(profile.state))}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(profile.revision))}</dd></div></dl>${badge(partnerReadinessStateBadge(profile.state))}</section>
+      <div class="portal-partner-readiness-layout"><section class="portal-card portal-card-pad"><form class="portal-form portal-partner-readiness-form" data-portal-form data-portal-no-transient data-portal-action="partner-readiness-save" data-portal-route="${route}" novalidate><div class="portal-partner-readiness-form-grid"><label class="portal-field portal-field--wide" for="partner-readiness-focus"><span>Trọng tâm dịch vụ <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" id="partner-readiness-focus" name="service_focus" type="text" minlength="4" maxlength="240" required autocomplete="off" value="${safeText(profile.service_focus)}" placeholder="Ví dụ: Thiết kế workflow nội dung và creative review cho đội nhỏ"${disabled}><small class="portal-field-help">Mô tả theo phạm vi chuyên môn, không thêm liên hệ, URL, token hoặc thông tin thanh toán.</small></label><label class="portal-field"><span>Khả dụng</span><select class="portal-select" name="availability"${disabled}>${options(policy.availability, profile.availability, availabilityLabels)}</select></label><label class="portal-field"><span>Cách hiển thị mức phí</span><select class="portal-select" name="rate_display_preference"${disabled}>${options(policy.rate_display_preferences, profile.rate_display_preference, rateLabels)}</select></label><label class="portal-field"><span>Mức sẵn sàng</span><select class="portal-select" name="visibility_draft"${disabled}>${options(policy.visibility_drafts, profile.visibility_draft, visibilityLabels)}</select></label><label class="portal-field portal-field--wide" for="partner-readiness-summary"><span>Tóm tắt năng lực</span><textarea class="portal-textarea" id="partner-readiness-summary" name="portfolio_summary" maxlength="1200" autocomplete="off" placeholder="Mô tả ngắn về cách bạn làm việc, tiêu chí review và loại kết quả bạn có thể đóng góp."${disabled}>${safeText(profile.portfolio_summary)}</textarea></label><label class="portal-field portal-field--wide" for="partner-readiness-note"><span>Ghi chú hợp tác</span><textarea class="portal-textarea" id="partner-readiness-note" name="collaboration_note" maxlength="1200" autocomplete="off" placeholder="Nêu phạm vi, cách phối hợp hoặc tiêu chí self-review phù hợp."${disabled}>${safeText(profile.collaboration_note)}</textarea></label></div><fieldset class="portal-partner-readiness-options"><legend>Năng lực ưu tiên</legend><p>Chọn các nhóm bạn muốn thể hiện trong hồ sơ private.</p><div class="portal-partner-readiness-choice-grid">${capabilityCards}</div></fieldset><fieldset class="portal-partner-readiness-options"><legend>Loại brief ưu tiên</legend><p>Đây là metadata self-review, không tạo matching hoặc chuyển tiếp sang CRM.</p><div class="portal-partner-readiness-choice-grid">${briefCards}</div></fieldset><div class="portal-form-footer"><span class="portal-form-note">Lưu theo signed Web account · revision ${safeText(String(profile.revision))} · không có Bot, bridge, provider, job, ví Xu hoặc PayOS.</span><button class="portal-button portal-button--primary" type="submit"${canSave ? "" : " disabled"}>${profile.exists ? "Lưu cập nhật" : "Lưu hồ sơ private"}</button></div></form></section><aside class="portal-partner-readiness-aside"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bước tiếp theo</h2><p class="portal-card-subtitle">${safeText(partnerReadinessStateLabel(profile.state))}</p></div>${badge(partnerReadinessStateBadge(profile.state))}</div>${stateAction}</section><section class="portal-card portal-card-pad"><h2 class="portal-card-title">Giới hạn rõ ràng</h2><p class="portal-card-subtitle">Trang này không là referral surface và không tạo link, commission, payout, CRM record, public listing, matching, contact, approval, payment hay delivery.</p><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-readiness-refresh" data-portal-route="${route}">Tải lại dữ liệu private</button></section></aside></div><section class="portal-partner-readiness-history"><section class="portal-card portal-card-pad"><h2 class="portal-card-title">Version history</h2><ol>${versions}</ol></section><section class="portal-card portal-card-pad"><h2 class="portal-card-title">Activity</h2><ol>${events}</ol></section></section></article>`;
+  }
+
   function renderWorkspaceSetup(page, context) {
     const setup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
     const profile = setup.profile && typeof setup.profile === "object" ? setup.profile : workspaceSetupEmptyProfile();
@@ -26096,6 +26294,7 @@
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);
       case "starter-kits": return renderStarterKits(page, context);
+      case "partner-readiness": return renderPartnerReadiness(page, context);
       case "workspace-setup": return renderWorkspaceSetup(page, context);
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);
