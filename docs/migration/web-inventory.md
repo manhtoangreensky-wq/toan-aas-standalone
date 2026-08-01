@@ -8,6 +8,7 @@
 | /admin-app | GET | legacy_admin_redirect |
 | /admin/approve-topup | POST | approve_manual_topup |
 | /admin/care/queues | GET | admin_care_queues |
+| /admin/care/resolution-feedback-summary | GET | admin_resolution_feedback_summary |
 | /admin/care/staff | GET | admin_care_staff |
 | /admin/cases | GET | admin_list_cases |
 | /admin/cases/{case_id} | GET | admin_get_case |
@@ -133,6 +134,7 @@
 | /cases/{case_id}/close | POST | close_case |
 | /cases/{case_id}/reopen | POST | reopen_case |
 | /cases/{case_id}/reply | POST | reply_case |
+| /cases/{case_id}/resolution-feedback | POST | create_resolution_feedback |
 | /catalog | GET | feature_catalog |
 | /catalog | GET | get_catalog |
 | /catalog | GET | get_catalog |
@@ -160,7 +162,5 @@
 | /consultations | POST | confirm_consultation |
 | /consultations/catalog | GET | consultation_catalog |
 | /consultations/preview | POST | preview_consultation |
-| /convert | POST | convert_audio_asset |
-| /convert | POST | convert_subtitle_asset |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

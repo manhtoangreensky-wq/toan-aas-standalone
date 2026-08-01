@@ -32,7 +32,7 @@ remain explicitly guarded or Telegram-only, and Video-menu work remains last.
 - Add one finite, case-sensitive descriptor for `menu|translation_transcript`.
 - Preserve the Bot-known-broken evidence in the mapping and prohibit all
   runtime, provider, job, finance and delivery claims.
-- Generate the translation boundary contract with the Bot failure and manual
+- Update the translation boundary contract with the Bot failure and manual
   Web fallback shown separately.
 - Regenerate only migration artifacts that are outputs of the static audit.
 - Add focused audit tests for exactness, status, and no-route/no-runtime

@@ -4579,20 +4579,27 @@ def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_s
         assert mapped["menu_launch_mode"] == "WEB_NAVIGATION"
 
     # The frozen Bot stores a `transcript` pending source but the later
-    # callback accepts only voice/file/text. Keep that known broken branch out
-    # of the browser-safe menu catalog rather than making Subtitle Studio look
-    # like an operational Bot translation adapter.
+    # callback accepts only voice/file/text. The one exact known-broken source
+    # may recover into a fresh guarded manual workspace without pretending the
+    # Bot translation adapter worked or replaying any Bot state.
     assert audit.TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS == {"menu|translation_transcript"}
     assert "menu|translation_transcript" not in audit.MENU_ACTION_REGISTRY
     transcript = audit._map_callback("menu|translation_transcript", "callback_data", {"file": "bot.py", "line": 1}, routes)
-    assert transcript["target"] == "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN"
-    assert transcript["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert transcript["resolution"] == "known_broken_bot_translation_transcript"
+    assert transcript["target"] == "/subtitle-studio"
+    assert transcript["status"] == "COPIED_GUARDED"
+    assert transcript["resolution"] == "reviewed_known_broken_translation_transcript_manual_fallback"
+    assert transcript["translation_fallback_capability_key"] == "subtitle_studio"
     assert transcript["source_dispositions"] == (
         "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
         "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "FRESH_SIGNED_WEB_MANUAL_TRANSCRIPT_FALLBACK",
+        "NO_RAW_BOT_CALLBACK_OR_PENDING_SOURCE_TO_BROWSER",
+        "NO_ASR_TRANSLATION_TTS_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM",
     )
+    case_variant = audit._map_callback("MENU|TRANSLATION_TRANSCRIPT", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert case_variant["target"] != "/subtitle-studio"
+    assert case_variant["resolution"] != "reviewed_known_broken_translation_transcript_manual_fallback"
 
     # The legacy `tr_*` handler consumes Telegram-local cached/pending source
     # state. Only three static picker literals may open a fresh guarded Web
@@ -4708,6 +4715,7 @@ def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_s
     assert public_catalog["subtitle_studio"]["route"] == "/subtitle-studio"
     assert public_catalog["subtitle_studio"]["authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
     serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "translation_transcript" not in serialized_catalog
     assert "translation_pair" not in serialized_catalog
     assert "translation_video_factory" not in serialized_catalog
 

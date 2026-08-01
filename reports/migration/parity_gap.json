@@ -30515,18 +30515,21 @@
         "file": "bot.py",
         "line": 49607
       },
-      "fallback_family": "translation_transcript",
-      "resolution": "known_broken_bot_translation_transcript",
+      "resolution": "reviewed_known_broken_translation_transcript_manual_fallback",
       "source": "menu|translation_transcript",
       "source_dispositions": [
         "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
         "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "FRESH_SIGNED_WEB_MANUAL_TRANSCRIPT_FALLBACK",
+        "NO_RAW_BOT_CALLBACK_OR_PENDING_SOURCE_TO_BROWSER",
+        "NO_ASR_TRANSLATION_TTS_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot menu stores a `transcript` pending source, while its later translation callback handles only voice, file and text before returning an unsupported-source alert.",
+      "source_evidence": "The frozen Bot stores a `transcript` pending source, but its translation callback accepts only voice, file and text before returning an unsupported-source alert. The Web fallback starts a blank signed manual Subtitle Studio workspace and receives no Telegram source, pending state or execution request.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN"
+      "status": "COPIED_GUARDED",
+      "target": "/subtitle-studio",
+      "translation_fallback_capability_key": "subtitle_studio"
     },
     {
       "classification": "customer",
@@ -74939,26 +74942,6 @@
       "source_kinds": [
         "callback_data"
       ]
-    },
-    {
-      "authority": "Known-broken Bot pending-source branch; no Web runtime parity claim",
-      "candidate_boundary": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN",
-      "count": 1,
-      "family": "translation_transcript",
-      "next_contract": "Do not map this Bot menu action to a working Web translation runtime. Keep manual transcript authoring independently available only through the signed Subtitle Studio until a separately reviewed translation contract exists.",
-      "priority": "P1",
-      "sample_sources": [
-        "menu|translation_transcript"
-      ],
-      "source_dispositions": [
-        "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
-        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "The frozen Bot stores `transcript` pending state, but its translation callback accepts only voice/file/text and returns unsupported source for transcript.",
-      "source_kinds": [
-        "callback_data"
-      ]
     }
   ],
   "gaps": [
@@ -74970,7 +74953,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 783,
+      "count": 782,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -75081,11 +75064,6 @@
         {
           "count": 1,
           "family": "tr_transcribe",
-          "priority": "P1"
-        },
-        {
-          "count": 1,
-          "family": "translation_transcript",
           "priority": "P1"
         }
       ],
@@ -75262,12 +75240,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.68,
+  "mapping_coverage_percent": 80.71,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1569,
+    "COPIED_GUARDED": 1570,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 903,
-    "NEEDS_FEATURE_DISPOSITION": 783,
+    "NEEDS_FEATURE_DISPOSITION": 782,
     "TELEGRAM_ONLY": 791,
     "WEB_NATIVE_READ_ONLY": 5
   },
@@ -75290,7 +75268,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.68,
+  "safe_disposition_coverage_percent": 80.71,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75300,15 +75278,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3270,
+    "resolved_static_source_count": 3271,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 140,
-    "unresolved_source_count": 783
+    "unresolved_source_count": 782
   },
-  "static_web_surface_coverage_percent": 38.71,
+  "static_web_surface_coverage_percent": 38.74,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
