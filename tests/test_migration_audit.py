@@ -444,10 +444,22 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
         for mapping in parity_gap["callback_mappings"]
         if mapping["resolution"] == "reviewed_imgtool_fresh_web_navigation"
     ]
-    assert {mapping["source"] for mapping in imgtool_navigation_mappings} == set(
-        audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS
+    reviewed_imgtool_sources = set(audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS) | set(
+        audit.IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS
     )
+    assert {mapping["source"] for mapping in imgtool_navigation_mappings} == reviewed_imgtool_sources
     assert all(mapping["status"] == "NAVIGATION_ONLY" for mapping in imgtool_navigation_mappings)
+    assert all(
+        mapping["imgtool_navigation_source_mode"] == "DIRECT_TOOL_ENTRY"
+        for mapping in imgtool_navigation_mappings
+        if mapping["source"] in audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS
+    )
+    assert all(
+        mapping["imgtool_navigation_source_mode"] == "BOT_PICKER_INTENT_DISCARDED"
+        and "BOT_PICKER_INTENT_DISCARDED" in mapping["source_dispositions"]
+        for mapping in imgtool_navigation_mappings
+        if mapping["source"] in audit.IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS
+    )
 
 
 def test_webapp_quality_workflow_uses_current_migration_audit_smoke_name() -> None:
@@ -3407,6 +3419,21 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "imgtool|editor_text": ("/image/brand-overlay", "web_image_brand_overlay"),
         "imgtool|editor_logo": ("/image/brand-overlay", "web_image_brand_overlay"),
     }
+    imgtool_picker_intent_navigation = {
+        "imgtool|prompt_goal|product": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_goal|ad": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_goal|cinematic": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|1x1": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|9x16": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|16x9": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|4x5": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|3x4": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|prompt_ratio|4x3": ("/image/prompt-composer", "web_image_prompt_composer"),
+        "imgtool|resize_pixels|1024x1024": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_pixels|1920x1080": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_pixels|1080x1920": ("/image/resize", "web_image_resize"),
+        "imgtool|resize_pixels|1080x1350": ("/image/resize", "web_image_resize"),
+    }
     expected_navigation_dispositions = {
         "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
         "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
@@ -3417,6 +3444,7 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "NO_RUNTIME_CLAIM",
     }
     assert set(audit.IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS) == set(imgtool_navigation)
+    assert set(audit.IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS) == set(imgtool_picker_intent_navigation)
     for identifier, (target, intent) in imgtool_navigation.items():
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
         assert mapped["target"] == target
@@ -3425,12 +3453,31 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         assert mapped["resolution"] == "reviewed_imgtool_fresh_web_navigation"
         assert mapped["imgtool_navigation_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
         assert mapped["imgtool_navigation_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["imgtool_navigation_source_mode"] == "DIRECT_TOOL_ENTRY"
         assert mapped["web_image_tool_intent"] == intent
         assert set(mapped["source_dispositions"]) == expected_navigation_dispositions
+
+    expected_picker_intent_dispositions = expected_navigation_dispositions | {
+        "BOT_PICKER_INTENT_DISCARDED",
+    }
+    for identifier, (target, intent) in imgtool_picker_intent_navigation.items():
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == target
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_imgtool_fresh_web_navigation"
+        assert mapped["imgtool_navigation_authority"] == "SIGNED_WEB_NATIVE_CUSTOMER"
+        assert mapped["imgtool_navigation_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["imgtool_navigation_source_mode"] == "BOT_PICKER_INTENT_DISCARDED"
+        assert mapped["web_image_tool_intent"] == intent
+        assert "?" not in mapped["target"] and "#" not in mapped["target"]
+        assert set(mapped["source_dispositions"]) == expected_picker_intent_dispositions
 
     for identifier in (
         "imgtool|",
         "imgtool|prompt_need_image",
+        "imgtool|prompt_goal_custom",
+        "imgtool|prompt_style|1",
         "imgtool|prompt_use",
         "imgtool|prompt_tier|basic",
         "imgtool|edit_ai",
@@ -3439,6 +3486,12 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         "imgtool|editor_overlays",
         "imgtool|editor_save",
         "IMGTOOL|EDITOR_RESIZE",
+        "IMGTOOL|PROMPT_GOAL|PRODUCT",
+        " imgtool|prompt_ratio|1x1",
+        "imgtool |prompt_ratio|1x1",
+        "imgtool\t|prompt_ratio|1x1",
+        "imgtool|prompt_ratio|1x1|future",
+        "imgtool|resize_pixels|999x999",
         "imgtool|resize_method|pad|future",
         "imgtool|editor_preset|future",
         "IMGTOOL|PROMPT_NEED_IMAGE",
@@ -3455,6 +3508,12 @@ def test_static_audit_keeps_imgtool_callbacks_out_of_generic_web_routes(tmp_path
         assert "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
 
     for template in (
+        "imgtool|prompt_goal|{*}",
+        "imgtool|prompt_style|{*}",
+        "imgtool|prompt_ratio|{*}",
+        "imgtool|resize_pixels|{*}",
+        "imgtool |prompt_ratio|{*}",
+        "imgtool\t|prompt_ratio|{*}",
         "imgtool|prompt_tier|{*}",
         "imgtool|resize_ratio|{*}",
         "imgtool|resize_method|{*}",
@@ -3482,12 +3541,16 @@ def image_tools_keyboard(
 ):
     InlineKeyboardButton("prompt", callback_data="imgtool|prompt_need_image")
     InlineKeyboardButton("manual prompt", callback_data="imgtool|prompt_manual")
+    InlineKeyboardButton("prompt goal", callback_data="imgtool|prompt_goal|ad")
+    InlineKeyboardButton("prompt ratio", callback_data="imgtool|prompt_ratio|9x16")
     InlineKeyboardButton("edit image", callback_data="imgtool|edit_need_image")
     InlineKeyboardButton("resize image", callback_data="imgtool|resize_task|ratio")
+    InlineKeyboardButton("resize pixels", callback_data="imgtool|resize_pixels|1920x1080")
     InlineKeyboardButton("resize method", callback_data="imgtool|resize_method|pad")
     InlineKeyboardButton("preset", callback_data="imgtool|editor_preset|photo_clear_detail")
     InlineKeyboardButton("overlay", callback_data="imgtool|editor_logo")
     InlineKeyboardButton("tier", callback_data=f"imgtool|prompt_tier|{tier}")
+    InlineKeyboardButton("style", callback_data="imgtool|prompt_style|1")
     InlineKeyboardButton("ratio", callback_data=f"imgtool|resize_ratio|{ratio}")
     InlineKeyboardButton("confirm", callback_data=f"imgtool|prompt_confirm_change|{token}")
     InlineKeyboardButton("edit", callback_data="imgtool|edit_ai")
@@ -3533,6 +3596,10 @@ def brand_overlay(): pass
     callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
     templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
     assert callbacks["imgtool|prompt_manual"]["target"] == "/image/prompt-composer"
+    assert callbacks["imgtool|prompt_goal|ad"]["target"] == "/image/prompt-composer"
+    assert callbacks["imgtool|prompt_goal|ad"]["imgtool_navigation_source_mode"] == "BOT_PICKER_INTENT_DISCARDED"
+    assert callbacks["imgtool|prompt_ratio|9x16"]["target"] == "/image/prompt-composer"
+    assert callbacks["imgtool|resize_pixels|1920x1080"]["target"] == "/image/resize"
     assert callbacks["imgtool|edit_need_image"]["target"] == "/image/edit"
     assert callbacks["imgtool|resize_task|ratio"]["target"] == "/image/resize"
     assert callbacks["imgtool|editor_preset|photo_clear_detail"]["target"] == "/image/edit"
@@ -3546,21 +3613,27 @@ def brand_overlay(): pass
         if item["resolution"] == "reviewed_imgtool_fresh_web_navigation"
     } == {
         "imgtool|prompt_manual",
+        "imgtool|prompt_goal|ad",
+        "imgtool|prompt_ratio|9x16",
         "imgtool|edit_need_image",
         "imgtool|resize_task|ratio",
+        "imgtool|resize_pixels|1920x1080",
         "imgtool|resize_method|pad",
         "imgtool|editor_preset|photo_clear_detail",
         "imgtool|editor_logo",
     }
     assert callbacks["imgtool|prompt_need_image"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
+    assert callbacks["imgtool|prompt_style|1"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert callbacks["imgtool|edit_ai"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert templates["imgtool|prompt_tier|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert templates["imgtool|resize_ratio|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     assert templates["imgtool|prompt_confirm_change|{*}"]["target"] == "IMGTOOL_SOURCE_REVIEW_REQUIRED"
     contract = (tmp_path / "docs" / "IMAGE_TOOLS_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "imgtool\\|*" in contract
+    assert "imgtool\\|prompt_goal\\|ad" in contract
     assert "reviewed_imgtool_fresh_web_navigation" in contract
     assert "no raw Bot callback, Telegram image/prompt/preset or pending/result state" in contract
+    assert "Bot picker value is discarded" in contract
     assert "IMGTOOL_SOURCE_REVIEW_REQUIRED" in contract
     assert "IMAGE_TOOLS_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot Image Tools callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
