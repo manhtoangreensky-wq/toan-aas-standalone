@@ -41,13 +41,16 @@ delivery works in Web. The source selection is finite so a new `tr_pick|…` or
 
 ## Known-broken Bot transcript menu
 
-`menu|translation_transcript` is recorded as
-`BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN`, not as an operational Web parity
-mapping. The frozen Bot stores `transcript` pending state, but its later
-`handle_translation_callback` branch accepts only `voice`, `file` and `text`,
-then returns an unsupported-source alert. Manual transcript authoring remains
-available independently through signed `/subtitle-studio`; that does not turn
-the broken Bot branch into a working translation runtime.
+`menu|translation_transcript` remains source-proven broken: the frozen Bot
+stores `transcript` pending state, but its later `handle_translation_callback`
+branch accepts only `voice`, `file` and `text`, then returns an
+unsupported-source alert. Only that exact lower-case literal may open a fresh,
+blank, guarded `/subtitle-studio` manual authoring workspace. It transfers no
+callback, Telegram identity, pending source, media/file, language target,
+provider request, job, wallet/Xu, PayOS/payment or output/delivery state, and
+does not call ASR, translation, TTS, dubbing or any provider. It is not an
+operational translation-runtime parity claim. Case, suffix and other variants
+remain fail-closed and cannot inherit the manual fallback.
 
 ## Telegram-only session state
 

@@ -3528,6 +3528,25 @@ MENU_TRANSLATION_TELEGRAM_ONLY_ACTIONS = frozenset({
 # source fact visible in the audit instead of letting a similarly named Web
 # editor disguise the broken Bot action as parity.
 TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS = frozenset({"menu|translation_transcript"})
+TRANSLATION_KNOWN_BROKEN_MANUAL_FALLBACKS: dict[str, dict[str, Any]] = {
+    "menu|translation_transcript": {
+        "target": "/subtitle-studio",
+        "capability_key": "subtitle_studio",
+        "source_dispositions": (
+            "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
+            "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+            "FRESH_SIGNED_WEB_MANUAL_TRANSCRIPT_FALLBACK",
+            "NO_RAW_BOT_CALLBACK_OR_PENDING_SOURCE_TO_BROWSER",
+            "NO_ASR_TRANSLATION_TTS_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot stores a `transcript` pending source, but its translation callback accepts only voice, "
+            "file and text before returning an unsupported-source alert. The Web fallback starts a blank signed "
+            "manual Subtitle Studio workspace and receives no Telegram source, pending state or execution request."
+        ),
+    }
+}
 
 # The Bot translation picker relies on a per-Telegram recent media/file/text
 # slot.  Only these literal non-executing entrances may open a *fresh* signed
@@ -8276,27 +8295,24 @@ def _map_known_broken_translation_menu_action(
     identifier: str,
     source_kind: str,
     evidence: dict[str, Any],
+    existing_routes: set[str],
 ) -> dict[str, Any] | None:
-    """Keep a source-proven broken Bot menu branch visible but non-actionable."""
+    """Open the one reviewed broken Bot literal in a blank manual workspace."""
 
-    if str(identifier or "").casefold() not in TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS:
+    action = TRANSLATION_KNOWN_BROKEN_MANUAL_FALLBACKS.get(identifier)
+    if action is None:
         return None
+    target = str(action["target"])
     return {
         "source_kind": source_kind,
         "source": identifier,
-        "target": "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN",
+        "target": target,
         "classification": "customer",
-        "status": "NEEDS_FEATURE_DISPOSITION",
-        "resolution": "known_broken_bot_translation_transcript",
-        "source_dispositions": (
-            "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
-            "BOT_PENDING_TEXT_OR_MEDIA_STATE",
-            "NO_RUNTIME_CLAIM",
-        ),
-        "source_evidence": (
-            "The frozen Bot menu stores a `transcript` pending source, while its later translation callback "
-            "handles only voice, file and text before returning an unsupported-source alert."
-        ),
+        "status": _mapping_status(target, existing_routes, telegram_only=False),
+        "resolution": "reviewed_known_broken_translation_transcript_manual_fallback",
+        "source_dispositions": tuple(action["source_dispositions"]),
+        "source_evidence": str(action["source_evidence"]),
+        "translation_fallback_capability_key": str(action["capability_key"]),
         "evidence": evidence,
     }
 
@@ -9128,7 +9144,12 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     translation_source_mapping = _map_translation_source_intake_callback(identifier, source_kind, evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
-    known_broken_translation_menu_mapping = _map_known_broken_translation_menu_action(identifier, source_kind, evidence)
+    known_broken_translation_menu_mapping = _map_known_broken_translation_menu_action(
+        identifier,
+        source_kind,
+        evidence,
+        existing_routes,
+    )
     if known_broken_translation_menu_mapping is not None:
         return known_broken_translation_menu_mapping
     media_creator_cancel_mapping = _map_media_creator_cancel_callback(identifier, source_kind, evidence)
@@ -12283,6 +12304,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`CALLBACK_HANDLER_DISPATCH_MAP.md`](CALLBACK_HANDLER_DISPATCH_MAP.md) — Bot callback dispatcher registrations, their source provenance and why they are not browser actions.\n"
         + "- [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.\n"
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
+        + "- [`TRANSLATION_MENU_BOUNDARY_CATALOG.md`](TRANSLATION_MENU_BOUNDARY_CATALOG.md) — the exact known-broken Bot transcript menu literal may only open a fresh guarded manual Subtitle Studio workspace; no Bot state or execution is transferred.\n"
         + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
         + "- [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md) — finite Bot document command entrypoints that only open fresh signed Web-native document pages; no Bot state or raw API is replayed.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
