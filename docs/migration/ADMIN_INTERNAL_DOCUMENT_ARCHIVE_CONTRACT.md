@@ -16,8 +16,9 @@ record identifiers and Telegram transport remain outside the Web App:
 | --- | --- | --- |
 | `/internal_docs`, `/search_internal_doc` | Private Admin Internal Document Archive page and metadata search | No Bot command execution or callback forwarding |
 | `archive|root`, `archive|help`, `archive|quick`, `archive|recent`, `archive|search`, `archive|search_dept`, `archive|types`, `archive|dept|tax_invoice`, `archive|type|general` | Fresh signed `/admin/internal-documents` directory | No department/type/query/file/record/pending state is forwarded or prefilled |
-| `archive|back_department`, `archive|change_dept`, `archive|discard_to_dept`, `archive|edit`, and every unreviewed dynamic `archive|…{*}` value | `ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED` | No generic `/admin` fallback; source state/identifier must be reviewed first |
-| `archive|preview`, `archive|save` | **TELEGRAM_ONLY** | No Bot record lookup, pending upload/edit, file delivery or mutation is replayed |
+| `archive|back_department`, `archive|change_dept`, `archive|discard_to_dept`, `archive|edit` | **TELEGRAM_ONLY** | Exact case-sensitive Bot pending-state transitions; no Web route, selector, record/file lookup, mutation or delivery is replayed |
+| every unreviewed dynamic `archive|…{*}` value, case variant, whitespace/suffix variant or future value | `ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED` | No generic `/admin` fallback; source state/identifier must be reviewed first |
+| `archive|preview`, `archive|save` | **TELEGRAM_ONLY** | Exact raw lower-case terminal literals only; no Bot record lookup, pending upload/edit, file delivery or mutation is replayed |
 | `internal_documents` table, `owner_admin_id`, Telegram attachment/file identifiers | `web_admin_archive_documents`, `web_admin_archive_versions`, `web_admin_archive_events` | No read, write, copy, migration or reconciliation of Bot records/files |
 | Bot recent/detail/send-file workflow | Owner-scoped list/detail and verified private Web download | No Telegram `send_document`, file ID, chat ID or public URL |
 
@@ -41,6 +42,18 @@ server-authorized Web archive records for the live canonical administrator.
 It never accepts a Bot department, type, search query, Telegram chat/message/
 file ID, Bot record ID, pending upload/edit state, output/download receipt or
 delivery action.
+
+`archive|back_department`, `archive|change_dept`,
+`archive|discard_to_dept` and `archive|edit` are exact raw lower-case entries
+in the migration terminal catalog. The frozen Bot reads or changes its
+per-Telegram-user pending Archive state for each transition. A spelling/case,
+whitespace or suffix variant is not a match and remains source-review-required
+so later Bot drift cannot inherit either a Web navigation or a terminal result.
+
+`archive|preview` and `archive|save` are exact raw lower-case entries in the
+migration terminal catalog as well. A whitespace, case or suffix variant is
+not a terminal match: it remains source-review-required so it cannot inherit
+Telegram record/delivery handling, a Web navigation or a browser action.
 
 ## Authority and enablement
 

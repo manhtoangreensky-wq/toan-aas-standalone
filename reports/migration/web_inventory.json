@@ -16,13 +16,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 3051,
+      "line": 3058,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 7334,
+      "line": 7377,
       "target": "_map_shopai_video_job_callback"
     },
     {
@@ -82,13 +82,13 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 7303,
+      "line": 7346,
       "target": "_shopai_video_job_source_review_mapping"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 7265,
+      "line": 7308,
       "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
@@ -197,27 +197,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5636,
+      "line": 5652,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5680,
+      "line": 5696,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5695,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6044,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6052,
+      "line": 5711,
       "token": "<dynamic:callback_data>"
     },
     {
@@ -228,6 +218,16 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "line": 6068,
+      "token": "<dynamic:callback_data>"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 6076,
+      "token": "<dynamic:callback_data>"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 6084,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -263,25 +263,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7360,
+      "line": 7403,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8027,
+      "line": 8070,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12938,
+      "line": 12987,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13561,
+      "line": 13610,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -293,7 +293,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13292,
+      "line": 13341,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -335,7 +335,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12923,
+      "line": 12972,
       "operation": "UPDATE",
       "table": "bot"
     },
@@ -365,37 +365,37 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7273,
+      "line": 7316,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7295,
+      "line": 7338,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8099,
+      "line": 8142,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12883,
+      "line": 12932,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12948,
+      "line": 12997,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10031,
+      "line": 10077,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -665,13 +665,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13562,
+      "line": 13611,
       "operation": "UPDATE",
       "table": "linked"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13722,
+      "line": 13771,
       "operation": "UPDATE",
       "table": "linked"
     },
@@ -737,19 +737,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12659,
+      "line": 12708,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12958,
+      "line": 13007,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13536,
+      "line": 13585,
       "operation": "UPDATE",
       "table": "or"
     },
@@ -7739,15 +7739,14 @@
         "copyfast_video_operations.py",
         "copyfast_video_studio.py"
       ],
-      "occurrences": 903,
+      "occurrences": 749,
       "provider": "PayOS"
     },
     {
       "files": [
-        "docs/superpowers/specs/2026-08-01-menu-action-terminal-catalog-design.md",
         "scripts/migration/audit_bot_to_web.py"
       ],
-      "occurrences": 9,
+      "occurrences": 8,
       "provider": "Key4U"
     },
     {
@@ -7897,7 +7896,7 @@
         "copyfast_starter_kits.py",
         "copyfast_storyboard_grid.py"
       ],
-      "occurrences": 1807,
+      "occurrences": 1691,
       "provider": "Telegram"
     }
   ],
@@ -13979,10 +13978,10 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 250,
-  "source_files_scanned": 250,
-  "source_fingerprint_sha256": "0836540c269e3fc8f310ca0f3d85000fcaa16e980f58b89efb36265d4c9dccca",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast261-menu-action-terminal-catalog",
+  "source_files_discovered": 141,
+  "source_files_scanned": 141,
+  "source_fingerprint_sha256": "145a614ff863c58ce4539d066c45c0846b562f7d4fcff78ebf9afec39268fcca",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast262-archive-terminal-catalog",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
