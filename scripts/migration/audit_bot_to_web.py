@@ -7701,6 +7701,66 @@ IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, str]] = {
 }
 
 
+# These values are not a request to transfer a Bot selection.  They are a
+# finite catalog of static source literals which may only begin a new signed
+# Web flow.  The actual Bot picker value is deliberately discarded; the Web
+# user selects every field, private asset and confirmation independently.
+IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, str]] = {
+    "imgtool|prompt_goal|product": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_goal|ad": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_goal|cinematic": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|1x1": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|9x16": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|16x9": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|4x5": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|3x4": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|prompt_ratio|4x3": {
+        "target": "/image/prompt-composer",
+        "web_image_tool_intent": "web_image_prompt_composer",
+    },
+    "imgtool|resize_pixels|1024x1024": {
+        "target": "/image/resize",
+        "web_image_tool_intent": "web_image_resize",
+    },
+    "imgtool|resize_pixels|1920x1080": {
+        "target": "/image/resize",
+        "web_image_tool_intent": "web_image_resize",
+    },
+    "imgtool|resize_pixels|1080x1920": {
+        "target": "/image/resize",
+        "web_image_tool_intent": "web_image_resize",
+    },
+    "imgtool|resize_pixels|1080x1350": {
+        "target": "/image/resize",
+        "web_image_tool_intent": "web_image_resize",
+    },
+}
+
+
 def _imgtool_fresh_web_navigation_mapping(
     identifier: str,
     source_kind: str,
@@ -7710,9 +7770,36 @@ def _imgtool_fresh_web_navigation_mapping(
     """Map only reviewed Image Tool picker literals to fresh Web navigation."""
 
     action = IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS.get(identifier)
+    source_mode = "DIRECT_TOOL_ENTRY"
+    if action is None:
+        action = IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS.get(identifier)
+        source_mode = "BOT_PICKER_INTENT_DISCARDED"
     if action is None:
         return None
     target = str(action["target"])
+    source_dispositions = (
+        "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
+        "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
+        "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
+        "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
+        "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
+        "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM",
+    )
+    source_evidence = (
+        "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw "
+        "Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not "
+        "preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action."
+    )
+    if source_mode == "BOT_PICKER_INTENT_DISCARDED":
+        source_dispositions = (*source_dispositions, "BOT_PICKER_INTENT_DISCARDED")
+        source_evidence = (
+            "The exact frozen Bot picker literal may start only a fresh signed Web image tool. Its Bot goal, ratio "
+            "or pixel selection is deliberately discarded: the browser receives no raw callback, Telegram identity, "
+            "file, prompt, pending/result state or prefilled input. The Web user must choose every field, private "
+            "Asset Vault source and confirmation independently; no Bot, provider, wallet/payment, job, output or "
+            "delivery action starts from this audit record."
+        )
     return {
         "source_kind": source_kind,
         "source": identifier,
@@ -7720,22 +7807,11 @@ def _imgtool_fresh_web_navigation_mapping(
         "classification": "customer",
         "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
         "resolution": "reviewed_imgtool_fresh_web_navigation",
-        "source_dispositions": (
-            "FRESH_SIGNED_WEB_IMAGE_TOOL_NAVIGATION",
-            "FINITE_BOT_IMAGE_TOOL_ENTRY_ONLY",
-            "NO_RAW_BOT_CALLBACK_OR_IMAGE_STATE_TO_BROWSER",
-            "BOT_IMAGE_TOOL_PENDING_OR_RESULT_STATE_NOT_REPLAYED",
-            "WEB_NATIVE_OWNER_SCOPED_IMAGE_TOOL_ONLY",
-            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
-            "NO_RUNTIME_CLAIM",
-        ),
-        "source_evidence": (
-            "The exact frozen Bot picker may start only a fresh signed Web image tool. The browser receives no raw "
-            "Bot callback, Telegram identity/file/result, image/prompt/preset or pending/result state; it does not "
-            "preselect a Web input or start a Bot, provider, wallet/payment, job, output or delivery action."
-        ),
+        "source_dispositions": source_dispositions,
+        "source_evidence": source_evidence,
         "imgtool_navigation_authority": "SIGNED_WEB_NATIVE_CUSTOMER",
         "imgtool_navigation_launch_mode": "WEB_NAVIGATION",
+        "imgtool_navigation_source_mode": source_mode,
         "web_image_tool_intent": str(action["web_image_tool_intent"]),
         "evidence": evidence,
     }
@@ -7792,7 +7868,12 @@ def _map_imgtool_callback(
 ) -> dict[str, Any] | None:
     """Map only reviewed raw Image Tool pickers; fail closed for every other source."""
 
-    if not str(identifier or "").casefold().startswith("imgtool|"):
+    # Recognize whitespace variants of the Image Tools namespace only so they
+    # remain on this fail-closed boundary. Exact tool/picker catalogs below
+    # still receive the untouched raw identifier, so whitespace never inherits
+    # fresh Web navigation.
+    raw_identifier = str(identifier or "")
+    if re.match(r"^\s*imgtool\s*\|", raw_identifier, flags=re.IGNORECASE) is None:
         return None
     fresh_navigation = _imgtool_fresh_web_navigation_mapping(identifier, source_kind, evidence, existing_routes)
     if fresh_navigation is not None:
@@ -12589,7 +12670,19 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "finite fresh signed Web navigation only; no raw Bot callback, Telegram image/prompt/preset or pending/result state is transferred or prefilled, and no Bot/provider/Xu/PayOS/job/output/delivery action is replayed",
         ]
         for source, contract in IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS.items()
+    ] + [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_imgtool_fresh_web_navigation",
+            "finite fresh signed Web navigation only; Bot picker value is discarded; no raw Bot callback, Telegram image/prompt/preset or pending/result state is transferred or prefilled, and no Bot/provider/Xu/PayOS/job/output/delivery action is replayed",
+        ]
+        for source, contract in IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS.items()
     ]
+    imgtool_fresh_navigation_count = (
+        len(IMGTOOL_FRESH_WEB_NAVIGATION_ACTIONS)
+        + len(IMGTOOL_PICKER_INTENT_FRESH_WEB_NAVIGATION_ACTIONS)
+    )
     imgtool_contract_rows = imgtool_fresh_navigation_contract_rows + [
         [
             "all unlisted frozen imgtool|* literals and templates",
@@ -12872,7 +12965,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md`](SHOPAI_VIDEO_JOB_CALLBACK_CONTRACT.md) — exact ShopAI Video Job callbacks remain canonical Bot-only; no task/job identifier can become a Web top-up, video/jobs route, browser action, provider poll, billing mutation or output-delivery claim.\n"
         + "- [`MANUAL_PAYMENT_CALLBACK_CONTRACT.md`](MANUAL_PAYMENT_CALLBACK_CONTRACT.md) — exact Bot manual-payment callbacks remain canonical Bot-only; no Telegram UID, bill/deposit or approval value can become a Web top-up/history/admin route, browser action or ledger/payment mutation.\n"
         + "- [`PROVIDER_CHOICE_CALLBACK_CONTRACT.md`](PROVIDER_CHOICE_CALLBACK_CONTRACT.md) — exact Bot provider-choice callbacks remain canonical Bot-only; no Telegram UID, pending voice/image request, Xu charge/refund, provider choice or Telegram delivery can become a Web route or browser action.\n"
-        + "- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — seventeen exact Bot Image Tools picker literals may only begin fresh signed Web-native Image routes; no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a browser input or runtime action, and every unlisted callback remains source-review-required.\n"
+        + f"- [`IMAGE_TOOLS_CALLBACK_CONTRACT.md`](IMAGE_TOOLS_CALLBACK_CONTRACT.md) — {imgtool_fresh_navigation_count} exact Bot Image Tools direct-entry/picker literals may only begin fresh signed Web-native Image routes; picker values are discarded, no Telegram pending state/file/result, ShopAI/Xu/provider branch or Telegram delivery becomes a browser input or runtime action, and every unlisted callback remains source-review-required.\n"
         + "- [`SUPPORT_TICKET_CALLBACK_CONTRACT.md`](SUPPORT_TICKET_CALLBACK_CONTRACT.md) — Bot Support/Ticket/Feedback callbacks remain owner/role/source-review boundaries apart from eleven exact Support/Ticket entries and nine exact Feedback entries that may only start fresh signed Web navigation; no Telegram ticket, lead, attachment, pending text, admin preview or delivery state becomes a Web portal action.\n"
         + "- [`FEEDBACK_MENU_CALLBACK_CONTRACT.md`](FEEDBACK_MENU_CALLBACK_CONTRACT.md) — nine exact Bot feedback entry literals may only open a fresh signed Web Support Desk form; no callback/category is sent to the browser and no Bot ticket/refund/payment/runtime behavior is replayed.\n"
         + "- [`WORKBOARD_TASK_CALLBACK_CONTRACT.md`](WORKBOARD_TASK_CALLBACK_CONTRACT.md) — Bot Workboard/Task callbacks remain Telegram-admin/source-review boundaries; no production job/task ID, stage/status or handoff prompt becomes a generic Web Workboard or Admin action.\n"
@@ -13130,7 +13223,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "IMAGE_TOOLS_CALLBACK_CONTRACT.md",
         "# Image Tools callback contract\n\n"
-        "The frozen Bot owns the `imgtool|*` callback handler. It is a broad Telegram Image Tools state machine rather than a browser menu: it reads the Telegram caller and per-user pending/result state, can reuse Telegram file identifiers, generate or save prompt/note state, perform local image edits/resizes, enter ShopAI confirmation/tier and canonical Xu/provider paths, and send outputs back to Telegram. The finite exact picker literals in the table are navigation-only exceptions: they may start a brand-new signed Web-native prompt, enhance, resize or brand-overlay route and do not identify a Web-owned draft, uploaded asset, owner-scoped job, browser history entry, Web checkout or safe browser action.\n\n"
+        "The frozen Bot owns the `imgtool|*` callback handler. It is a broad Telegram Image Tools state machine rather than a browser menu: it reads the Telegram caller and per-user pending/result state, can reuse Telegram file identifiers, generate or save prompt/note state, perform local image edits/resizes, enter ShopAI confirmation/tier and canonical Xu/provider paths, and send outputs back to Telegram. The finite exact direct-entry and picker literals in the table are navigation-only exceptions: they may start a brand-new signed Web-native prompt, enhance, resize or brand-overlay route and do not identify a Web-owned draft, uploaded asset, owner-scoped job, browser history entry, Web checkout or safe browser action. A picker literal's goal, ratio or pixel value is discarded rather than prefilled in the Web route.\n\n"
         + _markdown_table(
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             imgtool_contract_rows,
@@ -13775,7 +13868,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Web App role: signed-session caller of the private bridge; it must never credit Xu, finalize PayOS, or add a second payment webhook.\n"
         "- Manual top-up is a Telegram Bot-only handoff until a separate read-only, owner-scoped and redacted `pending_deposits` bridge contract exists. Web must not receive bills/TXIDs, create requests, run review actions or infer approval from a browser event. `manual|*` callback values are a separate canonical Bot boundary; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice is a Telegram Bot-only handoff: `prov|*` binds a Telegram user to a consumed pending voice/image request and may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. It cannot open a Web route or execute a browser provider/output action; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. Seventeen exact picker literals may only begin fresh signed Web-native Image navigation with no source-state transfer; every other value must not route or replay them. See `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        f"- Bot Image Tools callbacks are a Telegram state-machine boundary: `imgtool|*` can use pending/result/file/prompt/note state, local output, ShopAI tier/confirmation, provider/Xu and Telegram delivery. {imgtool_fresh_navigation_count} exact direct-entry/picker literals may only begin fresh signed Web-native Image navigation with no source-state transfer; picker values are discarded and every other value must not route or replay them. See `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks are a Telegram state-machine boundary and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` can use product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance. None may route/replay into Web. The classification does not add a Web feature or runtime-equivalence claim; fresh Web-native alternatives are non-executable for raw callbacks. See `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks are a Telegram owner/role workflow boundary: `support|*`, `ticket|*` and `feedback|*` can use support/lead/ticket/attachment/pending state, feedback category/text and Bot admin reply/delivery controls. The eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions: they may only start fresh signed `/support` or `/tickets` navigation, with no raw callback/category or Bot state transfer, category preselection, Bot ticket fetch, or case creation from the Bot entry. Every unlisted value stays source-review-required. See `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks are Telegram-admin production-state controls: `pipe|*` and `task|*` can update a canonical production job/task stage, status or handoff state. Web must not route or replay them; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
@@ -13935,7 +14028,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction. Manual payment callback values must not navigate Web or replay a Telegram UID/bill/deposit/approval state; see `MANUAL_PAYMENT_CALLBACK_CONTRACT.md`.\n"
         "- Provider choice stays a Bot handoff: `prov|*` binds Telegram identity and a consumed pending voice/image request, may charge/refund Xu, invoke a provider/fallback and deliver media in Telegram. No provider-choice callback may open a Web image/voice route or invoke provider/job/wallet/payment/output/delivery behavior; see `PROVIDER_CHOICE_CALLBACK_CONTRACT.md`.\n"
-        "- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. Seventeen exact picker literals may only begin fresh signed `/image/prompt-composer`, `/image/edit`, `/image/resize` or `/image/brand-overlay` navigation; they transfer no callback/image/prompt/preset/pending/result state and invoke no Web provider/job/wallet/payment/output/delivery behavior. Every unlisted value remains source-review-required; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
+        f"- Bot Image Tools callbacks stay outside the Web route layer: `imgtool|*` uses Telegram pending/result/file/prompt/memory state and can enter local output, ShopAI/Xu/provider and Telegram delivery paths. {imgtool_fresh_navigation_count} exact direct-entry/picker literals may only begin fresh signed `/image/prompt-composer`, `/image/edit`, `/image/resize` or `/image/brand-overlay` navigation; picker values are discarded, no callback/image/prompt/preset/pending/result state is transferred, and no Web provider/job/wallet/payment/output/delivery behavior is invoked. Every unlisted value remains source-review-required; see `IMAGE_TOOLS_CALLBACK_CONTRACT.md`.\n"
         "- Bot Audio Hub callbacks stay outside the Web route layer and are completely classified `TELEGRAM_ONLY`: `music_quick|*`, `sfx_quick|*` and `media_quick|*` use Telegram product context, pending/cache/selected media, voice-profile or Video Finishing state and can enter provider/Xu/Telegram-delivery paths; `suggest_music|*` is Bot keyword guidance, not a browser preset. No callback may open a Web Music, Video, Voice or Media route or invoke provider/job/wallet/payment/output/delivery behavior. The classification does not add a Web feature or runtime-equivalence claim; see `AUDIO_HUB_CALLBACK_CONTRACT.md`.\n"
         "- Bot Support/Ticket/Feedback callbacks stay outside the Web route layer: `support|*`, `ticket|*` and `feedback|*` use Telegram identity, support/lead/ticket/attachment/pending state or feedback category/text and may enter Bot-admin reply, status, refund-pending or Telegram delivery paths. The eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions, which may only begin fresh signed `/support` or `/tickets` navigation without forwarding a callback/category or invoking Bot ticket, ledger, provider, job or delivery behavior. There is no category preselection, Bot ticket fetch, or case creation from the Bot entry. Every unlisted value remains source-review-required; see `SUPPORT_TICKET_CALLBACK_CONTRACT.md` and `FEEDBACK_MENU_CALLBACK_CONTRACT.md`.\n"
         "- Bot Workboard/Task callbacks stay outside the Web route layer: `pipe|*` and `task|*` require Bot-admin Telegram identity and can mutate canonical production job/task stage, status or handoff state. No callback may open `/workboard` or an Admin route or invoke Web job/task/provider/output/ledger/delivery behavior; see `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.\n"
