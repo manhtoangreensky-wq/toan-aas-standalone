@@ -38995,24 +38995,21 @@
         "file": "bot.py",
         "line": 38564
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|admin",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39020,24 +39017,21 @@
         "file": "bot.py",
         "line": 49763
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|admin",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39045,24 +39039,21 @@
         "file": "bot.py",
         "line": 58563
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|admin",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39070,24 +39061,21 @@
         "file": "bot.py",
         "line": 58998
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|admin",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39095,24 +39083,21 @@
         "file": "bot.py",
         "line": 38494
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|al|high|0",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39120,24 +39105,21 @@
         "file": "bot.py",
         "line": 38494
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|al|new|0",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39145,24 +39127,21 @@
         "file": "bot.py",
         "line": 38495
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|al|refund|0",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39170,24 +39149,21 @@
         "file": "bot.py",
         "line": 38496
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|asearch|all",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39195,24 +39171,21 @@
         "file": "bot.py",
         "line": 38495
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|asearch|user",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39220,23 +39193,21 @@
         "file": "bot.py",
         "line": 38178
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|document_pdf",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39244,23 +39215,21 @@
         "file": "bot.py",
         "line": 38180
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|feature_request",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39268,23 +39237,21 @@
         "file": "bot.py",
         "line": 38177
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|image_error",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39292,23 +39259,21 @@
         "file": "bot.py",
         "line": 38180
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|lead_consulting",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39316,23 +39281,21 @@
         "file": "bot.py",
         "line": 38181
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|other",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39340,23 +39303,21 @@
         "file": "bot.py",
         "line": 38179
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|package_combo",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39364,23 +39325,21 @@
         "file": "bot.py",
         "line": 38177
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|payment_topup",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39388,23 +39347,21 @@
         "file": "bot.py",
         "line": 38179
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|refund",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39412,23 +39369,21 @@
         "file": "bot.py",
         "line": 38178
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|cat|video_error",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39670,24 +39625,21 @@
         "file": "bot.py",
         "line": 38496
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|stats",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -39695,24 +39647,21 @@
         "file": "bot.py",
         "line": 38497
       },
-      "fallback_family": "ticket",
-      "resolution": "support_ticket_callback_requires_web_native_owner_role_contract",
+      "resolution": "ticket_terminal_requires_telegram_context",
       "source": "ticket|templates",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
-        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",
         "BOT_ADMIN_ONLY",
         "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot support and ticket handlers bind callbacks to a Telegram user and short-lived support pending state. They can create or update a support ticket/lead, resolve a ticket against customer ownership, accept a Telegram attachment, or enter Bot-admin-only search/assignment/status/reply/refund-pending/lead/file flows that can send Telegram messages or files. The standalone Web has no adapter that accepts or replays the callback, Bot ticket identifier, attachment id, pending input, admin preview or Telegram delivery state.",
+      "source_evidence": "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger action, Telegram delivery bridge or runtime claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -74496,37 +74445,6 @@
       ]
     },
     {
-      "authority": "Source review required",
-      "candidate_boundary": "source_review_required",
-      "count": 47,
-      "family": "ticket",
-      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
-      "priority": "P1",
-      "sample_sources": [
-        "ticket|admin",
-        "ticket|al|high|0",
-        "ticket|al|new|0",
-        "ticket|al|refund|0",
-        "ticket|al|{*}|0",
-        "ticket|al|{*}|{*}",
-        "ticket|asearch|all",
-        "ticket|asearch|user",
-        "ticket|ask|{*}",
-        "ticket|assign|{*}",
-        "ticket|attach|{*}",
-        "ticket|av|{*}|new"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
-      "source_kinds": [
-        "callback_data",
-        "callback_template"
-      ]
-    },
-    {
       "authority": "Fresh signed Web-native planning; Bot Storypack state/runtime remain canonical Bot context",
       "candidate_boundary": "/video-studio/storyboard-composer",
       "count": 45,
@@ -74586,6 +74504,36 @@
       "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads/clears pending workflow and confirmation state, can inspect canonical package/Xu state, record billing events, enter provider/job guards, use Bot job IDs, or return Telegram-only guidance.",
       "source_kinds": [
         "callback_data",
+        "callback_template"
+      ]
+    },
+    {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 27,
+      "family": "ticket",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "ticket|al|{*}|0",
+        "ticket|al|{*}|{*}",
+        "ticket|ask|{*}",
+        "ticket|assign|{*}",
+        "ticket|attach|{*}",
+        "ticket|av|{*}|new",
+        "ticket|file|{*}",
+        "ticket|lead|{*}|contact",
+        "ticket|lead|{*}|potential",
+        "ticket|note|{*}",
+        "ticket|pv|{*}",
+        "ticket|reply_user|{*}"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
         "callback_template"
       ]
     },
@@ -74894,7 +74842,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 685,
+      "count": 665,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -74913,11 +74861,6 @@
           "priority": "P1"
         },
         {
-          "count": 47,
-          "family": "ticket",
-          "priority": "P1"
-        },
-        {
           "count": 45,
           "family": "storypack",
           "priority": "P1"
@@ -74925,6 +74868,11 @@
         {
           "count": 33,
           "family": "tvflow",
+          "priority": "P1"
+        },
+        {
+          "count": 27,
+          "family": "ticket",
           "priority": "P1"
         },
         {
@@ -75166,13 +75114,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 83.1,
+  "mapping_coverage_percent": 83.59,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1570,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 903,
-    "NEEDS_FEATURE_DISPOSITION": 685,
-    "TELEGRAM_ONLY": 888,
+    "NEEDS_FEATURE_DISPOSITION": 665,
+    "TELEGRAM_ONLY": 908,
     "WEB_NATIVE_READ_ONLY": 5
   },
   "metric_scope": {
@@ -75194,7 +75142,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 83.1,
+  "safe_disposition_coverage_percent": 83.59,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75204,13 +75152,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3368,
+    "resolved_static_source_count": 3388,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 96,
-    "unresolved_source_count": 685
+    "unresolved_source_count": 665
   },
   "static_web_surface_coverage_percent": 38.74,
   "telegram_link_callback_contract": {

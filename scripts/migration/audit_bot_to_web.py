@@ -7819,6 +7819,33 @@ SUPPORT_TICKET_ADMIN_CALLBACK_ACTIONS = frozenset({
 })
 
 
+# These raw, lower-case frozen Bot literals redraw Telegram-only category or
+# Bot-admin menu/list/search state.  Exact lookup is deliberate: whitespace,
+# case variants, suffixes and dynamic identifiers remain source-review-required.
+TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS = frozenset({
+    "ticket|cat|payment_topup",
+    "ticket|cat|image_error",
+    "ticket|cat|video_error",
+    "ticket|cat|document_pdf",
+    "ticket|cat|package_combo",
+    "ticket|cat|refund",
+    "ticket|cat|feature_request",
+    "ticket|cat|other",
+    "ticket|cat|lead_consulting",
+})
+
+TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS = frozenset({
+    "ticket|admin",
+    "ticket|al|new|0",
+    "ticket|al|high|0",
+    "ticket|al|refund|0",
+    "ticket|asearch|all",
+    "ticket|asearch|user",
+    "ticket|stats",
+    "ticket|templates",
+})
+
+
 # The frozen Bot feedback keyboard exposes these exact literals only.  Each
 # may begin a *fresh* signed Web Support Desk intake.  This is static audit
 # evidence, not a browser callback catalog: a raw Bot token or category is
@@ -8014,7 +8041,7 @@ def _support_ticket_fresh_web_navigation_mapping(
 def _support_ticket_callback_classification(identifier: str) -> str:
     """Preserve the Bot's role boundary while keeping all callback data opaque."""
 
-    parts = str(identifier or "").casefold().split("|")
+    parts = str(identifier or "").strip().casefold().split("|")
     if len(parts) > 1 and parts[0] == "ticket" and parts[1] in SUPPORT_TICKET_ADMIN_CALLBACK_ACTIONS:
         return "admin"
     return "customer"
@@ -8027,7 +8054,7 @@ def _support_ticket_source_review_mapping(
 ) -> dict[str, Any]:
     """Keep Telegram Support/Ticket/Feedback state out of generic Web routes."""
 
-    token = str(identifier or "").casefold()
+    token = str(identifier or "").strip().casefold()
     classification = _support_ticket_callback_classification(identifier)
     is_feedback = token.startswith("feedback|")
     pending_dispositions = (
@@ -8076,6 +8103,57 @@ def _support_ticket_source_review_mapping(
     }
 
 
+def _ticket_terminal_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Classify only frozen raw Ticket menu literals as Telegram-only."""
+
+    if identifier in TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS:
+        classification = "customer"
+    elif identifier in TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS:
+        classification = "admin"
+    else:
+        return None
+    state_dispositions = (
+        ("BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE",)
+        if classification == "customer"
+        else ()
+    )
+    role_dispositions = (
+        (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY",
+        )
+        if classification == "admin"
+        else ("CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY",)
+    )
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": classification,
+        "status": "TELEGRAM_ONLY",
+        "resolution": "ticket_terminal_requires_telegram_context",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            *state_dispositions,
+            *role_dispositions,
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The exact frozen Bot Ticket category or admin menu/list/search callback redraws Telegram-only state. "
+            "It does not create a Web route, browser action, ticket/lead/attachment replay, payment/refund/ledger "
+            "action, Telegram delivery bridge or runtime claim."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_support_ticket_callback(
     identifier: str,
     source_kind: str,
@@ -8102,7 +8180,11 @@ def _map_support_ticket_callback(
     if fresh_support_ticket_navigation is not None:
         return fresh_support_ticket_navigation
 
-    token = str(identifier or "").casefold()
+    terminal_ticket = _ticket_terminal_mapping(identifier, source_kind, evidence)
+    if terminal_ticket is not None:
+        return terminal_ticket
+
+    token = str(identifier or "").strip().casefold()
     if not token.startswith(("support|", "ticket|", "feedback|")):
         return None
     return _support_ticket_source_review_mapping(identifier, source_kind, evidence)
@@ -12548,6 +12630,18 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         for source, contract in SUPPORT_TICKET_FRESH_WEB_NAVIGATION_ACTIONS.items()
     ] + [
         [
+            ", ".join(sorted(TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS)),
+            "TELEGRAM_ONLY",
+            "ticket_terminal_requires_telegram_context",
+            "finite raw customer Ticket category catalog; preserves Telegram pending/record state and creates no Web navigation or browser action",
+        ],
+        [
+            ", ".join(sorted(TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS)),
+            "TELEGRAM_ONLY",
+            "ticket_terminal_requires_telegram_context",
+            "finite raw Bot-admin Ticket menu/list/search catalog; preserves Bot-admin role/state and creates no Web navigation or browser action",
+        ],
+        [
             ", ".join(FEEDBACK_FRESH_WEB_SUPPORT_NAVIGATION_ACTIONS),
             "/support",
             "reviewed_feedback_fresh_web_support_navigation",
@@ -13046,12 +13140,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "SUPPORT_TICKET_CALLBACK_CONTRACT.md",
         "# Support, Ticket and Feedback callback contract\n\n"
-        "The frozen Bot owns the `support|*`, `ticket|*` and `feedback|*` callback handlers. They are Telegram support workflows, not Web portal actions: callbacks bind a Telegram user to short-lived support/lead/ticket input state or a selected feedback category and pending text; they can create or update Bot support records, resolve a customer ticket against Bot ownership, accept a Telegram attachment, create a refund-review ticket and alert an admin, or enter admin-only search, assignment, status, suggested-reply, send, refund-pending, lead and file-delivery paths. The eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions: they may only start brand-new signed Web navigation to `/support` or `/tickets` and do not transfer a callback, category or Bot state. There is no category preselection, Bot ticket fetch, or case creation from the Bot entry. No callback is a Web ticket ID, browser back/reset action, support request, attachment authorization, admin permission or delivery contract.\n\n"
+        "The frozen Bot owns the `support|*`, `ticket|*` and `feedback|*` callback handlers. They are Telegram support workflows, not Web portal actions: callbacks bind a Telegram user to short-lived support/lead/ticket input state or a selected feedback category and pending text; they can create or update Bot support records, resolve a customer ticket against Bot ownership, accept a Telegram attachment, create a refund-review ticket and alert an admin, or enter admin-only search, assignment, status, suggested-reply, send, refund-pending, lead and file-delivery paths. The eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions: they may only start brand-new signed Web navigation to `/support` or `/tickets` and do not transfer a callback, category or Bot state. The seventeen exact raw Ticket terminal catalog literals below are separately `TELEGRAM_ONLY`: nine customer category selectors preserve the Telegram pending/record boundary, while eight Bot-admin menu/list/search controls preserve the `BOT_ADMIN_ONLY` boundary. Case variants, whitespace, suffixes, dynamic IDs and unlisted values do not inherit either catalog. There is no category preselection, Bot ticket fetch, or case creation from the Bot entry. No callback is a Web ticket ID, browser back/reset action, support request, attachment authorization, admin permission or delivery contract.\n\n"
         + _markdown_table(
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             support_ticket_contract_rows,
         )
-        + "\n\nEvery unlisted `support|*`, `ticket|*` and `feedback|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id, feedback category or pending input; create/update/assign/resolve a Bot ticket; request or mark a refund; send a Telegram reply/file; or claim a result. The finite Feedback entries are described in `FEEDBACK_MENU_CALLBACK_CONTRACT.md`; all finite entries only begin fresh signed Web navigation. A new Web case still requires an explicit customer form, signed session, CSRF and idempotency. No finite entry accepts or replays a Bot callback, category or Telegram ticket state.\n",
+        + "\n\nEvery unlisted `support|*`, `ticket|*` and `feedback|*` source remains `SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/support`, `/tickets` or an Admin route; navigate/reset the browser; receive/replay a Bot ticket/lead/attachment id, feedback category or pending input; create/update/assign/resolve a Bot ticket; request or mark a refund; send a Telegram reply/file; or claim a result. The finite Feedback entries are described in `FEEDBACK_MENU_CALLBACK_CONTRACT.md`; the eleven Support/Ticket and nine Feedback navigation entries only begin fresh signed Web navigation, while the seventeen exact Ticket terminal catalog entries are `TELEGRAM_ONLY`. A new Web case still requires an explicit customer form, signed session, CSRF and idempotency. No finite entry accepts or replays a Bot callback, category or Telegram ticket state.\n",
     )
     write(
         "FEEDBACK_MENU_CALLBACK_CONTRACT.md",
