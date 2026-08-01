@@ -6281,6 +6281,102 @@ def test_light_billing_final_surface_keeps_canonical_payment_truth_readable() ->
     )
 
 
+def test_light_admin_security_access_final_surface_keeps_aggregate_boundary_clear() -> None:
+    """Security and access stay aggregate-only posture views, not a control plane."""
+
+    portal_source = PORTAL_CLIENT
+    start = portal_source.index("  function renderAdminSecurityAccessPosture(")
+    next_renderer = portal_source.find("\n  function ", start + 1)
+    renderer_source = portal_source[start : next_renderer if next_renderer >= 0 else None]
+    assert '<article class="portal-page portal-admin-security-access-posture">' in renderer_source
+
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    layer = re.search(
+        r"/\* Final light Security and Access Posture surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
+        theme_source,
+        flags=re.DOTALL,
+    )
+    assert layer is not None
+    rules = _parse_css_rules(layer.group("css"))
+    root_scope = ".portal-page.portal-admin-security-access-posture"
+
+    def assert_declarations(selector: str, expected: dict[str, str], *, at_rule: str | None = None) -> None:
+        declarations = _css_declarations_for(rules, selector, at_rule=at_rule)
+        assert {name: declarations.get(name) for name in expected} == expected
+
+    assert_declarations(root_scope, {"color": "var(--portal-ink)", "background": "var(--portal-surface-light)"})
+    assert_declarations(
+        f"{root_scope} .portal-operations-admin-intro",
+        {
+            "background": "var(--portal-surface-soft) !important",
+            "border-color": "var(--portal-border)",
+            "box-shadow": "none",
+        },
+    )
+    assert_declarations(
+        f"{root_scope} .portal-operations-metrics .portal-metric",
+        {"background": "var(--portal-surface-light)", "box-shadow": "none"},
+    )
+    assert_declarations(f"{root_scope} .portal-card", {"background": "var(--portal-surface-light)", "box-shadow": "none"})
+    assert_declarations(
+        f"{root_scope} .portal-operations-run",
+        {"border-color": "var(--portal-border)", "background": "var(--portal-surface-light)"},
+    )
+    assert_declarations(
+        f"{root_scope} .portal-operations-boundary",
+        {
+            "background": "var(--portal-surface-soft)",
+            "border-color": "var(--portal-border)",
+            "box-shadow": "none",
+        },
+    )
+    assert_declarations(f"{root_scope} .portal-button--quiet:is(:hover, :focus-visible)", {"transform": "none", "box-shadow": "none"})
+    assert_declarations(f"{root_scope} .portal-button:disabled", {"background": "var(--portal-surface-soft)", "color": "var(--portal-muted)"})
+    assert_declarations(
+        f"{root_scope} :is(button, a, input, select, textarea):focus-visible",
+        {"outline": "3px solid var(--portal-focus) !important"},
+    )
+    assert_declarations(f'{root_scope} .portal-badge[data-status="read_only"]', {"color": "var(--portal-info)"})
+    assert_declarations(f'{root_scope} .portal-badge[data-status="guarded"]', {"color": "var(--portal-warning)"})
+    assert_declarations(f'{root_scope} .portal-badge[data-status="failed"]', {"color": "var(--portal-danger)"})
+
+    medium = "@media (max-width: 980px)"
+    assert_declarations(f"{root_scope} .portal-operations-admin-grid", {"grid-template-columns": "minmax(0, 1fr)"}, at_rule=medium)
+    mobile = "@media (max-width: 700px)"
+    assert_declarations(f"{root_scope} .portal-operations-metrics", {"grid-template-columns": "1fr"}, at_rule=mobile)
+    assert_declarations(f"{root_scope} :is(.portal-button--primary, .portal-button--quiet)", {"min-height": "44px"}, at_rule=mobile)
+    reduced_motion = "@media (prefers-reduced-motion: reduce)"
+    assert_declarations(
+        f"{root_scope} :is(.portal-card, .portal-metric, .portal-operations-run, .portal-button)",
+        {"transition": "none", "transform": "none"},
+        at_rule=reduced_motion,
+    )
+
+    selectors = [selector for rule in rules for selector in rule["selectors"]]
+    assert selectors
+    scope_boundary = re.compile(rf"{re.escape(root_scope)}(?:$|(?=[\s>+~:#.\[]))")
+    assert all(scope_boundary.match(selector) for selector in selectors)
+
+    def base_rule_index(selector: str) -> int:
+        return next(
+            index
+            for index, rule in enumerate(rules)
+            if rule["at_rules"] == () and selector in rule["selectors"]
+        )
+
+    assert base_rule_index(f"{root_scope} .portal-card") < base_rule_index(
+        f"{root_scope} .portal-operations-boundary"
+    )
+    assert {rule["at_rules"] for rule in rules} == {(), (medium,), (mobile,), (reduced_motion,)}
+    declaration_values = " ".join(value for rule in rules for value in rule["declarations"].values())
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", declaration_values)
+    assert not re.search(r"\b(?:rgba?|hsla?)\s*\(", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(r"\b(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(r"(?<![-\w])transparent(?![-\w])", declaration_values, flags=re.IGNORECASE)
+    assert not re.search(r"(?i:var)\(\s*--(?!portal-)", declaration_values)
+    assert all(not name.startswith("--") or name.startswith("--portal-") for rule in rules for name in rule["declarations"])
+
+
 def test_light_delivery_center_final_surface_keeps_canonical_states_clear() -> None:
     """Jobs and Assets stay readable without blurring delivery truth or ownership."""
 
