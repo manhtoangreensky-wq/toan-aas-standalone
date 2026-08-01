@@ -205,12 +205,17 @@ def test_partner_readiness_rejects_unsafe_fields_and_disabled_feature_without_si
         for invalid in (
             payload("partner-readiness-extra-0001", telegram_id="123"),
             payload("partner-readiness-url-0001", collaboration_note="Xem https://example.com trước."),
+            payload("partner-readiness-www-0001", collaboration_note="Xem www.example.com trước."),
             payload("partner-readiness-contact-0001", collaboration_note="Liên hệ @someone để trao đổi."),
             payload("partner-readiness-secret-0001", portfolio_summary="api_key=super-secret-value-123456"),
             payload("partner-readiness-token-0001", portfolio_summary="token=opaque-secret-value-123456"),
+            payload("partner-readiness-session-token-0001", portfolio_summary="session_token=opaque-secret-value-123456"),
+            payload("partner-readiness-jwt-0001", portfolio_summary="jwt=opaque-secret-value-123456"),
             payload("partner-readiness-ftp-0001", portfolio_summary="ftp://private.example.invalid/resource"),
             payload("partner-readiness-tel-0001", portfolio_summary="tel:+84901234567"),
             payload("partner-readiness-admin-identity-0001", portfolio_summary="admin identity: operator-42"),
+            payload("partner-readiness-admin-id-0001", portfolio_summary="admin_id=operator-42"),
+            payload("partner-readiness-operator-id-0001", portfolio_summary="operator_id=operator-42"),
             payload("partner-readiness-amount-0001", service_focus="Gói 2.000.000đ mỗi tháng."),
             payload("partner-readiness-markup-0001", service_focus="<script>alert(1)</script>"),
         ):
@@ -256,7 +261,17 @@ def test_production_error_envelopes_keep_partner_readiness_boundary(tmp_path, mo
     application = importlib.import_module("app")
     with TestClient(application.app) as client:
         denied = client.post("/api/v1/partner-readiness/profile/request-review", json={})
+        csrf = login(client, "partner-readiness-validation@example.com")
+        invalid = client.patch(
+            "/api/v1/partner-readiness/profile",
+            headers={"X-CSRF-Token": csrf},
+            json={"unexpected": True},
+        )
     assert denied.status_code == 401
     assert denied.json()["data"]["execution"] == "web_native_partner_readiness_profile_only"
     assert denied.json()["data"]["profile_persisted"] is False
     assert denied.json()["data"]["bot_called"] is False
+    assert invalid.status_code == 422
+    assert invalid.json()["data"]["execution"] == "web_native_partner_readiness_profile_only"
+    assert invalid.json()["data"]["profile_persisted"] is False
+    assert invalid.json()["data"]["bot_called"] is False

@@ -32,13 +32,22 @@ RATE_DISPLAY = frozenset({"on_request", "range_discussion", "not_shown"})
 VISIBILITY = frozenset({"private", "handoff_ready"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 CONTROL_PATTERN = re.compile(r"[\x00-\x1f\x7f]")
-MARKUP_OR_URL = re.compile(r"<[^>]*>|(?:[A-Za-z][A-Za-z0-9+.-]{1,15}://|(?:https?|mailto|javascript|data|file|ftp|tel|sms):)", re.IGNORECASE)
+MARKUP_OR_URL = re.compile(r"<[^>]*>|(?:\bwww\.|[A-Za-z][A-Za-z0-9+.-]{1,15}://|(?:https?|mailto|javascript|data|file|ftp|tel|sms):)", re.IGNORECASE)
 HANDLE_OR_CONTACT = re.compile(r"(?:\b[\w.+-]+@[\w-]+\.[\w.-]+\b|(?<!\w)@[A-Za-z][A-Za-z0-9_]{3,31}\b|\b(?:telegram|zalo|phone|email|liên\s*hệ|lien\s*he)\b|(?<!\d)0\d{8,10}(?!\d))", re.IGNORECASE)
 SECRET = re.compile(r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|secret|password|passphrase|authorization|otp|cvv|cvc|private[ _-]?key)\b", re.IGNORECASE)
 PAYMENT = re.compile(r"\b(?:payos|txid|transaction|bill|biên\s*lai|chứng\s*từ|số\s*tài\s*khoản|stk|card|thẻ|payment|payout|commission|recipient|người\s*nhận)\b|(?:\d[\d., ]{2,}\s*(?:đ|vnd|usd|\$))", re.IGNORECASE)
 REFERRAL = re.compile(r"\b(?:referral|affiliate|ref\s*code|mã\s*giới\s*thiệu|mã\s*ref)\b", re.IGNORECASE)
-CREDENTIAL_ASSIGNMENT = re.compile(r"\b(?:token|bearer|credential|secret|key)\s*[:=]\s*\S+", re.IGNORECASE)
-ADMIN_IDENTITY = re.compile(r"\b(?:admin(?:istrator)?|operator|staff|manager)\s+(?:identity|id|account|user)\b\s*[:=]?\s*\S*", re.IGNORECASE)
+CREDENTIAL_ASSIGNMENT = re.compile(
+    r"\b(?:[A-Za-z][A-Za-z0-9]*(?:[_-](?:token|secret|key|credential|password|jwt))|"
+    r"token|bearer|credential|secret|key|jwt|api[ _-]?(?:key|token)|access[ _-]?token)"
+    r"\s*[:=]\s*\S+",
+    re.IGNORECASE,
+)
+ADMIN_IDENTITY = re.compile(
+    r"\b(?:admin(?:istrator)?|operator|staff|manager)[\s_-]+"
+    r"(?:identity|id|account|user)\b\s*[:=]?\s*\S*",
+    re.IGNORECASE,
+)
 RETENTION = timedelta(hours=24)
 MAX_RECEIPTS = 1024
 
