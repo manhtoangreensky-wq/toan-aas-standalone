@@ -41,6 +41,13 @@ SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 # one-off audit to another output location; otherwise an old committed bundle
 # becomes input to the next Web fingerprint.
 STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS = (Path("docs") / "migration", Path("reports") / "migration")
+# Design/plan records are human review evidence.  They cannot define a Web
+# runtime route, request, database table, provider, environment reference or
+# source fingerprint merely because the static audit accepts Markdown input.
+STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS = (
+    *STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS,
+    Path("docs") / "superpowers",
+)
 EXCLUDED_DIRS = {
     ".git",
     ".pytest_cache",
@@ -444,7 +451,8 @@ ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS = frozenset(
         "archive|type|general",
     }
 )
-ARCHIVE_SOURCE_REVIEW_ACTIONS = frozenset(
+ARCHIVE_TELEGRAM_ONLY_ACTIONS = frozenset({"archive|preview", "archive|save"})
+ARCHIVE_PENDING_STATE_TELEGRAM_ONLY_ACTIONS = frozenset(
     {
         "archive|back_department",
         "archive|change_dept",
@@ -452,7 +460,6 @@ ARCHIVE_SOURCE_REVIEW_ACTIONS = frozenset(
         "archive|edit",
     }
 )
-ARCHIVE_TELEGRAM_ONLY_ACTIONS = frozenset({"archive|preview", "archive|save"})
 
 # Cinematic Ad Concept has a deliberately narrow Web-native boundary.  The
 # frozen Bot handler keeps a ten-minute per-Telegram-user pending/latest
@@ -4120,9 +4127,18 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "archive": {
         "priority": "P1",
-        "candidate_boundary": "/admin",
-        "authority": "Canonical Bot admin or separate Web admin archive",
-        "next_contract": "Separate Bot archive state from the isolated Web admin document archive; every write needs canonical role, CSRF, confirmation and audit evidence.",
+        "candidate_boundary": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED",
+        "authority": "Source review required",
+        "next_contract": "Review every unlisted Archive callback with handler-level state/identifier evidence before assigning any Web meaning. No dynamic, case/whitespace/suffix or future Archive value may inherit a generic `/admin` route; a separately designed Web Archive write also needs canonical role, CSRF, confirmation and audit evidence.",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "UNREVIEWED_ARCHIVE_CALLBACK_VALUE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Archive callback values can carry Telegram-local department/type/search selection, pending record/file identifiers, edit/upload transitions or delivery controls. Exact reviewed literals have their own finite dispositions; every residual value requires source review before it gains a Web route or action.",
     },
     "opmenu": {
         "priority": "P1",
@@ -6826,6 +6842,35 @@ def _map_docflow_callback(identifier: str, source_kind: str, evidence: dict[str,
     }
 
 
+def _archive_pending_state_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Record an exact Bot Archive pending-state transition as terminal-only."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "admin",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "archive_pending_state_requires_telegram_context",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_ARCHIVE_PENDING_STATE",
+            "TELEGRAM_ARCHIVE_STATE_TRANSITION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web "
+            "Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, "
+            "upload/edit mutation or delivery action from this source."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     """Keep Bot Archive callbacks inside a finite, role-checked boundary.
 
@@ -6836,8 +6881,8 @@ def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str,
     Telegram-only rather than inheriting a generic Admin route.
     """
 
-    token = str(identifier or "").casefold()
-    if token in ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS:
+    raw_identifier = str(identifier or "")
+    if raw_identifier in ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS:
         target = "/admin/internal-documents"
         return {
             "source_kind": source_kind,
@@ -6861,7 +6906,7 @@ def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str,
             "archive_launch_mode": "WEB_NAVIGATION",
             "evidence": evidence,
         }
-    if token in ARCHIVE_TELEGRAM_ONLY_ACTIONS:
+    if raw_identifier in ARCHIVE_TELEGRAM_ONLY_ACTIONS:
         return {
             "source_kind": source_kind,
             "source": identifier,
@@ -6881,21 +6926,19 @@ def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str,
             ),
             "evidence": evidence,
         }
-    review_label = (
-        "reviewed_archive_callback_requires_source_review"
-        if token in ARCHIVE_SOURCE_REVIEW_ACTIONS
-        else "archive_callback_requires_source_review"
-    )
+    if raw_identifier in ARCHIVE_PENDING_STATE_TELEGRAM_ONLY_ACTIONS:
+        return _archive_pending_state_telegram_only_mapping(identifier, source_kind, evidence)
     return {
         "source_kind": source_kind,
         "source": identifier,
         "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED",
         "classification": "admin",
         "status": "NEEDS_FEATURE_DISPOSITION",
-        "resolution": review_label,
+        "resolution": "archive_callback_requires_source_review",
         "source_dispositions": (
             "BOT_ADMIN_ONLY",
             "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "UNREVIEWED_ARCHIVE_CALLBACK_VALUE",
             "SOURCE_STATE_MACHINE_REQUIRED",
             "NO_RUNTIME_CLAIM",
         ),
@@ -9463,7 +9506,10 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         return residual_media_creator_mapping
     if token.startswith("docflow|"):
         return _map_docflow_callback(identifier, source_kind, evidence)
-    if token.startswith("archive|"):
+    # Strip only to recognize the Archive *family* at this dispatcher boundary.
+    # The raw identifier remains untouched below, so exact terminal/navigation
+    # catalogs stay case-, whitespace- and suffix-sensitive.
+    if token.strip().startswith("archive|"):
         return _map_archive_callback(identifier, source_kind, evidence, existing_routes)
     if token.startswith("tvflow|"):
         return _map_tvflow_callback(identifier, source_kind, evidence)
@@ -10779,7 +10825,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # intentionally case-sensitive. Normalized `token` remains only for
         # wildcard/prefix classification below.
         return _map_callback(raw_template, "callback_template", evidence, existing_routes)
-    if token.startswith("archive|"):
+    # As with literal callbacks, whitespace may reveal the Archive family but
+    # must never be normalized before the raw exact catalog lookup.
+    if token.strip().startswith("archive|"):
         # Dynamic Archive suffixes can encode Bot department/type/search state
         # or identifiers.  Keep all of them fail-closed instead of inheriting
         # the generic Admin route or a finite Archive directory literal.
@@ -12602,6 +12650,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + revision_summary
         + f"- Bot source fingerprint: `{bot['source_fingerprint_sha256']}`\n"
         + f"- Web source fingerprint: `{web['source_fingerprint_sha256']}`\n"
+        + "- The Web source inventory excludes `docs/superpowers` planning documents and configured/generated evidence output roots; other eligible Web source remains in scope.\n"
         + f"- Noncanonical Bot draft files excluded from inventory: `{len(bot.get('excluded_noncanonical_source_files', []))}`\n"
         + "- Canonical authority remains the bot for Telegram identity, Xu ledger, PayOS, jobs, and provider state.\n\n"
         + f"- Requested baseline private bridge source (`{CORE_BRIDGE_FILE}`): `{baseline_bridge_state}` (`present={baseline_bridge_present}`).\n"
@@ -13996,7 +14045,7 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
     candidate_web_output_roots = (
         report_dir,
         docs_dir,
-        *(web_root / relative for relative in STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS),
+        *(web_root / relative for relative in STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS),
     )
     web_output_roots = tuple(
         dict.fromkeys(
@@ -14015,7 +14064,7 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
                 "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
                 "Only source text, Python AST, and local read-only Git revision metadata are read.",
                 "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
-                "Configured output paths and standard migration evidence directories are excluded from the Web source inventory.",
+                "Configured output paths, standard migration evidence directories, and docs/superpowers planning documents are excluded from the Web source inventory.",
                 "Report/document text is sanitized for secret-shaped literals.",
             ],
             "bot": {

@@ -380,6 +380,21 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
         for mapping in current_menu_records
     )
     assert not any(item["family"] == "menu" for item in parity_gap["feature_disposition_backlog"])
+    archive_terminal_sources = set(audit.ARCHIVE_PENDING_STATE_TELEGRAM_ONLY_ACTIONS)
+    current_archive_records = [
+        mapping
+        for mapping in parity_gap["callback_mappings"]
+        if mapping["source"] in archive_terminal_sources
+    ]
+    assert len(current_archive_records) == 9
+    assert {mapping["source"] for mapping in current_archive_records} == archive_terminal_sources
+    assert all(
+        mapping["target"] == "TELEGRAM_ONLY" and mapping["status"] == "TELEGRAM_ONLY"
+        for mapping in current_archive_records
+    )
+    archive_backlog = next(item for item in parity_gap["feature_disposition_backlog"] if item["family"] == "archive")
+    assert archive_backlog["count"] == 2
+    assert archive_backlog["sample_sources"] == ["archive|dept|{*}"]
     imgtool_navigation_mappings = [
         mapping
         for mapping in parity_gap["callback_mappings"]
@@ -4181,12 +4196,24 @@ def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigat
     assert tax_invoice["target"] == "/admin/internal-documents"
     assert "voice" not in tax_invoice["target"]
 
-    for token in sorted(audit.ARCHIVE_SOURCE_REVIEW_ACTIONS):
+    expected_pending_state_terminal = {
+        "archive|back_department",
+        "archive|change_dept",
+        "archive|discard_to_dept",
+        "archive|edit",
+    }
+    assert set(audit.ARCHIVE_PENDING_STATE_TELEGRAM_ONLY_ACTIONS) == expected_pending_state_terminal
+
+    for token in sorted(expected_pending_state_terminal):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
         assert mapped["classification"] == "admin"
-        assert mapped["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "reviewed_archive_callback_requires_source_review"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "archive_pending_state_requires_telegram_context"
+        assert "BOT_ARCHIVE_PENDING_STATE" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+        assert "archive_authority" not in mapped
+        assert "archive_launch_mode" not in mapped
 
     for token in sorted(audit.ARCHIVE_TELEGRAM_ONLY_ACTIONS):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
@@ -4195,11 +4222,172 @@ def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigat
         assert mapped["status"] == "TELEGRAM_ONLY"
         assert mapped["resolution"] == "archive_preview_or_save_requires_telegram_state"
 
-    unreviewed = audit._map_callback("archive|future_record", "callback_data", evidence, routes)
-    assert unreviewed["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
-    assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert unreviewed["resolution"] == "archive_callback_requires_source_review"
+    # Preview/save are terminal only for their exact, case-sensitive Bot
+    # literals.  A case or suffix variant cannot inherit either terminal
+    # behavior or fresh Admin navigation without finite source review.
+    for token in (
+        "ARCHIVE|PREVIEW",
+        "archive|preview|future",
+        "ARCHIVE|SAVE",
+        "archive|save|future",
+    ):
+        unreviewed = audit._map_callback(token, "callback_data", evidence, routes)
+        assert unreviewed["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+        assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert unreviewed["resolution"] == "archive_callback_requires_source_review"
+        assert "UNREVIEWED_ARCHIVE_CALLBACK_VALUE" in unreviewed["source_dispositions"]
+
+    for token in (
+        "archive|future_record",
+        "ARCHIVE|BACK_DEPARTMENT",
+        "archive|back_department|future",
+        "archive|edit ",
+        "ARCHIVE|ROOT",
+    ):
+        unreviewed = audit._map_callback(token, "callback_data", evidence, routes)
+        assert unreviewed["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+        assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert unreviewed["resolution"] == "archive_callback_requires_source_review"
+        assert "UNREVIEWED_ARCHIVE_CALLBACK_VALUE" in unreviewed["source_dispositions"]
+        assert "archive_authority" not in unreviewed
+        assert "archive_launch_mode" not in unreviewed
+
+    dynamic = audit._map_callback_template("archive|dept|{*}", evidence, routes)
+    assert dynamic is not None
+    assert dynamic["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+    assert dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert dynamic["resolution"] == "archive_callback_requires_source_review"
+    assert "UNREVIEWED_ARCHIVE_CALLBACK_VALUE" in dynamic["source_dispositions"]
     assert not any(prefix == "archive|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+
+def test_static_audit_keeps_archive_whitespace_case_and_dynamic_terminal_drift_at_source_review() -> None:
+    """Archive dispatch recognizes the family without normalizing its raw value."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    for token in (
+        " archive|preview",
+        "archive|save ",
+        "\tARCHIVE|PREVIEW\t",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["source"] == token
+        assert mapped["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["target"] not in {"/admin/internal-documents", "TELEGRAM_ONLY"}
+        assert "archive_authority" not in mapped
+        assert "archive_launch_mode" not in mapped
+
+    for template in (
+        " archive|dept|{*}",
+        "archive|dept|{*} ",
+        "\tARCHIVE|DEPT|{*}\t",
+        " archive|preview|{*}",
+        "archive|save|{*} ",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["source"] == template
+        assert mapped["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["target"] not in {"/admin/internal-documents", "TELEGRAM_ONLY"}
+        assert "archive_authority" not in mapped
+        assert "archive_launch_mode" not in mapped
+
+    archive_contract = (REPOSITORY_ROOT / "docs" / "migration" / "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md").read_text(
+        encoding="utf-8"
+    )
+    assert "`archive|preview` and `archive|save` are exact raw lower-case" in archive_contract
+    assert "whitespace, case or suffix variant" in archive_contract
+    assert "source-review-required" in archive_contract
+
+
+def test_static_audit_keeps_archive_callback_family_fallback_at_source_review_boundary(tmp_path: Path) -> None:
+    """Dynamic Archive callbacks cannot advertise a generic Admin destination."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def archive_keyboard(department):
+    InlineKeyboardButton("Department", callback_data=f"archive|dept|{department}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+
+    backlog = next(item for item in result["parity_gap"]["feature_disposition_backlog"] if item["family"] == "archive")
+    assert backlog["candidate_boundary"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+    assert backlog["candidate_boundary"] != "/admin"
+    assert backlog["authority"] == "Source review required"
+    assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in backlog["source_dispositions"]
+
+
+def test_static_audit_excludes_superpowers_planning_docs_from_web_source_inventory(tmp_path: Path) -> None:
+    """Plans/specs are audit evidence, never Web runtime source input."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text("app = ApplicationBuilder().build()\n", encoding="utf-8")
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+
+@app.get('/runtime-probe')
+def runtime_probe():
+    return {'ok': True}
+""",
+        encoding="utf-8",
+    )
+    runtime_docs = web_root / "docs" / "runtime"
+    runtime_docs.mkdir(parents=True)
+    (runtime_docs / "provider-reference.md").write_text("PayOS runtime boundary\n", encoding="utf-8")
+    plan_dir = web_root / "docs" / "superpowers" / "plans"
+    spec_dir = web_root / "docs" / "superpowers" / "specs"
+    plan_dir.mkdir(parents=True)
+    spec_dir.mkdir(parents=True)
+    plan = plan_dir / "future-plan.md"
+    spec = spec_dir / "future-spec.md"
+    plan.write_text("# Planning evidence\n", encoding="utf-8")
+    spec.write_text("# Design evidence\n", encoding="utf-8")
+
+    first = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "generated-docs")
+    first_inventory = first["web_inventory"]
+
+    # Provider-shaped content in a plan/spec is review evidence only. Changing
+    # exactly those two Markdown files must not alter the runtime inventory.
+    plan.write_text("# Key4U provider plan\nPayOS webhook and OpenAI draft\n", encoding="utf-8")
+    spec.write_text("# Key4U spec\nTelegram / Deepgram provider notes\n", encoding="utf-8")
+    second = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "generated-docs")
+
+    # The exclusion is deliberately limited to docs/superpowers: normal app
+    # source and other Web documentation still form the inventory.
+    assert first_inventory["source_files_discovered"] == 2
+    assert first_inventory["source_files_scanned"] == 2
+    assert any(route["path"] == "/runtime-probe" for route in first_inventory["routes"])
+    assert "PayOS" in first_inventory["provider_names"]
+    assert first_inventory["source_fingerprint_sha256"] == second["web_inventory"]["source_fingerprint_sha256"]
+    assert first_inventory == second["web_inventory"]
+    planning_docs_guarantee = (
+        "Configured output paths, standard migration evidence directories, and docs/superpowers planning documents "
+        "are excluded from the Web source inventory."
+    )
+    assert planning_docs_guarantee in first["preflight"]["guarantees"]
+    assert planning_docs_guarantee in json.loads((tmp_path / "reports" / "preflight.json").read_text(encoding="utf-8"))["guarantees"]
+    assert "The Web source inventory excludes `docs/superpowers` planning documents" in (
+        tmp_path / "generated-docs" / "README.md"
+    ).read_text(encoding="utf-8")
 
 
 def test_static_audit_keeps_dashboard_fallbacks_actionable_instead_of_counting_feature_parity(tmp_path: Path) -> None:

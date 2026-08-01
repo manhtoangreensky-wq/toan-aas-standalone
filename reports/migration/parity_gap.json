@@ -4835,19 +4835,18 @@
         "file": "bot.py",
         "line": 123246
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4855,19 +4854,18 @@
         "file": "bot.py",
         "line": 123310
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4875,19 +4873,18 @@
         "file": "bot.py",
         "line": 123551
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4895,19 +4892,18 @@
         "file": "bot.py",
         "line": 123617
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4915,19 +4911,18 @@
         "file": "bot.py",
         "line": 123666
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4935,19 +4930,18 @@
         "file": "bot.py",
         "line": 123679
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|back_department",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -4955,19 +4949,18 @@
         "file": "bot.py",
         "line": 123388
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|change_dept",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "archive_authority": "SIGNED_CANONICAL_ADMIN_WEB_NATIVE",
@@ -5017,19 +5010,18 @@
         "file": "bot.py",
         "line": 123389
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|discard_to_dept",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -5037,19 +5029,18 @@
         "file": "bot.py",
         "line": 123387
       },
-      "fallback_family": "archive",
-      "resolution": "reviewed_archive_callback_requires_source_review",
+      "resolution": "archive_pending_state_requires_telegram_context",
       "source": "archive|edit",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "BOT_ARCHIVE_PENDING_STATE",
+        "TELEGRAM_ARCHIVE_STATE_TRANSITION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "An Archive callback may carry Bot department/type/search state, a pending record identifier, an edit transition, upload/delivery control or another canonical Bot archive action. It must receive finite source review before it can gain any Web meaning.",
+      "source_evidence": "The frozen Bot action reads or changes Telegram-local Archive pending state. The standalone Web Archive accepts no Bot state, identity, department/type/search selection, record/file identifier, upload/edit mutation or delivery action from this source.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "archive_authority": "SIGNED_CANONICAL_ADMIN_WEB_NATIVE",
@@ -52242,6 +52233,7 @@
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
         "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "UNREVIEWED_ARCHIVE_CALLBACK_VALUE",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
@@ -52262,6 +52254,7 @@
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
         "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "UNREVIEWED_ARCHIVE_CALLBACK_VALUE",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
@@ -74771,25 +74764,6 @@
       ]
     },
     {
-      "authority": "Canonical Bot admin or separate Web admin archive",
-      "candidate_boundary": "/admin",
-      "count": 11,
-      "family": "archive",
-      "next_contract": "Separate Bot archive state from the isolated Web admin document archive; every write needs canonical role, CSRF, confirmation and audit evidence.",
-      "priority": "P1",
-      "sample_sources": [
-        "archive|back_department",
-        "archive|change_dept",
-        "archive|dept|{*}",
-        "archive|discard_to_dept",
-        "archive|edit"
-      ],
-      "source_kinds": [
-        "callback_data",
-        "callback_template"
-      ]
-    },
-    {
       "authority": "Canonical Bot/provider translation request and delivery boundary",
       "candidate_boundary": "CORE_CANONICAL_TRANSLATION_GUARDED",
       "count": 10,
@@ -74834,6 +74808,29 @@
         "NO_RUNTIME_CLAIM"
       ],
       "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "callback_template"
+      ]
+    },
+    {
+      "authority": "Source review required",
+      "candidate_boundary": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED",
+      "count": 2,
+      "family": "archive",
+      "next_contract": "Review every unlisted Archive callback with handler-level state/identifier evidence before assigning any Web meaning. No dynamic, case/whitespace/suffix or future Archive value may inherit a generic `/admin` route; a separately designed Web Archive write also needs canonical role, CSRF, confirmation and audit evidence.",
+      "priority": "P1",
+      "sample_sources": [
+        "archive|dept|{*}"
+      ],
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+        "UNREVIEWED_ARCHIVE_CALLBACK_VALUE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Archive callback values can carry Telegram-local department/type/search selection, pending record/file identifiers, edit/upload transitions or delivery controls. Exact reviewed literals have their own finite dispositions; every residual value requires source review before it gains a Web route or action.",
       "source_kinds": [
         "callback_template"
       ]
@@ -74998,7 +74995,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 721,
+      "count": 712,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -75052,11 +75049,6 @@
           "priority": "P1"
         },
         {
-          "count": 11,
-          "family": "archive",
-          "priority": "P1"
-        },
-        {
           "count": 10,
           "family": "tr_target",
           "priority": "P1"
@@ -75064,6 +75056,11 @@
         {
           "count": 3,
           "family": "task",
+          "priority": "P1"
+        },
+        {
+          "count": 2,
+          "family": "archive",
           "priority": "P1"
         },
         {
@@ -75280,13 +75277,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 82.21,
+  "mapping_coverage_percent": 82.43,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1570,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 903,
-    "NEEDS_FEATURE_DISPOSITION": 721,
-    "TELEGRAM_ONLY": 852,
+    "NEEDS_FEATURE_DISPOSITION": 712,
+    "TELEGRAM_ONLY": 861,
     "WEB_NATIVE_READ_ONLY": 5
   },
   "metric_scope": {
@@ -75308,7 +75305,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 82.21,
+  "safe_disposition_coverage_percent": 82.43,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75318,13 +75315,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3332,
+    "resolved_static_source_count": 3341,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 123,
-    "unresolved_source_count": 721
+    "unresolved_source_count": 712
   },
   "static_web_surface_coverage_percent": 38.74,
   "telegram_link_callback_contract": {
