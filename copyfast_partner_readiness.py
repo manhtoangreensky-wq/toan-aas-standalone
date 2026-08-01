@@ -50,6 +50,7 @@ ADMIN_IDENTITY = re.compile(
 )
 RETENTION = timedelta(hours=24)
 MAX_RECEIPTS = 1024
+HISTORY_LIMIT = 100
 
 
 def _require_enabled() -> None:
@@ -315,8 +316,8 @@ def get_profile(response: Response, account: dict[str, Any] = Depends(require_ac
 def get_history(response: Response, account: dict[str, Any] = Depends(require_account)) -> dict[str, Any]:
     _require_enabled(); _private(response); ensure_copyfast_schema()
     with read_transaction() as conn:
-        rows = conn.execute("SELECT revision, snapshot_json, created_at FROM web_partner_readiness_versions WHERE account_id=? ORDER BY revision DESC", (str(account["id"]),)).fetchall()
-        events = conn.execute("SELECT action, state, revision, created_at FROM web_partner_readiness_events WHERE account_id=? ORDER BY created_at DESC, id DESC LIMIT 100", (str(account["id"]),)).fetchall()
+        rows = conn.execute("SELECT revision, snapshot_json, created_at FROM web_partner_readiness_versions WHERE account_id=? ORDER BY revision DESC LIMIT ?", (str(account["id"]), HISTORY_LIMIT)).fetchall()
+        events = conn.execute("SELECT action, state, revision, created_at FROM web_partner_readiness_events WHERE account_id=? ORDER BY created_at DESC, id DESC LIMIT ?", (str(account["id"]), HISTORY_LIMIT)).fetchall()
     versions = []
     for revision, raw, created_at in rows:
         try: snapshot = json.loads(str(raw))

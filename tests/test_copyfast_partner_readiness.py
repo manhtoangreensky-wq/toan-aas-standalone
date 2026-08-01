@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import sqlite3
 import sys
 from pathlib import Path
@@ -196,6 +197,39 @@ def test_partner_readiness_profile_history_owner_scope_idempotency_and_transitio
     assert [row[0] for row in versions] == [1, 2, 3, 4, 5, 6, 7]
     assert not {"telegram_id", "referral_code", "payout", "recipient", "amount"} & {row[1] for row in schema}
     assert audit and payload()["portfolio_summary"] not in " ".join(str(row[0]) for row in audit)
+
+
+def test_partner_readiness_history_caps_immutable_versions_at_one_hundred(tmp_path, monkeypatch):
+    db_path = tmp_path / "partner-readiness.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "readiness-history-cap@example.com")
+        assert client.patch(
+            "/api/v1/partner-readiness/profile",
+            headers={"X-CSRF-Token": csrf},
+            json=payload("partner-readiness-history-cap-create-0001"),
+        ).status_code == 200
+        with sqlite3.connect(db_path) as conn:
+            profile_id, account_id = conn.execute("SELECT id, account_id FROM web_partner_readiness_profiles").fetchone()
+            for revision in range(2, 122):
+                conn.execute(
+                    "INSERT INTO web_partner_readiness_versions (id, profile_id, account_id, revision, snapshot_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        f"history-cap-{revision}",
+                        profile_id,
+                        account_id,
+                        revision,
+                        json.dumps({"service_focus": "Thiết kế quy trình nội dung số cho đội nhỏ.", "state": "draft"}),
+                        f"2026-08-01T00:{revision % 60:02d}:00+00:00",
+                    ),
+                )
+            conn.commit()
+        history = client.get("/api/v1/partner-readiness/profile/history")
+
+    assert history.status_code == 200
+    versions = history.json()["data"]["versions"]
+    assert len(versions) == 100
+    assert versions[0]["revision"] == 121
+    assert versions[-1]["revision"] == 22
 
 
 def test_partner_readiness_rejects_unsafe_fields_and_disabled_feature_without_side_effects(tmp_path, monkeypatch):
