@@ -83,9 +83,8 @@ surface.
 
 `web_partner_readiness_events`
 
-- Narrow event metadata (`profile_created`, `profile_updated`,
-  `review_requested`, `interest_submitted`, `profile_archived`,
-  `profile_restored`) with no free-text audit detail.
+- Narrow event metadata (`create`, `update`, `request_review`,
+  `interest_submitted`, `archive`, `restore`) with no free-text audit detail.
 
 `web_partner_readiness_interest_submissions`
 
@@ -155,10 +154,12 @@ not a public portfolio or marketing page.
 
 ## Verification
 
-- Anonymous read/write, missing or invalid CSRF, malformed/oversized/extra
-  input, disabled feature, rate limiting, stale revision, invalid state
-  transition, idempotency replay/collision and archive/restore behaviors are
-  covered by focused API tests.
+- Focused API behavior tests cover anonymous read/write, missing CSRF,
+  malformed/oversized/extra input, disabled mode, stale revisions, invalid
+  transitions, idempotency replay/collision and archive/restore. Static app
+  contracts separately prove `require_csrf` dependency and shared read/write/
+  interest rate-limit bucket wiring; they do not claim focused invalid-CSRF or
+  rate-limit threshold behavior coverage for this module.
 - Tests assert the response boundary contains no Bot, provider, job,
   wallet/Xu, PayOS, referral, payout, public-listing or Admin CRM claim.
 - Portal contract tests prove signed hydration, no localStorage, clear

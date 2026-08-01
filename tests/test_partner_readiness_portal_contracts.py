@@ -78,6 +78,30 @@ def test_partner_readiness_hydration_is_owner_fenced_and_contract_checked() -> N
         assert forbidden not in partner_slice
 
 
+def test_partner_readiness_write_completion_is_fenced_to_the_originating_session() -> None:
+    helper = _between(
+        INTEGRATION,
+        "function partnerReadinessWriteSessionIsCurrent",
+        "function setPartnerReadinessActionBusy",
+    )
+    write = _between(
+        INTEGRATION,
+        "async function submitPartnerReadinessWrite",
+        "function isNativeStarterKitsPath",
+    )
+    for requirement in (
+        "sessionEpoch === partnerReadinessSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "base().partnerReadinessEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+    assert "const sessionEpoch = partnerReadinessSessionEpoch;" in write
+    assert write.count("partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)") >= 6
+    assert "if (acknowledged && partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) await hydratePartnerReadiness();" in write
+    assert "if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) setPartnerReadinessActionBusy(action, route, false);" in write
+
+
 def test_partner_readiness_has_private_cache_and_responsive_boundaries() -> None:
     assert '"/" + "api/v1/partner-readiness"' in WORKER
     assert '"/partner-readiness"' in WORKER

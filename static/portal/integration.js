@@ -22716,6 +22716,14 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function partnerReadinessWriteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === partnerReadinessSessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativePartnerReadinessPath(expectedPath)
+      && base().partnerReadinessEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
   function setPartnerReadinessActionBusy(action, route, busy) {
     const isBusy = Boolean(busy);
     document.querySelectorAll("[data-portal-action]").forEach((control) => {
@@ -22841,6 +22849,7 @@
   }
 
   async function submitPartnerReadinessWrite({ action, route, fields }) {
+    const sessionEpoch = partnerReadinessSessionEpoch;
     if (route !== "/partner-readiness" || currentPortalPath() !== route) throw new Error("Thao tác chỉ hợp lệ tại Partner Readiness đang mở.");
     const settings = {
       "partner-readiness-save": { capability: "partner-readiness-save", path: "/partner-readiness/profile", method: "PATCH", scope: "profile", interest: false },
@@ -22856,36 +22865,47 @@
     const scope = `partner-readiness:${settings.scope}:${payload.expected_revision}`;
     const submission = acquireSubmission(scope, featureFingerprint(payload));
     if (!submission) {
-      toast("Partner Readiness đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) {
+        toast("Partner Readiness đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      }
       return;
     }
     let acknowledged = false;
-    setPartnerReadinessActionBusy(action, route, true);
+    if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) setPartnerReadinessActionBusy(action, route, true);
     try {
       const result = await api(settings.path, {
         method: settings.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, idempotency_key: submission.key })
       });
+      // The URL can be identical after a sign-out/account switch. Session
+      // epoch, signed state and feature state must still belong to the writer.
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
       acknowledged = true;
       if (!partnerReadinessWriteReceipt(result.data, settings.interest)) {
         throw new Error("Máy chủ trả receipt Partner Readiness không đúng boundary an toàn. Hãy tải lại trước khi tiếp tục.");
       }
-      if (currentPortalPath() !== route) return;
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
       const refreshed = await hydratePartnerReadiness();
-      if (currentPortalPath() !== route) return;
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
       if (!refreshed) throw new Error("Máy chủ đã nhận yêu cầu nhưng Portal chưa tải lại được hồ sơ an toàn.");
-      toast(result.message || "Đã cập nhật Partner Readiness.");
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) toast(result.message || "Đã cập nhật Partner Readiness.");
     } catch (error) {
+      // A stale failure belongs to the prior signed account and must not reach
+      // the current account's generic error toast or trigger its private read.
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
       acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
       // Keep the same idempotency key only for an ambiguous network failure.
       // A server acknowledgement is always followed by an owner-scoped reread.
-      if (acknowledged && currentPortalPath() === route) await hydratePartnerReadiness();
+      if (acknowledged && partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) await hydratePartnerReadiness();
+      if (!partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) return;
       throw error;
     } finally {
       releaseSubmission(submission);
-      if (acknowledged) discardSubmission(scope, submission);
-      setPartnerReadinessActionBusy(action, route, false);
+      // A stale account must not reuse this idempotency entry, and its late
+      // completion must never unlock controls rendered for the next account.
+      if (acknowledged || !partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) discardSubmission(scope, submission);
+      if (partnerReadinessWriteSessionIsCurrent(sessionEpoch, route)) setPartnerReadinessActionBusy(action, route, false);
     }
   }
 
