@@ -39,11 +39,14 @@ BARE_DOMAIN_OR_PATH = re.compile(
     r"(?::\d{1,5})?(?:[/:?#][^\s]*)?(?![A-Za-z0-9-])",
     re.IGNORECASE,
 )
+IPV4_CANDIDATE = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])")
+TECHNICAL_DOT_JS_TOKENS = frozenset({
+    "node.js", "next.js", "react.js", "vue.js", "nuxt.js", "express.js",
+    "svelte.js", "angular.js", "solid.js", "three.js", "d3.js", "chart.js",
+})
 HANDLE_OR_CONTACT = re.compile(r"(?:\b[\w.+-]+@[\w-]+\.[\w.-]+\b|(?<!\w)@[A-Za-z][A-Za-z0-9_]{3,31}\b|\b(?:telegram|zalo|phone|email|liên\s*hệ|lien\s*he)\b|(?<!\d)0\d{8,10}(?!\d))", re.IGNORECASE)
-VIETNAMESE_INTL_PHONE = re.compile(
-    r"(?<!\d)(?:\+84|0084|84)[ .-]?(?:(?:\(0\)|0)[ .-]?)?[35789](?:[ .-]?\d){8}(?!\d)"
-)
-CARD_CANDIDATE = re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)")
+VIETNAMESE_PHONE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s().-]*\d){8,10}(?!\d)")
+CARD_CANDIDATE = re.compile(r"(?<![0-9A-Za-z])[0-9](?:[\s./-]*[0-9]){12,18}(?![0-9A-Za-z])")
 RAW_OTP = re.compile(r"\d{6}")
 SECRET = re.compile(r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|secret|password|passphrase|authorization|otp|cvv|cvc|private[ _-]?key)\b", re.IGNORECASE)
 PAYMENT = re.compile(r"\b(?:payos|txid|transaction|bill|biên\s*lai|chứng\s*từ|số\s*tài\s*khoản|stk|card|thẻ|payment|payout|commission|recipient|người\s*nhận)\b|(?:\d[\d., ]{2,}\s*(?:đ|vnd|usd|\$))", re.IGNORECASE)
@@ -75,6 +78,26 @@ def _private(response: Response) -> None:
     response.headers["Vary"] = "Cookie"
 
 
+def _contains_bare_url_or_ip(value: str) -> bool:
+    """Reject network destinations while preserving named JavaScript frameworks.
+
+    A protocol-prefixed URL is handled by ``MARKUP_OR_URL``.  This helper owns
+    the ambiguous bare forms: domain-like text is rejected unless it is a
+    closed, professional framework token such as ``Node.js``; IPv4 candidates
+    are only rejected when every octet is a valid address component.
+    """
+
+    for match in BARE_DOMAIN_OR_PATH.finditer(value):
+        token = match.group(0).lower().rstrip(".,;:!?")
+        if token not in TECHNICAL_DOT_JS_TOKENS:
+            return True
+    for match in IPV4_CANDIDATE.finditer(value):
+        is_ipv4 = all(0 <= int(octet) <= 255 for octet in match.group(0).split("."))
+        if is_ipv4:
+            return True
+    return False
+
+
 def _boundary(*, profile_persisted: bool, interest_submitted: bool = False) -> dict[str, Any]:
     return {
         "execution": "web_native_partner_readiness_profile_only",
@@ -96,9 +119,9 @@ def _text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bo
         raise ValueError(f"{label} cần từ {minimum} đến {maximum} ký tự hợp lệ")
     if text and (
         MARKUP_OR_URL.search(text)
-        or BARE_DOMAIN_OR_PATH.search(text)
+        or _contains_bare_url_or_ip(text)
         or HANDLE_OR_CONTACT.search(text)
-        or VIETNAMESE_INTL_PHONE.search(text)
+        or VIETNAMESE_PHONE.search(text)
         or CARD_CANDIDATE.search(text)
         or RAW_OTP.fullmatch(text)
         or SECRET.search(text)

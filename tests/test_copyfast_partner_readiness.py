@@ -271,12 +271,17 @@ def test_partner_readiness_rejects_unsafe_fields_and_disabled_feature_without_si
     (
         ("partner-readiness-bare-domain-0001", "example.com/path"),
         ("partner-readiness-long-tld-domain-0001", "example.museum/path"),
+        ("partner-readiness-js-domain-0001", "example.js"),
+        ("partner-readiness-ipv4-url-0001", "192.168.1.10/path"),
         ("partner-readiness-card-number-0001", "4111 1111 1111 1111"),
         ("partner-readiness-dashed-card-0001", "4111-1111-1111-1111"),
+        ("partner-readiness-dotted-card-0001", "4111.1111.1111.1111"),
+        ("partner-readiness-slashed-card-0001", "4111/1111/1111/1111"),
         ("partner-readiness-raw-otp-0001", "123456"),
         ("partner-readiness-intl-phone-0001", "+84901234567"),
         ("partner-readiness-0084-phone-0001", "0084901234567"),
         ("partner-readiness-84-phone-0001", "84901234567"),
+        ("partner-readiness-formatted-local-phone-0001", "090 123 4567"),
     ),
 )
 def test_partner_readiness_rejects_bare_sensitive_values_without_side_effects(
@@ -338,7 +343,7 @@ def test_partner_readiness_keeps_normal_vietnamese_prose_with_contextual_numbers
             headers={"X-CSRF-Token": csrf},
             json=payload(
                 "partner-readiness-normal-prose-0001",
-                collaboration_note="Có thể bàn giao 123456 bản ghi nội bộ vào quý 4 năm 2026.",
+                collaboration_note="Có thể bàn giao 123456 bản ghi nội bộ bằng Node.js và Next.js vào quý 4 năm 2026.",
             ),
         )
 
