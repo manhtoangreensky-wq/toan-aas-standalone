@@ -411,6 +411,34 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     )
     assert not any(item["family"] in {"pipe", "task"} for item in parity_gap["feature_disposition_backlog"])
     assert "All 27 observed finite `pipe|*`/`task|*` records are `TELEGRAM_ONLY`" in evidence
+    ticket_terminal_sources = set(audit.TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS) | set(
+        audit.TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS
+    )
+    current_ticket_terminal_records = [
+        mapping
+        for mapping in parity_gap["callback_mappings"]
+        if mapping["source"] in ticket_terminal_sources
+    ]
+    assert len(current_ticket_terminal_records) == 20
+    assert {mapping["source"] for mapping in current_ticket_terminal_records} == ticket_terminal_sources
+    assert all(
+        mapping["target"] == "TELEGRAM_ONLY"
+        and mapping["status"] == "TELEGRAM_ONLY"
+        and mapping["resolution"] == "ticket_terminal_requires_telegram_context"
+        for mapping in current_ticket_terminal_records
+    )
+    assert all(
+        "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapping["source_dispositions"]
+        for mapping in current_ticket_terminal_records
+        if mapping["source"] in audit.TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS
+    )
+    assert all(
+        "BOT_ADMIN_ONLY" in mapping["source_dispositions"]
+        and "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" not in mapping["source_dispositions"]
+        for mapping in current_ticket_terminal_records
+        if mapping["source"] in audit.TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS
+    )
+    assert "All 20 observed finite `ticket|*` terminal records (17 unique raw literals) are `TELEGRAM_ONLY`" in evidence
     imgtool_navigation_mappings = [
         mapping
         for mapping in parity_gap["callback_mappings"]
@@ -3564,7 +3592,6 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         "SUPPORT|CONSULT_TYPE|VOICE",
         "support|consult_type|package|future",
         "SUPPORT|CONSULT_TYPE|PACKAGE",
-        "ticket|cat|refund",
         "ticket|pv|42",
         "ticket|reply_user|42",
         "ticket|done|42",
@@ -3641,6 +3668,54 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert mapped["web_support_ticket_intent"] == action["web_support_ticket_intent"]
         assert set(mapped["source_dispositions"]) == expected_support_ticket_dispositions
 
+    ticket_customer_terminal_actions = {
+        "ticket|cat|payment_topup",
+        "ticket|cat|image_error",
+        "ticket|cat|video_error",
+        "ticket|cat|document_pdf",
+        "ticket|cat|package_combo",
+        "ticket|cat|refund",
+        "ticket|cat|feature_request",
+        "ticket|cat|other",
+        "ticket|cat|lead_consulting",
+    }
+    ticket_admin_terminal_actions = {
+        "ticket|admin",
+        "ticket|al|new|0",
+        "ticket|al|high|0",
+        "ticket|al|refund|0",
+        "ticket|asearch|all",
+        "ticket|asearch|user",
+        "ticket|stats",
+        "ticket|templates",
+    }
+    assert set(audit.TICKET_CUSTOMER_TELEGRAM_ONLY_ACTIONS) == ticket_customer_terminal_actions
+    assert set(audit.TICKET_ADMIN_TELEGRAM_ONLY_ACTIONS) == ticket_admin_terminal_actions
+
+    for identifier in ticket_customer_terminal_actions:
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "ticket_terminal_requires_telegram_context"
+        assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for identifier in ticket_admin_terminal_actions:
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "ticket_terminal_requires_telegram_context"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY" in mapped["source_dispositions"]
+        assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" not in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_TICKET_LEAD_ATTACHMENT_OR_TELEGRAM_STATE_REPLAY" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
     # Only the finite feedback keyboard entries can start a fresh Web-native
     # Support Desk form. The opaque Web audit intent is not a query/form/API
     # value and never preselects a customer support category.
@@ -3703,29 +3778,35 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION" in mapped["source_dispositions"]
 
-    for identifier in (
-        "ticket|admin",
-        "ticket|al|new|0",
-        "ticket|av|42|new",
-        "ticket|asearch|all",
-        "ticket|stats",
-        "ticket|templates",
-        "ticket|st|42|refund_pending",
-        "ticket|reply|42",
-        "ticket|suggest|42|0",
-        "ticket|send|42",
-        "ticket|ask|42",
-        "ticket|note|42",
-        "ticket|assign|42",
-        "ticket|lead|42|contact",
-        "ticket|file|42",
+    for identifier, classification in (
+        ("TICKET|CAT|REFUND", "customer"),
+        (" ticket|cat|refund", "customer"),
+        ("ticket|cat|refund ", "customer"),
+        ("ticket|cat|unknown", "customer"),
+        ("ticket|al|new|1", "admin"),
+        (" ticket|stats", "admin"),
+        ("ticket|stats ", "admin"),
+        ("ticket|av|42|new", "admin"),
+        ("ticket|st|42|refund_pending", "admin"),
+        ("ticket|reply|42", "admin"),
+        ("ticket|suggest|42|0", "admin"),
+        ("ticket|send|42", "admin"),
+        ("ticket|ask|42", "admin"),
+        ("ticket|note|42", "admin"),
+        ("ticket|assign|42", "admin"),
+        ("ticket|lead|42|contact", "admin"),
+        ("ticket|file|42", "admin"),
     ):
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
         assert mapped["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
-        assert mapped["classification"] == "admin"
+        assert mapped["classification"] == classification
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
-        assert "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY" in mapped["source_dispositions"]
+        if classification == "admin":
+            assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+            assert "CANONICAL_BOT_TICKET_ADMIN_MUTATION_OR_TELEGRAM_DELIVERY" in mapped["source_dispositions"]
+        else:
+            assert "BOT_SUPPORT_TICKET_PENDING_OR_RECORD_STATE" in mapped["source_dispositions"]
+            assert "CANONICAL_BOT_SUPPORT_TICKET_OR_LEAD_OWNERSHIP_BOUNDARY" in mapped["source_dispositions"]
 
     for template, classification in (
         ("support|consult|{*}", "customer"),
@@ -3739,6 +3820,8 @@ def test_static_audit_keeps_support_ticket_callbacks_out_of_generic_web_routes(t
         ("ticket|st|{*}|{*}", "admin"),
         ("ticket|send|{*}", "admin"),
         ("TICKET|ST|{*}|{*}", "admin"),
+        (" ticket|stats", "admin"),
+        ("ticket|stats ", "admin"),
         ("ticket|pv|{*}|future", "customer"),
         ("support|future|{*}", "customer"),
         ("feedback|cat|{*}", "customer"),
@@ -3769,6 +3852,11 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     InlineKeyboardButton("ticket start", callback_data="ticket|start")
     InlineKeyboardButton("support", callback_data="support|ticket")
     InlineKeyboardButton("ticket mine", callback_data="ticket|mine")
+    InlineKeyboardButton("ticket category", callback_data="ticket|cat|refund")
+    InlineKeyboardButton("ticket admin menu", callback_data="ticket|admin")
+    InlineKeyboardButton("ticket admin list", callback_data="ticket|al|new|0")
+    InlineKeyboardButton("ticket admin search", callback_data="ticket|asearch|all")
+    InlineKeyboardButton("ticket admin stats", callback_data="ticket|stats")
     InlineKeyboardButton("consult", callback_data=f"support|consult_need|{service_type}|0")
     InlineKeyboardButton("consult type", callback_data=f"support|consult_type|{service_type}")
     InlineKeyboardButton("consult suffix", callback_data=f"support|consult|{service_type}")
@@ -3798,6 +3886,10 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
         assert callbacks[identifier]["classification"] == "customer"
         assert callbacks[identifier]["status"] == "NEEDS_FEATURE_DISPOSITION"
         assert callbacks[identifier]["resolution"] == "support_ticket_callback_requires_web_native_owner_role_contract"
+    for identifier in ("ticket|cat|refund", "ticket|admin", "ticket|al|new|0", "ticket|asearch|all", "ticket|stats"):
+        assert callbacks[identifier]["target"] == "TELEGRAM_ONLY"
+        assert callbacks[identifier]["status"] == "TELEGRAM_ONLY"
+        assert callbacks[identifier]["resolution"] == "ticket_terminal_requires_telegram_context"
     assert templates["support|consult|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["support|consult_type|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
     assert templates["support|ticket|{*}"]["target"] == "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED"
@@ -3817,6 +3909,7 @@ def support_ticket_keyboard(ticket_id, service_type, admin_kind):
     assert "ticket\\|*" in contract
     assert "feedback\\|*" in contract
     assert "SUPPORT_TICKET_SOURCE_REVIEW_REQUIRED" in contract
+    assert "ticket_terminal_requires_telegram_context" in contract
     assert "reviewed_support_ticket_fresh_web_navigation" in contract
     assert "eleven exact Support/Ticket entry literals plus nine Feedback literals are finite navigation-only exceptions" in contract
     assert "no category preselection, Bot ticket fetch, or case creation from the Bot entry" in contract
