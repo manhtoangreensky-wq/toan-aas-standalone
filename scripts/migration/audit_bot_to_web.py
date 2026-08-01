@@ -2942,6 +2942,33 @@ def _menu_source_review_mapping(
         "evidence": evidence,
     }
 
+
+def _menu_terminal_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    contract: dict[str, Any],
+) -> dict[str, Any]:
+    """Return static evidence for a reviewed Bot-only menu terminal.
+
+    The descriptor intentionally has no route, capability, authority or
+    launch-mode field. It is not a browser compatibility action and it never
+    forwards the Bot callback value anywhere outside this static report.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": str(contract["classification"]),
+        "status": "TELEGRAM_ONLY",
+        "resolution": str(contract["resolution"]),
+        "source_dispositions": tuple(contract["source_dispositions"]),
+        "source_evidence": str(contract["source_evidence"]),
+        "evidence": evidence,
+    }
+
+
 # The frozen Bot's stale-job help is an admin-only explanatory branch. It can
 # lead toward canonical job-lock/refund confirmation state, but only this one
 # literal help action may open a fresh, separately guarded Web safety guide.
@@ -3625,6 +3652,234 @@ TRANSLATION_SESSION_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
 # last, so this one entry remains deliberately actionable rather than falling
 # through to the dashboard or pretending the generic /dubbing route is safe.
 TRANSLATION_VIDEO_MENU_DEFERRED_ACTIONS = frozenset({"menu|translation_video_factory"})
+
+
+def _menu_terminal_contract(
+    classification: str,
+    resolution: str,
+    source_dispositions: tuple[str, ...],
+    source_evidence: str,
+) -> dict[str, Any]:
+    """Create one audit-only terminal policy without a Web destination."""
+
+    return {
+        "classification": classification,
+        "resolution": resolution,
+        "source_dispositions": source_dispositions,
+        "source_evidence": source_evidence,
+    }
+
+
+# This is deliberately a *frozen-source* catalog, not a menu namespace
+# wildcard. Every key below was observed in the requested Bot baseline and
+# previously remained a P0 source-review record. It now has a truthful
+# terminal result: the browser receives no callback, route, role, command,
+# financial value, provider input, job identifier, output, or delivery claim.
+# New/case-variant menu values still fall through to source review so the audit
+# keeps Bot drift visible instead of silently treating a new behavior as done.
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|admin_confirm_maintenance_off": _menu_terminal_contract(
+        "admin",
+        "bot_admin_maintenance_confirmation_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_MAINTENANCE_MODE",
+            "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+            "NO_WEB_ADMIN_MAINTENANCE_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot confirmation can change its canonical maintenance mode for a Telegram admin; it is not a browser confirmation or Web runtime control.",
+    ),
+    "menu|admin_confirm_maintenance_on": _menu_terminal_contract(
+        "admin",
+        "bot_admin_maintenance_confirmation_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_MAINTENANCE_MODE",
+            "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+            "NO_WEB_ADMIN_MAINTENANCE_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot confirmation can change its canonical maintenance mode for a Telegram admin; it is not a browser confirmation or Web runtime control.",
+    ),
+    "menu|admin_packages_grant_combo": _menu_terminal_contract(
+        "admin",
+        "bot_admin_package_grant_command_guidance_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+            "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot admin menu displays package-grant command guidance; it must not become a Web entitlement grant or browser-side customer lookup.",
+    ),
+    "menu|admin_packages_grant_monthly": _menu_terminal_contract(
+        "admin",
+        "bot_admin_package_grant_command_guidance_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+            "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot admin menu displays package-grant command guidance; it must not become a Web entitlement grant or browser-side customer lookup.",
+    ),
+    "menu|admin_packages_user": _menu_terminal_contract(
+        "admin",
+        "bot_admin_package_grant_command_guidance_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+            "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot admin menu displays a Bot package-user command hint; it cannot expose a customer record or package state to a browser.",
+    ),
+    "menu|admin_provider_test": _menu_terminal_contract(
+        "admin",
+        "bot_admin_provider_test_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "BOT_PROVIDER_TEST_OR_RUNTIME_GUIDANCE",
+            "NO_WEB_PROVIDER_TEST_OR_RUNTIME_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot admin menu starts Bot-side provider-test guidance; it is not a Web provider diagnostic, paid call, or runtime control.",
+    ),
+}
+
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            "admin",
+            "canonical_job_lock_recovery_telegram_only",
+            _job_lock_recovery_source_review_dispositions(action),
+            str(action["source_evidence"]),
+        )
+        for source, action in JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS.items()
+        if source in {"menu|admin_confirm_clear_stale_jobs", "menu|admin_confirm_refund_job"}
+    }
+)
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            "admin",
+            "canonical_finance_compliance_mutation_telegram_only",
+            _finance_compliance_source_review_dispositions(action),
+            str(action["source_evidence"]),
+        )
+        for source, action in FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_ACTIONS.items()
+    }
+)
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            "admin",
+            "canonical_tax_accounting_operation_telegram_only",
+            _tax_accounting_source_review_dispositions(action),
+            str(action["source_evidence"]),
+        )
+        for source, action in TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.items()
+    }
+)
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            "customer",
+            "guided_video_menu_deferred_telegram_only",
+            (
+                "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+                "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+                "VIDEO_MENU_LAST",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "The frozen Bot guide entry opens a Video/trend child menu with Telegram pending state and later provider, output, job and billing branches; it stays Bot-only until the final Video menu phase.",
+        )
+        for source in GUIDED_VIDEO_MENU_DEFERRED_ACTIONS
+    }
+)
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            str(contract["classification"]),
+            "video_menu_deferred_telegram_only",
+            tuple(contract["source_dispositions"]),
+            str(contract["source_evidence"]),
+        )
+        for source, contract in VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items()
+    }
+)
+MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.update(
+    {
+        source: _menu_terminal_contract(
+            "customer",
+            "translation_video_menu_deferred_telegram_only",
+            (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_VIDEO_DUBBING_PENDING_STATE",
+                "VIDEO_MENU_LAST",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "The frozen Bot translation-video entry creates a pending Telegram video-dubbing state and later reaches voice, provider and output controls; it is deferred with the final Video menu.",
+        )
+        for source in TRANSLATION_VIDEO_MENU_DEFERRED_ACTIONS
+    }
+)
+
+# These are exact formatted callback templates detected in the frozen static
+# baseline. They are deliberately terminal only as source evidence: matching a
+# template never evaluates a dynamic segment or gives a Web meaning to it.
+MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES: dict[str, dict[str, Any]] = {
+    "menu|{*}": _menu_terminal_contract(
+        "customer",
+        "observed_dynamic_menu_template_telegram_only",
+        (
+            "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+            "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+            "UNREVIEWED_DYNAMIC_MENU_VALUE",
+            "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
+    ),
+    "menu|admin_confirm_ack_{*}": _menu_terminal_contract(
+        "admin",
+        "observed_admin_confirmation_ack_template_telegram_only",
+        (
+            "BOT_ADMIN_ONLY",
+            "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+            "UNREVIEWED_DYNAMIC_MENU_VALUE",
+            "NO_WEB_ADMIN_MUTATION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot acknowledgement template remains inside an admin Telegram confirmation state machine and cannot become a browser acknowledgement or mutation.",
+    ),
+}
+for _menu_locale_template in (
+    "menu|{*}_auto",
+    "menu|{*}_de",
+    "menu|{*}_en",
+    "menu|{*}_fr",
+    "menu|{*}_ja",
+    "menu|{*}_ko",
+    "menu|{*}_th",
+    "menu|{*}_vi",
+    "menu|{*}_zh",
+):
+    MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES[_menu_locale_template] = _menu_terminal_contract(
+        "customer",
+        "observed_locale_menu_template_telegram_only",
+        (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+            "UNREVIEWED_DYNAMIC_MENU_VALUE",
+            "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
+    )
 
 # The Bot's ``/operator_menu`` handler is not an execution dispatcher.  Its
 # buttons render command snippets for one Telegram admin, and many snippets
@@ -9129,6 +9384,18 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         not identifier.startswith("menu|") or identifier != token
     ):
         return _menu_source_review_mapping(identifier, source_kind, evidence)
+    menu_terminal_contract = MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.get(identifier)
+    if menu_terminal_contract is not None:
+        # The lookup is raw and exact. It closes only source values audited in
+        # the frozen baseline before any generic finance/job/video branch can
+        # make them look like a browser workflow. New lower-case values still
+        # reach the residual source-review boundary below.
+        return _menu_terminal_telegram_only_mapping(
+            identifier,
+            source_kind,
+            evidence,
+            menu_terminal_contract,
+        )
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
@@ -10485,6 +10752,16 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
 
     raw_template = str(template or "")
     token = raw_template.casefold()
+    menu_terminal_template_contract = MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES.get(raw_template)
+    if menu_terminal_template_contract is not None:
+        # A raw, exact template match is source evidence only. Dynamic pieces
+        # are never evaluated, forwarded, or converted into a Web route.
+        return _menu_terminal_telegram_only_mapping(
+            raw_template,
+            "callback_template",
+            evidence,
+            menu_terminal_template_contract,
+        )
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(template, "callback_template", evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
@@ -11815,21 +12092,21 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     ] + [
         [
             source,
-            "GUIDED_VIDEO_MENU_DEFERRED",
-            "guided_video_menu_deferred_until_video_menu_phase",
-            "NEEDS_FEATURE_DISPOSITION",
-            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED, BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED, VIDEO_MENU_LAST, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["resolution"]),
+            "TELEGRAM_ONLY",
+            ", ".join(str(value) for value in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["source_dispositions"]),
         ]
         for source in sorted(GUIDED_VIDEO_MENU_DEFERRED_ACTIONS)
     ]
     video_menu_deferred_contract_rows = [
         [
             source,
-            str(contract["target"]),
-            str(contract["resolution"]),
-            "NEEDS_FEATURE_DISPOSITION",
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["resolution"]),
+            "TELEGRAM_ONLY",
             str(contract["classification"]),
-            ", ".join(str(value) for value in contract["source_dispositions"]),
+            ", ".join(str(value) for value in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["source_dispositions"]),
         ]
         for source, contract in VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items()
     ] + [
@@ -11842,6 +12119,29 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ", ".join(MENU_SOURCE_REVIEW_BASE_DISPOSITIONS),
         ],
     ]
+    menu_terminal_contract_rows = [
+        [
+            source,
+            "callback_data",
+            str(contract["classification"]),
+            "TELEGRAM_ONLY",
+            str(contract["resolution"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in sorted(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.items())
+    ] + [
+        [
+            source,
+            "callback_template",
+            str(contract["classification"]),
+            "TELEGRAM_ONLY",
+            str(contract["resolution"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in sorted(MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES.items())
+    ]
+    menu_terminal_action_count = len(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS)
+    menu_terminal_template_count = len(MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES)
     system_data_stewardship_contract_rows = [
         [
             source,
@@ -11881,24 +12181,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     finance_compliance_source_review_contract_rows = [
         [
             source,
-            "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED",
-            "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
-            "NEEDS_FEATURE_DISPOSITION",
-            "admin",
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["resolution"]),
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["classification"]),
             "Canonical Bot finance-compliance operation",
-            ", ".join(_finance_compliance_source_review_dispositions(action)),
+            ", ".join(str(value) for value in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["source_dispositions"]),
         ]
         for source, action in sorted(FINANCE_COMPLIANCE_CANONICAL_SOURCE_REVIEW_ACTIONS.items())
     ]
     tax_accounting_source_review_contract_rows = [
         [
             source,
-            "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED",
-            "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
-            "NEEDS_FEATURE_DISPOSITION",
-            "admin",
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["resolution"]),
+            "TELEGRAM_ONLY",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["classification"]),
             "Canonical Bot finance/tax operation",
-            ", ".join(_tax_accounting_source_review_dispositions(action)),
+            ", ".join(str(value) for value in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["source_dispositions"]),
         ]
         for source, action in sorted(TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.items())
     ]
@@ -11917,12 +12217,21 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     job_lock_recovery_source_review_callback_rows = [
         [
             source,
-            "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
-            "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
-            "NEEDS_FEATURE_DISPOSITION",
+            "TELEGRAM_ONLY" if source in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS else "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
+            str(MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["resolution"])
+            if source in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS
+            else "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+            "TELEGRAM_ONLY" if source in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS else "NEEDS_FEATURE_DISPOSITION",
             "admin",
             "Canonical Bot job/refund mutation boundary",
-            ", ".join(_job_lock_recovery_source_review_dispositions(action)),
+            ", ".join(
+                str(value)
+                for value in (
+                    MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[source]["source_dispositions"]
+                    if source in MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS
+                    else _job_lock_recovery_source_review_dispositions(action)
+                )
+            ),
         ]
         for source, action in sorted(JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS.items())
     ]
@@ -12329,7 +12638,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
-        + "- [`VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md`](VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md) — six residual Video/worker/status/admin-hint menu callbacks plus unknown menu values are fail-closed source-review boundaries; they never fall back to Dashboard/Admin/history/reset behavior.\n"
+        + "- [`VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md`](VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md) — six residual Video/worker/status/admin-hint menu callbacks are terminal Bot-only while Video remains deferred; future unknown values remain fail-closed source-review evidence.\n"
+        + f"- [`MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md`](MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md) — {menu_terminal_action_count} exact frozen-Bot menu callbacks and {menu_terminal_template_count} observed templates are `TELEGRAM_ONLY` static source evidence, not browser actions or runtime parity.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
         + "- [`FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md`](FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md) — exact Bot Finance Compliance status navigation: a fresh canonical-admin readiness handoff only; Bot status/note state and the pending-note mutation remain outside the browser.\n"
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot finance-command-help/tax-menu dispositions: fresh canonical-admin guidance navigation with no Bot command text, finance data, calculation, export, file, ledger, payment or profile action replay.\n"
@@ -12750,9 +13060,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "run a command, inspect an unredacted snapshot, retry/refund a job, restart a worker or claim runtime health. "
         "`menu|admin_packages_catalog` only mirrors the Bot's static catalog-command guidance as a fresh read route; "
         "`menu|admin_packages_grant_combo`, `menu|admin_packages_grant_monthly`, and `menu|admin_packages_user` "
-        "remain command-guidance source-review records because they describe grant or user-lookup operations. "
+        "are terminal Telegram-only command-guidance records because they describe grant or user-lookup operations. "
         "`menu|provider_custom_help` only mirrors Bot provider freeze/unfreeze command guidance as a fresh Providers "
-        "read route; `menu|admin_provider_test` remains source-review-required; "
+        "read route; `menu|admin_provider_test` is terminal Telegram-only; "
         "`menu|admin_confirm_provider_freeze_shopaikey` remains Telegram-only; "
         "`menu|admin_confirm_provider_freeze_video` remains Telegram-only; "
         "`menu|admin_confirm_provider_freeze_image` remains Telegram-only; and "
@@ -12770,12 +13080,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "preselect a Web filter, calculate Finance/tax data, invoke an export, deliver a file or imply a runtime "
         "result. `menu|finance_compliance` has the separate "
         "`FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md` and opens only its fresh, data-free readiness "
-        "handoff; `menu|finance_compliance_update` remains source-review-required. `menu|tax_estimate` and "
-        "`menu|tax_export_month` retain their separate canonical-finance source-review contract. Any case variant, "
+        "handoff; `menu|finance_compliance_update` is terminal Telegram-only. `menu|tax_estimate` and "
+        "`menu|tax_export_month` retain their separate canonical-finance Telegram-only boundary. Any case variant, "
         "suffix or other unlisted `menu|finance_*` value remains source-review-required and cannot inherit a Finance "
         "route. `menu|finance_add_expense` has the separate `FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md`; no other "
         "`menu|finance_add_expense*` value inherits this canonical Finance route. Tax literals never inherit this "
-        "Admin ERP route and retain their separate finite tax-guidance or canonical source-review contract.\n",
+        "Admin ERP route and retain their separate finite tax-guidance or canonical Telegram-only boundary.\n",
     )
     write(
         "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md",
@@ -12878,7 +13188,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             guided_start_contract_rows,
         )
         + "\n\n`menu|guide_quick_start` starts the signed Web catalog at `/features`; it is navigation only, not a wizard execution. `menu|guide_faq` starts the signed Support Desk, which uses the Web account and owner-scoped ticket contract rather than a raw Telegram-ID field, Bot chat transcript, screenshot, refund request or status. The pre-existing image, music and canonical wallet navigation entries also begin fresh Web pages and carry no Telegram context.\n\n"
-        "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They remain visible migration backlog records until the final finite Video menu phase can define an independently signed, owner-scoped Web contract without replaying the Bot state machine.\n",
+        "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They are terminal Telegram-only evidence while the final finite Video menu phase remains deferred; this does not claim a Web Video workflow or replay the Bot state machine.\n",
     )
     write(
         "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md",
@@ -12891,7 +13201,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot action", "Web target/boundary", "Audit resolution", "Status", "Audience", "Required boundary"],
             video_menu_deferred_contract_rows,
         )
-        + "\n\nThe six exact entries above do **not** open `/dashboard`, `/video-studio`, `/jobs`, an Admin command page "
+        + "\n\nThe six exact entries above are terminal Telegram-only and do **not** open `/dashboard`, `/video-studio`, `/jobs`, an Admin command page "
         "or browser history/back/reset behavior. `menu|video_ai_true` only redraws child Telegram choices; "
         "`menu|video_frame_intro` first checks Bot worker/readiness state; `menu|hint_video_status` refers to a "
         "status button attached to the original Telegram job message; and the three internal hints only display "
@@ -12900,6 +13210,27 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "role checks, CSRF/idempotency for writes, asset validation, provider/worker authorization, quote/confirmation, "
         "canonical billing boundaries and verified private delivery. It must not replay a Bot callback, session, "
         "message/job identifier or command text.\n",
+    )
+    write(
+        "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md",
+        "# Menu action terminal catalog\n\n"
+        f"This static catalog closes {menu_terminal_action_count} exact frozen-Bot menu callbacks and "
+        f"{menu_terminal_template_count} exact frozen-Bot menu templates as `TELEGRAM_ONLY`. It is source evidence "
+        "only: no listed value becomes a Web route, browser command, capability, authority, identity, payment, "
+        "provider input, job identifier, output, asset, delivery, or runtime result. A terminal record is not a Web "
+        "runtime-equivalence claim.\n\n"
+        + _markdown_table(
+            ["Frozen Bot menu source", "Source kind", "Audience", "Web boundary", "Audit resolution", "Required boundary"],
+            menu_terminal_contract_rows,
+        )
+        + "\n\nThe templates above are retained as literal static source labels. Their `{*}` values are never evaluated, "
+        "forwarded to a browser, added to a URL/query/form/storage/API payload, or used to look up a Bot record. "
+        "`UNREVIEWED_DYNAMIC_MENU_VALUE` means an opaque value remains inside the Telegram context. Video entries "
+        "also retain `VIDEO_MENU_LAST`: this classification does not implement, enable, or claim the deferred Video "
+        "menu.\n\n"
+        "Case variants, whitespace/suffix variants, malformed callbacks, and future menu source values are intentionally "
+        "outside this finite catalog. They remain fail-closed source-review evidence rather than inheriting a route or "
+        "being silently counted as a terminal parity result.\n",
     )
     write(
         "SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md",
@@ -12921,12 +13252,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             finance_compliance_readiness_contract_rows,
         )
         + "\n\nThe exact status literal opens only the independently authorized, data-free `/admin/finance/tax-readiness` guidance page. It does not read the Bot compliance status, render a Bot compliance note, calculate tax, query finance data, create an export/file, perform a payment/ledger/PayOS/provider action or claim a completed compliance outcome.\n\n"
-        + "The following exact Bot callback remains a canonical finance-compliance source-review record, not fresh Web navigation or a browser form:\n\n"
+        + "The following exact Bot callback is a terminal canonical finance-compliance Bot-only record, not fresh Web navigation or a browser form:\n\n"
         + _markdown_table(
             ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             finance_compliance_source_review_contract_rows,
         )
-        + "\n\nThe Web does not create, update, or mutate a compliance note. Case variants, suffixes, and `menu|finance_compliance_update` cannot inherit the readiness route; they require a separately reviewed canonical finance mutation contract. This guidance is not tax/legal advice or a runtime-equivalence claim.\n",
+        + "\n\nThe Web does not create, update, or mutate a compliance note. `menu|finance_compliance_update` is terminal Telegram-only; case variants and suffixes cannot inherit the readiness route and require separate source review. This guidance is not tax/legal advice or a runtime-equivalence claim.\n",
     )
     write(
         "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md",
@@ -12937,12 +13268,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             tax_accounting_guidance_contract_rows,
         )
         + "\n\nEvery guidance row above opens only the exact `/admin/finance/tax-readiness` page after it repeats canonical signed-admin authorization. It is not tax or legal advice, a tax calculator, a canonical finance read model, a report/export API, a file-delivery route, a tax-profile/config/compliance mutation, a payment/ledger/PayOS/provider action or a runtime claim.\n\n"
-        + "The following exact Bot callbacks remain canonical-finance source-review records, not fresh Web navigation or an implied export implementation:\n\n"
+        + "The following exact Bot callbacks are terminal canonical-finance Bot-only records, not fresh Web navigation or an implied export implementation:\n\n"
         + _markdown_table(
             ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             tax_accounting_source_review_contract_rows,
         )
-        + "\n\nThe guidance rows and canonical-source-review rows above are the complete finite tax contracts. The thirteen exact "
+        + "\n\nThe guidance rows and canonical Telegram-only rows above are the complete finite tax contracts. The thirteen exact "
         "Admin ERP Finance fresh-read literals—`menu|finance_overview`, `menu|finance_revenue`, "
         "`menu|finance_revenue_this_month`, `menu|finance_revenue_last_month`, `menu|finance_revenue_year`, "
         "`menu|finance_revenue_custom_help`, "
@@ -12950,7 +13281,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "`menu|finance_profit_this_month`, `menu|finance_profit_year`, `menu|finance_export_month`, and "
         "`menu|finance_export_year`—belong only to the separate Admin ERP fresh-read contract, never either tax "
         "registry. The exact `menu|finance_compliance` literal belongs only to the separate Finance Compliance "
-        "readiness contract; `menu|finance_compliance_update`, every other unlisted `menu|finance_*` value, every unlisted "
+        "readiness contract; `menu|finance_compliance_update` is terminal Telegram-only, while every other unlisted `menu|finance_*` value and every unlisted "
         "`menu|tax_*` value, `archive|dept|tax_invoice`, and all case variants or suffixed values remain "
         "source-review-required outside the finite contracts. They require separately reviewed canonical "
         "finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",
@@ -12964,7 +13295,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             job_lock_recovery_guidance_contract_rows,
         )
         + "\n\nThe one guidance row opens only the exact `/admin/job-recovery-guide` page after it repeats canonical signed-admin authorization. It is a static triage/escalation guide, not a queue console, job read model, lock inspection tool, command surface, clear/retry/refund action, worker/provider/runtime control, payment/wallet/ledger/PayOS operation or recovery/delivery promise.\n\n"
-        + "The following exact Bot callbacks remain canonical mutation source-review records, not fresh Web navigation or browser confirmations:\n\n"
+        + "The following exact Bot callbacks retain canonical mutation boundaries: the observed clear/refund confirmations are terminal Telegram-only, while acknowledgement literals outside the frozen catalog remain source-review records. None is fresh Web navigation or a browser confirmation:\n\n"
         + _markdown_table(
             ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
             job_lock_recovery_source_review_callback_rows,
@@ -13456,6 +13787,11 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "\n\nA guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.\n\n"
         + community_trust_center_boundary
         + "\n\n"
+        + "## Menu action terminal catalog\n\n"
+        + f"The frozen static audit classifies {menu_terminal_action_count} exact `menu|...` callbacks and "
+        + f"{menu_terminal_template_count} observed menu templates as `TELEGRAM_ONLY`. This removes no Bot "
+        + "behavior and creates no Web route or runtime-equivalence claim; future source values remain visible "
+        + "as fail-closed review records. See [`MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md`](MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md).\n\n"
         + "## Additive Web-native guard: Video Poster Lab\n\n"
         + "Video Poster Lab is a Web-owned, bounded private JPEG extraction utility, not\n"
         + "a Telegram command mapping. Its route, schema and read-model integration do\n"

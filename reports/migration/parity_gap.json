@@ -15,7 +15,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4529,
+        "line": 4533,
         "method": "POST",
         "path": "/internal/v1/admin/features/{*}/freeze",
         "static": true
@@ -23,7 +23,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4413,
+        "line": 4417,
         "method": "GET",
         "path": "/internal/v1/admin/jobs",
         "static": true
@@ -31,7 +31,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4505,
+        "line": 4509,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/refund",
         "static": true
@@ -39,7 +39,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4482,
+        "line": 4486,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/retry",
         "static": true
@@ -47,7 +47,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4452,
+        "line": 4456,
         "method": "GET",
         "path": "/internal/v1/admin/modules/{*}",
         "static": true
@@ -55,7 +55,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4418,
+        "line": 4422,
         "method": "GET",
         "path": "/internal/v1/admin/payments",
         "static": true
@@ -63,7 +63,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4423,
+        "line": 4427,
         "method": "GET",
         "path": "/internal/v1/admin/providers",
         "static": true
@@ -71,7 +71,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4403,
+        "line": 4407,
         "method": "GET",
         "path": "/internal/v1/admin/summary",
         "static": true
@@ -79,7 +79,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4428,
+        "line": 4432,
         "method": "GET",
         "path": "/internal/v1/admin/tickets",
         "static": true
@@ -87,7 +87,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4408,
+        "line": 4412,
         "method": "GET",
         "path": "/internal/v1/admin/users",
         "static": true
@@ -95,7 +95,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4204,
+        "line": 4208,
         "method": "GET",
         "path": "/internal/v1/assets",
         "static": true
@@ -103,7 +103,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4207,
+        "line": 4211,
         "method": "GET",
         "path": "/internal/v1/assets",
         "static": true
@@ -111,7 +111,7 @@
       {
         "call": "bridge_request",
         "file": "copyfast_api.py",
-        "line": 2948,
+        "line": 2952,
         "method": "GET",
         "path": "/internal/v1/assets/{*}/download",
         "static": true
@@ -119,7 +119,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4303,
+        "line": 4307,
         "method": "GET",
         "path": "/internal/v1/features/status",
         "static": true
@@ -127,7 +127,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4345,
+        "line": 4349,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -135,7 +135,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4366,
+        "line": 4370,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -143,7 +143,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4145,
+        "line": 4149,
         "method": "GET",
         "path": "/internal/v1/jobs",
         "static": true
@@ -151,7 +151,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4148,
+        "line": 4152,
         "method": "GET",
         "path": "/internal/v1/jobs",
         "static": true
@@ -159,7 +159,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4188,
+        "line": 4192,
         "method": "GET",
         "path": "/internal/v1/jobs/{*}",
         "static": true
@@ -175,7 +175,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4041,
+        "line": 4045,
         "method": "GET",
         "path": "/internal/v1/packages",
         "static": true
@@ -183,7 +183,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4125,
+        "line": 4129,
         "method": "POST",
         "path": "/internal/v1/payments/create",
         "static": true
@@ -191,7 +191,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4135,
+        "line": 4139,
         "method": "GET",
         "path": "/internal/v1/payments/{*}",
         "static": true
@@ -199,7 +199,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4036,
+        "line": 4040,
         "method": "GET",
         "path": "/internal/v1/pricing",
         "static": true
@@ -207,7 +207,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4280,
+        "line": 4284,
         "method": "GET",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -215,7 +215,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4291,
+        "line": 4295,
         "method": "POST",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -223,7 +223,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4262,
+        "line": 4266,
         "method": "POST",
         "path": "/internal/v1/uploads",
         "static": true
@@ -231,7 +231,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4237,
+        "line": 4241,
         "method": "GET",
         "path": "/internal/v1/voice/profiles",
         "static": true
@@ -239,7 +239,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4025,
+        "line": 4029,
         "method": "GET",
         "path": "/internal/v1/wallet",
         "static": true
@@ -247,7 +247,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4030,
+        "line": 4034,
         "method": "GET",
         "path": "/internal/v1/wallet/history",
         "static": true
@@ -17775,8 +17775,7 @@
         "file": "bot.py",
         "line": 121940
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+      "resolution": "canonical_job_lock_recovery_telegram_only",
       "source": "menu|admin_confirm_clear_stale_jobs",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -17792,8 +17791,8 @@
       ],
       "source_evidence": "The frozen Bot renders a confirmation boundary for a canonical job-lock-clear operation; it is not a browser confirmation or Web job action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -17801,8 +17800,7 @@
         "file": "bot.py",
         "line": 122213
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+      "resolution": "canonical_job_lock_recovery_telegram_only",
       "source": "menu|admin_confirm_clear_stale_jobs",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -17818,8 +17816,8 @@
       ],
       "source_evidence": "The frozen Bot renders a confirmation boundary for a canonical job-lock-clear operation; it is not a browser confirmation or Web job action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -17863,20 +17861,19 @@
         "file": "bot.py",
         "line": 121980
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_maintenance_confirmation_telegram_only",
       "source": "menu|admin_confirm_maintenance_off",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_MAINTENANCE_MODE",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_WEB_ADMIN_MAINTENANCE_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot confirmation can change its canonical maintenance mode for a Telegram admin; it is not a browser confirmation or Web runtime control.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -17884,20 +17881,19 @@
         "file": "bot.py",
         "line": 122209
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_maintenance_confirmation_telegram_only",
       "source": "menu|admin_confirm_maintenance_off",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_MAINTENANCE_MODE",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_WEB_ADMIN_MAINTENANCE_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot confirmation can change its canonical maintenance mode for a Telegram admin; it is not a browser confirmation or Web runtime control.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -17905,20 +17901,19 @@
         "file": "bot.py",
         "line": 121980
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_maintenance_confirmation_telegram_only",
       "source": "menu|admin_confirm_maintenance_on",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_MAINTENANCE_MODE",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_WEB_ADMIN_MAINTENANCE_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot confirmation can change its canonical maintenance mode for a Telegram admin; it is not a browser confirmation or Web runtime control.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -17986,8 +17981,7 @@
         "file": "bot.py",
         "line": 122213
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+      "resolution": "canonical_job_lock_recovery_telegram_only",
       "source": "menu|admin_confirm_refund_job",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -18003,8 +17997,8 @@
       ],
       "source_evidence": "The frozen Bot confirmation can lead to a canonical job refund decision; the Web must not accept a Bot job identifier or request a refund.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -18121,20 +18115,18 @@
         "file": "bot.py",
         "line": 122415
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_package_grant_command_guidance_telegram_only",
       "source": "menu|admin_packages_grant_combo",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+        "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot admin menu displays package-grant command guidance; it must not become a Web entitlement grant or browser-side customer lookup.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -18142,20 +18134,18 @@
         "file": "bot.py",
         "line": 122416
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_package_grant_command_guidance_telegram_only",
       "source": "menu|admin_packages_grant_monthly",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+        "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot admin menu displays package-grant command guidance; it must not become a Web entitlement grant or browser-side customer lookup.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -18163,20 +18153,18 @@
         "file": "bot.py",
         "line": 122416
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_package_grant_command_guidance_telegram_only",
       "source": "menu|admin_packages_user",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "BOT_PACKAGE_GRANT_OR_USER_LOOKUP_COMMAND_GUIDANCE",
+        "NO_WEB_PACKAGE_OR_ENTITLEMENT_MUTATION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot admin menu displays a Bot package-user command hint; it cannot expose a customer record or package state to a browser.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18299,20 +18287,18 @@
         "file": "bot.py",
         "line": 122287
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_finite_exact_web_contract",
+      "resolution": "bot_admin_provider_test_telegram_only",
       "source": "menu|admin_provider_test",
       "source_dispositions": [
-        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
-        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
-        "FINITE_MENU_CATALOG_REQUIRED",
-        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "BOT_ADMIN_ONLY",
+        "BOT_PROVIDER_TEST_OR_RUNTIME_GUIDANCE",
+        "NO_WEB_PROVIDER_TEST_OR_RUNTIME_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot dispatches menu actions through one broad Telegram handler that can clear pending/session state before its role and action branches. This unreviewed callback cannot become a browser route, history/back/reset behavior, feature action or authority grant.",
+      "source_evidence": "The frozen Bot admin menu starts Bot-side provider-test guidance; it is not a Web provider diagnostic, paid call, or runtime control.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -18823,8 +18809,7 @@
         "file": "bot.py",
         "line": 121842
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_finance_compliance_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_finance_compliance_mutation_telegram_only",
       "source": "menu|finance_compliance_update",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -18840,8 +18825,8 @@
       ],
       "source_evidence": "The frozen Bot pending-note path enters a per-Telegram compliance-note flow before it writes a canonical finance-compliance record. The Web must not accept/replay the pending input, note, status or mutation without a separately approved canonical finance contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "admin_erp_authority": "SIGNED_CANONICAL_ADMIN_READ",
@@ -19898,8 +19883,7 @@
         "file": "bot.py",
         "line": 49726
       },
-      "fallback_family": "menu",
-      "resolution": "guided_video_menu_deferred_until_video_menu_phase",
+      "resolution": "guided_video_menu_deferred_telegram_only",
       "source": "menu|guide_guided_video",
       "source_dispositions": [
         "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
@@ -19908,10 +19892,10 @@
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Main Guide opens a video or trend guide section whose child buttons enter Bot-owned pending-media, provider, output and canonical payment/job paths. It must not fall back to Dashboard or become a generic browser video route before the finite Video menu phase establishes a separate owner-scoped Web contract.",
+      "source_evidence": "The frozen Bot guide entry opens a Video/trend child menu with Telegram pending state and later provider, output, job and billing branches; it stays Bot-only until the final Video menu phase.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "GUIDED_VIDEO_MENU_DEFERRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -19919,8 +19903,7 @@
         "file": "bot.py",
         "line": 49734
       },
-      "fallback_family": "menu",
-      "resolution": "guided_video_menu_deferred_until_video_menu_phase",
+      "resolution": "guided_video_menu_deferred_telegram_only",
       "source": "menu|guide_guided_video",
       "source_dispositions": [
         "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
@@ -19929,10 +19912,10 @@
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Main Guide opens a video or trend guide section whose child buttons enter Bot-owned pending-media, provider, output and canonical payment/job paths. It must not fall back to Dashboard or become a generic browser video route before the finite Video menu phase establishes a separate owner-scoped Web contract.",
+      "source_evidence": "The frozen Bot guide entry opens a Video/trend child menu with Telegram pending state and later provider, output, job and billing branches; it stays Bot-only until the final Video menu phase.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "GUIDED_VIDEO_MENU_DEFERRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20058,8 +20041,7 @@
         "file": "bot.py",
         "line": 49725
       },
-      "fallback_family": "menu",
-      "resolution": "guided_video_menu_deferred_until_video_menu_phase",
+      "resolution": "guided_video_menu_deferred_telegram_only",
       "source": "menu|guide_video_ai",
       "source_dispositions": [
         "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
@@ -20068,10 +20050,10 @@
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Main Guide opens a video or trend guide section whose child buttons enter Bot-owned pending-media, provider, output and canonical payment/job paths. It must not fall back to Dashboard or become a generic browser video route before the finite Video menu phase establishes a separate owner-scoped Web contract.",
+      "source_evidence": "The frozen Bot guide entry opens a Video/trend child menu with Telegram pending state and later provider, output, job and billing branches; it stays Bot-only until the final Video menu phase.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "GUIDED_VIDEO_MENU_DEFERRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20079,8 +20061,7 @@
         "file": "bot.py",
         "line": 49733
       },
-      "fallback_family": "menu",
-      "resolution": "guided_video_menu_deferred_until_video_menu_phase",
+      "resolution": "guided_video_menu_deferred_telegram_only",
       "source": "menu|guide_video_ai",
       "source_dispositions": [
         "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
@@ -20089,10 +20070,10 @@
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot Main Guide opens a video or trend guide section whose child buttons enter Bot-owned pending-media, provider, output and canonical payment/job paths. It must not fall back to Dashboard or become a generic browser video route before the finite Video menu phase establishes a separate owner-scoped Web contract.",
+      "source_evidence": "The frozen Bot guide entry opens a Video/trend child menu with Telegram pending state and later provider, output, job and billing branches; it stays Bot-only until the final Video menu phase.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "GUIDED_VIDEO_MENU_DEFERRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20388,8 +20369,7 @@
         "file": "bot.py",
         "line": 49746
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_film_blueprint",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20401,8 +20381,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then only displays a /film_blueprint command snippet. It is not a Web plan, production job, worker control, provider call or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -20410,8 +20390,7 @@
         "file": "bot.py",
         "line": 49750
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_film_blueprint",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20423,8 +20402,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then only displays a /film_blueprint command snippet. It is not a Web plan, production job, worker control, provider call or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -20432,8 +20411,7 @@
         "file": "bot.py",
         "line": 49748
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_growth_loop",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20445,8 +20423,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then only displays a /growth_loop command snippet. It is not a Web workflow, production job, publish action, provider call or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -20454,8 +20432,7 @@
         "file": "bot.py",
         "line": 49751
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_growth_loop",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20467,8 +20444,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then only displays a /growth_loop command snippet. It is not a Web workflow, production job, publish action, provider call or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20562,8 +20539,7 @@
         "file": "bot.py",
         "line": 49747
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_scene_pack",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20575,8 +20551,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then displays a /scene_pack command example containing a Bot job identifier placeholder. It cannot become a browser job lookup, scene action, provider call, worker action or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -20584,8 +20560,7 @@
         "file": "bot.py",
         "line": 49751
       },
-      "fallback_family": "menu",
-      "resolution": "video_admin_command_guidance_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_scene_pack",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -20597,8 +20572,8 @@
       ],
       "source_evidence": "The Bot gates this internal hint, then displays a /scene_pack command example containing a Bot job identifier placeholder. It cannot become a browser job lookup, scene action, provider call, worker action or admin mutation.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_ADMIN_COMMAND_GUIDANCE_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20606,8 +20581,7 @@
         "file": "bot.py",
         "line": 45384
       },
-      "fallback_family": "menu",
-      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_video_status",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -20619,8 +20593,8 @@
       ],
       "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20628,8 +20602,7 @@
         "file": "bot.py",
         "line": 49412
       },
-      "fallback_family": "menu",
-      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_video_status",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -20641,8 +20614,8 @@
       ],
       "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20650,8 +20623,7 @@
         "file": "bot.py",
         "line": 49420
       },
-      "fallback_family": "menu",
-      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_video_status",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -20663,8 +20635,8 @@
       ],
       "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20672,8 +20644,7 @@
         "file": "bot.py",
         "line": 49428
       },
-      "fallback_family": "menu",
-      "resolution": "video_status_hint_requires_canonical_job_or_support_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|hint_video_status",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -20685,8 +20656,8 @@
       ],
       "source_evidence": "The frozen Bot tells a customer to use the status button attached to the original Telegram job message or contact support with Telegram/job context. It does not identify a browser job record, owner-scoped read model or safe Web status action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "BOT_VIDEO_JOB_STATUS_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -29306,8 +29277,7 @@
         "file": "bot.py",
         "line": 121788
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_config",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29323,8 +29293,8 @@
       ],
       "source_evidence": "The frozen Bot reads its historical tax-profile/configuration state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29359,8 +29329,7 @@
         "file": "bot.py",
         "line": 121786
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_estimate",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29376,8 +29345,8 @@
       ],
       "source_evidence": "The frozen Bot calculates a tax estimate from canonical finance summary and historical tax-profile state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29385,8 +29354,7 @@
         "file": "bot.py",
         "line": 121794
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_estimate_month",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29402,8 +29370,8 @@
       ],
       "source_evidence": "The frozen Bot calculates a current-month tax estimate from canonical finance and tax-profile state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29411,8 +29379,7 @@
         "file": "bot.py",
         "line": 121794
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_estimate_previous",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29428,8 +29395,8 @@
       ],
       "source_evidence": "The frozen Bot calculates a previous-month tax estimate from canonical finance and tax-profile state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29437,8 +29404,7 @@
         "file": "bot.py",
         "line": 121795
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_estimate_quarter",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29454,8 +29420,8 @@
       ],
       "source_evidence": "The frozen Bot calculates a quarterly tax estimate from canonical finance and tax-profile state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29463,8 +29429,7 @@
         "file": "bot.py",
         "line": 121786
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29480,8 +29445,8 @@
       ],
       "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29489,8 +29454,7 @@
         "file": "bot.py",
         "line": 121796
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29506,8 +29470,8 @@
       ],
       "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29515,8 +29479,7 @@
         "file": "bot.py",
         "line": 121835
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29532,8 +29495,8 @@
       ],
       "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29541,8 +29504,7 @@
         "file": "bot.py",
         "line": 121843
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29558,8 +29520,8 @@
       ],
       "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29567,8 +29529,7 @@
         "file": "bot.py",
         "line": 121804
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export_custom_help",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29584,8 +29545,8 @@
       ],
       "source_evidence": "The frozen Bot emits custom-period instructions for the export flow and returns its export keyboard; the Web must not accept or replay that date input.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29593,8 +29554,7 @@
         "file": "bot.py",
         "line": 121803
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export_month",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29610,8 +29570,8 @@
       ],
       "source_evidence": "The frozen Bot resolves the current period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29619,8 +29579,7 @@
         "file": "bot.py",
         "line": 121803
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export_previous",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29636,8 +29595,8 @@
       ],
       "source_evidence": "The frozen Bot resolves the previous period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -29645,8 +29604,7 @@
         "file": "bot.py",
         "line": 121804
       },
-      "fallback_family": "menu",
-      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "resolution": "canonical_tax_accounting_operation_telegram_only",
       "source": "menu|tax_export_quarter",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
@@ -29662,8 +29620,8 @@
       ],
       "source_evidence": "The frozen Bot resolves the quarterly period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30557,8 +30515,7 @@
         "file": "bot.py",
         "line": 49577
       },
-      "fallback_family": "menu",
-      "resolution": "translation_video_factory_deferred_until_video_menu_phase",
+      "resolution": "translation_video_menu_deferred_telegram_only",
       "source": "menu|translation_video_factory",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30567,10 +30524,10 @@
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot translation-video entry creates a pending video dubbing state and later reaches voice/provider/output controls. It is deferred with the final Video menu rather than opening a generic browser dubbing route without a verified owner-scoped source contract.",
+      "source_evidence": "The frozen Bot translation-video entry creates a pending Telegram video-dubbing state and later reaches voice, provider and output controls; it is deferred with the final Video menu.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_TRANSLATION_MENU_DEFERRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30622,8 +30579,7 @@
         "file": "bot.py",
         "line": 50995
       },
-      "fallback_family": "menu",
-      "resolution": "video_ai_menu_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|video_ai_true",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30636,8 +30592,8 @@
       ],
       "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30645,8 +30601,7 @@
         "file": "bot.py",
         "line": 51000
       },
-      "fallback_family": "menu",
-      "resolution": "video_ai_menu_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|video_ai_true",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30659,8 +30614,8 @@
       ],
       "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30668,8 +30623,7 @@
         "file": "bot.py",
         "line": 51573
       },
-      "fallback_family": "menu",
-      "resolution": "video_ai_menu_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|video_ai_true",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30682,8 +30636,8 @@
       ],
       "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30691,8 +30645,7 @@
         "file": "bot.py",
         "line": 51812
       },
-      "fallback_family": "menu",
-      "resolution": "video_ai_menu_requires_final_video_menu_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|video_ai_true",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30705,8 +30658,8 @@
       ],
       "source_evidence": "The frozen Bot only redraws its Real AI Video keyboard. Its child callbacks enter Bot-owned prompt, image, reference-media, provider, output, job and canonical billing branches, so a raw menu callback cannot open or execute a generic Web Video surface.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "VIDEO_MENU_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -30730,8 +30683,7 @@
         "file": "bot.py",
         "line": 40850
       },
-      "fallback_family": "menu",
-      "resolution": "frame_video_intro_requires_worker_and_media_contract",
+      "resolution": "video_menu_deferred_telegram_only",
       "source": "menu|video_frame_intro",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
@@ -30745,8 +30697,8 @@
       ],
       "source_evidence": "The frozen Bot checks its frame-video worker/public-render guards and either sets a Bot-local maintenance error or redraws a Telegram image-slideshow keyboard. A Web page must not inherit worker readiness, uploaded Telegram media, render authority or output state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "FRAME_VIDEO_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54153,17 +54105,24 @@
       "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122173
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_admin_confirmation_ack_template_telegram_only",
       "source": "menu|admin_confirm_ack_{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_WEB_ADMIN_MUTATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot acknowledgement template remains inside an admin Telegram confirmation state machine and cannot become a browser acknowledgement or mutation.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54228,12 +54187,19 @@
         "file": "bot.py",
         "line": 30399
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54241,12 +54207,19 @@
         "file": "bot.py",
         "line": 49778
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54254,12 +54227,19 @@
         "file": "bot.py",
         "line": 49785
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54267,12 +54247,19 @@
         "file": "bot.py",
         "line": 122173
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54280,12 +54267,19 @@
         "file": "bot.py",
         "line": 122174
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54293,12 +54287,19 @@
         "file": "bot.py",
         "line": 122181
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54306,12 +54307,19 @@
         "file": "bot.py",
         "line": 122431
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_dynamic_menu_template_telegram_only",
       "source": "menu|{*}",
+      "source_dispositions": [
+        "BOT_MENU_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "BOT_PENDING_SESSION_STATE_NOT_REPLAYED",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_NAVIGATION_HISTORY_OR_RESET_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen baseline emits this opaque dynamic menu template from Bot-local menu and pending-session context. It is audit evidence only and never a browser action.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54319,12 +54327,19 @@
         "file": "bot.py",
         "line": 30459
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_auto",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54332,12 +54347,19 @@
         "file": "bot.py",
         "line": 30468
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_de",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54345,12 +54367,19 @@
         "file": "bot.py",
         "line": 30462
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54358,12 +54387,19 @@
         "file": "bot.py",
         "line": 30467
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_fr",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54371,12 +54407,19 @@
         "file": "bot.py",
         "line": 30464
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_ja",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54384,12 +54427,19 @@
         "file": "bot.py",
         "line": 30465
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_ko",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54397,12 +54447,19 @@
         "file": "bot.py",
         "line": 30466
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_th",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54410,12 +54467,19 @@
         "file": "bot.py",
         "line": 30461
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -54423,12 +54487,19 @@
         "file": "bot.py",
         "line": 30463
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "observed_locale_menu_template_telegram_only",
       "source": "menu|{*}_zh",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_LOCALE_STATE",
+        "UNREVIEWED_DYNAMIC_MENU_VALUE",
+        "NO_BROWSER_LOCALE_OR_WORKFLOW_STATE_WRITE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot formatted menu value carries locale or translation-session context for a Telegram user; the Web never accepts or replays that dynamic value.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -74396,32 +74467,6 @@
   },
   "feature_disposition_backlog": [
     {
-      "authority": "Web capability catalog",
-      "candidate_boundary": "/features",
-      "count": 61,
-      "family": "menu",
-      "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
-      "priority": "P0",
-      "sample_sources": [
-        "menu|admin_confirm_ack_{*}",
-        "menu|admin_confirm_clear_stale_jobs",
-        "menu|admin_confirm_maintenance_off",
-        "menu|admin_confirm_maintenance_on",
-        "menu|admin_confirm_refund_job",
-        "menu|admin_packages_grant_combo",
-        "menu|admin_packages_grant_monthly",
-        "menu|admin_packages_user",
-        "menu|admin_provider_test",
-        "menu|finance_compliance_update",
-        "menu|guide_guided_video",
-        "menu|guide_video_ai"
-      ],
-      "source_kinds": [
-        "callback_data",
-        "callback_template"
-      ]
-    },
-    {
       "authority": "Source review required",
       "candidate_boundary": "source_review_required",
       "count": 178,
@@ -74953,14 +74998,9 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 782,
+      "count": 721,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
-        {
-          "count": 61,
-          "family": "menu",
-          "priority": "P0"
-        },
         {
           "count": 178,
           "family": "imgtool",
@@ -75096,7 +75136,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 140,
+      "count": 123,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -75240,13 +75280,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.71,
+  "mapping_coverage_percent": 82.21,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1570,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 903,
-    "NEEDS_FEATURE_DISPOSITION": 782,
-    "TELEGRAM_ONLY": 791,
+    "NEEDS_FEATURE_DISPOSITION": 721,
+    "TELEGRAM_ONLY": 852,
     "WEB_NATIVE_READ_ONLY": 5
   },
   "metric_scope": {
@@ -75268,7 +75308,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.71,
+  "safe_disposition_coverage_percent": 82.21,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75278,13 +75318,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3271,
+    "resolved_static_source_count": 3332,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 140,
-    "unresolved_source_count": 782
+    "unresolved_callback_templates": 123,
+    "unresolved_source_count": 721
   },
   "static_web_surface_coverage_percent": 38.74,
   "telegram_link_callback_contract": {
