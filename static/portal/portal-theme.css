@@ -12353,3 +12353,165 @@ body {
     transform: none;
   }
 }
+
+/* Final light ERP Operations Desk surface */
+.portal-page.portal-operations-desk {
+  color: var(--portal-ink);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-operations-desk .portal-operations-admin-intro {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-operations-admin-intro :is(h2, dt, dd, strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-operations-desk .portal-operations-admin-intro p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-operations-desk .portal-operations-metrics .portal-metric {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-operations-metrics .portal-metric :is(span, em) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-operations-desk .portal-operations-metrics .portal-metric strong {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-operations-desk .portal-card {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-card :is(.portal-card-title, h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-operations-desk .portal-card :is(.portal-card-subtitle, p) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-operations-desk .portal-support-filter {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-support-filter label {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-operations-desk .portal-support-filter :is(.portal-select, select) {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-data-table-wrap {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-data-table :is(th, td) {
+  border-color: var(--portal-border);
+}
+
+.portal-page.portal-operations-desk .portal-data-table th {
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-operations-desk .portal-data-table td {
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  vertical-align: middle;
+}
+
+.portal-page.portal-operations-desk .portal-data-table tr:hover td {
+  background: var(--portal-light-hover-surface);
+}
+
+.portal-page.portal-operations-desk .portal-button--quiet {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-action);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-button--quiet:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-light-hover-surface);
+  color: var(--portal-action-hover);
+  transform: none;
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-button:disabled {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  box-shadow: none;
+}
+
+.portal-page.portal-operations-desk .portal-badge[data-status="read_only"] {
+  border-color: var(--portal-info);
+  color: var(--portal-info);
+}
+
+.portal-page.portal-operations-desk .portal-badge[data-status="guarded"] {
+  border-color: var(--portal-warning);
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-operations-desk .portal-badge[data-status="completed"] {
+  border-color: var(--portal-success);
+  color: var(--portal-success);
+}
+
+.portal-page.portal-operations-desk .portal-badge[data-status="failed"] {
+  border-color: var(--portal-danger);
+  color: var(--portal-danger);
+}
+
+.portal-page.portal-operations-desk :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .portal-page.portal-operations-desk .portal-support-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-operations-desk .portal-operations-metrics,
+  .portal-page.portal-operations-desk .portal-support-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-operations-desk :is(.portal-button--primary, .portal-button--quiet) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-operations-desk :is(.portal-card, .portal-metric, .portal-support-filter, .portal-select, .portal-button, .portal-data-table tbody tr) {
+    transition: none;
+    transform: none;
+  }
+}
