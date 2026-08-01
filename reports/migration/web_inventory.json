@@ -275,13 +275,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12987,
+      "line": 13064,
       "operation": "UPDATE",
       "table": "a"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13610,
+      "line": 13687,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -293,7 +293,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13341,
+      "line": 13418,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -335,7 +335,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12972,
+      "line": 13049,
       "operation": "UPDATE",
       "table": "bot"
     },
@@ -377,25 +377,25 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8142,
+      "line": 8216,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12932,
+      "line": 13009,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12997,
+      "line": 13074,
       "operation": "UPDATE",
       "table": "canonical"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10077,
+      "line": 10154,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -665,13 +665,13 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13611,
+      "line": 13688,
       "operation": "UPDATE",
       "table": "linked"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13771,
+      "line": 13848,
       "operation": "UPDATE",
       "table": "linked"
     },
@@ -737,19 +737,19 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12708,
+      "line": 12785,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13007,
+      "line": 13084,
       "operation": "UPDATE",
       "table": "or"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13585,
+      "line": 13662,
       "operation": "UPDATE",
       "table": "or"
     },
@@ -7896,7 +7896,7 @@
         "copyfast_starter_kits.py",
         "copyfast_storyboard_grid.py"
       ],
-      "occurrences": 1691,
+      "occurrences": 1695,
       "provider": "Telegram"
     }
   ],
@@ -13980,8 +13980,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "145a614ff863c58ce4539d066c45c0846b562f7d4fcff78ebf9afec39268fcca",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast262-archive-terminal-catalog",
+  "source_fingerprint_sha256": "b60d32f90082a6d8457c0b2859c3c837ecc7e7a6f789f430cabe4578cdf879c3",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast263-workboard-task-terminal-catalog",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
