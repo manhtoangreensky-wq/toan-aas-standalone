@@ -12827,3 +12827,86 @@ body {
     transform: none;
   }
 }
+
+/* Final light Security and Access Posture surface */
+.portal-page.portal-admin-security-access-posture {
+  color: var(--portal-ink);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-admin-security-access-posture .portal-operations-admin-intro {
+  background: var(--portal-surface-soft) !important;
+  border-color: var(--portal-border);
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-security-access-posture .portal-operations-metrics .portal-metric,
+.portal-page.portal-admin-security-access-posture .portal-card {
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-security-access-posture .portal-operations-boundary {
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-security-access-posture .portal-operations-run {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-admin-security-access-posture .portal-operations-boundary-list li {
+  border-color: var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-security-access-posture .portal-button--quiet:is(:hover, :focus-visible) {
+  transform: none;
+  box-shadow: none;
+}
+
+.portal-page.portal-admin-security-access-posture .portal-button:disabled {
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-security-access-posture :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+}
+
+.portal-page.portal-admin-security-access-posture .portal-badge[data-status="read_only"] {
+  color: var(--portal-info);
+}
+
+.portal-page.portal-admin-security-access-posture .portal-badge[data-status="guarded"] {
+  color: var(--portal-warning);
+}
+
+.portal-page.portal-admin-security-access-posture .portal-badge[data-status="failed"] {
+  color: var(--portal-danger);
+}
+
+@media (max-width: 980px) {
+  .portal-page.portal-admin-security-access-posture .portal-operations-admin-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-admin-security-access-posture .portal-operations-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-page.portal-admin-security-access-posture :is(.portal-button--primary, .portal-button--quiet) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-admin-security-access-posture :is(.portal-card, .portal-metric, .portal-operations-run, .portal-button) {
+    transition: none;
+    transform: none;
+  }
+}
