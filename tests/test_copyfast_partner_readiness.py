@@ -266,6 +266,85 @@ def test_partner_readiness_rejects_unsafe_fields_and_disabled_feature_without_si
         assert disabled.patch("/api/v1/partner-readiness/profile", headers={"X-CSRF-Token": csrf}, json=payload()).status_code == 503
 
 
+@pytest.mark.parametrize(
+    ("idempotency_key", "unsafe_value"),
+    (
+        ("partner-readiness-bare-domain-0001", "example.com/path"),
+        ("partner-readiness-long-tld-domain-0001", "example.museum/path"),
+        ("partner-readiness-card-number-0001", "4111 1111 1111 1111"),
+        ("partner-readiness-dashed-card-0001", "4111-1111-1111-1111"),
+        ("partner-readiness-raw-otp-0001", "123456"),
+        ("partner-readiness-intl-phone-0001", "+84901234567"),
+        ("partner-readiness-0084-phone-0001", "0084901234567"),
+        ("partner-readiness-84-phone-0001", "84901234567"),
+    ),
+)
+def test_partner_readiness_rejects_bare_sensitive_values_without_side_effects(
+    tmp_path, monkeypatch, idempotency_key, unsafe_value
+):
+    db_path = tmp_path / "partner-readiness.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, f"{idempotency_key}@example.com")
+        rejected = client.patch(
+            "/api/v1/partner-readiness/profile",
+            headers={"X-CSRF-Token": csrf},
+            json=payload(idempotency_key, collaboration_note=unsafe_value),
+        )
+
+    assert rejected.status_code == 422
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM web_partner_readiness_profiles").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM web_partner_readiness_versions").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize(
+    ("idempotency_key", "field", "duplicate_values"),
+    (
+        (
+            "partner-readiness-duplicate-capability-0001",
+            "capabilities",
+            ["brief_review", "brief_review"],
+        ),
+        (
+            "partner-readiness-duplicate-brief-0001",
+            "preferred_briefs",
+            ["campaign", "campaign"],
+        ),
+    ),
+)
+def test_partner_readiness_rejects_duplicate_closed_list_values_without_side_effects(
+    tmp_path, monkeypatch, idempotency_key, field, duplicate_values
+):
+    db_path = tmp_path / "partner-readiness.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, f"{idempotency_key}@example.com")
+        rejected = client.patch(
+            "/api/v1/partner-readiness/profile",
+            headers={"X-CSRF-Token": csrf},
+            json=payload(idempotency_key, **{field: duplicate_values}),
+        )
+
+    assert rejected.status_code == 422
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM web_partner_readiness_profiles").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM web_partner_readiness_versions").fetchone()[0] == 0
+
+
+def test_partner_readiness_keeps_normal_vietnamese_prose_with_contextual_numbers(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "partner-readiness-normal-prose@example.com")
+        accepted = client.patch(
+            "/api/v1/partner-readiness/profile",
+            headers={"X-CSRF-Token": csrf},
+            json=payload(
+                "partner-readiness-normal-prose-0001",
+                collaboration_note="Có thể bàn giao 123456 bản ghi nội bộ vào quý 4 năm 2026.",
+            ),
+        )
+
+    assert accepted.status_code == 200
+
+
 def test_partner_readiness_is_bounded_before_router_parsing(tmp_path, monkeypatch):
     """The production ASGI shell rejects oversized raw bodies with no store."""
 

@@ -33,7 +33,18 @@ VISIBILITY = frozenset({"private", "handoff_ready"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 CONTROL_PATTERN = re.compile(r"[\x00-\x1f\x7f]")
 MARKUP_OR_URL = re.compile(r"<[^>]*>|(?:\bwww\.|[A-Za-z][A-Za-z0-9+.-]{1,15}://|(?:https?|mailto|javascript|data|file|ftp|tel|sms):)", re.IGNORECASE)
+BARE_DOMAIN_OR_PATH = re.compile(
+    r"(?<![\w@])(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+"
+    r"[A-Za-z]{2,63}"
+    r"(?::\d{1,5})?(?:[/:?#][^\s]*)?(?![A-Za-z0-9-])",
+    re.IGNORECASE,
+)
 HANDLE_OR_CONTACT = re.compile(r"(?:\b[\w.+-]+@[\w-]+\.[\w.-]+\b|(?<!\w)@[A-Za-z][A-Za-z0-9_]{3,31}\b|\b(?:telegram|zalo|phone|email|liên\s*hệ|lien\s*he)\b|(?<!\d)0\d{8,10}(?!\d))", re.IGNORECASE)
+VIETNAMESE_INTL_PHONE = re.compile(
+    r"(?<!\d)(?:\+84|0084|84)[ .-]?(?:(?:\(0\)|0)[ .-]?)?[35789](?:[ .-]?\d){8}(?!\d)"
+)
+CARD_CANDIDATE = re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)")
+RAW_OTP = re.compile(r"\d{6}")
 SECRET = re.compile(r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|secret|password|passphrase|authorization|otp|cvv|cvc|private[ _-]?key)\b", re.IGNORECASE)
 PAYMENT = re.compile(r"\b(?:payos|txid|transaction|bill|biên\s*lai|chứng\s*từ|số\s*tài\s*khoản|stk|card|thẻ|payment|payout|commission|recipient|người\s*nhận)\b|(?:\d[\d., ]{2,}\s*(?:đ|vnd|usd|\$))", re.IGNORECASE)
 REFERRAL = re.compile(r"\b(?:referral|affiliate|ref\s*code|mã\s*giới\s*thiệu|mã\s*ref)\b", re.IGNORECASE)
@@ -83,7 +94,19 @@ def _text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bo
     text = re.sub(r"\s+", " ", str(value or "")).strip()
     if CONTROL_PATTERN.search(text) or len(text) > maximum or (not allow_empty and len(text) < minimum):
         raise ValueError(f"{label} cần từ {minimum} đến {maximum} ký tự hợp lệ")
-    if text and (MARKUP_OR_URL.search(text) or HANDLE_OR_CONTACT.search(text) or SECRET.search(text) or PAYMENT.search(text) or REFERRAL.search(text) or CREDENTIAL_ASSIGNMENT.search(text) or ADMIN_IDENTITY.search(text)):
+    if text and (
+        MARKUP_OR_URL.search(text)
+        or BARE_DOMAIN_OR_PATH.search(text)
+        or HANDLE_OR_CONTACT.search(text)
+        or VIETNAMESE_INTL_PHONE.search(text)
+        or CARD_CANDIDATE.search(text)
+        or RAW_OTP.fullmatch(text)
+        or SECRET.search(text)
+        or PAYMENT.search(text)
+        or REFERRAL.search(text)
+        or CREDENTIAL_ASSIGNMENT.search(text)
+        or ADMIN_IDENTITY.search(text)
+    ):
         raise ValueError(f"{label} không nhận markup, URL, liên hệ, secret, thanh toán hoặc referral")
     return text
 
@@ -97,9 +120,10 @@ def _closed(value: Any, *, label: str, allowed: frozenset[str], limit: int) -> l
         code = _text(item, label=label, minimum=1, maximum=48).lower()
         if code not in allowed:
             raise ValueError(f"{label} không hợp lệ")
-        if code not in seen:
-            seen.add(code)
-            result.append(code)
+        if code in seen:
+            raise ValueError(f"{label} không nhận giá trị trùng lặp")
+        seen.add(code)
+        result.append(code)
     if len(result) > limit:
         raise ValueError(f"{label} tối đa {limit} mục")
     return result
