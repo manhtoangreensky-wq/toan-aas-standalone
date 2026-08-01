@@ -144,6 +144,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
         "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md",
+        "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -162,6 +163,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert "AUDIO_HUB_CALLBACK_CONTRACT.md" in readme
     assert "SFX_CUE_SHEET_CONTRACT.md" in readme
     assert "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md" in readme
+    assert "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md" in readme
     assert "SUPPORT_TICKET_CALLBACK_CONTRACT.md" in readme
     assert "FEEDBACK_MENU_CALLBACK_CONTRACT.md" in readme
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in readme
@@ -181,7 +183,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert "menu\\|finance_export" in admin_erp_contract
     assert "FINANCE_ADD_EXPENSE_CALLBACK_CONTRACT.md" in admin_erp_contract
     assert "menu|admin_packages_grant_combo" in admin_erp_contract
-    assert "`menu|admin_provider_test` remains source-review-required" in admin_erp_contract
+    assert "`menu|admin_provider_test` is terminal Telegram-only" in admin_erp_contract
     finance_fresh_read_callbacks = (
         "menu|finance_overview",
         "menu|finance_revenue",
@@ -203,10 +205,10 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
         assert f"`{callback}` remains source-review-required" not in admin_erp_contract
     assert "FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md" in admin_erp_contract
     assert "`menu|finance_compliance` remains source-review-required" not in admin_erp_contract
-    assert "`menu|finance_compliance_update` remains source-review-required" in admin_erp_contract
+    assert "`menu|finance_compliance_update` is terminal Telegram-only" in admin_erp_contract
     assert (
         "`menu|tax_estimate` and `menu|tax_export_month` retain their separate "
-        "canonical-finance source-review contract"
+        "canonical-finance Telegram-only boundary"
     ) in admin_erp_contract
     tax_accounting_contract = (docs_dir / "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "The thirteen exact Admin ERP Finance fresh-read literals" in tax_accounting_contract
@@ -250,6 +252,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert "Web-native Video Poster environment names" in (docs_dir / "env-provider-map.md").read_text(encoding="utf-8")
     assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "known-gaps.md").read_text(encoding="utf-8")
     assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "KNOWN_GAPS_AND_GUARDS.md").read_text(encoding="utf-8")
+    assert "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md" in (docs_dir / "KNOWN_GAPS_AND_GUARDS.md").read_text(encoding="utf-8")
     assert "Bot source audited: working-tree fallback `unavailable` (`not_a_git_worktree`)" in (docs_dir / "README.md").read_text(encoding="utf-8")
     # The generated compatibility map must preserve the three Web authority
     # domains.  A later static audit must not silently reduce it to a generic
@@ -348,7 +351,7 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
         assert marker in connection
 
     for marker in (
-        "## Current static-audit rebaseline (2026-07-28)",
+        "## Current static-audit rebaseline (2026-08-01)",
         FROZEN_BOT_BASELINE,
         "## Historical verification record (non-current)",
     ):
@@ -362,6 +365,21 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     assert f"`{parity_gap['workflow_equivalence']['status']}` ({workflow_coverage}%)" in evidence
 
     audit = _load_audit_module()
+    terminal_menu_sources = set(audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS) | set(
+        audit.MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES
+    )
+    current_menu_records = [
+        mapping
+        for mapping in parity_gap["callback_mappings"] + parity_gap["callback_template_mappings"]
+        if mapping["source"] in terminal_menu_sources
+    ]
+    assert len(current_menu_records) == 61
+    assert {mapping["source"] for mapping in current_menu_records} == terminal_menu_sources
+    assert all(
+        mapping["target"] == "TELEGRAM_ONLY" and mapping["status"] == "TELEGRAM_ONLY"
+        for mapping in current_menu_records
+    )
+    assert not any(item["family"] == "menu" for item in parity_gap["feature_disposition_backlog"])
     imgtool_navigation_mappings = [
         mapping
         for mapping in parity_gap["callback_mappings"]
@@ -2097,10 +2115,19 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert mapped["target"] != "/admin/packages"
         assert mapped["status"] != "NAVIGATION_ONLY"
 
-    # Provider Custom Help is a finite admin-only guidance route. Its test,
-    # config and spelling variants retain the generic source-review boundary.
+    # Provider Custom Help is a finite admin-only guidance route. Its test is
+    # a frozen Bot-only terminal; spelling/config variants retain source
+    # review rather than borrowing the fresh Providers read route.
+    provider_test = audit._map_callback("menu|admin_provider_test", "callback_data", evidence, routes)
+    provider_test_contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS["menu|admin_provider_test"]
+    assert provider_test["target"] == "TELEGRAM_ONLY"
+    assert provider_test["status"] == "TELEGRAM_ONLY"
+    assert provider_test["resolution"] == provider_test_contract["resolution"]
+    assert provider_test["source_dispositions"] == provider_test_contract["source_dispositions"]
+    assert "admin_erp_feature_key" not in provider_test
+    assert "admin_erp_authority" not in provider_test
+    assert "admin_erp_launch_mode" not in provider_test
     for callback in (
-        "menu|admin_provider_test",
         "menu|provider_custom_help_future",
         "menu|provider_custom_help|future",
         "MENU|PROVIDER_CUSTOM_HELP",
@@ -2183,9 +2210,9 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_launch_mode" not in mapped
 
     # The exact Compliance status literal has its own finite, data-free
-    # readiness handoff. Its update branch, spelling/suffix variants and every
-    # other Finance selector remain source review and cannot inherit the
-    # general Finance read destination.
+    # readiness handoff. Its update branch is a frozen canonical Bot-only
+    # terminal; spelling/suffix variants remain source review and cannot
+    # inherit the general Finance read destination.
     compliance_status = audit._map_callback("menu|finance_compliance", "callback_data", evidence, routes)
     assert compliance_status["target"] == "/admin/finance/tax-readiness"
     assert compliance_status["status"] == "NAVIGATION_ONLY"
@@ -2194,8 +2221,13 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
     assert "BOT_FINANCE_COMPLIANCE_STATUS_NOT_REPLAYED" in compliance_status["source_dispositions"]
     assert "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION" in compliance_status["source_dispositions"]
 
+    update_contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS["menu|finance_compliance_update"]
+    update_mapping = audit._map_callback("menu|finance_compliance_update", "callback_data", evidence, routes)
+    assert update_mapping["target"] == "TELEGRAM_ONLY"
+    assert update_mapping["status"] == "TELEGRAM_ONLY"
+    assert update_mapping["resolution"] == update_contract["resolution"]
+    assert update_mapping["source_dispositions"] == update_contract["source_dispositions"]
     for callback in (
-        "menu|finance_compliance_update",
         "MENU|FINANCE_OVERVIEW",
         "menu|finance_revenue_year|future",
     ):
@@ -2213,14 +2245,16 @@ def test_static_audit_keeps_admin_erp_menu_navigation_private_and_exact() -> Non
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
 
-    # Tax calculation/export branches have their own stricter canonical-
-    # finance source-review contract and must not be downgraded to a generic
-    # menu fallback or inherit Admin ERP navigation metadata.
+    # Tax calculation/export branches have their own stricter canonical Bot
+    # boundary and must not be downgraded to a generic menu fallback or
+    # inherit Admin ERP navigation metadata.
     for callback in ("menu|tax_estimate", "menu|tax_export_month"):
         mapped = audit._map_callback(callback, "callback_data", evidence, routes)
-        assert mapped["target"] == "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
+        contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[callback]
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == contract["resolution"]
+        assert mapped["source_dispositions"] == contract["source_dispositions"]
         assert "admin_erp_feature_key" not in mapped
         assert "admin_erp_authority" not in mapped
         assert "admin_erp_launch_mode" not in mapped
@@ -4415,21 +4449,17 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
     assert dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
     assert dynamic["resolution"] == "dynamic_menu_action_requires_finite_catalog"
 
-    # The two Bot Main Guide video/trend choices remain explicit backlog
-    # records until the requested final Video-menu phase. They must never
-    # inherit the generic menu Dashboard fallback or a Web Video route.
+    # The two Bot Main Guide video/trend choices remain Bot-only until the
+    # requested final Video-menu phase. They must never inherit a generic
+    # Dashboard fallback or a Web Video route.
     for callback in sorted(audit.GUIDED_VIDEO_MENU_DEFERRED_ACTIONS):
         mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
-        assert mapped["target"] == "GUIDED_VIDEO_MENU_DEFERRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "guided_video_menu_deferred_until_video_menu_phase"
-        assert mapped["source_dispositions"] == (
-            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
-            "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
-            "VIDEO_MENU_LAST",
-            "SOURCE_STATE_MACHINE_REQUIRED",
-            "NO_RUNTIME_CLAIM",
-        )
+        contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[callback]
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == contract["resolution"]
+        assert mapped["source_dispositions"] == contract["source_dispositions"]
+        assert "VIDEO_MENU_LAST" in mapped["source_dispositions"]
 
 
 def test_menu_callbacks_are_exact_and_residual_video_menu_actions_fail_closed() -> None:
@@ -4438,13 +4468,14 @@ def test_menu_callbacks_are_exact_and_residual_video_menu_actions_fail_closed() 
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
 
-    for callback, contract in audit.VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items():
+    for callback, source_review_contract in audit.VIDEO_MENU_DEFERRED_SOURCE_REVIEW_ACTIONS.items():
         mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
-        assert mapped["target"] == contract["target"]
-        assert mapped["classification"] == contract["classification"]
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[callback]
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == source_review_contract["classification"]
+        assert mapped["status"] == "TELEGRAM_ONLY"
         assert mapped["resolution"] == contract["resolution"]
-        assert mapped["source_dispositions"] == contract["source_dispositions"]
+        assert mapped["source_dispositions"] == source_review_contract["source_dispositions"]
         assert mapped["target"] not in {"/dashboard", "/video-studio", "/jobs", "/admin", "/admin/callbacks"}
 
     # Every existing finite catalog entry remains a reviewed navigation path;
@@ -4487,6 +4518,240 @@ def test_menu_callbacks_are_exact_and_residual_video_menu_actions_fail_closed() 
         assert mapped["target"] == "TELEGRAM_ONLY"
         assert mapped["status"] == "TELEGRAM_ONLY"
         assert mapped["resolution"] == "telegram_only"
+
+
+def test_menu_terminal_catalog_classifies_observed_bot_only_values() -> None:
+    """Every frozen, non-navigation menu literal ends at a private Bot boundary."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected_exact = {
+        "menu|admin_confirm_clear_stale_jobs",
+        "menu|admin_confirm_refund_job",
+        "menu|admin_confirm_maintenance_off",
+        "menu|admin_confirm_maintenance_on",
+        "menu|admin_packages_grant_combo",
+        "menu|admin_packages_grant_monthly",
+        "menu|admin_packages_user",
+        "menu|admin_provider_test",
+        "menu|finance_compliance_update",
+        "menu|tax_config",
+        "menu|tax_estimate",
+        "menu|tax_estimate_month",
+        "menu|tax_estimate_previous",
+        "menu|tax_estimate_quarter",
+        "menu|tax_export",
+        "menu|tax_export_custom_help",
+        "menu|tax_export_month",
+        "menu|tax_export_previous",
+        "menu|tax_export_quarter",
+        "menu|guide_guided_video",
+        "menu|guide_video_ai",
+        "menu|hint_film_blueprint",
+        "menu|hint_growth_loop",
+        "menu|hint_scene_pack",
+        "menu|hint_video_status",
+        "menu|translation_video_factory",
+        "menu|video_ai_true",
+        "menu|video_frame_intro",
+    }
+    deferred_video_values = {
+        "menu|guide_guided_video",
+        "menu|guide_video_ai",
+        "menu|hint_film_blueprint",
+        "menu|hint_growth_loop",
+        "menu|hint_scene_pack",
+        "menu|hint_video_status",
+        "menu|translation_video_factory",
+        "menu|video_ai_true",
+        "menu|video_frame_intro",
+    }
+    navigation_metadata_markers = (
+        "capability",
+        "authority",
+        "navigation",
+        "feature_key",
+        "launch_mode",
+        "route",
+    )
+
+    assert set(audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS) == expected_exact
+    assert expected_exact.isdisjoint(audit.MENU_ACTION_REGISTRY)
+
+    for source, contract in audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS.items():
+        assert set(contract) == {
+            "classification",
+            "resolution",
+            "source_dispositions",
+            "source_evidence",
+        }
+        assert isinstance(contract["source_evidence"], str)
+        assert contract["source_evidence"]
+        assert isinstance(contract["source_dispositions"], tuple)
+        assert "NO_RUNTIME_CLAIM" in contract["source_dispositions"]
+
+        mapped = audit._map_callback(source, "callback_data", evidence, routes)
+        assert mapped["source_kind"] == "callback_data"
+        assert mapped["source"] == source
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == contract["classification"]
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == contract["resolution"]
+        assert mapped["source_dispositions"] == contract["source_dispositions"]
+        assert mapped["source_evidence"] == contract["source_evidence"]
+        assert mapped["evidence"] == evidence
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+        assert not any(
+            marker in key
+            for key in mapped
+            for marker in navigation_metadata_markers
+        )
+        if source in deferred_video_values:
+            assert "VIDEO_MENU_LAST" in mapped["source_dispositions"]
+
+
+def test_menu_terminal_catalog_templates_are_finite_and_other_menu_values_fail_closed() -> None:
+    """Observed templates are terminal; new values remain visible for source review."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected_templates = {
+        "menu|{*}",
+        "menu|admin_confirm_ack_{*}",
+        "menu|{*}_auto",
+        "menu|{*}_de",
+        "menu|{*}_en",
+        "menu|{*}_fr",
+        "menu|{*}_ja",
+        "menu|{*}_ko",
+        "menu|{*}_th",
+        "menu|{*}_vi",
+        "menu|{*}_zh",
+    }
+    navigation_metadata_markers = (
+        "capability",
+        "authority",
+        "navigation",
+        "feature_key",
+        "launch_mode",
+        "route",
+    )
+
+    assert set(audit.MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES) == expected_templates
+    for template in sorted(audit.MENU_TERMINAL_TELEGRAM_ONLY_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["source_kind"] == "callback_template"
+        assert mapped["source"] == template
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert isinstance(mapped["source_evidence"], str)
+        assert mapped["source_evidence"]
+        assert mapped["evidence"] == evidence
+        assert "UNREVIEWED_DYNAMIC_MENU_VALUE" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+        assert not any(
+            marker in key
+            for key in mapped
+            for marker in navigation_metadata_markers
+        )
+
+    # The catalog is a terminal exception list, not a replacement for existing
+    # independently reviewed fresh-navigation records.
+    reviewed_navigation = {
+        "menu|main": ("/dashboard", "reviewed_exact_menu_navigation"),
+        "menu|guide_quick_start": ("/features", "reviewed_guided_start_fresh_web_navigation"),
+        "menu|billing": ("/admin/payments", "reviewed_billing_menu_admin_navigation"),
+        "menu|admin": ("/admin", "reviewed_admin_erp_fresh_web_navigation"),
+        "menu|finance_compliance": (
+            "/admin/finance/tax-readiness",
+            "reviewed_finance_compliance_readiness_fresh_web_navigation",
+        ),
+    }
+    for source, (target, resolution) in reviewed_navigation.items():
+        assert source not in audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS
+        mapped = audit._map_callback(source, "callback_data", evidence, routes)
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == resolution
+
+    # Case variants, malformed values, suffixes and future Bot drift must stay
+    # fail-closed. They do not become terminal catalog entries and cannot take
+    # on route/capability/authority metadata merely by resembling one.
+    for source in (
+        "MENU|admin_confirm_refund_job",
+        "menu|admin_confirm_refund_job|again",
+        "menu|future_video_action",
+        "menu|video_ai_true|again",
+        "menu|",
+        "menu||",
+    ):
+        mapped = audit._map_callback(source, "callback_data", evidence, routes)
+        assert mapped["source"] == source
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["target"] not in {
+            "/dashboard",
+            "/features",
+            "/video-studio",
+            "/jobs",
+            "/admin",
+            "/admin/callbacks",
+        }
+        assert not any(
+            marker in key
+            for key in mapped
+            for marker in navigation_metadata_markers
+        )
+
+    from copyfast_registry import menu_capability_catalog
+
+    assert "menu|" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
+
+
+def test_menu_terminal_catalog_writes_a_non_runtime_migration_contract(tmp_path: Path) -> None:
+    """The generated terminal contract stays auditable without becoming a Web surface."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+pending = [
+    ("Provider test", "menu|admin_provider_test"),
+    ("Video", "menu|video_ai_true"),
+    ("Locale", f"menu|{'topic'}_vi"),
+]
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        "app = FastAPI()\n@app.get('/{page_path:path}')\nasync def page(): return {}\n",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+
+    contract = (tmp_path / "docs" / "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md").read_text(encoding="utf-8")
+    readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    known_gaps = (tmp_path / "docs" / "KNOWN_GAPS_AND_GUARDS.md").read_text(encoding="utf-8")
+    assert "TELEGRAM_ONLY" in contract
+    assert "UNREVIEWED_DYNAMIC_MENU_VALUE" in contract
+    assert "VIDEO_MENU_LAST" in contract
+    assert "not a Web runtime-equivalence claim" in contract
+    assert "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md" in readme
+    assert "MENU_ACTION_TERMINAL_CATALOG_CONTRACT.md" in known_gaps
+
+    menu_records = [
+        item
+        for item in result["parity_gap"]["callback_mappings"] + result["parity_gap"]["callback_template_mappings"]
+        if item["source"] in {"menu|admin_provider_test", "menu|video_ai_true", "menu|{*}_vi"}
+    ]
+    assert menu_records
+    assert all((item["target"], item["status"]) == ("TELEGRAM_ONLY", "TELEGRAM_ONLY") for item in menu_records)
 
 
 def test_profile_benefits_and_pricing_read_navigation_preserve_the_referral_boundary() -> None:
@@ -4674,9 +4939,10 @@ def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_s
         )
 
     deferred = audit._map_callback("menu|translation_video_factory", "callback_data", {"file": "bot.py", "line": 1}, routes)
-    assert deferred["target"] == "VIDEO_TRANSLATION_MENU_DEFERRED"
-    assert deferred["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert deferred["resolution"] == "translation_video_factory_deferred_until_video_menu_phase"
+    deferred_contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS["menu|translation_video_factory"]
+    assert deferred["target"] == "TELEGRAM_ONLY"
+    assert deferred["status"] == "TELEGRAM_ONLY"
+    assert deferred["resolution"] == deferred_contract["resolution"]
     assert deferred["source_dispositions"] == (
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_VIDEO_DUBBING_PENDING_STATE",
@@ -5008,8 +5274,8 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
 
     # The frozen Bot classifies its entire tax_ family as admin-only. The
     # finite guidance list cannot turn calculation, profile or CSV branches
-    # into a Web adapter; exact sensitive actions remain canonical-finance
-    # source-review records and even an unknown tax_ callback stays admin.
+    # into a Web adapter; frozen exact sensitive actions are terminal Bot-only
+    # records and an unknown tax_ callback still stays admin/source-reviewed.
     canonical_finance_actions = {
         "menu|tax_estimate": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
         "menu|tax_estimate_month": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
@@ -5028,10 +5294,12 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
         assert descriptor["operation_disposition"] == operation_disposition
         assert token not in audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
         mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        terminal_contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[token]
         assert mapped["classification"] == "admin"
-        assert mapped["target"] == "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == terminal_contract["resolution"]
+        assert mapped["source_dispositions"] == terminal_contract["source_dispositions"]
         for disposition in (
             "BOT_ADMIN_ONLY",
             "CANONICAL_BOT_FINANCE_TAX_STATE",
@@ -5044,8 +5312,8 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
         assert operation_disposition in mapped["source_dispositions"]
 
         case_variant = audit._map_callback(token.upper(), "callback_data", {"file": "bot.py", "line": 1}, routes)
-        assert case_variant["target"] != "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
-        assert case_variant["resolution"] != "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
+        assert case_variant["target"] != "TELEGRAM_ONLY"
+        assert case_variant["resolution"] != terminal_contract["resolution"]
 
     for token in (
         "MENU|finance_help",
@@ -5071,7 +5339,7 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
 
 
 def test_job_lock_recovery_guidance_is_finite_and_never_becomes_a_job_or_refund_control() -> None:
-    """Only Bot help becomes static canonical-admin guidance; mutations stay source-review-only."""
+    """Only Bot help becomes static canonical-admin guidance; mutations stay Bot-only."""
 
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
@@ -5110,13 +5378,20 @@ def test_job_lock_recovery_guidance_is_finite_and_never_becomes_a_job_or_refund_
     for token, operation_disposition in canonical_callbacks.items():
         assert token not in audit.JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
         mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
-        assert mapped["target"] == "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
         assert mapped["classification"] == "admin"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract"
         assert operation_disposition in mapped["source_dispositions"]
         assert "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION" in mapped["source_dispositions"]
         assert "NO_PAYOS_WALLET_LEDGER_ACTION" in mapped["source_dispositions"]
+        if token in audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS:
+            terminal_contract = audit.MENU_TERMINAL_TELEGRAM_ONLY_ACTIONS[token]
+            assert mapped["target"] == "TELEGRAM_ONLY"
+            assert mapped["status"] == "TELEGRAM_ONLY"
+            assert mapped["resolution"] == terminal_contract["resolution"]
+            assert mapped["source_dispositions"] == terminal_contract["source_dispositions"]
+        else:
+            assert mapped["target"] == "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+            assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+            assert mapped["resolution"] == "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract"
 
     canonical_commands = {
         "clear_job_lock": "CANONICAL_BOT_JOB_LOCK_CLEAR_MUTATION",
