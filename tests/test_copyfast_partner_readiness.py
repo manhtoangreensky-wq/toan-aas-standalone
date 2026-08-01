@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.testclient import TestClient
+import pytest
 
 
 MODULES = ["copyfast_db", "copyfast_auth", "copyfast_partner_readiness"]
@@ -275,3 +276,61 @@ def test_production_error_envelopes_keep_partner_readiness_boundary(tmp_path, mo
     assert invalid.json()["data"]["execution"] == "web_native_partner_readiness_profile_only"
     assert invalid.json()["data"]["profile_persisted"] is False
     assert invalid.json()["data"]["bot_called"] is False
+
+
+class _LostUpdateCursor:
+    def __init__(self, row=None, *, rowcount: int = 1):
+        self._row = row
+        self.rowcount = rowcount
+
+    def fetchone(self):
+        return self._row
+
+
+class _LostUpdateConnection:
+    def __init__(self, row):
+        self.row = row
+
+    def execute(self, sql: str, _parameters=()):
+        if sql.lstrip().startswith("SELECT"):
+            return _LostUpdateCursor(self.row)
+        if sql.lstrip().startswith("UPDATE"):
+            return _LostUpdateCursor(rowcount=0)
+        return _LostUpdateCursor()
+
+
+def _lost_update_readiness(monkeypatch):
+    for name in MODULES:
+        sys.modules.pop(name, None)
+    readiness = importlib.import_module("copyfast_partner_readiness")
+    row = (
+        "profile-1", "Quy trình nội dung số", '["brief_review"]', "open", "on_request",
+        '["product_content"]', "", "", "private", "draft", 1,
+        "2026-08-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00", None,
+    )
+    connection = _LostUpdateConnection(row)
+    monkeypatch.setattr(readiness, "_require_enabled", lambda: None)
+    monkeypatch.setattr(readiness, "_record_version_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(readiness, "_audit", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        readiness,
+        "_idempotent",
+        lambda _scope, _account_id, _key, _fingerprint, operation: operation(connection),
+    )
+    return readiness
+
+
+def test_partner_readiness_rejects_lost_profile_revision_update(monkeypatch):
+    readiness = _lost_update_readiness(monkeypatch)
+    body = readiness.ProfilePayload(**payload("partner-readiness-lost-update-0001", expected_revision=1))
+    with pytest.raises(HTTPException) as raised:
+        readiness.patch_profile(body, None, Response(), {"id": "account-1"}, {})
+    assert raised.value.status_code == 409
+
+
+def test_partner_readiness_rejects_lost_state_transition_update(monkeypatch):
+    readiness = _lost_update_readiness(monkeypatch)
+    body = readiness.RevisionPayload(**revision_payload(1, "partner-readiness-lost-transition-0001"))
+    with pytest.raises(HTTPException) as raised:
+        readiness.request_review(body, None, Response(), {"id": "account-1"}, {})
+    assert raised.value.status_code == 409

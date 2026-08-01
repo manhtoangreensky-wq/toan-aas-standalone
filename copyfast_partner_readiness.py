@@ -342,7 +342,12 @@ def patch_profile(payload: ProfilePayload, request: Request, response: Response,
             if profile["state"] not in {"draft", "review"}:
                 _conflict("Profile chỉ có thể sửa khi đang draft hoặc review")
             state, revision, now = ("draft" if profile["state"] == "review" else profile["state"]), profile["revision"] + 1, utc_now()
-            conn.execute("UPDATE web_partner_readiness_profiles SET service_focus=?, capabilities_json=?, availability=?, rate_display_preference=?, preferred_briefs_json=?, portfolio_summary=?, collaboration_note=?, visibility_draft=?, state=?, revision=?, updated_at=? WHERE account_id=? AND revision=?", (payload.service_focus, json.dumps(payload.capabilities), payload.availability, payload.rate_display_preference, json.dumps(payload.preferred_briefs), payload.portfolio_summary, payload.collaboration_note, payload.visibility_draft, state, revision, now, account_id, payload.expected_revision))
+            cursor = conn.execute(
+                "UPDATE web_partner_readiness_profiles SET service_focus=?, capabilities_json=?, availability=?, rate_display_preference=?, preferred_briefs_json=?, portfolio_summary=?, collaboration_note=?, visibility_draft=?, state=?, revision=?, updated_at=? WHERE account_id=? AND revision=?",
+                (payload.service_focus, json.dumps(payload.capabilities), payload.availability, payload.rate_display_preference, json.dumps(payload.preferred_briefs), payload.portfolio_summary, payload.collaboration_note, payload.visibility_draft, state, revision, now, account_id, payload.expected_revision),
+            )
+            if cursor.rowcount != 1:
+                _conflict("Profile đã được thay đổi. Hãy tải lại trước khi tiếp tục.")
             profile = _profile(_profile_row(conn, account_id)); action = "update"
         _record_version_event(conn, profile=profile, account_id=account_id, action=action); _audit(conn, account, request, action=action, profile=profile)
         data = _boundary(profile_persisted=True); data["profile"] = _summary(profile)
@@ -362,7 +367,12 @@ def _transition(*, endpoint: str, expected: str | frozenset[str], target: str, a
             if profile["state"] not in allowed: _conflict("Trạng thái readiness profile không cho phép thao tác này")
             revision, now = profile["revision"] + 1, utc_now()
             archived_at = now if target == "archived" else None
-            conn.execute("UPDATE web_partner_readiness_profiles SET state=?, revision=?, updated_at=?, archived_at=? WHERE account_id=? AND revision=?", (target, revision, now, archived_at, account_id, payload.expected_revision))
+            cursor = conn.execute(
+                "UPDATE web_partner_readiness_profiles SET state=?, revision=?, updated_at=?, archived_at=? WHERE account_id=? AND revision=?",
+                (target, revision, now, archived_at, account_id, payload.expected_revision),
+            )
+            if cursor.rowcount != 1:
+                _conflict("Profile đã được thay đổi. Hãy tải lại trước khi tiếp tục.")
             profile = _profile(_profile_row(conn, account_id))
             receipt = None
             if interest:
