@@ -59408,25 +59408,23 @@
         "file": "bot.py",
         "line": 111995
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|edit|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59434,25 +59432,23 @@
         "file": "bot.py",
         "line": 112960
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|edit|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59460,25 +59456,23 @@
         "file": "bot.py",
         "line": 113100
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|edit|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59486,25 +59480,23 @@
         "file": "bot.py",
         "line": 117901
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|publish|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59512,25 +59504,23 @@
         "file": "bot.py",
         "line": 119209
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|publish|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59538,25 +59528,23 @@
         "file": "bot.py",
         "line": 119397
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|publish|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59564,25 +59552,23 @@
         "file": "bot.py",
         "line": 111996
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|review|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59590,25 +59576,23 @@
         "file": "bot.py",
         "line": 112961
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|review|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59616,25 +59600,23 @@
         "file": "bot.py",
         "line": 113101
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|review|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59642,25 +59624,23 @@
         "file": "bot.py",
         "line": 117904
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|review|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59668,25 +59648,23 @@
         "file": "bot.py",
         "line": 119396
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|script|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59694,25 +59672,23 @@
         "file": "bot.py",
         "line": 111994
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|voice|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59720,25 +59696,23 @@
         "file": "bot.py",
         "line": 112959
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|voice|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59746,25 +59720,23 @@
         "file": "bot.py",
         "line": 113099
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|stage|voice|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59772,25 +59744,23 @@
         "file": "bot.py",
         "line": 112000
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59798,25 +59768,23 @@
         "file": "bot.py",
         "line": 112965
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59824,25 +59792,23 @@
         "file": "bot.py",
         "line": 113105
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59850,25 +59816,23 @@
         "file": "bot.py",
         "line": 119207
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59876,25 +59840,23 @@
         "file": "bot.py",
         "line": 119399
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59902,25 +59864,23 @@
         "file": "bot.py",
         "line": 111999
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|published|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59928,25 +59888,23 @@
         "file": "bot.py",
         "line": 112964
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|published|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59954,25 +59912,23 @@
         "file": "bot.py",
         "line": 113104
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|published|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -59980,25 +59936,23 @@
         "file": "bot.py",
         "line": 117903
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|ready|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -60006,25 +59960,23 @@
         "file": "bot.py",
         "line": 119206
       },
-      "fallback_family": "pipe",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "pipe|status|ready|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -60931,25 +60883,23 @@
         "file": "bot.py",
         "line": 117140
       },
-      "fallback_family": "task",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "task|handoff|x|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -60957,25 +60907,23 @@
         "file": "bot.py",
         "line": 117138
       },
-      "fallback_family": "task",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "task|status|blocked|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -60983,25 +60931,23 @@
         "file": "bot.py",
         "line": 117137
       },
-      "fallback_family": "task",
-      "resolution": "workboard_task_callback_requires_web_native_owner_role_contract",
+      "resolution": "workboard_task_requires_telegram_admin_context",
       "source": "task|status|ready|{*}",
       "source_dispositions": [
         "TELEGRAM_IDENTITY_CONTEXT",
         "BOT_ADMIN_ONLY",
         "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
         "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
         "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
         "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
         "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The frozen Bot `pipe|*` and `task|*` handlers require the configured Telegram admin, parse an opaque production job/task ID, and update canonical production stage/status/task/handoff state before rendering a Telegram result. Pipeline callbacks can mark a production job working, ready, published or blocked; task callbacks can change a task status or move it to a handoff prompt. The standalone Web has no adapter that accepts or replays the callback, Bot production job/task ID, stage/status value, handoff prompt or Telegram admin context.",
+      "source_evidence": "The frozen Bot production control requires the configured Telegram admin, parses an opaque production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, status, handoff prompt, Telegram identity or production mutation from this source.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -74644,32 +74590,6 @@
       ]
     },
     {
-      "authority": "Source review required",
-      "candidate_boundary": "source_review_required",
-      "count": 24,
-      "family": "pipe",
-      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
-      "priority": "P1",
-      "sample_sources": [
-        "pipe|stage|edit|{*}",
-        "pipe|stage|publish|{*}",
-        "pipe|stage|review|{*}",
-        "pipe|stage|script|{*}",
-        "pipe|stage|voice|{*}",
-        "pipe|status|blocked|{*}",
-        "pipe|status|published|{*}",
-        "pipe|status|ready|{*}"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
-      "source_kinds": [
-        "callback_template"
-      ]
-    },
-    {
       "authority": "Canonical Bot Telegram Media Creator state; separate Web-native contract required",
       "candidate_boundary": "MEDIA_CREATOR_SOURCE_REVIEW_REQUIRED",
       "count": 23,
@@ -74788,27 +74708,6 @@
       "source_evidence": "The Bot target callback consumes Telegram pending text/file/audio state and can call translation paths. A target label is not a Web translation request or result.",
       "source_kinds": [
         "callback_data",
-        "callback_template"
-      ]
-    },
-    {
-      "authority": "Source review required",
-      "candidate_boundary": "source_review_required",
-      "count": 3,
-      "family": "task",
-      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
-      "priority": "P1",
-      "sample_sources": [
-        "task|handoff|x|{*}",
-        "task|status|blocked|{*}",
-        "task|status|ready|{*}"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
-      "source_kinds": [
         "callback_template"
       ]
     },
@@ -74995,7 +74894,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 712,
+      "count": 685,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -75029,11 +74928,6 @@
           "priority": "P1"
         },
         {
-          "count": 24,
-          "family": "pipe",
-          "priority": "P1"
-        },
-        {
           "count": 23,
           "family": "create_media",
           "priority": "P1"
@@ -75051,11 +74945,6 @@
         {
           "count": 10,
           "family": "tr_target",
-          "priority": "P1"
-        },
-        {
-          "count": 3,
-          "family": "task",
           "priority": "P1"
         },
         {
@@ -75133,7 +75022,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 123,
+      "count": 96,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -75277,13 +75166,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 82.43,
+  "mapping_coverage_percent": 83.1,
   "mapping_status_counts": {
     "COPIED_GUARDED": 1570,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 903,
-    "NEEDS_FEATURE_DISPOSITION": 712,
-    "TELEGRAM_ONLY": 861,
+    "NEEDS_FEATURE_DISPOSITION": 685,
+    "TELEGRAM_ONLY": 888,
     "WEB_NATIVE_READ_ONLY": 5
   },
   "metric_scope": {
@@ -75305,7 +75194,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 82.43,
+  "safe_disposition_coverage_percent": 83.1,
   "schema_version": "2.0",
   "source_counts": {
     "callback_data": 2862,
@@ -75315,13 +75204,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 4053,
-    "resolved_static_source_count": 3341,
+    "resolved_static_source_count": 3368,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 4164,
     "total_mappings": 4053,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 123,
-    "unresolved_source_count": 712
+    "unresolved_callback_templates": 96,
+    "unresolved_source_count": 685
   },
   "static_web_surface_coverage_percent": 38.74,
   "telegram_link_callback_contract": {

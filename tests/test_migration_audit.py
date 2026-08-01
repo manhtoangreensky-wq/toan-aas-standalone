@@ -395,6 +395,22 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     archive_backlog = next(item for item in parity_gap["feature_disposition_backlog"] if item["family"] == "archive")
     assert archive_backlog["count"] == 2
     assert archive_backlog["sample_sources"] == ["archive|dept|{*}"]
+    workboard_terminal_sources = set(audit.WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES)
+    current_workboard_records = [
+        mapping
+        for mapping in parity_gap["callback_mappings"] + parity_gap["callback_template_mappings"]
+        if mapping["source"] in workboard_terminal_sources
+    ]
+    assert len(current_workboard_records) == 27
+    assert {mapping["source"] for mapping in current_workboard_records} == workboard_terminal_sources
+    assert all(
+        mapping["target"] == "TELEGRAM_ONLY"
+        and mapping["status"] == "TELEGRAM_ONLY"
+        and mapping["resolution"] == "workboard_task_requires_telegram_admin_context"
+        for mapping in current_workboard_records
+    )
+    assert not any(item["family"] in {"pipe", "task"} for item in parity_gap["feature_disposition_backlog"])
+    assert "All 27 observed finite `pipe|*`/`task|*` records are `TELEGRAM_ONLY`" in evidence
     imgtool_navigation_mappings = [
         mapping
         for mapping in parity_gap["callback_mappings"]
@@ -3894,6 +3910,21 @@ def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(t
 
     assert not any(prefix in {"pipe|", "task|"} for prefix, *_ in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
 
+    expected_terminal_templates = {
+        "pipe|stage|voice|{*}",
+        "pipe|stage|edit|{*}",
+        "pipe|stage|review|{*}",
+        "pipe|stage|publish|{*}",
+        "pipe|stage|script|{*}",
+        "pipe|status|ready|{*}",
+        "pipe|status|published|{*}",
+        "pipe|status|blocked|{*}",
+        "task|status|ready|{*}",
+        "task|status|blocked|{*}",
+        "task|handoff|x|{*}",
+    }
+    assert set(audit.WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES) == expected_terminal_templates
+
     for identifier in (
         "pipe|stage|voice|12",
         "pipe|stage|edit|12",
@@ -3903,13 +3934,32 @@ def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(t
         "pipe|status|ready|12",
         "pipe|status|published|12",
         "pipe|status|blocked|12",
-        "task|status|queued|31",
-        "task|status|working|31",
         "task|status|ready|31",
         "task|status|blocked|31",
         "task|handoff|x|31",
+    ):
+        mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "workboard_task_requires_telegram_admin_context"
+        assert "BOT_ADMIN_ONLY" in mapped["source_dispositions"]
+        assert "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER" in mapped["source_dispositions"]
+        assert "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE" in mapped["source_dispositions"]
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
+        assert "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for identifier in (
+        "task|status|queued|31",
+        "task|status|working|31",
         "PIPE|STAGE|REVIEW|12",
         "pipe|status|published|12|future",
+        "pipe|stage|unknown|12",
+        "pipe|stage|review|²",
+        " pipe|stage|review|12",
+        "task|status|ready|31 ",
+        "task|handoff|y|31",
         "task|future|opaque",
     ):
         mapped = audit._map_callback(identifier, "callback_data", evidence, routes)
@@ -3922,12 +3972,22 @@ def test_static_audit_keeps_workboard_task_callbacks_out_of_generic_web_routes(t
         assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in mapped["source_dispositions"]
         assert "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY" in mapped["source_dispositions"]
 
+    for template in expected_terminal_templates:
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "workboard_task_requires_telegram_admin_context"
+
     for template in (
         "pipe|stage|{*}|{*}",
         "pipe|status|{*}|{*}",
         "task|status|{*}|{*}",
-        "task|handoff|x|{*}",
         "PIPE|STAGE|{*}|{*}",
+        " pipe|stage|review|{*}",
+        "task|status|ready|{*} ",
+        "pipe|stage|review|{*}|future",
         "pipe|stage|{*}|{*}|future",
         "task|future|{*}",
     ):
@@ -3961,12 +4021,17 @@ def workboard_keyboard(job_id, task_id, stage):
         "task|status|ready|{*}",
         "task|handoff|x|{*}",
     ):
-        assert templates[template]["target"] == "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED"
+        expected_target = "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED" if template == "pipe|stage|{*}|{*}" else "TELEGRAM_ONLY"
+        assert templates[template]["target"] == expected_target
         assert templates[template]["classification"] == "admin"
+    assert templates["pipe|stage|{*}|{*}"]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    for template in ("pipe|status|published|{*}", "task|status|ready|{*}", "task|handoff|x|{*}"):
+        assert templates[template]["status"] == "TELEGRAM_ONLY"
     contract = (tmp_path / "docs" / "WORKBOARD_TASK_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "pipe\\|*" in contract
     assert "task\\|*" in contract
     assert "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED" in contract
+    assert "workboard_task_requires_telegram_admin_context" in contract
     assert "WORKBOARD_TASK_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot Workboard/Task callbacks stay outside the Web route layer" in (tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "Bot Workboard/Task callbacks are separate from the Web Workboard" in (tmp_path / "docs" / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")

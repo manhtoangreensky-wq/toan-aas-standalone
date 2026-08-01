@@ -8110,6 +8110,80 @@ def _map_support_ticket_callback(
 
 WORKBOARD_TASK_CALLBACK_PREFIXES = ("pipe|", "task|")
 
+# These source templates are the finite lower-case controls emitted by the
+# frozen Telegram-admin production keyboards.  Their opaque final identifier
+# is deliberately represented only as static audit evidence: no browser can
+# receive it or turn the corresponding Bot state transition into a Web action.
+WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES = frozenset(
+    {
+        "pipe|stage|voice|{*}",
+        "pipe|stage|edit|{*}",
+        "pipe|stage|review|{*}",
+        "pipe|stage|publish|{*}",
+        "pipe|stage|script|{*}",
+        "pipe|status|ready|{*}",
+        "pipe|status|published|{*}",
+        "pipe|status|blocked|{*}",
+        "task|status|ready|{*}",
+        "task|status|blocked|{*}",
+        "task|handoff|x|{*}",
+    }
+)
+
+
+def _workboard_task_terminal_template(identifier: str, source_kind: str) -> str | None:
+    """Return only a finite, raw source template that is safe to close.
+
+    A real Bot callback has exactly four segments and an integer production
+    identifier.  Static templates preserve the same shape with ``{*}``.
+    Case, whitespace, suffixes, an opaque id, or an unreviewed action all
+    return ``None`` so the caller retains the existing fail-closed boundary.
+    """
+
+    raw_identifier = str(identifier or "")
+    if source_kind == "callback_template":
+        return raw_identifier if raw_identifier in WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES else None
+    parts = raw_identifier.split("|")
+    if len(parts) != 4 or not (parts[-1].isascii() and parts[-1].isdecimal()):
+        return None
+    template = "|".join((*parts[:-1], "{*}"))
+    return template if template in WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES else None
+
+
+def _workboard_task_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Record a reviewed Bot-only production control without a Web action."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "admin",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "workboard_task_requires_telegram_admin_context",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_ADMIN_ONLY",
+            "BOT_PRODUCTION_JOB_OR_TASK_IDENTIFIER",
+            "CANONICAL_BOT_PRODUCTION_WORKFLOW_STATE",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_PRODUCTION_JOB_TASK_OR_HANDOFF_STATE_REPLAY",
+            "NO_PROVIDER_JOB_OUTPUT_OR_DELIVERY_ACTION",
+            "NO_WALLET_PAYMENT_REFUND_OR_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot production control requires the configured Telegram admin, parses an opaque "
+            "production job/task identifier, and mutates canonical Bot pipeline/task or handoff state before "
+            "rendering a Telegram result. The standalone Web accepts no callback value, Bot identifier, stage, "
+            "status, handoff prompt, Telegram identity or production mutation from this source."
+        ),
+        "evidence": evidence,
+    }
+
 
 def _workboard_task_source_review_mapping(
     identifier: str,
@@ -8154,10 +8228,13 @@ def _map_workboard_task_callback(
     source_kind: str,
     evidence: dict[str, Any],
 ) -> dict[str, Any] | None:
-    """Fail closed for every Bot Workboard/Task callback until Web-native flows exist."""
+    """Close only proven Bot-only controls; retain source review for drift."""
 
-    if not str(identifier or "").casefold().startswith(WORKBOARD_TASK_CALLBACK_PREFIXES):
+    raw_identifier = str(identifier or "")
+    if not raw_identifier.strip().casefold().startswith(WORKBOARD_TASK_CALLBACK_PREFIXES):
         return None
+    if _workboard_task_terminal_template(raw_identifier, source_kind) is not None:
+        return _workboard_task_telegram_only_mapping(identifier, source_kind, evidence)
     return _workboard_task_source_review_mapping(identifier, source_kind, evidence)
 
 
@@ -12509,19 +12586,19 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     ]
     workboard_task_contract_rows = [
         [
-            "all frozen pipe|stage|*/pipe|status|* literals and templates",
-            "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
-            "workboard_task_callback_requires_web_native_owner_role_contract",
-            "Telegram admin plus opaque Bot production job ID; updates canonical production stage/status, including publish/blocked transitions",
+            ", ".join(sorted(item for item in WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES if item.startswith("pipe|"))),
+            "TELEGRAM_ONLY",
+            "workboard_task_requires_telegram_admin_context",
+            "Exact raw lower-case source templates only; Telegram admin plus opaque Bot production job ID updates canonical stage/status and never becomes a Web action",
         ],
         [
-            "all frozen task|status|*/task|handoff|* literals and templates",
-            "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
-            "workboard_task_callback_requires_web_native_owner_role_contract",
-            "Telegram admin plus opaque Bot production task ID; validates/updates canonical task status or moves it into a Bot handoff prompt",
+            ", ".join(sorted(item for item in WORKBOARD_TASK_TELEGRAM_ONLY_TEMPLATES if item.startswith("task|"))),
+            "TELEGRAM_ONLY",
+            "workboard_task_requires_telegram_admin_context",
+            "Exact raw lower-case source templates only; Telegram admin plus opaque Bot production task ID updates canonical task/handoff state and never becomes a Web action",
         ],
         [
-            "case variants, missing tokens, suffixes or future pipe|*/task|* values",
+            "all other pipe|*/task|* values, including case/whitespace variants, unknown action/status/stage, missing tokens, suffixes and future templates",
             "WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED",
             "workboard_task_callback_requires_web_native_owner_role_contract",
             "no Web Workboard/Admin route, browser navigation/reset, Bot job/task/status/handoff replay, provider/output/delivery/ledger action or runtime claim",
@@ -12994,7 +13071,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot callback family", "Web target/boundary", "Audit resolution", "Required boundary"],
             workboard_task_contract_rows,
         )
-        + "\n\nEvery `pipe|*` and `task|*` source remains `WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/workboard` or an Admin route; navigate/reset the browser; receive/replay a Bot job/task ID, stage/status value or handoff prompt; update canonical Bot production state; invoke a provider; expose an output; send a delivery; mutate a payment/refund/ledger record; or claim completion. A future Web Workboard must start from its own signed staff session, server-side role checks, CSRF, confirmation/idempotency/audit rules for writes, and independently owned Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram production state.\n",
+        + "\n\nOnly the exact finite lower-case templates listed as `TELEGRAM_ONLY` are terminal static-audit records. They create no Web route, browser action, Web Workboard item, API request, provider call, output/delivery, payment/refund/ledger mutation or runtime claim. Every other `pipe|*` and `task|*` source remains `WORKBOARD_TASK_SOURCE_REVIEW_REQUIRED` until a workflow-specific Web-native owner/role contract exists. It cannot open `/workboard` or an Admin route; navigate/reset the browser; receive/replay a Bot job/task ID, stage/status value or handoff prompt; update canonical Bot production state; invoke a provider; expose an output; send a delivery; mutate a payment/refund/ledger record; or claim completion. A future Web Workboard must start from its own signed staff session, server-side role checks, CSRF, confirmation/idempotency/audit rules for writes, and independently owned Web records or a separately reviewed redacted bridge/read-model. It must never accept or replay a Bot callback or Telegram production state.\n",
     )
     write(
         "CREATIVE_VARIANT_CALLBACK_CONTRACT.md",
