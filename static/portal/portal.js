@@ -24439,7 +24439,9 @@
     const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
     const compatibilityGuarded = data.compatibility_guarded === true;
     const module = adminModuleKey(page, context);
-    const pageClass = module === "audit" ? " portal-admin-audit" : "";
+    const pageClass = module === "audit"
+      ? " portal-admin-audit"
+      : (module === "runtime" ? " portal-admin-runtime" : "");
     // Audit Explorer is Web-native and its endpoint performs the canonical
     // admin check itself. It must not be disabled just because the optional
     // Bot/Core Bridge read adapter is unavailable.
