@@ -13257,6 +13257,7 @@ body {
   }
 }
 
+/* Final light Partner Readiness surface */
 /* Partner Readiness is a dense, private customer workflow: one primary form,
    one status rail and two compact server-owned timelines. It deliberately
    reuses the shared teal/cyan tokens and does not introduce referral, CRM or
