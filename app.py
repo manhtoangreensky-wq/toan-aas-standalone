@@ -62,6 +62,7 @@ import copyfast_notification_center
 import copyfast_operations_desk
 import copyfast_finance_planning
 import copyfast_partner_crm
+import copyfast_partner_readiness
 import copyfast_prompt_library
 import copyfast_prompt_studio
 import copyfast_project_packages
@@ -385,6 +386,10 @@ WORKBOARD_BODY_MAX_BYTES = 128 * 1024
 # Partner & Lead CRM stores compact signed-account metadata and private notes;
 # it has no attachment, payout, referral, provider or contact-delivery body.
 PARTNER_CRM_BODY_MAX_BYTES = 16 * 1024
+# Partner Readiness accepts only one compact, authored profile payload. This
+# raw cap executes before CSRF/Pydantic/SQLite; it never opens a directory,
+# matching, contact, referral, payment or provider surface.
+PARTNER_READINESS_BODY_MAX_BYTES = 16 * 1024
 # First-run Workspace Setup is an enum-only preference receipt. Its small
 # pre-parse cap protects the signed, CSRF-protected mutation from oversized
 # chunked JSON without turning it into a generic profile/import endpoint.
@@ -490,6 +495,7 @@ class PromptLibraryBodyLimitMiddleware:
         analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
         workboard_max_bytes: int = WORKBOARD_BODY_MAX_BYTES,
         partner_crm_max_bytes: int = PARTNER_CRM_BODY_MAX_BYTES,
+        partner_readiness_max_bytes: int = PARTNER_READINESS_BODY_MAX_BYTES,
         workspace_setup_max_bytes: int = WORKSPACE_SETUP_BODY_MAX_BYTES,
         starter_kits_max_bytes: int = STARTER_KITS_BODY_MAX_BYTES,
         autopilot_tick_max_bytes: int = AUTOPILOT_TICK_BODY_MAX_BYTES,
@@ -531,6 +537,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
         self.workboard_max_bytes = int(workboard_max_bytes)
         self.partner_crm_max_bytes = int(partner_crm_max_bytes)
+        self.partner_readiness_max_bytes = int(partner_readiness_max_bytes)
         self.workspace_setup_max_bytes = int(workspace_setup_max_bytes)
         self.starter_kits_max_bytes = int(starter_kits_max_bytes)
         self.autopilot_tick_max_bytes = int(autopilot_tick_max_bytes)
@@ -597,6 +604,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/analytics-workspace/")
                 or path.startswith("/api/v1/workboard/")
                 or path.startswith("/api/v1/partner-crm/")
+                or path.startswith("/api/v1/partner-readiness/")
                 or path in WORKSPACE_SETUP_API_PATHS
                 or path.startswith(f"{STARTER_KITS_API_PREFIX}/")
                 or path == "/internal/v1/operations/tick"
@@ -678,6 +686,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.workboard_max_bytes
         if path.startswith("/api/v1/partner-crm/"):
             return self.partner_crm_max_bytes
+        if path.startswith("/api/v1/partner-readiness/"):
+            return self.partner_readiness_max_bytes
         if path in WORKSPACE_SETUP_API_PATHS:
             return self.workspace_setup_max_bytes
         if path.startswith(f"{STARTER_KITS_API_PREFIX}/"):
@@ -750,6 +760,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_analytics_workspace = path.startswith("/api/v1/analytics-workspace/")
         is_workboard = path.startswith("/api/v1/workboard/")
         is_partner_crm = path.startswith("/api/v1/partner-crm/")
+        is_partner_readiness = path.startswith("/api/v1/partner-readiness/")
         is_workspace_setup = path in WORKSPACE_SETUP_API_PATHS
         is_starter_kits = path.startswith(f"{STARTER_KITS_API_PREFIX}/")
         is_autopilot_tick = path == "/internal/v1/operations/tick"
@@ -805,6 +816,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_content_handoff
             else copyfast_partner_crm._boundary(lead_persisted=False)
             if is_partner_crm
+            else copyfast_partner_readiness._boundary(profile_persisted=False)
+            if is_partner_readiness
             else copyfast_workspace_setup._boundary(profile_persisted=False)
             if is_workspace_setup
             else copyfast_starter_kits._boundary()
@@ -857,6 +870,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_content_handoff
                     else "Dữ liệu Partner & Lead CRM vượt giới hạn kích thước an toàn."
                     if is_partner_crm
+                    else "Dữ liệu Partner Readiness vượt giới hạn kích thước an toàn."
+                    if is_partner_readiness
                     else "Dữ liệu thiết lập Workspace vượt giới hạn kích thước an toàn."
                     if is_workspace_setup
                     else "Xác nhận Starter Kit vượt giới hạn kích thước an toàn."
@@ -942,6 +957,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_content_handoff
                     else "WEB_PARTNER_CRM_BODY_TOO_LARGE"
                     if is_partner_crm
+                    else "WEB_PARTNER_READINESS_BODY_TOO_LARGE"
+                    if is_partner_readiness
                     else "WEB_WORKSPACE_SETUP_BODY_TOO_LARGE"
                     if is_workspace_setup
                     else "WEB_STARTER_KITS_BODY_TOO_LARGE"
@@ -1128,6 +1145,7 @@ app.add_middleware(
     analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
     workboard_max_bytes=WORKBOARD_BODY_MAX_BYTES,
     partner_crm_max_bytes=PARTNER_CRM_BODY_MAX_BYTES,
+    partner_readiness_max_bytes=PARTNER_READINESS_BODY_MAX_BYTES,
     workspace_setup_max_bytes=WORKSPACE_SETUP_BODY_MAX_BYTES,
     starter_kits_max_bytes=STARTER_KITS_BODY_MAX_BYTES,
     autopilot_tick_max_bytes=AUTOPILOT_TICK_BODY_MAX_BYTES,
@@ -1516,6 +1534,20 @@ async def security_headers(request: Request, call_next):
     # ASR, translation, TTS, dubbing, provider or media capability.
     subtitle_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/subtitle-studio/")
     subtitle_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/subtitle-studio/")
+    # Partner Readiness persists one private signed-owner service-readiness
+    # profile. These route-family limits are intentionally fixed before any
+    # database/session work and do not authorize matching, contact, referral,
+    # Bot/bridge, provider, job, wallet, Xu, payment, PayOS or delivery.
+    partner_readiness_interest = request.method == "POST" and request.url.path in {
+        "/api/v1/partner-readiness/profile/interest",
+        "/api/v1/partner-readiness/profile/interest/",
+    }
+    partner_readiness_write = (
+        request.method in {"POST", "PATCH"}
+        and request.url.path.startswith("/api/v1/partner-readiness/")
+        and not partner_readiness_interest
+    )
+    partner_readiness_read = request.method == "GET" and request.url.path.startswith("/api/v1/partner-readiness/")
     # Image Creative Studio is a signed-account text/reference workspace.
     # Its fixed family buckets prevent repeated browser authoring requests
     # from reaching SQLite unchecked; they do not enable image processing.
@@ -1762,6 +1794,12 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if subtitle_studio_read:
         rate_limit = 120
+    if partner_readiness_read:
+        rate_limit = 120
+    if partner_readiness_write:
+        rate_limit = 30
+    if partner_readiness_interest:
+        rate_limit = 12
     if image_studio_write:
         rate_limit = 40
     if image_studio_read:
@@ -1878,6 +1916,9 @@ async def security_headers(request: Request, call_next):
             else "video-studio-read" if video_studio_read
             else "subtitle-studio-write" if subtitle_studio_write
             else "subtitle-studio-read" if subtitle_studio_read
+            else "partner-readiness-interest" if partner_readiness_interest
+            else "partner-readiness-write" if partner_readiness_write
+            else "partner-readiness-read" if partner_readiness_read
             else "image-studio-write" if image_studio_write
             else "image-studio-read" if image_studio_read
             else "document-workspace-write" if document_workspace_write
@@ -1963,6 +2004,9 @@ async def security_headers(request: Request, call_next):
             is_partner_crm_consultation_request = (
                 partner_crm_consultation_preview or partner_crm_consultation_confirm
             )
+            is_partner_readiness_request = (
+                partner_readiness_read or partner_readiness_write or partner_readiness_interest
+            )
             is_mailbox_confirmation = request.url.path in {
                 "/api/v1/auth/email-verification/confirm",
                 "/api/v1/auth/password-recovery/confirm",
@@ -1974,6 +2018,8 @@ async def security_headers(request: Request, call_next):
                     data=(
                         copyfast_partner_crm._boundary(lead_persisted=False)
                         if is_partner_crm_consultation_request
+                        else copyfast_partner_readiness._boundary(profile_persisted=False)
+                        if is_partner_readiness_request
                         else copyfast_chat_workspace._boundary()
                         if is_chat_workspace_request
                         else copyfast_analytics_workspace._boundary()
@@ -2236,6 +2282,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         is_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
         is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
+        is_partner_readiness = request.url.path.startswith("/api/v1/partner-readiness/")
         return JSONResponse(
             envelope(
                 False,
@@ -2265,7 +2312,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_media_factory
                     else copyfast_quick_image_planner._boundary()
                     if is_quick_image_planner
-                    else copyfast_document_workspace._boundary() if is_document_workspace else None
+                    else copyfast_document_workspace._boundary() if is_document_workspace
+                    else copyfast_partner_readiness._boundary(profile_persisted=False) if is_partner_readiness else None
                 ),
                 status_name="failed",
                 error_code=error,
@@ -2288,6 +2336,7 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
             STARTER_KITS_API_PREFIX,
             f"{STARTER_KITS_API_PREFIX}/",
         }
+        is_partner_readiness = request.url.path.startswith("/api/v1/partner-readiness/")
         return JSONResponse(
             envelope(
                 False,
@@ -2317,7 +2366,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if request.url.path.startswith("/api/v1/media-factory/")
                     else copyfast_quick_image_planner._boundary()
                     if request.url.path.startswith("/api/v1/quick-image-planner/")
-                    else copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/") else None
+                    else copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/")
+                    else copyfast_partner_readiness._boundary(profile_persisted=False) if is_partner_readiness else None
                 ),
                 status_name="failed",
                 error_code="REQUEST_INVALID",
@@ -2480,6 +2530,7 @@ app.include_router(copyfast_governance.router)
 app.include_router(copyfast_admin_document_archive.router)
 app.include_router(copyfast_workboard.router)
 app.include_router(copyfast_partner_crm.router)
+app.include_router(copyfast_partner_readiness.router)
 app.include_router(copyfast_workspace_setup.router)
 app.include_router(copyfast_starter_kits.router)
 app.include_router(copyfast_support.router)
