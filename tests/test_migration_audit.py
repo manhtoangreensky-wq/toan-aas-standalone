@@ -890,8 +890,10 @@ def test_verify_web_evidence_rejects_clean_source_with_inconsistent_fingerprint_
     preflight_path.write_text(json.dumps(preflight), encoding="utf-8")
     inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="fingerprint"):
+    with pytest.raises(ValueError, match="fingerprint") as mismatch:
         audit.verify_web_evidence(web_root, report_dir, web_sha)
+    assert "recorded=" in str(mismatch.value)
+    assert "current=" in str(mismatch.value)
 
 
 def test_verify_web_evidence_round_trips_custom_report_and_docs_roots(tmp_path: Path) -> None:

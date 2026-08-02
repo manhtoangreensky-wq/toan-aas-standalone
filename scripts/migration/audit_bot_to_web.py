@@ -14476,7 +14476,11 @@ def verify_web_evidence(
     current_inventory = _summarize_inventory("webapp", web_root, excluded_source_roots=excluded_roots)
     current_fingerprint = str(current_inventory.get("source_fingerprint_sha256") or "")
     if current_fingerprint != preflight_fingerprint:
-        raise ValueError("Migration Web evidence fingerprint does not match the current eligible source")
+        raise ValueError(
+            "Migration Web evidence fingerprint does not match the current eligible source "
+            f"(recorded={preflight_fingerprint[:12]}, current={current_fingerprint[:12]}, "
+            f"files={current_inventory.get('source_files_scanned', 0)})"
+        )
     return {
         "expected_sha": expected,
         "recorded_audit_sha": recorded_audit_sha,
