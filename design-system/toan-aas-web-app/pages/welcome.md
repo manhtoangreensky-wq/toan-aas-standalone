@@ -24,7 +24,7 @@ action has already happened.
 ## Information hierarchy
 
 1. Header: TOAN AAS mark, three in-page anchors, reviewed locale switcher,
-   sign-in/account action and one teal primary CTA.
+   Aura light/dark switcher, sign-in/account action and one teal primary CTA.
 2. Hero: one direct product statement, one short factual explanation, two
    real route CTAs, three concise trust statements and a workflow preview.
 3. Studios: six real Web App routes grouped as a compact, even grid; every
@@ -44,8 +44,8 @@ action has already happened.
   dedicated public `lang` query value.  It is display-only, not persisted,
   does not read a Telegram locale and never changes workflow language.
 - At 920px collapse the hero to one column and place the preview after the
-  copy.  At 600px retain 44px controls, safe horizontal padding and no
-  horizontal overflow.  The locale selector must remain discoverable without
-  crowding the two primary account actions.
+  copy. At 600px retain 44px controls, safe horizontal padding and no
+  horizontal overflow. At 420px keep the locale selector and Aura switcher in
+  the header, while the duplicate nav CTA yields to the real hero CTA below.
 - Keep header, CTA and proof text aligned to the same content container; do
   not centre unrelated content inside cards just to fill space.

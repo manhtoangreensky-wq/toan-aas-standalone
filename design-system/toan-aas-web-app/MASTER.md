@@ -80,6 +80,34 @@ public and signed surfaces. The signed workspace is light and operational;
 only its navigation rail stays deep teal. Purple/pink generation gradients are
 not part of the TOAN AAS system.
 
+### Aura dual-theme extension
+
+The shared Aura layer adds a real, presentation-only dark mode without
+creating a second product language:
+
+| Role | Light | Dark |
+| --- | --- | --- |
+| App canvas | `#F3FBFC` | `#0B132B` |
+| Working surface | `#FFFFFF` | `#1C2541` |
+| Raised surface | `#FFFFFF` | `#243252` |
+| Primary text | `#073A45` | `#F0FBFF` |
+| Muted text | `#456B77` | `#B9CBD7` |
+| Primary action | `#0F766E` | `#14B8A6` |
+| Context / focus | `#0369A1` | `#38BDF8` |
+
+- `static/portal/portal-theme.css` owns the token mapping and final
+  route-safe surface overrides. Components consume semantic `--portal-*`
+  tokens; no page creates its own dark palette.
+- `static/portal/portal-theme.js` applies `light`, `dark` or `system` before
+  the shell renders. Its preference is browser-local presentation state only:
+  it is never sent to Web APIs, Core Bridge, Telegram, wallets, PayOS,
+  providers or jobs.
+- The Aura switcher is a labelled 44px control in the public, access and
+  signed headers. It cycles `light → dark → system`, exposes pressed state for
+  the effective dark mode, has a visible focus ring and honors reduced motion.
+- On a 375px public header, locale and theme controls remain visible; the
+  duplicate header CTA yields to the real CTA directly below in the hero.
+
 ### Typography
 
 - **Heading Font:** Inter
