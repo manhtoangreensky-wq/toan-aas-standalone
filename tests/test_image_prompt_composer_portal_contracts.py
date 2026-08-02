@@ -206,9 +206,11 @@ def test_image_prompt_composer_backend_remains_request_only_without_durable_muta
     assert '@router.post("/tools/prompt-composer")' in ROUTER
     assert "PROMPT_COMPOSER_GOAL_CODES" in ROUTER
     assert "PROMPT_COMPOSER_STYLE_PRESETS" in ROUTER
+    assert "PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG" in ROUTER
     assert "PROMPT_COMPOSER_RATIO_ALIASES" in ROUTER
     assert "from copyfast_bridge import" not in ROUTER
     assert "import httpx" not in ROUTER
+    assert "imgtool|prompt_style" not in ROUTER
     assert "import requests" not in ROUTER
 
     start = ROUTER.index('@router.post("/tools/prompt-composer")')

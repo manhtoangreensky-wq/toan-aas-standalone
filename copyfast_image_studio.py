@@ -38,6 +38,43 @@ PROMPT_COMPOSER_GOAL_CODES = frozenset({"product", "ad", "cinematic", "custom"})
 PROMPT_COMPOSER_RATIOS = frozenset({"1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"})
 PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
 PROMPT_COMPOSER_STYLE_PRESETS = frozenset({"auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"})
+PROMPT_COMPOSER_STYLE_SUGGESTION_GOAL_CODES = frozenset({"product", "ad", "cinematic"})
+PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG = {
+    "vi": {
+        "product": {
+            "suggestion_1": "Studio sạch đẹp",
+            "suggestion_2": "Luxury showroom",
+            "suggestion_3": "Lifestyle đời thường",
+        },
+        "ad": {
+            "suggestion_1": "Bán hàng trực tiếp",
+            "suggestion_2": "Premium brand",
+            "suggestion_3": "Viral/TikTok",
+        },
+        "cinematic": {
+            "suggestion_1": "Cinematic ánh sáng mạnh",
+            "suggestion_2": "Sci-fi/công nghệ tương lai",
+            "suggestion_3": "Fantasy/cyberpunk",
+        },
+    },
+    "en": {
+        "product": {
+            "suggestion_1": "Clean studio",
+            "suggestion_2": "Luxury showroom",
+            "suggestion_3": "Lifestyle everyday scene",
+        },
+        "ad": {
+            "suggestion_1": "Direct sales",
+            "suggestion_2": "Premium brand",
+            "suggestion_3": "Viral/TikTok",
+        },
+        "cinematic": {
+            "suggestion_1": "Strong cinematic lighting",
+            "suggestion_2": "Sci-fi/future tech",
+            "suggestion_3": "Fantasy/cyberpunk",
+        },
+    },
+}
 PROMPT_COMPOSER_RATIO_ALIASES = {
     "1:1": "1:1", "1x1": "1:1", "square": "1:1", "vuong": "1:1", "vuông": "1:1",
     "9:16": "9:16", "9x16": "9:16", "vertical": "9:16", "doc": "9:16", "dọc": "9:16", "reels": "9:16", "tiktok": "9:16",
@@ -756,53 +793,8 @@ def _prompt_composer_style_preset(goal_code: str, language: str, style_preset: s
 
     if style_preset == "auto":
         return _prompt_composer_default_style(goal_code, language)
-    catalog = {
-        "vi": {
-            "product": {
-                "suggestion_1": "studio sáng rõ, chủ thể trung tâm",
-                "suggestion_2": "premium tối giản, chất liệu và chi tiết rõ",
-                "suggestion_3": "editorial sạch, khoảng trống cho caption",
-            },
-            "ad": {
-                "suggestion_1": "hero thương hiệu rõ lợi ích, điểm nhìn tập trung",
-                "suggestion_2": "premium hiện đại, ánh sáng kiểm soát, CTA có khoảng thở",
-                "suggestion_3": "social nổi bật, bố cục sạch, thông điệp dễ quét",
-            },
-            "cinematic": {
-                "suggestion_1": "cinematic tương phản vừa, điểm nhìn rõ",
-                "suggestion_2": "cinematic premium, chiều sâu lớp cảnh và ánh sáng có chủ đích",
-                "suggestion_3": "cinematic không khí, khoảng trống cho tiêu đề hợp lệ",
-            },
-            "custom": {
-                "suggestion_1": "tối giản, chủ thể trung tâm, ánh sáng cân bằng",
-                "suggestion_2": "premium hiện đại, chi tiết có chủ đích, nền gọn",
-                "suggestion_3": "editorial sạch, màu sắc hài hòa, khoảng thở rõ",
-            },
-        },
-        "en": {
-            "product": {
-                "suggestion_1": "bright clean studio, centered subject",
-                "suggestion_2": "minimal premium, clear material and detail",
-                "suggestion_3": "clean editorial, caption-ready negative space",
-            },
-            "ad": {
-                "suggestion_1": "benefit-led brand hero, focused focal point",
-                "suggestion_2": "modern premium, controlled lighting, CTA breathing room",
-                "suggestion_3": "eye-catching social, clean composition, scannable message",
-            },
-            "cinematic": {
-                "suggestion_1": "cinematic moderate contrast, clear focal point",
-                "suggestion_2": "premium cinematic, layered depth and deliberate lighting",
-                "suggestion_3": "atmospheric cinematic, room for authorized title treatment",
-            },
-            "custom": {
-                "suggestion_1": "minimal, centered subject, balanced lighting",
-                "suggestion_2": "modern premium, deliberate detail, tidy background",
-                "suggestion_3": "clean editorial, balanced color, clear breathing room",
-            },
-        },
-    }
-    return catalog[language][goal_code][style_preset]
+    catalog_goal = goal_code if goal_code in PROMPT_COMPOSER_STYLE_SUGGESTION_GOAL_CODES else "product"
+    return PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG[language][catalog_goal][style_preset]
 
 
 def _prompt_composer_resolved_style(payload: ImagePromptComposerRequest) -> str:
