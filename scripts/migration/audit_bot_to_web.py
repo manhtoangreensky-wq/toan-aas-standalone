@@ -14311,7 +14311,10 @@ def _web_inventory_excluded_roots(web_root: Path, *configured_roots: Path) -> tu
     )
 
 
-def _web_relative_path_is_audit_excluded(relative: str) -> bool:
+def _web_relative_path_is_audit_excluded(
+    relative: str,
+    configured_excluded_relative_paths: Iterable[PurePosixPath] = (),
+) -> bool:
     """Return whether a Git status path lies wholly outside Web runtime source."""
 
     candidate = PurePosixPath(str(relative or "").replace("\\", "/").lstrip("./"))
@@ -14321,13 +14324,25 @@ def _web_relative_path_is_audit_excluded(relative: str) -> bool:
         return True
     return any(
         candidate == excluded_path or excluded_path in candidate.parents
-        for excluded_path in (PurePosixPath(excluded.as_posix()) for excluded in STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS)
+        for excluded_path in (
+            *(PurePosixPath(excluded.as_posix()) for excluded in STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS),
+            *configured_excluded_relative_paths,
+        )
     )
 
 
-def _web_worktree_state(root: Path) -> str:
+def _web_worktree_state(root: Path, excluded_source_roots: Iterable[Path] = ()) -> str:
     """Return clean/dirty for eligible Web source, ignoring audit-only paths."""
 
+    root = root.resolve()
+    configured_excluded_relative_paths: list[PurePosixPath] = []
+    for excluded_root in excluded_source_roots:
+        resolved_excluded_root = excluded_root.resolve()
+        if not _path_is_within(resolved_excluded_root, root) or resolved_excluded_root == root:
+            continue
+        configured_excluded_relative_paths.append(
+            PurePosixPath(resolved_excluded_root.relative_to(root).as_posix())
+        )
     status_code, status = _git_read_raw(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     if status_code != 0:
         return "status_unavailable"
@@ -14344,13 +14359,21 @@ def _web_worktree_state(root: Path) -> str:
             if index >= len(records):
                 return "status_unavailable"
             paths.append(records[index])
-        if any(not _web_relative_path_is_audit_excluded(path) for path in paths):
+        if any(
+            not _web_relative_path_is_audit_excluded(path, configured_excluded_relative_paths)
+            for path in paths
+        ):
             return "dirty"
         index += 1
     return "clean"
 
 
-def _web_revision_context(root: Path, source_fingerprint_sha256: str, requested_sha: str = "") -> dict[str, str]:
+def _web_revision_context(
+    root: Path,
+    source_fingerprint_sha256: str,
+    requested_sha: str = "",
+    excluded_source_roots: Iterable[Path] = (),
+) -> dict[str, str]:
     """Describe the static Web source snapshot without mutating the checkout."""
 
     requested = str(requested_sha or "").strip()
@@ -14365,7 +14388,7 @@ def _web_revision_context(root: Path, source_fingerprint_sha256: str, requested_
     if head_status != 0 or not re.fullmatch(r"[0-9a-f]{40}", head):
         return context
     context["checkout_sha"] = head
-    context["working_tree_state"] = _web_worktree_state(root)
+    context["working_tree_state"] = _web_worktree_state(root, excluded_source_roots)
     if not requested:
         context["requested_relation"] = "not_requested"
         return context
@@ -14376,6 +14399,7 @@ def _web_revision_context(root: Path, source_fingerprint_sha256: str, requested_
     if requested_status != 0 or not re.fullmatch(r"[0-9a-f]{40}", resolved_requested):
         context["requested_relation"] = "requested_revision_unavailable"
         return context
+    context["requested_sha"] = resolved_requested
     context["requested_relation"] = "exact" if head == resolved_requested else "different"
     return context
 
@@ -14392,17 +14416,29 @@ def _read_json_object(path: Path, label: str) -> dict[str, Any]:
     return payload
 
 
-def verify_web_evidence(web_root: Path, report_dir: Path, expected_sha: str) -> dict[str, str]:
+def verify_web_evidence(
+    web_root: Path,
+    report_dir: Path,
+    expected_sha: str,
+    docs_dir: Path | None = None,
+) -> dict[str, str]:
     """Verify committed Web evidence without inspecting or importing Bot code."""
 
     web_root = web_root.resolve()
     report_dir = report_dir.resolve()
+    docs_dir = (docs_dir or web_root / "docs" / "migration").resolve()
     expected = str(expected_sha or "").strip()
     if not web_root.is_dir():
         raise ValueError(f"Web root does not exist: {web_root}")
     if not re.fullmatch(r"[0-9a-f]{40}", expected):
         raise ValueError("Expected Web revision SHA is invalid")
-    context = _web_revision_context(web_root, "", expected)
+    excluded_roots = _web_inventory_excluded_roots(web_root, report_dir, docs_dir)
+    context = _web_revision_context(
+        web_root,
+        "",
+        expected,
+        excluded_source_roots=excluded_roots,
+    )
     if context["checkout_sha"] != expected or context["requested_relation"] != "exact":
         raise ValueError("Web checkout does not match the expected revision")
     if context["working_tree_state"] != "clean":
@@ -14414,6 +14450,8 @@ def verify_web_evidence(web_root: Path, report_dir: Path, expected_sha: str) -> 
     revision = webapp.get("revision") if isinstance(webapp, dict) else None
     if not isinstance(revision, dict):
         raise ValueError("Migration preflight has no Web revision evidence")
+    if str(revision.get("working_tree_state") or "") != "clean":
+        raise ValueError("Migration preflight Web audit source state is not clean")
     recorded_audit_sha = str(revision.get("checkout_sha") or "")
     if not re.fullmatch(r"[0-9a-f]{40}", recorded_audit_sha):
         raise ValueError("Migration preflight Web audit revision is invalid")
@@ -14432,7 +14470,6 @@ def verify_web_evidence(web_root: Path, report_dir: Path, expected_sha: str) -> 
     inventory_fingerprint = str(web_inventory.get("source_fingerprint_sha256") or "")
     if not re.fullmatch(r"[0-9a-f]{64}", preflight_fingerprint) or preflight_fingerprint != inventory_fingerprint:
         raise ValueError("Migration Web evidence fingerprint is invalid or inconsistent")
-    excluded_roots = _web_inventory_excluded_roots(web_root, report_dir)
     current_inventory = _summarize_inventory("webapp", web_root, excluded_source_roots=excluded_roots)
     current_fingerprint = str(current_inventory.get("source_fingerprint_sha256") or "")
     if current_fingerprint != preflight_fingerprint:
@@ -14520,6 +14557,7 @@ def run_audit(
                     web_root,
                     str(web.get("source_fingerprint_sha256") or ""),
                     web_revision_sha,
+                    excluded_source_roots=web_output_roots,
                 ),
             },
         }
@@ -14560,7 +14598,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.verify_web_evidence:
-            verification = verify_web_evidence(args.web_root, args.report_dir, args.web_revision)
+            verification = verify_web_evidence(args.web_root, args.report_dir, args.web_revision, args.docs_dir)
             print(json.dumps({"ok": True, "verification": verification}, ensure_ascii=False))
             return 0
         if args.bot_root is None or not args.bot_baseline_sha:
