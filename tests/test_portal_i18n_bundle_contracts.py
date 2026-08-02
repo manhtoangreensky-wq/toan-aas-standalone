@@ -230,6 +230,44 @@ for (const locale of expected) {
   }
 }
 
+const adminSecurityAccessKeys = [
+  "adminGeneric.securityAccess.state.loadingTitle",
+  "adminGeneric.securityAccess.state.integrityGuardedTitle",
+  "adminGeneric.securityAccess.metric.mfaRuntime.label",
+  "adminGeneric.securityAccess.panel.rateLimit.title",
+  "adminGeneric.securityAccess.boundary.0",
+  "adminGeneric.securityAccess.route.securityTitle",
+  "adminGeneric.securityAccess.route.accessDescription"
+];
+for (const locale of expected) {
+  for (const key of adminSecurityAccessKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
+const reviewedAdminSecurityAccessCopy = {
+  vi: {
+    loadingTitle: "Đang xác minh Security & Access Posture",
+    boundary: "Chỉ hiển thị aggregate Web-native; không có account, email, session, token, secret, IP hoặc audit detail."
+  },
+  en: {
+    loadingTitle: "Verifying Security & Access Posture",
+    boundary: "Only Web-native aggregates are shown; no accounts, emails, sessions, tokens, secrets, IP addresses, or audit details."
+  },
+  zh: {
+    loadingTitle: "正在验证安全与访问态势",
+    boundary: "仅显示 Web 原生汇总数据；不提供账户、邮箱、会话、令牌、密钥、IP 或审计详情。"
+  }
+};
+for (const [locale, reviewed] of Object.entries(reviewedAdminSecurityAccessCopy)) {
+  if (api.t("adminGeneric.securityAccess.state.loadingTitle", locale) !== reviewed.loadingTitle) {
+    throw new Error(`Security loading copy diverged for ${locale}`);
+  }
+  if (api.t("adminGeneric.securityAccess.boundary.0", locale) !== reviewed.boundary) {
+    throw new Error(`Security boundary copy diverged for ${locale}`);
+  }
+}
+
 const customerAuthoringKeys = [
   "workspaceDrafts.page.title", "workspaceDrafts.page.description",
   "workspaceDrafts.filter.searchLabel", "workspaceDrafts.pagination.range",
