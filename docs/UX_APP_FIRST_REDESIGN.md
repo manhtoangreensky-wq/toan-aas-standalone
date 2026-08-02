@@ -15,6 +15,11 @@ record, or an unavailable provider look ready.
 
 - **Style:** Swiss-modern productivity workspace with a compact, Odoo-like
   information hierarchy. It uses a light teal application canvas with white working surfaces rather than a decorative "AI landing" treatment.
+- **Theme modes:** Aura light/dark pairing uses the same semantic teal/sky
+  system in both modes. Light is cyan canvas + white surfaces; dark is slate
+  navy `#0B132B` + `#1C2541` surfaces with restrained teal/sky highlights.
+  The browser preference is presentation-only and never changes account,
+  identity, capability or workflow data.
 - **Brand expression:** deep teal is reserved for the navigation rail; one
   teal action accent and sky-blue context remain semantic, never the only way
   a state is communicated.
@@ -49,6 +54,9 @@ route manifest. Browser state cannot disclose an admin route or grant access.
   shell/PWA cache as a loading fallback.
 - The page retains its existing semantic headings, skip link, keyboard focus
   flow, dialog focus handling and signed-session guards.
+- The header Aura switcher has an accessible label and 44px mobile target.
+  It cycles light/dark/system without a page reload; all color transitions are
+  disabled for users requesting reduced motion.
 
 ## Delivery order
 

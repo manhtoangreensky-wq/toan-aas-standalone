@@ -5,6 +5,7 @@
   color-scheme: light;
   --portal-app-canvas: #f3fbfc;
   --portal-surface-light: #ffffff;
+  --portal-surface-raised: var(--portal-surface-light);
   --portal-action: #0f766e;
   --portal-action-hover: #115e59;
   --portal-on-action: #ffffff;
@@ -32,7 +33,7 @@
   --portal-accent: var(--portal-brand);
   --portal-accent-hover: var(--portal-brand-hover);
   --portal-accent-deep: var(--portal-action);
-  --portal-accent-ink: var(--portal-ink);
+  --portal-accent-ink: var(--portal-on-action);
   --portal-info: var(--portal-context);
   --portal-focus: var(--portal-context);
   --portal-warning: #a16207;
@@ -70,6 +71,55 @@
   --portal-landing-studio-hover-border: #5dbfc6;
   --portal-landing-footer-brand-text: #f3ffff;
   --portal-landing-footer-muted: #b9dee3;
+  /* Aura dark primitives stay in the canonical token owner.  The runtime
+     selector below only remaps semantic aliases, so a route never needs raw
+     colours to render either theme. */
+  --portal-dark-app-canvas: #0b132b;
+  --portal-dark-surface-light: #1c2541;
+  --portal-dark-surface-raised: #243252;
+  --portal-dark-surface-strong: #17213a;
+  --portal-dark-surface-soft: #14203a;
+  --portal-dark-ink: #f0fbff;
+  --portal-dark-muted: #b9cbd7;
+  --portal-dark-muted-strong: #d4e4eb;
+  --portal-dark-border: rgba(154, 211, 222, .22);
+  --portal-dark-border-strong: #4fd1c5;
+  --portal-dark-action: #14b8a6;
+  --portal-dark-action-hover: #2dd4bf;
+  --portal-dark-on-action: #062c35;
+  --portal-dark-brand: #2dd4bf;
+  --portal-dark-brand-hover: #5eead4;
+  --portal-dark-context: #38bdf8;
+  --portal-dark-focus: #7dd3fc;
+  --portal-dark-warning: #fbbf24;
+  --portal-dark-danger: #fca5a5;
+  --portal-dark-success: #86efac;
+  --portal-dark-rail: var(--portal-dark-app-canvas);
+  --portal-dark-rail-surface: var(--portal-dark-surface-soft);
+  --portal-dark-rail-hover: #1c3552;
+  --portal-dark-rail-border: rgba(125, 211, 252, .2);
+  --portal-dark-rail-text: #effcff;
+  --portal-dark-rail-muted: #b5d6dd;
+  --portal-dark-bg-deep: #070d20;
+  --portal-dark-border-subtle: rgba(154, 211, 222, .14);
+  --portal-dark-accent-border: #2a9eaa;
+  --portal-dark-accent-soft: rgba(45, 212, 191, .12);
+  --portal-dark-hover-surface: #263a5a;
+  --portal-dark-landing-brand-border: rgba(94, 234, 212, .52);
+  --portal-dark-landing-kicker-border: rgba(125, 211, 252, .45);
+  --portal-dark-landing-preview-border: rgba(125, 211, 252, .34);
+  --portal-dark-landing-callout-border: rgba(45, 212, 191, .42);
+  --portal-dark-landing-callout-surface: rgba(20, 184, 166, .1);
+  --portal-dark-landing-footer: #081125;
+  --portal-dark-control-disabled-surface: #152039;
+  --portal-dark-control-disabled-text: #7894a5;
+  --portal-dark-input-surface: #16213b;
+  --portal-dark-placeholder: #9bb8c5;
+  --portal-dark-shadow: 0 22px 58px rgba(0, 0, 0, .34);
+  --portal-dark-elevation-float: 0 16px 42px rgba(0, 0, 0, .42);
+  --portal-dark-canvas-glow-mint: rgba(45, 212, 191, .13);
+  --portal-dark-canvas-glow-sky: rgba(56, 189, 248, .09);
+  --portal-dark-table-hover: rgba(45, 212, 191, .1);
   --portal-shadow: 0 18px 44px rgba(2, 20, 29, .18);
   --portal-radius-lg: 16px;
   --portal-radius: 12px;
@@ -271,7 +321,7 @@ body {
    canvas and preserves the existing data-portal actions and route bindings. */
 .portal-body--auth,
 .portal-shell--auth {
-  color-scheme: light;
+  color-scheme: inherit;
   background: var(--portal-light-canvas);
   color: var(--portal-ink);
 }
@@ -599,7 +649,7 @@ body {
 .portal-body--landing,
 .portal-shell--landing,
 .portal-landing {
-  color-scheme: light;
+  color-scheme: inherit;
   background: var(--portal-light-canvas);
   color: var(--portal-ink);
 }
@@ -645,8 +695,8 @@ body {
 }
 
 .portal-landing .portal-button--primary {
-  background: var(--portal-accent);
-  color: var(--portal-accent-ink);
+  background: var(--portal-action);
+  color: var(--portal-on-action);
 }
 
 .portal-landing-hero {
@@ -1507,6 +1557,18 @@ body {
     display: none;
   }
 
+  .portal-header-actions .portal-theme-toggle-label { display: none; }
+
+  .portal-pwa-install-label { display: none; }
+
+  .portal-header-actions .portal-theme-toggle,
+  .portal-pwa-install-trigger {
+    width: 44px;
+    min-width: 44px;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
   .portal-session-chip {
     max-width: 190px;
   }
@@ -1556,6 +1618,10 @@ body {
   .portal-command-trigger-label,
   .portal-command-trigger kbd,
   .portal-pwa-install-label {
+    display: none;
+  }
+
+  .portal-header-actions > .portal-badge {
     display: none;
   }
 
@@ -2937,19 +3003,32 @@ body {
   .portal-auth-context { display: none; }
 }
 
-@media (max-width: 380px) {
-  .portal-auth-page--access .portal-auth-header { gap: 6px; }
-  .portal-auth-page--access .portal-auth-brand > span:last-child {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+@media (max-width: 390px) {
+  .portal-auth-page--access .portal-auth-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    row-gap: 8px;
+  }
+
+  .portal-auth-page--access .portal-auth-brand {
+    grid-column: 1;
+  }
+
+  .portal-auth-page--access .portal-auth-header-actions {
+    grid-column: 2;
+  }
+
+  .portal-auth-page--access .portal-auth-locale-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .portal-auth-page--access .portal-auth-locale-link {
+    flex: 1 1 0;
   }
 }
 
@@ -13546,5 +13625,304 @@ body {
   .portal-page.portal-partner-readiness .portal-partner-readiness-choice {
     transition: none;
     transform: none;
+  }
+}
+
+/* Aura dual-theme layer --------------------------------------------------
+   The Portal stays one product in either mode. These aliases are deliberately
+   semantic, so the Web shell, customer workspaces and ERP never fork their
+   route markup simply to show light or dark surfaces. */
+:root[data-portal-theme="dark"] {
+  color-scheme: dark;
+  --portal-app-canvas: var(--portal-dark-app-canvas);
+  --portal-surface-light: var(--portal-dark-surface-light);
+  --portal-surface-raised: var(--portal-dark-surface-raised);
+  --portal-surface-strong: var(--portal-dark-surface-strong);
+  --portal-surface-soft: var(--portal-dark-surface-soft);
+  --portal-ink: var(--portal-dark-ink);
+  --portal-text: var(--portal-ink);
+  --portal-muted: var(--portal-dark-muted);
+  --portal-muted-strong: var(--portal-dark-muted-strong);
+  --portal-border: var(--portal-dark-border);
+  --portal-border-strong: var(--portal-dark-border-strong);
+  --portal-action: var(--portal-dark-action);
+  --portal-action-hover: var(--portal-dark-action-hover);
+  --portal-on-action: var(--portal-dark-on-action);
+  --portal-brand: var(--portal-dark-brand);
+  --portal-brand-hover: var(--portal-dark-brand-hover);
+  --portal-context: var(--portal-dark-context);
+  --portal-focus: var(--portal-dark-focus);
+  --portal-warning: var(--portal-dark-warning);
+  --portal-danger: var(--portal-dark-danger);
+  --portal-success: var(--portal-dark-success);
+  --portal-rail: var(--portal-dark-rail);
+  --portal-rail-surface: var(--portal-dark-rail-surface);
+  --portal-rail-hover: var(--portal-dark-rail-hover);
+  --portal-rail-border: var(--portal-dark-rail-border);
+  --portal-rail-text: var(--portal-dark-rail-text);
+  --portal-rail-muted: var(--portal-dark-rail-muted);
+  --portal-bg: var(--portal-app-canvas);
+  --portal-bg-deep: var(--portal-dark-bg-deep);
+  --portal-chrome: var(--portal-surface-light);
+  --portal-surface: var(--portal-surface-light);
+  --portal-accent: var(--portal-brand);
+  --portal-accent-hover: var(--portal-brand-hover);
+  --portal-accent-deep: var(--portal-action);
+  --portal-accent-ink: var(--portal-on-action);
+  --portal-info: var(--portal-context);
+  --portal-light-canvas: var(--portal-app-canvas);
+  --portal-light-surface: var(--portal-surface-light);
+  --portal-light-soft: var(--portal-surface-soft);
+  --portal-light-border: var(--portal-border);
+  --portal-light-border-subtle: var(--portal-dark-border-subtle);
+  --portal-light-accent-border: var(--portal-dark-accent-border);
+  --portal-light-accent-soft: var(--portal-dark-accent-soft);
+  --portal-light-hover-surface: var(--portal-dark-hover-surface);
+  --portal-light-muted: var(--portal-muted);
+  --portal-light-action: var(--portal-brand);
+  --portal-landing-divider: var(--portal-border);
+  --portal-landing-brand-border: var(--portal-dark-landing-brand-border);
+  --portal-landing-kicker-border: var(--portal-dark-landing-kicker-border);
+  --portal-landing-preview-border: var(--portal-dark-landing-preview-border);
+  --portal-landing-callout-border: var(--portal-dark-landing-callout-border);
+  --portal-landing-callout-surface: var(--portal-dark-landing-callout-surface);
+  --portal-landing-studio-hover-border: var(--portal-dark-context);
+  --portal-landing-footer-brand-text: var(--portal-dark-rail-text);
+  --portal-landing-footer-muted: var(--portal-dark-rail-muted);
+  --portal-control-border: var(--portal-border);
+  --portal-control-surface: var(--portal-surface-light);
+  --portal-control-hover: var(--portal-dark-hover-surface);
+  --portal-control-disabled-border: var(--portal-dark-border-subtle);
+  --portal-control-disabled-surface: var(--portal-dark-control-disabled-surface);
+  --portal-control-disabled-text: var(--portal-dark-control-disabled-text);
+  --portal-input-surface: var(--portal-dark-input-surface);
+  --portal-table-divider: var(--portal-border);
+  --portal-nav-active-text: var(--portal-dark-rail-text);
+  --portal-nav-active-icon: var(--portal-dark-focus);
+  --portal-nav-hover-surface: var(--portal-dark-rail-hover);
+  --portal-light-placeholder: var(--portal-dark-placeholder);
+  --portal-light-disclosure-open-border: var(--portal-dark-border-strong);
+  --portal-shadow: var(--portal-dark-shadow);
+  --portal-elevation-float: var(--portal-dark-elevation-float);
+}
+
+html[data-portal-theme] {
+  background: var(--portal-app-canvas);
+}
+
+html[data-portal-theme] body,
+html[data-portal-theme] .portal-shell,
+html[data-portal-theme] .portal-main,
+html[data-portal-theme] .portal-header,
+html[data-portal-theme] .portal-mobile-nav,
+html[data-portal-theme] .portal-sidebar,
+html[data-portal-theme] .portal-landing,
+html[data-portal-theme] .portal-auth-page--access,
+html[data-portal-theme] .portal-card,
+html[data-portal-theme] .portal-command-dialog,
+html[data-portal-theme] :is(.portal-input, .portal-select, .portal-textarea) {
+  transition: background-color var(--portal-transition), border-color var(--portal-transition), color var(--portal-transition), box-shadow var(--portal-transition);
+}
+
+.portal-theme-toggle {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: var(--portal-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--portal-control-border);
+  border-radius: 999px;
+  background: var(--portal-control-surface);
+  color: var(--portal-ink);
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: border-color var(--portal-motion-fast) var(--portal-motion-ease-standard), background-color var(--portal-motion-fast) var(--portal-motion-ease-standard), color var(--portal-motion-fast) var(--portal-motion-ease-standard), box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard), transform var(--portal-motion-fast) var(--portal-motion-ease-standard);
+}
+
+.portal-theme-toggle:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-control-hover);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--portal-context) 13%, transparent);
+}
+
+.portal-theme-toggle:active { transform: translateY(1px); }
+
+.portal-theme-toggle:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
+.portal-theme-toggle-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--portal-context);
+}
+
+.portal-theme-toggle-icon .portal-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.portal-theme-toggle-label { min-width: 0; }
+
+.portal-auth-header-actions {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing),
+html[data-portal-theme="dark"] .portal-body,
+html[data-portal-theme="dark"] .portal-body--auth,
+html[data-portal-theme="dark"] .portal-body--landing,
+html[data-portal-theme="dark"] .portal-shell--auth,
+html[data-portal-theme="dark"] .portal-shell--landing,
+html[data-portal-theme="dark"] .portal-landing {
+  background: var(--portal-app-canvas);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
+  background: radial-gradient(circle at 86% -12%, var(--portal-dark-canvas-glow-mint), transparent 31rem), radial-gradient(circle at 12% 100%, var(--portal-dark-canvas-glow-sky), transparent 32rem), var(--portal-app-canvas);
+}
+
+html[data-portal-theme="dark"] .portal-header,
+html[data-portal-theme="dark"] .portal-mobile-nav,
+html[data-portal-theme="dark"] .portal-sidebar,
+html[data-portal-theme="dark"] .portal-auth-page--access .portal-auth-card,
+html[data-portal-theme="dark"] .portal-landing-preview,
+html[data-portal-theme="dark"] .portal-command-dialog {
+  background: var(--portal-surface-light);
+  border-color: var(--portal-border);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-sidebar {
+  background: var(--portal-rail);
+  border-right-color: var(--portal-rail-border);
+}
+
+html[data-portal-theme="dark"] .portal-card,
+html[data-portal-theme="dark"] .portal-page :is(.portal-card, .portal-module-card, .portal-action-card, .portal-summary-item, .portal-dashboard-draft, .portal-studio-card, .portal-metric, .portal-landing-studio, .portal-landing-trust-grid > article),
+html[data-portal-theme="dark"] .portal-page :is(.portal-notice, .portal-state, .portal-empty, .portal-form-section, .portal-table-wrap) {
+  background: var(--portal-surface-light);
+  border-color: var(--portal-border);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-page :is(.portal-card, .portal-module-card, .portal-action-card, .portal-summary-item, .portal-dashboard-draft, .portal-studio-card, .portal-metric, .portal-landing-studio, .portal-landing-trust-grid > article):hover {
+  border-color: var(--portal-border-strong);
+}
+
+html[data-portal-theme="dark"] .portal-page :is(.portal-card-title, .portal-summary-value, .portal-action-card-title, .portal-action-card-count, .portal-module-card-title, .portal-dashboard-draft strong, .portal-studio-card strong, .portal-section-heading h2, .portal-section-heading h3, h1, h2, h3, h4) {
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-page :is(.portal-card-subtitle, .portal-summary-key, .portal-action-card-body, .portal-action-card-link, .portal-module-card-footer, .portal-dashboard-draft small, .portal-studio-card p, .portal-studio-card .portal-badge, .portal-section-kicker, p, small, dt, .portal-form-note, .portal-field-help) {
+  color: var(--portal-muted);
+}
+
+html[data-portal-theme="dark"] :is(.portal-input, .portal-select, .portal-textarea) {
+  border-color: var(--portal-control-border);
+  background: var(--portal-input-surface);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] :is(.portal-input, .portal-select, .portal-textarea)::placeholder { color: var(--portal-light-placeholder); }
+
+html[data-portal-theme="dark"] :is(.portal-input, .portal-select, .portal-textarea):focus-visible,
+html[data-portal-theme="dark"] :is(.portal-button, .portal-theme-toggle, a, button, summary):focus-visible {
+  outline-color: var(--portal-focus);
+}
+
+html[data-portal-theme="dark"] .portal-button:not(.portal-button--primary),
+html[data-portal-theme="dark"] .portal-landing .portal-button--quiet {
+  border-color: var(--portal-control-border);
+  background: var(--portal-control-surface);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-button:not(.portal-button--primary):hover:not(:disabled),
+html[data-portal-theme="dark"] .portal-landing .portal-button--quiet:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-control-hover);
+}
+
+html[data-portal-theme="dark"] .portal-button--primary,
+html[data-portal-theme="dark"] .portal-sidebar-create {
+  border-color: var(--portal-action);
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
+html[data-portal-theme="dark"] .portal-button--primary:hover:not(:disabled),
+html[data-portal-theme="dark"] .portal-sidebar-create:hover {
+  border-color: var(--portal-action-hover);
+  background: var(--portal-action-hover);
+  color: var(--portal-on-action);
+}
+
+html[data-portal-theme="dark"] .portal-data-table :is(th, td),
+html[data-portal-theme="dark"] .portal-data-table td {
+  border-color: var(--portal-table-divider);
+  color: var(--portal-ink);
+}
+
+html[data-portal-theme="dark"] .portal-data-table tbody tr:hover { background: var(--portal-dark-table-hover); }
+
+html[data-portal-theme="dark"] .portal-landing :is(.portal-landing-brand strong, .portal-landing-hero h1, .portal-landing-section h2, .portal-landing-workflow h2, .portal-landing-trust h2) { color: var(--portal-ink); }
+
+html[data-portal-theme="dark"] .portal-landing :is(.portal-landing-brand small, .portal-landing-nav-links, .portal-landing-hero p, .portal-landing-section-heading p, .portal-landing-workflow p, .portal-landing-trust p) { color: var(--portal-muted); }
+
+html[data-portal-theme="dark"] .portal-landing-footer { background: var(--portal-dark-landing-footer); }
+
+html[data-portal-theme="dark"] .portal-landing-preview-bar,
+html[data-portal-theme="dark"] .portal-landing-preview-body,
+html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: var(--portal-border); }
+
+@media (max-width: 700px) {
+  .portal-theme-toggle { min-height: 44px; padding-inline: 12px; }
+  .portal-header-actions .portal-theme-toggle-label,
+  .portal-auth-header-actions .portal-theme-toggle-label,
+  .portal-landing-nav-actions .portal-theme-toggle-label { display: none; }
+}
+
+/* The hero repeats the signed/public CTA immediately below the nav. At phone
+   widths, leave header capacity to the three reviewed locale choices and the
+   Aura switcher instead of clipping a second copy of the same action. */
+@media (max-width: 420px) {
+  .portal-landing-nav-primary { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-portal-theme] body,
+  html[data-portal-theme] .portal-shell,
+  html[data-portal-theme] .portal-main,
+  html[data-portal-theme] .portal-header,
+  html[data-portal-theme] .portal-mobile-nav,
+  html[data-portal-theme] .portal-sidebar,
+  html[data-portal-theme] .portal-landing,
+  html[data-portal-theme] .portal-auth-page--access,
+  html[data-portal-theme] .portal-card,
+  html[data-portal-theme] .portal-command-dialog,
+  html[data-portal-theme] :is(.portal-input, .portal-select, .portal-textarea),
+  .portal-theme-toggle {
+    transition-duration: 0ms !important;
   }
 }
