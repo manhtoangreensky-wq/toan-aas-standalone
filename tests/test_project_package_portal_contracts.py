@@ -20,7 +20,7 @@ def test_project_package_is_a_separate_web_native_portal_surface() -> None:
     panel = PORTAL[PORTAL.index("function renderProjectPackagePanel"):PORTAL.index("function renderProjectPackages")]
     assert 'data-portal-action="project-package-export"' in panel
     assert 'data-portal-action="project-package-refresh"' in panel
-    assert "Package/Web export không tạo Job Bot" in panel
+    assert 'projectPackageText("panel.flowBody"' in panel
     assert "assetDownloadPath" not in panel
     assert "jobId" not in panel
     assert "fetch(" not in panel
