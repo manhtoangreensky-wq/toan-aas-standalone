@@ -149,6 +149,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* This is keyboard-only primary navigation. Use the AA action pair instead
+   of the lighter mint brand token retained by the legacy shell. */
+.skip-link {
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+
 .portal-button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--portal-focus) 82%, white);
   outline-offset: 3px;

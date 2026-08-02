@@ -15,6 +15,7 @@ PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 THEME = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
 THEME_JS_PATH = ROOT / "static" / "portal" / "portal-theme.js"
 THEME_JS = THEME_JS_PATH.read_text(encoding="utf-8")
+PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 SHELL = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
@@ -239,6 +240,22 @@ def test_landing_primary_action_uses_an_aa_contrast_pair() -> None:
     assert "color: var(--portal-on-action);" in landing_primary.group("declarations")
     assert "--portal-action: #0f766e;" in root.group("declarations")
     assert "--portal-on-action: #ffffff;" in root.group("declarations")
+
+
+def test_skip_link_uses_the_aa_action_pair_instead_of_the_mint_brand_pair() -> None:
+    legacy_skip_link = re.search(
+        r"\.skip-link\s*\{(?P<declarations>.*?)\n\}", PORTAL_CSS, flags=re.DOTALL
+    )
+    theme_skip_link = re.search(
+        r"\.skip-link\s*\{(?P<declarations>.*?)\n\}", THEME, flags=re.DOTALL
+    )
+
+    assert legacy_skip_link is not None
+    assert theme_skip_link is not None
+    assert "background: var(--portal-accent);" in legacy_skip_link.group("declarations")
+    assert "color: var(--portal-accent-ink);" in legacy_skip_link.group("declarations")
+    assert "background: var(--portal-action);" in theme_skip_link.group("declarations")
+    assert "color: var(--portal-on-action);" in theme_skip_link.group("declarations")
 
 
 def test_ci_gate_checks_aura_javascript_and_contracts() -> None:
