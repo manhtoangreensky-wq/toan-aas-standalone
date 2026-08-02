@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-02T10:41:21+00:00",
+  "generated_at_utc": "2026-08-02T12:46:28+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,12 +35,12 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "172a350fc1f0919f594394b9364a1ee5a413f54d",
+      "checkout_sha": "dc920150287f7145b8a0e2b0dbb90f4364b1b1b3",
       "requested_relation": "exact",
-      "requested_sha": "172a350fc1f0919f594394b9364a1ee5a413f54d",
-      "source_fingerprint_sha256": "dd30f72f43de4a16b3eb7caf600679c7a7b1fa8851c494984af6f3e5ef26999f",
+      "requested_sha": "dc920150287f7145b8a0e2b0dbb90f4364b1b1b3",
+      "source_fingerprint_sha256": "2bcabc2bb7a035a08e8e33d0b48e495d6a51ba0c1ee95311807124db9a93a371",
       "working_tree_state": "clean"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-theme-system"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-erp-data-surfaces"
   }
 }
