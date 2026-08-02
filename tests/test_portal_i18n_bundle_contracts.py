@@ -551,6 +551,39 @@ def test_customer_authoring_first_paint_titles_are_reviewed_for_all_locales() ->
         assert title in shell_titles
 
 
+def test_customer_authoring_has_no_untranslated_nested_or_package_surface() -> None:
+    """A Project flow stays localised through its editor, notes, and package library."""
+
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "projectCenter.notes.integrationTitle": ("Trạng thái tích hợp", "Integration status", "集成状态"),
+        "project.editor.title": ("Studio Document editor", "Studio Document editor", "工作室文档编辑器"),
+        "project.editor.save": ("Lưu phiên bản mới", "Save new version", "保存新版本"),
+        "projectPackage.page.title": ("Project Packages", "Project Packages", "项目套餐"),
+        "projectPackage.page.guardTitle": ("Project Packages chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
+        "projectPackage.page.historyTitle": ("Lịch sử Project Packages", "Project Package history", "项目套餐历史"),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+    editor = _between(PORTAL, "function renderStudioDocumentEditor", "function validProjectPackageId")
+    project_center = _between(PORTAL, "function projectCenterText", "// Memory Center")
+    package_surface = _between(PORTAL, "function renderProjectPackages", "function renderProjectDetail")
+    page_titles = _between(PORTAL, "function localizedPageTitle", "function documentTitle")
+    page_descriptions = _between(PORTAL, "function localizedPageDescription", "function initials")
+
+    assert "projectText(" in editor
+    assert "projectKindLabel(" in editor
+    assert "renderProjectCenterNotes(" in project_center
+    assert "projectPackageText(" in package_surface
+    assert 'path === "/project-packages"' in page_titles
+    assert 'path === "/project-packages"' in page_descriptions
+
+    titles = _between(PAGES, "_PORTAL_SHELL_TITLES = {", "}\n\n\ndef _safe_portal_build_id")
+    assert '"/project-packages": {"vi": "Project Packages · TOAN AAS", "en": "Project Packages · TOAN AAS", "zh": "项目套餐 · TOAN AAS"}' in titles
+
+
 def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration() -> None:
     snapshot = _node_portal_first_mount_snapshot()
     assert snapshot["firstMount"] == "zh"
