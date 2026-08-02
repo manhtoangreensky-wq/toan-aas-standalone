@@ -7520,6 +7520,7 @@
   "providers": [
     {
       "files": [
+        "README.md",
         "admin.html",
         "admin_ops.py",
         "app.py",
@@ -7558,8 +7559,7 @@
         "copyfast_storyboard_grid.py",
         "copyfast_subtitle_asset_operations.py",
         "copyfast_trend_research.py",
-        "copyfast_video_operations.py",
-        "copyfast_video_studio.py"
+        "copyfast_video_operations.py"
       ],
       "occurrences": 614,
       "provider": "PayOS"
@@ -7609,6 +7609,7 @@
     },
     {
       "files": [
+        "README.md",
         "app.py",
         "auth_ops.py",
         "copyfast_admin_audit.py",
@@ -7647,8 +7648,7 @@
         "copyfast_prompt_studio.py",
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py",
-        "copyfast_starter_kits.py",
-        "copyfast_storyboard_grid.py"
+        "copyfast_starter_kits.py"
       ],
       "occurrences": 1093,
       "provider": "Telegram"
@@ -13734,7 +13734,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "c7912e0d48836339933a6e6f46e96e69070313c103c0427c8697d14e6b1aad3d",
+  "source_fingerprint_sha256": "dd30f72f43de4a16b3eb7caf600679c7a7b1fa8851c494984af6f3e5ef26999f",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-theme-system",
   "ui_path_references": [
     {

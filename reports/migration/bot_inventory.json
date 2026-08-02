@@ -31853,17 +31853,18 @@
       "files": [
         "AGENTS.md",
         "ARCHITECTURE.md",
-        "bot.py",
         "CODEX_NEXT_TASK.md",
+        "README.md",
+        "ROADMAP.md",
+        "ROADMAP_90_DAYS.md",
+        "bot.py",
         "docs/ADMIN_REPORTING_AND_MODES.md",
         "docs/API_KEYS_SETUP.md",
-        "docs/architecture/TOAN_AAS_GATE_CALLBACK_STATE_MAP_20260616.md",
         "docs/AUDIT_LOG_PLAN.md",
         "docs/BETA_LAUNCH_CHECKLIST.md",
         "docs/COMMAND_REGISTRY.md",
         "docs/COST_CONTROL.md",
         "docs/CURRENT_STATE.md",
-        "docs/data_persistence_plan.md",
         "docs/DEV_AI_TOOLING_ROADMAP.md",
         "docs/EVENT_BUS_PLAN.md",
         "docs/EXTRACTION_PLAN.md",
@@ -31872,7 +31873,6 @@
         "docs/FOUNDATION_AUDIT_REPORT.md",
         "docs/GIFT_REWARD_CODES.md",
         "docs/IMAGE_TOOL_CENTER_MVP.md",
-        "docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md",
         "docs/LAUNCH_BONUS_POLICY.md",
         "docs/LEGAL_RISK_REGISTER.md",
         "docs/LIVE_BOT_QA_REPORT.md",
@@ -31884,13 +31884,13 @@
         "docs/PAYOS_SECURITY_AUDIT.md",
         "docs/PAYOS_SIGNATURE_TROUBLESHOOTING.md",
         "docs/PRICING_AUDIT.md",
-        "docs/PROMO_POLICY_AUDIT.md",
-        "docs/PROMO_REAL_PAYMENT_TEST.md",
         "docs/PROMOTION_POLICY_V2.md",
         "docs/PROMOTION_SYSTEM.md",
+        "docs/PROMO_POLICY_AUDIT.md",
+        "docs/PROMO_REAL_PAYMENT_TEST.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
-        "docs/public/TOAN_AAS_DIEU_KHOAN_CHINH_SACH_DICH_VU_V2.md",
-        "docs/public/TOAN_AAS_HUONG_DAN_SU_DUNG_CHO_KHACH_V2.md"
+        "docs/RAILWAY_VOLUME_SETUP.md",
+        "docs/REVENUE_BOT_CHECKLIST.md"
       ],
       "occurrences": 680,
       "provider": "PayOS"
@@ -31933,8 +31933,9 @@
       "files": [
         "bot.py",
         "docs/COMMAND_REGISTRY.md",
-        "docs/data_persistence_plan.md",
         "docs/LIVE_BOT_QA_REPORT.md",
+        "docs/STABLE_REVENUE_BOT_STATUS.md",
+        "docs/data_persistence_plan.md",
         "docs/provider_backlog_notes.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md",
@@ -31959,7 +31960,6 @@
         "docs/reports/TOAN_AAS_TELEGRAM_COMMAND_REGISTRY_HOTFIX_20260617.md",
         "docs/reports/TOAN_AAS_VIDEO_MENU_FLOW_REBUILD_20260620.md",
         "docs/shopaikey_provider_docs_backlog.md",
-        "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/toan_aas_product_workflow.md",
         "docs/video_content_workflow_references.md",
         "loadtests/README.md",
@@ -32000,11 +32000,11 @@
         "docs/CURRENT_STATE.md",
         "docs/EXTRACTION_PLAN.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
-        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
-        "docs/reports/TOAN_AAS_REMAINING_FIX_QUEUE_20260616.md",
         "docs/REVENUE_BOT_CHECKLIST.md",
         "docs/RISK_REGISTER.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
+        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
+        "docs/reports/TOAN_AAS_REMAINING_FIX_QUEUE_20260616.md",
         "providers/asr_provider.py",
         "providers/subtitle_dub_pipeline.py",
         "support_v1b.py"
@@ -32014,8 +32014,8 @@
     },
     {
       "files": [
-        "bot.py",
         "CODEX_NEXT_TASK.md",
+        "bot.py",
         "docs/STABLE_REVENUE_BOT_STATUS.md"
       ],
       "occurrences": 60,
@@ -32024,8 +32024,10 @@
     {
       "files": [
         "ARCHITECTURE.md",
-        "bot.py",
         "CODEX_NEXT_TASK.md",
+        "README.md",
+        "ROADMAP.md",
+        "bot.py",
         "docs/AI_PROVIDER_ROUTER.md",
         "docs/API_KEYS_SETUP.md",
         "docs/CHAT_AI_AUDIT.md",
@@ -32038,6 +32040,10 @@
         "docs/GROWTH_AI_AUDIT.md",
         "docs/GROWTH_LOOP.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
+        "docs/REVENUE_BOT_CHECKLIST.md",
+        "docs/RISK_REGISTER.md",
+        "docs/STABLE_REVENUE_BOT_STATUS.md",
+        "docs/TOAN_AAS_MASTER_GOAL_PLAN_V4_4000_WORDS_CODEX_READY.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md",
         "docs/reports/TOAN_AAS_FINAL_LAUNCH_FIX_BEFORE_20260620.md",
@@ -32046,17 +32052,11 @@
         "docs/reports/TOAN_AAS_KEY4U_FIRST_SMOKE_FIX_REPORT_20260617.md",
         "docs/reports/TOAN_AAS_LOAD_TEST_REPORT_20260617.md",
         "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
-        "docs/REVENUE_BOT_CHECKLIST.md",
-        "docs/RISK_REGISTER.md",
         "docs/shopaikey_provider_docs_backlog.md",
-        "docs/STABLE_REVENUE_BOT_STATUS.md",
-        "docs/TOAN_AAS_MASTER_GOAL_PLAN_V4_4000_WORDS_CODEX_READY.md",
         "docs/toan_aas_product_workflow.md",
         "handlers/tools_handler.py",
         "loadtests/README.md",
-        "providers/key4u_provider.py",
-        "README.md",
-        "ROADMAP.md"
+        "providers/key4u_provider.py"
       ],
       "occurrences": 198,
       "provider": "Gemini"
@@ -32064,8 +32064,9 @@
     {
       "files": [
         "ARCHITECTURE.md",
-        "bot.py",
         "CODEX_NEXT_TASK.md",
+        "README.md",
+        "bot.py",
         "docs/AI_PROVIDER_ROUTER.md",
         "docs/CHAT_AI_AUDIT.md",
         "docs/COMMAND_REGISTRY.md",
@@ -32078,6 +32079,9 @@
         "docs/IMAGE_TOOL_CENTER_MVP.md",
         "docs/MEDIA_TREND_IMAGE_VIDEO_STATUS.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
+        "docs/REVENUE_BOT_CHECKLIST.md",
+        "docs/RISK_REGISTER.md",
+        "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md",
         "docs/reports/TOAN_AAS_IMAGE_EDIT_AND_CHAT_AI_REPORT_20260620.md",
@@ -32086,15 +32090,11 @@
         "docs/reports/TOAN_AAS_KEY4U_KLING_DURATION_INVESTIGATION_20260617.md",
         "docs/reports/TOAN_AAS_LOAD_TEST_REPORT_20260617.md",
         "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
-        "docs/REVENUE_BOT_CHECKLIST.md",
-        "docs/RISK_REGISTER.md",
         "docs/shopaikey_provider_docs_backlog.md",
-        "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/toan_aas_product_workflow.md",
         "handlers/freelance_handler.py",
         "handlers/tools_handler.py",
-        "loadtests/README.md",
-        "README.md"
+        "loadtests/README.md"
       ],
       "occurrences": 203,
       "provider": "OpenAI"
@@ -32102,8 +32102,8 @@
     {
       "files": [
         "bot.py",
-        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
+        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
         "handlers/mxh_handler.py",
         "handlers/tools_handler.py",
         "handlers/video_handler.py"
@@ -32114,17 +32114,17 @@
     {
       "files": [
         "ARCHITECTURE.md",
+        "README.md",
         "bot.py",
         "docs/COMMAND_REGISTRY.md",
         "docs/COST_CONTROL.md",
         "docs/CURRENT_STATE.md",
         "docs/EXTRACTION_PLAN.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
-        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
         "docs/REVENUE_BOT_CHECKLIST.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/TOAN_AAS_MASTER_GOAL_PLAN_V4_4000_WORDS_CODEX_READY.md",
-        "README.md"
+        "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md"
       ],
       "occurrences": 127,
       "provider": "Fish Audio"
@@ -32157,8 +32157,10 @@
     },
     {
       "files": [
+        "README.md",
         "bot.py",
         "docs/COMMAND_REGISTRY.md",
+        "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md",
         "docs/reports/TOAN_AAS_ENGINE_ROADMAP_VOICE_MUSIC_SUBTITLE_VIDEO.md",
@@ -32167,18 +32169,16 @@
         "docs/reports/TOAN_AAS_OPEN_ALL_CURRENT_VIDEO_TIERS_20260617.md",
         "docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md",
         "docs/reports/TOAN_AAS_VIDEO_HIGH_TIERS_OPEN_REPORT_20260620.md",
-        "docs/reports/TOAN_AAS_VIDEO_TIER_MATRIX_20260620.md",
-        "docs/STABLE_REVENUE_BOT_STATUS.md",
-        "README.md"
+        "docs/reports/TOAN_AAS_VIDEO_TIER_MATRIX_20260620.md"
       ],
       "occurrences": 106,
       "provider": "Kling"
     },
     {
       "files": [
+        "README.md",
         "bot.py",
-        "handlers/tools_handler.py",
-        "README.md"
+        "handlers/tools_handler.py"
       ],
       "occurrences": 45,
       "provider": "Runway"
@@ -32195,8 +32195,10 @@
       "files": [
         "AGENTS.md",
         "ARCHITECTURE.md",
-        "bot.py",
         "CODEX_NEXT_TASK.md",
+        "README.md",
+        "ROADMAP.md",
+        "bot.py",
         "docs/ADMIN_REPORTING_AND_MODES.md",
         "docs/API_KEYS_SETUP.md",
         "docs/BETA_SALES_PACKAGE.md",
@@ -32211,7 +32213,6 @@
         "docs/GROWTH_AI_AUDIT.md",
         "docs/HEAD_BRAIN_OPERATING_SYSTEM.md",
         "docs/IMAGE_TOOL_CENTER_MVP.md",
-        "docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md",
         "docs/LEGAL_AUTOMATION_BACKLOG.md",
         "docs/LIVE_BOT_QA_REPORT.md",
         "docs/OPERATION_RISK_PLAN.md",
@@ -32219,20 +32220,19 @@
         "docs/PAYOS_SECURITY_AUDIT.md",
         "docs/PROMO_REAL_PAYMENT_TEST.md",
         "docs/PROVIDER_SECURITY_AUDIT.md",
-        "docs/public/TELEGRAM_TOPIC_PINNED_MESSAGES_V2.md",
-        "docs/public/TOAN_AAS_DIEU_KHOAN_CHINH_SACH_DICH_VU_V2.md",
-        "docs/public/TOAN_AAS_HUONG_DAN_SU_DUNG_CHO_KHACH_V2.md",
-        "docs/reports/TASK3D_VIDEO_PRODUCT_PROMPT_ENGINE_20260620.md",
-        "docs/reports/TOAN_AAS_BOT_FULL_AUDIT_REPORT_20260614.md",
-        "docs/reports/TOAN_AAS_ENGINE_ROADMAP_VOICE_MUSIC_SUBTITLE_VIDEO.md",
-        "docs/reports/TOAN_AAS_LOAD_TEST_REPORT_20260617.md",
-        "docs/reports/TOAN_AAS_PUBLIC_LAUNCH_AND_VIDEO_BETA_20260616.md",
-        "docs/reports/TOAN_AAS_TELEGRAM_COMMAND_REGISTRY_HOTFIX_20260617.md",
-        "docs/reports/TOAN_AAS_UX_LANGUAGE_FLOW_TOOL_AUDIT_20260616.md",
         "docs/SALES_READINESS_CHECKLIST.md",
         "docs/SALES_SCRIPT.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
-        "docs/support_ticket_v1b.md"
+        "docs/TELEGRAM_ADMIN_PERMISSIONS.md",
+        "docs/TELEGRAM_GROUP_SECURITY_AUDIT.md",
+        "docs/TOAN_AAS_MASTER_GOAL_PLAN_V4_4000_WORDS_CODEX_READY.md",
+        "docs/WEBSITE_INDEX_AUDIT.md",
+        "docs/WEBSITE_INDEX_UPDATE.md",
+        "docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md",
+        "docs/public/TELEGRAM_TOPIC_PINNED_MESSAGES_V2.md",
+        "docs/public/TOAN_AAS_DIEU_KHOAN_CHINH_SACH_DICH_VU_V2.md",
+        "docs/public/TOAN_AAS_HUONG_DAN_SU_DUNG_CHO_KHACH_V2.md",
+        "docs/reports/TASK3D_VIDEO_PRODUCT_PROMPT_ENGINE_20260620.md"
       ],
       "occurrences": 594,
       "provider": "Telegram"
@@ -33494,6 +33494,6 @@
   "schema_version": "2.0",
   "source_files_discovered": 176,
   "source_files_scanned": 172,
-  "source_fingerprint_sha256": "c457fcccc82790edfc3ab1a22da3e511b481f3a2abdf995d41fec23fecf22d33",
+  "source_fingerprint_sha256": "93eb18b700f7c2b17331ef40b92994ae1ce071deb5ed486be9da22b513dc3841",
   "source_root": "git-baseline:b29d0d474974075f4cba963d2c510f49d2d1b3e4"
 }
