@@ -856,6 +856,7 @@
       "states.processing": "Đang xử lý",
       "states.completed": "Hoàn tất",
       "states.failed": "Thất bại",
+      "states.unavailable": "Không khả dụng",
       "states.guarded": "Được bảo vệ",
       "states.disabled": "Tạm khóa",
       "states.readOnly": "Chỉ đọc",
@@ -1191,6 +1192,7 @@
       "states.processing": "Processing",
       "states.completed": "Completed",
       "states.failed": "Failed",
+      "states.unavailable": "Unavailable",
       "states.guarded": "Guarded",
       "states.disabled": "Disabled",
       "states.readOnly": "Read only",
@@ -1526,6 +1528,7 @@
       "states.processing": "处理中",
       "states.completed": "已完成",
       "states.failed": "失败",
+      "states.unavailable": "不可用",
       "states.guarded": "受保护",
       "states.disabled": "已禁用",
       "states.readOnly": "只读",
@@ -3043,6 +3046,33 @@
     }
   };
 
+  const ADMIN_DATA_SURFACE_MESSAGES = {
+    vi: {
+      "adminDataSurface.kicker": "Dữ liệu quản trị đã được cấp",
+      "adminDataSurface.recordCount": "{count} bản ghi trong phản hồi này",
+      "adminDataSurface.serverScope": "Chỉ dữ liệu đã qua role check và redaction",
+      "adminDataSurface.guardedScope": "Adapter canonical chưa được công bố; không có dữ liệu thay thế",
+      "adminDataSurface.unavailableCount": "Chưa có danh sách được cấp",
+      "adminDataSurface.unavailableScope": "Dữ liệu chưa thể xác minh trong phiên này"
+    },
+    en: {
+      "adminDataSurface.kicker": "Granted admin data",
+      "adminDataSurface.recordCount": "{count} records in this response",
+      "adminDataSurface.serverScope": "Only role-checked, redacted data is shown",
+      "adminDataSurface.guardedScope": "The canonical adapter is not published; no substitute data is shown",
+      "adminDataSurface.unavailableCount": "No list has been granted",
+      "adminDataSurface.unavailableScope": "The data cannot be verified in this session"
+    },
+    zh: {
+      "adminDataSurface.kicker": "已授予的管理数据",
+      "adminDataSurface.recordCount": "本次响应中有 {count} 条记录",
+      "adminDataSurface.serverScope": "仅显示已通过角色检查和脱敏的数据",
+      "adminDataSurface.guardedScope": "尚未发布 canonical 适配器；不会显示替代数据",
+      "adminDataSurface.unavailableCount": "尚未授予列表",
+      "adminDataSurface.unavailableScope": "当前会话无法验证数据"
+    }
+  };
+
   // Finance Operations Planning is a separately signed, Web-owned workspace.
   // These strings are fixed interface chrome only: server rows, category
   // labels, vendor labels and user-entered planning text must never be passed
@@ -3594,6 +3624,7 @@
     DASHBOARD_DELIVERY_MESSAGES[locale],
     TABLE_MESSAGES[locale],
     ADMIN_HOME_MESSAGES[locale],
+    ADMIN_DATA_SURFACE_MESSAGES[locale],
     FINANCE_PLANNING_MESSAGES[locale],
     ADMIN_FINANCE_WORKSPACE_MESSAGES[locale]
   ));

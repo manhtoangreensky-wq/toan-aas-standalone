@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "dd30f72f43de4a16b3eb7caf600679c7a7b1fa8851c494984af6f3e5ef26999f",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-theme-system",
+  "source_fingerprint_sha256": "2bcabc2bb7a035a08e8e33d0b48e495d6a51ba0c1ee95311807124db9a93a371",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-erp-data-surfaces",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
