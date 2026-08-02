@@ -194,7 +194,7 @@
   const STATE_I18N_KEYS = Object.freeze({
     ready: "states.ready", draft: "states.draft", awaiting_confirm: "states.awaitingConfirm",
     queued: "states.queued", processing: "states.processing", completed: "states.completed",
-    failed: "states.failed", guarded: "states.guarded", disabled: "states.disabled",
+    failed: "states.failed", unavailable: "states.unavailable", guarded: "states.guarded", disabled: "states.disabled",
     read_only: "states.readOnly", empty: "states.empty", backlog: "states.backlog",
     planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
     review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled",
@@ -18543,8 +18543,10 @@
   }
 
   function canonicalXu(value) {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? `${parsed.toLocaleString("vi-VN")} Xu` : "—";
+    // Xu is canonical display data. Keep the same strict finite-number policy
+    // as ERP cells so missing/blank values never become a plausible zero.
+    const parsed = adminNumericValue(value);
+    return parsed === null ? "—" : `${parsed.toLocaleString("vi-VN")} Xu`;
   }
 
   function jobCost(item) {
@@ -24468,10 +24470,38 @@
     return String(data.module || (page.routePath || page.path).split("/").filter(Boolean)[1] || "overview").toLowerCase().replace(/_/g, "-");
   }
 
+  function adminNumericValue(value) {
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value !== "string") return null;
+    const text = value.trim();
+    if (!text) return null;
+    const parsed = Number(text);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   function adminNumber(value, suffix) {
-    const parsed = Number(value);
-    const display = Number.isFinite(parsed) ? localizedNumber(parsed) : "—";
+    const parsed = adminNumericValue(value);
+    const display = parsed === null ? "—" : localizedNumber(parsed);
     return `${display}${suffix || ""}`;
+  }
+
+  function renderAdminDataSurface(module, data, content) {
+    // This is read-model chrome only. It describes the exact response already
+    // granted by the server; it never treats a missing projection as an empty
+    // result and does not invent a browser-side filter or adapter.
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const rowsGranted = source.compatibility_guarded !== true && Array.isArray(source.items);
+    const count = rowsGranted ? source.items.length : null;
+    const state = source.compatibility_guarded === true ? "guarded" : (rowsGranted ? "read_only" : "unavailable");
+    const countText = rowsGranted
+      ? uiText("adminDataSurface.recordCount", "{count} bản ghi trong phản hồi này", { count: String(count) })
+      : uiText("adminDataSurface.unavailableCount", "Chưa có danh sách được cấp");
+    const scopeText = source.compatibility_guarded === true
+      ? uiText("adminDataSurface.guardedScope", "Adapter canonical chưa được công bố; không có dữ liệu thay thế")
+      : (rowsGranted
+        ? uiText("adminDataSurface.serverScope", "Chỉ dữ liệu đã qua role check và redaction")
+        : uiText("adminDataSurface.unavailableScope", "Dữ liệu chưa thể xác minh trong phiên này"));
+    return `<section class="portal-admin-data-surface" data-portal-admin-data-surface data-admin-data-module="${safeText(module)}"><div class="portal-admin-data-toolbar"><div><span>${safeText(uiText("adminDataSurface.kicker", "Dữ liệu quản trị đã được cấp"))}</span><strong data-portal-admin-data-count>${safeText(countText)}</strong><small data-portal-admin-data-scope>${safeText(scopeText)}</small></div>${badge(state)}</div>${content}</section>`;
   }
 
   function adminJobActions(item, context, route) {
@@ -24557,37 +24587,43 @@
 
   function renderAdminDataTable(page, context) {
     const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
-    const rows = Array.isArray(data.items) ? data.items : [];
+    const rows = data.compatibility_guarded !== true && Array.isArray(data.items) ? data.items : [];
     const module = adminModuleKey(page, context);
     if (module === "audit" && context.adminAudit && typeof context.adminAudit === "object") return renderAdminAuditExplorer(context);
+    const surface = (content) => renderAdminDataSurface(module, data, content);
     if (["users", "user", "wallet"].includes(module)) {
-      return renderRowsTable(["Người dùng", "Tên hiển thị", "Số dư", "Đã dùng", "Gói", "Tạo lúc"], rows, (item) => `<td>${safeText(item.user_id || "—")}</td><td>${safeText(item.username || "—")}</td><td>${safeText(adminNumber(item.balance_xu, " Xu"))}</td><td>${safeText(adminNumber(item.total_spent_xu, " Xu"))}</td><td>${item.is_vip ? "VIP" : "Chuẩn"}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có người dùng được cấp", "Core Bridge chỉ trả các trường phù hợp với role quản trị hiện tại.");
+      return surface(renderRowsTable(["Người dùng", "Tên hiển thị", "Số dư", "Đã dùng", "Gói", "Tạo lúc"], rows, (item) => `<td>${safeText(item.user_id || "—")}</td><td>${safeText(item.username || "—")}</td><td>${safeText(adminNumber(item.balance_xu, " Xu"))}</td><td>${safeText(adminNumber(item.total_spent_xu, " Xu"))}</td><td>${item.is_vip ? "VIP" : "Chuẩn"}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có người dùng được cấp", "Core Bridge chỉ trả các trường phù hợp với role quản trị hiện tại."));
     }
     if (["payments", "topups", "revenue", "refunds"].includes(module)) {
       const manualBoundary = module === "topups"
         ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Chỉ đơn PayOS canonical</strong><p>Bảng này không phải hàng chờ nạp thủ công. Bill, TXID, đối soát và duyệt nạp thủ công tiếp tục trong Bot.</p></div></div>`
         : "";
-      return `${manualBoundary}${renderRowsTable(["Mã đơn PayOS", "Người dùng", "Giá trị", "Xu", "Loại PayOS", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.order_code || item.id || "—")}</td><td>${safeText(item.user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, " đ"))}</td><td>${safeText(adminNumber(item.xu, " Xu"))}</td><td>${safeText(item.type || "—")}</td><td>${badge(paymentStatus(item))}</td><td>${safeText(item.paid_at || item.created_at || "—")}</td>`, "Chưa có đơn PayOS được cấp", "Nạp thủ công không xuất hiện ở Web; Bot canonical giữ toàn bộ đối soát, approval và ledger.")}`;
+      return surface(`${manualBoundary}${renderRowsTable(["Mã đơn PayOS", "Người dùng", "Giá trị", "Xu", "Loại PayOS", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.order_code || item.id || "—")}</td><td>${safeText(item.user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, " đ"))}</td><td>${safeText(adminNumber(item.xu, " Xu"))}</td><td>${safeText(item.type || "—")}</td><td>${badge(paymentStatus(item))}</td><td>${safeText(item.paid_at || item.created_at || "—")}</td>`, "Chưa có đơn PayOS được cấp", "Nạp thủ công không xuất hiện ở Web; Bot canonical giữ toàn bộ đối soát, approval và ledger.")}`);
     }
     if (module === "failed-jobs") {
-      const incidentCount = rows.filter((item) => ["failed", "failed_no_charge", "cancelled"].includes(jobStatus(item))).length;
-      const incidentNotice = `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Incident queue chỉ đọc</strong><p>${safeText(String(incidentCount))} job lỗi/hủy được Core Bridge cấp trong lần đọc này. Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định.</p></div></div>`;
-      return `${incidentNotice}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Nguyên nhân đã rút gọn", "Chi phí / hoàn Xu", "Output", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || "Chưa có category canonical")}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có incident job được cấp", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser.")}`;
+      const incidentCount = data.compatibility_guarded !== true && Array.isArray(data.items)
+        ? rows.filter((item) => ["failed", "failed_no_charge", "cancelled"].includes(jobStatus(item))).length
+        : null;
+      const incidentText = incidentCount === null
+        ? "Core Bridge chưa cấp danh sách job lỗi/hủy trong lần đọc này."
+        : `${safeText(String(incidentCount))} job lỗi/hủy được Core Bridge cấp trong lần đọc này.`;
+      const incidentNotice = `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Incident queue chỉ đọc</strong><p>${incidentText} Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định.</p></div></div>`;
+      return surface(`${incidentNotice}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Nguyên nhân đã rút gọn", "Chi phí / hoàn Xu", "Output", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || "Chưa có category canonical")}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có incident job được cấp", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser.")}`);
     }
     if (["jobs", "failed-jobs", "workers", "runtime"].includes(module)) {
       const route = page.routePath || page.path;
-      return renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine", "Delivery", "Thao tác canonical"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${assetDeliveryState(item)}</td><td>${adminJobActions(item, context, route)}</td>`, "Chưa có job vận hành được cấp", "Admin view vẫn không hiển thị URL provider, local path hay download không ký.");
+      return surface(renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine", "Delivery", "Thao tác canonical"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${assetDeliveryState(item)}</td><td>${adminJobActions(item, context, route)}</td>`, "Chưa có job vận hành được cấp", "Admin view vẫn không hiển thị URL provider, local path hay download không ký."));
     }
     if (["providers", "provider-cost", "features", "freezes", "pricing", "promos"].includes(module)) {
-      return renderRowsTable(["Tính năng", "Trạng thái", "Lý do đã rút gọn", "Cập nhật"], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, "Chờ trạng thái canonical", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.");
+      return surface(renderRowsTable(["Tính năng", "Trạng thái", "Lý do đã rút gọn", "Cập nhật"], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, "Chờ trạng thái canonical", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI."));
     }
     if (["tickets", "support"].includes(module)) {
-      return renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${badge(ticketStatus(item))}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này.");
+      return surface(renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${ticketStatusCell(item)}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này."));
     }
     if (module === "audit") {
       return renderRowsTable(["Sự kiện", "Hành động", "Kết quả", "Thời điểm"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có audit event được cấp", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng.");
     }
-    return renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Module đang chờ adapter canonical", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp.");
+    return surface(renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Module đang chờ adapter canonical", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp."));
   }
 
   // These are first-class navigation centers, not new Bot adapters. Their

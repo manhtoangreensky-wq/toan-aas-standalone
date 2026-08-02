@@ -13970,3 +13970,96 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transition-duration: 0ms !important;
   }
 }
+
+/* Aura ERP data surfaces — truthful table read model. */
+.portal-page .portal-admin-data-surface {
+  display: grid;
+  min-width: 0;
+  gap: var(--portal-space-3);
+}
+
+.portal-page .portal-admin-data-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--portal-space-3);
+  padding: var(--portal-space-3) var(--portal-space-4);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface-strong);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-page .portal-admin-data-toolbar > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--portal-space-1);
+}
+
+.portal-page .portal-admin-data-toolbar span,
+.portal-page .portal-admin-data-toolbar small {
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-admin-data-toolbar span {
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: .02em;
+}
+
+.portal-page .portal-admin-data-toolbar strong {
+  color: var(--portal-ink);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-page .portal-admin-data-toolbar small {
+  max-width: 68ch;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.portal-page .portal-admin-data-toolbar .portal-badge {
+  align-self: center;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-page .portal-admin-data-surface .portal-data-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-page .portal-admin-data-surface [data-portal-table-scroll]:focus-visible {
+  outline: 3px solid var(--portal-context);
+  outline-offset: 2px;
+}
+
+.portal-page .portal-admin-data-surface .portal-data-table :is(th, td) {
+  border-color: var(--portal-border);
+}
+
+.portal-page .portal-admin-data-surface .portal-badge[data-status="failed_no_charge"] {
+  border-color: var(--portal-danger);
+  background: color-mix(in srgb, var(--portal-danger) 8%, var(--portal-surface-light));
+  color: var(--portal-danger);
+}
+
+@media (max-width: 700px) {
+  .portal-page .portal-admin-data-surface .portal-data-table th:first-child,
+  .portal-page .portal-admin-data-surface .portal-data-table tbody td:first-child:not(.portal-empty-cell) {
+    min-width: 10rem;
+    overflow-wrap: break-word;
+  }
+}
+
+@media (min-width: 921px) {
+  .portal-page .portal-admin-data-toolbar {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+}
