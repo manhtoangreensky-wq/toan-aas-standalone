@@ -95,8 +95,8 @@
   }
 
   function nextPreference() {
-    if (preference === "system") return resolved === "dark" ? "light" : "dark";
-    return preference === "light" ? "dark" : "system";
+    const index = THEMES.indexOf(preference);
+    return THEMES[(index + 1) % THEMES.length];
   }
 
   function syncControls() {
@@ -110,7 +110,6 @@
       const label = control.querySelector("[data-portal-theme-label]");
       if (icon) icon.innerHTML = resolved === "dark" ? SVG.sun : SVG.moon;
       if (label) label.textContent = `${copy.label}: ${modeLabel}`;
-      control.setAttribute("aria-pressed", String(resolved === "dark"));
       control.setAttribute("aria-label", `${copy.label}: ${modeLabel}. ${nextLabel}`);
       control.setAttribute("title", `${copy.label}: ${modeLabel}. ${nextLabel}`);
       control.dataset.portalThemePreference = preference;

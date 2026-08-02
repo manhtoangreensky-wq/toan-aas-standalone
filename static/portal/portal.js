@@ -9713,7 +9713,7 @@
   }
 
   function renderThemeToggle() {
-    return `<button class="portal-theme-toggle" type="button" data-portal-theme-toggle aria-pressed="false" aria-label="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}" title="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}"><span class="portal-theme-toggle-icon" data-portal-theme-icon aria-hidden="true"></span><span class="portal-theme-toggle-label" data-portal-theme-label>${safeText(uiText("chrome.theme_label", "Giao diện"))}</span></button>`;
+    return `<button class="portal-theme-toggle" type="button" data-portal-theme-toggle aria-label="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}" title="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}"><span class="portal-theme-toggle-icon" data-portal-theme-icon aria-hidden="true"></span><span class="portal-theme-toggle-label" data-portal-theme-label>${safeText(uiText("chrome.theme_label", "Giao diện"))}</span></button>`;
   }
 
   function renderHeader(page, context) {

@@ -103,8 +103,9 @@ creating a second product language:
   it is never sent to Web APIs, Core Bridge, Telegram, wallets, PayOS,
   providers or jobs.
 - The Aura switcher is a labelled 44px control in the public, access and
-  signed headers. It cycles `light → dark → system`, exposes pressed state for
-  the effective dark mode, has a visible focus ring and honors reduced motion.
+  signed headers. It cycles `system → light → dark → system`, announces the
+  current and next mode, does not use binary `aria-pressed`, has a visible
+  focus ring and honors reduced motion.
 - On a 375px public header, locale and theme controls remain visible; the
   duplicate header CTA yields to the real CTA directly below in the hero.
 
