@@ -34,9 +34,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
         with:
-          # The whitespace gate compares the pushed commit with its parent.
-          # checkout defaults to a depth of one, where HEAD^ is unavailable.
-          fetch-depth: 2
+          # Evidence can be committed after the exact source snapshot it
+          # describes. The verifier must resolve that ancestor for a PR's
+          # synthetic merge commit as well as for direct pushes.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -46,6 +47,18 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             requirements-dev.txt
+
+      # This is a repository-source provenance gate. Run it before dependency
+      # installation or compilation can create local build artefacts.
+      - name: Verify committed migration evidence
+        env:
+          WEB_AUDIT_EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python scripts/migration/audit_bot_to_web.py \
+            --verify-web-evidence \
+            --web-root . \
+            --report-dir reports/migration \
+            --web-revision "$WEB_AUDIT_EXPECTED_SHA"
 
       - name: Set up Node
         uses: actions/setup-node@v4

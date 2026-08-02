@@ -385,21 +385,21 @@ Only environment variable names are recorded. Values are never read and secret-s
 
 | Provider | Occurrences | Sample files |
 | --- | --- | --- |
-| PayOS | 680 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+| PayOS | 680 | AGENTS.md, ARCHITECTURE.md, CODEX_NEXT_TASK.md, README.md, ROADMAP.md |
 | Key4U | 319 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_PRICING_KNOWLEDGE.md, docs/provider_backlog_notes.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md |
-| ShopAIKey | 516 | bot.py, docs/COMMAND_REGISTRY.md, docs/data_persistence_plan.md, docs/LIVE_BOT_QA_REPORT.md, docs/provider_backlog_notes.md |
+| ShopAIKey | 516 | bot.py, docs/COMMAND_REGISTRY.md, docs/LIVE_BOT_QA_REPORT.md, docs/STABLE_REVENUE_BOT_STATUS.md, docs/data_persistence_plan.md |
 | MiniMax | 162 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_BOT_FULL_AUDIT_REPORT_20260614.md |
 | Deepgram | 94 | ARCHITECTURE.md, bot.py, docs/API_KEYS_SETUP.md, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md |
-| DeepL | 60 | bot.py, CODEX_NEXT_TASK.md, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Gemini | 198 | ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/AI_PROVIDER_ROUTER.md, docs/API_KEYS_SETUP.md |
-| OpenAI | 203 | ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/AI_PROVIDER_ROUTER.md, docs/CHAT_AI_AUDIT.md |
-| ElevenLabs | 67 | bot.py, docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md, docs/STABLE_REVENUE_BOT_STATUS.md, handlers/mxh_handler.py, handlers/tools_handler.py |
-| Fish Audio | 127 | ARCHITECTURE.md, bot.py, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md, docs/CURRENT_STATE.md |
+| DeepL | 60 | CODEX_NEXT_TASK.md, bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
+| Gemini | 198 | ARCHITECTURE.md, CODEX_NEXT_TASK.md, README.md, ROADMAP.md, bot.py |
+| OpenAI | 203 | ARCHITECTURE.md, CODEX_NEXT_TASK.md, README.md, bot.py, docs/AI_PROVIDER_ROUTER.md |
+| ElevenLabs | 67 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md, docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md, handlers/mxh_handler.py, handlers/tools_handler.py |
+| Fish Audio | 127 | ARCHITECTURE.md, README.md, bot.py, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md |
 | Suno | 121 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/provider_backlog_notes.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md |
-| Kling | 106 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_ENGINE_ROADMAP_VOICE_MUSIC_SUBTITLE_VIDEO.md |
-| Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
+| Kling | 106 | README.md, bot.py, docs/COMMAND_REGISTRY.md, docs/STABLE_REVENUE_BOT_STATUS.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md |
+| Runway | 45 | README.md, bot.py, handlers/tools_handler.py |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Telegram | 594 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+| Telegram | 594 | AGENTS.md, ARCHITECTURE.md, CODEX_NEXT_TASK.md, README.md, ROADMAP.md |
 
 ## Web-native Video Poster environment names
 

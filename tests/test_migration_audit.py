@@ -7,6 +7,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "migration" / "audit_bot_to_web.py"
 REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
@@ -556,6 +558,525 @@ async def dashboard():
     readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert f"Bot source audited: static Git baseline snapshot `{baseline_sha}`" in readme
     assert "working tree not used as source evidence" in readme
+
+
+def test_static_audit_records_web_revision_and_excludes_migration_tooling(tmp_path: Path) -> None:
+    """Web evidence must come from the requested clean revision, not audit tooling."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = tmp_path / "reports" / "migration"
+    docs_dir = tmp_path / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+
+@app.get('/provenance')
+def provenance():
+    return {'ok': True}
+""",
+        encoding="utf-8",
+    )
+    tooling = web_root / "scripts" / "migration" / "audit_helper.py"
+    tooling.parent.mkdir(parents=True)
+    tooling.write_text(
+        "PROVENANCE_TOOLING_ONLY_MARKER = 'PayOS provider execution helper'\n",
+        encoding="utf-8",
+    )
+    git("init")
+    git("add", "app.py", "scripts/migration/audit_helper.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "web fixture")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=web_sha,
+    )
+
+    webapp = result["preflight"]["webapp"]
+    assert webapp["revision"]["checkout_sha"] == web_sha
+    assert webapp["revision"]["requested_sha"] == web_sha
+    assert webapp["revision"]["requested_relation"] == "exact"
+    assert webapp["revision"]["working_tree_state"] == "clean"
+    assert webapp["revision"]["source_fingerprint_sha256"] == result["web_inventory"]["source_fingerprint_sha256"]
+    assert result["web_inventory"]["source_files_scanned"] == 1
+    assert "PROVENANCE_TOOLING_ONLY_MARKER" not in json.dumps(result["web_inventory"], ensure_ascii=False)
+
+    # A stale requested SHA must not be echoed as the audited checkout.  The
+    # extra text file changes Git revision only, so it remains outside the
+    # eligible runtime-source fingerprint.
+    (web_root / "revision-note.txt").write_text("evidence-only commit\n", encoding="utf-8")
+    git("add", "revision-note.txt")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "evidence note")
+    later_sha = git("rev-parse", "HEAD").stdout.strip()
+    later = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=tmp_path / "later-reports",
+        docs_dir=tmp_path / "later-docs",
+        web_revision_sha=web_sha,
+    )
+    later_revision = later["preflight"]["webapp"]["revision"]
+    assert later_revision["checkout_sha"] == later_sha
+    assert later_revision["requested_sha"] == web_sha
+    assert later_revision["requested_relation"] == "different"
+
+
+def test_static_audit_treats_tracked_migration_evidence_as_clean_web_source(tmp_path: Path) -> None:
+    """A leading-space Git porcelain entry must not corrupt excluded-path parsing."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    evidence = web_root / "docs" / "migration" / "README.md"
+    evidence.parent.mkdir(parents=True)
+    evidence.write_text("# Initial evidence\n", encoding="utf-8")
+    test_source = web_root / "tests" / "test_evidence_fixture.py"
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_fixture():\n    assert True\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py", "docs/migration/README.md", "tests/test_evidence_fixture.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "fixture")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    # This produces a leading ` M` porcelain record. It is generated evidence,
+    # and the test file is also excluded from the eligible Web runtime source
+    # set. Neither must make the audit source state dirty.
+    evidence.write_text("# Refreshed evidence\n", encoding="utf-8")
+    test_source.write_text("def test_fixture():\n    assert False\n", encoding="utf-8")
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=tmp_path / "reports",
+        docs_dir=tmp_path / "generated-docs",
+        web_revision_sha=web_sha,
+    )
+
+    assert result["preflight"]["webapp"]["revision"]["working_tree_state"] == "clean"
+
+
+def test_verify_web_evidence_requires_clean_matching_source(tmp_path: Path) -> None:
+    """Verification rejects evidence after the committed Web source becomes dirty."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    app_source = web_root / "app.py"
+    app_source.write_text(
+        """
+app = FastAPI()
+
+@app.get('/evidence')
+def evidence():
+    return {'ok': True}
+""",
+        encoding="utf-8",
+    )
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "web fixture")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=web_sha,
+    )
+    verified = audit.verify_web_evidence(web_root, report_dir, web_sha)
+
+    assert verified["expected_sha"] == web_sha
+    assert verified["recorded_audit_sha"] == web_sha
+    assert verified["source_fingerprint_sha256"] == result["web_inventory"]["source_fingerprint_sha256"]
+
+    app_source.write_text(
+        """
+app = FastAPI()
+
+@app.get('/evidence')
+def evidence():
+    return {'dirty': True}
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="clean"):
+        audit.verify_web_evidence(web_root, report_dir, web_sha)
+
+    # Commit the changed eligible source. The worktree is now clean, but its
+    # source fingerprint must no longer validate the older evidence.
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "un-audited source")
+    changed_sha = git("rev-parse", "HEAD").stdout.strip()
+    with pytest.raises(ValueError, match="fingerprint"):
+        audit.verify_web_evidence(web_root, report_dir, changed_sha)
+
+
+def test_verify_web_evidence_rejects_clean_audit_from_different_requested_revision(tmp_path: Path) -> None:
+    """A clean checkout cannot validate evidence generated for another revision."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "audited source")
+    requested_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    # The later commit leaves the eligible source unchanged, so this is a
+    # clean checkout with the same fingerprint but a different Git revision.
+    (web_root / "revision-note.txt").write_text("evidence-only commit\n", encoding="utf-8")
+    git("add", "revision-note.txt")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "later revision")
+    checkout_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=requested_sha,
+    )
+    revision = result["preflight"]["webapp"]["revision"]
+    assert revision["checkout_sha"] == checkout_sha
+    assert revision["requested_sha"] == requested_sha
+    assert revision["requested_relation"] == "different"
+    assert revision["working_tree_state"] == "clean"
+
+    with pytest.raises(ValueError, match="requested.*revision"):
+        audit.verify_web_evidence(web_root, report_dir, checkout_sha)
+
+
+def test_verify_web_evidence_rejects_clean_source_with_inconsistent_fingerprint_evidence(tmp_path: Path) -> None:
+    """Clean source cannot validate an evidence fingerprint for another source set."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "audited source")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=web_sha,
+    )
+    assert audit.verify_web_evidence(web_root, report_dir, web_sha)["expected_sha"] == web_sha
+
+    # Generated evidence is excluded from the source set, so this leaves the
+    # tracked runtime source clean. Both evidence files agree with each other
+    # but intentionally describe a different eligible source fingerprint.
+    preflight_path = report_dir / "preflight.json"
+    inventory_path = report_dir / "web_inventory.json"
+    preflight = json.loads(preflight_path.read_text(encoding="utf-8"))
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    mismatched_fingerprint = "0" * 64
+    preflight["webapp"]["revision"]["source_fingerprint_sha256"] = mismatched_fingerprint
+    inventory["source_fingerprint_sha256"] = mismatched_fingerprint
+    preflight_path.write_text(json.dumps(preflight), encoding="utf-8")
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="fingerprint") as mismatch:
+        audit.verify_web_evidence(web_root, report_dir, web_sha)
+    assert "recorded=" in str(mismatch.value)
+    assert "current=" in str(mismatch.value)
+
+
+def test_verify_web_evidence_round_trips_custom_report_and_docs_roots(tmp_path: Path) -> None:
+    """Configured generated output roots stay outside Web source provenance."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "generated" / "reports"
+    docs_dir = web_root / "generated" / "docs"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "web fixture")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=web_sha,
+    )
+
+    assert result["preflight"]["webapp"]["revision"]["working_tree_state"] == "clean"
+    verified = audit.verify_web_evidence(web_root, report_dir, web_sha, docs_dir)
+    assert verified["source_fingerprint_sha256"] == result["web_inventory"]["source_fingerprint_sha256"]
+
+
+def test_verify_web_evidence_rejects_evidence_created_from_dirty_source(tmp_path: Path) -> None:
+    """A later clean commit cannot bless evidence whose audit snapshot was dirty."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    app_source = web_root / "app.py"
+    app_source.write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "clean fixture")
+    audit_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    app_source.write_text("app = FastAPI()\nAUDIT_SOURCE_WAS_DIRTY = True\n", encoding="utf-8")
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=audit_sha,
+    )
+    assert result["preflight"]["webapp"]["revision"]["working_tree_state"] == "dirty"
+
+    git("add", "app.py", "reports/migration", "docs/migration")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "commit dirty audit source")
+    expected_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    with pytest.raises(ValueError, match="audit source.*clean"):
+        audit.verify_web_evidence(web_root, report_dir, expected_sha)
+
+
+def test_static_audit_normalizes_abbreviated_requested_web_revision(tmp_path: Path) -> None:
+    """Evidence stores the resolved SHA even when the audit receives an abbreviation."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        "application.add_handler(CommandHandler('start', handler))\n",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "web fixture")
+    web_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    result = audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=tmp_path / "reports",
+        docs_dir=tmp_path / "docs",
+        web_revision_sha=web_sha[:12],
+    )
+
+    revision = result["preflight"]["webapp"]["revision"]
+    assert revision["checkout_sha"] == web_sha
+    assert revision["requested_sha"] == web_sha
+    assert revision["requested_relation"] == "exact"
+
+
+def test_source_fingerprint_normalizes_crlf_for_cross_platform_evidence(tmp_path: Path) -> None:
+    """The same source text has one fingerprint on Windows and Linux checkout."""
+
+    audit = _load_audit_module()
+    source = tmp_path / "app.py"
+    source.write_bytes(b"app = FastAPI()\n\n@app.get('/health')\ndef health():\n    return {'ok': True}\n")
+    linux_fingerprint = audit._fingerprint([source], tmp_path)
+
+    source.write_bytes(b"app = FastAPI()\r\n\r\n@app.get('/health')\r\ndef health():\r\n    return {'ok': True}\r\n")
+    windows_fingerprint = audit._fingerprint([source], tmp_path)
+
+    assert windows_fingerprint == linux_fingerprint
+
+
+def test_source_file_inventory_order_is_platform_stable(tmp_path: Path) -> None:
+    """Fingerprint input order is based on POSIX relative paths, not Path flavor."""
+
+    audit = _load_audit_module()
+    (tmp_path / "admin.py").write_text("admin = True\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# readme\n", encoding="utf-8")
+    (tmp_path / "admin" / "child.py").parent.mkdir()
+    (tmp_path / "admin" / "child.py").write_text("child = True\n", encoding="utf-8")
+
+    files = audit._source_files(tmp_path)
+    relative_paths = [path.relative_to(tmp_path).as_posix() for path in files]
+
+    assert relative_paths == sorted(relative_paths)
+
+
+def test_webapp_quality_workflow_fetches_history_for_committed_audit_evidence() -> None:
+    """Evidence may be committed after its audited source snapshot."""
+
+    workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
+
+    assert "fetch-depth: 0" in workflow
+    assert "--verify-web-evidence" in workflow
+    assert workflow.index("Verify committed migration evidence") < workflow.index("Install test dependencies")
+    assert workflow.index("Verify committed migration evidence") < workflow.index("Compile Python")
 
 
 def test_static_audit_excludes_its_configured_output_roots_from_web_inventory(tmp_path: Path) -> None:
