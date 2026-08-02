@@ -695,3 +695,95 @@ def test_image_prompt_composer_memory_save_respects_memory_center_maintenance_fl
         )
         assert response.status_code == 503
         assert "WEBAPP_MEMORY_CENTER_ENABLED" in response.text
+
+
+def test_image_prompt_composer_memory_save_selected_variant_is_server_recomputed_and_idempotent(tmp_path, monkeypatch):
+    """The Web saves only a bounded variant index, never browser-rendered text."""
+
+    db_path = tmp_path / "image-prompt-composer-test.db"
+    path = "/api/v1/image-studio/tools/prompt-composer/save"
+    subject = "Đèn bàn chống chói cho góc làm việc tại nhà"
+    base = composer_payload(
+        subject=subject,
+        style="",
+        style_preset="suggestion_2",
+        ratio="16:9",
+        destination="memory_note",
+        idempotency_key="image-prompt-variant-selection-0001",
+    )
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "image-prompt-variant-selection@example.com")
+        preview = client.post(
+            "/api/v1/image-studio/tools/prompt-composer",
+            headers={"X-CSRF-Token": csrf},
+            json={key: value for key, value in base.items() if key not in {"destination", "idempotency_key"}},
+        )
+        assert preview.status_code == 200
+        expected = preview.json()["data"]["composer"]
+
+        created = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json={**base, "selected_variant_index": 2},
+        )
+        assert created.status_code == 200
+        body = created.json()
+        assert body["ok"] is True
+        assert body["data"]["selected_variant_index"] == 2
+        assert set(body["data"]) == {
+            "note",
+            "destination",
+            "selected_variant_index",
+            "execution",
+            "draft_recomputed_on_server",
+            "web_note_persisted",
+            "browser_result_persisted",
+            "pending_bot_save_created",
+            "telegram_state_changed",
+            "bot_called",
+            "bridge_called",
+            "source_image_inspected",
+            "provider_called",
+            "image_created",
+            "output_created",
+            "job_created",
+            "wallet_mutated",
+            "payment_started",
+            "asset_saved",
+            "publish_action_created",
+            "delivery_created",
+            "fact_checked",
+            "rights_verified",
+        }
+        assert expected["variants"][1] in client.get(
+            f"/api/v1/memory/notes/{body['data']['note']['id']}"
+        ).text
+        note_text = client.get(f"/api/v1/memory/notes/{body['data']['note']['id']}").json()["data"]["note"]["content"]
+        assert "selected_variant_index: 2" in note_text
+        assert expected["variants"][1] in note_text
+        assert expected["variants"][0] in note_text
+
+        replay = client.post(path, headers={"X-CSRF-Token": csrf}, json={**base, "selected_variant_index": 2})
+        assert replay.status_code == 200
+        assert replay.json() == body
+
+        changed_variant = client.post(path, headers={"X-CSRF-Token": csrf}, json={**base, "selected_variant_index": 3})
+        assert changed_variant.status_code == 409
+        with sqlite3.connect(db_path) as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_memory_notes").fetchone()[0] == 1
+
+        for invalid_index in (-1, 4):
+            invalid = client.post(path, headers={"X-CSRF-Token": csrf}, json={**base, "selected_variant_index": invalid_index, "idempotency_key": f"image-prompt-variant-invalid-{invalid_index:02d}"})
+            assert invalid.status_code == 422
+
+        rendered_text = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json={
+                **base,
+                "idempotency_key": "image-prompt-variant-rendered-text-0001",
+                "selected_variant_index": 1,
+                "prompt_text": "browser-rendered prompt must never be accepted",
+            },
+        )
+        assert rendered_text.status_code == 422

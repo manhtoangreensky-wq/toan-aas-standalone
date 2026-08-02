@@ -2385,11 +2385,14 @@ a { color: inherit; text-decoration: none; }
 .portal-image-prompt-composer-prompt pre, .portal-image-prompt-composer-variants pre { min-width: 0; max-height: 280px; margin: 0; overflow: auto; color: #e6d9f7; font: 10px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .portal-image-prompt-composer-variants { display: grid; grid-template-columns: minmax(172px, .38fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; padding: 15px; border: 1px solid rgba(163, 167, 255, .18); border-radius: 15px; background: linear-gradient(145deg, rgba(29, 30, 64, .55), rgba(41, 25, 54, .48)); }
 .portal-image-prompt-composer-variants h3 { margin: 4px 0 0; color: #f0edff; font-size: 15px; letter-spacing: -.03em; }
+.portal-image-prompt-composer-variants p { margin: 8px 0 0; color: #c9c5e7; font-size: 10px; line-height: 1.55; }
 .portal-image-prompt-composer-variants ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .portal-image-prompt-composer-variants li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; align-items: start; min-width: 0; padding: 10px; border: 1px solid rgba(178, 180, 255, .14); border-radius: 11px; background: rgba(8, 13, 30, .37); }
+.portal-image-prompt-composer-variants li[data-selected="true"] { border-color: rgba(125, 236, 217, .76); box-shadow: 0 0 0 1px rgba(125, 236, 217, .2); }
 .portal-image-prompt-composer-variants li > span { display: inline-grid; width: 28px; height: 23px; place-items: center; border: 1px solid rgba(183, 181, 255, .22); border-radius: 8px; background: rgba(133, 128, 242, .11); color: #dfdcff; font-size: 8px; font-weight: 800; letter-spacing: .05em; }
 .portal-image-prompt-composer-variants li > div { display: grid; gap: 5px; min-width: 0; }
 .portal-image-prompt-composer-variants li strong { color: #dcd9ff; font-size: 9px; font-weight: 790; letter-spacing: .04em; text-transform: uppercase; }
+.portal-image-prompt-composer-variant-select { justify-self: start; min-height: 32px; padding: 6px 10px; font-size: 10px; }
 .portal-image-prompt-composer-review { display: grid; gap: 9px; margin-top: 14px; padding: 14px; border: 1px solid rgba(255, 196, 112, .18); border-radius: 14px; background: rgba(63, 45, 27, .39); }
 .portal-image-prompt-composer-review strong { color: #ffe6b4; font-size: 11px; }
 .portal-image-prompt-composer-review ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
@@ -2452,7 +2455,9 @@ a { color: inherit; text-decoration: none; }
 .portal-image-prompt-composer-variants pre { color: #153e49; }
 .portal-image-prompt-composer-variants { border-color: #cfe7e7; background: #f5fbfb; }
 .portal-image-prompt-composer-variants h3 { color: #153e49; }
+.portal-image-prompt-composer-variants p { color: #44717a; }
 .portal-image-prompt-composer-variants li { border-color: #d7ecec; background: #ffffff; }
+.portal-image-prompt-composer-variants li[data-selected="true"] { border-color: #0f8d86; box-shadow: 0 0 0 1px #bfe5e3; }
 .portal-image-prompt-composer-variants li > span { border-color: #bfe5e3; background: #e8f8f6; color: #0b706b; }
 .portal-image-prompt-composer-variants li strong { color: #245863; }
 .portal-image-prompt-composer-review { border-color: #f0ddb4; background: #fffaf0; }

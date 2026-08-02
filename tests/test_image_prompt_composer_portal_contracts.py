@@ -202,6 +202,33 @@ def test_image_prompt_composer_memory_save_is_explicit_confirmed_and_content_fre
         assert boundary in PORTAL
 
 
+def test_image_prompt_composer_variant_selection_stays_in_session_and_sends_only_index() -> None:
+    for token in (
+        "imagePromptComposerSelectedVariantIndex",
+        'data-portal-action="image-prompt-composer-select-variant"',
+        "data-image-prompt-variant-index",
+        "selected_variant_index",
+        "0..3",
+        "imagePromptComposerVariantIndex",
+    ):
+        assert token in PORTAL or token in INTEGRATION or token in ROUTER
+
+    save_start = INTEGRATION.index('if (action === "image-prompt-composer-save-memory")')
+    save_end = INTEGRATION.index('if (action === "image-studio-refresh")', save_start)
+    save_action = INTEGRATION[save_start:save_end]
+    assert "selected_variant_index" in save_action
+    assert "short_prompt" not in save_action
+    assert "detailed_prompt" not in save_action
+    assert "variants" not in save_action
+
+    backend_start = ROUTER.index("class ImagePromptComposerMemorySaveRequest")
+    backend_end = ROUTER.index("class ImagePromptComposerResult", backend_start)
+    backend_model = ROUTER[backend_start:backend_end]
+    assert "selected_variant_index" in backend_model
+    assert "Field(default=0, ge=0, le=3)" in backend_model
+    assert "selected_variant_index" in ROUTER[ROUTER.index("def _image_prompt_composer_memory_note"):]
+
+
 def test_image_prompt_composer_backend_remains_request_only_without_durable_mutation() -> None:
     assert '@router.post("/tools/prompt-composer")' in ROUTER
     assert "PROMPT_COMPOSER_GOAL_CODES" in ROUTER

@@ -38,6 +38,20 @@ PROMPT_COMPOSER_GOAL_CODES = frozenset({"product", "ad", "cinematic", "custom"})
 PROMPT_COMPOSER_RATIOS = frozenset({"1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"})
 PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
 PROMPT_COMPOSER_STYLE_PRESETS = frozenset({"auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"})
+PROMPT_COMPOSER_VARIANT_LABELS = {
+    "vi": (
+        "Bản gốc",
+        "Biến thể 1 · Bán hàng trực tiếp",
+        "Biến thể 2 · Premium brand",
+        "Biến thể 3 · Viral / social",
+    ),
+    "en": (
+        "Original",
+        "Variant 1 · Product-led sales",
+        "Variant 2 · Premium brand",
+        "Variant 3 · Viral / social",
+    ),
+}
 PROMPT_COMPOSER_STYLE_SUGGESTION_GOAL_CODES = frozenset({"product", "ad", "cinematic"})
 PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG = {
     "vi": {
@@ -600,12 +614,17 @@ class ImagePromptComposerMemorySaveRequest(ImagePromptComposerRequest):
     """Narrow, explicit handoff of a reviewed composer selection to Memory.
 
     The browser may provide only the bounded ingredients necessary to recreate
-    the deterministic draft.  It cannot send a rendered prompt/body/title,
-    pick an account, use an asset, or point at a Bot pending result.
+    the deterministic draft plus one finite selection index. It cannot send a
+    rendered prompt/body/title, pick an account, use an asset, or point at a
+    Bot pending result.
     """
 
     destination: str
     idempotency_key: str
+    # This is the only mutable choice after the deterministic draft returns:
+    # 0 is the original detailed prompt; 1..3 are the three visible variants.
+    # It remains a bounded Web input and is never a Bot callback or prompt body.
+    selected_variant_index: int = Field(default=0, ge=0, le=3)
 
     @field_validator("destination")
     @classmethod
@@ -618,6 +637,13 @@ class ImagePromptComposerMemorySaveRequest(ImagePromptComposerRequest):
     @classmethod
     def validate_idempotency_key(cls, value: str) -> str:
         return _idempotency_key(value)
+
+    @field_validator("selected_variant_index", mode="before")
+    @classmethod
+    def validate_selected_variant_index(cls, value: Any) -> int:
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0 or value > 3:
+            raise ValueError("Lựa chọn prompt cần là chỉ số nguyên từ 0 đến 3")
+        return value
 
 
 class ImagePromptComposerResult(BaseModel):
@@ -909,17 +935,27 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
     ).model_dump()
 
 
-def _image_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, str, list[str]]:
+def _image_prompt_composer_memory_note(
+    composer: dict[str, Any],
+    *,
+    selected_variant_index: int,
+) -> tuple[str, str, list[str]]:
     """Serialize a fresh deterministic composer result as one Web note.
 
     This is deliberately not a generic browser-authored note endpoint.  The
-    full text is derived again from bounded composer inputs inside the write
-    transaction, so a caller cannot substitute a different title, prompt,
-    result object or private payload while reusing the visible save control.
+    full text and selected prompt are derived again from bounded composer
+    inputs and a finite index inside the write transaction, so a caller cannot
+    substitute a different title, prompt, result object or private payload
+    while reusing the visible save control.
     """
 
     try:
         result = ImagePromptComposerResult.model_validate(composer).model_dump()
+        if isinstance(selected_variant_index, bool) or not isinstance(selected_variant_index, int) or selected_variant_index < 0 or selected_variant_index > 3:
+            raise ValueError("Lựa chọn prompt cần là chỉ số nguyên từ 0 đến 3")
+        labels = PROMPT_COMPOSER_VARIANT_LABELS.get(result["language"], PROMPT_COMPOSER_VARIANT_LABELS["vi"])
+        selected_label = labels[selected_variant_index]
+        selected_prompt = result["detailed_prompt"] if selected_variant_index == 0 else result["variants"][selected_variant_index - 1]
         title = _line(
             "Image Prompt Composer",
             label="Tiêu đề ghi chú",
@@ -935,6 +971,11 @@ def _image_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, s
             f"Phong cách: {result['style']}",
             f"Tỷ lệ: {result['ratio']}",
             f"Ngôn ngữ: {result['language']}",
+            "",
+            "## Lựa chọn lưu",
+            f"selected_variant_index: {selected_variant_index}",
+            f"Lựa chọn: {selected_label}",
+            selected_prompt,
             "",
             "## Prompt ngắn",
             result["short_prompt"],
@@ -965,7 +1006,11 @@ def _image_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, s
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return title, content, ["image-prompt-composer", f"image-goal-{result['goal_code']}"]
+    return title, content, [
+        "image-prompt-composer",
+        f"image-goal-{result['goal_code']}",
+        f"image-prompt-variant-{selected_variant_index}",
+    ]
 
 
 def _image_prompt_composer_memory_boundaries(
@@ -1025,7 +1070,15 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(response, dict) or response.get("ok") is not True:
         return response
     source = response.get("data") if isinstance(response.get("data"), dict) else {}
-    data = _boundary()
+    # The explicit Prompt Composer → Memory handoff has its own closed,
+    # content-free receipt schema. Do not prepend the generic Image Studio
+    # authoring boundary fields here: the browser validates that narrow shape
+    # before it can claim a private note was saved or replayed.
+    is_prompt_composer_memory_receipt = (
+        source.get("destination") == "memory_note"
+        and source.get("execution") == "web_native_memory_note_server_recomputed"
+    )
+    data = {} if is_prompt_composer_memory_receipt else _boundary()
     artboard = source.get("artboard")
     if isinstance(artboard, dict) and isinstance(artboard.get("id"), str):
         data["artboard"] = {
@@ -1056,6 +1109,7 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
         }
     for name in (
         "execution",
+        "selected_variant_index",
         "reordered",
         "history_snapshot_recorded",
         "direction_count",
@@ -1739,10 +1793,11 @@ async def save_image_prompt_composer_to_memory(
 
     This is deliberately separate from ``/tools/prompt-composer`` so the
     preview remains stateless.  The browser sends only the bounded original
-    inputs, destination and idempotency key; it cannot submit a result object,
-    free-form note body, title, account, Bot pending state, asset or provider
-    reference.  The server recreates the full deterministic composer result
-    in the same transaction that creates the owner-scoped Web note.
+    inputs, finite selected-variant index, destination and idempotency key;
+    it cannot submit a result object, free-form note body, title, account, Bot
+    pending state, asset or provider reference. The server recreates the full
+    deterministic composer result in the same transaction that creates the
+    owner-scoped Web note.
     """
 
     _require_enabled()
@@ -1769,6 +1824,7 @@ async def save_image_prompt_composer_to_memory(
         {
             "action": "image_prompt_composer_memory_save",
             "destination": payload.destination,
+            "selected_variant_index": payload.selected_variant_index,
             "goal_code": payload.goal_code,
             "custom_goal": payload.custom_goal,
             "subject": payload.subject,
@@ -1784,7 +1840,10 @@ async def save_image_prompt_composer_to_memory(
         # transaction is open.  No browser-authored generated result is ever
         # accepted or stored as part of this handoff.
         composer = _compose_image_prompt(payload)
-        note_title, note_content, tags = _image_prompt_composer_memory_note(composer)
+        note_title, note_content, tags = _image_prompt_composer_memory_note(
+            composer,
+            selected_variant_index=payload.selected_variant_index,
+        )
         active_count = conn.execute(
             "SELECT COUNT(*) FROM web_memory_notes WHERE account_id=? AND state='active'",
             (account_id,),
@@ -1846,6 +1905,7 @@ async def save_image_prompt_composer_to_memory(
                     "priority": priority,
                 },
                 "destination": "memory_note",
+                "selected_variant_index": payload.selected_variant_index,
                 **_image_prompt_composer_memory_boundaries(),
             },
             status_name="completed",

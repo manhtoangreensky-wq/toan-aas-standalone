@@ -3058,6 +3058,14 @@
     return { goal_code: goalCode, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language };
   }
 
+  function normalizeImagePromptComposerSelectedVariantIndex(raw) {
+    // This is presentation state for the current signed tab only. Index 0
+    // represents the original detailed prompt; 1..3 select the three
+    // deterministic variants. It never restores a prompt body or Bot state.
+    const index = Number(raw);
+    return Number.isInteger(index) && index >= 0 && index <= 3 ? index : 0;
+  }
+
   // A saved note receipt is intentionally content-free. It is displayed only
   // after the server proves that it recomputed the draft and kept every
   // image/provider/job/wallet/payment boundary disabled.
@@ -3069,7 +3077,7 @@
     "fact_checked", "rights_verified"
   ]);
   const IMAGE_PROMPT_COMPOSER_MEMORY_RECEIPT_KEYS = Object.freeze([
-    "note", "destination", "execution", "draft_recomputed_on_server", "web_note_persisted",
+    "note", "destination", "selected_variant_index", "execution", "draft_recomputed_on_server", "web_note_persisted",
     ...IMAGE_PROMPT_COMPOSER_MEMORY_FALSE_BOUNDARY_FIELDS
   ]);
   const IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS = Object.freeze(["id", "revision", "state", "category", "priority"]);
@@ -3078,11 +3086,13 @@
     const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     const note = source.note && typeof source.note === "object" && !Array.isArray(source.note) ? source.note : {};
     const revision = Number(note.revision);
+    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(source.selected_variant_index);
     const exactShape = Object.keys(source).length === IMAGE_PROMPT_COMPOSER_MEMORY_RECEIPT_KEYS.length
       && IMAGE_PROMPT_COMPOSER_MEMORY_RECEIPT_KEYS.every((key) => Object.prototype.hasOwnProperty.call(source, key));
     const noteExactShape = Object.keys(note).length === IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS.length
       && IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(note, key));
     if (!exactShape || !noteExactShape || source.destination !== "memory_note"
+      || selectedVariantIndex !== source.selected_variant_index
       || source.execution !== "web_native_memory_note_server_recomputed"
       || source.draft_recomputed_on_server !== true || source.web_note_persisted !== true
       || !IMAGE_PROMPT_COMPOSER_MEMORY_FALSE_BOUNDARY_FIELDS.every((field) => source[field] === false)
@@ -3092,7 +3102,8 @@
     ) return {};
     return {
       note: { id: String(note.id), revision, state: "active", category: "Image Prompt Composer", priority: "normal" },
-      destination: "memory_note"
+      destination: "memory_note",
+      selected_variant_index: selectedVariantIndex
     };
   }
 
@@ -8080,6 +8091,7 @@
       // in tab memory only. Bootstrap clears them, and they never come from a
       // Bot pending result, source image, asset or browser storage.
       imagePromptComposerSaveSource: normalizeImagePromptComposerSaveSource(source.imagePromptComposerSaveSource),
+      imagePromptComposerSelectedVariantIndex: normalizeImagePromptComposerSelectedVariantIndex(source.imagePromptComposerSelectedVariantIndex),
       imagePromptComposerSaveReceipt: normalizeImagePromptComposerSaveReceipt(source.imagePromptComposerSaveReceipt),
       // Document Workspace is a separate signed-account authoring surface.
       // Preserve only bounded, server-sourced metadata through render
@@ -13177,7 +13189,7 @@
     return found ? found[1] : "Hướng phong cách";
   }
 
-  function renderImagePromptComposerResult(raw, rawSaveSource, canSaveToMemory) {
+  function renderImagePromptComposerResult(raw, rawSaveSource, rawSelectedVariantIndex, canSaveToMemory) {
     const result = raw && typeof raw === "object" ? raw : {};
     const composer = result.composer && typeof result.composer === "object" ? result.composer : null;
     if (!composer) {
@@ -13187,6 +13199,16 @@
       ["Prompt ngắn", composer.short_prompt], ["Prompt chi tiết", composer.detailed_prompt], ["Negative prompt", composer.negative_prompt]
     ].map(([label, value]) => `<article class="portal-image-prompt-composer-prompt"><span>${safeText(label)}</span><pre>${safeText(String(value || ""))}</pre></article>`).join("");
     const variants = Array.isArray(composer.variants) ? composer.variants : [];
+    const selectionOptions = [
+      { index: 0, label: "Bản gốc", prompt: composer.detailed_prompt },
+      ...variants.map((item, index) => ({
+        index: index + 1,
+        label: `Variant ${index + 1} · ${IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || "Prompt"}`,
+        prompt: item
+      }))
+    ].filter((item) => Number.isInteger(item.index) && item.index >= 0 && item.index <= 3 && typeof item.prompt === "string");
+    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(rawSelectedVariantIndex);
+    const selectedOption = selectionOptions.find((item) => item.index === selectedVariantIndex) || selectionOptions[0];
     const review = Array.isArray(composer.review_before_use) ? composer.review_before_use : [];
     const customGoal = composer.custom_goal
       ? `<span>Mục đích riêng: ${safeText(String(composer.custom_goal))}</span>`
@@ -13201,17 +13223,24 @@
       && saveSource.language === composer.language
       && (saveSource.style_preset !== "custom" || saveSource.style === composer.style)
     );
-    const saveControl = sourceMatchesComposer
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="image-prompt-composer-save-memory" data-portal-route="/image/prompt-composer" data-portal-confirm="Lưu bản nháp Web hiện tại vào Memory Center? Máy chủ sẽ tự tạo lại prompt từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh, job, không đổi ví Xu, PayOS, asset hoặc publish."${canSaveToMemory ? "" : " disabled"}>Lưu vào Memory Center</button>`
+    const saveControl = sourceMatchesComposer && selectedOption
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="image-prompt-composer-save-memory" data-portal-route="/image/prompt-composer" data-portal-confirm="Lưu ${safeText(selectedOption.label)} vào Memory Center? Máy chủ sẽ tự tạo lại prompt từ lựa chọn chỉ số đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh, job, không đổi ví Xu, PayOS, asset hoặc publish."${canSaveToMemory ? "" : " disabled"}>Lưu vào Memory Center</button>`
       : "";
-    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic draft</span><h2 class="portal-card-title">${safeText(String(composer.title || "Image Prompt Composer"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Chủ thể: ${safeText(String(composer.subject || ""))}</span><span>Hướng: ${safeText(imagePromptComposerStylePresetLabel(composer.style_preset))}</span><span>Style: ${safeText(String(composer.style || ""))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">Variants</span><h3>Ba hướng diễn đạt để so sánh</h3></div><ol>${variants.map((item, index) => `<li><span>${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || "Variant")}</strong><pre>${safeText(String(item))}</pre></div></li>`).join("")}</ol></section><section class="portal-image-prompt-composer-review"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Máy chủ tự tạo lại prompt; browser không gửi phần text đã sinh, không tạo Bot pending-save hay image execution.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">Mở Image Studio</a>${saveControl}</div></div></section>`;
+    const selectionCards = selectionOptions.map((item) => {
+      const selected = item.index === selectedVariantIndex;
+      const ordinal = item.index === 0 ? "Gốc" : String(item.index).padStart(2, "0");
+      return `<li${selected ? ' data-selected="true"' : ""}><span>${safeText(ordinal)}</span><div><strong>${safeText(item.label)}</strong><pre>${safeText(String(item.prompt || ""))}</pre><button class="portal-button portal-button--quiet portal-image-prompt-composer-variant-select" type="button" data-portal-action="image-prompt-composer-select-variant" data-portal-route="/image/prompt-composer" data-image-prompt-variant-index="${safeText(String(item.index))}" aria-pressed="${selected ? "true" : "false"}">${selected ? "Đang chọn" : `Chọn ${safeText(item.label)}`}</button></div></li>`;
+    }).join("");
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic draft</span><h2 class="portal-card-title">${safeText(String(composer.title || "Image Prompt Composer"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Chủ thể: ${safeText(String(composer.subject || ""))}</span><span>Hướng: ${safeText(imagePromptComposerStylePresetLabel(composer.style_preset))}</span><span>Style: ${safeText(String(composer.style || ""))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">Lựa chọn để lưu</span><h3>Bản gốc hoặc ba variants</h3><p>Đang chọn: <strong>${safeText(selectedOption ? selectedOption.label : "Bản gốc")}</strong>. Lựa chọn chỉ tồn tại trong phiên Web này.</p></div><ol>${selectionCards}</ol></section><section class="portal-image-prompt-composer-review"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Browser chỉ gửi index 0..3, không gửi phần text đã sinh; máy chủ tự tạo lại prompt và không tạo Bot pending-save hay image execution.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">Mở Image Studio</a>${saveControl}</div></div></section>`;
   }
 
   function renderImagePromptComposerSaveReceipt(raw) {
     const receipt = normalizeImagePromptComposerSaveReceipt(raw);
     const note = receipt.note && typeof receipt.note === "object" ? receipt.note : null;
     if (!note) return "";
-    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Memory Center riêng tư</span><h2 class="portal-card-title">Đã lưu bản nháp Web</h2><p class="portal-card-subtitle">${safeText(String(note.category || "Image Prompt Composer"))} · revision ${safeText(String(note.revision || 1))}. Receipt này không giữ lại nội dung ghi chú trong browser.</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">Đã tạo ghi chú owner-only trong Memory Center. Không có pending Telegram, Bot/provider call, source image, ảnh, job, ví Xu, PayOS, asset, publish hoặc delivery.</span><a class="portal-button portal-button--primary" href="/notes">Mở Memory Center</a></div></section>`;
+    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(receipt.selected_variant_index);
+    const selectedLabel = selectedVariantIndex === 0 ? "Bản gốc" : `Variant ${selectedVariantIndex}`;
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Memory Center riêng tư</span><h2 class="portal-card-title">Đã lưu ${safeText(selectedLabel)}</h2><p class="portal-card-subtitle">${safeText(String(note.category || "Image Prompt Composer"))} · revision ${safeText(String(note.revision || 1))}. Receipt này không giữ lại nội dung ghi chú trong browser.</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">Đã tạo ghi chú owner-only trong Memory Center. Không có pending Telegram, Bot/provider call, source image, ảnh, job, ví Xu, PayOS, asset, publish hoặc delivery.</span><a class="portal-button portal-button--primary" href="/notes">Mở Memory Center</a></div></section>`;
   }
 
   function renderImagePromptComposer(page, context) {
@@ -13221,7 +13250,7 @@
     return `<article class="portal-page portal-image-prompt-composer">${renderHero(page, context)}
       <section class="portal-image-prompt-composer-intro"><div><span class="portal-section-kicker">Web-native prompt planning</span><h2>Từ creative brief đến prompt ảnh có cấu trúc — không hề tạo ảnh.</h2><p>Composer chuyển trình tự prompt của Bot thành một công cụ Web text-only rõ ràng. Bạn kiểm soát toàn bộ bản nháp, có negative prompt và ba biến thể để review trước khi dùng trong workflow khác.</p></div><dl><div><dt>0</dt><dd>Ảnh / preview</dd></div><div><dt>0</dt><dd>Provider / job</dd></div><div><dt>3</dt><dd>Prompt variants</dd></div></dl></section>
       <div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief composer</span><h2 class="portal-card-title">Tạo prompt ảnh để review</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Brief và kết quả không được lưu thành artboard, asset, project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-prompt-compose" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, "image-prompt-composer")}<p class="portal-image-prompt-composer-style-status" data-image-prompt-composer-style-status role="status" aria-live="polite"></p><div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo prompt text editable; không gửi lệnh tạo, sửa, upscale, upload hoặc phân tích ảnh.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo prompt nháp</button></div></form></section><aside class="portal-card portal-card-pad portal-image-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Soạn prompt, không chạy image engine</h2><p class="portal-card-subtitle">Không có source image, upload, phân tích ảnh, model, provider, Bot, job, Xu, PayOS, asset, publish hay delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-image-prompt-composer-guard-list"><span><strong>Source image / upload</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Image / output</strong><em>off</em></span><span><strong>Job / wallet</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
-      ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, canSaveToMemory)}
+      ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, context.imagePromptComposerSelectedVariantIndex, canSaveToMemory)}
       ${renderImagePromptComposerSaveReceipt(context.imagePromptComposerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Bản nháp visual trước, engine sau</h2><p class="portal-card-subtitle">Dùng kết quả như một starting point có thể chỉnh sửa. Khi cần lưu direction có version history, hãy tạo Artboard riêng; việc đó vẫn không tạo ảnh hoặc tự gửi prompt đến provider.</p></div></div>${renderNotes(page)}</section>
     </article>`;
@@ -27790,6 +27819,14 @@
         __imageStudioOffset: source.getAttribute("data-image-studio-offset") || "",
         __imageStudioProjectReferenceOffset: source.getAttribute("data-image-studio-project-reference-offset") || "",
         __imageStudioAssetReferenceOffset: source.getAttribute("data-image-studio-asset-reference-offset") || ""
+      });
+    }
+    if (action === "image-prompt-composer-select-variant") {
+      // The selector sends only its finite ordinal into the current tab event.
+      // No prompt text, asset/reference, Bot callback or storage value is
+      // attached to this local presentation action.
+      Object.assign(fields, {
+        __imagePromptComposerSelectedVariantIndex: source.getAttribute("data-image-prompt-variant-index") || ""
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {
