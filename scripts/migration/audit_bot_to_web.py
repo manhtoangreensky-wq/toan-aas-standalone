@@ -5014,7 +5014,10 @@ def _source_files(root: Path, *, excluded_roots: Iterable[Path] = ()) -> list[Pa
                 # The source audit is read-only and must not fail merely
                 # because an unrelated generated artifact disappeared.
                 continue
-    return sorted(files)
+    # ``Path`` ordering is case-insensitive on Windows and separator-aware on
+    # POSIX. Sort the canonical relative POSIX path so the same Git checkout
+    # feeds the fingerprint in the same order on every runner.
+    return sorted(files, key=lambda path: _relative(path, root))
 
 
 def _active_inventory_files(project_kind: str, root: Path, files: list[Path]) -> tuple[list[Path], list[str]]:

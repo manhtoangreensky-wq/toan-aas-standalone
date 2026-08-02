@@ -1053,6 +1053,21 @@ def test_source_fingerprint_normalizes_crlf_for_cross_platform_evidence(tmp_path
     assert windows_fingerprint == linux_fingerprint
 
 
+def test_source_file_inventory_order_is_platform_stable(tmp_path: Path) -> None:
+    """Fingerprint input order is based on POSIX relative paths, not Path flavor."""
+
+    audit = _load_audit_module()
+    (tmp_path / "admin.py").write_text("admin = True\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# readme\n", encoding="utf-8")
+    (tmp_path / "admin" / "child.py").parent.mkdir()
+    (tmp_path / "admin" / "child.py").write_text("child = True\n", encoding="utf-8")
+
+    files = audit._source_files(tmp_path)
+    relative_paths = [path.relative_to(tmp_path).as_posix() for path in files]
+
+    assert relative_paths == sorted(relative_paths)
+
+
 def test_webapp_quality_workflow_fetches_history_for_committed_audit_evidence() -> None:
     """Evidence may be committed after its audited source snapshot."""
 
