@@ -14144,7 +14144,7 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(_sanitize(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _git_read(root: Path, *args: str) -> tuple[int, str]:
+def _git_read_raw(root: Path, *args: str) -> tuple[int, str]:
     """Read local Git metadata without touching remotes or source runtime.
 
     The migration task locks an expected Bot SHA.  A source fingerprint alone
@@ -14172,7 +14172,14 @@ def _git_read(root: Path, *args: str) -> tuple[int, str]:
         )
     except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
         return 1, ""
-    return completed.returncode, completed.stdout.strip()
+    return completed.returncode, completed.stdout
+
+
+def _git_read(root: Path, *args: str) -> tuple[int, str]:
+    """Read trimmed local Git metadata for scalar revision commands."""
+
+    status, output = _git_read_raw(root, *args)
+    return status, output.strip()
 
 
 @contextmanager
@@ -14308,6 +14315,10 @@ def _web_relative_path_is_audit_excluded(relative: str) -> bool:
     """Return whether a Git status path lies wholly outside Web runtime source."""
 
     candidate = PurePosixPath(str(relative or "").replace("\\", "/").lstrip("./"))
+    if not candidate.parts or _is_excluded_source_dir(candidate.parts[0]):
+        return True
+    if candidate.suffix.lower() not in SOURCE_SUFFIXES:
+        return True
     return any(
         candidate == excluded_path or excluded_path in candidate.parents
         for excluded_path in (PurePosixPath(excluded.as_posix()) for excluded in STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS)
@@ -14317,7 +14328,7 @@ def _web_relative_path_is_audit_excluded(relative: str) -> bool:
 def _web_worktree_state(root: Path) -> str:
     """Return clean/dirty for eligible Web source, ignoring audit-only paths."""
 
-    status_code, status = _git_read(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+    status_code, status = _git_read_raw(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     if status_code != 0:
         return "status_unavailable"
     records = [record for record in status.split("\0") if record]
@@ -14406,6 +14417,13 @@ def verify_web_evidence(web_root: Path, report_dir: Path, expected_sha: str) -> 
     recorded_audit_sha = str(revision.get("checkout_sha") or "")
     if not re.fullmatch(r"[0-9a-f]{40}", recorded_audit_sha):
         raise ValueError("Migration preflight Web audit revision is invalid")
+    recorded_requested_sha = str(revision.get("requested_sha") or "")
+    recorded_requested_relation = str(revision.get("requested_relation") or "")
+    if (
+        recorded_requested_sha != recorded_audit_sha
+        or recorded_requested_relation != "exact"
+    ):
+        raise ValueError("Migration preflight Web audit used a different requested revision")
     ancestor_status, _ = _git_read(web_root, "merge-base", "--is-ancestor", recorded_audit_sha, expected)
     if ancestor_status != 0:
         raise ValueError("Migration Web audit revision is not an ancestor of the expected revision")
