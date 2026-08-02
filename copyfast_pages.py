@@ -135,6 +135,8 @@ _PORTAL_SHELL_TITLES = {
     CAMPAIGN_CREATE_PATH: {"vi": "Campaign mới · TOAN AAS", "en": "New Campaign · TOAN AAS", "zh": "新建活动 · TOAN AAS"},
     "/projects": {"vi": "Project Operations Board · TOAN AAS", "en": "Project Operations Board · TOAN AAS", "zh": "项目运营看板 · TOAN AAS"},
     PROJECT_CREATE_PATH: {"vi": "Project mới · TOAN AAS", "en": "New Project · TOAN AAS", "zh": "新建项目 · TOAN AAS"},
+    "/admin/security": {"vi": "Security Posture · TOAN AAS", "en": "Security Posture · TOAN AAS", "zh": "安全态势 · TOAN AAS"},
+    "/admin/access": {"vi": "Access Posture · TOAN AAS", "en": "Access Posture · TOAN AAS", "zh": "访问态势 · TOAN AAS"},
 }
 
 
