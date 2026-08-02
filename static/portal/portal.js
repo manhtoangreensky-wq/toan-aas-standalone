@@ -2975,6 +2975,7 @@
   const IMAGE_PROMPT_COMPOSER_GOAL_CODES = new Set(["product", "ad", "cinematic", "custom"]);
   const IMAGE_PROMPT_COMPOSER_RATIOS = new Set(["1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"]);
   const IMAGE_PROMPT_COMPOSER_LANGUAGES = new Set(["vi", "en"]);
+  const IMAGE_PROMPT_COMPOSER_STYLE_PRESETS = new Set(["auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"]);
 
   function normalizeImagePromptComposerResult(raw) {
     // This receipt remains short-lived presentation state only. Reject an
@@ -2987,6 +2988,7 @@
     const goalLabel = typeof composer.goal_label === "string" && composer.goal_label.length > 0 && composer.goal_label.length <= 180 ? composer.goal_label : "";
     const customGoal = typeof composer.custom_goal === "string" && composer.custom_goal.length <= 180 ? composer.custom_goal : "";
     const subject = typeof composer.subject === "string" && composer.subject.length >= 2 && composer.subject.length <= 260 ? composer.subject : "";
+    const stylePreset = typeof composer.style_preset === "string" ? composer.style_preset : "";
     const style = typeof composer.style === "string" && composer.style.length >= 2 && composer.style.length <= 180 ? composer.style : "";
     const ratio = typeof composer.ratio === "string" ? composer.ratio : "";
     const language = typeof composer.language === "string" ? composer.language : "";
@@ -3003,7 +3005,7 @@
       !title || !IMAGE_PROMPT_COMPOSER_GOAL_CODES.has(goalCode) || !goalLabel
       || (goalCode === "custom" && customGoal.length < 2)
       || (goalCode !== "custom" && customGoal !== "")
-      || !subject || !style || !IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) || !IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
+      || !subject || !IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset) || !style || !IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) || !IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
       || !shortPrompt || !detailedPrompt || !negativePrompt || variants.length !== 3 || !reviewBeforeUse.length
       || source.execution !== "web_native_deterministic_prompt_only"
       || source.input_persisted !== false
@@ -3021,7 +3023,7 @@
     ) return {};
     return {
       composer: {
-        title, goal_code: goalCode, goal_label: goalLabel, custom_goal: customGoal, subject, style, ratio, language,
+        title, goal_code: goalCode, goal_label: goalLabel, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language,
         short_prompt: shortPrompt, detailed_prompt: detailedPrompt, negative_prompt: negativePrompt,
         variants, review_before_use: reviewBeforeUse
       }
@@ -3033,24 +3035,27 @@
   // reference, a Bot result or a browser-restored draft as save input.
   function normalizeImagePromptComposerSaveSource(raw) {
     const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-    const expected = ["goal_code", "custom_goal", "subject", "style", "ratio", "language"];
+    const expected = ["goal_code", "custom_goal", "subject", "style_preset", "style", "ratio", "language"];
     const exactShape = Object.keys(source).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(source, key));
     const goalCode = typeof source.goal_code === "string" ? source.goal_code : "";
     const customGoal = typeof source.custom_goal === "string" ? source.custom_goal : "";
     const subject = typeof source.subject === "string" ? source.subject : "";
+    const stylePreset = typeof source.style_preset === "string" ? source.style_preset : "";
     const style = typeof source.style === "string" ? source.style : "";
     const ratio = typeof source.ratio === "string" ? source.ratio : "";
     const language = typeof source.language === "string" ? source.language : "";
-    const inputs = [goalCode, customGoal, subject, style, ratio, language];
+    const inputs = [goalCode, customGoal, subject, stylePreset, style, ratio, language];
     const hasUnsafeControl = inputs.some((value) => /[\x00-\x1f\x7f]/.test(value));
     if (!exactShape || hasUnsafeControl || !IMAGE_PROMPT_COMPOSER_GOAL_CODES.has(goalCode)
-      || !IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) || !IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
+      || !IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset) || !IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) || !IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
       || subject.length < 2 || subject.length > 260 || style.length > 180
       || (style && style.length < 2) || customGoal.length > 180
       || (goalCode === "custom" && customGoal.length < 2)
       || (goalCode !== "custom" && customGoal !== "")
+      || (stylePreset === "custom" && style.length < 2)
+      || (stylePreset !== "custom" && style !== "")
     ) return {};
-    return { goal_code: goalCode, custom_goal: customGoal, subject, style, ratio, language };
+    return { goal_code: goalCode, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language };
   }
 
   // A saved note receipt is intentionally content-free. It is displayed only
@@ -13141,6 +13146,13 @@
     ["3:2", "3:2 · Ngang sản phẩm"], ["2:3", "2:3 · Dọc sản phẩm"], ["21:9", "21:9 · Ultra-wide"]
   ]);
   const IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"]]);
+  const IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS = Object.freeze([
+    ["auto", "Tự chọn phù hợp với mục tiêu"],
+    ["suggestion_1", "Gợi ý 1 · Rõ chủ thể"],
+    ["suggestion_2", "Gợi ý 2 · Premium có chiều sâu"],
+    ["suggestion_3", "Gợi ý 3 · Editorial / social"],
+    ["custom", "Tự nhập direction riêng"]
+  ]);
   const IMAGE_PROMPT_COMPOSER_VARIANT_LABELS = Object.freeze(["Bán hàng trực tiếp", "Premium brand", "Viral / social"]);
 
   function imagePromptComposerFields() {
@@ -13150,13 +13162,19 @@
       { name: "language", label: "Ngôn ngữ prompt", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS },
       { name: "custom_goal", label: "Mục đích riêng (nếu chọn Mục đích riêng)", control: "textarea", placeholder: "Ví dụ: key visual giới thiệu tính năng mới cho landing page", minLength: 2, maxLength: 180, wide: true, help: "Bỏ trống nếu bạn chọn Ảnh sản phẩm, Ảnh quảng cáo hoặc Cinematic / key visual." },
       { name: "subject", label: "Chủ thể / chủ đề", control: "textarea", placeholder: "Ví dụ: máy pha cà phê mini màu đen mờ trên quầy bếp sáng", required: true, minLength: 2, maxLength: 260, wide: true, help: "Chỉ mô tả nội dung bạn có quyền sử dụng. Không nhập ảnh, URL, token, OTP, chứng từ thanh toán hoặc yêu cầu mô phỏng thương hiệu/nghệ sĩ." },
-      { name: "style", label: "Phong cách & bố cục (tùy chọn)", control: "textarea", placeholder: "Ví dụ: studio sạch, ánh sáng mềm, chủ thể trung tâm, khoảng trống cho CTA", minLength: 2, maxLength: 180, wide: true, help: "Có thể để trống để server chọn direction mặc định theo mục tiêu. Nếu nhập, mô tả direction nguyên bản; tool không phân tích ảnh, không nhận upload và không tạo preview." }
+      { name: "style_preset", label: "Hướng phong cách", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, controlData: { "image-prompt-composer-style-preset": "" }, help: "Server tự chọn direction gốc theo mục tiêu và ngôn ngữ. Chỉ chọn Tự nhập khi cần mô tả riêng." },
+      { name: "style", label: "Phong cách riêng (chỉ khi chọn Tự nhập)", control: "textarea", placeholder: "Ví dụ: studio sạch, ánh sáng mềm, chủ thể trung tâm, khoảng trống cho CTA", minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, controlData: { "image-prompt-composer-custom-style": "" }, wrapperData: { "image-prompt-composer-custom-style-field": "" }, help: "Mô tả direction nguyên bản của bạn. Tool không phân tích ảnh, không nhận upload và không tạo preview." }
     ];
   }
 
   function imagePromptComposerGoalLabel(value) {
     const found = IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS.find(([key]) => key === String(value || ""));
     return found ? found[1] : "Image prompt";
+  }
+
+  function imagePromptComposerStylePresetLabel(value) {
+    const found = IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS.find(([key]) => key === String(value || ""));
+    return found ? found[1] : "Hướng phong cách";
   }
 
   function renderImagePromptComposerResult(raw, rawSaveSource, canSaveToMemory) {
@@ -13178,14 +13196,15 @@
       saveSource.goal_code && saveSource.goal_code === composer.goal_code
       && saveSource.custom_goal === composer.custom_goal
       && saveSource.subject === composer.subject
+      && saveSource.style_preset === composer.style_preset
       && saveSource.ratio === composer.ratio
       && saveSource.language === composer.language
-      && (!saveSource.style || saveSource.style === composer.style)
+      && (saveSource.style_preset !== "custom" || saveSource.style === composer.style)
     );
     const saveControl = sourceMatchesComposer
       ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="image-prompt-composer-save-memory" data-portal-route="/image/prompt-composer" data-portal-confirm="Lưu bản nháp Web hiện tại vào Memory Center? Máy chủ sẽ tự tạo lại prompt từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh, job, không đổi ví Xu, PayOS, asset hoặc publish."${canSaveToMemory ? "" : " disabled"}>Lưu vào Memory Center</button>`
       : "";
-    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic draft</span><h2 class="portal-card-title">${safeText(String(composer.title || "Image Prompt Composer"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Chủ thể: ${safeText(String(composer.subject || ""))}</span><span>Style: ${safeText(String(composer.style || ""))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">Variants</span><h3>Ba hướng diễn đạt để so sánh</h3></div><ol>${variants.map((item, index) => `<li><span>${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || "Variant")}</strong><pre>${safeText(String(item))}</pre></div></li>`).join("")}</ol></section><section class="portal-image-prompt-composer-review"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Máy chủ tự tạo lại prompt; browser không gửi phần text đã sinh, không tạo Bot pending-save hay image execution.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">Mở Image Studio</a>${saveControl}</div></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic draft</span><h2 class="portal-card-title">${safeText(String(composer.title || "Image Prompt Composer"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Chủ thể: ${safeText(String(composer.subject || ""))}</span><span>Hướng: ${safeText(imagePromptComposerStylePresetLabel(composer.style_preset))}</span><span>Style: ${safeText(String(composer.style || ""))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">Variants</span><h3>Ba hướng diễn đạt để so sánh</h3></div><ol>${variants.map((item, index) => `<li><span>${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || "Variant")}</strong><pre>${safeText(String(item))}</pre></div></li>`).join("")}</ol></section><section class="portal-image-prompt-composer-review"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Máy chủ tự tạo lại prompt; browser không gửi phần text đã sinh, không tạo Bot pending-save hay image execution.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">Mở Image Studio</a>${saveControl}</div></div></section>`;
   }
 
   function renderImagePromptComposerSaveReceipt(raw) {
@@ -13198,10 +13217,10 @@
   function renderImagePromptComposer(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["image-prompt-compose"] === true);
     const canSaveToMemory = Boolean(context.capabilities && context.capabilities["image-prompt-composer-save-memory"] === true);
-    const values = { goal_code: "product", custom_goal: "", subject: "", style: "", ratio: "1:1", language: "vi" };
+    const values = { goal_code: "product", custom_goal: "", subject: "", style_preset: "auto", style: "", ratio: "1:1", language: "vi" };
     return `<article class="portal-page portal-image-prompt-composer">${renderHero(page, context)}
       <section class="portal-image-prompt-composer-intro"><div><span class="portal-section-kicker">Web-native prompt planning</span><h2>Từ creative brief đến prompt ảnh có cấu trúc — không hề tạo ảnh.</h2><p>Composer chuyển trình tự prompt của Bot thành một công cụ Web text-only rõ ràng. Bạn kiểm soát toàn bộ bản nháp, có negative prompt và ba biến thể để review trước khi dùng trong workflow khác.</p></div><dl><div><dt>0</dt><dd>Ảnh / preview</dd></div><div><dt>0</dt><dd>Provider / job</dd></div><div><dt>3</dt><dd>Prompt variants</dd></div></dl></section>
-      <div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief composer</span><h2 class="portal-card-title">Tạo prompt ảnh để review</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Brief và kết quả không được lưu thành artboard, asset, project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-prompt-compose" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, "image-prompt-composer")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo prompt text editable; không gửi lệnh tạo, sửa, upscale, upload hoặc phân tích ảnh.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo prompt nháp</button></div></form></section><aside class="portal-card portal-card-pad portal-image-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Soạn prompt, không chạy image engine</h2><p class="portal-card-subtitle">Không có source image, upload, phân tích ảnh, model, provider, Bot, job, Xu, PayOS, asset, publish hay delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-image-prompt-composer-guard-list"><span><strong>Source image / upload</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Image / output</strong><em>off</em></span><span><strong>Job / wallet</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
+      <div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief composer</span><h2 class="portal-card-title">Tạo prompt ảnh để review</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Brief và kết quả không được lưu thành artboard, asset, project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-prompt-compose" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, "image-prompt-composer")}<p class="portal-image-prompt-composer-style-status" data-image-prompt-composer-style-status role="status" aria-live="polite"></p><div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo prompt text editable; không gửi lệnh tạo, sửa, upscale, upload hoặc phân tích ảnh.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo prompt nháp</button></div></form></section><aside class="portal-card portal-card-pad portal-image-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Soạn prompt, không chạy image engine</h2><p class="portal-card-subtitle">Không có source image, upload, phân tích ảnh, model, provider, Bot, job, Xu, PayOS, asset, publish hay delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-image-prompt-composer-guard-list"><span><strong>Source image / upload</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Image / output</strong><em>off</em></span><span><strong>Job / wallet</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
       ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, canSaveToMemory)}
       ${renderImagePromptComposerSaveReceipt(context.imagePromptComposerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Bản nháp visual trước, engine sau</h2><p class="portal-card-subtitle">Dùng kết quả như một starting point có thể chỉnh sửa. Khi cần lưu direction có version history, hãy tạo Artboard riêng; việc đó vẫn không tạo ảnh hoặc tự gửi prompt đến provider.</p></div></div>${renderNotes(page)}</section>
@@ -27067,6 +27086,33 @@
     }
   }
 
+  function synchronizeImagePromptComposerStylePreset(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-prompt-compose") return;
+    const preset = form.querySelector("[data-image-prompt-composer-style-preset]");
+    const custom = form.querySelector("[data-image-prompt-composer-custom-style]");
+    const field = form.querySelector("[data-image-prompt-composer-custom-style-field]");
+    if (!preset || !custom || !field) return;
+    const customMode = String(preset.value || "auto") === "custom";
+    if (!customMode) custom.value = "";
+    const disabled = Boolean(preset.disabled) || !customMode;
+    custom.disabled = disabled;
+    custom.required = customMode;
+    custom.setAttribute("aria-disabled", String(disabled));
+    custom.setAttribute("aria-required", String(customMode));
+    field.hidden = !customMode;
+    field.classList.toggle("is-muted", !customMode);
+    const requiredMark = field.querySelector("[data-portal-required-mark]");
+    const requiredMessage = field.querySelector("[data-portal-required-message]");
+    if (requiredMark) requiredMark.hidden = !customMode;
+    if (requiredMessage) requiredMessage.hidden = !customMode;
+    const status = form.querySelector("[data-image-prompt-composer-style-status]");
+    if (status) {
+      status.textContent = customMode
+        ? "Đang dùng direction tự nhập. Chỉ mô tả phong cách nguyên bản mà bạn có quyền sử dụng."
+        : "Đang dùng hướng phong cách do server chọn theo mục tiêu và ngôn ngữ; text tự nhập không đi vào request.";
+    }
+  }
+
   function synchronizeSubtitleAssetOperationForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "subtitle-asset-operation-submit") return;
     const source = form.querySelector('select[name="source_asset_id"]');
@@ -28269,6 +28315,10 @@
           && event.target && event.target.name === "idea_source") {
           synchronizeQuickImagePlannerForm(form);
         }
+        if (form.getAttribute("data-portal-action") === "image-prompt-compose"
+          && event.target && event.target.name === "style_preset") {
+          synchronizeImagePromptComposerStylePreset(form);
+        }
         if (form.getAttribute("data-portal-action") === "subtitle-asset-operation-submit"
           && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
           synchronizeSubtitleAssetOperationForm(form);
@@ -28469,6 +28519,7 @@
       });
       main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
       main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
+      main.querySelectorAll('[data-portal-action="image-prompt-compose"]').forEach((form) => synchronizeImagePromptComposerStylePreset(form));
       main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
       main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
       main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));

@@ -2368,6 +2368,8 @@ a { color: inherit; text-decoration: none; }
 .portal-image-prompt-composer-intro dd { margin: 7px 0 0; color: #c9a7ac; font-size: 10px; line-height: 1.45; }
 .portal-image-prompt-composer-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
 .portal-image-prompt-composer-form { background: linear-gradient(150deg, rgba(67, 35, 49, .97), rgba(7, 17, 31, .99)); }
+.portal-image-prompt-composer-form .portal-field[hidden] { display: none; }
+.portal-image-prompt-composer-style-status { min-height: 1.5em; margin: 2px 0 0; color: #dfc4c7; font-size: 11px; line-height: 1.55; }
 .portal-image-prompt-composer-boundary, .portal-image-prompt-composer-result { background: linear-gradient(150deg, rgba(46, 31, 58, .94), rgba(7, 17, 31, .99)); }
 .portal-image-prompt-composer-boundary { display: grid; gap: 14px; }
 .portal-image-prompt-composer-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -2421,6 +2423,42 @@ a { color: inherit; text-decoration: none; }
   .portal-image-prompt-composer-variants li { grid-template-columns: 24px minmax(0, 1fr); padding: 9px; }
   .portal-image-prompt-composer-variants li > span { width: 24px; height: 22px; font-size: 7px; }
 }
+
+/* Image Prompt Composer light-surface corrections */
+.portal-image-prompt-composer-intro {
+  border-color: #bfe6e5;
+  background: #f7fffe;
+  box-shadow: none;
+}
+.portal-image-prompt-composer-intro h2 { color: #073a45; }
+.portal-image-prompt-composer-intro p { color: #44717a; }
+.portal-image-prompt-composer-intro dl > div { border-color: #d2eceb; background: #ffffff; }
+.portal-image-prompt-composer-intro dt { color: #0f8d86; }
+.portal-image-prompt-composer-intro dd { color: #557780; }
+.portal-image-prompt-composer-form,
+.portal-image-prompt-composer-boundary,
+.portal-image-prompt-composer-result { background: #ffffff; }
+.portal-image-prompt-composer-form .portal-field label { color: #153e49; }
+.portal-image-prompt-composer-form .portal-field-help,
+.portal-image-prompt-composer-form .portal-form-note { color: #44717a; }
+.portal-image-prompt-composer-style-status { color: #44717a; }
+.portal-image-prompt-composer-guard-list span { border-color: #d5ebeb; background: #f5fbfb; }
+.portal-image-prompt-composer-guard-list strong { color: #153e49; }
+.portal-image-prompt-composer-guard-list em { border-color: #bfe5e3; background: #e8f8f6; color: #0b706b; }
+.portal-image-prompt-composer-meta span { border-color: #cde8e7; background: #effafa; color: #245863; }
+.portal-image-prompt-composer-prompt { border-color: #cfe7e7; background: #f5fbfb; }
+.portal-image-prompt-composer-prompt > span { color: #0b706b; }
+.portal-image-prompt-composer-prompt pre,
+.portal-image-prompt-composer-variants pre { color: #153e49; }
+.portal-image-prompt-composer-variants { border-color: #cfe7e7; background: #f5fbfb; }
+.portal-image-prompt-composer-variants h3 { color: #153e49; }
+.portal-image-prompt-composer-variants li { border-color: #d7ecec; background: #ffffff; }
+.portal-image-prompt-composer-variants li > span { border-color: #bfe5e3; background: #e8f8f6; color: #0b706b; }
+.portal-image-prompt-composer-variants li strong { color: #245863; }
+.portal-image-prompt-composer-review { border-color: #f0ddb4; background: #fffaf0; }
+.portal-image-prompt-composer-review strong { color: #805b13; }
+.portal-image-prompt-composer-review li { color: #5c4d2f; }
+.portal-image-prompt-composer-review li::before { color: #b87916; }
 
 /* Video Prompt Planner is a text-only planning surface. Its timeline is
    intentionally direction-rich without imitating a video editor, renderer,

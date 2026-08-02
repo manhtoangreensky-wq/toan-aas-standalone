@@ -31,6 +31,7 @@ def test_image_prompt_composer_is_a_native_image_route_and_catalog_feature() -> 
 
 def test_image_prompt_composer_result_is_bounded_escaped_and_honest() -> None:
     assert "const IMAGE_PROMPT_COMPOSER_GOAL_CODES" in PORTAL
+    assert "const IMAGE_PROMPT_COMPOSER_STYLE_PRESETS" in PORTAL
     assert "function normalizeImagePromptComposerResult(raw)" in PORTAL
     for boundary in (
         'source.execution !== "web_native_deterministic_prompt_only"',
@@ -63,6 +64,42 @@ def test_image_prompt_composer_result_is_bounded_escaped_and_honest() -> None:
     assert "review_before_use" in result_renderer
     assert "output_url" not in result_renderer
     assert "job_id" not in result_renderer
+
+
+def test_image_prompt_composer_style_preset_is_web_native_bounded_and_accessible() -> None:
+    for token in (
+        "const IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS",
+        'name: "style_preset"',
+        'data-image-prompt-composer-style-preset',
+        'data-image-prompt-composer-custom-style',
+        'data-image-prompt-composer-custom-style-field',
+        'data-image-prompt-composer-style-status',
+        "function synchronizeImagePromptComposerStylePreset(form)",
+        'if (!customMode) custom.value = "";',
+        "style_preset: \"auto\"",
+    ):
+        assert token in PORTAL
+    for selector in (
+        ".portal-image-prompt-composer-style-status",
+        ".portal-image-prompt-composer-form .portal-field[hidden]",
+    ):
+        assert selector in CSS
+    for preset in ("auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"):
+        assert f'"{preset}"' in PORTAL
+
+    contract_start = INTEGRATION.index("const IMAGE_PROMPT_COMPOSER_GOALS")
+    contract_end = INTEGRATION.index("// Retain only a compact, content-free receipt", contract_start)
+    style_contract = INTEGRATION[contract_start:contract_end]
+    for token in (
+        "const IMAGE_PROMPT_COMPOSER_STYLE_PRESETS",
+        'imageStudioLine(fields.style_preset || "auto", "Preset phong cách", 1, 32, false)',
+        "stylePreset !== \"custom\" && style",
+        "style_preset: stylePreset",
+        "selection.style_preset === composer.style_preset",
+    ):
+        assert token in style_contract
+    assert "imgtool|prompt_style" not in style_contract
+    assert "telegram" not in style_contract.lower()
 
 
 def test_image_prompt_composer_uses_only_the_signed_csrf_web_native_api() -> None:
@@ -168,6 +205,7 @@ def test_image_prompt_composer_memory_save_is_explicit_confirmed_and_content_fre
 def test_image_prompt_composer_backend_remains_request_only_without_durable_mutation() -> None:
     assert '@router.post("/tools/prompt-composer")' in ROUTER
     assert "PROMPT_COMPOSER_GOAL_CODES" in ROUTER
+    assert "PROMPT_COMPOSER_STYLE_PRESETS" in ROUTER
     assert "PROMPT_COMPOSER_RATIO_ALIASES" in ROUTER
     assert "from copyfast_bridge import" not in ROUTER
     assert "import httpx" not in ROUTER
@@ -245,3 +283,27 @@ def test_image_prompt_composer_private_ui_is_responsive_and_never_pwa_cached() -
     assert '"/image/prompt-composer"' in private_paths
     assert '"/api/v1/image-studio"' not in shell
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
+
+
+def test_image_prompt_composer_result_uses_the_teal_light_surface_with_readable_prompt_text() -> None:
+    marker = "/* Image Prompt Composer light-surface corrections */"
+    assert marker in CSS
+    start = CSS.index(marker)
+    end = CSS.index("/* Video Prompt Planner", start)
+    light_surface = CSS[start:end]
+    for token in (
+        ".portal-image-prompt-composer-intro",
+        ".portal-image-prompt-composer-prompt",
+        ".portal-image-prompt-composer-prompt > span",
+        ".portal-image-prompt-composer-prompt pre",
+        ".portal-image-prompt-composer-meta span",
+        ".portal-image-prompt-composer-form .portal-field label",
+        ".portal-image-prompt-composer-form .portal-field-help",
+        ".portal-image-prompt-composer-form .portal-form-note",
+        ".portal-image-prompt-composer-style-status { color: #44717a;",
+        ".portal-image-prompt-composer-prompt > span { color: #0b706b; }",
+        "#f5fbfb",
+        "#153e49",
+        "#0f8d86",
+    ):
+        assert token in light_surface

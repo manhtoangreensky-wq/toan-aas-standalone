@@ -37,6 +37,7 @@ IMAGE_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
 PROMPT_COMPOSER_GOAL_CODES = frozenset({"product", "ad", "cinematic", "custom"})
 PROMPT_COMPOSER_RATIOS = frozenset({"1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"})
 PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
+PROMPT_COMPOSER_STYLE_PRESETS = frozenset({"auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"})
 PROMPT_COMPOSER_RATIO_ALIASES = {
     "1:1": "1:1", "1x1": "1:1", "square": "1:1", "vuong": "1:1", "vuông": "1:1",
     "9:16": "9:16", "9x16": "9:16", "vertical": "9:16", "doc": "9:16", "dọc": "9:16", "reels": "9:16", "tiktok": "9:16",
@@ -486,6 +487,7 @@ class ImagePromptComposerRequest(BaseModel):
     custom_goal: str = ""
     subject: str
     style: str = ""
+    style_preset: str = "auto"
     ratio: str = "1:1"
     language: str = "vi"
 
@@ -518,6 +520,14 @@ class ImagePromptComposerRequest(BaseModel):
             raise ValueError("Phong cách cần từ 2 đến 180 ký tự hợp lệ")
         return normalized
 
+    @field_validator("style_preset")
+    @classmethod
+    def validate_style_preset(cls, value: str) -> str:
+        normalized = _line(value, label="Preset phong cách", minimum=1, maximum=32).lower()
+        if normalized not in PROMPT_COMPOSER_STYLE_PRESETS:
+            raise ValueError("Preset phong cách không hợp lệ")
+        return normalized
+
     @field_validator("ratio")
     @classmethod
     def validate_ratio(cls, value: str) -> str:
@@ -532,10 +542,21 @@ class ImagePromptComposerRequest(BaseModel):
         return normalized
 
     def model_post_init(self, __context: Any) -> None:
+        # Preserve the existing private Web API for a short-lived stale tab:
+        # before this field existed, a non-empty style had exactly the
+        # semantic meaning of a custom direction.  An explicit new preset is
+        # always strict, so a browser cannot sneak text into a server-owned
+        # choice or replay a Bot callback-shaped value.
+        if "style_preset" not in self.model_fields_set and self.style:
+            self.style_preset = "custom"
         if self.goal_code == "custom" and not self.custom_goal:
             raise ValueError("Mục tiêu tùy chỉnh là bắt buộc khi chọn custom")
         if self.goal_code != "custom" and self.custom_goal:
             raise ValueError("Mục tiêu tùy chỉnh chỉ dùng khi chọn custom")
+        if self.style_preset == "custom" and not self.style:
+            raise ValueError("Phong cách riêng là bắt buộc khi chọn Tự nhập")
+        if self.style_preset != "custom" and self.style:
+            raise ValueError("Chỉ nhập phong cách riêng khi chọn Tự nhập")
 
 
 class ImagePromptComposerMemorySaveRequest(ImagePromptComposerRequest):
@@ -572,6 +593,7 @@ class ImagePromptComposerResult(BaseModel):
     goal_label: str
     custom_goal: str
     subject: str
+    style_preset: str
     style: str
     ratio: str
     language: str
@@ -605,6 +627,13 @@ class ImagePromptComposerResult(BaseModel):
     @classmethod
     def validate_result_subject(cls, value: str) -> str:
         return _line(value, label="Chủ thể kết quả", minimum=2, maximum=MAX_PROMPT_COMPOSER_SUBJECT)
+
+    @field_validator("style_preset")
+    @classmethod
+    def validate_result_style_preset(cls, value: str) -> str:
+        if value not in PROMPT_COMPOSER_STYLE_PRESETS:
+            raise ValueError("Preset phong cách kết quả không hợp lệ")
+        return value
 
     @field_validator("style")
     @classmethod
@@ -717,6 +746,71 @@ def _prompt_composer_default_style(goal_code: str, language: str) -> str:
     return catalog[language][goal_code]
 
 
+def _prompt_composer_style_preset(goal_code: str, language: str, style_preset: str) -> str:
+    """Resolve a bounded Web style choice without accepting Bot callback data.
+
+    Presets intentionally contain only generic, original art-direction words.
+    They are semantic Web values, never a provider/model/tier choice or a
+    reference to a Telegram callback, pending state, file, payment or job.
+    """
+
+    if style_preset == "auto":
+        return _prompt_composer_default_style(goal_code, language)
+    catalog = {
+        "vi": {
+            "product": {
+                "suggestion_1": "studio sáng rõ, chủ thể trung tâm",
+                "suggestion_2": "premium tối giản, chất liệu và chi tiết rõ",
+                "suggestion_3": "editorial sạch, khoảng trống cho caption",
+            },
+            "ad": {
+                "suggestion_1": "hero thương hiệu rõ lợi ích, điểm nhìn tập trung",
+                "suggestion_2": "premium hiện đại, ánh sáng kiểm soát, CTA có khoảng thở",
+                "suggestion_3": "social nổi bật, bố cục sạch, thông điệp dễ quét",
+            },
+            "cinematic": {
+                "suggestion_1": "cinematic tương phản vừa, điểm nhìn rõ",
+                "suggestion_2": "cinematic premium, chiều sâu lớp cảnh và ánh sáng có chủ đích",
+                "suggestion_3": "cinematic không khí, khoảng trống cho tiêu đề hợp lệ",
+            },
+            "custom": {
+                "suggestion_1": "tối giản, chủ thể trung tâm, ánh sáng cân bằng",
+                "suggestion_2": "premium hiện đại, chi tiết có chủ đích, nền gọn",
+                "suggestion_3": "editorial sạch, màu sắc hài hòa, khoảng thở rõ",
+            },
+        },
+        "en": {
+            "product": {
+                "suggestion_1": "bright clean studio, centered subject",
+                "suggestion_2": "minimal premium, clear material and detail",
+                "suggestion_3": "clean editorial, caption-ready negative space",
+            },
+            "ad": {
+                "suggestion_1": "benefit-led brand hero, focused focal point",
+                "suggestion_2": "modern premium, controlled lighting, CTA breathing room",
+                "suggestion_3": "eye-catching social, clean composition, scannable message",
+            },
+            "cinematic": {
+                "suggestion_1": "cinematic moderate contrast, clear focal point",
+                "suggestion_2": "premium cinematic, layered depth and deliberate lighting",
+                "suggestion_3": "atmospheric cinematic, room for authorized title treatment",
+            },
+            "custom": {
+                "suggestion_1": "minimal, centered subject, balanced lighting",
+                "suggestion_2": "modern premium, deliberate detail, tidy background",
+                "suggestion_3": "clean editorial, balanced color, clear breathing room",
+            },
+        },
+    }
+    return catalog[language][goal_code][style_preset]
+
+
+def _prompt_composer_resolved_style(payload: ImagePromptComposerRequest) -> str:
+    if payload.style_preset == "custom":
+        return payload.style
+    return _prompt_composer_style_preset(payload.goal_code, payload.language, payload.style_preset)
+
+
 def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]:
     """Adapt the Bot's pure image-prompt text recipes into Web-native drafts.
 
@@ -729,7 +823,7 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
 
     language = payload.language
     goal_label = _prompt_composer_goal_label(payload.goal_code, payload.custom_goal, language)
-    style = payload.style or _prompt_composer_default_style(payload.goal_code, language)
+    style = _prompt_composer_resolved_style(payload)
     subject = payload.subject
     ratio = payload.ratio
     review = (
@@ -798,6 +892,7 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
             "goal_label": goal_label,
             "custom_goal": payload.custom_goal,
             "subject": subject,
+            "style_preset": payload.style_preset,
             "style": style,
             "ratio": ratio,
             "language": language,
@@ -832,6 +927,7 @@ def _image_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, s
             f"Tiêu đề bản nháp: {result['title']}",
             f"Mục tiêu: {result['goal_label']}",
             f"Chủ thể: {result['subject']}",
+            f"Preset phong cách: {result['style_preset']}",
             f"Phong cách: {result['style']}",
             f"Tỷ lệ: {result['ratio']}",
             f"Ngôn ngữ: {result['language']}",
@@ -1672,6 +1768,7 @@ async def save_image_prompt_composer_to_memory(
             "goal_code": payload.goal_code,
             "custom_goal": payload.custom_goal,
             "subject": payload.subject,
+            "style_preset": payload.style_preset,
             "style": payload.style,
             "ratio": payload.ratio,
             "language": payload.language,
