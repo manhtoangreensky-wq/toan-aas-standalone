@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-02T13:50:06+00:00",
+  "generated_at_utc": "2026-08-02T14:02:49+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "f09fd4654b06c79f6f5f0640d7c915b9339a7906",
+      "checkout_sha": "2280a54d7754b9e17dc9609697f4063f6f188692",
       "requested_relation": "exact",
-      "requested_sha": "f09fd4654b06c79f6f5f0640d7c915b9339a7906",
-      "source_fingerprint_sha256": "ecfc47c1e66e30f8122cdcb79c2a58e455dc6a342926dca4bee3a18178f4d8f6",
+      "requested_sha": "2280a54d7754b9e17dc9609697f4063f6f188692",
+      "source_fingerprint_sha256": "6fb427e3f2a29832b7d38e24d94ba1633a26ae1cc3f1421c311bedb167ff9b78",
       "working_tree_state": "clean"
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-erp-data-surfaces"
