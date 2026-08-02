@@ -306,6 +306,58 @@ def test_image_prompt_composer_style_catalog_covers_every_goal_and_legacy_auto_r
                 assert auto_composer["style"] not in resolved
 
 
+def test_image_prompt_composer_bot_style_catalog_uses_visible_directions_without_callback_transport(tmp_path, monkeypatch):
+    """Web suggestions follow Bot-visible copy, never its callback protocol."""
+
+    expected = {
+        "vi": {
+            "product": ["Studio sạch đẹp", "Luxury showroom", "Lifestyle đời thường"],
+            "ad": ["Bán hàng trực tiếp", "Premium brand", "Viral/TikTok"],
+            "cinematic": ["Cinematic ánh sáng mạnh", "Sci-fi/công nghệ tương lai", "Fantasy/cyberpunk"],
+        },
+        "en": {
+            "product": ["Clean studio", "Luxury showroom", "Lifestyle everyday scene"],
+            "ad": ["Direct sales", "Premium brand", "Viral/TikTok"],
+            "cinematic": ["Strong cinematic lighting", "Sci-fi/future tech", "Fantasy/cyberpunk"],
+        },
+    }
+    path = "/api/v1/image-studio/tools/prompt-composer"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "image-prompt-bot-style-catalog@example.com")
+        for language, goals in expected.items():
+            for goal_code, styles in goals.items():
+                for index, style in enumerate(styles, start=1):
+                    response = client.post(
+                        path,
+                        headers={"X-CSRF-Token": csrf},
+                        json=composer_payload(
+                            goal_code=goal_code,
+                            style="",
+                            style_preset=f"suggestion_{index}",
+                            language=language,
+                        ),
+                    )
+                    assert response.status_code == 200
+                    composer = response.json()["data"]["composer"]
+                    assert composer["style_preset"] == f"suggestion_{index}"
+                    assert composer["style"] == style
+
+            for index, style in enumerate(goals["product"], start=1):
+                custom_goal = client.post(
+                    path,
+                    headers={"X-CSRF-Token": csrf},
+                    json=composer_payload(
+                        goal_code="custom",
+                        custom_goal="Key visual có yêu cầu riêng",
+                        style="",
+                        style_preset=f"suggestion_{index}",
+                        language=language,
+                    ),
+                )
+                assert custom_goal.status_code == 200
+                assert custom_goal.json()["data"]["composer"]["style"] == style
+
+
 def test_image_prompt_composer_rejects_schema_sensitive_input_and_guards_imitation(tmp_path, monkeypatch):
     path = "/api/v1/image-studio/tools/prompt-composer"
     with make_client(tmp_path, monkeypatch) as client:
