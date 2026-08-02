@@ -48,6 +48,18 @@ jobs:
             requirements.txt
             requirements-dev.txt
 
+      # This is a repository-source provenance gate. Run it before dependency
+      # installation or compilation can create local build artefacts.
+      - name: Verify committed migration evidence
+        env:
+          WEB_AUDIT_EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python scripts/migration/audit_bot_to_web.py \
+            --verify-web-evidence \
+            --web-root . \
+            --report-dir reports/migration \
+            --web-revision "$WEB_AUDIT_EXPECTED_SHA"
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -65,16 +77,6 @@ jobs:
           node --check static/portal/portal-theme.js
           node --check static/portal/integration.js
           node --check static/portal/service-worker.js
-
-      - name: Verify committed migration evidence
-        env:
-          WEB_AUDIT_EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          python scripts/migration/audit_bot_to_web.py \
-            --verify-web-evidence \
-            --web-root . \
-            --report-dir reports/migration \
-            --web-revision "$WEB_AUDIT_EXPECTED_SHA"
 
       - name: Run critical Web App contracts (bounded)
         shell: bash

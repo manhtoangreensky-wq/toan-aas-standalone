@@ -1058,6 +1058,8 @@ def test_webapp_quality_workflow_fetches_history_for_committed_audit_evidence() 
 
     assert "fetch-depth: 0" in workflow
     assert "--verify-web-evidence" in workflow
+    assert workflow.index("Verify committed migration evidence") < workflow.index("Install test dependencies")
+    assert workflow.index("Verify committed migration evidence") < workflow.index("Compile Python")
 
 
 def test_static_audit_excludes_its_configured_output_roots_from_web_inventory(tmp_path: Path) -> None:
