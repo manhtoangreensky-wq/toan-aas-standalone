@@ -111,6 +111,81 @@ def test_admin_erp_surface_fixed_chrome_is_localized_in_all_supported_locales() 
     assert I18N.count('"states.unavailable"') == 3
 
 
+def test_generic_admin_erp_chrome_uses_closed_reviewed_locale_copy() -> None:
+    """Generic Admin data screens translate fixed chrome, never server data."""
+
+    generic_keys = sorted(set(re.findall(r'adminGenericText\("([^"]+)"', PORTAL)))
+    assert len(generic_keys) >= 100
+    for key in generic_keys:
+        assert I18N.count(f'"adminGeneric.{key}"') == 3
+
+    assert "function adminGenericText(key, fallback, params)" in PORTAL
+    assert "uiText(`adminGeneric.${key}`, fallback, params)" in PORTAL
+    assert "function adminGenericModuleLabel(module)" in PORTAL
+
+    actions = _section(PORTAL, "function adminJobActions", "function renderAdminFreezeControls")
+    maintenance = _section(PORTAL, "function renderAdminFreezeControls", "function adminAuditListing")
+    audit_pagination = _section(PORTAL, "function renderAdminAuditPagination", "function renderAdminAuditExplorer")
+    audit = _section(PORTAL, "function renderAdminAuditExplorer", "function renderAdminDataTable")
+    tables = _section(PORTAL, "function renderAdminDataTable", "// These are first-class navigation centers")
+    admin = _section(PORTAL, "function renderAdmin(page, context)", "const BOT_COMPANION_COMMAND_PATTERN")
+    for source in (actions, maintenance, audit_pagination, audit, tables, admin):
+        assert "adminGenericText(" in source
+        for forbidden in ("fetch(", "localStorage", "sessionStorage", "XMLHttpRequest"):
+            assert forbidden.lower() not in source.lower()
+
+    assert "safeText(data.message)" in admin
+    assert "recordId: String(page.recordId)" in admin
+    assert 'safeText(adminGenericText("record.body"' in admin
+    assert "safeText(item.user_id" in tables
+    assert "safeText(item.username" in tables
+    assert "adminNumber(item.amount_vnd" in tables
+    assert "safeText(event.created_at" in audit
+
+
+def test_generic_admin_erp_audit_filters_and_module_headings_stay_localized() -> None:
+    """Dynamic label lookup must not leave reviewed Admin chrome in Vietnamese."""
+
+    audit_options = _section(PORTAL, "const ADMIN_AUDIT_CATEGORY_OPTIONS", "const ADMIN_AUDIT_CATEGORY_KEYS")
+    for value, key in (
+        ("all", "audit.filter.option.all"),
+        ("auth", "audit.filter.option.auth"),
+        ("support", "audit.filter.option.support"),
+        ("operations", "audit.filter.option.operations"),
+        ("workspace", "audit.filter.option.workspace"),
+        ("content", "audit.filter.option.content"),
+        ("asset", "audit.filter.option.asset"),
+        ("admin", "audit.filter.option.admin"),
+        ("security", "audit.filter.option.security"),
+    ):
+        assert f'["{value}", "{key}"]' in audit_options
+        assert I18N.count(f'"adminGeneric.{key}"') == 3
+
+    audit_normalizer = _section(PORTAL, "function normalizeAdminAuditProjection", "function normalizeAdminAuditListing")
+    for vietnamese_default in ("Sự kiện Web", "Sự kiện đã redaction", "Đã ghi nhận trạng thái"):
+        assert vietnamese_default not in audit_normalizer
+
+    audit = _section(PORTAL, "function renderAdminAuditExplorer", "function renderAdminDataTable")
+    assert "ADMIN_AUDIT_CATEGORY_OPTIONS.map(([value, labelKey])" in audit
+    assert "adminGenericText(labelKey, value)" in audit
+
+    module_labels = _section(PORTAL, "const ADMIN_GENERIC_MODULE_LABEL_KEYS", "function adminGenericModuleLabel")
+    for module, key in (
+        ("overview", "module.overview"),
+        ("packages", "module.packages"),
+        ("campaigns", "module.campaigns"),
+        ("calendar", "module.calendar"),
+        ("approvals", "module.approvals"),
+        ("analytics", "module.analytics"),
+        ("reports", "module.reports"),
+        ("export", "module.export"),
+        ("system", "module.system"),
+        ("backups", "module.backups"),
+    ):
+        assert f'{module}: "{key}"' in module_labels or f'"{module}": "{key}"' in module_labels
+        assert I18N.count(f'"adminGeneric.{key}"') == 3
+
+
 def test_admin_erp_surface_uses_aura_tokens_and_shared_failure_semantics() -> None:
     marker = "/* Aura ERP data surfaces — truthful table read model. */"
     assert marker in THEME
