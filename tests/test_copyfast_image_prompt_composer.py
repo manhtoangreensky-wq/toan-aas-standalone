@@ -152,6 +152,7 @@ def test_image_prompt_composer_is_session_csrf_bounded_and_non_persistent(tmp_pa
             "goal_label",
             "custom_goal",
             "subject",
+            "style_preset",
             "style",
             "ratio",
             "language",
@@ -163,6 +164,9 @@ def test_image_prompt_composer_is_session_csrf_bounded_and_non_persistent(tmp_pa
         }
         assert composer["goal_code"] == "product"
         assert composer["subject"] == "Bình nước giữ nhiệt cho người đi làm"
+        # An older Web client that sent the pre-preset custom style remains
+        # compatible, but the server records its semantic interpretation.
+        assert composer["style_preset"] == "custom"
         assert composer["style"] == "Studio sạch đẹp, ánh sáng mềm"
         assert composer["ratio"] == "9:16"
         assert composer["language"] == "vi"
@@ -205,6 +209,103 @@ def test_image_prompt_composer_is_session_csrf_bounded_and_non_persistent(tmp_pa
         assert composer_storage_counts(db_path) == before
 
 
+def test_image_prompt_composer_resolves_only_web_native_style_presets(tmp_path, monkeypatch):
+    """A preset is semantic Web input, resolved server-side and repeatable."""
+
+    path = "/api/v1/image-studio/tools/prompt-composer"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "image-prompt-preset@example.com")
+        auto_styles = {}
+        for language, expected_default in (("vi", "studio sạch đẹp"), ("en", "clean studio")):
+            auto = client.post(
+                path,
+                headers={"X-CSRF-Token": csrf},
+                json=composer_payload(style="", style_preset="auto", language=language),
+            )
+            assert auto.status_code == 200
+            composer = auto.json()["data"]["composer"]
+            assert composer["style_preset"] == "auto"
+            assert composer["style"] == expected_default
+            auto_styles[language] = composer["style"]
+
+        for language in ("vi", "en"):
+            resolved = []
+            for preset in ("suggestion_1", "suggestion_2", "suggestion_3"):
+                first = client.post(
+                    path,
+                    headers={"X-CSRF-Token": csrf},
+                    json=composer_payload(style="", style_preset=preset, language=language),
+                )
+                second = client.post(
+                    path,
+                    headers={"X-CSRF-Token": csrf},
+                    json=composer_payload(style="", style_preset=preset, language=language),
+                )
+                assert first.status_code == second.status_code == 200
+                first_composer = first.json()["data"]["composer"]
+                second_composer = second.json()["data"]["composer"]
+                assert first_composer["style_preset"] == second_composer["style_preset"] == preset
+                assert first_composer["style"] == second_composer["style"]
+                assert first_composer["style"] in first_composer["short_prompt"]
+                assert first_composer["style"] in first_composer["variants"][0]
+                resolved.append(first_composer["style"])
+            assert len(set(resolved)) == 3
+            assert auto_styles[language] not in resolved
+
+        custom = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=composer_payload(style_preset="custom", style="minimal, cyan accent, ample negative space"),
+        )
+        assert custom.status_code == 200
+        assert custom.json()["data"]["composer"]["style_preset"] == "custom"
+        assert custom.json()["data"]["composer"]["style"] == "minimal, cyan accent, ample negative space"
+
+
+def test_image_prompt_composer_style_catalog_covers_every_goal_and_legacy_auto_request(tmp_path, monkeypatch):
+    """Every server-owned catalogue branch remains callable without Bot state."""
+
+    path = "/api/v1/image-studio/tools/prompt-composer"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "image-prompt-catalog@example.com")
+        for language in ("vi", "en"):
+            for goal_code in ("product", "ad", "cinematic", "custom"):
+                goal = {
+                    "goal_code": goal_code,
+                    "custom_goal": "Key visual cho tính năng mới" if goal_code == "custom" else "",
+                }
+                auto = client.post(
+                    path,
+                    headers={"X-CSRF-Token": csrf},
+                    json=composer_payload(**goal, style="", style_preset="auto", language=language),
+                )
+                legacy_auto = client.post(
+                    path,
+                    headers={"X-CSRF-Token": csrf},
+                    json=composer_payload(**goal, style="", language=language),
+                )
+                assert auto.status_code == legacy_auto.status_code == 200
+                auto_composer = auto.json()["data"]["composer"]
+                legacy_composer = legacy_auto.json()["data"]["composer"]
+                assert auto_composer["style_preset"] == legacy_composer["style_preset"] == "auto"
+                assert auto_composer["style"] == legacy_composer["style"]
+
+                resolved = []
+                for preset in ("suggestion_1", "suggestion_2", "suggestion_3"):
+                    response = client.post(
+                        path,
+                        headers={"X-CSRF-Token": csrf},
+                        json=composer_payload(**goal, style="", style_preset=preset, language=language),
+                    )
+                    assert response.status_code == 200
+                    composer = response.json()["data"]["composer"]
+                    assert composer["style_preset"] == preset
+                    assert composer["style"] in composer["short_prompt"]
+                    resolved.append(composer["style"])
+                assert len(set(resolved)) == 3
+                assert auto_composer["style"] not in resolved
+
+
 def test_image_prompt_composer_rejects_schema_sensitive_input_and_guards_imitation(tmp_path, monkeypatch):
     path = "/api/v1/image-studio/tools/prompt-composer"
     with make_client(tmp_path, monkeypatch) as client:
@@ -220,6 +321,30 @@ def test_image_prompt_composer_rejects_schema_sensitive_input_and_guards_imitati
         assert short_custom_goal.status_code == 422
         short_style = client.post(path, headers={"X-CSRF-Token": csrf}, json=composer_payload(style="x"))
         assert short_style.status_code == 422
+        unknown_preset = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=composer_payload(style="", style_preset="imgtool|prompt_style|1"),
+        )
+        assert unknown_preset.status_code == 422
+        numeric_bot_preset = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=composer_payload(style="", style_preset="1"),
+        )
+        assert numeric_bot_preset.status_code == 422
+        preset_with_browser_style = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=composer_payload(style_preset="suggestion_1", style="browser must not override preset"),
+        )
+        assert preset_with_browser_style.status_code == 422
+        custom_without_style = client.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=composer_payload(style_preset="custom", style=""),
+        )
+        assert custom_without_style.status_code == 422
         extra = client.post(
             path,
             headers={"X-CSRF-Token": csrf},
@@ -286,6 +411,8 @@ def test_image_prompt_composer_memory_save_is_signed_recomputed_and_owner_scoped
     subject = "Đèn bàn chống chói cho góc làm việc tại nhà"
     payload = composer_payload(
         subject=subject,
+        style="",
+        style_preset="suggestion_2",
         ratio="16:9",
         destination="memory_note",
         idempotency_key="image-prompt-composer-save-memory-0001",
@@ -338,7 +465,7 @@ def test_image_prompt_composer_memory_save_is_signed_recomputed_and_owner_scoped
         guarded = client.post(
             path,
             headers={"X-CSRF-Token": csrf},
-            json={**payload, "style": "phong cách của một nghệ sĩ đương đại"},
+            json={**payload, "style_preset": "custom", "style": "phong cách của một nghệ sĩ đương đại"},
         )
         assert guarded.status_code == 200
         assert guarded.json()["ok"] is False
@@ -352,7 +479,7 @@ def test_image_prompt_composer_memory_save_is_signed_recomputed_and_owner_scoped
         preview = client.post(
             "/api/v1/image-studio/tools/prompt-composer",
             headers={"X-CSRF-Token": csrf},
-            json=composer_payload(subject=subject, ratio="16:9"),
+            json=composer_payload(subject=subject, style="", style_preset="suggestion_2", ratio="16:9"),
         )
         assert preview.status_code == 200
         expected = preview.json()["data"]["composer"]
@@ -438,7 +565,7 @@ def test_image_prompt_composer_memory_save_is_signed_recomputed_and_owner_scoped
         altered = client.post(
             path,
             headers={"X-CSRF-Token": csrf},
-            json={**payload, "subject": "Đèn cây đọc sách cho phòng khách"},
+            json={**payload, "style_preset": "suggestion_3"},
         )
         assert altered.status_code == 409
         assert composer_storage_counts(db_path) == after_create

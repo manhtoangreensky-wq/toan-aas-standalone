@@ -9544,6 +9544,7 @@
   const IMAGE_PROMPT_COMPOSER_GOALS = new Set(["product", "ad", "cinematic", "custom"]);
   const IMAGE_PROMPT_COMPOSER_RATIOS = new Set(["1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"]);
   const IMAGE_PROMPT_COMPOSER_LANGUAGES = new Set(["vi", "en"]);
+  const IMAGE_PROMPT_COMPOSER_STYLE_PRESETS = new Set(["auto", "suggestion_1", "suggestion_2", "suggestion_3", "custom"]);
   const IMAGE_PROMPT_COMPOSER_RATIO_ALIASES = new Map([
     ["square", "1:1"], ["vuong", "1:1"],
     ["doc", "9:16"], ["vertical", "9:16"], ["reels", "9:16"], ["tiktok", "9:16"],
@@ -9570,18 +9571,21 @@
     const goalCode = imageStudioLine(fields.goal_code || "product", "Mục tiêu ảnh", 1, 24, false).toLowerCase();
     const customGoal = imageStudioLine(fields.custom_goal, "Mục tiêu riêng", 0, 180, true);
     const subject = imageStudioLine(fields.subject, "Mô tả chủ thể", 2, 260, false);
+    const stylePreset = imageStudioLine(fields.style_preset || "auto", "Preset phong cách", 1, 32, false).toLowerCase();
     const style = imageStudioLine(fields.style, "Phong cách", 0, 180, true);
     const ratio = imagePromptComposerRatio(fields.ratio || "1:1");
     const language = imageStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 8, false).toLowerCase();
     if (!IMAGE_PROMPT_COMPOSER_GOALS.has(goalCode)) throw new Error("Mục tiêu Prompt Composer không hợp lệ.");
+    if (!IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset)) throw new Error("Preset phong cách Prompt Composer không hợp lệ.");
     if (!IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)) throw new Error("Ngôn ngữ Prompt Composer không hợp lệ.");
     if (goalCode === "custom" && !customGoal) throw new Error("Mục tiêu riêng cần từ 2 đến 180 ký tự.");
     if (goalCode !== "custom" && customGoal) throw new Error("Chỉ nhập mục tiêu riêng khi chọn mục tiêu Tuỳ chỉnh.");
     if (customGoal && customGoal.length < 2) throw new Error("Mục tiêu riêng cần từ 2 đến 180 ký tự.");
-    if (style && style.length < 2) throw new Error("Phong cách cần từ 2 đến 180 ký tự nếu được nhập.");
+    if (stylePreset === "custom" && style.length < 2) throw new Error("Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập.");
+    if (stylePreset !== "custom" && style) throw new Error("Chỉ nhập phong cách riêng khi chọn Tự nhập.");
     const safety = imagePromptComposerSafetyError(goalCode, customGoal, subject, style, ratio, language);
     if (safety) throw new Error(safety);
-    return { goal_code: goalCode, custom_goal: customGoal, subject, style, ratio, language };
+    return { goal_code: goalCode, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language };
   }
   function imagePromptComposerResultIsSafe(value) {
     const data = value && typeof value === "object" ? value : {};
@@ -9590,6 +9594,7 @@
     const goalLabel = typeof composer.goal_label === "string" && composer.goal_label.length > 0 && composer.goal_label.length <= 180 ? composer.goal_label : "";
     const customGoal = typeof composer.custom_goal === "string" && composer.custom_goal.length <= 180 ? composer.custom_goal : "";
     const subject = typeof composer.subject === "string" && composer.subject.length >= 2 && composer.subject.length <= 260 ? composer.subject : "";
+    const stylePreset = typeof composer.style_preset === "string" ? composer.style_preset : "";
     const style = typeof composer.style === "string" && composer.style.length > 0 && composer.style.length <= 180 ? composer.style : "";
     const ratio = typeof composer.ratio === "string" ? composer.ratio : "";
     const language = typeof composer.language === "string" ? composer.language : "";
@@ -9607,7 +9612,7 @@
     const safety = imagePromptComposerSafetyError(goalLabel, customGoal, subject, style, ...textFields, ...variants, ...review);
     return Boolean(
       IMAGE_PROMPT_COMPOSER_GOALS.has(goalCode) && goalLabel && (goalCode !== "custom" || customGoal)
-      && subject && style && IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) && IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
+      && subject && IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset) && style && IMAGE_PROMPT_COMPOSER_RATIOS.has(ratio) && IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)
       && validTextFields && validVariants && validReview && !safety
       && data.execution === "web_native_deterministic_prompt_only"
       && data.input_persisted === false
@@ -9631,7 +9636,7 @@
   // Bot result, an asset or any browser-persisted draft.
   function imagePromptComposerMemorySaveSource(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-    const expected = ["goal_code", "custom_goal", "subject", "style", "ratio", "language"];
+    const expected = ["goal_code", "custom_goal", "subject", "style_preset", "style", "ratio", "language"];
     if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return null;
     try {
       return imagePromptComposerPayload(source);
@@ -9644,15 +9649,16 @@
     const selection = imagePromptComposerMemorySaveSource(source);
     const data = result && typeof result === "object" && !Array.isArray(result) ? result : {};
     const composer = data.composer && typeof data.composer === "object" && !Array.isArray(data.composer) ? data.composer : {};
-    // An empty style is valid input: the server then selects its deterministic
-    // default. Every other field must still match this tab's original source.
+    // A server-resolved preset keeps the browser style empty.  Every field,
+    // including the semantic preset, must match this tab's source exactly.
     return Boolean(selection && imagePromptComposerResultIsSafe(data)
       && selection.goal_code === composer.goal_code
       && selection.custom_goal === composer.custom_goal
       && selection.subject === composer.subject
+      && selection.style_preset === composer.style_preset
       && selection.ratio === composer.ratio
       && selection.language === composer.language
-      && (!selection.style || selection.style === composer.style));
+      && (selection.style_preset !== "custom" || selection.style === composer.style));
   }
 
   // Retain only a compact, content-free receipt after a successful Memory
