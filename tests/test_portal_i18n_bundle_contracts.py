@@ -245,6 +245,21 @@ for (const locale of expected) {
   }
 }
 
+const adminAutomationMonitorKeys = [
+  "adminGeneric.automationMonitor.state.loadingTitle",
+  "adminGeneric.automationMonitor.scheduler.ready",
+  "adminGeneric.automationMonitor.metric.inboxCenter.label",
+  "adminGeneric.automationMonitor.aggregate.guardedTitle",
+  "adminGeneric.automationMonitor.boundary.noControlPlane.title",
+  "adminGeneric.automationMonitor.route.title",
+  "adminGeneric.automationMonitor.route.description"
+];
+for (const locale of expected) {
+  for (const key of adminAutomationMonitorKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 const reviewedAdminSecurityAccessCopy = {
   vi: {
     loadingTitle: "Đang xác minh Security & Access Posture",
@@ -265,6 +280,17 @@ for (const [locale, reviewed] of Object.entries(reviewedAdminSecurityAccessCopy)
   }
   if (api.t("adminGeneric.securityAccess.boundary.0", locale) !== reviewed.boundary) {
     throw new Error(`Security boundary copy diverged for ${locale}`);
+  }
+}
+
+const reviewedAutomationMonitorCopy = {
+  vi: "Đang xác minh receipt private",
+  en: "Verifying the private receipt",
+  zh: "正在验证私有回执"
+};
+for (const [locale, expectedCopy] of Object.entries(reviewedAutomationMonitorCopy)) {
+  if (api.t("adminGeneric.automationMonitor.state.loadingTitle", locale) !== expectedCopy) {
+    throw new Error(`Automation Monitor loading copy diverged for ${locale}`);
   }
 }
 

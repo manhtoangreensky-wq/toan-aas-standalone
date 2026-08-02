@@ -87,6 +87,10 @@
     return adminGenericText(`securityAccess.${key}`, fallback, params);
   }
 
+  function adminAutomationMonitorText(key, fallback, params) {
+    return adminGenericText(`automationMonitor.${key}`, fallback, params);
+  }
+
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
     payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
@@ -9047,6 +9051,7 @@
     "Hỗ trợ": "nav.support",
     "Bảng giá": "nav.pricing",
     "Quản trị": "nav.admin",
+    "Automation Monitor": "adminGeneric.automationMonitor.route.title",
     "Security Posture": "adminGeneric.securityAccess.route.securityTitle",
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
@@ -9146,6 +9151,7 @@
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
+    if (path === "/admin/automation") return adminAutomationMonitorText("route.title", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
@@ -9177,6 +9183,7 @@
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
+    if (path === "/admin/automation") return adminAutomationMonitorText("route.description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
@@ -21822,11 +21829,18 @@
 
   function automationMonitorStateLabel(value) {
     return ({
-      ready: "Sẵn sàng", center_disabled: "Inbox đang tắt", automation_disabled: "Chế độ quan sát",
-      persistent_store_unverified: "Chưa xác minh persistent store", topology_unverified: "Chưa xác minh topology",
-      single_replica_required: "Yêu cầu một replica", limits_unverified: "Chưa xác minh giới hạn", guarded: "Đang bảo vệ",
-      started: "Đang ghi nhận", completed: "Hoàn tất", failed: "Có lỗi đã bảo vệ"
-    }[String(value || "").toLowerCase()] || "Đang bảo vệ");
+      ready: adminAutomationMonitorText("scheduler.ready", "Sẵn sàng"),
+      center_disabled: adminAutomationMonitorText("scheduler.centerDisabled", "Inbox Center đang tắt"),
+      automation_disabled: adminAutomationMonitorText("scheduler.automationDisabled", "Chế độ quan sát"),
+      persistent_store_unverified: adminAutomationMonitorText("scheduler.persistentStoreUnverified", "Kho lưu trữ bền vững chưa được xác minh"),
+      topology_unverified: adminAutomationMonitorText("scheduler.topologyUnverified", "Cấu trúc triển khai chưa được xác minh"),
+      single_replica_required: adminAutomationMonitorText("scheduler.singleReplicaRequired", "Cần một replica"),
+      limits_unverified: adminAutomationMonitorText("scheduler.limitsUnverified", "Giới hạn chưa được xác minh"),
+      guarded: adminAutomationMonitorText("scheduler.guarded", "Đang bảo vệ"),
+      started: adminAutomationMonitorText("scheduler.started", "Đang ghi nhận"),
+      completed: adminAutomationMonitorText("scheduler.completed", "Hoàn tất"),
+      failed: adminAutomationMonitorText("scheduler.failed", "Lỗi (đang bảo vệ)")
+    }[String(value || "").toLowerCase()] || adminAutomationMonitorText("scheduler.guarded", "Đang bảo vệ"));
   }
 
   function automationMonitorBadgeState(value) {
@@ -21837,7 +21851,13 @@
   }
 
   function automationMonitorCount(value) {
-    return Number.isInteger(value) && value >= 0 && value <= 1000000000 ? String(value) : "—";
+    return Number.isInteger(value) && value >= 0 && value <= 1000000000 ? localizedNumber(value) : "—";
+  }
+
+  function automationMonitorTimestamp(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "—";
+    return localizedDateTime(raw, { dateStyle: "medium", timeStyle: "short" }) || raw.replace("T", " · ");
   }
 
   function adminSecurityAccessPostureCount(value) {
@@ -21964,43 +21984,61 @@
     const ready = readState === "ready" && Boolean(context.adminAutomationMonitorEnabled);
     const serverRoute = serverAuthorizesAdminRoute(context, "/admin/automation");
     const canRefresh = ready && serverRoute && context.capabilities && context.capabilities["admin-automation-monitor-refresh"] === true;
+    const text = (key, fallback, params) => adminAutomationMonitorText(key, fallback, params);
     if (!ready) {
-      return `<article class="portal-page portal-admin-automation-monitor">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh receipt private" : "Automation Monitor chưa khả dụng"}</h2><p>${loading ? "Máy chủ đang xác minh signed Web admin session và nạp lại projection receipt đã được redaction. Dữ liệu cũ cùng các nút đọc được giữ ẩn cho tới khi phản hồi hiện tại hợp lệ." : "Trang không dùng browser role, dữ liệu Bot, log thô hay cache cũ để thay thế kết quả server-side."}</p></div></div></section></article>`;
+      return `<article class="portal-page portal-admin-automation-monitor">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${safeText(loading ? text("state.loadingTitle", "Đang xác minh receipt private") : text("state.unavailableTitle", "Automation Monitor chưa khả dụng"))}</h2><p>${safeText(loading ? text("state.loadingBody", "Máy chủ đang xác minh phiên quản trị Web đã ký và nạp lại projection receipt đã được che bớt. Dữ liệu cũ cùng các nút chỉ đọc được giữ ẩn cho đến khi phản hồi hiện tại hợp lệ.") : text("state.unavailableBody", "Trang này không dùng role từ trình duyệt, dữ liệu Bot, log thô hoặc cache cũ để thay thế kết quả do máy chủ trả về."))}</p></div></div></section></article>`;
     }
     const schedulerState = String(scheduler.state || "guarded");
     const schedulerBadge = responseState === "read_only" ? automationMonitorBadgeState(schedulerState) : "guarded";
     const latestCopy = latest
-      ? `${automationMonitorStateLabel(latest.state)} · ${safeText(supportCaseTimestamp(latest.finished_at || latest.started_at))}`
-      : "Chưa có receipt được xác minh";
+      ? safeText(text("latest.copyWithReceipt", "{state} · {timestamp}", {
+        state: automationMonitorStateLabel(latest.state),
+        timestamp: automationMonitorTimestamp(latest.finished_at || latest.started_at)
+      }))
+      : safeText(text("latest.copyWithoutReceipt", "Chưa có receipt được xác minh"));
     const latestDetail = latest
-      ? `${automationMonitorCount(latest.action_count)} action · ${automationMonitorCount(latest.candidate_count)} candidate`
-      : "Không dùng số 0 thay cho lịch sử chưa có hoặc đang bảo vệ.";
+      ? safeText(text("latest.detailWithReceipt", "{actions} hành động · {candidates} ứng viên", {
+        actions: automationMonitorCount(latest.action_count),
+        candidates: automationMonitorCount(latest.candidate_count)
+      }))
+      : safeText(text("latest.detailWithoutReceipt", "Không dùng số 0 thay cho lịch sử chưa có hoặc đang được bảo vệ."));
     const runRows = runs.length
-      ? runs.map((item) => `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(automationMonitorStateLabel(item && item.state))}</strong><small>${safeText(supportCaseTimestamp(item && (item.finished_at || item.started_at)))} · ${safeText(automationMonitorCount(item && item.action_count))} action · ${safeText(automationMonitorCount(item && item.candidate_count))} candidate</small></div><div class="portal-operations-run-meta">${badge(automationMonitorBadgeState(item && item.state))}</div></article>`).join("")
-      : renderEmpty("Chưa có receipt hiển thị", "Không có receipt đã được server xác minh cho trang này; Portal không tạo record mẫu hoặc suy đoán scheduler đang hoạt động.", "·");
+      ? runs.map((item) => `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(automationMonitorStateLabel(item && item.state))}</strong><small>${safeText(text("run.actionCandidateCaption", "{timestamp} · {actions} hành động · {candidates} ứng viên", {
+        timestamp: automationMonitorTimestamp(item && (item.finished_at || item.started_at)),
+        actions: automationMonitorCount(item && item.action_count),
+        candidates: automationMonitorCount(item && item.candidate_count)
+      }))}</small></div><div class="portal-operations-run-meta">${badge(automationMonitorBadgeState(item && item.state))}</div></article>`).join("")
+      : renderEmpty(text("run.emptyTitle", "Chưa có receipt hiển thị"), text("run.emptyBody", "Chưa có receipt được máy chủ xác minh cho trang này; Portal không tạo record mẫu hoặc suy đoán scheduler đang hoạt động."), "·");
     const runListing = context.adminAutomationMonitorListing && typeof context.adminAutomationMonitorListing === "object" ? context.adminAutomationMonitorListing : {};
     const pagination = runListing.pagination && typeof runListing.pagination === "object" ? runListing.pagination : {};
     const previous = Number.isInteger(pagination.previousOffset) ? pagination.previousOffset : null;
     const next = Number.isInteger(pagination.nextOffset) ? pagination.nextOffset : null;
     const disabled = canRefresh ? "" : " disabled";
-    const pager = previous === null && next === null ? "" : `<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(previous === null ? 0 : previous))}"${previous === null ? " disabled" : disabled}>← Trang trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(next === null ? 0 : next))}"${next === null ? " disabled" : disabled}>Trang sau →</button></div>`;
+    const pager = previous === null && next === null ? "" : `<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(previous === null ? 0 : previous))}"${previous === null ? " disabled" : disabled}>${safeText(text("run.previousPage", "← Trang trước"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(next === null ? 0 : next))}"${next === null ? " disabled" : disabled}>${safeText(text("run.nextPage", "Trang sau →"))}</button></div>`;
     const historyState = responseState === "read_only" ? "read_only" : "guarded";
     const unverifiedCount = counts && Number.isInteger(counts.unknown) && counts.unknown > 0 ? counts.unknown : 0;
-    const aggregateTitle = integrityGuarded || unverifiedCount ? "Tổng hợp trạng thái · cần xác minh" : "Tổng hợp trạng thái";
-    const aggregateCopy = integrityGuarded
-      ? "Có receipt chưa đạt schema redacted; số đếm được ẩn thay vì trình bày aggregate một phần như dữ liệu đã xác minh."
+    const aggregateTitle = integrityGuarded
+      ? text("aggregate.guardedTitle", "Tổng hợp trạng thái · cần xác minh")
       : unverifiedCount
-        ? "Có receipt chưa phân loại; toàn bộ monitor vẫn guarded và không suy đoán nguyên nhân."
-        : "Không có nguồn guarded nào được hiển thị thành 0 hoặc “healthy”.";
+        ? text("aggregate.unknownTitle", "Tổng hợp trạng thái · chưa phân loại")
+        : text("aggregate.title", "Tổng hợp trạng thái");
+    const aggregateCopy = integrityGuarded
+      ? text("aggregate.guardedBody", "Có receipt chưa đạt schema đã che bớt; số đếm được ẩn thay vì trình bày số liệu tổng hợp một phần như đã xác minh.")
+      : unverifiedCount
+        ? text("aggregate.unknownBody", "Có receipt chưa được phân loại; toàn bộ monitor vẫn được bảo vệ và không suy đoán nguyên nhân.")
+        : text("aggregate.healthyBody", "Không hiển thị nguồn đang được bảo vệ như 0 hoặc “hoạt động bình thường”.");
     const unverifiedRow = integrityGuarded || unverifiedCount
-      ? `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Chưa xác minh</strong><small>Receipt không đạt schema redacted hoặc chưa phân loại; không suy đoán nguyên nhân hay tự sửa.</small></div><div class="portal-operations-run-meta"><strong>${safeText(integrityGuarded ? "—" : automationMonitorCount(unverifiedCount))}</strong></div></article>`
+      ? `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(text("aggregate.unknownLabel", "Chưa xác minh"))}</strong><small>${safeText(text("aggregate.unknownNote", "Receipt không đạt schema đã che bớt hoặc chưa được phân loại; không suy đoán nguyên nhân hay tự sửa."))}</small></div><div class="portal-operations-run-meta"><strong>${safeText(integrityGuarded ? "—" : automationMonitorCount(unverifiedCount))}</strong></div></article>`
       : "";
-    const details = `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Read-only scheduler boundary</span><h2 class="portal-card-title">Có quan sát, không có control plane</h2><p class="portal-card-subtitle">Receipt chỉ cho biết Web scheduler đã ghi nhận metadata nội bộ theo policy. Nó không chứng minh Telegram/email/web push, provider run, delivery, payment, job hay một lỗi đã được tự sửa.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không hiển thị run/request ID, nonce, HMAC, lease, receipt JSON, source, account hay nội dung khách.</li><li>Không có tick, retry, webhook, secret, restart, deploy, wallet/Xu, PayOS hoặc provider action.</li><li>Refresh chỉ đọc lại projection signed server-side; không chạy scheduler trong browser.</li></ul></section>`;
+    const details = `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("boundary.kicker", "Ranh giới scheduler chỉ đọc"))}</span><h2 class="portal-card-title">${safeText(text("boundary.noControlPlane.title", "Có quan sát, không có quyền điều khiển"))}</h2><p class="portal-card-subtitle">${safeText(text("boundary.noControlPlane.body", "Receipt chỉ cho biết scheduler Web đã ghi nhận metadata nội bộ theo chính sách. Nó không chứng minh đã gửi Telegram/email/Web push, chạy provider, delivery, payment, job hoặc tự sửa lỗi."))}</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>${safeText(text("boundary.noIdentifiers", "Không hiển thị ID lần chạy/yêu cầu, nonce, HMAC, lease, JSON receipt, nguồn, tài khoản hoặc nội dung khách."))}</li><li>${safeText(text("boundary.noActions", "Không có tick scheduler, retry, webhook, secret, restart, deploy, ví/Xu, PayOS hoặc thao tác nhà cung cấp."))}</li><li>${safeText(text("boundary.refreshReadOnly", "Làm mới chỉ đọc lại dữ liệu đã ký do máy chủ cung cấp; không chạy scheduler trong trình duyệt."))}</li></ul></section>`;
+    const introState = responseState === "read_only"
+      ? text("intro.readOnlyLabel", "Chỉ đọc")
+      : text("intro.guardedLabel", "Đang bảo vệ");
     return `<article class="portal-page portal-admin-automation-monitor">${renderHero(page, context)}
-      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">Web-native Automation Monitor</span><h2>Quan sát scheduler an toàn, không tự tạo hành động</h2><p>Trạng thái hiện tại: ${safeText(automationMonitorStateLabel(schedulerState))}. Chỉ metadata receipt đã được redaction được hiển thị; trạng thái guarded luôn được giữ nguyên thay vì thay bằng dữ liệu cũ.</p></div><dl><div><dt>${safeText(automationMonitorStateLabel(schedulerState))}</dt><dd>Preflight do server xác minh</dd></div><div><dt>${safeText(responseState === "read_only" ? "Chỉ đọc" : "Bảo vệ")}</dt><dd>Không có mutation</dd></div></dl></section>
-      <section class="portal-operations-metrics" aria-label="Tổng quan Automation Monitor"><div class="portal-metric"><span>Inbox Center</span><strong>${scheduler.center_enabled === true ? "Bật" : scheduler.center_enabled === false ? "Tắt" : "—"}</strong><em>Không phải external delivery</em></div><div class="portal-metric"><span>Scheduler</span><strong>${scheduler.automation_enabled === true ? "Quan sát" : scheduler.automation_enabled === false ? "Tắt" : "—"}</strong><em>${safeText(automationMonitorStateLabel(schedulerState))}</em></div><div class="portal-metric"><span>Receipt gần nhất</span><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : "—")}</strong><em>${safeText(latestDetail)}</em></div><div class="portal-metric"><span>Receipt completed</span><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong><em>${integrityGuarded ? "Đang chờ receipt được xác minh" : "Counter đã redact"}</em></div></section>
-      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Receipt gần nhất</h2><p class="portal-card-subtitle">${safeText(latestCopy)}</p></div>${badge(schedulerBadge)}</div><div class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : "Chưa có receipt")}</strong><small>${safeText(latestDetail)}</small></div><div class="portal-operations-run-meta">${latest ? badge(automationMonitorBadgeState(latest.state)) : badge(historyState)}</div></div></section><section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(aggregateTitle)}</h2><p class="portal-card-subtitle">${safeText(aggregateCopy)}</p></div>${badge(integrityGuarded || unverifiedCount ? "guarded" : historyState)}</div><div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Started</strong><small>Receipt đang mở</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.started) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Completed</strong><small>Receipt đã đóng hợp lệ</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Failed</strong><small>Không giả định đã tự sửa</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.failed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Guarded</strong><small>Scheduler giữ ranh giới an toàn</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.guarded) : "—")}</strong></div></article>${unverifiedRow}</div></section></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử receipt đã redact</h2><p class="portal-card-subtitle">Không có filter/search/detail vì các trường nhận dạng và source không được đưa ra Portal.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-refresh" data-portal-route="/admin/automation"${canRefresh ? "" : " disabled"}>Làm mới</button></div><div class="portal-operations-run-list">${runRows}</div>${pager}</section>${details}
+      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">${safeText(text("intro.kicker", "Giám sát tự động hóa Web-native"))}</span><h2>${safeText(text("intro.title", "Quan sát scheduler an toàn, không tự tạo hành động"))}</h2><p>${safeText(text("intro.body", "Trạng thái hiện tại: {state}. Chỉ hiển thị metadata receipt đã che bớt; trạng thái đang bảo vệ luôn được giữ nguyên, không thay bằng dữ liệu cũ.", { state: automationMonitorStateLabel(schedulerState) }))}</p></div><dl><div><dt>${safeText(automationMonitorStateLabel(schedulerState))}</dt><dd>${safeText(text("intro.preflightValue", "Preflight do server xác minh"))}</dd></div><div><dt>${safeText(introState)}</dt><dd>${safeText(text("intro.noMutation", "Không có thao tác thay đổi"))}</dd></div></dl></section>
+      <section class="portal-operations-metrics" aria-label="${safeText(text("metric.aria", "Tổng quan Automation Monitor"))}"><div class="portal-metric"><span>${safeText(text("metric.inboxCenter.label", "Inbox Center"))}</span><strong>${safeText(scheduler.center_enabled === true ? text("metric.enabled", "Bật") : scheduler.center_enabled === false ? text("metric.disabled", "Tắt") : "—")}</strong><em>${safeText(text("metric.noExternalDelivery", "Không phải hoạt động gửi ra bên ngoài"))}</em></div><div class="portal-metric"><span>${safeText(text("metric.scheduler.label", "Scheduler"))}</span><strong>${safeText(scheduler.automation_enabled === true ? text("metric.observing", "Quan sát") : scheduler.automation_enabled === false ? text("metric.disabled", "Tắt") : "—")}</strong><em>${safeText(automationMonitorStateLabel(schedulerState))}</em></div><div class="portal-metric"><span>${safeText(text("metric.latestReceipt.label", "Receipt gần nhất"))}</span><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : "—")}</strong><em>${latestDetail}</em></div><div class="portal-metric"><span>${safeText(text("metric.completedReceipt.label", "Receipt đã hoàn tất"))}</span><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong><em>${safeText(integrityGuarded ? text("metric.pendingVerification", "Đang chờ receipt được xác minh") : text("metric.redactedCounter", "Bộ đếm đã che bớt"))}</em></div></section>
+      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(text("metric.latestReceipt.label", "Receipt gần nhất"))}</h2><p class="portal-card-subtitle">${latestCopy}</p></div>${badge(schedulerBadge)}</div><div class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : text("latest.emptyTitle", "Chưa có receipt"))}</strong><small>${latestDetail}</small></div><div class="portal-operations-run-meta">${latest ? badge(automationMonitorBadgeState(latest.state)) : badge(historyState)}</div></div></section><section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(aggregateTitle)}</h2><p class="portal-card-subtitle">${safeText(aggregateCopy)}</p></div>${badge(integrityGuarded || unverifiedCount ? "guarded" : historyState)}</div><div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(text("aggregate.startedLabel", "Đã bắt đầu"))}</strong><small>${safeText(text("aggregate.startedNote", "Receipt đang mở"))}</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.started) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(text("aggregate.completedLabel", "Hoàn tất"))}</strong><small>${safeText(text("aggregate.completedNote", "Receipt đã đóng hợp lệ"))}</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(text("aggregate.failedLabel", "Thất bại"))}</strong><small>${safeText(text("aggregate.failedNote", "Không giả định đã tự sửa"))}</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.failed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(text("aggregate.guardedLabel", "Đang bảo vệ"))}</strong><small>${safeText(text("aggregate.guardedNote", "Scheduler giữ ranh giới an toàn"))}</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.guarded) : "—")}</strong></div></article>${unverifiedRow}</div></section></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(text("history.title", "Lịch sử receipt đã che bớt"))}</h2><p class="portal-card-subtitle">${safeText(text("history.body", "Không có lọc, tìm kiếm hoặc chi tiết vì trường nhận dạng và nguồn không được đưa ra Portal."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-refresh" data-portal-route="/admin/automation"${canRefresh ? "" : " disabled"}>${safeText(text("run.refresh", "Làm mới"))}</button></div><div class="portal-operations-run-list">${runRows}</div>${pager}</section>${details}
     </article>`;
   }
 

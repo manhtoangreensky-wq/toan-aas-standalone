@@ -137,6 +137,7 @@ _PORTAL_SHELL_TITLES = {
     PROJECT_CREATE_PATH: {"vi": "Project mới · TOAN AAS", "en": "New Project · TOAN AAS", "zh": "新建项目 · TOAN AAS"},
     "/admin/security": {"vi": "Security Posture · TOAN AAS", "en": "Security Posture · TOAN AAS", "zh": "安全态势 · TOAN AAS"},
     "/admin/access": {"vi": "Access Posture · TOAN AAS", "en": "Access Posture · TOAN AAS", "zh": "访问态势 · TOAN AAS"},
+    "/admin/automation": {"vi": "Automation Monitor · TOAN AAS", "en": "Automation Monitor · TOAN AAS", "zh": "自动化监控 · TOAN AAS"},
 }
 
 
