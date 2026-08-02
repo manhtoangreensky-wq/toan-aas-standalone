@@ -803,6 +803,27 @@ def _prompt_composer_resolved_style(payload: ImagePromptComposerRequest) -> str:
     return _prompt_composer_style_preset(payload.goal_code, payload.language, payload.style_preset)
 
 
+def _prompt_composer_variants(*, subject: str, style: str, ratio: str, language: str) -> list[str]:
+    """Return the Bot's visible three-variant catalogue as Web-only text.
+
+    This helper deliberately receives only bounded draft fields.  It has no
+    Telegram callback, pending state, file, provider, job, wallet or payment
+    dependency and cannot be used as an image-execution request.
+    """
+
+    if language == "vi":
+        return [
+            f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, studio sạch, {ratio}, ánh sáng premium, chi tiết cao, không watermark",
+            f"{subject}, key visual thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, {ratio}, ánh sáng luxury, chất lượng cao, không chữ thừa",
+            f"{subject}, ảnh viral nổi bật mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, {ratio}, dễ dừng lướt, chủ thể sạch, không watermark",
+        ]
+    return [
+        f"{subject}, product-led sales hero image, clear benefit, clean studio, {ratio}, premium lighting, high detail, no watermark",
+        f"{subject}, premium brand key visual, {style}, refined composition, {ratio}, luxury lighting, high quality, no extra text",
+        f"{subject}, viral social media visual, bold focal point, energetic composition, {ratio}, scroll-stopping, clean subject, no watermark",
+    ]
+
+
 def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]:
     """Adapt the Bot's pure image-prompt text recipes into Web-native drafts.
 
@@ -818,6 +839,7 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
     style = _prompt_composer_resolved_style(payload)
     subject = payload.subject
     ratio = payload.ratio
+    variants = _prompt_composer_variants(subject=subject, style=style, ratio=ratio, language=language)
     review = (
         [
             "Đây là bản nháp text có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
@@ -849,11 +871,6 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
             "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, logo hỏng, chữ sai hoặc thừa, "
             "watermark, nền rối, phơi sáng quá mức hoặc thiếu sáng"
         )
-        variants = [
-            f"{subject}, ảnh làm rõ sản phẩm hoặc thông điệp chính, phong cách {style}, {ratio}, bố cục hero sạch, ánh sáng premium, chi tiết có chủ đích, không watermark",
-            f"{subject}, key visual thương hiệu tinh tế, phong cách {style}, {ratio}, điểm nhìn rõ, nền gọn, màu cân bằng, chỉ dùng logo/chữ đã được cấp quyền",
-            f"{subject}, visual social nổi bật nhưng dễ đọc, phong cách {style}, {ratio}, chủ thể sạch, khoảng trống cho caption, không chữ tự phát hoặc watermark",
-        ]
         title = f"Bản nháp prompt ảnh: {subject}"
     else:
         short_prompt = (
@@ -870,11 +887,6 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
             "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, "
             "messy background, overexposure, underexposure"
         )
-        variants = [
-            f"{subject}, product or message-led hero visual, {style}, {ratio}, clean focal composition, premium lighting, deliberate detail, no watermark",
-            f"{subject}, refined brand key visual, {style}, {ratio}, clear focal point, tidy background, balanced color, authorized logo or text only",
-            f"{subject}, eye-catching but legible social visual, {style}, {ratio}, clean subject, caption space, no invented text or watermark",
-        ]
         title = f"Image prompt draft: {subject}"
 
     return ImagePromptComposerResult.model_validate(

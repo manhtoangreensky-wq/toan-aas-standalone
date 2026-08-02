@@ -247,7 +247,10 @@ def test_image_prompt_composer_resolves_only_web_native_style_presets(tmp_path, 
                 assert first_composer["style_preset"] == second_composer["style_preset"] == preset
                 assert first_composer["style"] == second_composer["style"]
                 assert first_composer["style"] in first_composer["short_prompt"]
-                assert first_composer["style"] in first_composer["variants"][0]
+                # The Bot's sales variant intentionally uses its fixed clean
+                # studio direction; the premium variant is the one that
+                # carries the selected style exactly.
+                assert first_composer["style"] in first_composer["variants"][1]
                 resolved.append(first_composer["style"])
             assert len(set(resolved)) == 3
             assert auto_styles[language] not in resolved
@@ -356,6 +359,45 @@ def test_image_prompt_composer_bot_style_catalog_uses_visible_directions_without
                 )
                 assert custom_goal.status_code == 200
                 assert custom_goal.json()["data"]["composer"]["style"] == style
+
+
+def test_image_prompt_composer_bot_variant_catalog_is_exact_and_request_only(tmp_path, monkeypatch):
+    """The Web mirrors Bot-visible variants without importing Bot state."""
+
+    path = "/api/v1/image-studio/tools/prompt-composer"
+    subject = "Bình nước giữ nhiệt cho người đi làm"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "image-prompt-bot-variant-catalog@example.com")
+        for language in ("vi", "en"):
+            response = client.post(
+                path,
+                headers={"X-CSRF-Token": csrf},
+                json=composer_payload(
+                    subject=subject,
+                    style="",
+                    style_preset="suggestion_2",
+                    ratio="9x16",
+                    language=language,
+                ),
+            )
+            assert response.status_code == 200
+            body = response.json()
+            assert body["status"] == "draft"
+            composer = body["data"]["composer"]
+            style = composer["style"]
+            if language == "vi":
+                expected = [
+                    f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, studio sạch, 9:16, ánh sáng premium, chi tiết cao, không watermark",
+                    f"{subject}, key visual thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, 9:16, ánh sáng luxury, chất lượng cao, không chữ thừa",
+                    f"{subject}, ảnh viral nổi bật mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể sạch, không watermark",
+                ]
+            else:
+                expected = [
+                    f"{subject}, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+                    f"{subject}, premium brand key visual, {style}, refined composition, 9:16, luxury lighting, high quality, no extra text",
+                    f"{subject}, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark",
+                ]
+            assert composer["variants"] == expected
 
 
 def test_image_prompt_composer_rejects_schema_sensitive_input_and_guards_imitation(tmp_path, monkeypatch):
