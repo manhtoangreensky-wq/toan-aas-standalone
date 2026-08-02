@@ -7561,7 +7561,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 631,
+      "occurrences": 643,
       "provider": "PayOS"
     },
     {
@@ -7650,7 +7650,7 @@
         "copyfast_registry.py",
         "copyfast_starter_kits.py"
       ],
-      "occurrences": 1111,
+      "occurrences": 1114,
       "provider": "Telegram"
     }
   ],
@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "6fb427e3f2a29832b7d38e24d94ba1633a26ae1cc3f1421c311bedb167ff9b78",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-erp-data-surfaces",
+  "source_fingerprint_sha256": "b85607b6cc1281d9cebaf0a0bf1d810e48a3c48295f660c26f1be75b1c0b5ea9",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-erp-generic-locales",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

@@ -79,6 +79,26 @@
     return uiText(`adminFinance.${key}`, fallback, params);
   }
 
+  function adminGenericText(key, fallback, params) {
+    return uiText(`adminGeneric.${key}`, fallback, params);
+  }
+
+  const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
+    overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
+    payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
+    jobs: "module.jobs", "failed-jobs": "module.failedJobs", workers: "module.workers", runtime: "module.runtime",
+    providers: "module.providers", "provider-cost": "module.providerCost", features: "module.features", freezes: "module.freezes",
+    pricing: "module.pricing", packages: "module.packages", promos: "module.promos",
+    campaigns: "module.campaigns", calendar: "module.calendar", approvals: "module.approvals", analytics: "module.analytics",
+    reports: "module.reports", "export": "module.export", system: "module.system", backups: "module.backups", audit: "module.audit"
+  });
+
+  function adminGenericModuleLabel(module) {
+    const source = String(module || "").trim();
+    const key = ADMIN_GENERIC_MODULE_LABEL_KEYS[source];
+    return key ? adminGenericText(key, source) : source;
+  }
+
   // These helpers apply the active reviewed interface locale only to UI
   // presentation. They never normalize customer/workflow data or alter a
   // stored timestamp, amount, currency/Xu value, source/target language or
@@ -4845,9 +4865,9 @@
   // render contract small and explicit so raw audit identity, targets, detail
   // or provider/payment metadata can never become a presentation field.
   const ADMIN_AUDIT_CATEGORY_OPTIONS = Object.freeze([
-    ["all", "Tất cả nhóm"], ["auth", "Xác thực"], ["support", "CSKH"],
-    ["operations", "Vận hành"], ["workspace", "Workspace"], ["content", "Nội dung"],
-    ["asset", "Tài sản & tài liệu"], ["admin", "Quản trị"], ["security", "Bảo mật"]
+    ["all", "audit.filter.option.all"], ["auth", "audit.filter.option.auth"], ["support", "audit.filter.option.support"],
+    ["operations", "audit.filter.option.operations"], ["workspace", "audit.filter.option.workspace"], ["content", "audit.filter.option.content"],
+    ["asset", "audit.filter.option.asset"], ["admin", "audit.filter.option.admin"], ["security", "audit.filter.option.security"]
   ]);
   const ADMIN_AUDIT_CATEGORY_KEYS = new Set(ADMIN_AUDIT_CATEGORY_OPTIONS.map(([value]) => value));
   const ADMIN_AUDIT_LIST_LIMIT = 50;
@@ -4866,9 +4886,9 @@
         ? String(item.state).toLowerCase()
         : "guarded";
       return {
-        category_label: typeof item.category_label === "string" ? item.category_label.slice(0, 80) : "Sự kiện Web",
-        event_label: typeof item.event_label === "string" ? item.event_label.slice(0, 160) : "Sự kiện đã redaction",
-        outcome_label: typeof item.outcome_label === "string" ? item.outcome_label.slice(0, 100) : "Đã ghi nhận trạng thái",
+        category_label: typeof item.category_label === "string" ? item.category_label.slice(0, 80) : "",
+        event_label: typeof item.event_label === "string" ? item.event_label.slice(0, 160) : "",
+        outcome_label: typeof item.outcome_label === "string" ? item.outcome_label.slice(0, 100) : "",
         state,
         created_at: typeof item.created_at === "string" ? item.created_at.slice(0, 80) : "",
         source: item.source === "web_audit_events_redacted" ? item.source : "web_audit_events_redacted"
@@ -24565,19 +24585,21 @@
 
   function adminJobActions(item, context, route) {
     const jobId = String(item && item.id || "").trim();
-    if (!/^[A-Za-z0-9._:-]{1,160}$/.test(jobId)) return `<span class="portal-form-note">Chưa có job ID hợp lệ</span>`;
+    if (!/^[A-Za-z0-9._:-]{1,160}$/.test(jobId)) return `<span class="portal-form-note">${safeText(adminGenericText("jobAction.invalidId", "Chưa có job ID hợp lệ"))}</span>`;
     const state = jobStatus(item);
     const canRetry = context.capabilities && context.capabilities["admin-retry"] === true;
     const canRefund = context.capabilities && context.capabilities["admin-refund"] === true;
     const retryEligible = ["failed", "failed_no_charge", "cancelled"].includes(state);
     const refundEligible = ["completed", "failed"].includes(state);
-    if (!retryEligible && !refundEligible) return `<span class="portal-form-note">Không có action phù hợp</span>`;
-    const disabledTitle = "Cần signed canonical admin session, CSRF, Core Bridge và WEBAPP_ADMIN_WRITES_ENABLED.";
+    if (!retryEligible && !refundEligible) return `<span class="portal-form-note">${safeText(adminGenericText("jobAction.noneAvailable", "Không có action phù hợp"))}</span>`;
+    const disabledTitle = adminGenericText("jobAction.disabledTitle", "Cần signed canonical admin session, CSRF, Core Bridge và WEBAPP_ADMIN_WRITES_ENABLED.");
+    const retryConfirm = adminGenericText("jobAction.retryConfirm", "Retry job {jobId}? Bot canonical sẽ kiểm tra lại quyền, trạng thái và charge trước khi quyết định.", { jobId });
+    const refundConfirm = adminGenericText("jobAction.refundConfirm", "Yêu cầu hoàn Xu cho job {jobId}? Bot canonical sẽ kiểm tra charge, output và chính sách refund trước khi quyết định.", { jobId });
     const retry = retryEligible
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-retry" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="Retry job ${safeText(jobId)}? Bot canonical sẽ kiểm tra lại quyền, trạng thái và charge trước khi quyết định."${canRetry ? "" : ` disabled title="${disabledTitle}"`}>Retry</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-retry" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="${safeText(retryConfirm)}"${canRetry ? "" : ` disabled title="${safeText(disabledTitle)}"`}>${safeText(adminGenericText("jobAction.retryLabel", "Retry"))}</button>`
       : "";
     const refund = refundEligible
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-refund" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="Yêu cầu hoàn Xu cho job ${safeText(jobId)}? Bot canonical sẽ kiểm tra charge, output và chính sách refund trước khi quyết định."${canRefund ? "" : ` disabled title="${disabledTitle}"`}>Yêu cầu hoàn Xu</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-refund" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="${safeText(refundConfirm)}"${canRefund ? "" : ` disabled title="${safeText(disabledTitle)}"`}>${safeText(adminGenericText("jobAction.refundLabel", "Yêu cầu hoàn Xu"))}</button>`
       : "";
     return `<div class="portal-inline-actions portal-admin-write-actions">${retry}${refund}</div>`;
   }
@@ -24593,10 +24615,10 @@
     const enabled = context.capabilities && context.capabilities["admin-freeze"] === true && features.length > 0;
     const disabled = enabled ? "" : " disabled";
     const reason = features.length
-      ? "Chỉ bật sau signed canonical admin session, CSRF, Core Bridge và flag write riêng."
-      : "Chờ catalog canonical để chọn feature cần điều khiển.";
+      ? adminGenericText("maintenance.catalogReadyNote", "Chỉ bật sau signed canonical admin session, CSRF, Core Bridge và flag write riêng.")
+      : adminGenericText("maintenance.catalogPendingNote", "Chờ catalog canonical để chọn feature cần điều khiển.");
     const options = features.map((item) => `<option value="${safeText(item.key)}">${safeText(item.label)} · ${safeText(item.key)}</option>`).join("");
-    return `<section class="portal-card portal-card-pad portal-admin-write-panel"><div class="portal-card-header"><div><h2 class="portal-card-title">Maintenance feature canonical</h2><p class="portal-card-subtitle">Đóng băng/mở lại luôn đi qua confirmation, CSRF, idempotency và canonical admin check. Browser không thay provider, giá hoặc trạng thái job trực tiếp.</p></div>${badge(enabled ? "awaiting_confirm" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="admin-freeze" data-portal-route="${safeText(page.routePath || page.path)}" data-portal-confirm="Xác nhận gửi thay đổi maintenance sang Bot canonical? Hãy kiểm tra feature, trạng thái và ghi chú trước khi tiếp tục." novalidate><label class="portal-field"><span class="portal-label">Feature</span><select class="portal-select" name="feature" required${disabled}><option value="" selected disabled>Chọn feature cần điều khiển</option>${options}</select></label><label class="portal-field"><span class="portal-label">Trạng thái</span><select class="portal-select" name="frozen" required${disabled}><option value="" selected disabled>Chọn thay đổi</option><option value="true">Đóng băng tạm thời</option><option value="false">Mở lại feature</option></select></label><label class="portal-field"><span class="portal-label">Ghi chú vận hành</span><textarea class="portal-textarea" name="note" placeholder="Lý do, phạm vi và điều kiện mở lại…" minlength="5" maxlength="300" required${disabled}></textarea></label><div class="portal-form-footer"><span class="portal-form-note">${safeText(reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Áp dụng maintenance</button></div></form></section>`;
+    return `<section class="portal-card portal-card-pad portal-admin-write-panel"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminGenericText("maintenance.title", "Maintenance feature canonical"))}</h2><p class="portal-card-subtitle">${safeText(adminGenericText("maintenance.body", "Đóng băng/mở lại luôn đi qua confirmation, CSRF, idempotency và canonical admin check. Browser không thay provider, giá hoặc trạng thái job trực tiếp."))}</p></div>${badge(enabled ? "awaiting_confirm" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="admin-freeze" data-portal-route="${safeText(page.routePath || page.path)}" data-portal-confirm="${safeText(adminGenericText("maintenance.confirm", "Xác nhận gửi thay đổi maintenance sang Bot canonical? Hãy kiểm tra feature, trạng thái và ghi chú trước khi tiếp tục."))}" novalidate><label class="portal-field"><span class="portal-label">${safeText(adminGenericText("maintenance.featureLabel", "Feature"))}</span><select class="portal-select" name="feature" required${disabled}><option value="" selected disabled>${safeText(adminGenericText("maintenance.featurePlaceholder", "Chọn feature cần điều khiển"))}</option>${options}</select></label><label class="portal-field"><span class="portal-label">${safeText(adminGenericText("maintenance.stateLabel", "Trạng thái"))}</span><select class="portal-select" name="frozen" required${disabled}><option value="" selected disabled>${safeText(adminGenericText("maintenance.statePlaceholder", "Chọn thay đổi"))}</option><option value="true">${safeText(adminGenericText("maintenance.freezeOption", "Đóng băng tạm thời"))}</option><option value="false">${safeText(adminGenericText("maintenance.unfreezeOption", "Mở lại feature"))}</option></select></label><label class="portal-field"><span class="portal-label">${safeText(adminGenericText("maintenance.noteLabel", "Ghi chú vận hành"))}</span><textarea class="portal-textarea" name="note" placeholder="${safeText(adminGenericText("maintenance.notePlaceholder", "Lý do, phạm vi và điều kiện mở lại…"))}" minlength="5" maxlength="300" required${disabled}></textarea></label><div class="portal-form-footer"><span class="portal-form-note">${safeText(reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>${safeText(adminGenericText("maintenance.submit", "Áp dụng maintenance"))}</button></div></form></section>`;
   }
 
   function adminAuditListing(context) {
@@ -24611,10 +24633,12 @@
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
     const disabled = enabled ? "" : " disabled";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " sự kiện đã redaction" : "Không có sự kiện ở trang này";
-    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-audit-page" data-portal-route="/admin/audit" data-admin-audit-offset="' + safeText(String(previous)) + '"' + disabled + '>← Trang trước</button>';
-    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-audit-page" data-portal-route="/admin/audit" data-admin-audit-offset="' + safeText(String(next)) + '"' + disabled + '>Trang sau →</button>';
-    return '<nav class="portal-support-pagination" aria-label="Phân trang Audit Explorer"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
+    const range = returned
+      ? adminGenericText("audit.pagination.range", "Đang hiển thị {start}–{end} sự kiện đã redaction", { start: String(offset + 1), end: String(offset + returned) })
+      : adminGenericText("audit.pagination.emptyRange", "Không có sự kiện ở trang này");
+    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-audit-page" data-portal-route="/admin/audit" data-admin-audit-offset="' + safeText(String(previous)) + '"' + disabled + '>' + safeText(adminGenericText("audit.pagination.previous", "← Trang trước")) + "</button>";
+    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-audit-page" data-portal-route="/admin/audit" data-admin-audit-offset="' + safeText(String(next)) + '"' + disabled + '>' + safeText(adminGenericText("audit.pagination.next", "Trang sau →")) + "</button>";
+    return '<nav class="portal-support-pagination" aria-label="' + safeText(adminGenericText("audit.pagination.label", "Phân trang Audit Explorer")) + '"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
   function renderAdminAuditExplorer(context) {
@@ -24633,15 +24657,15 @@
       ? `<ul class="portal-admin-audit-boundaries">${boundaries.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul>`
       : "";
     const rows = renderRowsTable(
-      ["Nhóm", "Sự kiện", "Kết quả", "Thời điểm"],
+      [adminGenericText("audit.column.category", "Nhóm"), adminGenericText("audit.column.event", "Sự kiện"), adminGenericText("audit.column.outcome", "Kết quả"), adminGenericText("audit.column.occurredAt", "Thời điểm")],
       events,
-      (event) => `<td>${safeText(event.category_label || "Sự kiện Web")}</td><td>${safeText(event.event_label || "Sự kiện đã redaction")}</td><td>${badge(event.state || "guarded")}<small class="portal-table-note">${safeText(event.outcome_label || "Đã ghi nhận trạng thái")}</small></td><td>${safeText(event.created_at || "—")}</td>`,
-      "Chưa có sự kiện Web-owned phù hợp",
-      "Audit Explorer không thay thế audit Bot/Core Bridge và không tạo event hoặc dữ liệu giả."
+      (event) => `<td>${safeText(event.category_label || adminGenericText("audit.defaultCategory", "Sự kiện Web"))}</td><td>${safeText(event.event_label || adminGenericText("audit.defaultEvent", "Sự kiện đã redaction"))}</td><td>${badge(event.state || "guarded")}<small class="portal-table-note">${safeText(event.outcome_label || adminGenericText("audit.defaultOutcome", "Đã ghi nhận trạng thái"))}</small></td><td>${safeText(event.created_at || "—")}</td>`,
+      adminGenericText("audit.emptyTitle", "Chưa có sự kiện Web-owned phù hợp"),
+      adminGenericText("audit.emptyBody", "Audit Explorer không thay thế audit Bot/Core Bridge và không tạo event hoặc dữ liệu giả.")
     );
-    const filterOptions = ADMIN_AUDIT_CATEGORY_OPTIONS.map(([value, label]) => '<option value="' + safeText(value) + '"' + (filter.category === value ? " selected" : "") + ">" + safeText(label) + "</option>").join("");
-    const filterForm = '<form class="portal-project-filter" data-portal-form data-portal-no-transient data-portal-action="admin-audit-filter" data-portal-route="/admin/audit" novalidate><div class="portal-fields"><label class="portal-field"><span>Nhóm sự kiện</span><select class="portal-select" name="category"' + controlDisabled + ">" + filterOptions + "</select></label></div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">Chỉ lọc theo nhóm allowlist và chỉ yêu cầu metadata Audit Explorer đã redaction; không có tìm kiếm raw action, identity hoặc detail.</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"admin-audit-filter-clear\" data-portal-route=\"/admin/audit\"" + controlDisabled + ">Xóa lọc</button><button class=\"portal-button portal-button--primary\" type=\"submit\"" + controlDisabled + ">Lọc Audit</button></div></div></form>";
-    return `<section class="portal-admin-audit-explorer"><div class="portal-admin-grid"><div class="portal-metric"><span>Đã trả</span><strong>${safeText(count(summary.returned))}</strong><em>Giới hạn server</em></div><div class="portal-metric"><span>Đã ghi nhận</span><strong>${safeText(count(summary.completed))}</strong><em>Web audit metadata</em></div><div class="portal-metric"><span>Được chặn</span><strong>${safeText(count(summary.guarded))}</strong><em>Không phải lỗi giả</em></div><div class="portal-metric"><span>Chỉ đọc</span><strong>${safeText(count(summary.read_only))}</strong><em>Đã redaction</em></div></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Audit Explorer Web-native</h2><p class="portal-card-subtitle">Chỉ metadata Web-owned đã redaction. Không có account ID, Telegram ID, request ID, target, detail, token, payment reference hoặc payload provider.</p></div>${badge(context.adminAuditReadState || "read_only")}</div>${filterForm}${rows}${renderAdminAuditPagination(listing, canRequest)}${boundaryList}</section></section>`;
+    const filterOptions = ADMIN_AUDIT_CATEGORY_OPTIONS.map(([value, labelKey]) => '<option value="' + safeText(value) + '"' + (filter.category === value ? " selected" : "") + ">" + safeText(adminGenericText(labelKey, value)) + "</option>").join("");
+    const filterForm = '<form class="portal-project-filter" data-portal-form data-portal-no-transient data-portal-action="admin-audit-filter" data-portal-route="/admin/audit" novalidate><div class="portal-fields"><label class="portal-field"><span>' + safeText(adminGenericText("audit.filter.category", "Nhóm sự kiện")) + '</span><select class="portal-select" name="category"' + controlDisabled + ">" + filterOptions + "</select></label></div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">" + safeText(adminGenericText("audit.filter.body", "Chỉ lọc theo nhóm allowlist và chỉ yêu cầu metadata Audit Explorer đã redaction; không có tìm kiếm raw action, identity hoặc detail.")) + "</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"admin-audit-filter-clear\" data-portal-route=\"/admin/audit\"" + controlDisabled + ">" + safeText(adminGenericText("audit.filter.clear", "Xóa lọc")) + "</button><button class=\"portal-button portal-button--primary\" type=\"submit\"" + controlDisabled + ">" + safeText(adminGenericText("audit.filter.apply", "Lọc Audit")) + "</button></div></div></form>";
+    return `<section class="portal-admin-audit-explorer"><div class="portal-admin-grid"><div class="portal-metric"><span>${safeText(adminGenericText("audit.metric.returned", "Đã trả"))}</span><strong>${safeText(count(summary.returned))}</strong><em>${safeText(adminGenericText("audit.metric.serverLimit", "Giới hạn server"))}</em></div><div class="portal-metric"><span>${safeText(adminGenericText("audit.metric.recorded", "Đã ghi nhận"))}</span><strong>${safeText(count(summary.completed))}</strong><em>${safeText(adminGenericText("audit.metric.webMetadata", "Web audit metadata"))}</em></div><div class="portal-metric"><span>${safeText(adminGenericText("audit.metric.guarded", "Được chặn"))}</span><strong>${safeText(count(summary.guarded))}</strong><em>${safeText(adminGenericText("audit.metric.noSyntheticFailure", "Không phải lỗi giả"))}</em></div><div class="portal-metric"><span>${safeText(adminGenericText("audit.metric.readOnly", "Chỉ đọc"))}</span><strong>${safeText(count(summary.read_only))}</strong><em>${safeText(adminGenericText("audit.metric.redacted", "Đã redaction"))}</em></div></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminGenericText("audit.title", "Audit Explorer Web-native"))}</h2><p class="portal-card-subtitle">${safeText(adminGenericText("audit.body", "Chỉ metadata Web-owned đã redaction. Không có account ID, Telegram ID, request ID, target, detail, token, payment reference hoặc payload provider."))}</p></div>${badge(context.adminAuditReadState || "read_only")}</div>${filterForm}${rows}${renderAdminAuditPagination(listing, canRequest)}${boundaryList}</section></section>`;
   }
 
   function renderAdminDataTable(page, context) {
@@ -24651,38 +24675,38 @@
     if (module === "audit" && context.adminAudit && typeof context.adminAudit === "object") return renderAdminAuditExplorer(context);
     const surface = (content) => renderAdminDataSurface(module, data, content);
     if (["users", "user", "wallet"].includes(module)) {
-      return surface(renderRowsTable(["Người dùng", "Tên hiển thị", "Số dư", "Đã dùng", "Gói", "Tạo lúc"], rows, (item) => `<td>${safeText(item.user_id || "—")}</td><td>${safeText(item.username || "—")}</td><td>${safeText(adminNumber(item.balance_xu, " Xu"))}</td><td>${safeText(adminNumber(item.total_spent_xu, " Xu"))}</td><td>${item.is_vip ? "VIP" : "Chuẩn"}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có người dùng được cấp", "Core Bridge chỉ trả các trường phù hợp với role quản trị hiện tại."));
+      return surface(renderRowsTable([adminGenericText("users.column.user", "Người dùng"), adminGenericText("users.column.displayName", "Tên hiển thị"), adminGenericText("users.column.balance", "Số dư"), adminGenericText("users.column.spent", "Đã dùng"), adminGenericText("users.column.package", "Gói"), adminGenericText("users.column.createdAt", "Tạo lúc")], rows, (item) => `<td>${safeText(item.user_id || "—")}</td><td>${safeText(item.username || "—")}</td><td>${safeText(adminNumber(item.balance_xu, " Xu"))}</td><td>${safeText(adminNumber(item.total_spent_xu, " Xu"))}</td><td>${safeText(item.is_vip ? adminGenericText("users.package.vip", "VIP") : adminGenericText("users.package.standard", "Chuẩn"))}</td><td>${safeText(item.created_at || "—")}</td>`, adminGenericText("users.emptyTitle", "Chưa có người dùng được cấp"), adminGenericText("users.emptyBody", "Core Bridge chỉ trả các trường phù hợp với role quản trị hiện tại.")));
     }
     if (["payments", "topups", "revenue", "refunds"].includes(module)) {
       const manualBoundary = module === "topups"
-        ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Chỉ đơn PayOS canonical</strong><p>Bảng này không phải hàng chờ nạp thủ công. Bill, TXID, đối soát và duyệt nạp thủ công tiếp tục trong Bot.</p></div></div>`
+        ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("payments.topupNoticeTitle", "Chỉ đơn PayOS canonical"))}</strong><p>${safeText(adminGenericText("payments.topupNoticeBody", "Bảng này không phải hàng chờ nạp thủ công. Bill, TXID, đối soát và duyệt nạp thủ công tiếp tục trong Bot."))}</p></div></div>`
         : "";
-      return surface(`${manualBoundary}${renderRowsTable(["Mã đơn PayOS", "Người dùng", "Giá trị", "Xu", "Loại PayOS", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.order_code || item.id || "—")}</td><td>${safeText(item.user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, " đ"))}</td><td>${safeText(adminNumber(item.xu, " Xu"))}</td><td>${safeText(item.type || "—")}</td><td>${badge(paymentStatus(item))}</td><td>${safeText(item.paid_at || item.created_at || "—")}</td>`, "Chưa có đơn PayOS được cấp", "Nạp thủ công không xuất hiện ở Web; Bot canonical giữ toàn bộ đối soát, approval và ledger.")}`);
+      return surface(`${manualBoundary}${renderRowsTable([adminGenericText("payments.column.orderCode", "Mã đơn PayOS"), adminGenericText("payments.column.user", "Người dùng"), adminGenericText("payments.column.amount", "Giá trị"), adminGenericText("payments.column.xu", "Xu"), adminGenericText("payments.column.type", "Loại PayOS"), adminGenericText("payments.column.status", "Trạng thái"), adminGenericText("payments.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.order_code || item.id || "—")}</td><td>${safeText(item.user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, " đ"))}</td><td>${safeText(adminNumber(item.xu, " Xu"))}</td><td>${safeText(item.type || "—")}</td><td>${badge(paymentStatus(item))}</td><td>${safeText(item.paid_at || item.created_at || "—")}</td>`, adminGenericText("payments.emptyTitle", "Chưa có đơn PayOS được cấp"), adminGenericText("payments.emptyBody", "Nạp thủ công không xuất hiện ở Web; Bot canonical giữ toàn bộ đối soát, approval và ledger."))}`);
     }
     if (module === "failed-jobs") {
       const incidentCount = data.compatibility_guarded !== true && Array.isArray(data.items)
         ? rows.filter((item) => ["failed", "failed_no_charge", "cancelled"].includes(jobStatus(item))).length
         : null;
       const incidentText = incidentCount === null
-        ? "Core Bridge chưa cấp danh sách job lỗi/hủy trong lần đọc này."
-        : `${safeText(String(incidentCount))} job lỗi/hủy được Core Bridge cấp trong lần đọc này.`;
-      const incidentNotice = `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Incident queue chỉ đọc</strong><p>${incidentText} Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định.</p></div></div>`;
-      return surface(`${incidentNotice}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Nguyên nhân đã rút gọn", "Chi phí / hoàn Xu", "Output", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || "Chưa có category canonical")}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có incident job được cấp", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser.")}`);
+        ? adminGenericText("failedJobs.unavailableNotice", "Core Bridge chưa cấp danh sách job lỗi/hủy trong lần đọc này.")
+        : adminGenericText("failedJobs.countNotice", "{count} job lỗi/hủy được Core Bridge cấp trong lần đọc này.", { count: String(incidentCount) });
+      const incidentNotice = `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("failedJobs.noticeTitle", "Incident queue chỉ đọc"))}</strong><p>${safeText(incidentText)} ${safeText(adminGenericText("failedJobs.noticeBody", "Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định."))}</p></div></div>`;
+      return surface(`${incidentNotice}${renderRowsTable([adminGenericText("failedJobs.column.job", "Job"), adminGenericText("failedJobs.column.feature", "Tính năng"), adminGenericText("failedJobs.column.status", "Trạng thái"), adminGenericText("failedJobs.column.errorCategory", "Nguyên nhân đã rút gọn"), adminGenericText("failedJobs.column.costRefund", "Chi phí / hoàn Xu"), adminGenericText("failedJobs.column.output", "Output"), adminGenericText("failedJobs.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || adminGenericText("failedJobs.errorCategoryFallback", "Chưa có category canonical"))}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("failedJobs.emptyTitle", "Chưa có incident job được cấp"), adminGenericText("failedJobs.emptyBody", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser."))}`);
     }
     if (["jobs", "failed-jobs", "workers", "runtime"].includes(module)) {
       const route = page.routePath || page.path;
-      return surface(renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine", "Delivery", "Thao tác canonical"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${assetDeliveryState(item)}</td><td>${adminJobActions(item, context, route)}</td>`, "Chưa có job vận hành được cấp", "Admin view vẫn không hiển thị URL provider, local path hay download không ký."));
+      return surface(renderRowsTable([adminGenericText("jobs.column.job", "Job"), adminGenericText("jobs.column.feature", "Tính năng"), adminGenericText("jobs.column.status", "Trạng thái"), adminGenericText("jobs.column.canonicalCost", "Chi phí canonical"), adminGenericText("jobs.column.updatedAt", "Cập nhật"), adminGenericText("jobs.column.outputEngine", "Output engine"), adminGenericText("jobs.column.delivery", "Delivery"), adminGenericText("jobs.column.actions", "Thao tác canonical")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${assetDeliveryState(item)}</td><td>${adminJobActions(item, context, route)}</td>`, adminGenericText("jobs.emptyTitle", "Chưa có job vận hành được cấp"), adminGenericText("jobs.emptyBody", "Admin view vẫn không hiển thị URL provider, local path hay download không ký.")));
     }
     if (["providers", "provider-cost", "features", "freezes", "pricing", "promos"].includes(module)) {
-      return surface(renderRowsTable(["Tính năng", "Trạng thái", "Lý do đã rút gọn", "Cập nhật"], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, "Chờ trạng thái canonical", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI."));
+      return surface(renderRowsTable([adminGenericText("providerFeature.column.feature", "Tính năng"), adminGenericText("providerFeature.column.status", "Trạng thái"), adminGenericText("providerFeature.column.reason", "Lý do đã rút gọn"), adminGenericText("providerFeature.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, adminGenericText("providerFeature.emptyTitle", "Chờ trạng thái canonical"), adminGenericText("providerFeature.emptyBody", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.")));
     }
     if (["tickets", "support"].includes(module)) {
       return surface(renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${ticketStatusCell(item)}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này."));
     }
     if (module === "audit") {
-      return renderRowsTable(["Sự kiện", "Hành động", "Kết quả", "Thời điểm"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có audit event được cấp", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng.");
+      return renderRowsTable([adminGenericText("audit.column.event", "Sự kiện"), adminGenericText("audit.column.action", "Hành động"), adminGenericText("audit.column.outcome", "Kết quả"), adminGenericText("audit.column.occurredAt", "Thời điểm")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, adminGenericText("audit.emptyTitle", "Chưa có audit event được cấp"), adminGenericText("audit.emptyBody", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng."));
     }
-    return surface(renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Module đang chờ adapter canonical", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp."));
+    return surface(renderRowsTable([adminGenericText("fallbackTable.column.subject", "Đối tượng"), adminGenericText("fallbackTable.column.status", "Trạng thái"), adminGenericText("fallbackTable.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("fallbackTable.emptyTitle", "Module đang chờ adapter canonical"), adminGenericText("fallbackTable.emptyBody", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp.")));
   }
 
   // These are first-class navigation centers, not new Bot adapters. Their
@@ -24801,15 +24825,28 @@
     const incidentReadOnly = module === "failed-jobs";
     const writeEnabled = !compatibilityGuarded && !incidentReadOnly && Boolean(context.capabilities && (context.capabilities["admin-retry"] || context.capabilities["admin-refund"] || context.capabilities["admin-freeze"]));
     const canonicalAdmin = hasLiveCanonicalAdmin(context);
-    const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>Record được yêu cầu</strong><p>ID ${safeText(page.recordId)} không cấp quyền hay dữ liệu cho browser. Core Bridge phải kiểm tra permission trước khi trả chi tiết.</p></div></div>` : "";
-    const adapterMessage = data.message ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>Trạng thái adapter</strong><p>${safeText(data.message)}</p></div></div>` : "";
+    const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("record.title", "Record được yêu cầu"))}</strong><p>${safeText(adminGenericText("record.body", "ID {recordId} không cấp quyền hay dữ liệu cho browser. Core Bridge phải kiểm tra permission trước khi trả chi tiết.", { recordId: String(page.recordId) }))}</p></div></div>` : "";
+    const adapterMessage = data.message ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("adapter.title", "Trạng thái adapter"))}</strong><p>${safeText(data.message)}</p></div></div>` : "";
     const compatibilityNotice = compatibilityGuarded
-      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Chờ adapter Web đã kiểm chứng</strong><p>Route này được giữ để không mất parity điều hướng với Bot, nhưng Web không gọi một module Bot chưa công bố. Không có số liệu, action, provider, Xu hoặc payment nào được tạo thay thế.</p></div></div>`
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("compatibility.title", "Chờ adapter Web đã kiểm chứng"))}</strong><p>${safeText(adminGenericText("compatibility.body", "Route này được giữ để không mất parity điều hướng với Bot, nhưng Web không gọi một module Bot chưa công bố. Không có số liệu, action, provider, Xu hoặc payment nào được tạo thay thế."))}</p></div></div>`
       : "";
-    const refreshTitle = compatibilityGuarded ? "Module này chưa có adapter Bot canonical để làm mới từ Web." : "Làm mới dữ liệu quản trị đã được role-check.";
-    return `<article class="portal-page${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${canonicalAdmin ? "Lớp quản trị canonical có kiểm soát" : "Cần quyền quản trị được server xác minh"}</h2><p>${canonicalAdmin ? "Dữ liệu hiển thị, write permission, CSRF, confirmation và audit vẫn do Core Bridge quyết định." : "Không có dữ liệu PII, wallet hoặc payment được render cho client không có signed canonical authority."}</p></div></div></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(module)} · dữ liệu vận hành</h2><p class="portal-card-subtitle">Hiển thị sau permission, redaction và ownership checks. Bộ lọc/write sẽ chỉ xuất hiện khi có adapter canonical riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="${safeText(page.routePath || page.path)}" title="${safeText(refreshTitle)}"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${compatibilityNotice}${adapterMessage}${renderAdminDataTable(page, context)}</section>
-        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${writeEnabled ? "Write adapter có kiểm soát" : "Chế độ chỉ đọc"}</h2><p class="portal-card-subtitle">${compatibilityGuarded ? "Bot chưa công bố adapter; Web không dựng action thay thế." : (incidentReadOnly ? "Incident queue chỉ hỗ trợ triage bằng metadata canonical đã rút gọn; Bot giữ retry/refund/charge." : (writeEnabled ? "Mỗi write vẫn cần xác nhận Bot canonical và audit event." : "Không bypass canonical business rules."))}</p></div>${badge(writeEnabled ? "awaiting_confirm" : (compatibilityGuarded ? "guarded" : "read_only"))}</div>${renderNotes(page)}</aside></div>${renderAdminFreezeControls(page, context)}${recordText}</article>`;
+    const refreshTitle = compatibilityGuarded
+      ? adminGenericText("refresh.guardedTitle", "Module này chưa có adapter Bot canonical để làm mới từ Web.")
+      : adminGenericText("refresh.readyTitle", "Làm mới dữ liệu quản trị đã được role-check.");
+    const accessTitle = writeEnabled
+      ? adminGenericText("access.writeTitle", "Write adapter có kiểm soát")
+      : adminGenericText("access.readOnlyTitle", "Chế độ chỉ đọc");
+    const accessBody = compatibilityGuarded
+      ? adminGenericText("access.compatibilityBody", "Bot chưa công bố adapter; Web không dựng action thay thế.")
+      : (incidentReadOnly
+        ? adminGenericText("access.incidentReadOnlyBody", "Incident queue chỉ hỗ trợ triage bằng metadata canonical đã rút gọn; Bot giữ retry/refund/charge.")
+        : (writeEnabled
+          ? adminGenericText("access.writeBody", "Mỗi write vẫn cần xác nhận Bot canonical và audit event.")
+          : adminGenericText("access.readOnlyBody", "Không bypass canonical business rules.")));
+    const moduleLabel = adminGenericModuleLabel(module);
+    return `<article class="portal-page${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalTitle", "Lớp quản trị canonical có kiểm soát") : adminGenericText("guard.requiredTitle", "Cần quyền quản trị được server xác minh"))}</h2><p>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalBody", "Dữ liệu hiển thị, write permission, CSRF, confirmation và audit vẫn do Core Bridge quyết định.") : adminGenericText("guard.requiredBody", "Không có dữ liệu PII, wallet hoặc payment được render cho client không có signed canonical authority."))}</p></div></div></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminGenericText("data.title", "{module} · dữ liệu vận hành", { module: moduleLabel }))}</h2><p class="portal-card-subtitle">${safeText(adminGenericText("data.body", "Hiển thị sau permission, redaction và ownership checks. Bộ lọc/write sẽ chỉ xuất hiện khi có adapter canonical riêng."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="${safeText(page.routePath || page.path)}" title="${safeText(refreshTitle)}"${refreshEnabled ? "" : " disabled"}>${safeText(adminGenericText("refresh.label", "Làm mới"))}</button></div>${compatibilityNotice}${adapterMessage}${renderAdminDataTable(page, context)}</section>
+        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(accessTitle)}</h2><p class="portal-card-subtitle">${safeText(accessBody)}</p></div>${badge(writeEnabled ? "awaiting_confirm" : (compatibilityGuarded ? "guarded" : "read_only"))}</div>${renderNotes(page)}</aside></div>${renderAdminFreezeControls(page, context)}${recordText}</article>`;
   }
 
   const BOT_COMPANION_COMMAND_PATTERN = /^\/[a-z][a-z0-9_]{1,48}$/;
