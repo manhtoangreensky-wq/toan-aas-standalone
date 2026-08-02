@@ -45,6 +45,8 @@ adopt the same tokens in isolated PRs.
   aliases without raw colors in rendered rules.
 - Command palette and mobile/sidebar backdrops use the scrim aliases.
 - Theme-control and auth-context icons use the icon-size aliases.
+- The public landing proof text uses the contrast-safe semantic action accent
+  rather than the legacy pale mint on a light canvas.
 - Existing theme switcher, focus-ring, reduced-motion and route contracts stay
   unchanged.
 - No Bot, CSKH document, provider, payment, database, or production deploy

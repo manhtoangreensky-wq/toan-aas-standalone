@@ -105,6 +105,76 @@ def test_aura_tokens_use_requested_slate_dark_pair_and_accessible_controls() -> 
     assert "transition-duration: 0ms !important;" in THEME
 
 
+def test_aura_geometry_tokens_have_light_dark_aliases_and_consumers() -> None:
+    """Shared geometry and overlay primitives must survive both Aura themes."""
+
+    root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", THEME, flags=re.DOTALL)
+    dark_theme = re.search(
+        r':root\[data-portal-theme="dark"\]\s*\{(?P<declarations>.*?)\n\}',
+        THEME,
+        flags=re.DOTALL,
+    )
+
+    assert root is not None
+    assert dark_theme is not None
+    root_declarations = root.group("declarations")
+    dark_declarations = dark_theme.group("declarations")
+
+    for token in (
+        "--portal-radius-md: 12px;",
+        "--portal-space-1: 4px;",
+        "--portal-space-2: 8px;",
+        "--portal-space-3: 12px;",
+        "--portal-space-4: 16px;",
+        "--portal-space-6: 24px;",
+        "--portal-space-8: 32px;",
+        "--portal-elevation-0: none;",
+        "--portal-elevation-1:",
+        "--portal-elevation-2:",
+        "--portal-elevation-3:",
+        "--portal-icon-sm: 16px;",
+        "--portal-icon-md: 18px;",
+        "--portal-icon-lg: 20px;",
+        "--portal-scrim:",
+        "--portal-scrim-blur: 2px;",
+    ):
+        assert token in root_declarations
+
+    for token in (
+        "--portal-dark-elevation-1:",
+        "--portal-dark-elevation-2:",
+        "--portal-dark-elevation-3:",
+        "--portal-dark-scrim:",
+    ):
+        assert token in root_declarations
+
+    for token in (
+        "--portal-elevation-1: var(--portal-dark-elevation-1);",
+        "--portal-elevation-2: var(--portal-dark-elevation-2);",
+        "--portal-elevation-3: var(--portal-dark-elevation-3);",
+        "--portal-scrim: var(--portal-dark-scrim);",
+    ):
+        assert token in dark_declarations
+
+    assert "border-radius: var(--portal-radius-md);" in THEME
+    assert "box-shadow: var(--portal-elevation-3);" in THEME
+    assert "background: var(--portal-scrim);" in THEME
+    assert "width: var(--portal-icon-md);" in THEME
+
+
+def test_landing_proof_uses_a_semantic_contrast_safe_accent_in_light_mode() -> None:
+    """The signed public landing must not retain pale mint text on light canvas."""
+
+    proof = re.search(
+        r"\.portal-landing-proof li span\s*\{(?P<declarations>.*?)\n\}",
+        THEME,
+        flags=re.DOTALL,
+    )
+
+    assert proof is not None
+    assert "color: var(--portal-accent-deep);" in proof.group("declarations")
+
+
 def test_compact_landing_header_preserves_locale_and_theme_without_clipping_cta() -> None:
     assert "@media (max-width: 420px)" in THEME
     assert ".portal-landing-nav-primary { display: none; }" in THEME

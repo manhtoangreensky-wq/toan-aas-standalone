@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `tests/test_portal_aura_theme_contracts.py`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add a test that extracts the light `:root` declarations, the dark primitive
 declarations and the dark semantic alias block. Assert the following exact
@@ -69,8 +69,6 @@ def test_aura_geometry_tokens_have_light_dark_aliases_and_consumers() -> None:
         assert token in primitive_tokens
 
     for token in (
-        "--portal-radius-md: 12px;",
-        "--portal-space-4: 16px;",
         "--portal-elevation-1: var(--portal-dark-elevation-1);",
         "--portal-elevation-2: var(--portal-dark-elevation-2);",
         "--portal-elevation-3: var(--portal-dark-elevation-3);",
@@ -84,7 +82,7 @@ def test_aura_geometry_tokens_have_light_dark_aliases_and_consumers() -> None:
     assert "width: var(--portal-icon-md);" in theme_source
 ```
 
-- [ ] **Step 2: Run the focused test and verify it fails for the missing tokens**
+- [x] **Step 2: Run the focused test and verify it fails for the missing tokens**
 
 Run from the worktree:
 
@@ -103,21 +101,21 @@ declared yet.
 - Modify: `static/portal/portal-theme.css:13680-13740` (dark semantic aliases)
 - Test: `tests/test_portal_aura_theme_contracts.py`
 
-- [ ] **Step 1: Add minimal light primitives and semantic aliases**
+- [x] **Step 1: Add minimal light primitives and semantic aliases**
 
 Add the 4/8px spacing tokens, `--portal-radius-md`, elevation levels, icon
 sizes and `--portal-scrim`/`--portal-scrim-blur` to the canonical `:root`.
 Use the existing light shadow values as the source for elevation levels and
 keep all custom-property names under the `--portal-` namespace.
 
-- [ ] **Step 2: Add dark primitives and remap semantic aliases**
+- [x] **Step 2: Add dark primitives and remap semantic aliases**
 
 Add dark elevation and scrim primitives alongside the existing dark set, then
 map the semantic elevation/scrim aliases in
 `:root[data-portal-theme="dark"]`. Geometry and icon sizes remain identical
 across themes so layout does not jump on theme switch.
 
-- [ ] **Step 3: Switch representative consumers to aliases**
+- [x] **Step 3: Switch representative consumers to aliases**
 
 Use `var(--portal-radius-md)` for the existing medium-radius surfaces, use
 `var(--portal-elevation-3)` for the command dialog, use
@@ -125,7 +123,15 @@ Use `var(--portal-radius-md)` for the existing medium-radius surfaces, use
 backdrops, and use `var(--portal-icon-md)` for theme/auth context icons. Keep
 transitions and reduced-motion rules unchanged.
 
-- [ ] **Step 4: Run the focused test and verify it passes**
+- [x] **Step 3a: Repair the verified landing proof contrast regression**
+
+Add a second failing contract asserting that `.portal-landing-proof li span`
+uses `var(--portal-accent-deep)`. Add the final-theme override, rerun the
+focused test, and confirm the light canvas no longer uses the legacy pale-mint
+text. This is a visual accessibility repair found during local preview, not a
+content or layout change.
+
+- [x] **Step 4: Run the focused test and verify it passes**
 
 ```powershell
 python -m pytest -q tests/test_portal_aura_theme_contracts.py -k geometry_tokens
@@ -137,20 +143,20 @@ Expected: PASS.
 
 **Files:** No additional files.
 
-- [ ] **Step 1: Compile and syntax-check changed assets**
+- [x] **Step 1: Compile and syntax-check changed assets**
 
 ```powershell
 python -m py_compile tests/test_portal_aura_theme_contracts.py
 node --check static/portal/portal-theme.js
 ```
 
-- [ ] **Step 2: Run focused Aura contracts**
+- [x] **Step 2: Run focused Aura contracts**
 
 ```powershell
 python -m pytest -q tests/test_portal_aura_theme_contracts.py tests/test_teal_cyan_ui_foundation_contracts.py
 ```
 
-- [ ] **Step 3: Check whitespace and scope**
+- [x] **Step 3: Check whitespace and scope**
 
 ```powershell
 git diff --check origin/main...HEAD
@@ -160,7 +166,7 @@ git diff --name-only origin/main...HEAD
 Expected changed scope: the contract test, `portal-theme.css`, and this
 design/plan documentation only; no Bot or CSKH files.
 
-- [ ] **Step 4: Commit and review**
+- [x] **Step 4: Commit and review**
 
 ```powershell
 git add tests/test_portal_aura_theme_contracts.py static/portal/portal-theme.css docs/superpowers/specs/2026-08-02-aura-token-foundation-design.md docs/superpowers/plans/2026-08-02-aura-token-foundation.md
