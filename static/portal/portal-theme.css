@@ -116,14 +116,38 @@
   --portal-dark-input-surface: #16213b;
   --portal-dark-placeholder: #9bb8c5;
   --portal-dark-shadow: 0 22px 58px rgba(0, 0, 0, .34);
+  --portal-dark-elevation-1: 0 1px 2px rgba(0, 0, 0, .22);
+  --portal-dark-elevation-2: 0 10px 28px rgba(0, 0, 0, .34);
+  --portal-dark-elevation-3: 0 24px 66px rgba(0, 0, 0, .58);
   --portal-dark-elevation-float: 0 16px 42px rgba(0, 0, 0, .42);
+  --portal-dark-scrim: rgba(0, 0, 0, .56);
   --portal-dark-canvas-glow-mint: rgba(45, 212, 191, .13);
   --portal-dark-canvas-glow-sky: rgba(56, 189, 248, .09);
   --portal-dark-table-hover: rgba(45, 212, 191, .1);
   --portal-shadow: 0 18px 44px rgba(2, 20, 29, .18);
   --portal-radius-lg: 16px;
   --portal-radius: 12px;
+  --portal-radius-md: 12px;
   --portal-radius-sm: 9px;
+  --portal-space-1: 4px;
+  --portal-space-2: 8px;
+  --portal-space-3: 12px;
+  --portal-space-4: 16px;
+  --portal-space-5: 20px;
+  --portal-space-6: 24px;
+  --portal-space-8: 32px;
+  --portal-space-10: 40px;
+  --portal-icon-xs: 14px;
+  --portal-icon-sm: 16px;
+  --portal-icon-md: 18px;
+  --portal-icon-lg: 20px;
+  --portal-icon-xl: 24px;
+  --portal-elevation-0: none;
+  --portal-elevation-1: 0 1px 2px rgba(2, 20, 29, .08);
+  --portal-elevation-2: 0 8px 20px rgba(2, 20, 29, .12);
+  --portal-elevation-3: 0 24px 66px rgba(0, 0, 0, .46);
+  --portal-scrim: rgba(0, 7, 13, .56);
+  --portal-scrim-blur: 2px;
   --portal-control-height: 42px;
   --portal-transition: 180ms cubic-bezier(.2, .8, .2, 1);
   --portal-motion-fast: 140ms;
@@ -315,7 +339,14 @@ body {
 .portal-command-dialog {
   border-color: var(--portal-control-border);
   background: var(--portal-surface);
-  box-shadow: 0 24px 66px rgba(0, 0, 0, .46);
+  box-shadow: var(--portal-elevation-3);
+}
+
+.portal-shell--focus .portal-backdrop,
+.portal-backdrop,
+.portal-command-palette-backdrop {
+  background: var(--portal-scrim);
+  backdrop-filter: blur(var(--portal-scrim-blur));
 }
 
 .portal-mobile-nav {
@@ -408,7 +439,7 @@ body {
   text-decoration: none;
 }
 
-.portal-auth-back .portal-icon { width: 15px; height: 15px; }
+.portal-auth-back .portal-icon { width: var(--portal-icon-sm); height: var(--portal-icon-sm); }
 
 .portal-auth-page--access .portal-auth-locale-nav {
   display: inline-flex;
@@ -694,6 +725,8 @@ body {
 }
 
 .portal-landing-nav-links a:hover { color: var(--portal-accent-deep); }
+
+.portal-landing-proof li span { color: var(--portal-accent-deep); }
 
 .portal-landing .portal-button--quiet {
   border-color: var(--portal-light-action);
@@ -13710,7 +13743,11 @@ body {
   --portal-light-placeholder: var(--portal-dark-placeholder);
   --portal-light-disclosure-open-border: var(--portal-dark-border-strong);
   --portal-shadow: var(--portal-dark-shadow);
+  --portal-elevation-1: var(--portal-dark-elevation-1);
+  --portal-elevation-2: var(--portal-dark-elevation-2);
+  --portal-elevation-3: var(--portal-dark-elevation-3);
   --portal-elevation-float: var(--portal-dark-elevation-float);
+  --portal-scrim: var(--portal-dark-scrim);
 }
 
 html[data-portal-theme] {
@@ -13737,8 +13774,8 @@ html[data-portal-theme] :is(.portal-input, .portal-select, .portal-textarea) {
   min-height: var(--portal-control-height);
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: var(--portal-space-2);
+  padding: var(--portal-space-2) var(--portal-space-3);
   border: 1px solid var(--portal-control-border);
   border-radius: 999px;
   background: var(--portal-control-surface);
@@ -13768,15 +13805,15 @@ html[data-portal-theme] :is(.portal-input, .portal-select, .portal-textarea) {
 
 .portal-theme-toggle-icon {
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: var(--portal-icon-md);
+  height: var(--portal-icon-md);
   place-items: center;
   color: var(--portal-context);
 }
 
 .portal-theme-toggle-icon .portal-icon {
-  width: 18px;
-  height: 18px;
+  width: var(--portal-icon-md);
+  height: var(--portal-icon-md);
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -13791,7 +13828,7 @@ html[data-portal-theme] :is(.portal-input, .portal-select, .portal-textarea) {
   min-width: 0;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--portal-space-2);
 }
 
 html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing),
