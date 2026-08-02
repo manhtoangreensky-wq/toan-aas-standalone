@@ -22,17 +22,25 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-01T17:37:05+00:00",
+  "generated_at_utc": "2026-08-02T09:32:41+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
     "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
     "Configured output paths, standard migration evidence directories, and docs/superpowers planning documents are excluded from the Web source inventory.",
+    "Migration audit tooling under scripts/migration is excluded from the Web source inventory.",
     "Report/document text is sanitized for secret-shaped literals."
   ],
   "schema_version": "2.0",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast265-imgtool-picker-intent-catalog"
+    "revision": {
+      "checkout_sha": "0f704d828f612f8108db946dc487b4c2ddf67565",
+      "requested_relation": "exact",
+      "requested_sha": "0f704d828f612f8108db946dc487b4c2ddf67565",
+      "source_fingerprint_sha256": "a73bfa02cc4c919dbdc3109ca4a65f664317b6a3fa18ef3da2e0acb3541704eb",
+      "working_tree_state": "clean"
+    },
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-theme-system"
   }
 }

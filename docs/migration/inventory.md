@@ -11,9 +11,9 @@
 | Unresolved callback templates | 475 | n/a |
 | Conversation handlers | 0 | n/a |
 | FastAPI routes | 139 | 675 |
-| Background/job signals | 194 | 32 |
-| Database tables | 97 | 222 |
+| Background/job signals | 194 | 28 |
+| Database tables | 97 | 216 |
 | Environment names | 376 | 315 |
-| Provider names | 15 | 16 |
+| Provider names | 15 | 7 |
 
 Reports contain the complete machine-readable records. Values matching secret formats are redacted.

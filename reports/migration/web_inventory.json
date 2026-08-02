@@ -14,18 +14,6 @@
       "target": "_deliver_password_recovery_challenge"
     },
     {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "kind": "function",
-      "line": 3058,
-      "target": "_job_lock_recovery_source_review_dispositions"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "kind": "function",
-      "line": 7377,
-      "target": "_map_shopai_video_job_callback"
-    },
-    {
       "file": "copyfast_api.py",
       "kind": "function",
       "line": 2700,
@@ -78,18 +66,6 @@
       "kind": "function",
       "line": 73,
       "target": "_scheduler_state"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "kind": "function",
-      "line": 7346,
-      "target": "_shopai_video_job_source_review_mapping"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "kind": "function",
-      "line": 7308,
-      "target": "_shopai_video_job_telegram_only_mapping"
     },
     {
       "file": "copyfast_support.py",
@@ -194,57 +170,21 @@
       "target": "web_scheduler_persistence_ready"
     }
   ],
-  "callback_data": [
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5652,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5696,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5711,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6060,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6068,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6076,
-      "token": "<dynamic:callback_data>"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6084,
-      "token": "<dynamic:callback_data>"
-    }
-  ],
+  "callback_data": [],
   "callback_handlers": [],
   "callback_templates": [],
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 32,
-    "callback_data": 7,
+    "background_jobs": 28,
+    "callback_data": 0,
     "callback_handlers": 0,
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 222,
+    "database_tables": 216,
     "env_references": 315,
-    "providers": 16,
+    "providers": 7,
     "routes": 675,
     "ui_path_references": 46
   },
@@ -262,40 +202,10 @@
       "table": "a"
     },
     {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7403,
-      "operation": "UPDATE",
-      "table": "a"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8178,
-      "operation": "UPDATE",
-      "table": "a"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13251,
-      "operation": "UPDATE",
-      "table": "a"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13874,
-      "operation": "UPDATE",
-      "table": "a"
-    },
-    {
       "file": "copyfast_support.py",
       "line": 1942,
       "operation": "UPDATE",
       "table": "above"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13605,
-      "operation": "UPDATE",
-      "table": "active"
     },
     {
       "file": "affiliate_ops.py",
@@ -334,12 +244,6 @@
       "table": "b2b_projects"
     },
     {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13236,
-      "operation": "UPDATE",
-      "table": "bot"
-    },
-    {
       "file": "campaign.py",
       "line": 21,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -362,42 +266,6 @@
       "line": 37,
       "operation": "INSERT INTO",
       "table": "campaigns"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7316,
-      "operation": "UPDATE",
-      "table": "canonical"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7338,
-      "operation": "UPDATE",
-      "table": "canonical"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8379,
-      "operation": "UPDATE",
-      "table": "canonical"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13196,
-      "operation": "UPDATE",
-      "table": "canonical"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13261,
-      "operation": "UPDATE",
-      "table": "canonical"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 10317,
-      "operation": "UPDATE",
-      "table": "choices"
     },
     {
       "file": "ai_assistant.py",
@@ -664,18 +532,6 @@
       "table": "feedback"
     },
     {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13875,
-      "operation": "UPDATE",
-      "table": "linked"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 14035,
-      "operation": "UPDATE",
-      "table": "linked"
-    },
-    {
       "file": "customer_api.py",
       "line": 16,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -734,24 +590,6 @@
       "line": 3991,
       "operation": "UPDATE",
       "table": "only"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 12972,
-      "operation": "UPDATE",
-      "table": "or"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13271,
-      "operation": "UPDATE",
-      "table": "or"
-    },
-    {
-      "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 13849,
-      "operation": "UPDATE",
-      "table": "or"
     },
     {
       "file": "billing.py",
@@ -2999,13 +2837,13 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1003,
+      "line": 1157,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1031,
+      "line": 1185,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -3191,7 +3029,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1351,
+      "line": 1505,
       "operation": "INSERT INTO",
       "table": "web_image_artboard_versions"
     },
@@ -3203,13 +3041,13 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1316,
+      "line": 1470,
       "operation": "INSERT INTO",
       "table": "web_image_artboards"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1335,
+      "line": 1489,
       "operation": "UPDATE",
       "table": "web_image_artboards"
     },
@@ -3221,7 +3059,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1397,
+      "line": 1551,
       "operation": "INSERT INTO",
       "table": "web_image_direction_versions"
     },
@@ -3233,37 +3071,37 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1360,
+      "line": 1514,
       "operation": "INSERT INTO",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1390,
+      "line": 1544,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1421,
+      "line": 1575,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1424,
+      "line": 1578,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 2415,
+      "line": 2576,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 2420,
+      "line": 2581,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
@@ -3365,7 +3203,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1440,
+      "line": 1594,
       "operation": "INSERT INTO",
       "table": "web_image_studio_events"
     },
@@ -3455,7 +3293,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1723,
+      "line": 1883,
       "operation": "INSERT INTO",
       "table": "web_memory_events"
     },
@@ -3485,7 +3323,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1717,
+      "line": 1877,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
@@ -3533,7 +3371,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1711,
+      "line": 1871,
       "operation": "INSERT INTO",
       "table": "web_memory_notes"
     },
@@ -5803,14 +5641,10 @@
   "database_tables": [
     "a",
     "above",
-    "active",
     "affiliate_links",
     "any",
     "b2b_projects",
-    "bot",
     "campaigns",
-    "canonical",
-    "choices",
     "credit_events",
     "erp_approvals",
     "erp_assets",
@@ -5831,13 +5665,11 @@
     "erp_workloads",
     "family",
     "feedback",
-    "linked",
     "manual_orders",
     "manual_performance_events",
     "media_assets",
     "one",
     "only",
-    "or",
     "payos_orders",
     "payos_processed",
     "request",
@@ -7657,8 +7489,7 @@
       "multiscene",
       "text_to_video",
       "image_to_video",
-      "trend",
-      "quick_video"
+      "trend"
     ],
     "voice": [
       "voice",
@@ -7679,20 +7510,11 @@
   "project_kind": "webapp",
   "provider_names": [
     "PayOS",
-    "Key4U",
-    "ShopAIKey",
-    "MiniMax",
     "Deepgram",
-    "DeepL",
     "Gemini",
-    "OpenAI",
     "ElevenLabs",
     "Fish Audio",
     "Suno",
-    "Kling",
-    "Runway",
-    "Replicate",
-    "Cloudinary",
     "Telegram"
   ],
   "providers": [
@@ -7739,44 +7561,15 @@
         "copyfast_video_operations.py",
         "copyfast_video_studio.py"
       ],
-      "occurrences": 750,
+      "occurrences": 614,
       "provider": "PayOS"
     },
     {
       "files": [
-        "scripts/migration/audit_bot_to_web.py"
+        "ai_media.py"
       ],
-      "occurrences": 8,
-      "provider": "Key4U"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "ShopAIKey"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "MiniMax"
-    },
-    {
-      "files": [
-        "ai_media.py",
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 4,
+      "occurrences": 3,
       "provider": "Deepgram"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "DeepL"
     },
     {
       "files": [
@@ -7785,73 +7578,34 @@
         "coach.py",
         "copyfast_api.py",
         "copyfast_db.py",
-        "scripts/migration/audit_bot_to_web.py",
         "video.html",
         "video.py"
       ],
-      "occurrences": 12,
+      "occurrences": 11,
       "provider": "Gemini"
     },
     {
       "files": [
-        "scripts/migration/audit_bot_to_web.py"
+        "ai_media.py"
       ],
       "occurrences": 1,
-      "provider": "OpenAI"
-    },
-    {
-      "files": [
-        "ai_media.py",
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 2,
       "provider": "ElevenLabs"
     },
     {
       "files": [
-        "ai_media.py",
-        "scripts/migration/audit_bot_to_web.py"
+        "ai_media.py"
       ],
-      "occurrences": 4,
+      "occurrences": 3,
       "provider": "Fish Audio"
     },
     {
       "files": [
         "copyfast_registry.py",
         "customer_app.html",
-        "scripts/migration/audit_bot_to_web.py",
         "static/portal/portal.js"
       ],
-      "occurrences": 12,
+      "occurrences": 9,
       "provider": "Suno"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "Kling"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "Runway"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "Replicate"
-    },
-    {
-      "files": [
-        "scripts/migration/audit_bot_to_web.py"
-      ],
-      "occurrences": 1,
-      "provider": "Cloudinary"
     },
     {
       "files": [
@@ -7896,7 +7650,7 @@
         "copyfast_starter_kits.py",
         "copyfast_storyboard_grid.py"
       ],
-      "occurrences": 1703,
+      "occurrences": 1093,
       "provider": "Telegram"
     }
   ],
@@ -8471,7 +8225,7 @@
     {
       "endpoint": "image_artboards",
       "file": "copyfast_image_studio.py",
-      "line": 1886,
+      "line": 2047,
       "methods": [
         "GET"
       ],
@@ -8480,7 +8234,7 @@
     {
       "endpoint": "image_artboard_create",
       "file": "copyfast_image_studio.py",
-      "line": 1957,
+      "line": 2118,
       "methods": [
         "POST"
       ],
@@ -8489,7 +8243,7 @@
     {
       "endpoint": "image_artboard_detail",
       "file": "copyfast_image_studio.py",
-      "line": 1945,
+      "line": 2106,
       "methods": [
         "GET"
       ],
@@ -8498,7 +8252,7 @@
     {
       "endpoint": "image_artboard_update",
       "file": "copyfast_image_studio.py",
-      "line": 1990,
+      "line": 2151,
       "methods": [
         "PATCH"
       ],
@@ -8507,7 +8261,7 @@
     {
       "endpoint": "image_direction_create",
       "file": "copyfast_image_studio.py",
-      "line": 2124,
+      "line": 2285,
       "methods": [
         "POST"
       ],
@@ -8516,7 +8270,7 @@
     {
       "endpoint": "image_directions_reorder",
       "file": "copyfast_image_studio.py",
-      "line": 2382,
+      "line": 2543,
       "methods": [
         "POST"
       ],
@@ -8525,7 +8279,7 @@
     {
       "endpoint": "image_direction_update",
       "file": "copyfast_image_studio.py",
-      "line": 2177,
+      "line": 2338,
       "methods": [
         "PATCH"
       ],
@@ -8534,7 +8288,7 @@
     {
       "endpoint": "image_direction_archive",
       "file": "copyfast_image_studio.py",
-      "line": 2296,
+      "line": 2457,
       "methods": [
         "POST"
       ],
@@ -8543,7 +8297,7 @@
     {
       "endpoint": "image_direction_restore",
       "file": "copyfast_image_studio.py",
-      "line": 2304,
+      "line": 2465,
       "methods": [
         "POST"
       ],
@@ -8552,7 +8306,7 @@
     {
       "endpoint": "image_direction_restore_version",
       "file": "copyfast_image_studio.py",
-      "line": 2312,
+      "line": 2473,
       "methods": [
         "POST"
       ],
@@ -8561,7 +8315,7 @@
     {
       "endpoint": "image_artboard_estimate",
       "file": "copyfast_image_studio.py",
-      "line": 2438,
+      "line": 2599,
       "methods": [
         "GET"
       ],
@@ -8570,7 +8324,7 @@
     {
       "endpoint": "image_artboard_lifecycle",
       "file": "copyfast_image_studio.py",
-      "line": 2031,
+      "line": 2192,
       "methods": [
         "POST"
       ],
@@ -8579,7 +8333,7 @@
     {
       "endpoint": "image_artboard_restore_version",
       "file": "copyfast_image_studio.py",
-      "line": 2073,
+      "line": 2234,
       "methods": [
         "POST"
       ],
@@ -9875,7 +9629,7 @@
     {
       "endpoint": "image_studio_events",
       "file": "copyfast_image_studio.py",
-      "line": 2466,
+      "line": 2627,
       "methods": [
         "GET"
       ],
@@ -10109,7 +9863,7 @@
     {
       "endpoint": "image_studio_history",
       "file": "copyfast_image_studio.py",
-      "line": 2477,
+      "line": 2638,
       "methods": [
         "GET"
       ],
@@ -11081,7 +10835,7 @@
     {
       "endpoint": "image_studio_policy",
       "file": "copyfast_image_studio.py",
-      "line": 1772,
+      "line": 1933,
       "methods": [
         "GET"
       ],
@@ -11720,7 +11474,7 @@
     {
       "endpoint": "image_studio_references",
       "file": "copyfast_image_studio.py",
-      "line": 1787,
+      "line": 1948,
       "methods": [
         "GET"
       ],
@@ -11765,7 +11519,7 @@
     {
       "endpoint": "image_studio_image_asset_references",
       "file": "copyfast_image_studio.py",
-      "line": 1838,
+      "line": 1999,
       "methods": [
         "GET"
       ],
@@ -11783,7 +11537,7 @@
     {
       "endpoint": "image_studio_project_references",
       "file": "copyfast_image_studio.py",
-      "line": 1796,
+      "line": 1957,
       "methods": [
         "GET"
       ],
@@ -12341,7 +12095,7 @@
     {
       "endpoint": "image_studio_summary",
       "file": "copyfast_image_studio.py",
-      "line": 1763,
+      "line": 1924,
       "methods": [
         "GET"
       ],
@@ -12899,7 +12653,7 @@
     {
       "endpoint": "compose_image_prompt",
       "file": "copyfast_image_studio.py",
-      "line": 1603,
+      "line": 1757,
       "methods": [
         "POST"
       ],
@@ -12908,7 +12662,7 @@
     {
       "endpoint": "save_image_prompt_composer_to_memory",
       "file": "copyfast_image_studio.py",
-      "line": 1633,
+      "line": 1787,
       "methods": [
         "POST"
       ],
@@ -13980,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "767b6b23517e231543750b7062069381e6ef7549a32612b2e823822c8776213e",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast265-imgtool-picker-intent-catalog",
+  "source_fingerprint_sha256": "a73bfa02cc4c919dbdc3109ca4a65f664317b6a3fa18ef3da2e0acb3541704eb",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-aura-theme-system",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
