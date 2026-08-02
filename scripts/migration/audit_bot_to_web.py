@@ -6178,7 +6178,10 @@ def _fingerprint(files: list[Path], root: Path) -> str:
         relative = _relative(path, root).encode("utf-8")
         digest.update(relative)
         digest.update(b"\0")
-        digest.update(path.read_bytes())
+        # The source catalogue is text-only. Git commonly checks it out with
+        # CRLF on Windows and LF in CI, so preserve semantic source provenance
+        # across hosts without treating an EOL conversion as a runtime change.
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
         digest.update(b"\0")
     return digest.hexdigest()
 

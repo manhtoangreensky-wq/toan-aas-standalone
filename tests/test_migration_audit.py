@@ -1037,6 +1037,20 @@ def test_static_audit_normalizes_abbreviated_requested_web_revision(tmp_path: Pa
     assert revision["requested_relation"] == "exact"
 
 
+def test_source_fingerprint_normalizes_crlf_for_cross_platform_evidence(tmp_path: Path) -> None:
+    """The same source text has one fingerprint on Windows and Linux checkout."""
+
+    audit = _load_audit_module()
+    source = tmp_path / "app.py"
+    source.write_bytes(b"app = FastAPI()\n\n@app.get('/health')\ndef health():\n    return {'ok': True}\n")
+    linux_fingerprint = audit._fingerprint([source], tmp_path)
+
+    source.write_bytes(b"app = FastAPI()\r\n\r\n@app.get('/health')\r\ndef health():\r\n    return {'ok': True}\r\n")
+    windows_fingerprint = audit._fingerprint([source], tmp_path)
+
+    assert windows_fingerprint == linux_fingerprint
+
+
 def test_webapp_quality_workflow_fetches_history_for_committed_audit_evidence() -> None:
     """Evidence may be committed after its audited source snapshot."""
 
