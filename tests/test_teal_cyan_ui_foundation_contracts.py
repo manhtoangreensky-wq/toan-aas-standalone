@@ -369,8 +369,11 @@ def test_light_core_workspace_intros_keep_their_metric_hierarchy_readable() -> N
 
     assert all(selector in PORTAL_CATALOGUE for selector in metric_intros)
     assert '<section class="portal-project-summary">' in PORTAL_CLIENT
-    assert '<dt>Mục tiêu</dt><dd>${safeText(String(project.objective || "Chưa đặt"))}</dd>' in PORTAL_CLIENT
-    assert '<dt>Trạng thái</dt><dd>${badge(projectState(project.state))}</dd>' in PORTAL_CLIENT
+    assert 'projectText("detail.objective", "Mục tiêu")' in PORTAL_CLIENT
+    assert 'projectText("detail.noObjective", "Chưa đặt")' in PORTAL_CLIENT
+    assert 'projectText("detail.state", "Trạng thái")' in PORTAL_CLIENT
+    assert '<dt>${safeText(projectText("detail.objective", "Mục tiêu"))}</dt><dd>${safeText(String(project.objective || projectText("detail.noObjective", "Chưa đặt")))}</dd>' in PORTAL_CLIENT
+    assert '<dt>${safeText(projectText("detail.state", "Trạng thái"))}</dt><dd>${badge(projectState(project.state))}</dd>' in PORTAL_CLIENT
     assert metric_cards is not None
     assert standard_primary is not None
     assert standard_secondary is not None

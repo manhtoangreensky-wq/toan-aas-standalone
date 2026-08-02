@@ -64,8 +64,8 @@ def test_project_operations_board_has_truthful_owner_scoped_read_states() -> Non
         'if (readState === "loading")',
         'if (readState !== "ready")',
         'data-portal-action="projects-refresh"',
-        "Không có dữ liệu cũ",
-        "Không có activity giả",
+        'projectCenterText("failed.noStaleData"',
+        'projectCenterText("failed.noFakeActivity"',
     ):
         assert token in root
     for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "URLSearchParams", "bridge_request", "CORE_BRIDGE"):
@@ -86,10 +86,10 @@ def test_project_operations_board_separates_authoring_and_honest_create_access()
         "const startAction = canCreate",
         'href="/projects/new"',
         "portal-project-operations-create-guard",
-        "Chỉ có quyền xem",
-        "Không có timeline suy đoán",
-        "Project active trên trang này",
-        "Studio Documents trên trang này",
+        'projectCenterText("createGuard.title"',
+        'projectCenterText("noActivity.title"',
+        'projectCenterText("summary.active"',
+        'projectCenterText("summary.documents"',
     ):
         assert token in root
 

@@ -230,6 +230,23 @@ for (const locale of expected) {
   }
 }
 
+const customerAuthoringKeys = [
+  "workspaceDrafts.page.title", "workspaceDrafts.page.description",
+  "workspaceDrafts.filter.searchLabel", "workspaceDrafts.pagination.range",
+  "workspaceDrafts.card.resume", "workspaceDrafts.boundary.title",
+  "projectCenter.page.title", "projectCenter.page.description",
+  "projectCenter.filter.searchLabel", "projectCenter.pagination.range",
+  "projectCenter.authoring.createTitle", "projectCenter.guard.title",
+  "project.page.title", "project.detail.title", "project.detail.documentsTitle",
+  "project.document.kind.brief", "project.document.create", "project.boundary.title",
+  "projectPackage.panel.title", "projectPackage.panel.create", "projectPackage.panel.emptyTitle"
+];
+for (const locale of expected) {
+  for (const key of customerAuthoringKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 if (api.normalizeLocale("zh-CN") !== "zh") throw new Error("Chinese display alias did not normalize");
 if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese must not masquerade as Simplified Chinese");
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");
@@ -476,6 +493,95 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
     for key, translations in expected.items():
         for translation in translations:
             assert f'"{key}": "{translation}"' in source
+
+
+def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> None:
+    """Workspace and Project UI copy is localised; customer records stay data."""
+
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "workspaceDrafts.page.title": ("Bản nháp Workspace", "Workspace drafts", "工作台草稿"),
+        "workspaceDrafts.filter.searchLabel": ("Tìm bản nháp", "Search drafts", "搜索草稿"),
+        "workspaceDrafts.card.resume": ("Tiếp tục brief", "Continue brief", "继续简报"),
+        "projectCenter.page.title": ("Project Operations Board", "Project Operations Board", "项目运营看板"),
+        "projectCenter.filter.searchLabel": ("Tìm Project", "Search projects", "搜索项目"),
+        "projectCenter.authoring.createTitle": ("Tạo Project", "Create a project", "创建项目"),
+        "project.page.title": ("Project Workspace", "Project Workspace", "项目工作区"),
+        "project.detail.documentsTitle": ("Studio Documents", "Studio Documents", "工作室文档"),
+        "project.document.create": ("Thêm Studio Document", "Add Studio Document", "添加工作室文档"),
+        "projectPackage.panel.title": ("Project Packages", "Project Packages", "项目套餐"),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+    workspace = _between(PORTAL, "function workspaceDraftText", "const PROJECT_DOCUMENT_KINDS")
+    project_center = _between(PORTAL, "function projectCenterText", "// Memory Center")
+    project_detail = _between(PORTAL, "function renderProjectDetail", "function renderFeatureFamily")
+    project_packages = _between(PORTAL, "function projectPackageText", "function renderProjectPackages")
+    page_titles = _between(PORTAL, "function localizedPageTitle", "function documentTitle")
+    page_descriptions = _between(PORTAL, "function localizedPageDescription", "function initials")
+
+    assert "function workspaceDraftText" in workspace
+    assert "workspaceDraftText(" in workspace
+    assert "function projectCenterText" in project_center
+    assert "projectCenterText(" in project_center
+    assert "function projectText" in project_center
+    assert "projectText(" in project_center + project_detail
+    assert "function projectPackageText" in project_packages
+    assert "projectPackageText(" in project_packages
+    assert 'path === "/workspace"' in page_titles
+    assert 'path === "/projects"' in page_titles
+    assert "path.startsWith(\"/projects/\")" in page_titles
+    assert 'path === "/workspace"' in page_descriptions
+    assert 'path === "/projects"' in page_descriptions
+    # Dynamic titles/briefs/documents remain server/customer data and are
+    # escaped for presentation rather than sent through the UI catalog.
+    assert 'safeText(String(project.title ||' in project_detail
+    assert 'safeText(String(project.summary ||' in project_detail
+    assert 'safeText(String(document.title ||' in project_detail
+
+
+def test_customer_authoring_first_paint_titles_are_reviewed_for_all_locales() -> None:
+    titles = _between(PAGES, "_PORTAL_SHELL_TITLES = {", "}\n\n\ndef _safe_portal_build_id")
+    assert '"/workspace": {"vi": "Bản nháp Workspace · TOAN AAS", "en": "Workspace drafts · TOAN AAS", "zh": "工作台草稿 · TOAN AAS"}' in titles
+    shell_titles = _between(PAGES, "def _shell_title_for", "\n\ndef _fallback_template")
+    assert "if PROJECT_PATH.fullmatch(normalized):" in shell_titles
+    for title in ("Project Workspace · TOAN AAS", "项目工作区 · TOAN AAS"):
+        assert title in shell_titles
+
+
+def test_customer_authoring_has_no_untranslated_nested_or_package_surface() -> None:
+    """A Project flow stays localised through its editor, notes, and package library."""
+
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "projectCenter.notes.integrationTitle": ("Trạng thái tích hợp", "Integration status", "集成状态"),
+        "project.editor.title": ("Studio Document editor", "Studio Document editor", "工作室文档编辑器"),
+        "project.editor.save": ("Lưu phiên bản mới", "Save new version", "保存新版本"),
+        "projectPackage.page.title": ("Project Packages", "Project Packages", "项目套餐"),
+        "projectPackage.page.guardTitle": ("Project Packages chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
+        "projectPackage.page.historyTitle": ("Lịch sử Project Packages", "Project Package history", "项目套餐历史"),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+    editor = _between(PORTAL, "function renderStudioDocumentEditor", "function validProjectPackageId")
+    project_center = _between(PORTAL, "function projectCenterText", "// Memory Center")
+    package_surface = _between(PORTAL, "function renderProjectPackages", "function renderProjectDetail")
+    page_titles = _between(PORTAL, "function localizedPageTitle", "function documentTitle")
+    page_descriptions = _between(PORTAL, "function localizedPageDescription", "function initials")
+
+    assert "projectText(" in editor
+    assert "projectKindLabel(" in editor
+    assert "renderProjectCenterNotes(" in project_center
+    assert "projectPackageText(" in package_surface
+    assert 'path === "/project-packages"' in page_titles
+    assert 'path === "/project-packages"' in page_descriptions
+
+    titles = _between(PAGES, "_PORTAL_SHELL_TITLES = {", "}\n\n\ndef _safe_portal_build_id")
+    assert '"/project-packages": {"vi": "Project Packages · TOAN AAS", "en": "Project Packages · TOAN AAS", "zh": "项目套餐 · TOAN AAS"}' in titles
 
 
 def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration() -> None:

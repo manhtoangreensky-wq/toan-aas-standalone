@@ -124,6 +124,8 @@ _PORTAL_SHELL_TITLES = {
     "/account/interface-language": {"vi": "Ngôn ngữ giao diện · TOAN AAS", "en": "Interface language · TOAN AAS", "zh": "界面语言 · TOAN AAS"},
     "/workspace/setup": {"vi": "Thiết lập workspace · TOAN AAS", "en": "Workspace setup · TOAN AAS", "zh": "工作台设置 · TOAN AAS"},
     "/workspace-menu": {"vi": "Chuyển workspace · TOAN AAS", "en": "Switch workspace · TOAN AAS", "zh": "切换工作台 · TOAN AAS"},
+    "/workspace": {"vi": "Bản nháp Workspace · TOAN AAS", "en": "Workspace drafts · TOAN AAS", "zh": "工作台草稿 · TOAN AAS"},
+    "/project-packages": {"vi": "Project Packages · TOAN AAS", "en": "Project Packages · TOAN AAS", "zh": "项目套餐 · TOAN AAS"},
     "/starter-kits": {"vi": "Starter Kits · TOAN AAS", "en": "Starter Kits · TOAN AAS", "zh": "入门套件 · TOAN AAS"},
     "/audio-hub": {"vi": "Audio Production Hub · TOAN AAS", "en": "Audio Production Hub · TOAN AAS", "zh": "音频制作中心 · TOAN AAS"},
     "/audio-hub/new": {"vi": "Audio Production Brief mới · TOAN AAS", "en": "New Audio Production Brief · TOAN AAS", "zh": "新建音频制作简报 · TOAN AAS"},
@@ -321,6 +323,12 @@ def _shell_title_for(path: str, locale: str) -> str:
             "vi": "Image Operations Board · TOAN AAS",
             "en": "Image Operations Board · TOAN AAS",
             "zh": "图像运营看板 · TOAN AAS",
+        }[locale]
+    if PROJECT_PATH.fullmatch(normalized):
+        return {
+            "vi": "Project Workspace · TOAN AAS",
+            "en": "Project Workspace · TOAN AAS",
+            "zh": "项目工作区 · TOAN AAS",
         }[locale]
     # Do not present a Vietnamese route title as if it were reviewed English
     # or Simplified Chinese. The browser catalog upgrades individual workspace
