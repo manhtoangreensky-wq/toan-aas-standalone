@@ -9587,6 +9587,16 @@
     if (safety) throw new Error(safety);
     return { goal_code: goalCode, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language };
   }
+
+  function imagePromptComposerVariantIndex(value) {
+    // 0 is the original detailed prompt; 1..3 select the stable Bot-derived
+    // variant order. This finite index is the only post-compose UI choice
+    // that may reach the explicit Memory handoff.
+    const index = typeof value === "number"
+      ? value
+      : (typeof value === "string" && /^(?:0|1|2|3)$/.test(value.trim()) ? Number(value) : null);
+    return Number.isInteger(index) && index >= 0 && index <= 3 ? index : null;
+  }
   function imagePromptComposerResultIsSafe(value) {
     const data = value && typeof value === "object" ? value : {};
     const composer = data.composer && typeof data.composer === "object" ? data.composer : {};
@@ -9672,7 +9682,7 @@
     "fact_checked", "rights_verified"
   ]);
   const IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_RESPONSE_KEYS = Object.freeze([
-    "note", "destination", "execution", "draft_recomputed_on_server", "web_note_persisted",
+    "note", "destination", "selected_variant_index", "execution", "draft_recomputed_on_server", "web_note_persisted",
     ...IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS
   ]);
   const IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS = Object.freeze(["id", "revision", "state", "category", "priority"]);
@@ -9681,12 +9691,15 @@
     const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
     const note = data.note && typeof data.note === "object" && !Array.isArray(data.note) ? data.note : {};
     const revision = Number(note.revision);
+    const selectedVariantIndex = imagePromptComposerVariantIndex(data.selected_variant_index);
     if (
       Object.keys(data).length !== IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_RESPONSE_KEYS.length
       || !IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_RESPONSE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(data, key))
       || Object.keys(note).length !== IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS.length
       || !IMAGE_PROMPT_COMPOSER_MEMORY_NOTE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(note, key))
       || data.destination !== "memory_note"
+      || selectedVariantIndex === null
+      || data.selected_variant_index !== selectedVariantIndex
       || data.execution !== "web_native_memory_note_server_recomputed"
       || data.draft_recomputed_on_server !== true || data.web_note_persisted !== true
       || !IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS.every((field) => data[field] === false)
@@ -9695,7 +9708,8 @@
     ) return null;
     return {
       note: { id: String(note.id), revision, state: "active", category: "Image Prompt Composer", priority: "normal" },
-      destination: "memory_note"
+      destination: "memory_note",
+      selected_variant_index: selectedVariantIndex
     };
   }
 
@@ -13879,11 +13893,12 @@
       imageStudioEvents: [],
       imageStudioPolicy: {},
       imageStudioReadState: account && imageStudioEnabled ? "loading" : "guarded",
-      // Composer text, its bounded save selection and its compact receipt
-      // are tab-memory only. Clear all three before route hydration so one
+      // Composer text, its bounded save selection, selected variant and its
+      // compact receipt are tab-memory only. Clear all four before route hydration so one
       // account cannot render or reuse another account's private brief.
       imagePromptComposerResult: {},
       imagePromptComposerSaveSource: {},
+      imagePromptComposerSelectedVariantIndex: 0,
       imagePromptComposerSaveReceipt: {},
       // Document Workspace data is owner-scoped. Clear it before every
       // session refresh so a failed read can never reveal another account's
@@ -30319,6 +30334,25 @@
         });
         return;
       }
+      if (action === "image-prompt-composer-select-variant") {
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (!(capabilities["image-prompt-compose"] === true)) {
+          throw new Error("Cần signed Web session, CSRF và Image Studio đang sẵn sàng để chọn variant prompt.");
+        }
+        const selectedVariantIndex = imagePromptComposerVariantIndex(fields.__imagePromptComposerSelectedVariantIndex);
+        const currentResult = base().imagePromptComposerResult;
+        if (selectedVariantIndex === null || !imagePromptComposerResultIsSafe(currentResult)) {
+          throw new Error("Variant prompt không còn thuộc bản nháp Web hiện tại. Hãy tạo lại prompt trước khi chọn.");
+        }
+        merge({
+          imagePromptComposerSelectedVariantIndex: selectedVariantIndex,
+          // A prior receipt describes a different explicit selection, so do
+          // not leave it visible after the session-local choice changes.
+          imagePromptComposerSaveReceipt: {}
+        });
+        toast(selectedVariantIndex === 0 ? "Đã chọn Bản gốc để review hoặc lưu." : `Đã chọn Variant ${selectedVariantIndex} để review hoặc lưu.`);
+        return;
+      }
       if (action === "image-prompt-compose") {
         const payload = imagePromptComposerPayload(fields);
         // The Composer is a stateless template recipe: do not create a
@@ -30328,6 +30362,7 @@
         merge({
           imagePromptComposerResult: {},
           imagePromptComposerSaveSource: {},
+          imagePromptComposerSelectedVariantIndex: 0,
           imagePromptComposerSaveReceipt: {}
         });
         setActionBusy(action, route, true);
@@ -30348,6 +30383,7 @@
           merge({
             imagePromptComposerResult: data,
             imagePromptComposerSaveSource: saveSource,
+            imagePromptComposerSelectedVariantIndex: 0,
             imagePromptComposerSaveReceipt: {},
             pageStates: { ...(base().pageStates || {}), "/image/prompt-composer": "ready" }
           });
@@ -30364,10 +30400,14 @@
         }
         const source = imagePromptComposerMemorySaveSource(base().imagePromptComposerSaveSource);
         const currentResult = base().imagePromptComposerResult;
+        const selectedVariantIndex = imagePromptComposerVariantIndex(base().imagePromptComposerSelectedVariantIndex);
         if (!source || !imagePromptComposerMemorySaveSourceMatchesResult(source, currentResult)) {
           throw new Error("Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Image Prompt Composer trước khi lưu.");
         }
-        const payload = { ...source, destination: "memory_note" };
+        if (selectedVariantIndex === null) {
+          throw new Error("Hãy chọn Bản gốc hoặc một Variant hợp lệ trước khi lưu vào Memory Center.");
+        }
+        const payload = { ...source, destination: "memory_note", selected_variant_index: selectedVariantIndex };
         const scope = "image-studio:prompt-composer:save-memory";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
         if (!submission) {
@@ -30389,6 +30429,7 @@
           if (result.status !== "completed") throw new Error("Máy chủ chưa xác nhận lưu Image Prompt Composer vào Memory Center.");
           const receipt = imagePromptComposerMemorySaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Memory Center content-free và đúng ranh giới an toàn.");
+          if (receipt.selected_variant_index !== selectedVariantIndex) throw new Error("Receipt Memory Center không khớp variant đã chọn trong phiên này.");
           merge({ imagePromptComposerSaveReceipt: receipt });
           toast(result.message || "Đã lưu bản nháp Web vào Memory Center riêng tư.");
         } catch (error) {
