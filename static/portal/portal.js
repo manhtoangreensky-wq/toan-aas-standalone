@@ -97,6 +97,8 @@
 
   function adminPostbackReadinessText(key, fallback, params) { return adminGenericText("postbackReadiness." + key, fallback, params); }
 
+  function adminJobRecoveryGuideText(key, fallback, params) { return adminGenericText("jobRecoveryGuide." + key, fallback, params); }
+
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
     payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
@@ -9060,6 +9062,7 @@
     "Automation Monitor": "adminGeneric.automationMonitor.route.title",
     "System & Data Stewardship": "adminGeneric.systemStewardship.route.title",
     "Postback Readiness": "adminGeneric.postbackReadiness.route.title",
+    "Job-Lock Recovery Safety Guide": "adminGeneric.jobRecoveryGuide.route.title",
     "Security Posture": "adminGeneric.securityAccess.route.securityTitle",
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
@@ -9162,6 +9165,7 @@
     if (path === "/admin/automation") return adminAutomationMonitorText("route.title", fallback);
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.title", fallback);
     if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.title", fallback);
+    if (path === "/admin/job-recovery-guide") return adminJobRecoveryGuideText("route.title", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
@@ -9196,6 +9200,7 @@
     if (path === "/admin/automation") return adminAutomationMonitorText("route.description", fallback);
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.description", fallback);
     if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.description", fallback);
+    if (path === "/admin/job-recovery-guide") return adminJobRecoveryGuideText("route.description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
@@ -24642,26 +24647,35 @@
     // console. The generic server route gate has already required canonical
     // admin authority. Keep this literal so browser UI cannot turn Bot-side
     // job/refund mutations into a clear, retry, refund or runtime control.
+    const text = (key, fallback, params) => adminJobRecoveryGuideText(key, fallback, params);
     const checkpoints = [
-      { icon: ICONS.jobs, title: "Dừng ở triage", text: "Nhận diện triệu chứng theo quy trình nội bộ, nhưng không suy đoán job nào bị kẹt hoặc đã hoàn tất từ màn hình này." },
-      { icon: ICONS.document, title: "Giữ bằng chứng tối thiểu", text: "Ghi nhận bối cảnh sự cố ở kênh vận hành được phê duyệt; không chép dữ liệu Bot, định danh hoặc payload nhạy cảm vào browser." },
-      { icon: ICONS.security, title: "Chuyển đúng authority", text: "Chỉ canonical workflow có quyền mới xác minh queue, charge, delivery và quyết định hành động tiếp theo." }
+      { icon: ICONS.jobs, title: text("checkpoint.triage.title", "Dừng ở triage"), text: text("checkpoint.triage.body", "Nhận diện triệu chứng theo quy trình nội bộ, nhưng không suy đoán job nào bị kẹt hoặc đã hoàn tất từ màn hình này.") },
+      { icon: ICONS.document, title: text("checkpoint.evidence.title", "Giữ bằng chứng tối thiểu"), text: text("checkpoint.evidence.body", "Ghi nhận bối cảnh sự cố ở kênh vận hành được phê duyệt; không chép dữ liệu Bot, định danh hoặc payload nhạy cảm vào browser.") },
+      { icon: ICONS.security, title: text("checkpoint.authority.title", "Chuyển đúng authority"), text: text("checkpoint.authority.body", "Chỉ canonical workflow có quyền mới xác minh queue, charge, delivery và quyết định hành động tiếp theo.") }
     ];
     const boundaries = [
-      { icon: ICONS.jobs, title: "Không clear, retry hoặc refund", text: "Không có chọn job, xác nhận, bulk operation hay đổi trạng thái; Web không hứa hẹn khôi phục hoặc delivery." },
-      { icon: ICONS.providers, title: "Không điều khiển runtime", text: "Không đọc hoặc thao tác worker, provider, queue, lock, healthcheck, restart hay lịch chạy tự động." },
-      { icon: ICONS.payments, title: "Không có financial side effect", text: "Không thay đổi Xu, charge, refund, payment, PayOS, ledger, entitlement hoặc billing event." }
+      { icon: ICONS.jobs, title: text("boundary.noMutation.title", "Không clear, retry hoặc refund"), text: text("boundary.noMutation.body", "Không có chọn job, xác nhận, bulk operation hay đổi trạng thái; Web không hứa hẹn khôi phục hoặc delivery.") },
+      { icon: ICONS.providers, title: text("boundary.noRuntime.title", "Không điều khiển runtime"), text: text("boundary.noRuntime.body", "Không đọc hoặc thao tác worker, provider, queue, lock, healthcheck, restart hay lịch chạy tự động.") },
+      { icon: ICONS.payments, title: text("boundary.noFinancial.title", "Không có financial side effect"), text: text("boundary.noFinancial.body", "Không thay đổi Xu, charge, refund, payment, PayOS, ledger, entitlement hoặc billing event.") }
     ];
     const jobsLink = serverAuthorizesAdminRoute(context, "/admin/jobs")
-      ? '<a class="portal-button portal-button--quiet" href="/admin/jobs">Mở Jobs canonical</a>'
+      ? `<a class="portal-button portal-button--quiet" href="/admin/jobs">${safeText(text("link.jobs", "Mở Jobs canonical"))}</a>`
       : "";
     const checkpointCards = checkpoints.map((item) => `<article class="portal-job-recovery-card"><span class="portal-job-recovery-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
     const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
+    const localizedNotes = [
+      text("notes.scope.body", "Đây là hướng dẫn an toàn, không phải màn hình xử lý job. Mọi quyết định và thao tác canonical chỉ được thực hiện trong quy trình được phê duyệt."),
+      text("notes.botBoundary.body", "Trang không nhận định danh người dùng hay job, không đọc queue/worker/provider và không nhận trạng thái, Xu, payment hay refund từ Bot/Core Bridge.")
+    ];
+    const noteLabels = {
+      integrationTitle: text("notes.integration.title", "Trạng thái tích hợp"),
+      safetyTitle: text("notes.safety.title", "Nguyên tắc an toàn")
+    };
     return `<article class="portal-page portal-admin-job-recovery-guide">${renderHero(page, context)}
-      <section class="portal-job-recovery-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Xử lý dấu hiệu job-lock bằng quy trình có kiểm soát, không bằng nút thao tác nhanh</h2><p>Trang này giúp đội vận hành phân biệt bước triage, ghi nhận và escalation. Mọi kiểm tra trạng thái thực, quyết định can thiệp và financial side effect vẫn nằm trong canonical procedure đã được phê duyệt.</p></div><div class="portal-job-recovery-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Authority được tách riêng</strong><small>Chỉ signed canonical admin được mở guidance này</small></span></div></section>
-      <section class="portal-job-recovery-section" aria-labelledby="job-recovery-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Triage checklist</span><h2 id="job-recovery-checklist-title">Ba bước trước khi escalation</h2><p>Không cần nhập dữ liệu tại đây. Checklist không tạo ticket, không đọc job và không kích hoạt bất kỳ workflow nào.</p></div>${badge("read_only")}</div><div class="portal-job-recovery-grid">${checkpointCards}</div></section>
-      <section class="portal-card portal-card-pad portal-job-recovery-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe escalation</span><h2 class="portal-card-title">Trình tự được đề xuất</h2><p class="portal-card-subtitle">Tách triage khỏi quyền mutation để tránh thao tác nhầm trên queue, delivery hoặc billing.</p></div>${badge("read_only")}</div><ol><li><strong>Xác định phạm vi sự cố</strong><span>Ghi nhận thời điểm, ảnh hưởng và dấu hiệu ở kênh vận hành được phê duyệt; không suy luận trạng thái canonical.</span></li><li><strong>Kiểm tra trong hệ thống canonical</strong><span>Chỉ authority được cấp quyền mới xác minh lifecycle, ownership, delivery và financial policy.</span></li><li><strong>Escalate theo runbook</strong><span>Để canonical owner thực hiện hoặc từ chối thao tác có side effect, kèm audit event và kiểm tra hậu quả phù hợp.</span></li></ol>${jobsLink ? `<div class="portal-form-footer">${jobsLink}</div>` : ""}</section>
-      <section class="portal-card portal-card-pad portal-job-recovery-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là queue console, job adapter, runbook executor hay một đường tắt tới financial mutation.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+      <section class="portal-job-recovery-intro"><div><span class="portal-section-kicker">${safeText(text("intro.kicker", "Canonical admin guidance · read-only"))}</span><h2>${safeText(text("intro.title", "Xử lý dấu hiệu job-lock bằng quy trình có kiểm soát, không bằng nút thao tác nhanh"))}</h2><p>${safeText(text("intro.body", "Trang này giúp đội vận hành phân biệt bước triage, ghi nhận và escalation. Mọi kiểm tra trạng thái thực, quyết định can thiệp và financial side effect vẫn nằm trong canonical procedure đã được phê duyệt."))}</p></div><div class="portal-job-recovery-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(text("intro.statusTitle", "Authority được tách riêng"))}</strong><small>${safeText(text("intro.statusBody", "Chỉ signed canonical admin được mở guidance này"))}</small></span></div></section>
+      <section class="portal-job-recovery-section" aria-labelledby="job-recovery-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(text("checklist.kicker", "Triage checklist"))}</span><h2 id="job-recovery-checklist-title">${safeText(text("checklist.title", "Ba bước trước khi escalation"))}</h2><p>${safeText(text("checklist.body", "Không cần nhập dữ liệu tại đây. Checklist không tạo ticket, không đọc job và không kích hoạt bất kỳ workflow nào."))}</p></div>${badge("read_only")}</div><div class="portal-job-recovery-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-job-recovery-process"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("escalation.kicker", "Safe escalation"))}</span><h2 class="portal-card-title">${safeText(text("escalation.title", "Trình tự được đề xuất"))}</h2><p class="portal-card-subtitle">${safeText(text("escalation.body", "Tách triage khỏi quyền mutation để tránh thao tác nhầm trên queue, delivery hoặc billing."))}</p></div>${badge("read_only")}</div><ol><li><strong>${safeText(text("escalation.itemScope.title", "Xác định phạm vi sự cố"))}</strong><span>${safeText(text("escalation.itemScope.body", "Ghi nhận thời điểm, ảnh hưởng và dấu hiệu ở kênh vận hành được phê duyệt; không suy luận trạng thái canonical."))}</span></li><li><strong>${safeText(text("escalation.itemCanonical.title", "Kiểm tra trong hệ thống canonical"))}</strong><span>${safeText(text("escalation.itemCanonical.body", "Chỉ authority được cấp quyền mới xác minh lifecycle, ownership, delivery và financial policy."))}</span></li><li><strong>${safeText(text("escalation.itemEscalate.title", "Escalate theo runbook"))}</strong><span>${safeText(text("escalation.itemEscalate.body", "Để canonical owner thực hiện hoặc từ chối thao tác có side effect, kèm audit event và kiểm tra hậu quả phù hợp."))}</span></li></ol>${jobsLink ? `<div class="portal-form-footer">${jobsLink}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-job-recovery-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("limits.kicker", "Deliberate limits"))}</span><h2 class="portal-card-title">${safeText(text("limits.title", "Ranh giới được giữ cố ý"))}</h2><p class="portal-card-subtitle">${safeText(text("limits.body", "Guidance không phải là queue console, job adapter, runbook executor hay một đường tắt tới financial mutation."))}</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes({ ...page, notes: localizedNotes }, noteLabels)}</section>
     </article>`;
   }
 

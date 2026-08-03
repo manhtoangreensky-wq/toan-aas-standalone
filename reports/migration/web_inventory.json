@@ -7561,7 +7561,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 652,
+      "occurrences": 655,
       "provider": "PayOS"
     },
     {
@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "ceebbb1af877939f7e3542644cf4d787684d7ae7af46fd0b69fdf81adcd60438",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-postback-readiness-locales",
+  "source_fingerprint_sha256": "ccb7bc04d14073f116dd1ee6bea3efba34fc9b87c89ef2f0c33ffcd26286c1cd",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-job-recovery-locales",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
