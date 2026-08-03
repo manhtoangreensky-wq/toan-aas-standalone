@@ -100,7 +100,15 @@ _PORTAL_SHELL_COPY = {
 }
 _PORTAL_SHELL_TITLES = {
     "/admin/growth/postback-readiness": {"vi": "Postback Readiness · TOAN AAS", "en": "Postback Readiness · TOAN AAS", "zh": "回传准备 · TOAN AAS"},
+    "/admin/jobs": {"vi": "Công việc · TOAN AAS", "en": "Jobs · TOAN AAS", "zh": "任务 · TOAN AAS"},
+    "/admin/jobs/failed": {"vi": "Công việc thất bại · TOAN AAS", "en": "Failed jobs · TOAN AAS", "zh": "失败任务 · TOAN AAS"},
     "/admin/job-recovery-guide": {"vi": "Hướng dẫn xử lý Job-Lock · TOAN AAS", "en": "Job-Lock Recovery Guide · TOAN AAS", "zh": "任务锁恢复指南 · TOAN AAS"},
+    "/admin/providers": {"vi": "Nhà cung cấp & chi phí · TOAN AAS", "en": "Providers & cost · TOAN AAS", "zh": "服务商与成本 · TOAN AAS"},
+    "/admin/provider-cost": {"vi": "Chi phí nhà cung cấp · TOAN AAS", "en": "Provider cost · TOAN AAS", "zh": "服务商成本 · TOAN AAS"},
+    "/admin/workers": {"vi": "Workers · TOAN AAS", "en": "Workers · TOAN AAS", "zh": "工作进程 · TOAN AAS"},
+    "/admin/features": {"vi": "Sẵn sàng tính năng · TOAN AAS", "en": "Feature readiness · TOAN AAS", "zh": "功能就绪状态 · TOAN AAS"},
+    "/admin/freezes": {"vi": "Bảo trì & đóng băng · TOAN AAS", "en": "Maintenance & freeze · TOAN AAS", "zh": "维护与冻结 · TOAN AAS"},
+    "/admin/runtime": {"vi": "Runtime · TOAN AAS", "en": "Runtime · TOAN AAS", "zh": "运行时 · TOAN AAS"},
     "/": {"vi": "TOAN AAS", "en": "TOAN AAS", "zh": "TOAN AAS"},
     "/app": {"vi": "TOAN AAS Workspace", "en": "TOAN AAS Workspace", "zh": "TOAN AAS 工作台"},
     "/dashboard": {"vi": "Tổng quan · TOAN AAS", "en": "Overview · TOAN AAS", "zh": "概览 · TOAN AAS"},
