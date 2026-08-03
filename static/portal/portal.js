@@ -99,6 +99,34 @@
 
   function adminJobRecoveryGuideText(key, fallback, params) { return adminGenericText("jobRecoveryGuide." + key, fallback, params); }
 
+  const DELIVERY_RUNTIME_ROUTE_I18N = Object.freeze({
+    "/admin/jobs": { title: "adminGeneric.deliveryRuntimeNavigation.jobs.title", description: "adminGeneric.deliveryRuntimeNavigation.jobs.description" },
+    "/admin/jobs/failed": { title: "adminGeneric.deliveryRuntimeNavigation.failedJobs.title", description: "adminGeneric.deliveryRuntimeNavigation.failedJobs.description" },
+    "/admin/job-recovery-guide": { title: "adminGeneric.jobRecoveryGuide.route.title", description: "adminGeneric.jobRecoveryGuide.route.description" },
+    "/admin/providers": { title: "adminGeneric.deliveryRuntimeNavigation.providers.title", description: "adminGeneric.deliveryRuntimeNavigation.providers.description" },
+    "/admin/provider-cost": { title: "adminGeneric.deliveryRuntimeNavigation.providerCost.title", description: "adminGeneric.deliveryRuntimeNavigation.providerCost.description" },
+    "/admin/workers": { title: "adminGeneric.deliveryRuntimeNavigation.workers.title", description: "adminGeneric.deliveryRuntimeNavigation.workers.description" },
+    "/admin/features": { title: "adminGeneric.deliveryRuntimeNavigation.features.title", description: "adminGeneric.deliveryRuntimeNavigation.features.description" },
+    "/admin/freezes": { title: "adminGeneric.deliveryRuntimeNavigation.freezes.title", description: "adminGeneric.deliveryRuntimeNavigation.freezes.description" },
+    "/admin/runtime": { title: "adminGeneric.deliveryRuntimeNavigation.runtime.title", description: "adminGeneric.deliveryRuntimeNavigation.runtime.description" }
+  });
+
+  const DELIVERY_RUNTIME_GROUP_I18N = Object.freeze({
+    "delivery_runtime": { title: "adminGeneric.deliveryRuntimeNavigation.group.title", description: "adminGeneric.deliveryRuntimeNavigation.group.description" }
+  });
+
+  function adminDeliveryRuntimeNavigationText(route, field, fallback) {
+    const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalizePath(route)];
+    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
+    return uiText(entry[field], fallback);
+  }
+
+  function adminDeliveryRuntimeGroupText(groupId, field, fallback) {
+    const entry = DELIVERY_RUNTIME_GROUP_I18N[String(groupId || "")];
+    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
+    return uiText(entry[field], fallback);
+  }
+
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
     payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
@@ -9166,6 +9194,14 @@
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.title", fallback);
     if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.title", fallback);
     if (path === "/admin/job-recovery-guide") return adminJobRecoveryGuideText("route.title", fallback);
+    if (path === "/admin/jobs") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/jobs/failed") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/providers") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/provider-cost") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/workers") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/features") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/freezes") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
+    if (path === "/admin/runtime") return adminDeliveryRuntimeNavigationText(path, "title", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
@@ -9201,6 +9237,14 @@
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.description", fallback);
     if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.description", fallback);
     if (path === "/admin/job-recovery-guide") return adminJobRecoveryGuideText("route.description", fallback);
+    if (path === "/admin/jobs") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/jobs/failed") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/providers") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/provider-cost") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/workers") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/features") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/freezes") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
+    if (path === "/admin/runtime") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
@@ -9254,16 +9298,26 @@
           : (rawState === "guarded_directory" ? "guarded" : (ALLOWED_STATES.has(rawState) ? rawState : "guarded"));
         seen.add(route);
         routes.add(route);
+        const moduleDescription = String(module.description || "Module được máy chủ bảo vệ theo authority riêng.").trim().slice(0, 280);
+        // Translate only the reviewed, exact route allowlist after the server
+        // has admitted the route and normalized its presentation state. Unknown
+        // server metadata stays untouched and cannot become a browser grant.
+        const localizedModuleTitle = adminDeliveryRuntimeNavigationText(route, "title", moduleTitle);
+        const localizedModuleDescription = adminDeliveryRuntimeNavigationText(route, "description", moduleDescription);
         modules.push({
           route,
-          title: moduleTitle,
-          description: String(module.description || "Module được máy chủ bảo vệ theo authority riêng.").trim().slice(0, 280),
+          title: localizedModuleTitle,
+          description: localizedModuleDescription,
           icon: adminRouteIcon(route),
           state,
           authority: String(module.authority || candidate.authority || "server_authorized").trim().slice(0, 48)
         });
       });
-      if (modules.length) groups.push({ id, title, description, modules });
+      if (modules.length) {
+        const localizedGroupTitle = adminDeliveryRuntimeGroupText(id, "title", title);
+        const localizedGroupDescription = adminDeliveryRuntimeGroupText(id, "description", description);
+        groups.push({ id, title: localizedGroupTitle, description: localizedGroupDescription, modules });
+      }
     });
     return {
       groups,
