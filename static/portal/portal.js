@@ -18,6 +18,39 @@
   // remains deliberately capped at five modules.
   const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;
 
+  // Keep this closed presentation map beside the Admin-navigation constants.
+  // The independent mobile navigation harness intentionally evaluates this
+  // small prelude with adminErpNavigation, so it must not depend on a later
+  // UI runtime being present. In the full Portal uiText is available; in the
+  // harness the original server-issued fallback is deliberately retained.
+  const DELIVERY_RUNTIME_ROUTE_I18N = Object.freeze({
+    "/admin/jobs": { title: "adminGeneric.deliveryRuntimeNavigation.jobs.title", description: "adminGeneric.deliveryRuntimeNavigation.jobs.description" },
+    "/admin/jobs/failed": { title: "adminGeneric.deliveryRuntimeNavigation.failedJobs.title", description: "adminGeneric.deliveryRuntimeNavigation.failedJobs.description" },
+    "/admin/job-recovery-guide": { title: "adminGeneric.jobRecoveryGuide.route.title", description: "adminGeneric.jobRecoveryGuide.route.description" },
+    "/admin/providers": { title: "adminGeneric.deliveryRuntimeNavigation.providers.title", description: "adminGeneric.deliveryRuntimeNavigation.providers.description" },
+    "/admin/provider-cost": { title: "adminGeneric.deliveryRuntimeNavigation.providerCost.title", description: "adminGeneric.deliveryRuntimeNavigation.providerCost.description" },
+    "/admin/workers": { title: "adminGeneric.deliveryRuntimeNavigation.workers.title", description: "adminGeneric.deliveryRuntimeNavigation.workers.description" },
+    "/admin/features": { title: "adminGeneric.deliveryRuntimeNavigation.features.title", description: "adminGeneric.deliveryRuntimeNavigation.features.description" },
+    "/admin/freezes": { title: "adminGeneric.deliveryRuntimeNavigation.freezes.title", description: "adminGeneric.deliveryRuntimeNavigation.freezes.description" },
+    "/admin/runtime": { title: "adminGeneric.deliveryRuntimeNavigation.runtime.title", description: "adminGeneric.deliveryRuntimeNavigation.runtime.description" }
+  });
+
+  const DELIVERY_RUNTIME_GROUP_I18N = Object.freeze({
+    "delivery_runtime": { title: "adminGeneric.deliveryRuntimeNavigation.group.title", description: "adminGeneric.deliveryRuntimeNavigation.group.description" }
+  });
+
+  function adminDeliveryRuntimeNavigationText(route, field, fallback) {
+    const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalizePath(route)];
+    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
+    return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
+  }
+
+  function adminDeliveryRuntimeGroupText(groupId, field, fallback) {
+    const entry = DELIVERY_RUNTIME_GROUP_I18N[String(groupId || "")];
+    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
+    return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
+  }
+
   function publicBuildId(value) {
     // Build IDs are public cache names, not a route, session value or generic
     // server message.  Keep a browser-side validation fence even though the
@@ -98,34 +131,6 @@
   function adminPostbackReadinessText(key, fallback, params) { return adminGenericText("postbackReadiness." + key, fallback, params); }
 
   function adminJobRecoveryGuideText(key, fallback, params) { return adminGenericText("jobRecoveryGuide." + key, fallback, params); }
-
-  const DELIVERY_RUNTIME_ROUTE_I18N = Object.freeze({
-    "/admin/jobs": { title: "adminGeneric.deliveryRuntimeNavigation.jobs.title", description: "adminGeneric.deliveryRuntimeNavigation.jobs.description" },
-    "/admin/jobs/failed": { title: "adminGeneric.deliveryRuntimeNavigation.failedJobs.title", description: "adminGeneric.deliveryRuntimeNavigation.failedJobs.description" },
-    "/admin/job-recovery-guide": { title: "adminGeneric.jobRecoveryGuide.route.title", description: "adminGeneric.jobRecoveryGuide.route.description" },
-    "/admin/providers": { title: "adminGeneric.deliveryRuntimeNavigation.providers.title", description: "adminGeneric.deliveryRuntimeNavigation.providers.description" },
-    "/admin/provider-cost": { title: "adminGeneric.deliveryRuntimeNavigation.providerCost.title", description: "adminGeneric.deliveryRuntimeNavigation.providerCost.description" },
-    "/admin/workers": { title: "adminGeneric.deliveryRuntimeNavigation.workers.title", description: "adminGeneric.deliveryRuntimeNavigation.workers.description" },
-    "/admin/features": { title: "adminGeneric.deliveryRuntimeNavigation.features.title", description: "adminGeneric.deliveryRuntimeNavigation.features.description" },
-    "/admin/freezes": { title: "adminGeneric.deliveryRuntimeNavigation.freezes.title", description: "adminGeneric.deliveryRuntimeNavigation.freezes.description" },
-    "/admin/runtime": { title: "adminGeneric.deliveryRuntimeNavigation.runtime.title", description: "adminGeneric.deliveryRuntimeNavigation.runtime.description" }
-  });
-
-  const DELIVERY_RUNTIME_GROUP_I18N = Object.freeze({
-    "delivery_runtime": { title: "adminGeneric.deliveryRuntimeNavigation.group.title", description: "adminGeneric.deliveryRuntimeNavigation.group.description" }
-  });
-
-  function adminDeliveryRuntimeNavigationText(route, field, fallback) {
-    const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalizePath(route)];
-    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
-    return uiText(entry[field], fallback);
-  }
-
-  function adminDeliveryRuntimeGroupText(groupId, field, fallback) {
-    const entry = DELIVERY_RUNTIME_GROUP_I18N[String(groupId || "")];
-    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
-    return uiText(entry[field], fallback);
-  }
 
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",

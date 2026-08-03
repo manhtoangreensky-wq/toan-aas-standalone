@@ -157,6 +157,22 @@ def test_delivery_runtime_locale_projection_never_becomes_a_control_plane() -> N
         assert required in route_gate
 
 
+def test_delivery_runtime_projection_keeps_admin_navigation_harness_self_contained() -> None:
+    portal = _read("static/portal/portal.js")
+    start = portal.index("const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;")
+    end = portal.index("function publicBuildId(value)", start)
+    harness_prelude = portal[start:end]
+
+    for declaration in (
+        "const DELIVERY_RUNTIME_ROUTE_I18N = Object.freeze({",
+        "const DELIVERY_RUNTIME_GROUP_I18N = Object.freeze({",
+        "function adminDeliveryRuntimeNavigationText(route, field, fallback)",
+        "function adminDeliveryRuntimeGroupText(groupId, field, fallback)",
+        'typeof uiText === "function"',
+    ):
+        assert declaration in harness_prelude
+
+
 def test_delivery_runtime_first_paint_titles_cover_only_the_reviewed_paths() -> None:
     pages = _read("copyfast_pages.py")
 
