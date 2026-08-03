@@ -100,6 +100,7 @@ _PORTAL_SHELL_COPY = {
 }
 _PORTAL_SHELL_TITLES = {
     "/admin/growth/postback-readiness": {"vi": "Postback Readiness · TOAN AAS", "en": "Postback Readiness · TOAN AAS", "zh": "回传准备 · TOAN AAS"},
+    "/admin/job-recovery-guide": {"vi": "Hướng dẫn xử lý Job-Lock · TOAN AAS", "en": "Job-Lock Recovery Guide · TOAN AAS", "zh": "任务锁恢复指南 · TOAN AAS"},
     "/": {"vi": "TOAN AAS", "en": "TOAN AAS", "zh": "TOAN AAS"},
     "/app": {"vi": "TOAN AAS Workspace", "en": "TOAN AAS Workspace", "zh": "TOAN AAS 工作台"},
     "/dashboard": {"vi": "Tổng quan · TOAN AAS", "en": "Overview · TOAN AAS", "zh": "概览 · TOAN AAS"},
