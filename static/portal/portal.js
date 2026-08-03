@@ -95,6 +95,8 @@
     return adminGenericText("systemStewardship." + key, fallback, params);
   }
 
+  function adminPostbackReadinessText(key, fallback, params) { return adminGenericText("postbackReadiness." + key, fallback, params); }
+
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
     payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
@@ -9057,6 +9059,7 @@
     "Quản trị": "nav.admin",
     "Automation Monitor": "adminGeneric.automationMonitor.route.title",
     "System & Data Stewardship": "adminGeneric.systemStewardship.route.title",
+    "Postback Readiness": "adminGeneric.postbackReadiness.route.title",
     "Security Posture": "adminGeneric.securityAccess.route.securityTitle",
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
@@ -9158,6 +9161,7 @@
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.title", fallback);
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.title", fallback);
+    if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.title", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
@@ -9191,6 +9195,7 @@
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.description", fallback);
     if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.description", fallback);
+    if (path === "/admin/growth/postback-readiness") return adminPostbackReadinessText("route.description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
@@ -9995,9 +10000,12 @@
       </div></aside>`;
   }
 
-  function renderNotes(page) {
+  function renderNotes(page, labels) {
     const notes = page.notes && page.notes.length ? page.notes : ["Trạng thái bên ngoài chỉ được dùng sau khi backend kiểm tra quyền sở hữu và capability."];
-    return `<div class="portal-panel-list">${notes.map((note, index) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(index ? ICONS.security : ICONS.legal)}</span><div><strong>${index ? "Nguyên tắc an toàn" : "Trạng thái tích hợp"}</strong><span>${safeText(note)}</span></div></div>`).join("")}</div>`;
+    const noteLabels = labels && typeof labels === "object" ? labels : {};
+    const integrationTitle = typeof noteLabels.integrationTitle === "string" ? noteLabels.integrationTitle : "Trạng thái tích hợp";
+    const safetyTitle = typeof noteLabels.safetyTitle === "string" ? noteLabels.safetyTitle : "Nguyên tắc an toàn";
+    return `<div class="portal-panel-list">${notes.map((note, index) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(index ? ICONS.security : ICONS.legal)}</span><div><strong>${safeText(index ? safetyTitle : integrationTitle)}</strong><span>${safeText(note)}</span></div></div>`).join("")}</div>`;
   }
 
   function flowHasFreshEstimate(flow) {
@@ -24589,34 +24597,43 @@
   }
 
   function renderAdminPostbackReadiness(page, context) {
+    const text = (key, fallback, params) => adminPostbackReadinessText(key, fallback, params);
     // This static canonical-admin guide deliberately stops before configuration
     // or inbound-event handling. It gives staff a clear handoff sequence while
     // keeping Bot-owned connection data, attribution and financial effects out
     // of the browser.
     const checkpoints = [
-      { icon: ICONS.security, title: "Khoanh phạm vi được phê duyệt", text: "Xác định owner canonical, mục tiêu và kênh vận hành được phê duyệt trước khi yêu cầu thay đổi bên ngoài." },
-      { icon: ICONS.document, title: "Rà soát chống ghi nhận trùng", text: "Để owner canonical kiểm tra quy tắc nhận sự kiện và bằng chứng cần thiết trong hệ thống được cấp quyền." },
-      { icon: ICONS.users, title: "Handoff đúng authority", text: "Chuyển yêu cầu tới người phụ trách đã được ủy quyền; không sao chép dữ liệu nhạy cảm hay context Bot vào Web." }
+      { icon: ICONS.security, title: text("checkpoint.scope.title", "Khoanh phạm vi được phê duyệt"), text: text("checkpoint.scope.body", "Xác định owner canonical, mục tiêu và kênh vận hành được phê duyệt trước khi yêu cầu thay đổi bên ngoài.") },
+      { icon: ICONS.document, title: text("checkpoint.dedupe.title", "Rà soát chống ghi nhận trùng"), text: text("checkpoint.dedupe.body", "Để owner canonical kiểm tra quy tắc nhận sự kiện và bằng chứng cần thiết trong hệ thống được cấp quyền.") },
+      { icon: ICONS.users, title: text("checkpoint.handoff.title", "Handoff đúng authority"), text: text("checkpoint.handoff.body", "Chuyển yêu cầu tới người phụ trách đã được ủy quyền; không sao chép dữ liệu nhạy cảm hay context Bot vào Web.") }
     ];
     const boundaries = [
-      { icon: ICONS.security, title: "Không tạo cấu hình kết nối", text: "Không có trường nhập, thông tin kết nối, credential hay hướng dẫn sao chép giá trị nhạy cảm trong browser." },
-      { icon: ICONS.reports, title: "Không gửi hoặc nhận sự kiện", text: "Không có thao tác thử, replay hay ghi nhận event; Web không trở thành đường nhận dữ liệu thứ hai." },
-      { icon: ICONS.payments, title: "Không thay đổi attribution hay tài chính", text: "Không gắn referral, reward, doanh thu, payout, Xu, payment hay bất kỳ entitlement canonical nào." }
+      { icon: ICONS.security, title: text("boundary.noConfig.title", "Không tạo cấu hình kết nối"), text: text("boundary.noConfig.body", "Không có trường nhập, thông tin kết nối, credential hay hướng dẫn sao chép giá trị nhạy cảm trong browser.") },
+      { icon: ICONS.reports, title: text("boundary.noEvents.title", "Không gửi hoặc nhận sự kiện"), text: text("boundary.noEvents.body", "Không có thao tác thử, replay hay ghi nhận event; Web không trở thành đường nhận dữ liệu thứ hai.") },
+      { icon: ICONS.payments, title: text("boundary.noFinancial.title", "Không thay đổi attribution hay tài chính"), text: text("boundary.noFinancial.body", "Không gắn referral, reward, doanh thu, payout, Xu, payment hay bất kỳ entitlement canonical nào.") }
     ];
     const growthLink = serverAuthorizesAdminRoute(context, "/admin/growth")
-      ? '<a class="portal-button portal-button--quiet" href="/admin/growth">Về Growth &amp; Affiliate</a>'
+      ? `<a class="portal-button portal-button--quiet" href="/admin/growth">${safeText(text("link.growth", "Về Growth & Affiliate"))}</a>`
       : "";
     const auditLink = serverAuthorizesAdminRoute(context, "/admin/audit")
-      ? '<a class="portal-button portal-button--quiet" href="/admin/audit">Mở Audit logs</a>'
+      ? `<a class="portal-button portal-button--quiet" href="/admin/audit">${safeText(text("link.audit", "Mở Audit logs"))}</a>`
       : "";
     const checkpointCards = checkpoints.map((item) => `<article class="portal-postback-readiness-card"><span class="portal-postback-readiness-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
     const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
     const handoffLinks = [growthLink, auditLink].filter(Boolean).join("");
+    const localizedNotes = [
+      text("notes.scope.body", "Route này chỉ giúp chuẩn bị phạm vi và handoff. Browser không nhận Telegram identity, cấu hình mạng, thông tin kết nối nhạy cảm, affiliate/job reference, event, attribution, doanh thu hay payout từ Bot/Core Bridge."),
+      text("notes.botBoundary.body", "Postback canonical tiếp tục thuộc Bot. Web không tạo cấu hình, không gửi bản thử, không nhận sự kiện, không thay đổi referral/reward và không tạo audit event thay thế.")
+    ];
+    const noteLabels = {
+      integrationTitle: text("notes.integration.title", "Trạng thái tích hợp"),
+      safetyTitle: text("notes.safety.title", "Nguyên tắc an toàn")
+    };
     return `<article class="portal-page portal-admin-postback-readiness">${renderHero(page, context)}
-      <section class="portal-postback-readiness-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Chuẩn bị postback có kiểm soát, không biến Web thành nơi cấu hình hoặc nhận sự kiện</h2><p>Trang này làm rõ trình tự chuẩn bị và handoff. Mọi cấu hình, kiểm tra dữ liệu thực và quyết định vận hành vẫn thuộc canonical owner trong quy trình đã được phê duyệt.</p></div><div class="portal-postback-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Route được bảo vệ riêng</strong><small>Chỉ signed canonical admin được mở guidance này</small></span></div></section>
-      <section class="portal-postback-readiness-section" aria-labelledby="postback-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="postback-readiness-checklist-title">Ba điểm cần rõ trước khi handoff</h2><p>Không cần nhập dữ liệu tại đây. Checklist không đọc trạng thái thực, không tạo record và không kích hoạt workflow.</p></div>${badge("read_only")}</div><div class="portal-postback-readiness-grid">${checkpointCards}</div></section>
-      <section class="portal-card portal-card-pad portal-postback-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Giữ việc chuẩn bị tách biệt khỏi quyền cấu hình và quyền ghi nhận để không tạo tác động ngoài ý muốn từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Xác định mục tiêu và owner</strong><span>Làm rõ phạm vi, quyền quyết định và nơi xử lý được phê duyệt trước khi yêu cầu thao tác.</span></li><li><strong>Kiểm tra tại authority canonical</strong><span>Chỉ người có quyền mới xác minh dữ liệu nguồn, quy tắc chống trùng và trạng thái vận hành thực.</span></li><li><strong>Handoff qua kênh nội bộ</strong><span>Chuyển yêu cầu kèm bối cảnh tối thiểu, không đưa dữ liệu nhạy cảm hoặc context Bot vào browser.</span></li></ol>${handoffLinks ? `<div class="portal-form-footer">${handoffLinks}</div>` : ""}</section>
-      <section class="portal-card portal-card-pad portal-postback-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là trang cấu hình, console nhận sự kiện hay adapter dữ liệu affiliate.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+      <section class="portal-postback-readiness-intro"><div><span class="portal-section-kicker">${safeText(text("intro.kicker", "Canonical admin guidance · read-only"))}</span><h2>${safeText(text("intro.title", "Chuẩn bị postback có kiểm soát, không biến Web thành nơi cấu hình hoặc nhận sự kiện"))}</h2><p>${safeText(text("intro.body", "Trang này làm rõ trình tự chuẩn bị và handoff. Mọi cấu hình, kiểm tra dữ liệu thực và quyết định vận hành vẫn thuộc canonical owner trong quy trình đã được phê duyệt."))}</p></div><div class="portal-postback-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(text("intro.statusTitle", "Route được bảo vệ riêng"))}</strong><small>${safeText(text("intro.statusBody", "Chỉ signed canonical admin được mở guidance này"))}</small></span></div></section>
+      <section class="portal-postback-readiness-section" aria-labelledby="postback-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(text("checklist.kicker", "Preparation checklist"))}</span><h2 id="postback-readiness-checklist-title">${safeText(text("checklist.title", "Ba điểm cần rõ trước khi handoff"))}</h2><p>${safeText(text("checklist.body", "Không cần nhập dữ liệu tại đây. Checklist không đọc trạng thái thực, không tạo record và không kích hoạt workflow."))}</p></div>${badge("read_only")}</div><div class="portal-postback-readiness-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-postback-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("handoff.kicker", "Safe handoff"))}</span><h2 class="portal-card-title">${safeText(text("handoff.title", "Trình tự đề xuất"))}</h2><p class="portal-card-subtitle">${safeText(text("handoff.body", "Giữ việc chuẩn bị tách biệt khỏi quyền cấu hình và quyền ghi nhận để không tạo tác động ngoài ý muốn từ browser."))}</p></div>${badge("read_only")}</div><ol><li><strong>${safeText(text("handoff.itemScope.title", "Xác định mục tiêu và owner"))}</strong><span>${safeText(text("handoff.itemScope.body", "Làm rõ phạm vi, quyền quyết định và nơi xử lý được phê duyệt trước khi yêu cầu thao tác."))}</span></li><li><strong>${safeText(text("handoff.itemAuthority.title", "Kiểm tra tại authority canonical"))}</strong><span>${safeText(text("handoff.itemAuthority.body", "Chỉ người có quyền mới xác minh dữ liệu nguồn, quy tắc chống trùng và trạng thái vận hành thực."))}</span></li><li><strong>${safeText(text("handoff.itemChannel.title", "Handoff qua kênh nội bộ"))}</strong><span>${safeText(text("handoff.itemChannel.body", "Chuyển yêu cầu kèm bối cảnh tối thiểu, không đưa dữ liệu nhạy cảm hoặc context Bot vào browser."))}</span></li></ol>${handoffLinks ? `<div class="portal-form-footer">${handoffLinks}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-postback-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("limits.kicker", "Deliberate limits"))}</span><h2 class="portal-card-title">${safeText(text("limits.title", "Ranh giới được giữ cố ý"))}</h2><p class="portal-card-subtitle">${safeText(text("limits.body", "Guidance không phải là trang cấu hình, console nhận sự kiện hay adapter dữ liệu affiliate."))}</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes({ ...page, notes: localizedNotes }, noteLabels)}</section>
     </article>`;
   }
 

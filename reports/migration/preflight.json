@@ -22,7 +22,7 @@
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-21\\p0-admin-broadcast2"
   },
-  "generated_at_utc": "2026-08-03T07:22:00+00:00",
+  "generated_at_utc": "2026-08-03T08:11:18+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,12 +35,12 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "030b7d0d93f97b1488588c8c387e5940f631cca4",
+      "checkout_sha": "006257e5eb87fa0fe63bdda93c2e89205043d8eb",
       "requested_relation": "exact",
-      "requested_sha": "030b7d0d93f97b1488588c8c387e5940f631cca4",
-      "source_fingerprint_sha256": "142e8a5df5f427b3088621d7435a6f0ad139080393955dfa1a020cf1abec59bd",
+      "requested_sha": "006257e5eb87fa0fe63bdda93c2e89205043d8eb",
+      "source_fingerprint_sha256": "ceebbb1af877939f7e3542644cf4d787684d7ae7af46fd0b69fdf81adcd60438",
       "working_tree_state": "clean"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-system-stewardship-locales"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-postback-readiness-locales"
   }
 }

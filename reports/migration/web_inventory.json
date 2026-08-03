@@ -7650,7 +7650,7 @@
         "copyfast_registry.py",
         "copyfast_starter_kits.py"
       ],
-      "occurrences": 1117,
+      "occurrences": 1121,
       "provider": "Telegram"
     }
   ],
@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "142e8a5df5f427b3088621d7435a6f0ad139080393955dfa1a020cf1abec59bd",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-system-stewardship-locales",
+  "source_fingerprint_sha256": "ceebbb1af877939f7e3542644cf4d787684d7ae7af46fd0b69fdf81adcd60438",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-postback-readiness-locales",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
