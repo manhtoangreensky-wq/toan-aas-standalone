@@ -89,6 +89,8 @@ DEFAULT_INTERFACE_LOCALE = "vi"
 OAUTH_CONTACT_PROVIDERS = frozenset({"google", "github", "apple"})
 OAUTH_STATE_VALUE_MAX_LENGTH = 256
 OAUTH_STATE_COOKIE_NAME_DIGEST_LENGTH = 32
+OAUTH_RETURN_QUERY_MAX_LENGTH = 2_048
+OAUTH_RETURN_QUERY_MAX_FIELDS = 128
 SESSION_REFERENCE_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -817,6 +819,40 @@ def _verified_oauth_contact_email(identity: dict) -> str:
     return email
 
 
+def _oauth_return_locale_from_query(query: str) -> str:
+    """Return one exact, presentation-only locale from a bounded query.
+
+    OAuth return paths intentionally discard every query value except a single
+    literal ``lang=vi|en|zh`` field.  The extractor must not use a low global
+    field cap: ordinary tracking parameters would otherwise erase a valid
+    locale.  Bound the total query and scan instead, rejecting a duplicate
+    locale rather than choosing one attacker-controlled occurrence.
+    """
+
+    if not query or len(query) > OAUTH_RETURN_QUERY_MAX_LENGTH:
+        return ""
+    locale = ""
+    found_locale = False
+    field_count = 0
+    for field in query.split("&"):
+        if not field:
+            continue
+        field_count += 1
+        if field_count > OAUTH_RETURN_QUERY_MAX_FIELDS:
+            return ""
+        name, separator, value = field.partition("=")
+        if name != "lang":
+            continue
+        if found_locale:
+            return ""
+        found_locale = True
+        # Keep the wire representation exact.  The public shell only accepts
+        # lowercase reviewed locale values, so do not decode, trim or
+        # normalize a value that it would reject on initial rendering.
+        locale = value if separator and value in INTERFACE_LOCALES else ""
+    return locale
+
+
 def _safe_oauth_return_path(value: str | None) -> str:
     candidate = str(value or "").strip()
     if not candidate or not candidate.startswith("/") or candidate.startswith("//") or "\\" in candidate:
@@ -826,9 +862,29 @@ def _safe_oauth_return_path(value: str | None) -> str:
         return "/dashboard"
     # The shell resolves route access itself; do not put a provider callback,
     # private API or untrusted URL into the post-login redirect.
-    if candidate.startswith("/api/") or candidate.startswith("/internal/"):
+    path = parsed.path or "/dashboard"
+    # No signed OAuth return needs an encoded path segment. Reject it rather
+    # than relying on a later router's percent-decoding behavior, and keep
+    # exact API/internal roots aligned with the final HTML-shell fence.
+    if (
+        "%" in path
+        or path in {"/api", "/internal"}
+        or path.startswith("/api/")
+        or path.startswith("/internal/")
+    ):
         return "/dashboard"
-    return candidate.split("?", 1)[0] or "/dashboard"
+    # OAuth has historically stripped every query parameter from the return
+    # route. Preserve only the closed, presentation-only interface locale so
+    # a public EN/ZH journey does not silently return to Vietnamese. All
+    # other query data remains intentionally discarded.
+    locale = _oauth_return_locale_from_query(parsed.query)
+    return f"{path}?lang={locale}" if locale else path
+
+
+def _oauth_return_locale(return_path: str | None) -> str:
+    """Extract only a previously allowlisted interface locale from a return path."""
+    parsed = urlparse(_safe_oauth_return_path(return_path))
+    return _oauth_return_locale_from_query(parsed.query)
 
 
 def _new_telegram_code() -> str:
@@ -1760,13 +1816,15 @@ def _oauth_authorization_url(provider: str, state_value: str) -> str:
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
 
-def _oauth_redirect(reason: str, *, path: str = "/login") -> RedirectResponse:
+def _oauth_redirect(reason: str, *, path: str = "/login", locale: str | None = None) -> RedirectResponse:
     # Reasons are internal fixed slugs only. Never pass a provider response,
     # access token, email address or unvalidated `next` URL to the browser.
     allowed = {"unavailable", "cancelled", "failed", "state", "session", "link-required", "linked", "already-linked"}
     safe_reason = reason if reason in allowed else "failed"
     separator = "&" if "?" in path else "?"
-    return RedirectResponse(f"{path}{separator}oauth={safe_reason}", status_code=status.HTTP_303_SEE_OTHER)
+    safe_locale = str(locale or "").strip().lower()
+    locale_suffix = f"&lang={safe_locale}" if safe_locale in INTERFACE_LOCALES else ""
+    return RedirectResponse(f"{path}{separator}oauth={safe_reason}{locale_suffix}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _consume_oauth_state(request: Request, provider: str, state_value: str) -> dict | None:
@@ -4250,8 +4308,10 @@ async def start_oauth_link(provider: str, request: Request, response: Response, 
 @router.get("/oauth/{provider}/start")
 async def start_oauth(provider: str, request: Request):
     provider = provider.strip().lower()
+    return_path = _safe_oauth_return_path(request.query_params.get("next"))
+    return_locale = _oauth_return_locale(return_path)
     if not _oauth_enabled(provider):
-        return _oauth_redirect("unavailable")
+        return _oauth_redirect("unavailable", locale=return_locale)
     try:
         purpose = "signin"
         account_id: str | None = None
@@ -4271,11 +4331,15 @@ async def start_oauth(provider: str, request: Request):
             purpose=purpose,
             account_id=account_id,
             initiating_session_id=initiating_session_id,
-            return_path=_safe_oauth_return_path(request.query_params.get("next")),
+            return_path=return_path,
         )
         authorization_url = _oauth_authorization_url(provider, state_value)
     except (HTTPException, RuntimeError, ValueError):
-        response = _oauth_redirect("unavailable" if purpose == "signin" else "session", path="/account" if purpose == "link" else "/login")
+        response = _oauth_redirect(
+            "unavailable" if purpose == "signin" else "session",
+            path="/account" if purpose == "link" else "/login",
+            locale=return_locale if purpose == "signin" else None,
+        )
         if request.query_params.get("link") == "1":
             _clear_oauth_link_cookie(response)
         return response
@@ -4302,12 +4366,18 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         response = _oauth_redirect("state")
         _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value)
         return response
+    return_path = _safe_oauth_return_path(state_data["return_path"])
+    return_locale = _oauth_return_locale(return_path) if state_data["purpose"] == "signin" else ""
     provider_error = str(values.get("error") or "")
     code = str(values.get("code") or "")
     if provider_error or not code:
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider cancelled or omitted authorization code")
-        response = _oauth_redirect("cancelled" if provider_error == "access_denied" else "failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        response = _oauth_redirect(
+            "cancelled" if provider_error == "access_denied" else "failed",
+            path="/account" if state_data["purpose"] == "link" else "/login",
+            locale=return_locale,
+        )
         _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     try:
@@ -4317,7 +4387,11 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
     except OAuthIdentityError:
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider identity verification failed")
-        response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        response = _oauth_redirect(
+            "failed",
+            path="/account" if state_data["purpose"] == "link" else "/login",
+            locale=return_locale,
+        )
         _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     except Exception:
@@ -4325,7 +4399,11 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         # verification.  Do not leak third-party details to browser/audit.
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider callback failed")
-        response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        response = _oauth_redirect(
+            "failed",
+            path="/account" if state_data["purpose"] == "link" else "/login",
+            locale=return_locale,
+        )
         _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     if state_data["purpose"] == "link":
@@ -4363,10 +4441,9 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         return response
     account, outcome = _oauth_signin_account(identity, request)
     if not account:
-        response = _oauth_redirect(outcome)
+        response = _oauth_redirect(outcome, locale=return_locale)
         _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
-    return_path = _safe_oauth_return_path(state_data["return_path"])
     # OAuth establishes a signed Web account with its own Workspace. Telegram
     # linking is an optional companion integration, not an execution gate, so
     # an email/Google/GitHub/Apple user returns straight to the validated Web

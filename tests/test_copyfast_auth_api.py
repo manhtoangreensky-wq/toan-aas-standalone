@@ -663,6 +663,62 @@ def test_oauth_disabled_by_default_exposes_no_live_provider_path(tmp_path, monke
         assert start.headers["location"] == "/login?oauth=unavailable"
 
 
+def test_oauth_public_locale_survives_closed_start_and_callback_continuations(tmp_path, monkeypatch):
+    """A public auth locale is presentation-only but must survive OAuth hops."""
+    with make_client(tmp_path, monkeypatch) as client:
+        unavailable = client.get(
+            "/api/v1/auth/oauth/google/start",
+            params={"next": "/dashboard?lang=en"},
+            follow_redirects=False,
+        )
+        assert unavailable.status_code == 303
+        assert unavailable.headers["location"] == "/login?oauth=unavailable&lang=en"
+        tracked = client.get(
+            "/api/v1/auth/oauth/google/start",
+            params={"next": "/dashboard?lang=en&utm_source=x&utm_campaign=y"},
+            follow_redirects=False,
+        )
+        assert tracked.status_code == 303
+        assert tracked.headers["location"] == "/login?oauth=unavailable&lang=en"
+        duplicate_locale = client.get(
+            "/api/v1/auth/oauth/google/start",
+            params={"next": "/dashboard?lang=en&lang=zh"},
+            follow_redirects=False,
+        )
+        assert duplicate_locale.status_code == 303
+        assert duplicate_locale.headers["location"] == "/login?oauth=unavailable"
+
+    enable_oauth_provider(monkeypatch, "google")
+    with make_client(tmp_path, monkeypatch) as client:
+        started = client.get(
+            "/api/v1/auth/oauth/google/start",
+            params={"next": "/video/product?lang=zh"},
+            follow_redirects=False,
+        )
+        state_value, _query = oauth_state_from_redirect(started)
+        cancelled = client.get(
+            f"/api/v1/auth/oauth/google/callback?error=access_denied&state={state_value}",
+            follow_redirects=False,
+        )
+        assert cancelled.status_code == 303
+        assert cancelled.headers["location"] == "/login?oauth=cancelled&lang=zh"
+
+
+def test_oauth_return_path_rejects_api_internal_and_encoded_path_variants(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch):
+        import copyfast_auth
+
+        for unsafe_path in (
+            "/api",
+            "/api?lang=en",
+            "/internal",
+            "/internal?lang=zh",
+            "/api%2Fv1%2Fauth%2Fme?lang=en",
+            "/internal%2fv1%2Fjobs?lang=zh",
+        ):
+            assert copyfast_auth._safe_oauth_return_path(unsafe_path) == "/dashboard"
+
+
 def test_google_oauth_uses_signed_state_pkce_and_creates_an_oauth_only_account(tmp_path, monkeypatch):
     enable_oauth_provider(monkeypatch, "google")
     with make_client(tmp_path, monkeypatch) as client:

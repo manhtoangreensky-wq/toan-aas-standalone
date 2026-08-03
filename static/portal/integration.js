@@ -750,6 +750,15 @@
     return safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
   }
 
+  function publicAuthInterfaceLocale() {
+    // The server has already accepted this small allowlist while rendering the
+    // public shell.  Do not reinterpret raw query input here: a value such as
+    // `lang=EN` renders Vietnamese server-side, so normalizing it only for the
+    // redirect would make the registration journey inconsistent with OAuth.
+    const locale = String(base().interfaceLocale || "").trim().toLowerCase();
+    return INTERFACE_LOCALES.has(locale) ? locale : "vi";
+  }
+
   function telegramChallengePending(flow) {
     const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
     return Boolean(
@@ -34330,7 +34339,7 @@
         // both new and existing email responses identical prevents account
         // enumeration; login is the single password flow that issues cookie
         // and CSRF credentials.
-        window.location.assign("/login?registered=1");
+        window.location.assign(`/login?registered=1&lang=${publicAuthInterfaceLocale()}`);
         return;
       }
       if (action === "auth-password-recovery-start") {
