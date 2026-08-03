@@ -15,14 +15,14 @@
     "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
     "entrypoint_present": true,
     "revision": {
-      "ahead_commits": 0,
-      "baseline_relation": "exact",
+      "ahead_commits": 1063,
+      "baseline_relation": "ahead_of_requested_baseline",
       "behind_commits": 0,
-      "checkout_sha": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
+      "checkout_sha": "d973209fc9ecc9d9f368c89e0df198331b2ab621"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-21\\p0-admin-broadcast2"
+    "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-03T16:11:45+00:00",
+  "generated_at_utc": "2026-08-03T18:02:39+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,12 +35,12 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "fda0aa8f73635346b0889fb3b3bd1c6b9791b3a9",
+      "checkout_sha": "066536b188f24f028152d5997acd46dcbc952774",
       "requested_relation": "exact",
-      "requested_sha": "fda0aa8f73635346b0889fb3b3bd1c6b9791b3a9",
-      "source_fingerprint_sha256": "982881dc3a8bf1219c98fe55edfca40fd62110510c4a6399bfb51683485cc4e2",
+      "requested_sha": "066536b188f24f028152d5997acd46dcbc952774",
+      "source_fingerprint_sha256": "ed8008ddcbc57a4879a57a7fb65e5db51ef2a1aa2765ec29980bb0a072e4d13e",
       "working_tree_state": "clean"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-account-center-locale-clarity"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-account-security-locales"
   }
 }

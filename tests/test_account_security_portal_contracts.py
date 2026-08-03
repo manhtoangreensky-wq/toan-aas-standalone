@@ -49,7 +49,7 @@ def test_account_security_has_a_signed_portal_route_and_safe_forms() -> None:
     assert 'data-account-security-secret type="password" name="current_password"' in view
     assert 'autocomplete="current-password"' in view
     assert 'autocomplete="new-password"' in view
-    assert 'data-portal-confirm="Đổi mật khẩu và thu hồi các phiên khác?' in view
+    assert 'data-portal-confirm="${safeText(copy("passwordChangeConfirm"' in view
     assert 'provider === "telegram" && canonicalTelegram' in view
     assert "Không có nút gỡ liên kết Telegram trên Web App." in view
     assert "Portal không hiển thị luồng khôi phục giả." in view
@@ -116,7 +116,7 @@ def test_account_security_contact_assurance_is_allowlisted_and_never_keeps_conta
     assert "Email đã được xác minh qua liên kết bảo mật" in view
     assert 'data-portal-action="account-security-email-verification-start"' in view
     assert "Web không lưu token OAuth hoặc giả lập gửi thư xác minh." in view
-    assert 'href="/account">Mở phương thức đăng nhập</a>' in view
+    assert 'href="/account">${safeText(copy("openLoginMethods"' in view
 
 
 def test_account_security_writes_reuse_csrf_api_and_refresh_rotated_session() -> None:

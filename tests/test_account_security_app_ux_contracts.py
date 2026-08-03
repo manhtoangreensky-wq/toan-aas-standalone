@@ -63,13 +63,13 @@ def test_security_posture_never_overstates_a_password_or_mfa_action_without_its_
 
     assert 'mfa.runtimeAvailable && passwordAvailable && mfaStartEnabled' in posture
     assert 'state: passwordEnabled ? "ready" : (passwordAvailable ? "guarded" : "read_only")' in facts
-    assert 'title: passwordEnabled ? "Sẵn sàng" : (passwordAvailable ? "Đang bảo vệ" : "Chưa khả dụng")' in facts
+    assert 'title: passwordEnabled ? copy("postureReady", "Sẵn sàng") : (passwordAvailable ? copy("postureGuarded", "Đang bảo vệ") : copy("postureUnavailable", "Chưa khả dụng"))' in facts
 
 
 def test_security_posture_uses_clear_vietnamese_guarded_copy() -> None:
     security = _section(PORTAL, "function renderAccountSecurity(page, context)", "function accountActivityStatus")
 
-    assert 'title: "Đang được bảo vệ"' in security
+    assert 'title: copy("postureProtected", "Đang được bảo vệ")' in security
     assert 'title: "Đang guarded"' not in security
 
 
