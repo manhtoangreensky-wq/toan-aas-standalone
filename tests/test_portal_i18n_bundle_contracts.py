@@ -110,6 +110,64 @@ for (const locale of expected) {
   }
 }
 
+const postbackReadinessKeys = [
+  "adminGeneric.postbackReadiness.route.title",
+  "adminGeneric.postbackReadiness.route.description",
+  "adminGeneric.postbackReadiness.intro.kicker",
+  "adminGeneric.postbackReadiness.intro.title",
+  "adminGeneric.postbackReadiness.intro.body",
+  "adminGeneric.postbackReadiness.intro.statusTitle",
+  "adminGeneric.postbackReadiness.intro.statusBody",
+  "adminGeneric.postbackReadiness.checklist.kicker",
+  "adminGeneric.postbackReadiness.checklist.title",
+  "adminGeneric.postbackReadiness.checklist.body",
+  "adminGeneric.postbackReadiness.checkpoint.scope.title",
+  "adminGeneric.postbackReadiness.checkpoint.scope.body",
+  "adminGeneric.postbackReadiness.checkpoint.dedupe.title",
+  "adminGeneric.postbackReadiness.checkpoint.dedupe.body",
+  "adminGeneric.postbackReadiness.checkpoint.handoff.title",
+  "adminGeneric.postbackReadiness.checkpoint.handoff.body",
+  "adminGeneric.postbackReadiness.handoff.kicker",
+  "adminGeneric.postbackReadiness.handoff.title",
+  "adminGeneric.postbackReadiness.handoff.body",
+  "adminGeneric.postbackReadiness.handoff.itemScope.title",
+  "adminGeneric.postbackReadiness.handoff.itemScope.body",
+  "adminGeneric.postbackReadiness.handoff.itemAuthority.title",
+  "adminGeneric.postbackReadiness.handoff.itemAuthority.body",
+  "adminGeneric.postbackReadiness.handoff.itemChannel.title",
+  "adminGeneric.postbackReadiness.handoff.itemChannel.body",
+  "adminGeneric.postbackReadiness.limits.kicker",
+  "adminGeneric.postbackReadiness.limits.title",
+  "adminGeneric.postbackReadiness.limits.body",
+  "adminGeneric.postbackReadiness.boundary.noConfig.title",
+  "adminGeneric.postbackReadiness.boundary.noConfig.body",
+  "adminGeneric.postbackReadiness.boundary.noEvents.title",
+  "adminGeneric.postbackReadiness.boundary.noEvents.body",
+  "adminGeneric.postbackReadiness.boundary.noFinancial.title",
+  "adminGeneric.postbackReadiness.boundary.noFinancial.body",
+  "adminGeneric.postbackReadiness.link.growth",
+  "adminGeneric.postbackReadiness.link.audit",
+  "adminGeneric.postbackReadiness.notes.integration.title",
+  "adminGeneric.postbackReadiness.notes.safety.title",
+  "adminGeneric.postbackReadiness.notes.scope.body",
+  "adminGeneric.postbackReadiness.notes.botBoundary.body"
+];
+for (const locale of expected) {
+  for (const key of postbackReadinessKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+const reviewedPostbackReadinessCopy = {
+  vi: "Postback Readiness",
+  en: "Postback Readiness",
+  zh: "回传准备"
+};
+for (const [locale, expectedCopy] of Object.entries(reviewedPostbackReadinessCopy)) {
+  if (api.t("adminGeneric.postbackReadiness.route.title", locale) !== expectedCopy) {
+    throw new Error("Postback Readiness route copy diverged for " + locale);
+  }
+}
+
 const dashboardKeys = [
   "dashboard.summary.kicker", "dashboard.summary.greeting",
   "dashboard.summary.body", "dashboard.summary.projects",
