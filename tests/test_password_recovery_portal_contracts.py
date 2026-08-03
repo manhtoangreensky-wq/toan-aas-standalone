@@ -20,11 +20,13 @@ def test_password_recovery_is_a_public_non_transient_portal_route() -> None:
     assert 'action: "auth-password-recovery-start"' in PORTAL
     assert "fields: copyFields(FIELD_SETS.passwordRecovery)" in PORTAL
     assert "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không." in PORTAL
-    assert 'href="/password-recovery">Quên mật khẩu?</a>' in PORTAL
+    assert 'href="/password-recovery?lang=${safeText(requestedLocale)}"' in PORTAL
+    assert '${safeText(accessText("recovery", "Quên mật khẩu?"))}' in PORTAL
 
     view = _between(PORTAL, "function renderAuth", "const RESULT_LABELS")
     assert 'page.path === "/password-recovery" ? " data-portal-no-transient" : ""' in view
-    assert 'page.path === "/register" ? renderOAuthRegistrationMethods(context) : ""' in view
+    assert 'const isRegister = page.path === "/register";' in view
+    assert 'isRegister ? renderOAuthRegistrationMethods(context) : ""' in view
     assert "localStorage.getItem" not in view
     assert "localStorage.setItem" not in view
     assert "sessionStorage.getItem" not in view

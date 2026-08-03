@@ -685,10 +685,10 @@ def test_registration_explains_real_login_methods_and_profile_defaults() -> None
     assert "Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật" in PORTAL
     assert "function renderOAuthRegistrationMethods(context)" in PORTAL
     assert "Tạo hoặc tiếp tục với OAuth" in PORTAL
-    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register")' in PORTAL
-    assert 'renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register")' in PORTAL
-    assert 'renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register")' in PORTAL
-    assert 'renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register")' in PORTAL
+    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register", context)' in PORTAL
+    assert 'renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register", context)' in PORTAL
+    assert 'renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register", context)' in PORTAL
+    assert 'renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register", context)' in PORTAL
     assert "portal-auth-notes" in PORTAL
     assert "Browser không nhận hoặc lưu Telegram ID" in PORTAL
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
@@ -1051,7 +1051,7 @@ def test_login_methods_are_explicit_about_telegram_gmail_and_configuration_gated
     assert "function renderTelegramLoginMethod(context)" in PORTAL
     assert "Không nhập Telegram ID vào Web" in PORTAL
     assert "Telegram Login xác thực Web bằng OIDC" in PORTAL
-    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin")' in PORTAL
+    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin", context)' in PORTAL
     assert 'data-portal-action="start-telegram-login"' in PORTAL
     assert 'data-portal-action="refresh-telegram-login"' in PORTAL
     assert "Google (OAuth)" in PORTAL
@@ -1059,7 +1059,9 @@ def test_login_methods_are_explicit_about_telegram_gmail_and_configuration_gated
     assert "Sign in with Apple" in PORTAL
     assert "OAuth chưa được cấu hình trên server" in PORTAL
     assert "không có đăng nhập giả" in PORTAL
-    assert 'window.location.assign("/login?registered=1");' in INTEGRATION
+    assert "function publicAuthInterfaceLocale()" in INTEGRATION
+    assert 'return INTERFACE_LOCALES.has(locale) ? locale : "vi";' in INTEGRATION
+    assert "window.location.assign(`/login?registered=1&lang=${publicAuthInterfaceLocale()}`);" in INTEGRATION
     assert 'api("/auth/telegram/login/start"' in INTEGRATION
     assert 'api("/auth/telegram/login/complete"' in INTEGRATION
     assert 'fetch(`${API}/auth/telegram/connection/status`' in INTEGRATION
@@ -1176,15 +1178,16 @@ def test_telegram_onboarding_preserves_only_a_safe_local_workflow_continuation()
     assert "function onboardingContinuationRoute()" in PORTAL
     assert "Workflow đang chờ" in PORTAL
     assert "Mở lại workflow" in PORTAL
-    continuation = PORTAL[PORTAL.index("function safeOnboardingContinuation(value)"):PORTAL.index("function renderPublicOAuthCard(provider")]
+    continuation = PORTAL[PORTAL.index("function safeOnboardingContinuation(value)"):PORTAL.index("function publicOAuthStartPath")]
     assert "/api/v1/" not in continuation
     assert 'href="/payments' not in continuation
     assert "localStorage." not in continuation
     assert "telegram_id" not in continuation
     oauth_card = PORTAL[PORTAL.index("function renderPublicOAuthCard(provider"):PORTAL.index("function renderTelegramLoginMethod(context)")]
     assert "const continuation = onboardingContinuationRoute();" in oauth_card
-    assert "?next=${encodeURIComponent(continuation)}" in oauth_card
-    assert "const startPath" in oauth_card
+    assert "const startPath = publicOAuthStartPath(provider, continuation, context);" in oauth_card
+    assert "function publicOAuthStartPath(provider, continuation, context)" in PORTAL
+    assert 'new URLSearchParams({ next: `${returnPath}${separator}lang=${locale}` })' in PORTAL
     auth = (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
     assert "return_path = _safe_oauth_return_path(state_data[\"return_path\"])" in auth
     assert "target = return_path" in auth

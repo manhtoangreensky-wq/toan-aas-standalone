@@ -436,7 +436,7 @@
       { name: "confirm_password", label: "Xác nhận mật khẩu", labelKey: "access.field.passwordConfirm", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "access.placeholder.passwordConfirm", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     passwordRecovery: [
-      { name: "email", label: "Email tài khoản", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không." }
+      { name: "email", label: "Email tài khoản", labelKey: "access.field.recoveryEmail", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không.", helpKey: "access.help.recoveryEmail" }
     ],
     telegramAccountUpgrade: [
       { name: "email", label: "Email đăng nhập (có thể dùng Gmail)", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Thêm Email + mật khẩu vào đúng tài khoản Telegram đang đăng nhập; không ghép tự động với tài khoản Web khác." },
@@ -861,7 +861,7 @@
   definePage({
     path: "/password-recovery", title: "Khôi phục mật khẩu", icon: ICONS.account, section: "Tài khoản",
     description: "Yêu cầu liên kết đặt lại mật khẩu cho tài khoản Email + mật khẩu. Phản hồi không phân biệt email; chỉ liên kết một lần trong mailbox mới có thể thay đổi mật khẩu.",
-    access: "public", layout: "auth", status: "ready", action: "auth-password-recovery-start", actionLabel: "Gửi liên kết đặt lại", fields: copyFields(FIELD_SETS.passwordRecovery),
+    access: "public", layout: "auth", status: "ready", action: "auth-password-recovery-start", actionLabel: "Gửi liên kết đặt lại", actionLabelKey: "access.action.recovery", fields: copyFields(FIELD_SETS.passwordRecovery),
     notes: ["Yêu cầu không tiết lộ email có tài khoản hay không. Dịch vụ gửi thư cần được operator bật và cấu hình trên server trước khi có email thật.", "Link chỉ hiển thị form xác nhận; preview/scanner không thể reset. Khi hoàn tất, Web thu hồi mọi signed session cũ và không tự đăng nhập.", "Không dùng Telegram ID, Bot, provider, PayOS, Xu hay localStorage trong recovery flow."]
   });
   // Marketing remains available only as an explicit secondary route. The app
@@ -23872,7 +23872,15 @@
     return `<span class="portal-auth-provider-mark" data-provider="${safeText(key)}" aria-hidden="true">${marks[key]}</span>`;
   }
 
-  function renderPublicOAuthCard(provider, label, enabled, icon, purpose) {
+  function publicOAuthStartPath(provider, continuation, context) {
+    const locale = reviewedInterfaceLocale(context && context.interfaceLocale) || "vi";
+    const returnPath = continuation || "/dashboard";
+    const separator = returnPath.includes("?") ? "&" : "?";
+    const params = new URLSearchParams({ next: `${returnPath}${separator}lang=${locale}` });
+    return `/api/v1/auth/oauth/${safeText(provider)}/start?${params.toString()}`;
+  }
+
+  function renderPublicOAuthCard(provider, label, enabled, icon, purpose, context) {
     const registration = purpose === "register";
     const isApple = provider === "apple";
     const isTelegram = provider === "telegram";
@@ -23892,7 +23900,7 @@
           : "OAuth server đã được cấu hình. Sau khi xác nhận tại provider, Web tạo signed session; token không được trả về browser."))
       : "OAuth chưa được cấu hình trên server nên nút được giữ khóa; không có đăng nhập giả.";
     const continuation = onboardingContinuationRoute();
-    const startPath = `/api/v1/auth/oauth/${safeText(provider)}/start${continuation ? `?next=${encodeURIComponent(continuation)}` : ""}`;
+    const startPath = publicOAuthStartPath(provider, continuation, context);
     return `<article class="portal-auth-provider-option${enabled ? " is-enabled" : " is-unavailable"}" data-auth-provider="${safeText(provider)}">${authProviderMark(provider)}<div><strong>${safeText(label)}</strong><p>${safeText(description)}</p></div>${enabled ? `<a class="portal-button portal-button--quiet" href="${startPath}">${safeText(actionLabel)}</a>` : `<span class="portal-auth-provider-state" title="Cần OAuth client, secret và callback URL trên server">Chờ cấu hình máy chủ</span>`}</article>`;
   }
 
@@ -23931,10 +23939,10 @@
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Phiên xác minh Telegram đang chờ</strong><p>Tab vừa được làm mới nên Portal không hiển thị lại mã một lần. Browser vẫn chỉ kiểm tra challenge HttpOnly của chính tab này; nếu bạn đã xác nhận trong Bot, Portal sẽ tự hoàn tất.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${ready ? "Hoàn tất đăng nhập" : "Kiểm tra ngay"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login" data-portal-confirm="Tạo mã mới sẽ thay thế challenge đang chờ. Bạn có chắc muốn tiếp tục?"${connectionDisabled}>Tạo mã mới</button></div></div></div>`
       : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Telegram</strong><p>Đăng nhập bằng chính tài khoản Telegram đang mở Bot. Bot chứng minh ownership; Web không nhận Telegram ID thô. Lần đầu có thể tự tạo hồ sơ Web mặc định sau xác minh.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"${connectionDisabled}>Đăng nhập với Telegram</button></div></div></div>`;
     const providers = [
-      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin") },
-      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "signin") },
-      { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "signin") },
-      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "signin") }
+      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin", context) },
+      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "signin", context) },
+      { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "signin", context) },
+      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "signin", context) }
     ];
     const enabledProviders = providers.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providers.filter((item) => !item.enabled).map((item) => item.markup).join("");
@@ -23949,10 +23957,10 @@
     const githubEnabled = oauthProviders.github && oauthProviders.github.enabled === true;
     const appleEnabled = oauthProviders.apple && oauthProviders.apple.enabled === true;
     const providerCards = [
-      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register") },
-      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register") },
-      { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register") },
-      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register") }
+      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register", context) },
+      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register", context) },
+      { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register", context) },
+      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register", context) }
     ];
     const enabledProviders = providerCards.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providerCards.filter((item) => !item.enabled).map((item) => item.markup).join("");
@@ -23963,6 +23971,7 @@
     const accessText = (key, fallback) => uiText(`access.${key}`, fallback);
     const isLogin = page.path === "/login";
     const isRegister = page.path === "/register";
+    const isRecovery = page.path === "/password-recovery";
     const alternative = isLogin
       ? ["/register", accessText("alternative.register", "Tạo tài khoản")]
       : ["/login", accessText("alternative.signIn", "Đăng nhập")];
@@ -23985,24 +23994,24 @@
       : "";
     const noTransient = page.path === "/password-recovery" ? " data-portal-no-transient" : "";
     const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiếp tục bằng đăng nhập</strong><p>Nếu email vừa gửi chưa có tài khoản, hồ sơ đã được tạo. Đăng nhập để khởi tạo signed session và dùng Workspace Web; Telegram có thể liên kết sau nếu cần đồng bộ Bot.</p></div></div>`
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(accessText("notice.registrationHandoffTitle", "Tiếp tục bằng đăng nhập"))}</strong><p>${safeText(accessText("notice.registrationHandoffBody", "Nếu email vừa gửi chưa có tài khoản, hồ sơ đã được tạo. Đăng nhập để khởi tạo signed session và dùng Workspace Web; Telegram có thể liên kết sau nếu cần đồng bộ Bot."))}</p></div></div>`
       : "";
     const oauthReason = page.path === "/login" || page.path === "/account" ? new URLSearchParams(window.location.search).get("oauth") || "" : "";
     const oauthMessages = {
-      unavailable: "OAuth chưa được cấu hình trên server.",
-      cancelled: "Bạn đã hủy xác minh tại nhà cung cấp.",
-      failed: "Không thể xác minh OAuth. Hãy thử lại mà không chia sẻ mã hay token với bất kỳ ai.",
-      state: "Phiên OAuth không hợp lệ hoặc đã hết hạn. Hãy bắt đầu lại từ Web App.",
-      session: "Signed session đã thay đổi trong khi liên kết OAuth. Hãy đăng nhập lại rồi thử lại.",
-      "link-required": "Email này đã có tài khoản Web. Hãy đăng nhập bằng phương thức hiện có, sau đó liên kết OAuth trong trang Tài khoản.",
-      linked: "Đã liên kết OAuth với signed session hiện tại.",
-      "already-linked": "OAuth này đã liên kết với tài khoản hiện tại."
+      unavailable: accessText("oauth.unavailable", "OAuth chưa được cấu hình trên server."),
+      cancelled: accessText("oauth.cancelled", "Bạn đã hủy xác minh tại nhà cung cấp."),
+      failed: accessText("oauth.failed", "Không thể xác minh OAuth. Hãy thử lại mà không chia sẻ mã hay token với bất kỳ ai."),
+      state: accessText("oauth.state", "Phiên OAuth không hợp lệ hoặc đã hết hạn. Hãy bắt đầu lại từ Web App."),
+      session: accessText("oauth.session", "Signed session đã thay đổi trong khi liên kết OAuth. Hãy đăng nhập lại rồi thử lại."),
+      "link-required": accessText("oauth.linkRequired", "Email này đã có tài khoản Web. Hãy đăng nhập bằng phương thức hiện có, sau đó liên kết OAuth trong trang Tài khoản."),
+      linked: accessText("oauth.linked", "Đã liên kết OAuth với signed session hiện tại."),
+      "already-linked": accessText("oauth.alreadyLinked", "OAuth này đã liên kết với tài khoản hiện tại.")
     };
     const oauthHandoff = oauthMessages[oauthReason]
-      ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>OAuth</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
+      ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
     const registerSetup = page.path === "/register"
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>Hồ sơ mặc định sau khi tạo</strong><p>Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity.</p></div></div>`
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>${safeText(accessText("notice.defaultProfileTitle", "Hồ sơ mặc định sau khi tạo"))}</strong><p>${safeText(accessText("notice.defaultProfileBody", "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</p></div></div>`
       : "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
@@ -24027,21 +24036,21 @@
     );
     const primaryTitle = mfaLoginPending
       ? "Xác thực hai lớp"
-      : (isLogin ? accessText("primary.login", "Đăng nhập bằng email") : (isRegister ? accessText("primary.register", "Tạo tài khoản bằng email") : page.title));
+      : (isLogin ? accessText("primary.login", "Đăng nhập bằng email") : (isRegister ? accessText("primary.register", "Tạo tài khoản bằng email") : (isRecovery ? accessText("primary.recovery", "Khôi phục mật khẩu") : page.title)));
     const primaryDescription = mfaLoginPending
       ? "Nhập mã xác thực trong ứng dụng hoặc mã khôi phục của chính bạn."
       : (isLogin
         ? accessText("primary.loginDescription", "Email + mật khẩu là đường chính để vào Workspace.")
-        : (isRegister ? accessText("primary.registerDescription", "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau.") : safeText(page.description)));
-    const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : safeText(displayPageTitle(page, context)));
+        : (isRegister ? accessText("primary.registerDescription", "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau.") : (isRecovery ? accessText("primary.recoveryDescription", "Nhập email để nhận hướng dẫn an toàn.") : safeText(page.description))));
+    const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context))));
     const authIntroDescription = isLogin
       ? accessText("intro.login", "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần.")
       : (isRegister
         ? accessText("intro.register", "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot.")
-        : safeText(page.description));
+        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description)));
     const authContextTitle = isLogin
       ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.")
-      : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn.");
+      : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."));
     const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}"><span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><p class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</p><p class="portal-auth-context-title">${safeText(authContextTitle)}</p><ul class="portal-auth-context-list"><li>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</li><li>${safeText(accessText("context.pointTwo", "Mỗi thao tác quan trọng đều có trạng thái dễ hiểu."))}</li><li>${safeText(accessText("context.pointThree", "Bạn luôn có đường quay lại hỗ trợ khi cần."))}</li></ul></aside>`;
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
     const alternativeMethods = providerMethods

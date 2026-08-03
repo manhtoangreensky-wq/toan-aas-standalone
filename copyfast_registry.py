@@ -543,6 +543,7 @@ def allowed_paths() -> set[str]:
         "/welcome",
         "/login",
         "/register",
+        "/password-recovery",
         "/onboarding",
         "/workspace/setup",
         "/starter-kits",

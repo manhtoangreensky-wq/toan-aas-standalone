@@ -129,6 +129,7 @@ _PORTAL_SHELL_TITLES = {
     "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},
     "/login": {"vi": "Đăng nhập · TOAN AAS", "en": "Sign in · TOAN AAS", "zh": "登录 · TOAN AAS"},
     "/register": {"vi": "Tạo tài khoản · TOAN AAS", "en": "Create account · TOAN AAS", "zh": "创建账户 · TOAN AAS"},
+    "/password-recovery": {"vi": "Khôi phục mật khẩu · TOAN AAS", "en": "Password recovery · TOAN AAS", "zh": "找回密码 · TOAN AAS"},
     "/onboarding": {"vi": "Bắt đầu với TOAN AAS", "en": "Get started with TOAN AAS", "zh": "开始使用 TOAN AAS"},
     "/account": {"vi": "Tài khoản · TOAN AAS", "en": "Account · TOAN AAS", "zh": "账户 · TOAN AAS"},
     "/account/interface-language": {"vi": "Ngôn ngữ giao diện · TOAN AAS", "en": "Interface language · TOAN AAS", "zh": "界面语言 · TOAN AAS"},
