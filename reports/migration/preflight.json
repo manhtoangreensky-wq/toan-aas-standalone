@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-02T16:41:55+00:00",
+  "generated_at_utc": "2026-08-03T05:35:42+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,12 +35,12 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "63f79cd534419d90ce04e3aa2978eca1ffc8e7ea",
+      "checkout_sha": "fccee64b0238181ea4f3f876be945c7c09fe0d6a",
       "requested_relation": "exact",
-      "requested_sha": "63f79cd534419d90ce04e3aa2978eca1ffc8e7ea",
-      "source_fingerprint_sha256": "cb57491de6f7e74adb070d2561675b67509f745538c33320939ea0819fbb367e",
+      "requested_sha": "fccee64b0238181ea4f3f876be945c7c09fe0d6a",
+      "source_fingerprint_sha256": "8ceeec801b5775a89779fd51038af28e3f5564c1c201577cc6f4677181e94ee5",
       "working_tree_state": "clean"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-erp-security-locales"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-admin-automation-monitor-locales"
   }
 }
