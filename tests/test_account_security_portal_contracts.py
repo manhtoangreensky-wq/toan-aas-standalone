@@ -22,7 +22,8 @@ def _between(source: str, start: str, end: str) -> str:
 def test_account_security_has_a_signed_portal_route_and_safe_forms() -> None:
     assert 'customerPage("/account/security", "Bảo mật tài khoản"' in PORTAL
     assert 'layout: "account-security"' in PORTAL
-    assert 'href="/account/security">Bảo mật tài khoản →</a>' in PORTAL
+    account = _between(PORTAL, "function renderAccount(page, context)", "function renderInterfaceLocaleNavigator")
+    assert 'href="/account/security">${safeText(copy("securityLink"' in account
     assert 'case "account-security": return renderAccountSecurity(page, context);' in PORTAL
 
     view = _between(PORTAL, "function renderAccountSecurity", "function accountActivityStatus")

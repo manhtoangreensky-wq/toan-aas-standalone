@@ -853,8 +853,9 @@ def test_core_portal_renderers_consume_reviewed_locale_keys() -> None:
     assert "localizedPageTitle(page, context)" in hero
     assert "localizedPageDescription(page)" in hero
     assert "options: INTERFACE_LOCALE_OPTIONS" in PORTAL
-    for required in ('uiText("account.display_name"', 'uiText("account.profile"', 'uiText("account.save"'):
-        assert required in account or required in PORTAL
+    assert 'const copy = (key, fallback, params) => accountCenterText(`profile.${key}`, fallback, params);' in account
+    for required in ('copy("displayNameLabel"', 'copy("editorTitle"', 'copy("editorSave"'):
+        assert required in account
     for required in ('uiText("setup.role"', 'uiText("setup.focusTitle"', 'uiText("setup.saveAndEnter"'):
         assert required in setup
     for required in ('uiText("starter.catalogTitle"', 'uiText("starter.confirmationTitle"', 'uiText("starter.scopeTitle"'):
