@@ -39,7 +39,7 @@ def test_account_has_one_contextual_primary_and_keeps_optional_telegram_as_secon
     assert 'class="portal-button portal-button--primary" href="${safeText(accountPrimaryAction.href)}"' in account
     assert 'class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>' in account
     assert 'class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>' not in account
-    assert 'data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"' in account
+    assert 'data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm"' in account
 
 
 def test_security_frontloads_sanitized_posture_and_keeps_generic_assurance_after_actions() -> None:

@@ -23,7 +23,8 @@ def _between(source: str, start: str, end: str) -> str:
 def test_data_controls_has_a_distinct_guarded_web_route() -> None:
     assert 'customerPage("/account/data-controls", "Kiểm soát dữ liệu Web"' in PORTAL
     assert 'layout: "account-data-controls"' in PORTAL
-    assert 'href="/account/data-controls">Kiểm soát dữ liệu Web →</a>' in PORTAL
+    account = _between(PORTAL, "function renderAccount(page, context)", "function renderInterfaceLocaleNavigator")
+    assert 'href="/account/data-controls">${safeText(copy("dataControlsLink"' in account
     assert 'case "account-data-controls": return renderAccountDataControls(page, context);' in PORTAL
 
     view = _between(PORTAL, "function renderAccountDataControls", "function renderLegal")

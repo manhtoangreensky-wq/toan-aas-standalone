@@ -132,6 +132,7 @@ _PORTAL_SHELL_TITLES = {
     "/password-recovery": {"vi": "Khôi phục mật khẩu · TOAN AAS", "en": "Password recovery · TOAN AAS", "zh": "找回密码 · TOAN AAS"},
     "/onboarding": {"vi": "Bắt đầu với TOAN AAS", "en": "Get started with TOAN AAS", "zh": "开始使用 TOAN AAS"},
     "/account": {"vi": "Tài khoản · TOAN AAS", "en": "Account · TOAN AAS", "zh": "账户 · TOAN AAS"},
+    "/account/activity": {"vi": "Hoạt động tài khoản · TOAN AAS", "en": "Account activity · TOAN AAS", "zh": "账户活动 · TOAN AAS"},
     "/account/interface-language": {"vi": "Ngôn ngữ giao diện · TOAN AAS", "en": "Interface language · TOAN AAS", "zh": "界面语言 · TOAN AAS"},
     "/workspace/setup": {"vi": "Thiết lập workspace · TOAN AAS", "en": "Workspace setup · TOAN AAS", "zh": "工作台设置 · TOAN AAS"},
     "/workspace-menu": {"vi": "Chuyển workspace · TOAN AAS", "en": "Switch workspace · TOAN AAS", "zh": "切换工作台 · TOAN AAS"},

@@ -34550,7 +34550,11 @@
       }
       if (action === "refresh-account-activity") {
         await hydrateAccountActivity();
-        toast("Đã làm mới nhật ký hoạt động Web.");
+        const i18n = window.TOANAASI18n;
+        const message = i18n && typeof i18n.t === "function"
+          ? i18n.t("accountCenter.activity.refreshSuccess")
+          : "Đã làm mới nhật ký hoạt động Web.";
+        toast(message || "Đã làm mới nhật ký hoạt động Web.");
         return;
       }
       if (action === "governance-documents-refresh") {
