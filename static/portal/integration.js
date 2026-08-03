@@ -22487,6 +22487,16 @@
   const ACCOUNT_SECURITY_MFA_CODE_PATTERN = /^(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})$/;
   const ACCOUNT_SECURITY_MFA_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,160}$/;
 
+  // This helper translates only browser-authored Account Security feedback.
+  // Server responses remain the canonical public message and are deliberately
+  // not reinterpreted by the browser.
+  function accountSecurityText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(`accountCenter.security.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   function validAccountSecurityMfaId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -35003,15 +35013,15 @@
       }
       if (action === "account-security-refresh") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể làm mới Bảo mật tài khoản từ signed Portal hiện tại.");
+          throw new Error(accountSecurityText("actionRefreshRouteError", "Chỉ có thể làm mới Bảo mật tài khoản từ signed Portal hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-view"] === true)) {
-          throw new Error("Cần signed Web session để xem Bảo mật tài khoản.");
+          throw new Error(accountSecurityText("actionRefreshCapabilityError", "Cần signed Web session để xem Bảo mật tài khoản."));
         }
         setActionBusy(action, route, true);
         try {
           const security = await hydrateAccountSecurity();
-          if (security) toast("Đã làm mới phiên và phương thức đăng nhập từ server.");
+          if (security) toast(accountSecurityText("actionRefreshSuccess", "Đã làm mới phiên và phương thức đăng nhập từ server."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -35019,13 +35029,13 @@
       }
       if (action === "account-security-revoke-session") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể thu hồi phiên từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionRevokeSessionRouteError", "Chỉ có thể thu hồi phiên từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-revoke-session"] === true)) {
-          throw new Error("Cần signed session và CSRF hợp lệ để thu hồi phiên.");
+          throw new Error(accountSecurityText("actionRevokeSessionCapabilityError", "Cần signed session và CSRF hợp lệ để thu hồi phiên."));
         }
         const sessionRef = String(fields.session_ref || "").trim().toLowerCase();
-        if (!/^[a-f0-9]{64}$/.test(sessionRef)) throw new Error("Phiên đăng nhập không còn khả dụng. Hãy làm mới danh sách.");
+        if (!/^[a-f0-9]{64}$/.test(sessionRef)) throw new Error(accountSecurityText("actionSessionInvalidError", "Phiên đăng nhập không còn khả dụng. Hãy làm mới danh sách."));
         setActionBusy(action, route, true);
         try {
           const result = await api("/auth/security/sessions/revoke", {
@@ -35035,8 +35045,8 @@
           });
           await hydrateAccountSecurity();
           toast(result.data && result.data.revoked === true
-            ? "Đã thu hồi phiên đăng nhập khác."
-            : "Phiên này đã không còn khả dụng hoặc không thể thu hồi.");
+            ? accountSecurityText("actionRevokeSessionSuccess", "Đã thu hồi phiên đăng nhập khác.")
+            : accountSecurityText("actionRevokeSessionUnavailable", "Phiên này đã không còn khả dụng hoặc không thể thu hồi."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -35044,10 +35054,10 @@
       }
       if (action === "account-security-revoke-others") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể thu hồi các phiên khác từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionRevokeOthersRouteError", "Chỉ có thể thu hồi các phiên khác từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-revoke-others"] === true)) {
-          throw new Error("Cần signed session và CSRF hợp lệ để thu hồi phiên.");
+          throw new Error(accountSecurityText("actionRevokeOthersCapabilityError", "Cần signed session và CSRF hợp lệ để thu hồi phiên."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35059,8 +35069,8 @@
           await hydrateAccountSecurity();
           const revokedCount = Number(result.data && result.data.revoked_count);
           toast(Number.isInteger(revokedCount) && revokedCount > 0
-            ? `Đã thu hồi ${revokedCount} phiên đăng nhập khác.`
-            : "Không còn phiên đăng nhập khác để thu hồi.");
+            ? accountSecurityText("actionRevokeOthersSuccess", "Đã thu hồi {count} phiên đăng nhập khác.", { count: revokedCount })
+            : accountSecurityText("actionNoOtherSessions", "Không còn phiên đăng nhập khác để thu hồi."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -35075,19 +35085,19 @@
         };
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
           clearSecrets();
-          throw new Error("Chỉ có thể đổi mật khẩu từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionPasswordRouteError", "Chỉ có thể đổi mật khẩu từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-password-change"] === true)) {
           clearSecrets();
-          throw new Error("Cần signed session và CSRF hợp lệ để đổi mật khẩu.");
+          throw new Error(accountSecurityText("actionPasswordCapabilityError", "Cần signed session và CSRF hợp lệ để đổi mật khẩu."));
         }
         const currentPassword = String(fields.current_password || "");
         const newPassword = String(fields.new_password || "");
         const confirmation = String(fields.confirm_password || "");
         setActionBusy(action, route, true);
         try {
-          if (!currentPassword || !newPassword) throw new Error("Hãy nhập mật khẩu hiện tại và mật khẩu mới.");
-          if (newPassword !== confirmation) throw new Error("Xác nhận mật khẩu mới chưa khớp.");
+          if (!currentPassword || !newPassword) throw new Error(accountSecurityText("actionPasswordMissingError", "Hãy nhập mật khẩu hiện tại và mật khẩu mới."));
+          if (newPassword !== confirmation) throw new Error(accountSecurityText("actionPasswordMismatchError", "Xác nhận mật khẩu mới chưa khớp."));
           const result = await api("/auth/security/password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -35096,7 +35106,7 @@
           clearSecrets();
           applyAccountSecuritySessionRotation(result.data || {});
           await hydrate();
-          toast(result.message || "Đã đổi mật khẩu và làm mới signed session.");
+          toast(result.message || accountSecurityText("actionPasswordSuccess", "Đã đổi mật khẩu và làm mới signed session."));
         } finally {
           clearSecrets();
           setActionBusy(action, route, false);
@@ -35105,10 +35115,10 @@
       }
       if (action === "account-security-email-verification-start") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể yêu cầu xác minh email từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionEmailRouteError", "Chỉ có thể yêu cầu xác minh email từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-email-verification"] === true)) {
-          throw new Error("Cần signed session và CSRF hợp lệ để yêu cầu xác minh email.");
+          throw new Error(accountSecurityText("actionEmailCapabilityError", "Cần signed session và CSRF hợp lệ để yêu cầu xác minh email."));
         }
         const methods = base().accountSecurity && base().accountSecurity.loginMethods
           ? base().accountSecurity.loginMethods
@@ -35117,7 +35127,7 @@
           ? methods.email_verification
           : {};
         if (verification.can_start !== true) {
-          throw new Error("Máy chủ chưa cho phép gửi liên kết xác minh cho phương thức đăng nhập này.");
+          throw new Error(accountSecurityText("actionEmailUnavailableError", "Máy chủ chưa cho phép gửi liên kết xác minh cho phương thức đăng nhập này."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35127,7 +35137,7 @@
             body: JSON.stringify({ confirm: true })
           });
           await hydrateAccountSecurity();
-          toast(result.message || "Đã ghi nhận yêu cầu xác minh email.");
+          toast(result.message || accountSecurityText("actionEmailSuccess", "Đã ghi nhận yêu cầu xác minh email."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -35140,16 +35150,16 @@
         };
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
           clearSecrets();
-          throw new Error("Chỉ có thể thiết lập xác thực hai bước từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionMfaStartRouteError", "Chỉ có thể thiết lập xác thực hai bước từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-mfa-start"] === true)) {
           clearSecrets();
-          throw new Error("Cần signed session, CSRF, mật khẩu Web và MFA đang bật an toàn để thiết lập.");
+          throw new Error(accountSecurityText("actionMfaStartCapabilityError", "Cần signed session, CSRF, mật khẩu Web và MFA đang bật an toàn để thiết lập."));
         }
         const currentPassword = String(fields.current_password || "");
         if (!currentPassword) {
           clearSecrets();
-          throw new Error("Hãy nhập mật khẩu hiện tại để bắt đầu thiết lập xác thực hai bước.");
+          throw new Error(accountSecurityText("actionMfaStartPasswordError", "Hãy nhập mật khẩu hiện tại để bắt đầu thiết lập xác thực hai bước."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35159,7 +35169,7 @@
             body: JSON.stringify({ current_password: currentPassword })
           });
           const enrollment = accountSecurityMfaEnrollmentProjection(result.data && result.data.mfa_enrollment);
-          if (!enrollment) throw new Error("Máy chủ chưa trả thiết lập xác thực hai bước hợp lệ.");
+          if (!enrollment) throw new Error(accountSecurityText("actionMfaStartPayloadError", "Máy chủ chưa trả thiết lập xác thực hai bước hợp lệ."));
           const currentSecurity = base().accountSecurity && typeof base().accountSecurity === "object"
             ? base().accountSecurity
             : {};
@@ -35173,7 +35183,7 @@
             mfaEnrollment: enrollment,
             mfaRecoveryCodes: []
           });
-          toast(result.message || "Đã tạo thiết lập MFA tạm thời.");
+          toast(result.message || accountSecurityText("actionMfaStartSuccess", "Đã tạo thiết lập MFA tạm thời."));
         } finally {
           clearSecrets();
           setActionBusy(action, route, false);
@@ -35183,17 +35193,17 @@
       if (action === "account-security-mfa-confirm") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
           clearAccountSecurityMfaInputs();
-          throw new Error("Chỉ có thể xác nhận MFA từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionMfaConfirmRouteError", "Chỉ có thể xác nhận MFA từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-mfa-confirm"] === true)) {
           clearAccountSecurityMfaInputs();
-          throw new Error("Cần signed session, CSRF và MFA đang bật an toàn để xác nhận.");
+          throw new Error(accountSecurityText("actionMfaConfirmCapabilityError", "Cần signed session, CSRF và MFA đang bật an toàn để xác nhận."));
         }
         const enrollment = accountSecurityMfaEnrollmentProjection(base().mfaEnrollment);
         const code = accountSecurityMfaCode(fields.code);
         if (!enrollment || !code) {
           clearAccountSecurityMfaInputs();
-          throw new Error("Thiết lập MFA đã hết hạn hoặc mã xác nhận không hợp lệ. Hãy bắt đầu lại.");
+          throw new Error(accountSecurityText("actionMfaConfirmInvalidError", "Thiết lập MFA đã hết hạn hoặc mã xác nhận không hợp lệ. Hãy bắt đầu lại."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35217,7 +35227,7 @@
             // server payload cannot cause the browser to invent or recreate
             // recovery codes.
             merge({ mfaEnrollment: {}, mfaRecoveryCodes: [] });
-            throw new Error("MFA đã thay đổi nhưng mã khôi phục không thể hiển thị an toàn. Hãy làm mới Bảo mật tài khoản.");
+            throw new Error(accountSecurityText("actionMfaRecoveryUnavailableError", "MFA đã thay đổi nhưng mã khôi phục không thể hiển thị an toàn. Hãy làm mới Bảo mật tài khoản."));
           }
           const currentSecurity = base().accountSecurity && typeof base().accountSecurity === "object"
             ? base().accountSecurity
@@ -35229,7 +35239,7 @@
             // They are never written to a URL, form draft or browser storage.
             mfaRecoveryCodes: recoveryCodes
           });
-          toast(result.message || "Đã bật xác thực hai bước. Lưu mã khôi phục trước khi rời trang.");
+          toast(result.message || accountSecurityText("actionMfaConfirmSuccess", "Đã bật xác thực hai bước. Lưu mã khôi phục trước khi rời trang."));
         } finally {
           clearAccountSecurityMfaInputs();
           setActionBusy(action, route, false);
@@ -35244,17 +35254,17 @@
         };
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
           clearSecrets();
-          throw new Error("Chỉ có thể tắt MFA từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionMfaDisableRouteError", "Chỉ có thể tắt MFA từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-mfa-disable"] === true)) {
           clearSecrets();
-          throw new Error("Cần signed session, CSRF và MFA đang bật an toàn để tắt.");
+          throw new Error(accountSecurityText("actionMfaDisableCapabilityError", "Cần signed session, CSRF và MFA đang bật an toàn để tắt."));
         }
         const currentPassword = String(fields.current_password || "");
         const code = accountSecurityMfaCode(fields.code);
         if (!currentPassword || !code) {
           clearSecrets();
-          throw new Error("Nhập mật khẩu hiện tại và mã xác thực hoặc mã khôi phục để tắt MFA.");
+          throw new Error(accountSecurityText("actionMfaDisableInputError", "Nhập mật khẩu hiện tại và mã xác thực hoặc mã khôi phục để tắt MFA."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35267,7 +35277,7 @@
           merge({ mfaEnrollment: {}, mfaRecoveryCodes: [] });
           clearSecrets();
           await hydrate();
-          toast(result.message || "Đã tắt xác thực hai bước và làm mới signed session.");
+          toast(result.message || accountSecurityText("actionMfaDisableSuccess", "Đã tắt xác thực hai bước và làm mới signed session."));
         } finally {
           clearSecrets();
           setActionBusy(action, route, false);
@@ -35276,26 +35286,26 @@
       }
       if (action === "account-security-mfa-clear-recovery-codes") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể xóa mã khôi phục khỏi tab này từ Bảo mật tài khoản.");
+          throw new Error(accountSecurityText("actionMfaClearRouteError", "Chỉ có thể xóa mã khôi phục khỏi tab này từ Bảo mật tài khoản."));
         }
         merge({ mfaRecoveryCodes: [] });
-        toast("Đã xóa mã khôi phục khỏi tab này. Chúng không được lưu trong browser.");
+        toast(accountSecurityText("actionMfaClearSuccess", "Đã xóa mã khôi phục khỏi tab này. Chúng không được lưu trong browser."));
         return;
       }
       if (action === "account-security-oauth-unlink") {
         if (route !== "/account/security" || currentPortalPath() !== "/account/security") {
-          throw new Error("Chỉ có thể gỡ OAuth từ Bảo mật tài khoản hiện tại.");
+          throw new Error(accountSecurityText("actionOauthRouteError", "Chỉ có thể gỡ OAuth từ Bảo mật tài khoản hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["account-security-oauth-unlink"] === true)) {
-          throw new Error("Cần signed session và CSRF hợp lệ để gỡ OAuth.");
+          throw new Error(accountSecurityText("actionOauthCapabilityError", "Cần signed session và CSRF hợp lệ để gỡ OAuth."));
         }
         const provider = String(fields.provider || "").trim().toLowerCase();
-        if (!ACCOUNT_SECURITY_OAUTH_PROVIDERS.has(provider)) throw new Error("Phương thức OAuth không hợp lệ.");
+        if (!ACCOUNT_SECURITY_OAUTH_PROVIDERS.has(provider)) throw new Error(accountSecurityText("actionOauthInvalidError", "Phương thức OAuth không hợp lệ."));
         const profile = base().profile && typeof base().profile === "object" ? base().profile : {};
         const canonicalTelegram = profile.accountType === "telegram"
           || Boolean(profile.loginMethods && profile.loginMethods.telegram === true);
         if (provider === "telegram" && canonicalTelegram) {
-          throw new Error("Telegram-first là identity canonical do Bot xác minh và không thể gỡ từ Web App.");
+          throw new Error(accountSecurityText("actionTelegramCanonicalError", "Telegram-first là identity canonical do Bot xác minh và không thể gỡ từ Web App."));
         }
         setActionBusy(action, route, true);
         try {
@@ -35307,10 +35317,10 @@
           if (result.data && result.data.unlinked === true) {
             applyAccountSecuritySessionRotation(result.data || {});
             await hydrate();
-            toast(result.message || "Đã gỡ OAuth và làm mới signed session.");
+            toast(result.message || accountSecurityText("actionOauthUnlinkSuccess", "Đã gỡ OAuth và làm mới signed session."));
           } else {
             await hydrateAccountSecurity();
-            toast(result.message || "Phương thức OAuth không còn khả dụng để gỡ.");
+            toast(result.message || accountSecurityText("actionOauthUnavailable", "Phương thức OAuth không còn khả dụng để gỡ."));
           }
         } finally {
           setActionBusy(action, route, false);
