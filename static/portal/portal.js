@@ -91,6 +91,10 @@
     return adminGenericText(`automationMonitor.${key}`, fallback, params);
   }
 
+  function adminSystemStewardshipText(key, fallback, params) {
+    return adminGenericText("systemStewardship." + key, fallback, params);
+  }
+
   const ADMIN_GENERIC_MODULE_LABEL_KEYS = Object.freeze({
     overview: "module.overview", users: "module.users", user: "module.users", wallet: "module.wallet",
     payments: "module.payments", topups: "module.topups", revenue: "module.revenue", refunds: "module.refunds",
@@ -9052,6 +9056,7 @@
     "Bảng giá": "nav.pricing",
     "Quản trị": "nav.admin",
     "Automation Monitor": "adminGeneric.automationMonitor.route.title",
+    "System & Data Stewardship": "adminGeneric.systemStewardship.route.title",
     "Security Posture": "adminGeneric.securityAccess.route.securityTitle",
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
@@ -9152,6 +9157,7 @@
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.title", fallback);
+    if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.title", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
@@ -9184,6 +9190,7 @@
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.description", fallback);
+    if (path === "/admin/system-stewardship") return adminSystemStewardshipText("route.description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
@@ -24334,38 +24341,46 @@
     // every destination repeats its own authorization boundary on the server.
     const navigation = adminErpNavigation(context);
     const canonicalAdmin = hasLiveCanonicalAdmin(context);
+    const text = (key, fallback, params) => adminSystemStewardshipText(key, fallback, params);
     const localCards = [
-      { route: "/admin/automation", icon: ICONS.system, title: "Automation Monitor", description: "Receipt scheduler Web-native đã redaction, chỉ đọc và không có control plane." },
-      { route: "/admin/security", icon: ICONS.security, title: "Security Posture", description: "Aggregate bảo mật Web-native đã redaction; không có session, secret hoặc control." },
-      { route: "/admin/access", icon: ICONS.users, title: "Access Posture", description: "Tổng quan access Web-native đã redaction, không có grant hoặc revoke quyền." },
-      { route: "/admin/governance", icon: ICONS.security, title: "Governance Documents", description: "Tài liệu vận hành Web-native có lifecycle, review và audit riêng." },
-      { route: "/admin/internal-documents", icon: ICONS.document, title: "Internal Document Archive", description: "Kho hồ sơ private với version bất biến và delivery được kiểm tra." }
+      { route: "/admin/automation", icon: ICONS.system, title: text("card.automation.title", "Automation Monitor"), description: text("card.automation.description", "Receipt scheduler Web-native đã redaction, chỉ đọc và không có control plane.") },
+      { route: "/admin/security", icon: ICONS.security, title: text("card.security.title", "Security Posture"), description: text("card.security.description", "Aggregate bảo mật Web-native đã redaction; không có session, secret hoặc control.") },
+      { route: "/admin/access", icon: ICONS.users, title: text("card.access.title", "Access Posture"), description: text("card.access.description", "Tổng quan access Web-native đã redaction, không có grant hoặc revoke quyền.") },
+      { route: "/admin/governance", icon: ICONS.security, title: text("card.governance.title", "Governance Documents"), description: text("card.governance.description", "Tài liệu vận hành Web-native có lifecycle, review và audit riêng.") },
+      { route: "/admin/internal-documents", icon: ICONS.document, title: text("card.archive.title", "Internal Document Archive"), description: text("card.archive.description", "Kho hồ sơ private với version bất biến và delivery được kiểm tra.") }
     ];
     const canonicalCards = [
-      { route: "/admin/system", icon: ICONS.system, title: "System", description: "System read model do canonical authority cấp và redaction." },
-      { route: "/admin/runtime", icon: ICONS.system, title: "Runtime", description: "Runtime metadata canonical đã redaction; không có deploy hoặc repair executor." },
-      { route: "/admin/backups", icon: ICONS.document, title: "Backups", description: "Backup metadata canonical chỉ đọc; không có restore action trong release này." }
+      { route: "/admin/system", icon: ICONS.system, title: text("card.system.title", "System"), description: text("card.system.description", "System read model do canonical authority cấp và redaction.") },
+      { route: "/admin/runtime", icon: ICONS.system, title: text("card.runtime.title", "Runtime"), description: text("card.runtime.description", "Runtime metadata canonical đã redaction; không có deploy hoặc repair executor.") },
+      { route: "/admin/backups", icon: ICONS.document, title: text("card.backups.title", "Backups"), description: text("card.backups.description", "Backup metadata canonical chỉ đọc; không có restore action trong release này.") }
     ];
     const renderCard = (card, authority) => {
       const allowed = serverAuthorizesAdminRoute(context, card.route) && (authority !== "canonical" || canonicalAdmin);
-      const marker = authority === "canonical" ? "Canonical authority" : "Web-local admin";
+      const marker = authority === "canonical"
+        ? text("authority.canonical", "Canonical authority")
+        : text("authority.local", "Web-local admin");
       const state = allowed ? "read_only" : "guarded";
-      const body = `<span class="portal-stewardship-card-icon" aria-hidden="true">${portalIcon(card.icon)}</span><span class="portal-stewardship-card-copy"><small>${safeText(marker)}</small><strong>${safeText(card.title)}</strong><span>${safeText(card.description)}</span><em>${allowed ? "Mở khu vực" : (authority === "canonical" ? "Cần canonical authority" : "Chờ máy chủ xác minh quyền")} <b aria-hidden="true">→</b></em></span><span class="portal-stewardship-card-state">${badge(state)}</span>`;
+      const actionLabel = allowed
+        ? text("action.open", "Mở khu vực")
+        : (authority === "canonical"
+          ? text("action.requiresCanonical", "Cần canonical authority")
+          : text("action.waitingServer", "Chờ máy chủ xác minh quyền"));
+      const body = `<span class="portal-stewardship-card-icon" aria-hidden="true">${portalIcon(card.icon)}</span><span class="portal-stewardship-card-copy"><small>${safeText(marker)}</small><strong>${safeText(card.title)}</strong><span>${safeText(card.description)}</span><em>${safeText(actionLabel)} <b aria-hidden="true">→</b></em></span><span class="portal-stewardship-card-state">${badge(state)}</span>`;
       return allowed
         ? `<a class="portal-stewardship-card" href="${safeText(card.route)}">${body}</a>`
-        : `<div class="portal-stewardship-card portal-stewardship-card--guarded" aria-label="${safeText(card.title)} đang được bảo vệ">${body}</div>`;
+        : `<div class="portal-stewardship-card portal-stewardship-card--guarded" aria-label="${safeText(text("action.guardedAria", "{title} đang được bảo vệ", { title: card.title }))}">${body}</div>`;
     };
     const manifestReady = navigation.groups.length > 0;
     const localContent = localCards.map((card) => renderCard(card, "local")).join("");
     const canonicalContent = canonicalCards.map((card) => renderCard(card, "canonical")).join("");
     const manifestMessage = manifestReady
-      ? "Các điểm đến dưới đây được lọc theo manifest mà máy chủ cấp cho phiên hiện tại."
-      : "Máy chủ chưa cấp manifest điều hướng cho phiên hiện tại; các khu vực vẫn được giữ ở trạng thái bảo vệ.";
+      ? text("manifest.ready", "Các điểm đến dưới đây được lọc theo manifest mà máy chủ cấp cho phiên hiện tại.")
+      : text("manifest.guarded", "Máy chủ chưa cấp manifest điều hướng cho phiên hiện tại; các khu vực vẫn được giữ ở trạng thái bảo vệ.");
     return `<article class="portal-page portal-admin-system-stewardship">${renderHero(page, context)}
-      <section class="portal-stewardship-intro"><div><span class="portal-section-kicker">Admin navigation · read-only</span><h2>Điều hướng rõ ràng, authority tách biệt</h2><p>${safeText(manifestMessage)} Không có số liệu runtime, log, secret, provider state hay action vận hành được dựng tại hub này.</p></div><div class="portal-stewardship-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${canonicalAdmin ? "Canonical authority đã xác minh" : "Canonical authority tách biệt"}</strong><small>Local Web admin không tự mở quyền canonical</small></span></div></section>
-      <section class="portal-stewardship-section" aria-labelledby="stewardship-local-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web-owned surfaces</span><h2 id="stewardship-local-title">Observability và hồ sơ nội bộ</h2><p>Các màn hình local vẫn cần signed Web admin và kiểm tra server-side tại từng route.</p></div>${badge("read_only")}</div><div class="portal-stewardship-grid">${localContent}</div></section>
-      <section class="portal-stewardship-section" aria-labelledby="stewardship-canonical-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Separately guarded</span><h2 id="stewardship-canonical-title">System, runtime và backup canonical</h2><p>Chỉ mở khi authority canonical còn hợp lệ; hub không proxy, cache hoặc thay thế read model này.</p></div>${badge(canonicalAdmin ? "read_only" : "guarded")}</div><div class="portal-stewardship-grid">${canonicalContent}</div></section>
-      <section class="portal-card portal-card-pad portal-stewardship-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">No hidden controls</span><h2 class="portal-card-title">Ranh giới vận hành</h2><p class="portal-card-subtitle">Đây là directory có chủ ý, không phải control plane, trình tự xử lý lỗi hay cơ chế tự sửa.</p></div>${badge("read_only")}</div><ul><li><span aria-hidden="true">${portalIcon(ICONS.system)}</span><span><strong>Không deploy hoặc repair</strong><small>Không có runbook executor, healthcheck, restart, restore hay hành động hạ tầng trong browser.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.providers)}</span><span><strong>Không gọi provider hoặc bridge</strong><small>Không tạo request provider, không đọc payload, credential, raw log hoặc trạng thái runtime.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><span><strong>Không có payment hoặc ledger action</strong><small>Không tác động Xu, PayOS, entitlement, refund, job charge hoặc canonical record.</small></span></li></ul></section>
+      <section class="portal-stewardship-intro"><div><span class="portal-section-kicker">${safeText(text("intro.kicker", "Admin navigation · read-only"))}</span><h2>${safeText(text("intro.title", "Điều hướng rõ ràng, authority tách biệt"))}</h2><p>${safeText(manifestMessage)} ${safeText(text("intro.boundary", "Không có số liệu runtime, log, secret, provider state hay action vận hành được dựng tại hub này."))}</p></div><div class="portal-stewardship-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(canonicalAdmin ? text("intro.statusVerified", "Canonical authority đã xác minh") : text("intro.statusSeparated", "Canonical authority tách biệt"))}</strong><small>${safeText(text("intro.statusBody", "Local Web admin không tự mở quyền canonical"))}</small></span></div></section>
+      <section class="portal-stewardship-section" aria-labelledby="stewardship-local-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(text("section.local.kicker", "Web-owned surfaces"))}</span><h2 id="stewardship-local-title">${safeText(text("section.local.title", "Observability và hồ sơ nội bộ"))}</h2><p>${safeText(text("section.local.body", "Các màn hình local vẫn cần signed Web admin và kiểm tra server-side tại từng route."))}</p></div>${badge("read_only")}</div><div class="portal-stewardship-grid">${localContent}</div></section>
+      <section class="portal-stewardship-section" aria-labelledby="stewardship-canonical-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(text("section.canonical.kicker", "Separately guarded"))}</span><h2 id="stewardship-canonical-title">${safeText(text("section.canonical.title", "System, runtime và backup canonical"))}</h2><p>${safeText(text("section.canonical.body", "Chỉ mở khi authority canonical còn hợp lệ; hub không proxy, cache hoặc thay thế read model này."))}</p></div>${badge(canonicalAdmin ? "read_only" : "guarded")}</div><div class="portal-stewardship-grid">${canonicalContent}</div></section>
+      <section class="portal-card portal-card-pad portal-stewardship-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(text("boundary.kicker", "No hidden controls"))}</span><h2 class="portal-card-title">${safeText(text("boundary.title", "Ranh giới vận hành"))}</h2><p class="portal-card-subtitle">${safeText(text("boundary.body", "Đây là directory có chủ ý, không phải control plane, trình tự xử lý lỗi hay cơ chế tự sửa."))}</p></div>${badge("read_only")}</div><ul><li><span aria-hidden="true">${portalIcon(ICONS.system)}</span><span><strong>${safeText(text("boundary.noDeploy.title", "Không deploy hoặc repair"))}</strong><small>${safeText(text("boundary.noDeploy.body", "Không có runbook executor, healthcheck, restart, restore hay hành động hạ tầng trong browser."))}</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.providers)}</span><span><strong>${safeText(text("boundary.noProvider.title", "Không gọi provider hoặc bridge"))}</strong><small>${safeText(text("boundary.noProvider.body", "Không tạo request provider, không đọc payload, credential, raw log hoặc trạng thái runtime."))}</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><span><strong>${safeText(text("boundary.noLedger.title", "Không có payment hoặc ledger action"))}</strong><small>${safeText(text("boundary.noLedger.body", "Không tác động Xu, PayOS, entitlement, refund, job charge hoặc canonical record."))}</small></span></li></ul></section>
     </article>`;
   }
 

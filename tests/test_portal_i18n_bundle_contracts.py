@@ -260,6 +260,23 @@ for (const locale of expected) {
   }
 }
 
+const adminSystemStewardshipKeys = [
+  "adminGeneric.systemStewardship.route.title",
+  "adminGeneric.systemStewardship.route.description",
+  "adminGeneric.systemStewardship.card.automation.title",
+  "adminGeneric.systemStewardship.card.backups.description",
+  "adminGeneric.systemStewardship.authority.canonical",
+  "adminGeneric.systemStewardship.action.requiresCanonical",
+  "adminGeneric.systemStewardship.intro.title",
+  "adminGeneric.systemStewardship.section.local.title",
+  "adminGeneric.systemStewardship.boundary.noDeploy.title"
+];
+for (const locale of expected) {
+  for (const key of adminSystemStewardshipKeys) {
+    if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
+  }
+}
+
 const reviewedAdminSecurityAccessCopy = {
   vi: {
     loadingTitle: "Đang xác minh Security & Access Posture",
@@ -291,6 +308,17 @@ const reviewedAutomationMonitorCopy = {
 for (const [locale, expectedCopy] of Object.entries(reviewedAutomationMonitorCopy)) {
   if (api.t("adminGeneric.automationMonitor.state.loadingTitle", locale) !== expectedCopy) {
     throw new Error(`Automation Monitor loading copy diverged for ${locale}`);
+  }
+}
+
+const reviewedSystemStewardshipCopy = {
+  vi: "System & Data Stewardship",
+  en: "System & Data Stewardship",
+  zh: "系统与数据治理"
+};
+for (const [locale, expectedCopy] of Object.entries(reviewedSystemStewardshipCopy)) {
+  if (api.t("adminGeneric.systemStewardship.route.title", locale) !== expectedCopy) {
+    throw new Error("System & Data Stewardship route copy diverged for " + locale);
   }
 }
 

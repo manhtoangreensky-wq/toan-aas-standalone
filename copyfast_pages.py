@@ -138,6 +138,7 @@ _PORTAL_SHELL_TITLES = {
     "/admin/security": {"vi": "Security Posture · TOAN AAS", "en": "Security Posture · TOAN AAS", "zh": "安全态势 · TOAN AAS"},
     "/admin/access": {"vi": "Access Posture · TOAN AAS", "en": "Access Posture · TOAN AAS", "zh": "访问态势 · TOAN AAS"},
     "/admin/automation": {"vi": "Automation Monitor · TOAN AAS", "en": "Automation Monitor · TOAN AAS", "zh": "自动化监控 · TOAN AAS"},
+    "/admin/system-stewardship": {"vi": "System & Data Stewardship · TOAN AAS", "en": "System & Data Stewardship · TOAN AAS", "zh": "系统与数据治理 · TOAN AAS"},
 }
 
 
