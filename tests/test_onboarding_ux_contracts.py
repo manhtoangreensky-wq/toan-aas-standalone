@@ -25,14 +25,16 @@ def test_onboarding_keeps_workspace_independent_and_never_offers_a_dead_link_act
     assert "const linkActionDisabled = linkActionEnabled" in onboarding
     assert "telegramConnectionBlockReason(context)" in onboarding
     assert 'data-portal-action="start-telegram-link" data-portal-route="/onboarding"${linkActionDisabled}>${safeText(linkActionLabel)}' in onboarding
-    assert "Web hoạt động độc lập" in onboarding
-    assert "Vào Workspace" in onboarding
+    assert 'onboardingText("independentTitle"' in onboarding
+    assert 'onboardingText("enterWorkspace"' in onboarding
     choice = onboarding[onboarding.index("const independentWorkspaceChoice"):onboarding.index("const linkChallengePaused")]
     assert "const skipRoute = workspaceRoute;" in onboarding
-    assert 'const skipLabel = continuation ? "Mở lại workflow" : "Vào Workspace";' in onboarding
+    assert "const skipLabel = continuation" in onboarding
+    assert 'onboardingText("resumeWorkflow"' in onboarding
+    assert 'onboardingText("enterWorkspace"' in onboarding
     assert 'href="${safeText(skipRoute)}"' in choice
     assert ">${safeText(skipLabel)}</a>" in choice
-    assert 'renderEmpty("Chưa có mã liên kết"' in onboarding
+    assert 'renderEmpty(onboardingText("emptyTitle"' in onboarding
 
 
 def test_telegram_link_state_changes_hide_actions_that_the_server_would_reject() -> None:
@@ -53,7 +55,7 @@ def test_telegram_link_state_changes_hide_actions_that_the_server_would_reject()
         "function renderPausedTelegramLinkChallenge(",
         "function renderOnboarding(page, context)",
     )
-    assert "Liên kết Telegram đang tạm dừng" in paused
+    assert 'onboardingText("pausedTitle"' in paused
     assert 'data-portal-action="refresh-link-status"' in paused
     assert "Mở Telegram" not in paused
     assert "copy-telegram-link-command" not in paused
@@ -67,11 +69,11 @@ def test_onboarding_exposes_clear_step_state_and_uses_closed_svg_icons() -> None
         "function authProviderMark(provider)",
     )
 
-    assert 'class="portal-onboarding-steps" aria-label="Tiến trình liên kết Telegram"' in onboarding
+    assert 'class="portal-onboarding-steps" aria-label="${safeText(onboardingText("stepsAria"' in onboarding
     assert 'aria-current="step"' in onboarding
     assert "portalIcon(ICONS.check)" in onboarding
-    assert "portalIcon(ICONS.link)" in onboarding
-    assert "portalIcon(ICONS.shield)" in onboarding
+    assert "ICONS.link" in onboarding
+    assert "ICONS.shield" in onboarding
     assert "data-portal-link-status aria-live" in onboarding
     assert "⌁" not in onboarding
     assert "↗" not in onboarding
@@ -88,7 +90,7 @@ def test_telegram_connection_notices_and_onboarding_layout_have_app_grade_afford
     assert "portalIcon(ICONS.check)" in notice
     assert "portalIcon(ICONS.link)" in notice
     assert "portalIcon(ICONS.info)" in notice
-    assert "Telegram ID không đi qua browser" in notice
+    assert 'telegramConnectionText("verifiedBody"' in notice
     assert ".portal-onboarding-choice {" in CSS
     assert ".portal-onboarding-choice-icon .portal-icon" in CSS
     assert ".portal-onboarding-steps li[data-state=\"current\"]" in CSS
