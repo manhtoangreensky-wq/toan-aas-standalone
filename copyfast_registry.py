@@ -546,6 +546,11 @@ def allowed_paths() -> set[str]:
         "/password-recovery",
         "/onboarding",
         "/workspace/setup",
+        # This signed Web page remains reachable when the narrow Data Controls
+        # feature flag is off so Portal can explain its guarded state. The API
+        # and every mutation retain their independent server-side flag, owner
+        # and CSRF checks; adding the shell route grants no data authority.
+        "/account/data-controls",
         "/starter-kits",
         "/campaigns",
         "/calendar",
