@@ -112,6 +112,13 @@
     return uiText(`accountCenter.${key}`, fallback, params);
   }
 
+  // Data Controls copies only fixed Web UI chrome. Canonical privacy scope,
+  // request identifiers, timestamps, revisions, and server messages remain
+  // server projections and are never translated as browser-owned state.
+  function dataControlsText(key, fallback, params) {
+    return accountCenterText(`dataControls.${key}`, fallback, params);
+  }
+
   function adminFinanceText(key, fallback, params) {
     return uiText(`adminFinance.${key}`, fallback, params);
   }
@@ -6323,10 +6330,10 @@
     "account_profile", "memory_center", "prompt_library", "workboard"
   ]);
   const DATA_CONTROLS_CATEGORY_META = Object.freeze({
-    account_profile: { label: "Hồ sơ Web", detail: "Metadata hồ sơ Web hiện tại; release này không tự xóa hồ sơ." },
-    memory_center: { label: "Ghi chú & nhắc việc", detail: "Ghi chú và nhắc việc thuộc Memory Center Web." },
-    prompt_library: { label: "Prompt Library", detail: "Template prompt hiện tại do Web App sở hữu." },
-    workboard: { label: "Workboard", detail: "Mục việc hiện tại; event/reference nội bộ không thuộc export v1." }
+    account_profile: { labelKey: "categoryAccountProfileLabel", labelFallback: "Hồ sơ Web", detailKey: "categoryAccountProfileDetail", detailFallback: "Metadata hồ sơ Web hiện tại; release này không tự xóa hồ sơ." },
+    memory_center: { labelKey: "categoryMemoryCenterLabel", labelFallback: "Ghi chú & nhắc việc", detailKey: "categoryMemoryCenterDetail", detailFallback: "Ghi chú và nhắc việc thuộc Memory Center Web." },
+    prompt_library: { labelKey: "categoryPromptLibraryLabel", labelFallback: "Prompt Library", detailKey: "categoryPromptLibraryDetail", detailFallback: "Template prompt hiện tại do Web App sở hữu." },
+    workboard: { labelKey: "categoryWorkboardLabel", labelFallback: "Workboard", detailKey: "categoryWorkboardDetail", detailFallback: "Mục việc hiện tại; event/reference nội bộ không thuộc export v1." }
   });
   const DATA_CONTROLS_REQUEST_STATES = new Set([
     "awaiting_review", "identity_verification_pending", "cancelled", "closed"
@@ -9156,6 +9163,7 @@
     "Hoạt động tài khoản": "page.accountActivity.title",
     "Bảo mật tài khoản": "page.accountSecurity.title",
     "Kiểm soát dữ liệu": "shellNav.dataControls",
+    "Kiểm soát dữ liệu Web": "page.dataControls.title",
     "Chăm sóc dữ liệu Web": "shellNav.workspaceCare",
     "Inbox": "shellNav.inbox",
     "Automation Center": "shellNav.automationCenter",
@@ -9219,6 +9227,7 @@
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/activity") return uiText("page.accountActivity.title", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.title", fallback);
+    if (path === "/account/data-controls") return uiText("page.dataControls.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.title", fallback);
@@ -9263,6 +9272,7 @@
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/activity") return uiText("page.accountActivity.description", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.description", fallback);
+    if (path === "/account/data-controls") return uiText("page.dataControls.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.description", fallback);
@@ -22894,11 +22904,11 @@
 
   function dataControlsRequestStateLabel(state) {
     return {
-      awaiting_review: "Chờ review",
-      identity_verification_pending: "Chờ xác minh identity",
-      cancelled: "Đã hủy",
-      closed: "Đã đóng"
-    }[state] || "Đang được bảo vệ";
+      awaiting_review: dataControlsText("requestAwaitingReview", "Chờ review"),
+      identity_verification_pending: dataControlsText("requestIdentityVerificationPending", "Chờ xác minh identity"),
+      cancelled: dataControlsText("requestCancelled", "Đã hủy"),
+      closed: dataControlsText("requestClosed", "Đã đóng")
+    }[state] || dataControlsText("requestGuarded", "Đang được bảo vệ");
   }
 
   function dataControlsRequestBadgeState(state) {
@@ -22950,6 +22960,7 @@
   }
 
   function renderAccountDataControls(page, context) {
+    const copy = (key, fallback, params) => dataControlsText(key, fallback, params);
     const controls = context.dataControls && typeof context.dataControls === "object" ? context.dataControls : {};
     const enabled = context.dataControlsEnabled === true && controls.enabled === true;
     const readState = String(controls.readState || "guarded");
@@ -22960,44 +22971,56 @@
     const canCancel = capabilities["data-controls-erasure-cancel"] === true;
     const settingsNav = renderAccountSettingsNav("/account/data-controls");
     const guardedReason = !enabled
-      ? "Data Control Center đang tắt theo cấu hình máy chủ. Không có export hoặc yêu cầu xóa nào được tạo từ màn hình này."
+      ? copy("guardedDisabledBody", "Data Control Center đang tắt theo cấu hình máy chủ. Không có export hoặc yêu cầu xóa nào được tạo từ màn hình này.")
       : !canView
-        ? "Cần signed Web session hiện tại để đọc phạm vi dữ liệu thuộc account này."
-        : "Máy chủ chưa trả projection Data Control hợp lệ; Portal không suy đoán dữ liệu hoặc trạng thái yêu cầu.";
+        ? copy("guardedSessionBody", "Cần signed Web session hiện tại để đọc phạm vi dữ liệu thuộc account này.")
+        : copy("guardedProjectionBody", "Máy chủ chưa trả projection Data Control hợp lệ; Portal không suy đoán dữ liệu hoặc trạng thái yêu cầu.");
     if (!enabled || !canView || readState === "guarded") {
       return `<article class="portal-page portal-account-data-controls">${renderHero(page, context)}${settingsNav}
-        <section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>Data Control Center đang được bảo vệ</h2><p>${safeText(guardedReason)}</p><div class="portal-state-meta"><span>Web authoring only</span><span>Không có thao tác tự động</span><span>Không gọi Bot</span></div></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">Quay lại Tài khoản</a></div></section>
-        <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Khác với lệnh Bot</strong><p>Lệnh <code>/data_delete</code> tiếp tục thuộc policy Bot/Telegram. Trung tâm Web này không gửi yêu cầu sang Bot và không kiểm soát Xu, PayOS, provider, job, Asset Vault, file hay dữ liệu Telegram.</p></div></div></section>
+        <section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${safeText(copy("guardedTitle", "Data Control Center đang được bảo vệ"))}</h2><p>${safeText(guardedReason)}</p><div class="portal-state-meta"><span>${safeText(copy("guardedScope", "Web authoring only"))}</span><span>${safeText(copy("guardedNoAutomatic", "Không có thao tác tự động"))}</span><span>${safeText(copy("guardedNoBot", "Không gọi Bot"))}</span></div></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">${safeText(copy("accountLink", "Quay lại Tài khoản"))}</a></div></section>
+        <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(copy("botBoundaryTitle", "Khác với lệnh Bot"))}</strong><p>${safeText(copy("botBoundaryBody", "Lệnh /data_delete tiếp tục thuộc policy Bot/Telegram. Trung tâm Web này không gửi yêu cầu sang Bot và không kiểm soát Xu, PayOS, provider, job, Asset Vault, file hay dữ liệu Telegram."))}</p></div></div></section>
       </article>`;
     }
     if (readState !== "read_only" || !controls.summary) {
       return `<article class="portal-page portal-account-data-controls">${renderHero(page, context)}${settingsNav}
-        <section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang kiểm tra phạm vi dữ liệu Web</h2><p>Portal chỉ hiển thị Data Control Center sau khi server xác nhận signed account và projection owner-scoped.</p></div></div></section>
+        <section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${safeText(copy("loadingTitle", "Đang kiểm tra phạm vi dữ liệu Web"))}</h2><p>${safeText(copy("loadingBody", "Portal chỉ hiển thị Data Control Center sau khi server xác nhận signed account và projection owner-scoped."))}</p></div></div></section>
       </article>`;
     }
     const summary = controls.summary;
     const categories = Array.isArray(summary.categories) ? summary.categories : [];
     const categoryRows = categories.map((item) => {
-      const meta = DATA_CONTROLS_CATEGORY_META[item.key] || { label: "Dữ liệu Web", detail: "Phạm vi được server xác nhận." };
-      const erasure = item.erasureRequestAvailable === true ? "Có thể đưa vào review xóa" : "Chỉ export trong release này";
-      return `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${item.erasureRequestAvailable === true ? "✓" : "i"}</span><div><strong>${safeText(meta.label)}</strong><span>${safeText(String(item.recordCount))} record · ${safeText(erasure)}</span><small>${safeText(meta.detail)}</small></div></div>`;
-    }).join("") || renderEmpty("Chưa có phạm vi để hiển thị", "Portal không tự dựng inventory khi projection server trống hoặc không hợp lệ.", "⌘");
+      const meta = DATA_CONTROLS_CATEGORY_META[item.key] || {
+        labelKey: "categoryFallbackLabel", labelFallback: "Dữ liệu Web", detailKey: "categoryFallbackDetail", detailFallback: "Phạm vi được server xác nhận."
+      };
+      const erasure = item.erasureRequestAvailable === true
+        ? copy("erasureAvailable", "Có thể đưa vào review xóa")
+        : copy("exportOnly", "Chỉ export trong release này");
+      return `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${item.erasureRequestAvailable === true ? "✓" : "i"}</span><div><strong>${safeText(copy(meta.labelKey, meta.labelFallback))}</strong><span>${safeText(copy("recordSummary", "{count} record · {erasure}", { count: String(item.recordCount), erasure }))}</span><small>${safeText(copy(meta.detailKey, meta.detailFallback))}</small></div></div>`;
+    }).join("") || renderEmpty(
+      copy("emptyScopeTitle", "Chưa có phạm vi để hiển thị"),
+      copy("emptyScopeBody", "Portal không tự dựng inventory khi projection server trống hoặc không hợp lệ."),
+      "⌘"
+    );
     const counts = summary.requestCounts && typeof summary.requestCounts === "object" ? summary.requestCounts : {};
     const pendingCount = Number(counts.awaiting_review || 0) + Number(counts.identity_verification_pending || 0);
     const requestRows = (Array.isArray(controls.requests) ? controls.requests : []).map((request) => {
       const mutable = DATA_CONTROLS_MUTABLE_REQUEST_STATES.has(request.state) && canCancel;
       const cancelForm = mutable
-        ? `<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="data-controls-erasure-cancel" data-portal-route="/account/data-controls" data-portal-confirm="Hủy yêu cầu review xóa dữ liệu Web này? Không có dữ liệu nào sẽ bị xóa."><input type="hidden" name="request_id" value="${safeText(request.id)}" autocomplete="off"><input type="hidden" name="expected_revision" value="${safeText(String(request.revision))}" autocomplete="off"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy yêu cầu</button></div></form>`
-        : `<span class="portal-form-note">${DATA_CONTROLS_MUTABLE_REQUEST_STATES.has(request.state) ? "CSRF hoặc quyền hủy chưa sẵn sàng." : "Yêu cầu này không còn có thể hủy."}</span>`;
-      return `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${request.state === "cancelled" ? "—" : "⌁"}</span><div><strong>${safeText(dataControlsRequestStateLabel(request.state))}</strong><span>Yêu cầu: ${safeText(request.requestedAt)} · Cập nhật: ${safeText(request.updatedAt)} · Revision ${safeText(String(request.revision))}</span><small>Phạm vi: Web authoring only · ${request.automaticDeletion === false ? "không tự xóa" : ""}</small>${cancelForm}</div><div>${badge(dataControlsRequestBadgeState(request.state))}</div></div>`;
-    }).join("") || renderEmpty("Chưa có yêu cầu review xóa", "Tạo yêu cầu chỉ ghi nhận cho review của con người; không có dữ liệu nào bị xóa tự động.", "·");
-    const exportDisabled = canExport ? "" : " disabled title=\"Cần signed session, CSRF và Data Control Center đang bật.\"";
-    const requestDisabled = canRequestErasure ? "" : " disabled title=\"Cần signed session, CSRF và Data Control Center đang bật.\"";
+        ? `<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="data-controls-erasure-cancel" data-portal-route="/account/data-controls" data-portal-confirm="${safeText(copy("cancelConfirm", "Hủy yêu cầu review xóa dữ liệu Web này? Không có dữ liệu nào sẽ bị xóa."))}"><input type="hidden" name="request_id" value="${safeText(request.id)}" autocomplete="off"><input type="hidden" name="expected_revision" value="${safeText(String(request.revision))}" autocomplete="off"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">${safeText(copy("cancelAction", "Hủy yêu cầu"))}</button></div></form>`
+        : `<span class="portal-form-note">${safeText(DATA_CONTROLS_MUTABLE_REQUEST_STATES.has(request.state) ? copy("cancelUnavailableCapability", "CSRF hoặc quyền hủy chưa sẵn sàng.") : copy("cancelUnavailableState", "Yêu cầu này không còn có thể hủy."))}</span>`;
+      return `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${request.state === "cancelled" ? "—" : "⌁"}</span><div><strong>${safeText(dataControlsRequestStateLabel(request.state))}</strong><span>${safeText(copy("requestSummary", "Yêu cầu: {requestedAt} · Cập nhật: {updatedAt} · Revision {revision}", { requestedAt: request.requestedAt, updatedAt: request.updatedAt, revision: String(request.revision) }))}</span><small>${safeText(copy("requestScopeSummary", "Phạm vi: Web authoring only · không tự xóa"))}</small>${cancelForm}</div><div>${badge(dataControlsRequestBadgeState(request.state))}</div></div>`;
+    }).join("") || renderEmpty(
+      copy("emptyRequestsTitle", "Chưa có yêu cầu review xóa"),
+      copy("emptyRequestsBody", "Tạo yêu cầu chỉ ghi nhận cho review của con người; không có dữ liệu nào bị xóa tự động."),
+      "·"
+    );
+    const exportDisabled = canExport ? "" : ` disabled title="${safeText(copy("exportDisabledTitle", "Cần signed session, CSRF và Data Control Center đang bật."))}"`;
+    const requestDisabled = canRequestErasure ? "" : ` disabled title="${safeText(copy("requestDisabledTitle", "Cần signed session, CSRF và Data Control Center đang bật."))}"`;
     return `<article class="portal-page portal-account-data-controls">${renderHero(page, context)}${settingsNav}
-      <section class="portal-support-intro"><div><span class="portal-section-kicker">Web-only privacy controls</span><h2>Kiểm soát rõ phạm vi, không có đường tắt</h2><p>Data Control Center chỉ xử lý authoring do Web App sở hữu. Nó không phải bản sao của Bot, không phải account deletion, không phải file deletion và không gửi Telegram/email/provider notification.</p></div><dl><div><dt>${safeText(String(summary.authoringRecordCount))}</dt><dd>record authoring trong phạm vi</dd></div><div><dt>${safeText(String(pendingCount))}</dt><dd>yêu cầu đang chờ review</dd></div><div><dt>v1</dt><dd>export trực tiếp, bounded</dd></div></dl></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Phạm vi hiện tại</h2><p class="portal-card-subtitle">Chỉ những category được server công bố mới xuất hiện. Dữ liệu Bot/Telegram, payment, job, output, Asset Vault và support evidence bị loại trừ.</p></div>${badge("read_only")}</div><div class="portal-panel-list">${categoryRows}</div></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Xuất dữ liệu Web</h2><p class="portal-card-subtitle">Server tạo một JSON attachment hiện tại, bounded; browser không tự dựng hoặc lưu bản export thứ hai.</p></div>${badge(canExport ? "ready" : "guarded")}</div><p class="portal-form-note">File chỉ gồm hồ sơ Web, Memory Center, Prompt Library và Workboard trong phạm vi v1. Không chứa password, session, CSRF, OAuth token, Bot/Telegram, Xu/PayOS, provider, job, asset/file hoặc audit raw.</p><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="data-controls-export" data-portal-route="/account/data-controls" data-portal-confirm="Xuất JSON dữ liệu authoring thuộc Web account hiện tại? File không bao gồm dữ liệu Bot/Telegram hoặc hệ thống canonical khác."${exportDisabled}>Xuất JSON dữ liệu Web</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="data-controls-refresh" data-portal-route="/account/data-controls">Làm mới</button></div></aside></div>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu review xóa</h2><p class="portal-card-subtitle">Yêu cầu chỉ được ghi nhận cho human review. Server không xóa account, record, file hay dữ liệu Telegram khi bạn gửi form này.</p></div>${badge(canRequestErasure ? "awaiting_confirm" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="data-controls-erasure-request" data-portal-route="/account/data-controls" data-portal-confirm="Gửi yêu cầu review xóa dữ liệu Web authoring? Đây không phải lệnh xóa tức thì; không có account, file hay dữ liệu Bot/Telegram nào bị xóa."><div class="portal-fields"><label class="portal-checkbox"><input name="confirm_erasure" type="checkbox" value="true" required${requestDisabled}><span>Tôi hiểu đây chỉ là yêu cầu review cho phạm vi Web authoring hiện tại, không phải xóa tự động.</span></label></div><div class="portal-form-footer"><span class="portal-form-note">Nếu account dùng phương thức Telegram-first/OAuth phù hợp, server có thể đặt yêu cầu ở trạng thái cần xác minh identity. Browser không tự hoàn tất xác minh.</span><button class="portal-button portal-button--primary" type="submit"${requestDisabled}>Gửi yêu cầu review</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới Bot & canonical systems</h2><p class="portal-card-subtitle">Hai luồng được tách có chủ ý để tránh xóa nhầm hoặc thông báo giả.</p></div>${badge("read_only")}</div><ol class="portal-project-steps"><li><strong><code>/data_delete</code> trong Bot</strong><span>Luôn theo policy Bot/Telegram canonical riêng.</span></li><li><strong>Data Control Center Web</strong><span>Chỉ authoring Web v1 và luôn cần server-side owner check, CSRF, confirmation, idempotency, revision và audit.</span></li><li><strong>Không có hành động ngầm</strong><span>Không gọi bridge, wallet, PayOS, provider, job, asset/file, support evidence hay external notification.</span></li></ol></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử yêu cầu review</h2><p class="portal-card-subtitle">Chỉ yêu cầu thuộc signed Web account hiện tại. Mỗi hủy yêu cầu cần revision hiện tại và confirmation riêng.</p></div><div class="portal-inline-actions"><span class="portal-form-note">Tối đa ${safeText(String(controls.listing && controls.listing.limit || 20))} yêu cầu ở lần đọc này</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="data-controls-refresh" data-portal-route="/account/data-controls">Làm mới</button></div></div><div class="portal-panel-list">${requestRows}</div></section>
+      <section class="portal-support-intro"><div><span class="portal-section-kicker">${safeText(copy("heroEyebrow", "Web-only privacy controls"))}</span><h2>${safeText(copy("heroTitle", "Kiểm soát rõ phạm vi, không có đường tắt"))}</h2><p>${safeText(copy("heroBody", "Data Control Center chỉ xử lý authoring do Web App sở hữu. Nó không phải bản sao của Bot, không phải account deletion, không phải file deletion và không gửi Telegram/email/provider notification."))}</p></div><dl><div><dt>${safeText(String(summary.authoringRecordCount))}</dt><dd>${safeText(copy("heroAuthoringCount", "record authoring trong phạm vi"))}</dd></div><div><dt>${safeText(String(pendingCount))}</dt><dd>${safeText(copy("heroPendingCount", "yêu cầu đang chờ review"))}</dd></div><div><dt>v1</dt><dd>${safeText(copy("heroExportBounded", "export trực tiếp, bounded"))}</dd></div></dl></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("scopeTitle", "Phạm vi hiện tại"))}</h2><p class="portal-card-subtitle">${safeText(copy("scopeBody", "Chỉ những category được server công bố mới xuất hiện. Dữ liệu Bot/Telegram, payment, job, output, Asset Vault và support evidence bị loại trừ."))}</p></div>${badge("read_only")}</div><div class="portal-panel-list">${categoryRows}</div></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("exportTitle", "Xuất dữ liệu Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("exportBody", "Server tạo một JSON attachment hiện tại, bounded; browser không tự dựng hoặc lưu bản export thứ hai."))}</p></div>${badge(canExport ? "ready" : "guarded")}</div><p class="portal-form-note">${safeText(copy("exportBoundary", "File chỉ gồm hồ sơ Web, Memory Center, Prompt Library và Workboard trong phạm vi v1. Không chứa password, session, CSRF, OAuth token, Bot/Telegram, Xu/PayOS, provider, job, asset/file hoặc audit raw."))}</p><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="data-controls-export" data-portal-route="/account/data-controls" data-portal-confirm="${safeText(copy("exportConfirm", "Xuất JSON dữ liệu authoring thuộc Web account hiện tại? File không bao gồm dữ liệu Bot/Telegram hoặc hệ thống canonical khác."))}"${exportDisabled}>${safeText(copy("exportAction", "Xuất JSON dữ liệu Web"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="data-controls-refresh" data-portal-route="/account/data-controls">${safeText(copy("refreshAction", "Làm mới"))}</button></div></aside></div>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("erasureTitle", "Yêu cầu review xóa"))}</h2><p class="portal-card-subtitle">${safeText(copy("erasureBody", "Yêu cầu chỉ được ghi nhận cho human review. Server không xóa account, record, file hay dữ liệu Telegram khi bạn gửi form này."))}</p></div>${badge(canRequestErasure ? "awaiting_confirm" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="data-controls-erasure-request" data-portal-route="/account/data-controls" data-portal-confirm="${safeText(copy("erasureConfirm", "Gửi yêu cầu review xóa dữ liệu Web authoring? Đây không phải lệnh xóa tức thì; không có account, file hay dữ liệu Bot/Telegram nào bị xóa."))}"><div class="portal-fields"><label class="portal-checkbox"><input name="confirm_erasure" type="checkbox" value="true" required${requestDisabled}><span>${safeText(copy("erasureAcknowledgement", "Tôi hiểu đây chỉ là yêu cầu review cho phạm vi Web authoring hiện tại, không phải xóa tự động."))}</span></label></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(copy("erasureNote", "Nếu account dùng phương thức Telegram-first/OAuth phù hợp, server có thể đặt yêu cầu ở trạng thái cần xác minh identity. Browser không tự hoàn tất xác minh."))}</span><button class="portal-button portal-button--primary" type="submit"${requestDisabled}>${safeText(copy("erasureAction", "Gửi yêu cầu review"))}</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("systemsTitle", "Ranh giới Bot & canonical systems"))}</h2><p class="portal-card-subtitle">${safeText(copy("systemsBody", "Hai luồng được tách có chủ ý để tránh xóa nhầm hoặc thông báo giả."))}</p></div>${badge("read_only")}</div><ol class="portal-project-steps"><li><strong><code>/data_delete</code> ${safeText(copy("botStepTitle", "trong Bot"))}</strong><span>${safeText(copy("botStepBody", "Luôn theo policy Bot/Telegram canonical riêng."))}</span></li><li><strong>${safeText(copy("webStepTitle", "Data Control Center Web"))}</strong><span>${safeText(copy("webStepBody", "Chỉ authoring Web v1 và luôn cần server-side owner check, CSRF, confirmation, idempotency, revision và audit."))}</span></li><li><strong>${safeText(copy("noHiddenStepTitle", "Không có hành động ngầm"))}</strong><span>${safeText(copy("noHiddenStepBody", "Không gọi bridge, wallet, PayOS, provider, job, asset/file, support evidence hay external notification."))}</span></li></ol></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("historyTitle", "Lịch sử yêu cầu review"))}</h2><p class="portal-card-subtitle">${safeText(copy("historyBody", "Chỉ yêu cầu thuộc signed Web account hiện tại. Mỗi hủy yêu cầu cần revision hiện tại và confirmation riêng."))}</p></div><div class="portal-inline-actions"><span class="portal-form-note">${safeText(copy("historyLimit", "Tối đa {count} yêu cầu ở lần đọc này", { count: String(controls.listing && controls.listing.limit || 20) }))}</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="data-controls-refresh" data-portal-route="/account/data-controls">${safeText(copy("refreshAction", "Làm mới"))}</button></div></div><div class="portal-panel-list">${requestRows}</div></section>
     </article>`;
   }
 

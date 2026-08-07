@@ -97,6 +97,8 @@ jobs:
             tests/test_account_security_portal_contracts.py \
             tests/test_account_security_app_ux_contracts.py \
             tests/test_account_security_locale_contracts.py \
+            tests/test_data_controls_portal_contracts.py \
+            tests/test_data_controls_locale_contracts.py \
             tests/test_portal_i18n_bundle_contracts.py \
             tests/test_portal_i18n_locale_contracts.py \
             tests/test_interface_locale_navigator_portal_contracts.py \

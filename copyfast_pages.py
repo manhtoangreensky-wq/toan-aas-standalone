@@ -134,6 +134,7 @@ _PORTAL_SHELL_TITLES = {
     "/account": {"vi": "Tài khoản · TOAN AAS", "en": "Account · TOAN AAS", "zh": "账户 · TOAN AAS"},
     "/account/activity": {"vi": "Hoạt động tài khoản · TOAN AAS", "en": "Account activity · TOAN AAS", "zh": "账户活动 · TOAN AAS"},
     "/account/security": {"vi": "Bảo mật tài khoản · TOAN AAS", "en": "Account security · TOAN AAS", "zh": "账户安全 · TOAN AAS"},
+    "/account/data-controls": {"vi": "Kiểm soát dữ liệu Web · TOAN AAS", "en": "Web data controls · TOAN AAS", "zh": "Web 数据控制 · TOAN AAS"},
     "/account/interface-language": {"vi": "Ngôn ngữ giao diện · TOAN AAS", "en": "Interface language · TOAN AAS", "zh": "界面语言 · TOAN AAS"},
     "/workspace/setup": {"vi": "Thiết lập workspace · TOAN AAS", "en": "Workspace setup · TOAN AAS", "zh": "工作台设置 · TOAN AAS"},
     "/workspace-menu": {"vi": "Chuyển workspace · TOAN AAS", "en": "Switch workspace · TOAN AAS", "zh": "切换工作台 · TOAN AAS"},
@@ -152,6 +153,17 @@ _PORTAL_SHELL_TITLES = {
     "/admin/access": {"vi": "Access Posture · TOAN AAS", "en": "Access Posture · TOAN AAS", "zh": "访问态势 · TOAN AAS"},
     "/admin/automation": {"vi": "Automation Monitor · TOAN AAS", "en": "Automation Monitor · TOAN AAS", "zh": "自动化监控 · TOAN AAS"},
     "/admin/system-stewardship": {"vi": "System & Data Stewardship · TOAN AAS", "en": "System & Data Stewardship · TOAN AAS", "zh": "系统与数据治理 · TOAN AAS"},
+}
+
+# Route-specific descriptions are intentionally limited to reviewed, public
+# presentation copy. They must never interpolate account data, request state,
+# identifiers, or other private browser/server projections into first paint.
+_PORTAL_SHELL_DESCRIPTIONS = {
+    "/account/data-controls": {
+        "vi": "Xuất dữ liệu authoring thuộc Web và tạo yêu cầu review xóa theo phạm vi, không tác động Bot hoặc hệ thống canonical khác.",
+        "en": "Export Web-owned authoring data and create scope-bound erasure-review requests without affecting the Bot or another canonical system.",
+        "zh": "导出 Web 拥有的创作数据，并创建范围受限的删除审核请求，不影响 Bot 或其他权威系统。",
+    },
 }
 
 
@@ -353,6 +365,14 @@ def _shell_title_for(path: str, locale: str) -> str:
     return _PORTAL_SHELL_COPY[locale]["workspace_title"]
 
 
+def _shell_description_for(path: str, locale: str) -> str:
+    """Return reviewed route metadata without exposing signed Web state."""
+
+    normalized = path.rstrip("/") or "/"
+    descriptions = _PORTAL_SHELL_DESCRIPTIONS.get(normalized)
+    return descriptions[locale] if descriptions else _PORTAL_SHELL_COPY[locale]["description"]
+
+
 def _fallback_template() -> str:
     # Keep the fallback compatible with the strict production CSP: bootstrap
     # data lives in inert JSON, never in an inline executable script.
@@ -393,7 +413,7 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
         .replace("__PORTAL_TITLE__", html.escape(payload["title"]))
         .replace("__PORTAL_HTML_LANG__", shell_copy["html_lang"])
         .replace("__PORTAL_LOCALE__", locale)
-        .replace("__PORTAL_DESCRIPTION__", html.escape(shell_copy["description"], quote=True))
+        .replace("__PORTAL_DESCRIPTION__", html.escape(_shell_description_for(normalized, locale), quote=True))
         .replace("__PORTAL_SKIP_NAVIGATION__", html.escape(shell_copy["skip_navigation"]))
         .replace("__PORTAL_MAIN_NAVIGATION__", html.escape(shell_copy["main_navigation"], quote=True))
         .replace("__PORTAL_QUICK_NAVIGATION__", html.escape(shell_copy["quick_navigation"], quote=True))

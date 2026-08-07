@@ -36,10 +36,12 @@ def test_data_controls_has_a_distinct_guarded_web_route() -> None:
     ):
         assert f'data-portal-action="{action}"' in view
     assert view.count("data-portal-no-transient") >= 2
-    assert "Không có thao tác tự động" in view
-    assert "Không gọi Bot" in view
-    assert "Không có hành động ngầm" in view
-    assert "<code>/data_delete</code> trong Bot" in view
+    assert 'const copy = (key, fallback, params) => dataControlsText(key, fallback, params);' in view
+    assert 'copy("guardedNoAutomatic", "Không có thao tác tự động")' in view
+    assert 'copy("guardedNoBot", "Không gọi Bot")' in view
+    assert 'copy("noHiddenStepTitle", "Không có hành động ngầm")' in view
+    assert '<code>/data_delete</code> ${safeText(copy("botStepTitle", "trong Bot"))}' in view
+    assert 'copy("botBoundaryBody", "Lệnh /data_delete' in view
     assert "localStorage." not in view
     assert "sessionStorage." not in view
 

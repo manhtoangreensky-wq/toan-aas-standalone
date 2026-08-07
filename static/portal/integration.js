@@ -22497,6 +22497,15 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  // This helper translates only browser-authored Data Controls feedback.
+  // Server messages and canonical privacy protocol literals remain unchanged.
+  function dataControlsText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(`accountCenter.dataControls.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   function validAccountSecurityMfaId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -24491,10 +24500,10 @@
         api(dataControlsListPath(offset))
       ]);
       if (!dataControlsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
-      if (summaryResult.status !== "read_only" || requestsResult.status !== "read_only") throw new Error("Data Control Center chưa trả trạng thái chỉ đọc hợp lệ.");
+      if (summaryResult.status !== "read_only" || requestsResult.status !== "read_only") throw new Error(dataControlsText("actionReadStateError", "Data Control Center chưa trả trạng thái chỉ đọc hợp lệ."));
       const summary = dataControlsSummaryProjection(summaryResult.data);
       const requestPage = dataControlsListingProjection(requestsResult.data, offset);
-      if (!summary || !requestPage) throw new Error("Projection Data Control không hợp lệ.");
+      if (!summary || !requestPage) throw new Error(dataControlsText("actionProjectionInvalidError", "Projection Data Control không hợp lệ."));
       if (!dataControlsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
       merge({
         dataControlsSummary: summary,
@@ -24514,7 +24523,7 @@
   }
 
   function dataControlsWriteBoundary(value) {
-    if (!dataControlsBoundaryIsSafe(value)) throw new Error("Máy chủ chưa trả boundary Data Control hợp lệ.");
+    if (!dataControlsBoundaryIsSafe(value)) throw new Error(dataControlsText("actionBoundaryError", "Máy chủ chưa trả boundary Data Control hợp lệ."));
     return value;
   }
 
@@ -24522,7 +24531,7 @@
     const context = base();
     const csrfToken = context.session && typeof context.session.csrfToken === "string" ? context.session.csrfToken : "";
     if (!(context.session && context.session.authenticated === true && context.dataControlsEnabled === true && csrfToken)) {
-      throw new Error("Cần signed Web session, CSRF và Data Control Center đang bật để export.");
+      throw new Error(dataControlsText("actionExportCapabilityError", "Cần signed Web session, CSRF và Data Control Center đang bật để export."));
     }
     const headers = new Headers({ "Accept": "application/json", "Content-Type": "application/json" });
     headers.set("X-Request-ID", randomKey("web"));
@@ -24536,7 +24545,7 @@
     if (!response.ok) {
       let payload = {};
       try { payload = await response.json(); } catch (_) { /* sanitized generic error below */ }
-      const error = new Error(payload && payload.message ? payload.message : "Máy chủ chưa tạo được export dữ liệu Web.");
+      const error = new Error(payload && payload.message ? payload.message : dataControlsText("actionExportServerError", "Máy chủ chưa tạo được export dữ liệu Web."));
       error.status = response.status;
       throw error;
     }
@@ -24547,18 +24556,18 @@
     let guardedEnvelope = null;
     try { guardedEnvelope = await response.clone().json(); } catch (_) { /* the successful attachment is still JSON */ }
     if (guardedEnvelope && guardedEnvelope.ok === false) {
-      const error = new Error(guardedEnvelope.message || "Máy chủ chưa tạo được export dữ liệu Web.");
+      const error = new Error(guardedEnvelope.message || dataControlsText("actionExportServerError", "Máy chủ chưa tạo được export dữ liệu Web."));
       error.status = response.status;
       throw error;
     }
     const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
     const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
     if (!contentType.startsWith("application/json") || !cacheControl.includes("no-store")) {
-      throw new Error("Response export không có chính sách attachment riêng tư hợp lệ.");
+      throw new Error(dataControlsText("actionExportResponseError", "Response export không có chính sách attachment riêng tư hợp lệ."));
     }
     const blob = await response.blob();
     if (!(blob.size > 0 && blob.size <= 13 * 1024 * 1024)) {
-      throw new Error("Kích thước export không hợp lệ; browser không lưu file một phần.");
+      throw new Error(dataControlsText("actionExportSizeError", "Kích thước export không hợp lệ; browser không lưu file một phần."));
     }
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -34884,15 +34893,15 @@
       }
       if (action === "data-controls-refresh") {
         if (route !== "/account/data-controls" || currentPortalPath() !== "/account/data-controls") {
-          throw new Error("Chỉ có thể làm mới Data Control Center từ signed Portal hiện tại.");
+          throw new Error(dataControlsText("actionRefreshRouteError", "Chỉ có thể làm mới Data Control Center từ signed Portal hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["data-controls-refresh"] === true)) {
-          throw new Error("Data Control Center đang tắt hoặc signed Web session không còn hợp lệ.");
+          throw new Error(dataControlsText("actionRefreshCapabilityError", "Data Control Center đang tắt hoặc signed Web session không còn hợp lệ."));
         }
         setActionBusy(action, route, true);
         try {
           const projection = await hydrateDataControls();
-          if (projection) toast("Đã làm mới phạm vi và lịch sử Data Control từ server.");
+          if (projection) toast(dataControlsText("actionRefreshSuccess", "Đã làm mới phạm vi và lịch sử Data Control từ server."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -34900,15 +34909,15 @@
       }
       if (action === "data-controls-export") {
         if (route !== "/account/data-controls" || currentPortalPath() !== "/account/data-controls") {
-          throw new Error("Chỉ có thể export từ Data Control Center hiện tại.");
+          throw new Error(dataControlsText("actionExportRouteError", "Chỉ có thể export từ Data Control Center hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["data-controls-export"] === true)) {
-          throw new Error("Cần signed Web session, CSRF và Data Control Center đang bật để export.");
+          throw new Error(dataControlsText("actionExportCapabilityError", "Cần signed Web session, CSRF và Data Control Center đang bật để export."));
         }
         setActionBusy(action, route, true);
         try {
           await downloadDataControlsExport();
-          toast("Đã tạo JSON attachment cho dữ liệu authoring thuộc Web App.");
+          toast(dataControlsText("actionExportSuccess", "Đã tạo JSON attachment cho dữ liệu authoring thuộc Web App."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -34916,18 +34925,18 @@
       }
       if (action === "data-controls-erasure-request") {
         if (route !== "/account/data-controls" || currentPortalPath() !== "/account/data-controls") {
-          throw new Error("Chỉ có thể gửi yêu cầu review từ Data Control Center hiện tại.");
+          throw new Error(dataControlsText("actionRequestRouteError", "Chỉ có thể gửi yêu cầu review từ Data Control Center hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["data-controls-erasure-request"] === true)) {
-          throw new Error("Cần signed Web session, CSRF và Data Control Center đang bật để gửi yêu cầu review.");
+          throw new Error(dataControlsText("actionRequestCapabilityError", "Cần signed Web session, CSRF và Data Control Center đang bật để gửi yêu cầu review."));
         }
         if (fields.confirm_erasure !== true) {
-          throw new Error("Hãy xác nhận rằng đây chỉ là yêu cầu review dữ liệu Web authoring.");
+          throw new Error(dataControlsText("actionRequestConfirmationError", "Hãy xác nhận rằng đây chỉ là yêu cầu review dữ liệu Web authoring."));
         }
         const scope = "data-controls:erasure-request";
         const submission = acquireSubmission(scope, DATA_CONTROLS_SCOPE_KEY);
         if (!submission) {
-          toast("Yêu cầu review đang được gửi. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          toast(dataControlsText("actionRequestPending", "Yêu cầu review đang được gửi. Vui lòng chờ phản hồi từ máy chủ."), "error");
           return;
         }
         let acknowledged = false;
@@ -34947,10 +34956,10 @@
           acknowledged = true;
           const boundary = dataControlsWriteBoundary(result.data);
           if (!dataControlsRequestProjection(boundary.request)) {
-            throw new Error("Máy chủ chưa trả yêu cầu review Data Control hợp lệ.");
+            throw new Error(dataControlsText("actionRequestProjectionError", "Máy chủ chưa trả yêu cầu review Data Control hợp lệ."));
           }
           await hydrateDataControls(0);
-          toast(result.message || "Đã ghi nhận yêu cầu review xóa dữ liệu Web. Chưa có dữ liệu nào bị xóa.");
+          toast(result.message || dataControlsText("actionRequestSuccess", "Đã ghi nhận yêu cầu review xóa dữ liệu Web. Chưa có dữ liệu nào bị xóa."));
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await hydrateDataControls(0);
@@ -34964,20 +34973,20 @@
       }
       if (action === "data-controls-erasure-cancel") {
         if (route !== "/account/data-controls" || currentPortalPath() !== "/account/data-controls") {
-          throw new Error("Chỉ có thể hủy yêu cầu review từ Data Control Center hiện tại.");
+          throw new Error(dataControlsText("actionCancelRouteError", "Chỉ có thể hủy yêu cầu review từ Data Control Center hiện tại."));
         }
         if (!(base().capabilities && base().capabilities["data-controls-erasure-cancel"] === true)) {
-          throw new Error("Cần signed Web session, CSRF và Data Control Center đang bật để hủy yêu cầu.");
+          throw new Error(dataControlsText("actionCancelCapabilityError", "Cần signed Web session, CSRF và Data Control Center đang bật để hủy yêu cầu."));
         }
         const requestId = String(fields.request_id || "").trim().toLowerCase();
         const expectedRevision = dataControlsSafeInteger(fields.expected_revision, 1, 1000000);
         if (!validDataControlsRequestId(requestId) || expectedRevision === null) {
-          throw new Error("Yêu cầu Data Control không còn hợp lệ. Hãy làm mới lịch sử.");
+          throw new Error(dataControlsText("actionCancelInvalidError", "Yêu cầu Data Control không còn hợp lệ. Hãy làm mới lịch sử."));
         }
         const scope = `data-controls:erasure-cancel:${requestId}:${expectedRevision}`;
         const submission = acquireSubmission(scope, "cancel");
         if (!submission) {
-          toast("Yêu cầu hủy đang được gửi. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          toast(dataControlsText("actionCancelPending", "Yêu cầu hủy đang được gửi. Vui lòng chờ phản hồi từ máy chủ."), "error");
           return;
         }
         let acknowledged = false;
@@ -34996,10 +35005,10 @@
           acknowledged = true;
           const boundary = dataControlsWriteBoundary(result.data);
           if (!dataControlsRequestProjection(boundary.request)) {
-            throw new Error("Máy chủ chưa trả trạng thái hủy Data Control hợp lệ.");
+            throw new Error(dataControlsText("actionCancelProjectionError", "Máy chủ chưa trả trạng thái hủy Data Control hợp lệ."));
           }
           await hydrateDataControls(0);
-          toast(result.message || "Đã hủy yêu cầu review xóa dữ liệu Web. Không có dữ liệu nào bị xóa.");
+          toast(result.message || dataControlsText("actionCancelSuccess", "Đã hủy yêu cầu review xóa dữ liệu Web. Không có dữ liệu nào bị xóa."));
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await hydrateDataControls(0);
