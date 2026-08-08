@@ -1,9 +1,10 @@
-"""Focused contracts for the opt-in public landing motion test (TEST1).
+"""Focused contracts for the public Landing Cinematic Mini.
 
 These are intentionally static contracts: motion is presentation-only, and
 the existing portal tests already own server/routing/auth behaviour.  The
-contracts keep the experiment narrowly scoped to ``/welcome?motion=1`` while
-making the DOM hooks and CSS/lifecycle boundaries reviewable without a browser.
+contracts keep the enhancement narrowly scoped to ``/welcome`` with a
+``?motion=0`` comparison opt-out, while making the DOM hooks and CSS/lifecycle
+boundaries reviewable without a browser.
 """
 
 from pathlib import Path
@@ -28,13 +29,13 @@ def _root_declarations() -> str:
     return match.group("body")
 
 
-def test_motion_is_strict_welcome_opt_in_with_landing_only_mount_cleanup() -> None:
+def test_motion_is_default_for_welcome_with_a_safe_opt_out_and_landing_only_cleanup() -> None:
     mount = _between(PORTAL, "function mountPortal(override) {", "\n\n  window.TOANAASPortal")
 
     assert 'window.location.pathname === "/welcome"' in mount
-    assert 'new URLSearchParams(window.location.search || "").get("motion") === "1"' in mount
+    assert 'new URLSearchParams(window.location.search || "").get("motion") !== "0"' in mount
     assert "motion.unmountLanding" in mount
-    assert re.search(r"if\s*\(landingMotionOptIn[\s\S]{0,500}?motion\.mountLanding", mount)
+    assert re.search(r"if\s*\(landingMotionEnabled[\s\S]{0,500}?motion\.mountLanding", mount)
     assert mount.index("motion.unmountLanding") < mount.index("function renderShell()")
     assert mount.index("motion.mountLanding") > mount.index("main.innerHTML = renderPage(page, context);")
 
@@ -111,7 +112,7 @@ def test_landing_motion_theme_has_local_timing_tokens_and_selector_gate() -> Non
     ):
         assert token in root
 
-    assert '[data-landing-motion="test1"]' in THEME
+    assert '[data-landing-motion="cinematic-mini"]' in THEME
     for selector in (
         "landing-motion-header",
         "landing-motion-hero",
@@ -152,7 +153,7 @@ def test_landing_motion_theme_keeps_motion_transform_only_and_reduced_content_vi
 
     # The experiment must not introduce motion patterns outside the explicit
     # landing test gate.
-    gated = THEME[THEME.index('[data-landing-motion="test1"]'):]
+    gated = THEME[THEME.index('[data-landing-motion="cinematic-mini"]'):]
     assert ".landing-motion-header" in gated
     assert "position: sticky;" in gated
     assert "scroll-behavior" not in gated
