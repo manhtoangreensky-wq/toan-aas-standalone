@@ -170,17 +170,17 @@ git diff --check
 
 Expected: exit 0.
 
-- [ ] **Step 2: Commit source.**
+- [x] **Step 2: Commit source.**
 
 ~~~powershell
 git commit -m "Localize job detail and support"
 ~~~
 
-- [ ] **Step 3: Run static-only migration audit for the full source SHA, commit only evidence files, then invoke --verify-web-evidence with the full final SHA.**
+- [x] **Step 3: Run static-only migration audit for the full source SHA, commit only evidence files, then invoke --verify-web-evidence with the full final SHA.**
 
 Expected: every audit reports ok: true; the audit reads source text only and never imports or calls Bot, PayOS, providers, or webhooks.
 
-- [ ] **Step 4: Capture the committed source revision and regenerate only static migration evidence.**
+- [x] **Step 4: Capture the committed source revision and regenerate only static migration evidence.**
 
 ~~~powershell
 $sourceSha = git rev-parse HEAD
@@ -196,7 +196,7 @@ git status --short
 
 Expected: the audit exits 0 and only its generated migration evidence changes. It parses source text and local Git metadata; it does not import, run, or change Bot source.
 
-- [ ] **Step 5: Commit generated evidence only when it changed.**
+- [x] **Step 5: Commit generated evidence only when it changed.**
 
 ~~~powershell
 git add docs/migration/README.md reports/migration/preflight.json reports/migration/web_inventory.json
@@ -205,7 +205,7 @@ git commit -m "Refresh migration evidence for job detail locale"
 
 Expected: this commit contains no portal source, Bot source, provider configuration, secrets, or environment file. If `git status --short` shows no evidence change, skip the commit and record that evidence was already current.
 
-- [ ] **Step 6: Verify evidence against the final Web revision.**
+- [x] **Step 6: Verify evidence against the final Web revision.**
 
 ~~~powershell
 $finalSha = git rev-parse HEAD
