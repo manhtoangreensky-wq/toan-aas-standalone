@@ -156,6 +156,12 @@
   --portal-motion-distance: 10px;
   --portal-motion-ease-standard: cubic-bezier(.2,.8,.2,1);
   --portal-motion-ease-emphasis: cubic-bezier(.16,1,.3,1);
+  --portal-landing-motion-fast: 160ms;
+  --portal-landing-motion-ui: 220ms;
+  --portal-landing-motion-reveal: 480ms;
+  --portal-landing-motion-hero: 600ms;
+  --portal-landing-motion-stagger: 80ms;
+  --portal-landing-motion-ease: cubic-bezier(.16,1,.3,1);
   --portal-elevation-float: 0 12px 30px rgba(2, 20, 29, .16);
   --portal-rail-width: 272px;
   --portal-content-max-width: 1600px;
@@ -14061,5 +14067,224 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   .portal-page .portal-admin-data-toolbar {
     flex-wrap: nowrap;
     align-items: center;
+  }
+}
+
+/* TEST1 is deliberately scoped to the public landing opt-in. It only animates
+   opacity and transforms, keeps all dimensions stable and has no effect until
+   the landing lifecycle adds the data attribute at runtime. */
+@keyframes portal-landing-motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-landing-motion="test1"] .landing-motion-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    transition:
+      background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      backdrop-filter var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-header[data-landing-motion-header="compact"] {
+    border-color: var(--portal-border);
+    background: color-mix(in srgb, var(--portal-app-canvas) 92%, transparent);
+    box-shadow: var(--portal-elevation-1);
+    backdrop-filter: blur(10px);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-header .portal-brand-mark {
+    transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-header[data-landing-motion-header="compact"] .portal-brand-mark {
+    transform: scale(.96);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero:not(.is-ready) :is(
+    .portal-landing-hero-copy h1,
+    .portal-landing-hero-copy p,
+    .portal-landing-hero-actions,
+    .portal-landing-proof,
+    .portal-landing-preview
+  ) {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero.is-ready :is(
+    .portal-landing-hero-copy h1,
+    .portal-landing-hero-copy p,
+    .portal-landing-hero-actions,
+    .portal-landing-proof,
+    .portal-landing-preview
+  ) {
+    animation: portal-landing-motion-enter var(--portal-landing-motion-hero) var(--portal-landing-motion-ease) both;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero.is-ready .portal-landing-hero-copy p {
+    animation-delay: var(--portal-landing-motion-stagger);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero.is-ready .portal-landing-hero-actions {
+    animation-delay: calc(var(--portal-landing-motion-stagger) * 2);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero.is-ready .portal-landing-proof {
+    animation-delay: calc(var(--portal-landing-motion-stagger) * 3);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-hero.is-ready .portal-landing-preview {
+    animation-delay: calc(var(--portal-landing-motion-stagger) * 4);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-pending {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-pending:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible {
+    animation: portal-landing-motion-enter var(--portal-landing-motion-reveal) var(--portal-landing-motion-ease) both;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-reveal-title {
+    animation: portal-landing-motion-enter var(--portal-landing-motion-reveal) var(--portal-landing-motion-ease) both;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card {
+    animation: portal-landing-motion-enter var(--portal-landing-motion-reveal) var(--portal-landing-motion-ease) backwards;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(1) { animation-delay: var(--portal-landing-motion-stagger); }
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(2) { animation-delay: calc(var(--portal-landing-motion-stagger) * 2); }
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(3) { animation-delay: calc(var(--portal-landing-motion-stagger) * 3); }
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(4) { animation-delay: calc(var(--portal-landing-motion-stagger) * 4); }
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(5) { animation-delay: calc(var(--portal-landing-motion-stagger) * 5); }
+  [data-landing-motion="test1"] .landing-motion-reveal.is-visible .landing-motion-card:nth-child(6) { animation-delay: calc(var(--portal-landing-motion-stagger) * 6); }
+
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible .landing-motion-card {
+    animation-duration: 400ms;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible .landing-motion-card:nth-child(1) { animation-delay: 0ms; }
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible .landing-motion-card:nth-child(2) { animation-delay: var(--portal-landing-motion-stagger); }
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible .landing-motion-card:nth-child(3) { animation-delay: calc(var(--portal-landing-motion-stagger) * 2); }
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible .landing-motion-card:nth-child(4) { animation-delay: calc(var(--portal-landing-motion-stagger) * 3); }
+
+  [data-landing-motion="test1"] .landing-motion-workflow ol {
+    position: relative;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-workflow ol::before {
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    left: 24px;
+    width: 1px;
+    background: var(--portal-light-accent-border);
+    content: "";
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition:
+      opacity var(--portal-landing-motion-reveal) var(--portal-landing-motion-ease),
+      transform var(--portal-landing-motion-reveal) var(--portal-landing-motion-ease);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-workflow.is-visible ol::before {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  [data-landing-motion="test1"] .landing-motion-final .landing-motion-cta {
+    transform-origin: center;
+  }
+
+  /* Keyboard focus is always more important than a decorative delayed reveal. */
+  [data-landing-motion="test1"] .landing-motion-hero:focus-within :is(
+    .portal-landing-hero-copy h1,
+    .portal-landing-hero-copy p,
+    .portal-landing-hero-actions,
+    .portal-landing-proof,
+    .portal-landing-preview
+  ),
+  [data-landing-motion="test1"] .landing-motion-reveal:focus-within,
+  [data-landing-motion="test1"] .landing-motion-reveal:focus-within .landing-motion-card,
+  [data-landing-motion="test1"] .landing-motion-reveal .landing-motion-card:focus-visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-landing-motion="test1"] .landing-motion-card,
+  [data-landing-motion="test1"] .landing-motion-cta {
+    transition:
+      transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-landing-motion="test1"] .portal-landing-studio.landing-motion-card:is(:hover, :focus-visible) {
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    [data-landing-motion="test1"] .landing-motion-cta:is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+
+    [data-landing-motion="test1"] .landing-motion-cta > span[aria-hidden="true"] {
+      transition: transform var(--portal-landing-motion-fast) var(--portal-landing-motion-ease);
+    }
+
+    [data-landing-motion="test1"] .landing-motion-cta:is(:hover, :focus-visible) > span[aria-hidden="true"] {
+      transform: translateX(4px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    [data-landing-motion="test1"] .landing-motion-card:active,
+    [data-landing-motion="test1"] .landing-motion-cta:active {
+      transform: scale(.99);
+      transition-duration: 100ms;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  [data-landing-motion="test1"] .landing-motion-workflow ol::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-landing-motion="test1"] :is(
+    .landing-motion-hero,
+    .landing-motion-reveal,
+    .landing-motion-reveal-title,
+    .landing-motion-card,
+    .landing-motion-cta,
+    .landing-motion-workflow ol::before
+  ) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
