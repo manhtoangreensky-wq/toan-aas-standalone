@@ -1,7 +1,7 @@
 # Telegram access and OAuth locale clarity — implementation plan
 
-> **Owner:** Web App only  
-> **Branch:** `feature/p0-webapp-telegram-access-locale`  
+> **Owner:** Web App only
+> **Branch:** `feature/p0-webapp-telegram-access-locale`
 > **Scope:** customer access presentation in Vietnamese, English, and Simplified Chinese
 
 ## Objective
