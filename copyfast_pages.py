@@ -33,6 +33,7 @@ SUBTITLE_STUDIO_PATH = re.compile(r"^/subtitle-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1
 IMAGE_STUDIO_PATH = re.compile(r"^/image-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 IMAGE_HUB_PATH = re.compile(r"^/image-hub/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 JOB_DETAIL_PATH = re.compile(r"^/jobs/[A-Za-z0-9._:-]{1,160}$")
+TICKET_DETAIL_PATH = re.compile(r"^/tickets/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 DOCUMENT_WORKSPACE_PATH = re.compile(r"^/document-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CHAT_WORKSPACE_PATH = re.compile(r"^/chat/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ANALYTICS_WORKSPACE_PATH = re.compile(r"^/analytics/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -119,6 +120,8 @@ _PORTAL_SHELL_TITLES = {
     "/pricing": {"vi": "Bảng giá · TOAN AAS", "en": "Pricing · TOAN AAS", "zh": "价格 · TOAN AAS"},
     "/jobs": {"vi": "Job Center · TOAN AAS", "en": "Job Center · TOAN AAS", "zh": "任务中心 · TOAN AAS"},
     "/assets": {"vi": "Thư viện tài sản · TOAN AAS", "en": "Asset library · TOAN AAS", "zh": "资源库 · TOAN AAS"},
+    "/support": {"vi": "Hỗ trợ · TOAN AAS", "en": "Support · TOAN AAS", "zh": "支持 · TOAN AAS"},
+    "/tickets": {"vi": "Yêu cầu của tôi · TOAN AAS", "en": "My requests · TOAN AAS", "zh": "我的请求 · TOAN AAS"},
     "/status": {"vi": "Trạng thái dịch vụ · TOAN AAS", "en": "Service status · TOAN AAS", "zh": "服务状态 · TOAN AAS"},
     "/tools": {"vi": "Công cụ & models · TOAN AAS", "en": "Tools & models · TOAN AAS", "zh": "工具与模型 · TOAN AAS"},
     "/studio": {"vi": "Media Studio · TOAN AAS", "en": "Media Studio · TOAN AAS", "zh": "媒体工作室 · TOAN AAS"},
@@ -190,6 +193,16 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "vi": "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.",
         "en": "Completed files appear only after Core Bridge verifies ownership and supplies a temporary signed URL.",
         "zh": "只有在 Core Bridge 验证所有权并提供临时签名 URL 后，完成的文件才会显示。",
+    },
+    "/support": {
+        "vi": "Tạo và theo dõi yêu cầu Support Desk theo signed Web account; Web không gửi nội dung sang Telegram hoặc provider.",
+        "en": "Create and track Support Desk requests for the signed Web account; the Web does not send content to Telegram or providers.",
+        "zh": "为已签名 Web 账户创建和跟踪支持请求；Web 不会将内容发送到 Telegram 或服务商。",
+    },
+    "/tickets": {
+        "vi": "Theo dõi các yêu cầu Web thuộc signed account hiện tại; case, phản hồi và quyền sở hữu luôn do máy chủ xác minh.",
+        "en": "Track Web requests owned by the current signed account; cases, replies and ownership are always verified by the server.",
+        "zh": "跟踪当前已签名账户拥有的 Web 请求；case、回复和所有权始终由服务器验证。",
     },
     "/onboarding": {
         "vi": "Bắt đầu với Workspace Web độc lập hoặc liên kết Telegram bằng mã một lần an toàn khi cần dữ liệu canonical do Bot xác minh.",
@@ -394,6 +407,12 @@ def _shell_title_for(path: str, locale: str) -> str:
             "en": "Job details · TOAN AAS",
             "zh": "任务详情 · TOAN AAS",
         }[locale]
+    if TICKET_DETAIL_PATH.fullmatch(normalized):
+        return {
+            "vi": "Chi tiết yêu cầu · TOAN AAS",
+            "en": "Request details · TOAN AAS",
+            "zh": "请求详情 · TOAN AAS",
+        }[locale]
     if AUDIO_HUB_PATH.fullmatch(normalized):
         return {
             "vi": "Audio Production Board · TOAN AAS",
@@ -428,6 +447,12 @@ def _shell_description_for(path: str, locale: str) -> str:
             "en": "Review owner-scoped canonical job details; delivery opens only through a temporary signed URL.",
             "zh": "查看已验证所有权范围内的 canonical 任务详情；交付仅通过临时签名 URL 打开。",
         }[locale]
+    if TICKET_DETAIL_PATH.fullmatch(normalized):
+        return {
+            "vi": "Xem case Support Desk owner-scoped; nội dung và trạng thái chỉ mở sau khi máy chủ xác minh phiên hiện tại.",
+            "en": "Review an owner-scoped Support Desk case; content and state open only after the server verifies the current session.",
+            "zh": "查看仅限所有者的 Support Desk case；内容和状态仅在服务器验证当前会话后开放。",
+        }[locale]
     descriptions = _PORTAL_SHELL_DESCRIPTIONS.get(normalized)
     return descriptions[locale] if descriptions else _PORTAL_SHELL_COPY[locale]["description"]
 
@@ -445,6 +470,8 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     # public surface strict before that family can absorb an invalid child
     # such as `/image-hub/not-a-uuid`.
     if normalized.startswith("/image-hub/") and normalized != "/image-hub/new" and not IMAGE_HUB_PATH.fullmatch(normalized):
+        raise HTTPException(status_code=404, detail="Trang không tồn tại")
+    if normalized.startswith("/tickets/") and not TICKET_DETAIL_PATH.fullmatch(normalized):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
     if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
