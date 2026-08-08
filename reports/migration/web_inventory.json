@@ -7561,7 +7561,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 679,
+      "occurrences": 688,
       "provider": "PayOS"
     },
     {
@@ -7650,7 +7650,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1394,
+      "occurrences": 1427,
       "provider": "Telegram"
     }
   ],
@@ -13734,7 +13734,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "054d6d7629573107f22f190eaf8648cfea54e6904aa8a651785eb43724ab319e",
+  "source_fingerprint_sha256": "916cc6d9b305b23c82583b19c8164eeb700a0eb613a3780d65443753b8930a1e",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-data-controls-locales",
   "ui_path_references": [
     {
