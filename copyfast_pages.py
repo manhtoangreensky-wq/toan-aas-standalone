@@ -114,6 +114,8 @@ _PORTAL_SHELL_TITLES = {
     "/dashboard": {"vi": "Tổng quan · TOAN AAS", "en": "Overview · TOAN AAS", "zh": "概览 · TOAN AAS"},
     "/features": {"vi": "Tất cả công cụ · TOAN AAS", "en": "All tools · TOAN AAS", "zh": "全部工具 · TOAN AAS"},
     "/membership": {"vi": "Gói thành viên · TOAN AAS", "en": "Membership · TOAN AAS", "zh": "会员方案 · TOAN AAS"},
+    "/packages": {"vi": "Gói dịch vụ · TOAN AAS", "en": "Service packages · TOAN AAS", "zh": "服务套餐 · TOAN AAS"},
+    "/pricing": {"vi": "Bảng giá · TOAN AAS", "en": "Pricing · TOAN AAS", "zh": "价格 · TOAN AAS"},
     "/status": {"vi": "Trạng thái dịch vụ · TOAN AAS", "en": "Service status · TOAN AAS", "zh": "服务状态 · TOAN AAS"},
     "/tools": {"vi": "Công cụ & models · TOAN AAS", "en": "Tools & models · TOAN AAS", "zh": "工具与模型 · TOAN AAS"},
     "/studio": {"vi": "Media Studio · TOAN AAS", "en": "Media Studio · TOAN AAS", "zh": "媒体工作室 · TOAN AAS"},
@@ -161,6 +163,21 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/membership": {
+        "vi": "Xem quyền lợi và trạng thái gói do nguồn canonical xác minh; Web không tự cấp tier hoặc thay đổi Xu.",
+        "en": "Review membership benefits and plan status verified by the canonical source; the Web does not grant tiers or change credits.",
+        "zh": "查看由 canonical 来源验证的会员权益和套餐状态；Web 不会授予等级或更改积分。",
+    },
+    "/packages": {
+        "vi": "Duyệt danh mục gói do nguồn canonical công bố; Web không tạo mua hàng, checkout hoặc thay đổi Xu.",
+        "en": "Browse packages published by the canonical source; the Web does not create a purchase, checkout, or credit change.",
+        "zh": "浏览 canonical 来源发布的服务套餐；Web 不会创建购买、结账或积分变更。",
+    },
+    "/pricing": {
+        "vi": "Xem bảng giá canonical theo schema đã xác minh; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
+        "en": "Review canonical pricing from a verified schema; the Web does not infer rates, promotions, or credit limits.",
+        "zh": "查看来自已验证 schema 的 canonical 价格；Web 不会推测费率、优惠或积分限额。",
+    },
     "/onboarding": {
         "vi": "Bắt đầu với Workspace Web độc lập hoặc liên kết Telegram bằng mã một lần an toàn khi cần dữ liệu canonical do Bot xác minh.",
         "en": "Start with an independent Web Workspace or securely link Telegram with a one-time code when Bot-verified canonical data is needed.",
