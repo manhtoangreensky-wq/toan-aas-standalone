@@ -9,7 +9,7 @@
   // can actually perceive it after Portal hydration. This is presentation
   // timing only; it never gates content, navigation, or an account action.
   const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;
-  const LANDING_HERO_KICKOFF_FALLBACK_MS = 90;
+  const LANDING_HERO_KICKOFF_FALLBACK_MS = 160;
   // The preview demonstrates the real Web workflow in a short, bounded
   // sequence. It is intentionally replayable instead of running forever.
   const LANDING_PREVIEW_STEP_START_DELAY_MS = 460;
@@ -175,6 +175,23 @@
         else step.classList.remove("landing-motion-step-active");
       });
     };
+    const schedulePreviewSteps = (run) => {
+      previewSteps.forEach((_step, index) => {
+        if (index === 0) return;
+        const timer = window.setTimeout(() => {
+          if (!isCurrentMount() || run !== introRun) return;
+          setActivePreviewStep(index);
+        }, LANDING_PREVIEW_STEP_START_DELAY_MS + ((index - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS));
+        previewStepTimers.push(timer);
+      });
+    };
+    const settleIntro = (run) => {
+      settledTimer = window.setTimeout(() => {
+        if (!isCurrentMount() || run !== introRun) return;
+        settledTimer = 0;
+        root.setAttribute("data-landing-motion-phase", "settled");
+      }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
+    };
     const replayIntro = () => {
       if (!isCurrentMount()) return;
       clearIntroSchedule();
@@ -198,26 +215,26 @@
         heroFrame = 0;
         heroKickoffTimer = 0;
         if (hero) hero.classList.add("is-ready");
+        schedulePreviewSteps(run);
+        // The countdown begins only after the browser has painted the initial
+        // state and the visible hero sequence has actually started.
+        settleIntro(run);
       };
       if (hero) {
-        heroFrame = window.requestAnimationFrame(activateHero);
+        heroFrame = window.requestAnimationFrame(() => {
+          if (!isCurrentMount() || run !== introRun) return;
+          // A second animation frame gives the browser a real pre-animation
+          // paint. Without it, fast devices can jump straight to the final
+          // state and make a valid motion sequence look like no motion at all.
+          heroFrame = window.requestAnimationFrame(activateHero);
+        });
         // Background tabs and an initial long task may defer animation frames.
         // A bounded timer keeps the intro observable without creating a loop.
         heroKickoffTimer = window.setTimeout(activateHero, LANDING_HERO_KICKOFF_FALLBACK_MS);
+      } else {
+        schedulePreviewSteps(run);
+        settleIntro(run);
       }
-      previewSteps.forEach((_step, index) => {
-        if (index === 0) return;
-        const timer = window.setTimeout(() => {
-          if (!isCurrentMount() || run !== introRun) return;
-          setActivePreviewStep(index);
-        }, LANDING_PREVIEW_STEP_START_DELAY_MS + ((index - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS));
-        previewStepTimers.push(timer);
-      });
-      settledTimer = window.setTimeout(() => {
-        if (!isCurrentMount() || run !== introRun) return;
-        settledTimer = 0;
-        root.setAttribute("data-landing-motion-phase", "settled");
-      }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
     };
 
     const syncHeader = () => {

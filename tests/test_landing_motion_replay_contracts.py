@@ -107,11 +107,11 @@ function fixture() {
 
 const first = fixture();
 motion.mountLanding(first.root);
-const firstCallbacks = { frames: frames.slice(), timers: timers.slice() };
-first.frames = frames;
-first.timers = timers;
-// The first frame starts the real hero sequence.
+// The first frame establishes a pre-animation paint; the second starts the
+// visible hero sequence.
 frames[0].callback();
+frames[1].callback();
+const firstCallbacks = { frames: frames.slice(), timers: timers.slice() };
 const afterInitialFrame = {
   phase: first.root.getAttribute("data-landing-motion-phase"),
   ready: first.hero.classList.has("is-ready"),
