@@ -49,3 +49,19 @@ action has already happened.
   the header, while the duplicate nav CTA yields to the real hero CTA below.
 - Keep header, CTA and proof text aligned to the same content container; do
   not centre unrelated content inside cards just to fill space.
+
+## Cinematic Mini refinement
+
+- The public landing may use a single cinematic opening: editorial H1 curtain,
+  shallow teal–sky aperture frame and the existing semantic preview steps.
+  This is a presentation layer only; it never substitutes a photographic
+  background, fabricated activity, a provider result or a fake account state.
+- `/welcome` defaults to Light only when the browser has no saved theme value.
+  Its header exposes explicit **Sáng** and **Tối** choices. An explicit browser
+  choice is reused; the signed application keeps its established theme cycle.
+- The cinematic lifecycle is default on `/welcome`; `?motion=0` is reserved for
+  a no-motion comparison. `prefers-reduced-motion` keeps the aperture static
+  and reveals every control/content item immediately.
+- Keep the aperture as one quiet background frame. Do not add looping glow,
+  ambient video, parallax, decorative blobs, raw colors or copied visual
+  identity from a reference site.

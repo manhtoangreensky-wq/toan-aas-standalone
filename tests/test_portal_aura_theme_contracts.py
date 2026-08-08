@@ -56,10 +56,14 @@ def test_theme_controller_does_not_observe_its_own_icon_rendering() -> None:
     assert "observer.observe(" not in THEME_JS
 
 
-def test_theme_toggle_is_shared_by_workspace_access_and_public_companion() -> None:
+def test_theme_cycle_stays_shared_by_workspace_access_while_landing_uses_explicit_choices() -> None:
     assert "function renderThemeToggle()" in PORTAL
-    assert PORTAL.count("${renderThemeToggle()}") == 3
+    assert PORTAL.count("${renderThemeToggle()}") == 2
+    assert "function renderLandingThemeSwitch()" in PORTAL
+    assert "${renderLandingThemeSwitch()}" in PORTAL
     assert "data-portal-theme-toggle" in PORTAL
+    assert 'data-portal-theme-set="light"' in PORTAL
+    assert 'data-portal-theme-set="dark"' in PORTAL
     assert "theme.syncControls()" in PORTAL
     assert 'class="portal-auth-header-actions"' in PORTAL
     assert 'class="portal-landing-nav-actions"' in PORTAL
@@ -182,7 +186,12 @@ def test_compact_landing_header_preserves_locale_and_theme_without_clipping_cta(
 
 def test_theme_cycle_uses_its_explicit_mode_label_instead_of_binary_pressed_state() -> None:
     assert 'data-portal-theme-toggle aria-pressed' not in PORTAL
-    assert 'setAttribute("aria-pressed"' not in THEME_JS
+    shared_cycle_sync = THEME_JS[
+        THEME_JS.index('querySelectorAll("[data-portal-theme-toggle]")'):
+        THEME_JS.index('querySelectorAll("[data-portal-theme-set]")')
+    ]
+    assert 'setAttribute("aria-pressed"' not in shared_cycle_sync
+    assert 'setAttribute("aria-pressed", String(active));' in THEME_JS
     assert "control.dataset.portalThemePreference = preference;" in THEME_JS
     assert "control.dataset.portalThemeResolved = resolved;" in THEME_JS
 

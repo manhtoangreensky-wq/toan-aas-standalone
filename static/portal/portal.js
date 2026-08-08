@@ -9926,6 +9926,13 @@
     return `<button class="portal-theme-toggle" type="button" data-portal-theme-toggle aria-label="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}" title="${safeText(uiText("chrome.theme_switch", "Đổi giao diện"))}"><span class="portal-theme-toggle-icon" data-portal-theme-icon aria-hidden="true"></span><span class="portal-theme-toggle-label" data-portal-theme-label>${safeText(uiText("chrome.theme_label", "Giao diện"))}</span></button>`;
   }
 
+  function renderLandingThemeSwitch() {
+    const themeLabel = safeText(uiText("chrome.theme_label", "Giao diện"));
+    const lightLabel = safeText(uiText("chrome.theme_light", "Sáng"));
+    const darkLabel = safeText(uiText("chrome.theme_dark", "Tối"));
+    return `<div class="portal-landing-theme-switch" role="group" aria-label="${themeLabel}"><button type="button" data-portal-theme-set="light" aria-label="${themeLabel}: ${lightLabel}" title="${themeLabel}: ${lightLabel}">${lightLabel}</button><button type="button" data-portal-theme-set="dark" aria-label="${themeLabel}: ${darkLabel}" title="${themeLabel}: ${darkLabel}">${darkLabel}</button></div>`;
+  }
+
   function renderHeader(page, context) {
     const name = displayName(context);
     const adminSurface = isAdminPortalSurface(page);
@@ -25864,7 +25871,7 @@
     const localeMarkup = languageLinks.map((item) => `<a class="portal-landing-locale-link" href="${item.href}"${locale === item.code ? ' aria-current="true"' : ""}>${item.label}</a>`).join("");
     return `<article class="portal-landing portal-landing-public-container" aria-label="TOAN AAS">
       <header class="portal-landing-header">
-        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#studios">${text("nav.features")}</a><a href="#workflow">${text("nav.workflow")}</a><a href="#trust">${text("nav.trust")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderThemeToggle()}${secondaryAction}${navigationAction}</div></nav>
+        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#studios">${text("nav.features")}</a><a href="#workflow">${text("nav.workflow")}</a><a href="#trust">${text("nav.trust")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>
       </header>
       <section class="portal-landing-hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${text("hero.title")}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}</div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><aside class="portal-landing-preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside></section>
       <section class="portal-landing-section" id="studios"><div class="portal-landing-section-heading"><span>${text("studios.kicker")}</span><h2>${text("studios.title")}</h2><p>${text("studios.body")}</p></div><div class="portal-landing-studios">${studioCards}</div></section>
@@ -29141,9 +29148,10 @@
     if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
     const isLanding = page.layout === "landing";
     const isAuth = page.layout === "auth";
-    const landingMotionOptIn = isLanding
-      && window.location.pathname === "/welcome"
-      && new URLSearchParams(window.location.search || "").get("motion") === "1";
+    const landingMotionRoute = isLanding
+      && window.location.pathname === "/welcome";
+    const landingMotionEnabled = landingMotionRoute
+      && new URLSearchParams(window.location.search || "").get("motion") !== "0";
     const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
     shell.dataset.portalSurface = surface;
     document.body.dataset.portalSurface = surface;
@@ -29181,7 +29189,7 @@
       }
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
-    main.dataset.portalMotionSkipEnter = landingMotionOptIn ? "true" : "false";
+    main.dataset.portalMotionSkipEnter = landingMotionRoute ? "true" : "false";
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       header.innerHTML = renderHeader(page, context);
@@ -29220,7 +29228,7 @@
       mountLandingMotion();
     }
     function mountLandingMotion() {
-      if (landingMotionOptIn && typeof motion.mountLanding === "function") motion.mountLanding(main);
+      if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
     }
     const replaceResult = motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {

@@ -64,14 +64,28 @@
 
   function mountLanding(root) {
     unmountLanding();
-    if (!root || typeof window !== "object" || prefersReducedMotion()) return;
+    if (!root || typeof window !== "object") return;
 
-    root.setAttribute("data-landing-motion", "test1");
+    root.setAttribute("data-landing-motion", "cinematic-mini");
     const header = root.querySelector(".portal-landing-header");
     const hero = root.querySelector(".portal-landing-hero");
+    const preview = root.querySelector(".portal-landing-preview");
     const revealTargets = Array.from(root.querySelectorAll(
       ".portal-landing-section, .portal-landing-workflow, .portal-landing-trust, .portal-landing-final"
     ));
+    if (header) header.classList.add("landing-motion-header");
+    if (hero) hero.classList.add("landing-motion-hero", "landing-cinematic-hero");
+    if (preview) {
+      preview.classList.add("landing-cinematic-preview");
+      preview.querySelectorAll(".portal-landing-preview-steps > span")
+        .forEach((step) => step.classList.add("landing-cinematic-step"));
+    }
+
+    // The aperture remains a quiet static frame for motion-sensitive visitors.
+    // Only animation setup is skipped; no content relies on this helper to be
+    // visible or operable.
+    if (prefersReducedMotion()) return;
+
     let scrollFrame = 0;
     let heroFrame = 0;
     let observer = null;
@@ -90,13 +104,11 @@
     };
 
     if (header) {
-      header.classList.add("landing-motion-header");
       syncHeader();
       window.addEventListener("scroll", onScroll, { passive: true });
     }
 
     if (hero) {
-      hero.classList.add("landing-motion-hero");
       root.querySelectorAll(
         ".portal-landing-hero-copy, .portal-landing-hero-actions, .portal-landing-proof, .portal-landing-preview"
       ).forEach((stage) => stage.classList.add("landing-motion-hero-stage"));

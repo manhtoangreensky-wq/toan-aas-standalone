@@ -9,21 +9,26 @@
 
   const STORAGE_KEY = "toan-aas-portal-theme";
   const THEMES = Object.freeze(["system", "light", "dark"]);
+  const EXPLICIT_THEMES = Object.freeze(["light", "dark"]);
   const SVG = Object.freeze({
     sun: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2.5v2M12 19.5v2M4.5 4.5l1.4 1.4M18.1 18.1l1.4 1.4M2.5 12h2M19.5 12h2M4.5 19.5l1.4-1.4M18.1 5.9l1.4-1.4"></path></svg>',
     moon: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.2 15.6A7.8 7.8 0 0 1 8.4 4.8 8.5 8.5 0 1 0 19.2 15.6Z"></path></svg>'
   });
 
   function valid(value) {
-    return THEMES.includes(value) ? value : "system";
+    return THEMES.includes(value) ? value : null;
   }
 
   function readPreference() {
     try {
       return valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
     } catch (_) {
-      return "system";
+      return null;
     }
+  }
+
+  function fallbackPreference() {
+    return typeof window !== "undefined" && window.location && window.location.pathname === "/welcome" ? "light" : "system";
   }
 
   function systemTheme() {
@@ -35,11 +40,12 @@
   }
 
   function resolve(preference) {
-    const selected = valid(preference);
+    const selected = valid(preference) || "system";
     return selected === "system" ? systemTheme() : selected;
   }
 
-  let preference = readPreference();
+  const storedPreference = readPreference();
+  let preference = storedPreference || fallbackPreference();
   let resolved = resolve(preference);
 
   function setMetaColor(theme) {
@@ -115,10 +121,21 @@
       control.dataset.portalThemePreference = preference;
       control.dataset.portalThemeResolved = resolved;
     });
+    global.document.querySelectorAll("[data-portal-theme-set]").forEach((control) => {
+      const mode = control.dataset && control.dataset.portalThemeSet;
+      if (!EXPLICIT_THEMES.includes(mode)) return;
+      const active = resolved === mode;
+      const modeLabel = mode === "dark" ? copy.dark : copy.light;
+      control.setAttribute("aria-pressed", String(active));
+      control.classList.toggle("is-active", active);
+      control.setAttribute("aria-label", `${copy.label}: ${modeLabel}`);
+      control.setAttribute("title", `${copy.label}: ${modeLabel}`);
+    });
   }
 
   function setPreference(value) {
     const next = valid(value);
+    if (!next) return resolved;
     const previousPreference = preference;
     const previousResolved = resolved;
     preference = next;
@@ -144,6 +161,14 @@
     if (!global.document || global.document.__toanAasThemeBound) return;
     global.document.__toanAasThemeBound = true;
     global.document.addEventListener("click", (event) => {
+      const explicit = event.target && event.target.closest ? event.target.closest("[data-portal-theme-set]") : null;
+      if (explicit) {
+        const explicitTheme = explicit.dataset && explicit.dataset.portalThemeSet;
+        if (!EXPLICIT_THEMES.includes(explicitTheme)) return;
+        event.preventDefault();
+        setPreference(explicit.dataset.portalThemeSet);
+        return;
+      }
       const control = event.target && event.target.closest ? event.target.closest("[data-portal-theme-toggle]") : null;
       if (!control) return;
       event.preventDefault();
