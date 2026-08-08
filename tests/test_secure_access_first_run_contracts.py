@@ -59,11 +59,13 @@ def test_optional_telegram_onboarding_preserves_the_bounded_continuation_route()
     onboarding = _section(PORTAL, "function renderOnboarding(page, context)", "function authProviderMark(provider)")
     for token in (
         "const skipRoute = workspaceRoute;",
-        'const skipLabel = continuation ? "Mở lại workflow" : "Vào Workspace";',
+        "const skipLabel = continuation",
+        'onboardingText("resumeWorkflow"',
+        'onboardingText("enterWorkspace"',
         'class="portal-onboarding-route"',
-        "Workflow sẽ được giữ lại",
-        "Web hoạt động độc lập",
-        "Chỉ khi bạn muốn đọc dữ liệu canonical từ Bot",
+        'onboardingText("routeResumeTitle"',
+        'onboardingText("independentTitle"',
+        '"stepVerifyBody"',
     ):
         assert token in onboarding
     choice = onboarding[onboarding.index("const independentWorkspaceChoice"):onboarding.index("const linkChallengePaused")]

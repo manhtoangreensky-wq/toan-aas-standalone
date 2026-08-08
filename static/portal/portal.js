@@ -119,6 +119,19 @@
     return accountCenterText(`dataControls.${key}`, fallback, params);
   }
 
+  // Onboarding copy is deliberately limited to presentation text.  Its
+  // challenge, callback, session and one-time-code semantics remain owned by
+  // the server and Bot protocol below.
+  function onboardingText(key, fallback, params) {
+    return uiText(`onboarding.${key}`, fallback, params);
+  }
+
+  // This notice appears on the access screens as well as onboarding, so it
+  // has its own small catalogue rather than depending on a page renderer.
+  function telegramConnectionText(key, fallback, params) {
+    return uiText(`telegramConnection.${key}`, fallback, params);
+  }
+
   function adminFinanceText(key, fallback, params) {
     return uiText(`adminFinance.${key}`, fallback, params);
   }
@@ -9228,6 +9241,7 @@
     if (path === "/account/activity") return uiText("page.accountActivity.title", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.title", fallback);
     if (path === "/account/data-controls") return uiText("page.dataControls.title", fallback);
+    if (path === "/onboarding") return onboardingText("page.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.title", fallback);
@@ -9273,6 +9287,7 @@
     if (path === "/account/activity") return uiText("page.accountActivity.description", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.description", fallback);
     if (path === "/account/data-controls") return uiText("page.dataControls.description", fallback);
+    if (path === "/onboarding") return onboardingText("page.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.description", fallback);
@@ -23622,35 +23637,41 @@
   function telegramConnectionBlockReason(context) {
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     if (connection.bot_callback_adapter_enabled !== true) {
-      return "Bot TOAN AAS chưa deploy adapter liên kết đã ký hoặc release gate đang tắt; khách hàng không thể tự sửa và Web không tạo mã chết.";
+      return telegramConnectionText("adapterPendingReason", "Bot TOAN AAS chưa deploy adapter liên kết đã ký hoặc release gate đang tắt; khách hàng không thể tự sửa và Web không tạo mã chết.");
     }
     const missing = Array.isArray(connection.missing_configuration)
       ? connection.missing_configuration.filter((item) => typeof item === "string" && /^[A-Z0-9_]{3,80}$/.test(item)).slice(0, 4)
       : [];
-    if (missing.length) return "Web đang chờ cấu hình " + missing.join(", ") + " trước khi tạo mã liên kết Telegram.";
-    return "Cầu nối Telegram chưa sẵn sàng trên máy chủ; Web không tạo mã để tránh một luồng không thể hoàn tất.";
+    if (missing.length) return telegramConnectionText("missingConfigReason", "Web đang chờ cấu hình {configuration} trước khi tạo mã liên kết Telegram.", { configuration: missing.join(", ") });
+    return telegramConnectionText("unavailableReason", "Cầu nối Telegram chưa sẵn sàng trên máy chủ; Web không tạo mã để tránh một luồng không thể hoàn tất.");
   }
 
   function renderTelegramConnectionNotice(context) {
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     if (telegramConnectionReady(context)) {
       if (connection.bot_callback_observed === true) {
-        const lastKind = connection.last_valid_callback_kind === "account_link" ? "liên kết tài khoản" : "đăng nhập";
-        const lastAt = typeof connection.last_valid_callback_at === "string" && connection.last_valid_callback_at.trim()
-          ? ` Lần callback hợp lệ gần nhất: ${connection.last_valid_callback_at.trim().slice(0, 80)}.`
+        const lastKind = connection.last_valid_callback_kind === "account_link"
+          ? telegramConnectionText("lastKindAccountLink", "liên kết tài khoản")
+          : telegramConnectionText("lastKindLogin", "đăng nhập");
+        const callbackAt = typeof connection.last_valid_callback_at === "string" && connection.last_valid_callback_at.trim()
+          ? connection.last_valid_callback_at.trim().slice(0, 80)
           : "";
-        return `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>Cầu nối Telegram đã được xác minh</strong><p>Web đã nhận callback Bot đã ký cho luồng ${safeText(lastKind)}.${safeText(lastAt)} Telegram ID không đi qua browser.</p></div></div>`;
+        const lastAt = callbackAt
+          ? telegramConnectionText("lastCallbackAt", " Lần callback hợp lệ gần nhất: {value}.", { value: callbackAt })
+          : "";
+        const body = telegramConnectionText("verifiedBody", "Web đã nhận callback Bot đã ký cho luồng {kind}.{lastAt} Telegram ID không đi qua browser.", { kind: lastKind, lastAt });
+        return `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>${safeText(telegramConnectionText("verifiedTitle", "Cầu nối Telegram đã được xác minh"))}</strong><p>${safeText(body)}</p></div></div>`;
       }
-      return `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Sẵn sàng xác minh Telegram</strong><p>Web đã có deep link và receiver ký số. Hãy tạo mã rồi xác nhận trong Bot; sau callback hợp lệ đầu tiên, Portal sẽ đánh dấu cầu nối đã được kiểm chứng. Không nhập Telegram ID vào Web.</p></div></div>`;
+      return `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(telegramConnectionText("readyTitle", "Sẵn sàng xác minh Telegram"))}</strong><p>${safeText(telegramConnectionText("readyBody", "Web đã có deep link và receiver ký số. Hãy tạo mã rồi xác nhận trong Bot; sau callback hợp lệ đầu tiên, Portal sẽ đánh dấu cầu nối đã được kiểm chứng. Không nhập Telegram ID vào Web."))}</p></div></div>`;
     }
     const missing = Array.isArray(connection.missing_configuration) ? connection.missing_configuration.filter((item) => typeof item === "string" && /^[A-Z0-9_]{3,80}$/.test(item)).slice(0, 4) : [];
     const adapterPending = connection.bot_callback_adapter_enabled !== true;
     const text = adapterPending
-      ? "Bot chưa được phát hành/kích hoạt adapter liên kết đã ký. Đăng nhập Telegram OIDC có thể dùng riêng cho Web khi đã cấu hình, nhưng Xu, jobs và assets canonical vẫn khóa. Không nhập Telegram ID; chờ Bot adapter được bật rồi tạo mã một lần."
+      ? telegramConnectionText("adapterPendingBody", "Bot chưa được phát hành/kích hoạt adapter liên kết đã ký. Đăng nhập Telegram OIDC có thể dùng riêng cho Web khi đã cấu hình, nhưng Xu, jobs và assets canonical vẫn khóa. Không nhập Telegram ID; chờ Bot adapter được bật rồi tạo mã một lần.")
       : (missing.length
-        ? `Web đang chờ cấu hình ${missing.join(", ")}. Không nhập Telegram ID; sau khi cấu hình, dùng mã một lần trong Bot.`
-        : "Web chưa xác nhận được cấu hình cầu nối Telegram. Không nhập Telegram ID; hãy thử lại sau khi Bot/Web được cấu hình.");
-    return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.info)}</span><div><strong>Kết nối Telegram chưa sẵn sàng</strong><p>${safeText(text)}</p></div></div>`;
+        ? telegramConnectionText("missingConfigBody", "Web đang chờ cấu hình {configuration}. Không nhập Telegram ID; sau khi cấu hình, dùng mã một lần trong Bot.", { configuration: missing.join(", ") })
+        : telegramConnectionText("unknownBody", "Web chưa xác nhận được cấu hình cầu nối Telegram. Không nhập Telegram ID; hãy thử lại sau khi Bot/Web được cấu hình."));
+    return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.info)}</span><div><strong>${safeText(telegramConnectionText("notReadyTitle", "Kết nối Telegram chưa sẵn sàng"))}</strong><p>${safeText(text)}</p></div></div>`;
   }
 
   function safeOnboardingContinuation(value) {
@@ -23669,22 +23690,26 @@
     const actionEnabled = enabled && connectionReady;
     const disabled = actionEnabled ? "" : " disabled title=\"" + safeText(reason) + "\"";
     const heading = readyToComplete
-      ? "Bot đã xác minh Telegram"
-      : (expired ? "Mã liên kết đã hết hạn" : "Phiên liên kết Telegram đang chờ");
+      ? onboardingText("recoveredReadyTitle", "Bot đã xác minh Telegram")
+      : (expired ? onboardingText("recoveredExpiredTitle", "Mã liên kết đã hết hạn") : onboardingText("recoveredPendingTitle", "Phiên liên kết Telegram đang chờ"));
     const body = readyToComplete
-      ? "Portal đang hoàn tất liên kết bằng signed session và CSRF của đúng tab đã tạo mã. Không có Telegram ID nào được trả về browser."
+      ? onboardingText("recoveredReadyBody", "Portal đang hoàn tất liên kết bằng signed session và CSRF của đúng tab đã tạo mã. Không có Telegram ID nào được trả về browser.")
       : (expired
-        ? "Mã một lần không còn hợp lệ. Tạo mã mới để tiếp tục; mã cũ không thể dùng lại."
-        : "Tab vừa được làm mới nên Portal không hiển thị lại mã hoặc deep link. Nếu bạn đã gửi mã vào Bot, hãy chờ hoặc kiểm tra lại; nếu chưa, hãy chủ động tạo mã mới để hủy mã đang chờ.");
+        ? onboardingText("recoveredExpiredBody", "Mã một lần không còn hợp lệ. Tạo mã mới để tiếp tục; mã cũ không thể dùng lại.")
+        : onboardingText("recoveredPendingBody", "Tab vừa được làm mới nên Portal không hiển thị lại mã hoặc deep link. Nếu bạn đã gửi mã vào Bot, hãy chờ hoặc kiểm tra lại; nếu chưa, hãy chủ động tạo mã mới để hủy mã đang chờ."));
     const safeMessage = typeof message === "string" && message.trim() ? "<p>" + safeText(message.trim()) + "</p>" : "";
-    return '<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">' + safeText(heading) + '</h2><p class="portal-card-subtitle">' + safeText(body) + '</p>' + safeMessage + '</div>' + badge(expired ? "failed" : "awaiting_confirm") + '</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="' + safeText(workspaceRoute) + '">' + safeText(workspaceLabel) + '</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">Kiểm tra ngay</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding" data-portal-confirm="Tạo mã mới sẽ hủy mã Telegram đang chờ. Bạn có chắc muốn tiếp tục?"' + disabled + '>' + (expired ? "Tạo mã mới" : "Tạo mã mới và hủy mã cũ") + '</button></div></section>';
+    const replacementConfirm = onboardingText("replacePendingCodeConfirm", "Tạo mã mới sẽ hủy mã Telegram đang chờ. Bạn có chắc muốn tiếp tục?");
+    const replacementLabel = expired
+      ? onboardingText("newCode", "Tạo mã mới")
+      : onboardingText("replacePendingCode", "Tạo mã mới và hủy mã cũ");
+    return '<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">' + safeText(heading) + '</h2><p class="portal-card-subtitle">' + safeText(body) + '</p>' + safeMessage + '</div>' + badge(expired ? "failed" : "awaiting_confirm") + '</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="' + safeText(workspaceRoute) + '">' + safeText(workspaceLabel) + '</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">' + safeText(onboardingText("checkNow", "Kiểm tra ngay")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding" data-portal-confirm="' + safeText(replacementConfirm) + '"' + disabled + '>' + safeText(replacementLabel) + '</button></div></section>';
   }
 
   function renderPausedTelegramLinkChallenge({ workspaceRoute, workspaceLabel }) {
     // The bridge can be disabled after a code was issued.  Do not expose a
     // deep link or copied command in that transition: the Bot callback would
     // fail closed, so the only honest customer action is a read-only refresh.
-    return `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Liên kết Telegram đang tạm dừng</h2><p class="portal-card-subtitle">Cầu nối xác minh đang không sẵn sàng. Portal đã ẩn mã, deep link và lệnh Bot để không hướng bạn vào một luồng không thể hoàn tất.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Bạn vẫn có thể dùng Workspace Web độc lập. Khi máy chủ xác nhận lại cầu nối, hãy tạo mã mới; mã cũ không được dùng lại.</span><a class="portal-button portal-button--primary" href="${safeText(workspaceRoute)}">${safeText(workspaceLabel)}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">Kiểm tra trạng thái</button></div></section>`;
+    return `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(onboardingText("pausedTitle", "Liên kết Telegram đang tạm dừng"))}</h2><p class="portal-card-subtitle">${safeText(onboardingText("pausedBody", "Cầu nối xác minh đang không sẵn sàng. Portal đã ẩn mã, deep link và lệnh Bot để không hướng bạn vào một luồng không thể hoàn tất."))}</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(onboardingText("pausedNote", "Bạn vẫn có thể dùng Workspace Web độc lập. Khi máy chủ xác nhận lại cầu nối, hãy tạo mã mới; mã cũ không được dùng lại."))}</span><a class="portal-button portal-button--primary" href="${safeText(workspaceRoute)}">${safeText(workspaceLabel)}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">${safeText(onboardingText("checkStatus", "Kiểm tra trạng thái"))}</button></div></section>`;
   }
 
   function starterKitCatalogItem(context, key) {
@@ -23898,7 +23923,9 @@
     const linkActionEnabled = enabled && connectionReady;
     const linkActionReason = connectionReady ? reason : telegramConnectionBlockReason(context);
     const linkActionDisabled = linkActionEnabled ? "" : ` disabled title="${safeText(linkActionReason)}"`;
-    const linkActionLabel = connectionReady ? "Tạo mã liên kết Telegram" : "Liên kết Telegram đang chờ";
+    const linkActionLabel = connectionReady
+      ? onboardingText("linkActionCreate", "Tạo mã liên kết Telegram")
+      : onboardingText("linkActionWaiting", "Liên kết Telegram đang chờ");
     const code = typeof data.code === "string" && data.code ? data.code : "";
     const recovered = data.recovered === true && !code;
     const readyToComplete = data.ready_to_complete === true;
@@ -23910,9 +23937,11 @@
     // that brought them here. Telegram is optional, so skip always preserves
     // the same bounded continuation as a completed link.
     const skipRoute = workspaceRoute;
-    const skipLabel = continuation ? "Mở lại workflow" : "Vào Workspace";
+    const skipLabel = continuation
+      ? onboardingText("resumeWorkflow", "Mở lại workflow")
+      : onboardingText("enterWorkspace", "Vào Workspace");
     const independentWorkspaceChoice = !linked && !code && !recovered
-      ? `<aside class="portal-onboarding-choice" aria-label="Lựa chọn sử dụng Workspace"><span class="portal-onboarding-choice-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><strong>Web hoạt động độc lập</strong><p>Bạn có thể vào Workspace ngay. Liên kết Telegram chỉ cần khi muốn đọc dữ liệu canonical do Bot xác minh.</p></div><a class="portal-button portal-button--primary" href="${safeText(skipRoute)}">${safeText(skipLabel)}</a></aside>`
+      ? `<aside class="portal-onboarding-choice" aria-label="${safeText(onboardingText("choiceAria", "Lựa chọn sử dụng Workspace"))}"><span class="portal-onboarding-choice-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><strong>${safeText(onboardingText("independentTitle", "Web hoạt động độc lập"))}</strong><p>${safeText(onboardingText("independentBody", "Bạn có thể vào Workspace ngay. Liên kết Telegram chỉ cần khi muốn đọc dữ liệu canonical do Bot xác minh."))}</p></div><a class="portal-button portal-button--primary" href="${safeText(skipRoute)}">${safeText(skipLabel)}</a></aside>`
       : "";
     const linkChallengePaused = (Boolean(code) || recovered) && !connectionReady;
     const pending = linkChallengePaused
@@ -23920,26 +23949,27 @@
       : recovered
       ? renderRecoveredTelegramLinkChallenge({ enabled, connectionReady, reason: linkActionReason, readyToComplete, expired, message: flow.message, workspaceRoute: skipRoute, workspaceLabel: skipLabel })
       : code
-      ? `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Xác minh trong Telegram</h2><p class="portal-card-subtitle">Mã chỉ sống trong phiên này; không được lưu trong localStorage hoặc gửi sang provider.</p></div>${badge("awaiting_confirm")}</div>
-        <div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mã một lần</span><code class="portal-link-code">${safeText(code)}</code></div><div class="portal-summary-item"><span class="portal-summary-key">Hiệu lực</span><span class="portal-summary-value">${safeText(String(data.expires_in_minutes || "—"))} phút</span></div></div>
-        <div class="portal-form-footer"><span class="portal-form-note">Mở bot TOAN AAS bằng deep link. Nếu Telegram không mở được từ trình duyệt này, sao chép lệnh dự phòng rồi gửi vào Bot. Khi quay lại tab này, Portal tự kiểm tra callback đã ký; nút bên cạnh chỉ để kiểm tra ngay. Bot là authority duy nhất xác minh Telegram identity.</span>${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">Mở Telegram</a>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(skipRoute)}">${safeText(skipLabel)}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}">Sao chép lệnh</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>Kiểm tra ngay</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding" data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?"${linkActionDisabled}>Tạo mã mới</button></div>
+      ? `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(onboardingText("challengeTitle", "Xác minh trong Telegram"))}</h2><p class="portal-card-subtitle">${safeText(onboardingText("challengeSubtitle", "Mã chỉ sống trong phiên này; không được lưu trong localStorage hoặc gửi sang provider."))}</p></div>${badge("awaiting_confirm")}</div>
+        <div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(onboardingText("codeLabel", "Mã một lần"))}</span><code class="portal-link-code">${safeText(code)}</code></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(onboardingText("expiryLabel", "Hiệu lực"))}</span><span class="portal-summary-value">${safeText(onboardingText("minutes", "{value} phút", { value: String(data.expires_in_minutes || "—") }))}</span></div></div>
+        <div class="portal-form-footer"><span class="portal-form-note">${safeText(onboardingText("challengeNote", "Mở bot TOAN AAS bằng deep link. Nếu Telegram không mở được từ trình duyệt này, sao chép lệnh dự phòng rồi gửi vào Bot. Khi quay lại tab này, Portal tự kiểm tra callback đã ký; nút bên cạnh chỉ để kiểm tra ngay. Bot là authority duy nhất xác minh Telegram identity."))}</span>${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">${safeText(onboardingText("openTelegram", "Mở Telegram"))}</a>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(skipRoute)}">${safeText(skipLabel)}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}">${safeText(onboardingText("copyCommand", "Sao chép lệnh"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(onboardingText("checkNow", "Kiểm tra ngay"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding" data-portal-confirm="${safeText(onboardingText("replaceCodeConfirm", "Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?"))}"${linkActionDisabled}>${safeText(onboardingText("newCode", "Tạo mã mới"))}</button></div>
       </section>`
-      : `<section class="portal-card portal-card-pad">${independentWorkspaceChoice}${renderEmpty("Chưa có mã liên kết", "Workspace Web đã dùng được độc lập. Chỉ tạo mã một lần khi cần đọc Xu, jobs hoặc assets canonical do Bot xác minh.", ICONS.link)}<div class="portal-form-footer"><span class="portal-form-note">Mã chỉ áp dụng cho signed session hiện tại, có hạn dùng ngắn và chỉ Bot đang mở của bạn mới có thể xác nhận.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding"${linkActionDisabled}>${safeText(linkActionLabel)}</button></div></section>`;
+      : `<section class="portal-card portal-card-pad">${independentWorkspaceChoice}${renderEmpty(onboardingText("emptyTitle", "Chưa có mã liên kết"), onboardingText("emptyBody", "Workspace Web đã dùng được độc lập. Chỉ tạo mã một lần khi cần đọc Xu, jobs hoặc assets canonical do Bot xác minh."), ICONS.link)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(onboardingText("emptyNote", "Mã chỉ áp dụng cho signed session hiện tại, có hạn dùng ngắn và chỉ Bot đang mở của bạn mới có thể xác nhận."))}</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding"${linkActionDisabled}>${safeText(linkActionLabel)}</button></div></section>`;
     const step = linked ? 3 : (code || recovered ? 2 : 1);
-    const steps = [[1, "Chọn cách bắt đầu", "Web hoạt động độc lập; Telegram là tùy chọn"], [2, "Xác nhận Telegram", "Chỉ khi bạn muốn đọc dữ liệu canonical từ Bot"], [3, "Vào Workspace", "Giữ đúng workflow bạn đã chọn trong Web"]];
-    const stepper = `<ol class="portal-onboarding-steps" aria-label="Tiến trình liên kết Telegram">${steps.map(([number, title, detail]) => {
+    const steps = [[1, "stepStartTitle", "Chọn cách bắt đầu", "stepStartBody", "Web hoạt động độc lập; Telegram là tùy chọn"], [2, "stepVerifyTitle", "Xác nhận Telegram", "stepVerifyBody", "Chỉ khi bạn muốn đọc dữ liệu canonical từ Bot"], [3, "stepWorkspaceTitle", "Vào Workspace", "stepWorkspaceBody", "Giữ đúng workflow bạn đã chọn trong Web"]];
+    const stepper = `<ol class="portal-onboarding-steps" aria-label="${safeText(onboardingText("stepsAria", "Tiến trình liên kết Telegram"))}">${steps.map(([number, titleKey, titleFallback, detailKey, detailFallback]) => {
       const current = number === step;
       const state = number < step ? ' data-state="done"' : current ? ' data-state="current"' : "";
       const currentStep = current ? ' aria-current="step"' : "";
       const marker = number < step ? portalIcon(ICONS.check) : safeText(String(number));
-      return `<li${state}${currentStep}><span aria-hidden="true">${marker}</span><div><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></div></li>`;
+      return `<li${state}${currentStep}><span aria-hidden="true">${marker}</span><div><strong>${safeText(onboardingText(titleKey, titleFallback))}</strong><small>${safeText(onboardingText(detailKey, detailFallback))}</small></div></li>`;
     }).join("")}</ol>`;
-    const routeSummary = `<section class="portal-onboarding-route" aria-label="Điểm đến sau onboarding"><span class="portal-onboarding-route-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><strong>${continuation ? "Workflow sẽ được giữ lại" : "Bạn có thể bắt đầu ngay"}</strong><p>${continuation ? "Bỏ qua hoặc hoàn tất liên kết đều đưa bạn trở về workflow đã chọn; không mất dữ liệu form ở browser." : "Dashboard, Project và Draft Web vẫn dùng được ngay cả khi chưa liên kết Telegram."}</p></div><span class="portal-onboarding-route-state">${safeText(continuation ? "Tiếp tục workflow" : "Web độc lập")}</span></section>`;
+    const routeSummary = `<section class="portal-onboarding-route" aria-label="${safeText(onboardingText("routeAria", "Điểm đến sau onboarding"))}"><span class="portal-onboarding-route-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><strong>${safeText(continuation ? onboardingText("routeResumeTitle", "Workflow sẽ được giữ lại") : onboardingText("routeStartTitle", "Bạn có thể bắt đầu ngay"))}</strong><p>${safeText(continuation ? onboardingText("routeResumeBody", "Bỏ qua hoặc hoàn tất liên kết đều đưa bạn trở về workflow đã chọn; không mất dữ liệu form ở browser.") : onboardingText("routeStartBody", "Dashboard, Project và Draft Web vẫn dùng được ngay cả khi chưa liên kết Telegram."))}</p></div><span class="portal-onboarding-route-state">${safeText(continuation ? onboardingText("routeResumeState", "Tiếp tục workflow") : onboardingText("routeIndependentState", "Web độc lập"))}</span></section>`;
     const continuationNotice = continuation
-      ? `<div class="portal-notice portal-notice--info portal-onboarding-continuation"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.external)}</span><div><strong>Workflow đang chờ</strong><p>Sau khi Bot xác minh Telegram, Portal sẽ mở lại workflow bạn đã chọn.</p></div></div>`
+      ? `<div class="portal-notice portal-notice--info portal-onboarding-continuation"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.external)}</span><div><strong>${safeText(onboardingText("continuationTitle", "Workflow đang chờ"))}</strong><p>${safeText(onboardingText("continuationBody", "Sau khi Bot xác minh Telegram, Portal sẽ mở lại workflow bạn đã chọn."))}</p></div></div>`
       : "";
-    const completed = `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="completed"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><h2>Telegram đã liên kết</h2><p>Phiên Web có thể đọc dữ liệu canonical qua Core Bridge. Xu, PayOS, job và provider vẫn do bot điều phối.</p><div class="portal-state-meta"><span>Identity canonical đã xác minh</span><span>Không lưu Telegram ID ở browser</span></div></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${safeText(workspaceRoute)}">${continuation ? "Mở lại workflow" : "Vào Dashboard"}</a></div></section>`;
-    const assurance = `<details class="portal-onboarding-assurance"><summary>Thông tin liên kết và bảo mật</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Tạo mã một lần</strong><span>Web server tạo, băm và đặt hạn dùng cho mã liên kết.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>Xác nhận trong Bot</strong><span>Bot xác minh Telegram identity và gọi callback nội bộ đã ký.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Quay lại Workspace</strong><span>Portal kiểm tra signed session; không tự nhận quyền từ dữ liệu browser.</span></div></div></div></details>`;
+    const completed = `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="completed"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><h2>${safeText(onboardingText("completedTitle", "Telegram đã liên kết"))}</h2><p>${safeText(onboardingText("completedBody", "Phiên Web có thể đọc dữ liệu canonical qua Core Bridge. Xu, PayOS, job và provider vẫn do bot điều phối."))}</p><div class="portal-state-meta"><span>${safeText(onboardingText("completedCanonicalIdentity", "Identity canonical đã xác minh"))}</span><span>${safeText(onboardingText("completedNoBrowserIdentity", "Không lưu Telegram ID ở browser"))}</span></div></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${safeText(workspaceRoute)}">${safeText(continuation ? onboardingText("resumeWorkflow", "Mở lại workflow") : onboardingText("openDashboard", "Vào Dashboard"))}</a></div></section>`;
+    const assuranceRows = [[ICONS.link, "assuranceCodeTitle", "Tạo mã một lần", "assuranceCodeBody", "Web server tạo, băm và đặt hạn dùng cho mã liên kết."], [ICONS.check, "assuranceBotTitle", "Xác nhận trong Bot", "assuranceBotBody", "Bot xác minh Telegram identity và gọi callback nội bộ đã ký."], [ICONS.shield, "assuranceReturnTitle", "Quay lại Workspace", "assuranceReturnBody", "Portal kiểm tra signed session; không tự nhận quyền từ dữ liệu browser."]];
+    const assurance = `<details class="portal-onboarding-assurance"><summary>${safeText(onboardingText("assuranceSummary", "Thông tin liên kết và bảo mật"))}</summary><div class="portal-panel-list">${assuranceRows.map(([icon, titleKey, titleFallback, bodyKey, bodyFallback]) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(icon)}</span><div><strong>${safeText(onboardingText(titleKey, titleFallback))}</strong><span>${safeText(onboardingText(bodyKey, bodyFallback))}</span></div></div>`).join("")}</div></details>`;
     const activeContent = linked ? completed : `${renderTelegramConnectionNotice(context)}${pending}`;
     const onboardingHeroPage = { ...page, action: "none" };
     return `<article class="portal-page portal-onboarding-page">${renderHero(onboardingHeroPage, context)}<div class="portal-onboarding-layout"><div class="portal-onboarding-action">${activeContent}</div><aside class="portal-onboarding-progress">${stepper}${routeSummary}${continuationNotice}</aside></div>${assurance}</article>`;

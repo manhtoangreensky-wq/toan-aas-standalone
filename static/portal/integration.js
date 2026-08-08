@@ -917,6 +917,15 @@
     return target.supported ? api(target.endpoint) : localAdminCompatibilityGuard(target);
   }
 
+  // This helper is intentionally limited to browser-authored onboarding
+  // feedback. API/Bot messages remain canonical and always win when present.
+  function onboardingText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(`onboarding.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   async function copyPaymentBotCommand(value) {
     const command = String(value || "");
     if (!["/naptien", "/thucong"].includes(command)) throw new Error("Lệnh thanh toán canonical không hợp lệ.");
@@ -942,7 +951,7 @@
     // any payment/provider data. The Bot still proves the caller identity.
     const command = String(value || "").trim();
     if (!/^\/linkweb\s+[A-Za-z0-9_-]{12,160}$/.test(command)) {
-      throw new Error("Lệnh liên kết Telegram không hợp lệ.");
+      throw new Error(onboardingText("browser.invalidCommand", "Lệnh liên kết Telegram không hợp lệ."));
     }
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(command);
@@ -957,7 +966,7 @@
     field.select();
     const copied = document.execCommand("copy");
     field.remove();
-    if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép. Hãy copy lệnh hiển thị bên cạnh.");
+    if (!copied) throw new Error(onboardingText("browser.clipboardUnavailable", "Trình duyệt chưa cho phép sao chép. Hãy copy lệnh hiển thị bên cạnh."));
   }
 
   async function copyBotCompanionCommand(value) {
@@ -25118,10 +25127,12 @@
     stopTelegramLinkPolling();
     const completed = await api("/auth/telegram/link/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
     merge({ linkStatus: completed.data || { linked: true }, linkFlow: {} });
-    toast(completed.message);
-    await hydrate();
     const requested = requestedPortalRoute();
-    toast(requested ? "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn." : "Telegram đã được liên kết. Đang mở Dashboard.");
+    const fallback = requested
+      ? onboardingText("browser.completeResume", "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn.")
+      : onboardingText("browser.completeDashboard", "Telegram đã được liên kết. Đang mở Dashboard.");
+    toast(completed.message || fallback);
+    await hydrate();
     window.location.assign(requested || "/dashboard");
     return true;
   }
@@ -25136,7 +25147,7 @@
       linkFlow: {
         ...previous,
         status: result.status || "awaiting_confirm",
-        message: result.message || "Đang chờ Bot xác minh Telegram.",
+        message: result.message || onboardingText("browser.waitingForBot", "Đang chờ Bot xác minh Telegram."),
         errorCode: result.error_code || "",
         // A reload never restores the code. If it only existed in memory,
         // expose a safe recovered marker and let the user either wait for the
@@ -25152,9 +25163,12 @@
     merge({ linkStatus: result.data || {} });
     if (result.data && result.data.linked) {
       stopTelegramLinkPolling();
-      await hydrate();
       const requested = requestedPortalRoute();
-      toast(requested ? "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn." : "Telegram đã được liên kết. Đang mở Dashboard.");
+      const fallback = requested
+        ? onboardingText("browser.completeResume", "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn.")
+        : onboardingText("browser.completeDashboard", "Telegram đã được liên kết. Đang mở Dashboard.");
+      toast(result.message || fallback);
+      await hydrate();
       window.location.assign(requested || "/dashboard");
       return true;
     }
@@ -25163,16 +25177,18 @@
       return completeTelegramLinkChallenge();
     }
     if (recoverTelegramLinkFlow(result)) {
-      if (!silent) toast(result.message);
+      if (!silent) toast(result.message || onboardingText("browser.waitingForBot", "Đang chờ Bot xác minh Telegram."));
       return false;
     }
     const previous = base().linkFlow && typeof base().linkFlow === "object" ? base().linkFlow : {};
     const previousData = previous.data && typeof previous.data === "object" ? previous.data : {};
+    let browserFallback = "";
     if (typeof previousData.code === "string" || previousData.recovered === true) {
-      merge({ linkFlow: { status: "failed", message: "Mã liên kết Telegram đã hết hạn hoặc không còn thuộc phiên Web này. Hãy tạo mã mới.", errorCode: "LINK_CODE_INVALID", data: { expired: true } } });
+      browserFallback = onboardingText("browser.expired", "Mã liên kết Telegram đã hết hạn hoặc không còn thuộc phiên Web này. Hãy tạo mã mới.");
+      merge({ linkFlow: { status: "failed", message: result.message || browserFallback, errorCode: "LINK_CODE_INVALID", data: { expired: true } } });
       stopTelegramLinkPolling();
     }
-    if (!silent) toast(result.message);
+    if (!silent) toast(result.message || browserFallback);
     return false;
   }
 
@@ -34546,7 +34562,7 @@
       if (action === "start-telegram-link") {
         const submission = acquireSubmission("telegram-link-start", "one-time-account-link");
         if (!submission) {
-          toast("Mã liên kết Telegram đang được tạo. Vui lòng chờ phản hồi.", "error");
+          toast(onboardingText("browser.startPending", "Mã liên kết Telegram đang được tạo. Vui lòng chờ phản hồi."), "error");
           return;
         }
         setActionBusy(action, route, true);
@@ -35345,7 +35361,7 @@
       if (action === "copy-telegram-link-command") {
         const command = String(detail.copyText || "");
         await copyTelegramLinkCommand(command);
-        toast("Đã sao chép lệnh liên kết. Hãy dán lệnh vào Bot TOAN AAS rồi quay lại tab này.");
+        toast(onboardingText("browser.copySuccess", "Đã sao chép lệnh liên kết. Hãy dán lệnh vào Bot TOAN AAS rồi quay lại tab này."));
         return;
       }
       if (action === "copy-bot-companion-command") {

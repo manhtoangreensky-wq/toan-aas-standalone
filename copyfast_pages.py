@@ -159,6 +159,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/onboarding": {
+        "vi": "Bắt đầu với Workspace Web độc lập hoặc liên kết Telegram bằng mã một lần an toàn khi cần dữ liệu canonical do Bot xác minh.",
+        "en": "Start with an independent Web Workspace or securely link Telegram with a one-time code when Bot-verified canonical data is needed.",
+        "zh": "先独立使用 Web 工作台；仅在需要 Bot 验证的权威数据时，使用一次性代码安全关联 Telegram。",
+    },
     "/account/data-controls": {
         "vi": "Xuất dữ liệu authoring thuộc Web và tạo yêu cầu review xóa theo phạm vi, không tác động Bot hoặc hệ thống canonical khác.",
         "en": "Export Web-owned authoring data and create scope-bound erasure-review requests without affecting the Bot or another canonical system.",
