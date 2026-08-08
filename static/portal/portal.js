@@ -108,6 +108,13 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  // Public access copy is fixed presentation chrome.  Do not pass signed
+  // Telegram/OAuth protocol data through this helper: messages, codes,
+  // deep links, expiry and provider readiness remain server-owned values.
+  function accessPresentationText(key, fallback, params) {
+    return uiText(`access.${key}`, fallback, params);
+  }
+
   function accountCenterText(key, fallback, params) {
     return uiText(`accountCenter.${key}`, fallback, params);
   }
@@ -24195,31 +24202,35 @@
     const registration = purpose === "register";
     const isApple = provider === "apple";
     const isTelegram = provider === "telegram";
-    if (isTelegram) label = label + " (chỉ truy cập Web)";
+    if (isTelegram) label += accessPresentationText("provider.telegramWebOnlySuffix", " (chỉ truy cập Web)");
     const actionLabel = isApple
-      ? "Sign in with Apple"
+      ? accessPresentationText("provider.appleAction", "Sign in with Apple")
       : (isTelegram
-        ? "Đăng nhập bằng Telegram"
-        : `${registration ? "Tạo hoặc tiếp tục với" : "Tiếp tục với"} ${label}`);
+        ? accessPresentationText("provider.telegramAction", "Đăng nhập bằng Telegram")
+        : accessPresentationText(
+          registration ? "provider.registerOrContinueWith" : "provider.continueWith",
+          registration ? "Tạo hoặc tiếp tục với {provider}" : "Tiếp tục với {provider}",
+          { provider: label }
+        ));
     const description = enabled
       ? (registration
         ? (isTelegram
-          ? "Telegram Login xác minh tại Telegram và tạo signed Web session. Sau đó bạn xác nhận cùng tài khoản trong Bot để mở Xu, jobs và assets canonical."
-          : "Sau khi xác nhận tại provider, Web sẽ tạo tài khoản lần đầu hoặc mở đúng tài khoản OAuth hiện có. Token không được trả về browser.")
+          ? accessPresentationText("provider.telegramRegisterDescription", "Telegram Login xác minh tại Telegram và tạo signed Web session. Sau đó bạn xác nhận cùng tài khoản trong Bot để mở Xu, jobs và assets canonical.")
+          : accessPresentationText("provider.registerDescription", "Sau khi xác nhận tại provider, Web sẽ tạo tài khoản lần đầu hoặc mở đúng tài khoản OAuth hiện có. Token không được trả về browser."))
         : (isTelegram
-          ? "Telegram Login được xác minh bằng OIDC trên server. Sau đó, Web vẫn yêu cầu Bot xác nhận cùng identity trước khi đọc dữ liệu canonical."
-          : "OAuth server đã được cấu hình. Sau khi xác nhận tại provider, Web tạo signed session; token không được trả về browser."))
-      : "OAuth chưa được cấu hình trên server nên nút được giữ khóa; không có đăng nhập giả.";
+          ? accessPresentationText("provider.telegramSignInDescription", "Telegram Login được xác minh bằng OIDC trên server. Sau đó, Web vẫn yêu cầu Bot xác nhận cùng identity trước khi đọc dữ liệu canonical.")
+          : accessPresentationText("provider.signInDescription", "OAuth server đã được cấu hình. Sau khi xác nhận tại provider, Web tạo signed session; token không được trả về browser.")))
+      : accessPresentationText("provider.unavailableDescription", "OAuth chưa được cấu hình trên server nên nút được giữ khóa; không có đăng nhập giả.");
     const continuation = onboardingContinuationRoute();
     const startPath = publicOAuthStartPath(provider, continuation, context);
-    return `<article class="portal-auth-provider-option${enabled ? " is-enabled" : " is-unavailable"}" data-auth-provider="${safeText(provider)}">${authProviderMark(provider)}<div><strong>${safeText(label)}</strong><p>${safeText(description)}</p></div>${enabled ? `<a class="portal-button portal-button--quiet" href="${startPath}">${safeText(actionLabel)}</a>` : `<span class="portal-auth-provider-state" title="Cần OAuth client, secret và callback URL trên server">Chờ cấu hình máy chủ</span>`}</article>`;
+    return `<article class="portal-auth-provider-option${enabled ? " is-enabled" : " is-unavailable"}" data-auth-provider="${safeText(provider)}">${authProviderMark(provider)}<div><strong>${safeText(label)}</strong><p>${safeText(description)}</p></div>${enabled ? `<a class="portal-button portal-button--quiet" href="${startPath}">${safeText(actionLabel)}</a>` : `<span class="portal-auth-provider-state" title="${safeText(accessPresentationText("provider.unavailableTitle", "Cần OAuth client, secret và callback URL trên server"))}">${safeText(accessPresentationText("provider.unavailableState", "Chờ cấu hình máy chủ"))}</span>`}</article>`;
   }
 
   function renderExpiredTelegramLoginChallenge(message, connectionDisabled) {
     const detail = typeof message === "string" && message.trim()
       ? message.trim()
-      : "Mã một lần không còn hợp lệ và không được hiển thị lại. Hãy tạo mã mới trong chính tab này.";
-    return '<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">' + portalIcon(ICONS.info) + '</span><div><strong>Mã đăng nhập Telegram đã hết hạn</strong><p>' + safeText(detail) + '</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"' + connectionDisabled + '>Tạo mã mới</button></div></div></div>';
+      : accessPresentationText("telegram.expiredFallback", "Mã một lần không còn hợp lệ và không được hiển thị lại. Hãy tạo mã mới trong chính tab này.");
+    return '<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">' + portalIcon(ICONS.info) + '</span><div><strong>' + safeText(accessPresentationText("telegram.expiredTitle", "Mã đăng nhập Telegram đã hết hạn")) + '</strong><p>' + safeText(detail) + '</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"' + connectionDisabled + '>' + safeText(accessPresentationText("telegram.newCode", "Tạo mã mới")) + '</button></div></div></div>';
   }
 
   function renderTelegramLoginMethod(context) {
@@ -24241,14 +24252,14 @@
     const accountRequired = flow.errorCode === "TELEGRAM_LOGIN_ACCOUNT_REQUIRED" || data.restart_required === true;
     const botCommand = code ? `/linkweb ${code}` : "";
     const pending = accountRequired
-      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.info)}</span><div><strong>Telegram chưa liên kết với Web App</strong><p>${safeText(flow.message || "Hãy đăng ký/đăng nhập bằng email, liên kết Telegram trong Thiết lập tài khoản, rồi tạo mã đăng nhập mới.")}</p><div class="portal-form-footer" style="margin-top:10px"><a class="portal-button portal-button--quiet" href="/register">Tạo tài khoản</a><a class="portal-button portal-button--quiet" href="/login">Đăng nhập email</a></div></div></div>`
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.info)}</span><div><strong>${safeText(accessPresentationText("telegram.accountRequiredTitle", "Telegram chưa liên kết với Web App"))}</strong><p>${safeText(flow.message || accessPresentationText("telegram.accountRequiredFallback", "Hãy đăng ký hoặc đăng nhập bằng email, liên kết Telegram trong Thiết lập tài khoản, rồi tạo mã đăng nhập mới."))}</p><div class="portal-form-footer" style="margin-top:10px"><a class="portal-button portal-button--quiet" href="/register">${safeText(accessPresentationText("telegram.createAccount", "Tạo tài khoản"))}</a><a class="portal-button portal-button--quiet" href="/login">${safeText(accessPresentationText("telegram.emailSignIn", "Đăng nhập bằng email"))}</a></div></div></div>`
       : expired
       ? renderExpiredTelegramLoginChallenge(flow.message, connectionDisabled)
       : code
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Xác minh Telegram</strong><p>Không nhập Telegram ID vào Web. Mở Bot bằng deep link; nếu trình duyệt không mở Telegram thì sao chép lệnh dự phòng. Khi quay lại tab này, Portal tự kiểm tra mã browser-bound đã ký.</p><div class="portal-form-footer" style="margin-top:10px"><code class="portal-link-code">${safeText(code)}</code>${deepLink ? `<a class="portal-button portal-button--quiet" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">Mở Telegram</a>` : ""}<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}">Sao chép lệnh</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${ready ? "Hoàn tất đăng nhập" : "Kiểm tra ngay"}</button></div></div></div>`
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(accessPresentationText("telegram.challengeTitle", "Xác minh Telegram"))}</strong><p>${safeText(accessPresentationText("telegram.challengeBody", "Không nhập Telegram ID vào Web. Mở Bot bằng deep link; nếu trình duyệt không mở Telegram thì sao chép lệnh dự phòng. Khi quay lại tab này, Portal tự kiểm tra mã browser-bound đã ký."))}</p><div class="portal-form-footer" style="margin-top:10px"><code class="portal-link-code">${safeText(code)}</code>${deepLink ? `<a class="portal-button portal-button--quiet" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">${safeText(accessPresentationText("telegram.openTelegram", "Mở Telegram"))}</a>` : ""}<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}">${safeText(accessPresentationText("telegram.copyCommand", "Sao chép lệnh"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${safeText(ready ? accessPresentationText("telegram.completeSignIn", "Hoàn tất đăng nhập") : accessPresentationText("telegram.checkNow", "Kiểm tra ngay"))}</button></div></div></div>`
       : recovered
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Phiên xác minh Telegram đang chờ</strong><p>Tab vừa được làm mới nên Portal không hiển thị lại mã một lần. Browser vẫn chỉ kiểm tra challenge HttpOnly của chính tab này; nếu bạn đã xác nhận trong Bot, Portal sẽ tự hoàn tất.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${ready ? "Hoàn tất đăng nhập" : "Kiểm tra ngay"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login" data-portal-confirm="Tạo mã mới sẽ thay thế challenge đang chờ. Bạn có chắc muốn tiếp tục?"${connectionDisabled}>Tạo mã mới</button></div></div></div>`
-      : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>Telegram</strong><p>Đăng nhập bằng chính tài khoản Telegram đang mở Bot. Bot chứng minh ownership; Web không nhận Telegram ID thô. Lần đầu có thể tự tạo hồ sơ Web mặc định sau xác minh.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"${connectionDisabled}>Đăng nhập với Telegram</button></div></div></div>`;
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(accessPresentationText("telegram.recoveredTitle", "Phiên xác minh Telegram đang chờ"))}</strong><p>${safeText(accessPresentationText("telegram.recoveredBody", "Tab vừa được làm mới nên Portal không hiển thị lại mã một lần. Browser vẫn chỉ kiểm tra challenge HttpOnly của chính tab này; nếu bạn đã xác nhận trong Bot, Portal sẽ tự hoàn tất."))}</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${safeText(ready ? accessPresentationText("telegram.completeSignIn", "Hoàn tất đăng nhập") : accessPresentationText("telegram.checkNow", "Kiểm tra ngay"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login" data-portal-confirm="${safeText(accessPresentationText("telegram.replaceCodeConfirm", "Tạo mã mới sẽ thay thế challenge đang chờ. Bạn có chắc muốn tiếp tục?"))}"${connectionDisabled}>${safeText(accessPresentationText("telegram.newCode", "Tạo mã mới"))}</button></div></div></div>`
+      : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(accessPresentationText("telegram.title", "Telegram"))}</strong><p>${safeText(accessPresentationText("telegram.body", "Đăng nhập bằng chính tài khoản Telegram đang mở Bot. Bot chứng minh ownership; Web không nhận Telegram ID thô. Lần đầu có thể tự tạo hồ sơ Web mặc định sau xác minh."))}</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"${connectionDisabled}>${safeText(accessPresentationText("telegram.signIn", "Đăng nhập với Telegram"))}</button></div></div></div>`;
     const providers = [
       { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin", context) },
       { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "signin", context) },
@@ -24258,7 +24269,7 @@
     const enabledProviders = providers.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providers.filter((item) => !item.enabled).map((item) => item.markup).join("");
     const activeTelegramFlow = Boolean(accountRequired || expired || code || recovered || ready);
-    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Phương thức đăng nhập khác</h3><p class="portal-card-subtitle">Email + mật khẩu là đường chính. Telegram Login xác thực Web bằng OIDC; OAuth chỉ xuất hiện khi máy chủ đã cấu hình thật. Liên kết Bot là bước tùy chọn, tách riêng khỏi đăng nhập Web.</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này.</p>`}<details class="portal-auth-telegram-panel"${activeTelegramFlow ? " open" : ""}><summary><span>Liên kết Telegram/Bot</span><small>Tùy chọn · mở Xu, jobs và assets canonical</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details>${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>Phương thức đang chờ cấu hình (${safeText(String(providers.filter((item) => !item.enabled).length))})</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}</section>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("telegram.sectionTitle", "Phương thức đăng nhập khác"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("telegram.sectionBody", "Email + mật khẩu là đường chính. Telegram Login xác thực Web bằng OIDC; OAuth chỉ xuất hiện khi máy chủ đã cấu hình thật. Liên kết Bot là bước tùy chọn, tách riêng khỏi đăng nhập Web."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("telegram.noProviderConfigured", "Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này."))}</p>`}<details class="portal-auth-telegram-panel"${activeTelegramFlow ? " open" : ""}><summary><span>${safeText(accessPresentationText("telegram.linkPanelTitle", "Liên kết Telegram/Bot"))}</span><small>${safeText(accessPresentationText("telegram.linkPanelHint", "Tùy chọn · mở Xu, jobs và assets canonical"))}</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details>${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("telegram.pendingProviders", "Phương thức đang chờ cấu hình ({count})", { count: String(providers.filter((item) => !item.enabled).length) }))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}</section>`;
   }
 
   function renderOAuthRegistrationMethods(context) {
@@ -24275,7 +24286,7 @@
     ];
     const enabledProviders = providerCards.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providerCards.filter((item) => !item.enabled).map((item) => item.markup).join("");
-    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Tạo hoặc tiếp tục với OAuth</h3><p class="portal-card-subtitle">OAuth là phương thức riêng và không tự ghép tài khoản chỉ vì trùng email. Liên kết Bot được thực hiện sau khi bạn đã vào Workspace.</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">Chưa có phương thức OAuth được cấu hình. Bạn vẫn có thể tạo tài khoản bằng Email + mật khẩu.</p>`}${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>Xem các phương thức đang chờ cấu hình</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}</section>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("provider.registerSectionTitle", "Tạo hoặc tiếp tục với OAuth"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("provider.registerSectionBody", "OAuth là phương thức riêng và không tự ghép tài khoản chỉ vì trùng email. Liên kết Bot được thực hiện sau khi bạn đã vào Workspace."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("provider.noProviderForRegistration", "Chưa có phương thức OAuth được cấu hình. Bạn vẫn có thể tạo tài khoản bằng Email + mật khẩu."))}</p>`}${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("provider.pendingProviderMethods", "Xem các phương thức đang chờ cấu hình"))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}</section>`;
   }
 
   function renderAuth(page, context) {
