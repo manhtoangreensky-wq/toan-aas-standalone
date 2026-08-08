@@ -13732,10 +13732,10 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 141,
-  "source_files_scanned": 141,
-  "source_fingerprint_sha256": "5a6b5e97e51021f4413383d98c5de210856827557205d69e6016fee82cbdd4cb",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-test1",
+  "source_files_discovered": 142,
+  "source_files_scanned": 142,
+  "source_fingerprint_sha256": "726f915f0b769094850a86cd5107d56fcacdaaebfb24e5023550a7bc15d393a3",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-cinematic-mini",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
