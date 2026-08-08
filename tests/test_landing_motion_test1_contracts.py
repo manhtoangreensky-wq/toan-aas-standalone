@@ -108,8 +108,8 @@ def test_landing_motion_theme_has_local_timing_tokens_and_selector_gate() -> Non
         "--portal-landing-motion-ui: 220ms;",
         "--portal-landing-motion-reveal: 480ms;",
             "--portal-landing-motion-hero: 980ms;",
-            "--portal-landing-motion-stagger: 135ms;",
-            "--portal-landing-motion-sequence: 1900ms;",
+            "--portal-landing-motion-stagger: 110ms;",
+            "--portal-landing-motion-sequence: 7600ms;",
     ):
         assert token in root
 

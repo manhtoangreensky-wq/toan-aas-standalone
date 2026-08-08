@@ -16,7 +16,7 @@ The captures were checked visually against the supplied reference:
 
 | Comparison point | Reference cue | TOAN AAS implementation | Result |
 | --- | --- | --- | --- |
-| Opening rhythm | Large title appears through a cinematic frame | H1 uses a one-time 620 ms curtain, then the factual copy/actions/preview stage in sequence | Kept, adapted |
+| Opening rhythm | Large title appears through a cinematic frame | H1 uses a one-time 1100 ms curtain, then the factual copy/actions/preview stage in sequence | Kept, adapted |
 | Aperture | Large arched layer establishes depth | Teal–sky abstract aperture sits behind the semantic Workspace preview | Kept, brand-safe |
 | Color | Warm editorial photo treatment | Existing teal–sky light surface and slate dark surface remain unchanged | Intentionally different |
 | Product surface | Photo is the focal artifact | Real HTML Workspace preview stays readable and cannot imply a completed job | Intentionally different |
@@ -32,6 +32,15 @@ The captures were checked visually against the supplied reference:
   class, and no heading animation.
 - Default `/welcome` mounted `data-landing-motion="cinematic-mini"`; the H1
   computed animation was `portal-landing-cinematic-curtain`.
+- The observable playback window is bounded to 7.6 seconds. The preview
+  advances through its four real workflow stages twice, then settles; it does
+  not loop indefinitely. A browser trace on the local build measured H1
+  opacity/transform changing at 250 ms (`0`, `18px`), 700 ms (`0.88`, `2.17px`),
+  and 1300 ms (`~1`, `0px`), with active stages `1 → 2 → 3 → 4 → 2 → 4` before
+  the settled state at 7.8 seconds.
+- The preview outline uses a finite teal scan/glow during playback, and the
+  active stage owns the single `is-active` state (the server-side first-stage
+  marker is not left highlighted alongside it).
 - Scrolling revealed the first studio section through the existing
   IntersectionObserver lifecycle. Browser console output was empty.
 

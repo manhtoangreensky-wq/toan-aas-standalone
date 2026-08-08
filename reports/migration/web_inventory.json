@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 142,
   "source_files_scanned": 142,
-  "source_fingerprint_sha256": "70d9050d85aa0a1b45c156cef82de309174971c9757c0aebfb1081244cd6c8dc",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-visible-v2",
+  "source_fingerprint_sha256": "db2e4ba0398f4c1b996682a7901d57a2053d424274814091df4870c4371e2367",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-observable",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

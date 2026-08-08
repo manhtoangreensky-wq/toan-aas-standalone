@@ -8,12 +8,17 @@
   // The public Landing needs a long enough one-shot sequence that visitors
   // can actually perceive it after Portal hydration. This is presentation
   // timing only; it never gates content, navigation, or an account action.
-  const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;
+  // Keep the opening sequence observable after a normal page paint.  The
+  // previous 1.9s window was technically correct, but most visitors only
+  // noticed the final static frame after fonts and hydration had settled.
+  const LANDING_SEQUENCE_SETTLE_DELAY_MS = 7600;
   const LANDING_HERO_KICKOFF_FALLBACK_MS = 160;
   // The preview demonstrates the real Web workflow in a short, bounded
   // sequence. It is intentionally replayable instead of running forever.
-  const LANDING_PREVIEW_STEP_START_DELAY_MS = 460;
-  const LANDING_PREVIEW_STEP_INTERVAL_MS = 360;
+  const LANDING_PREVIEW_STEP_START_DELAY_MS = 620;
+  const LANDING_PREVIEW_STEP_INTERVAL_MS = 900;
+  const LANDING_PREVIEW_CYCLE_PAUSE_MS = 700;
+  const LANDING_PREVIEW_CYCLE_COUNT = 2;
   let landingCleanup = null;
   let landingGeneration = 0;
 
@@ -125,7 +130,8 @@
       }
       if (hero) hero.classList.remove("landing-motion-hero", "landing-cinematic-hero", "is-ready");
       if (preview) preview.classList.remove("landing-cinematic-preview");
-      previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step", "landing-motion-step-active"));
+      previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step", "landing-motion-step-active", "is-active"));
+      if (previewSteps[0]) previewSteps[0].classList.add("is-active");
       root.removeAttribute("data-landing-motion-run");
       heroStages.forEach((stage) => stage.classList.remove("landing-motion-hero-stage"));
       revealDetails.forEach(({ target, title, cards }) => {
@@ -168,27 +174,53 @@
       heroKickoffTimer = 0;
       settledTimer = 0;
       previewStepTimers = [];
+      root.removeAttribute("data-landing-motion-playback");
     };
     const setActivePreviewStep = (activeIndex) => {
       previewSteps.forEach((step, index) => {
-        if (index === activeIndex) step.classList.add("landing-motion-step-active");
-        else step.classList.remove("landing-motion-step-active");
+        if (index === activeIndex) {
+          step.classList.add("landing-motion-step-active", "is-active");
+        } else {
+          step.classList.remove("landing-motion-step-active", "is-active");
+        }
       });
     };
     const schedulePreviewSteps = (run) => {
-      previewSteps.forEach((_step, index) => {
-        if (index === 0) return;
-        const timer = window.setTimeout(() => {
-          if (!isCurrentMount() || run !== introRun) return;
-          setActivePreviewStep(index);
-        }, LANDING_PREVIEW_STEP_START_DELAY_MS + ((index - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS));
-        previewStepTimers.push(timer);
-      });
+      if (previewSteps.length < 2) return;
+      root.setAttribute("data-landing-motion-playback", "active");
+      const cycleSpan = ((previewSteps.length - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS)
+        + LANDING_PREVIEW_CYCLE_PAUSE_MS;
+      for (let cycle = 0; cycle < LANDING_PREVIEW_CYCLE_COUNT; cycle += 1) {
+        previewSteps.forEach((_step, index) => {
+          if (index === 0) return;
+          const delay = LANDING_PREVIEW_STEP_START_DELAY_MS
+            + (cycle * cycleSpan)
+            + ((index - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS);
+          const timer = window.setTimeout(() => {
+            if (!isCurrentMount() || run !== introRun) return;
+            setActivePreviewStep(index);
+          }, delay);
+          previewStepTimers.push(timer);
+        });
+        // Return briefly to the first stage between bounded playback cycles;
+        // this makes the workflow direction legible without an infinite loop.
+        if (cycle < LANDING_PREVIEW_CYCLE_COUNT - 1) {
+          const resetTimer = window.setTimeout(() => {
+            if (!isCurrentMount() || run !== introRun) return;
+            setActivePreviewStep(0);
+          }, LANDING_PREVIEW_STEP_START_DELAY_MS
+            + (cycle * cycleSpan)
+            + ((previewSteps.length - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS)
+            + 320);
+          previewStepTimers.push(resetTimer);
+        }
+      }
     };
     const settleIntro = (run) => {
       settledTimer = window.setTimeout(() => {
         if (!isCurrentMount() || run !== introRun) return;
         settledTimer = 0;
+        root.removeAttribute("data-landing-motion-playback");
         root.setAttribute("data-landing-motion-phase", "settled");
       }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
     };

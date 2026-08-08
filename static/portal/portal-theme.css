@@ -161,7 +161,7 @@
   --portal-landing-motion-reveal: 480ms;
   --portal-landing-motion-hero: 980ms;
   --portal-landing-motion-stagger: 110ms;
-  --portal-landing-motion-sequence: 1900ms;
+  --portal-landing-motion-sequence: 7600ms;
   --portal-landing-motion-ease: cubic-bezier(.16,1,.3,1);
   --portal-landing-cinematic-curtain: 1100ms;
   --portal-landing-cinematic-aperture: 1200ms;
@@ -14208,6 +14208,27 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* A finite scan/glow gives the Workspace preview a clearly observable
+   playback cue. It is removed by portal-motion.js after the two cycles, so
+   the landing page never becomes an attention-seeking infinite animation. */
+@keyframes portal-landing-preview-scan {
+  0% {
+    opacity: .34;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-context) 0%, transparent);
+    transform: translate3d(-10px, 5px, 0) scale(.985);
+  }
+  45% {
+    opacity: .92;
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--portal-context) 14%, transparent);
+    transform: translate3d(5px, -2px, 0) scale(1.005);
+  }
+  100% {
+    opacity: .46;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-context) 0%, transparent);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   [data-landing-motion="cinematic-mini"] .landing-motion-header {
     position: sticky;
@@ -14241,6 +14262,11 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
 
   [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-cinematic-preview::after {
     animation: portal-landing-cinematic-aperture var(--portal-landing-cinematic-aperture) var(--portal-landing-motion-ease) 120ms both;
+  }
+
+  [data-landing-motion="cinematic-mini"][data-landing-motion-playback="active"] .landing-cinematic-preview::after {
+    border-width: 2px;
+    animation: portal-landing-preview-scan 1700ms var(--portal-landing-motion-ease) 4 both;
   }
 
   [data-landing-motion="cinematic-mini"] .landing-motion-hero:not(.is-ready) :is(
@@ -14312,7 +14338,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     background: color-mix(in srgb, var(--portal-context) 12%, var(--portal-surface-light));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 16%, transparent);
     color: var(--portal-context);
-    transform: translateY(-3px);
+    transform: translateY(-4px);
   }
 
   [data-landing-motion="cinematic-mini"] .landing-motion-reveal.is-pending {
