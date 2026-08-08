@@ -17,8 +17,10 @@ def test_job_center_empty_state_routes_to_work_not_a_fake_job() -> None:
     jobs = _section("function renderJobs(page, context)", "function renderJobDetail(page, context)")
 
     assert 'const firstJobActions = !allJobs.length && selected === "all"' in jobs
-    assert 'href="/features">Chọn workflow</a>' in jobs
-    assert 'href="/workspace">Mở bản nháp Web</a>' in jobs
+    assert 'href="/features"' in jobs
+    assert 'deliveryCenterText("jobs.first.workflow", "Chọn workflow")' in jobs
+    assert 'href="/workspace"' in jobs
+    assert 'deliveryCenterText("jobs.first.drafts", "Mở bản nháp Web")' in jobs
     assert "không do browser tự tạo" in jobs
 
 
@@ -26,8 +28,10 @@ def test_asset_center_empty_state_routes_to_asset_vault_not_a_fake_delivery() ->
     assets = _section("function renderAssets(page, context)", "function validVaultAssetId(value)")
 
     assert 'const firstAssetActions = !allAssets.length && selected === "all"' in assets
-    assert 'href="/asset-vault">Mở Asset Vault</a>' in assets
-    assert 'href="/features">Chọn workflow</a>' in assets
+    assert 'href="/asset-vault"' in assets
+    assert 'deliveryCenterText("assets.first.vault", "Mở Asset Vault")' in assets
+    assert 'href="/features"' in assets
+    assert 'deliveryCenterText("assets.first.workflow", "Chọn workflow")' in assets
     assert "không dựng placeholder thành file hoàn tất" in assets
 
 

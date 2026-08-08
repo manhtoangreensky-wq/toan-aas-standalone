@@ -23,11 +23,14 @@ def test_asset_vault_namespace_is_never_presented_as_a_job_or_delivery() -> None
     assert 'assetId.startsWith("wna:v1:")' in identity
     assert 'kind: "web_vault"' in identity
     assert 'label: "Tệp riêng Web"' in identity
+    assert 'deliveryCenterText("identity.vault.label"' in PORTAL
+    assert 'deliveryCenterText("identity.canonical.label"' in PORTAL
     assert 'if (assetRecordIdentity(item).kind === "web_vault") return "/asset-vault";' in PORTAL
     assert 'if (identity.kind === "web_vault") {' in link
     assert 'href="/asset-vault"' in link
     assert 'href="/jobs/${encodeURIComponent(assetId)}"' in link
-    assert 'data-delivery="vault">Tệp riêng Web · không phải output' in delivery
+    assert 'data-delivery="vault">' in delivery
+    assert 'deliveryCenterText("status.delivery.vault", "Tệp riêng Web · không phải output")' in delivery
     assert 'if (identity.kind === "web_vault") {' in delivery
 
 
