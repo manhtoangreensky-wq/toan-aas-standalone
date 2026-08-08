@@ -159,12 +159,13 @@
   --portal-landing-motion-fast: 160ms;
   --portal-landing-motion-ui: 220ms;
   --portal-landing-motion-reveal: 480ms;
-  --portal-landing-motion-hero: 600ms;
-  --portal-landing-motion-stagger: 80ms;
+  --portal-landing-motion-hero: 980ms;
+  --portal-landing-motion-stagger: 135ms;
+  --portal-landing-motion-sequence: 1900ms;
   --portal-landing-motion-ease: cubic-bezier(.16,1,.3,1);
-  --portal-landing-cinematic-curtain: 620ms;
-  --portal-landing-cinematic-aperture: 680ms;
-  --portal-landing-cinematic-step: 360ms;
+  --portal-landing-cinematic-curtain: 1100ms;
+  --portal-landing-cinematic-aperture: 1200ms;
+  --portal-landing-cinematic-step: 520ms;
   --portal-elevation-float: 0 12px 30px rgba(2, 20, 29, .16);
   --portal-rail-width: 272px;
   --portal-content-max-width: 1600px;
@@ -14131,11 +14132,11 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
 @keyframes portal-landing-motion-enter {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(24px) scale(.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -14234,11 +14235,11 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transform: scale(.96);
   }
 
-  [data-landing-motion="cinematic-mini"] .landing-cinematic-hero::before {
+  [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-cinematic-hero::before {
     animation: portal-landing-cinematic-aperture var(--portal-landing-cinematic-aperture) var(--portal-landing-motion-ease) both;
   }
 
-  [data-landing-motion="cinematic-mini"] .landing-cinematic-preview::after {
+  [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-cinematic-preview::after {
     animation: portal-landing-cinematic-aperture var(--portal-landing-cinematic-aperture) var(--portal-landing-motion-ease) 120ms both;
   }
 
@@ -14253,7 +14254,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transform: translateY(16px);
   }
 
-  [data-landing-motion="cinematic-mini"] .landing-motion-hero.is-ready :is(
+  [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-motion-hero.is-ready :is(
     .portal-landing-hero-copy h1,
     .portal-landing-hero-copy p,
     .portal-landing-hero-actions,
@@ -14263,11 +14264,11 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     animation: portal-landing-motion-enter var(--portal-landing-motion-hero) var(--portal-landing-motion-ease) both;
   }
 
-  [data-landing-motion="cinematic-mini"] .landing-motion-hero:not(.is-ready) .portal-landing-hero-copy h1 {
+  [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-motion-hero:not(.is-ready) .portal-landing-hero-copy h1 {
     clip-path: inset(0 0 100% 0);
   }
 
-  [data-landing-motion="cinematic-mini"] .landing-motion-hero.is-ready .portal-landing-hero-copy h1 {
+  [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-motion-hero.is-ready .portal-landing-hero-copy h1 {
     animation: portal-landing-cinematic-curtain var(--portal-landing-cinematic-curtain) var(--portal-landing-motion-ease) both;
   }
 

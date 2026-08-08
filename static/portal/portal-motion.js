@@ -5,8 +5,12 @@
 
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const ENTER_CLEAR_DELAY_MS = 500;
+  // The public Landing needs a long enough one-shot sequence that visitors
+  // can actually perceive it after Portal hydration. This is presentation
+  // timing only; it never gates content, navigation, or an account action.
+  const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;
+  const LANDING_HERO_KICKOFF_FALLBACK_MS = 90;
   let landingCleanup = null;
-  let landingHeroHasEntered = false;
 
   function prefersReducedMotion() {
     return typeof window.matchMedia === "function"
@@ -67,6 +71,7 @@
     if (!root || typeof window !== "object") return;
 
     root.setAttribute("data-landing-motion", "cinematic-mini");
+    root.setAttribute("data-landing-motion-phase", "intro");
     const header = root.querySelector(".portal-landing-header");
     const hero = root.querySelector(".portal-landing-hero");
     const preview = root.querySelector(".portal-landing-preview");
@@ -81,13 +86,24 @@
         .forEach((step) => step.classList.add("landing-cinematic-step"));
     }
 
+    const clearLandingAttributes = () => {
+      root.removeAttribute("data-landing-motion-phase");
+      root.removeAttribute("data-landing-motion");
+    };
     // The aperture remains a quiet static frame for motion-sensitive visitors.
     // Only animation setup is skipped; no content relies on this helper to be
-    // visible or operable.
-    if (prefersReducedMotion()) return;
+    // visible or operable. Cleanup still has to run on the next route mount.
+    landingCleanup = clearLandingAttributes;
+    if (prefersReducedMotion()) {
+      root.setAttribute("data-landing-motion-phase", "settled");
+      return;
+    }
 
     let scrollFrame = 0;
     let heroFrame = 0;
+    let heroKickoffTimer = 0;
+    let heroActivated = false;
+    let settledTimer = 0;
     let observer = null;
 
     const syncHeader = () => {
@@ -112,12 +128,22 @@
       root.querySelectorAll(
         ".portal-landing-hero-copy, .portal-landing-hero-actions, .portal-landing-proof, .portal-landing-preview"
       ).forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
-      if (landingHeroHasEntered) {
+      // Each real entry to /welcome receives an intro. The previous global
+      // one-time gate made SPA navigation appear static after the first visit.
+      hero.classList.remove("is-ready");
+      const activateHero = () => {
+        if (heroActivated) return;
+        heroActivated = true;
+        if (heroFrame) window.cancelAnimationFrame(heroFrame);
+        if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
+        heroFrame = 0;
+        heroKickoffTimer = 0;
         hero.classList.add("is-ready");
-      } else {
-        landingHeroHasEntered = true;
-        heroFrame = window.requestAnimationFrame(() => hero.classList.add("is-ready"));
-      }
+      };
+      heroFrame = window.requestAnimationFrame(activateHero);
+      // Background tabs and an initial long task may defer animation frames.
+      // A bounded timer keeps the intro observable without creating a loop.
+      heroKickoffTimer = window.setTimeout(activateHero, LANDING_HERO_KICKOFF_FALLBACK_MS);
     }
 
     revealTargets.forEach((target) => {
@@ -155,13 +181,20 @@
       revealTargets.forEach((target) => target.classList.add("is-visible"));
     }
 
+    settledTimer = window.setTimeout(() => {
+      settledTimer = 0;
+      root.setAttribute("data-landing-motion-phase", "settled");
+    }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
+
     landingCleanup = () => {
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
       if (heroFrame) window.cancelAnimationFrame(heroFrame);
+      if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
+      if (settledTimer) window.clearTimeout(settledTimer);
       if (header) window.removeEventListener("scroll", onScroll);
       revealTargets.forEach((target) => target.removeEventListener("focusin", onRevealFocus));
       if (observer) observer.disconnect();
-      root.removeAttribute("data-landing-motion");
+      clearLandingAttributes();
     };
   }
 
