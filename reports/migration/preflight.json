@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-08T20:25:14+00:00",
+  "generated_at_utc": "2026-08-08T20:31:41+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "31e6615f759d4a8763ab891ea13b292b3b63825f",
+      "checkout_sha": "a17853df375137b08e304f359d2b79fc563d23c9",
       "requested_relation": "exact",
-      "requested_sha": "31e6615f759d4a8763ab891ea13b292b3b63825f",
-      "source_fingerprint_sha256": "db2605107cbbe114c0aa18b5f2b288917ede36415c1ed2aedd531dc6352e69cd",
+      "requested_sha": "a17853df375137b08e304f359d2b79fc563d23c9",
+      "source_fingerprint_sha256": "70d9050d85aa0a1b45c156cef82de309174971c9757c0aebfb1081244cd6c8dc",
       "working_tree_state": "clean"
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-visible-v2"
