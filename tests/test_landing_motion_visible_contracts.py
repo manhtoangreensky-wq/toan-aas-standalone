@@ -31,7 +31,7 @@ function classes() {
 }
 function rootFixture() {
   const attributes = new Map();
-  const header = { classList: classes(), setAttribute() {} };
+  const header = { classList: classes(), setAttribute() {}, removeAttribute() {} };
   const hero = { classList: classes() };
   const preview = { classList: classes(), querySelectorAll() { return []; } };
   return {

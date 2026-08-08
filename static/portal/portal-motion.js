@@ -11,6 +11,7 @@
   const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;
   const LANDING_HERO_KICKOFF_FALLBACK_MS = 90;
   let landingCleanup = null;
+  let landingGeneration = 0;
 
   function prefersReducedMotion() {
     return typeof window.matchMedia === "function"
@@ -62,8 +63,13 @@
   }
 
   function unmountLanding() {
-    if (typeof landingCleanup === "function") landingCleanup();
+    const cleanup = landingCleanup;
     landingCleanup = null;
+    // In-flight RAF/timer/observer deliveries can race cancellation during a
+    // route replacement.  Invalidate their generation before cleanup runs so
+    // a stale callback can never mutate the old or newly rendered landing.
+    landingGeneration += 1;
+    if (typeof cleanup === "function") cleanup();
   }
 
   function mountLanding(root) {
@@ -78,22 +84,61 @@
     const revealTargets = Array.from(root.querySelectorAll(
       ".portal-landing-section, .portal-landing-workflow, .portal-landing-trust, .portal-landing-final"
     ));
+    const previewSteps = preview
+      ? Array.from(preview.querySelectorAll(".portal-landing-preview-steps > span"))
+      : [];
+    const heroStages = hero
+      ? Array.from(root.querySelectorAll(
+        ".portal-landing-hero-copy, .portal-landing-hero-actions, .portal-landing-proof, .portal-landing-preview"
+      ))
+      : [];
+    const revealDetails = revealTargets.map((target) => ({
+      target,
+      title: target.querySelector(
+        ".portal-landing-section-heading, .portal-landing-workflow > div, .portal-landing-trust-copy, .portal-landing-final > div"
+      ),
+      cards: Array.from(target.querySelectorAll(
+        ".portal-landing-studio, .portal-landing-workflow li, .portal-landing-trust-grid > article"
+      ))
+    }));
+    const landingCtas = Array.from(root.querySelectorAll(".portal-button"));
+    const generation = landingGeneration;
+    const isCurrentMount = () => landingGeneration === generation;
     if (header) header.classList.add("landing-motion-header");
     if (hero) hero.classList.add("landing-motion-hero", "landing-cinematic-hero");
     if (preview) {
       preview.classList.add("landing-cinematic-preview");
-      preview.querySelectorAll(".portal-landing-preview-steps > span")
-        .forEach((step) => step.classList.add("landing-cinematic-step"));
+      previewSteps.forEach((step) => step.classList.add("landing-cinematic-step"));
     }
 
-    const clearLandingAttributes = () => {
+    const clearLandingDecorations = () => {
       root.removeAttribute("data-landing-motion-phase");
       root.removeAttribute("data-landing-motion");
+      if (header) {
+        header.classList.remove("landing-motion-header");
+        header.removeAttribute("data-landing-motion-header");
+      }
+      if (hero) hero.classList.remove("landing-motion-hero", "landing-cinematic-hero", "is-ready");
+      if (preview) preview.classList.remove("landing-cinematic-preview");
+      previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step"));
+      heroStages.forEach((stage) => stage.classList.remove("landing-motion-hero-stage"));
+      revealDetails.forEach(({ target, title, cards }) => {
+        target.classList.remove(
+          "landing-motion-reveal",
+          "landing-motion-workflow",
+          "landing-motion-final",
+          "is-pending",
+          "is-visible"
+        );
+        if (title) title.classList.remove("landing-motion-reveal-title");
+        cards.forEach((card) => card.classList.remove("landing-motion-card"));
+      });
+      landingCtas.forEach((cta) => cta.classList.remove("landing-motion-cta"));
     };
     // The aperture remains a quiet static frame for motion-sensitive visitors.
     // Only animation setup is skipped; no content relies on this helper to be
     // visible or operable. Cleanup still has to run on the next route mount.
-    landingCleanup = clearLandingAttributes;
+    landingCleanup = clearLandingDecorations;
     if (prefersReducedMotion()) {
       root.setAttribute("data-landing-motion-phase", "settled");
       return;
@@ -108,6 +153,7 @@
 
     const syncHeader = () => {
       scrollFrame = 0;
+      if (!isCurrentMount()) return;
       if (!header) return;
       header.setAttribute(
         "data-landing-motion-header",
@@ -115,6 +161,7 @@
       );
     };
     const onScroll = () => {
+      if (!isCurrentMount()) return;
       if (scrollFrame) return;
       scrollFrame = window.requestAnimationFrame(syncHeader);
     };
@@ -125,13 +172,12 @@
     }
 
     if (hero) {
-      root.querySelectorAll(
-        ".portal-landing-hero-copy, .portal-landing-hero-actions, .portal-landing-proof, .portal-landing-preview"
-      ).forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
+      heroStages.forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
       // Each real entry to /welcome receives an intro. The previous global
       // one-time gate made SPA navigation appear static after the first visit.
       hero.classList.remove("is-ready");
       const activateHero = () => {
+        if (!isCurrentMount()) return;
         if (heroActivated) return;
         heroActivated = true;
         if (heroFrame) window.cancelAnimationFrame(heroFrame);
@@ -146,21 +192,17 @@
       heroKickoffTimer = window.setTimeout(activateHero, LANDING_HERO_KICKOFF_FALLBACK_MS);
     }
 
-    revealTargets.forEach((target) => {
+    revealDetails.forEach(({ target, title, cards }) => {
       target.classList.add("landing-motion-reveal");
       if (target.matches(".portal-landing-workflow")) target.classList.add("landing-motion-workflow");
       if (target.matches(".portal-landing-final")) target.classList.add("landing-motion-final");
-      const title = target.querySelector(
-        ".portal-landing-section-heading, .portal-landing-workflow > div, .portal-landing-trust-copy, .portal-landing-final > div"
-      );
       if (title) title.classList.add("landing-motion-reveal-title");
-      target.querySelectorAll(
-        ".portal-landing-studio, .portal-landing-workflow li, .portal-landing-trust-grid > article"
-      ).forEach((card) => card.classList.add("landing-motion-card"));
+      cards.forEach((card) => card.classList.add("landing-motion-card"));
     });
-    root.querySelectorAll(".portal-button").forEach((cta) => cta.classList.add("landing-motion-cta"));
+    landingCtas.forEach((cta) => cta.classList.add("landing-motion-cta"));
 
     const revealTarget = (target) => {
+      if (!isCurrentMount()) return;
       target.classList.remove("is-pending");
       target.classList.add("is-visible");
       if (observer) observer.unobserve(target);
@@ -171,6 +213,7 @@
     if (typeof window.IntersectionObserver === "function") {
       revealTargets.forEach((target) => target.classList.add("is-pending"));
       observer = new window.IntersectionObserver((entries) => {
+        if (!isCurrentMount()) return;
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           revealTarget(entry.target);
@@ -183,6 +226,7 @@
 
     settledTimer = window.setTimeout(() => {
       settledTimer = 0;
+      if (!isCurrentMount()) return;
       root.setAttribute("data-landing-motion-phase", "settled");
     }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
 
@@ -194,7 +238,7 @@
       if (header) window.removeEventListener("scroll", onScroll);
       revealTargets.forEach((target) => target.removeEventListener("focusin", onRevealFocus));
       if (observer) observer.disconnect();
-      clearLandingAttributes();
+      clearLandingDecorations();
     };
   }
 
