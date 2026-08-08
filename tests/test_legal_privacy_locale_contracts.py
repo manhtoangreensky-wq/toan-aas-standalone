@@ -72,9 +72,14 @@ def test_render_legal_keeps_route_boundary_and_localizes_fixed_copy() -> None:
         'legalPrivacyText("notice.privacyBody"',
         'legalPrivacyText("row.legalFirstTitle"',
         'legalPrivacyText("row.privacyFirstTitle"',
+        'legalPrivacyText("row.legalFirstBody"',
+        'legalPrivacyText("row.privacyFirstBody"',
         'legalPrivacyText("row.legalSecondTitle"',
         'legalPrivacyText("row.privacySecondTitle"',
+        'legalPrivacyText("row.legalSecondBody"',
+        'legalPrivacyText("row.privacySecondBody"',
         'legalPrivacyText("row.thirdTitle"',
+        'legalPrivacyText("row.thirdBody"',
     ):
         assert key in renderer
     assert 'data-portal-action=' not in renderer
