@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 142,
   "source_files_scanned": 142,
-  "source_fingerprint_sha256": "d19772eabf9f4eda9e5631428c03242fadb225d31f21069700e7e914722525fd",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-lifecycle",
+  "source_fingerprint_sha256": "db2605107cbbe114c0aa18b5f2b288917ede36415c1ed2aedd531dc6352e69cd",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-visible-v2",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
