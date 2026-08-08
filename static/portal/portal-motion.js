@@ -10,6 +10,10 @@
   // timing only; it never gates content, navigation, or an account action.
   const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;
   const LANDING_HERO_KICKOFF_FALLBACK_MS = 90;
+  // The preview demonstrates the real Web workflow in a short, bounded
+  // sequence. It is intentionally replayable instead of running forever.
+  const LANDING_PREVIEW_STEP_START_DELAY_MS = 460;
+  const LANDING_PREVIEW_STEP_INTERVAL_MS = 360;
   let landingCleanup = null;
   let landingGeneration = 0;
 
@@ -102,6 +106,7 @@
       ))
     }));
     const landingCtas = Array.from(root.querySelectorAll(".portal-button"));
+    const replayControl = root.querySelector("[data-landing-motion-replay]");
     const generation = landingGeneration;
     const isCurrentMount = () => landingGeneration === generation;
     if (header) header.classList.add("landing-motion-header");
@@ -120,7 +125,8 @@
       }
       if (hero) hero.classList.remove("landing-motion-hero", "landing-cinematic-hero", "is-ready");
       if (preview) preview.classList.remove("landing-cinematic-preview");
-      previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step"));
+      previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step", "landing-motion-step-active"));
+      root.removeAttribute("data-landing-motion-run");
       heroStages.forEach((stage) => stage.classList.remove("landing-motion-hero-stage"));
       revealDetails.forEach(({ target, title, cards }) => {
         target.classList.remove(
@@ -149,7 +155,70 @@
     let heroKickoffTimer = 0;
     let heroActivated = false;
     let settledTimer = 0;
+    let previewStepTimers = [];
+    let introRun = 0;
     let observer = null;
+
+    const clearIntroSchedule = () => {
+      if (heroFrame) window.cancelAnimationFrame(heroFrame);
+      if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
+      if (settledTimer) window.clearTimeout(settledTimer);
+      previewStepTimers.forEach((timer) => window.clearTimeout(timer));
+      heroFrame = 0;
+      heroKickoffTimer = 0;
+      settledTimer = 0;
+      previewStepTimers = [];
+    };
+    const setActivePreviewStep = (activeIndex) => {
+      previewSteps.forEach((step, index) => {
+        if (index === activeIndex) step.classList.add("landing-motion-step-active");
+        else step.classList.remove("landing-motion-step-active");
+      });
+    };
+    const replayIntro = () => {
+      if (!isCurrentMount()) return;
+      clearIntroSchedule();
+      const run = ++introRun;
+      heroActivated = false;
+      root.setAttribute("data-landing-motion-phase", "intro");
+      root.setAttribute("data-landing-motion-run", String(run));
+      if (hero) {
+        hero.classList.remove("is-ready");
+        // Force a style boundary so a replay always restarts the CSS timeline.
+        void hero.offsetWidth;
+      }
+      setActivePreviewStep(0);
+      if (prefersReducedMotion()) return;
+
+      const activateHero = () => {
+        if (!isCurrentMount() || run !== introRun || heroActivated) return;
+        heroActivated = true;
+        if (heroFrame) window.cancelAnimationFrame(heroFrame);
+        if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
+        heroFrame = 0;
+        heroKickoffTimer = 0;
+        if (hero) hero.classList.add("is-ready");
+      };
+      if (hero) {
+        heroFrame = window.requestAnimationFrame(activateHero);
+        // Background tabs and an initial long task may defer animation frames.
+        // A bounded timer keeps the intro observable without creating a loop.
+        heroKickoffTimer = window.setTimeout(activateHero, LANDING_HERO_KICKOFF_FALLBACK_MS);
+      }
+      previewSteps.forEach((_step, index) => {
+        if (index === 0) return;
+        const timer = window.setTimeout(() => {
+          if (!isCurrentMount() || run !== introRun) return;
+          setActivePreviewStep(index);
+        }, LANDING_PREVIEW_STEP_START_DELAY_MS + ((index - 1) * LANDING_PREVIEW_STEP_INTERVAL_MS));
+        previewStepTimers.push(timer);
+      });
+      settledTimer = window.setTimeout(() => {
+        if (!isCurrentMount() || run !== introRun) return;
+        settledTimer = 0;
+        root.setAttribute("data-landing-motion-phase", "settled");
+      }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
+    };
 
     const syncHeader = () => {
       scrollFrame = 0;
@@ -171,26 +240,7 @@
       window.addEventListener("scroll", onScroll, { passive: true });
     }
 
-    if (hero) {
-      heroStages.forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
-      // Each real entry to /welcome receives an intro. The previous global
-      // one-time gate made SPA navigation appear static after the first visit.
-      hero.classList.remove("is-ready");
-      const activateHero = () => {
-        if (!isCurrentMount()) return;
-        if (heroActivated) return;
-        heroActivated = true;
-        if (heroFrame) window.cancelAnimationFrame(heroFrame);
-        if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
-        heroFrame = 0;
-        heroKickoffTimer = 0;
-        hero.classList.add("is-ready");
-      };
-      heroFrame = window.requestAnimationFrame(activateHero);
-      // Background tabs and an initial long task may defer animation frames.
-      // A bounded timer keeps the intro observable without creating a loop.
-      heroKickoffTimer = window.setTimeout(activateHero, LANDING_HERO_KICKOFF_FALLBACK_MS);
-    }
+    if (hero) heroStages.forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
 
     revealDetails.forEach(({ target, title, cards }) => {
       target.classList.add("landing-motion-reveal");
@@ -200,6 +250,7 @@
       cards.forEach((card) => card.classList.add("landing-motion-card"));
     });
     landingCtas.forEach((cta) => cta.classList.add("landing-motion-cta"));
+    if (replayControl) replayControl.addEventListener("click", replayIntro);
 
     const revealTarget = (target) => {
       if (!isCurrentMount()) return;
@@ -224,19 +275,16 @@
       revealTargets.forEach((target) => target.classList.add("is-visible"));
     }
 
-    settledTimer = window.setTimeout(() => {
-      settledTimer = 0;
-      if (!isCurrentMount()) return;
-      root.setAttribute("data-landing-motion-phase", "settled");
-    }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
+    // Start the first bounded sequence after all lifecycle listeners are in
+    // place. The same function is used by the visible replay control.
+    replayIntro();
 
     landingCleanup = () => {
+      clearIntroSchedule();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-      if (heroFrame) window.cancelAnimationFrame(heroFrame);
-      if (heroKickoffTimer) window.clearTimeout(heroKickoffTimer);
-      if (settledTimer) window.clearTimeout(settledTimer);
       if (header) window.removeEventListener("scroll", onScroll);
       revealTargets.forEach((target) => target.removeEventListener("focusin", onRevealFocus));
+      if (replayControl) replayControl.removeEventListener("click", replayIntro);
       if (observer) observer.disconnect();
       clearLandingDecorations();
     };
