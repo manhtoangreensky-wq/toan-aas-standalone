@@ -138,6 +138,13 @@
     return uiText(`legalPrivacy.${key}`, fallback, params);
   }
 
+  // Membership, package and pricing views only translate fixed Web chrome.
+  // The Bot/Core Bridge remains the authority for every plan label, note,
+  // price, status and entitlement projected into these pages.
+  function billingCatalogText(key, fallback, params) {
+    return uiText(`billingCatalog.${key}`, fallback, params);
+  }
+
   function adminFinanceText(key, fallback, params) {
     return uiText(`adminFinance.${key}`, fallback, params);
   }
@@ -9250,6 +9257,9 @@
     if (path === "/onboarding") return onboardingText("page.title", fallback);
     if (path === "/legal") return legalPrivacyText("page.legal.title", fallback);
     if (path === "/privacy") return legalPrivacyText("page.privacy.title", fallback);
+    if (path === "/membership") return billingCatalogText("page.membership.title", fallback);
+    if (path === "/packages") return billingCatalogText("page.packages.title", fallback);
+    if (path === "/pricing") return billingCatalogText("page.pricing.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.title", fallback);
@@ -9298,6 +9308,9 @@
     if (path === "/onboarding") return onboardingText("page.description", fallback);
     if (path === "/legal") return legalPrivacyText("page.legal.description", fallback);
     if (path === "/privacy") return legalPrivacyText("page.privacy.description", fallback);
+    if (path === "/membership") return billingCatalogText("page.membership.description", fallback);
+    if (path === "/packages") return billingCatalogText("page.packages.description", fallback);
+    if (path === "/pricing") return billingCatalogText("page.pricing.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.description", fallback);
@@ -18214,7 +18227,7 @@
         const label = canonicalShortText(item.label, 120) || code;
         if (!label || seen.has(`${code}:${label}`)) return;
         seen.add(`${code}:${label}`);
-        entries.push({ code, label, note: canonicalShortText(item.note, 240) || "Quyền lợi do Bot canonical xác minh.", priceLabel: canonicalShortText(item.priceLabel, 80), status: item.status === "read_only" ? "read_only" : "guarded" });
+        entries.push({ code, label, note: canonicalShortText(item.note, 240) || billingCatalogText("membership.defaultCatalogNote", "Quyền lợi do Bot canonical xác minh."), priceLabel: canonicalShortText(item.priceLabel, 80), status: item.status === "read_only" ? "read_only" : "guarded" });
       });
     });
     return entries.slice(0, 12);
@@ -18225,16 +18238,16 @@
     const plan = wallet && wallet.plan && typeof wallet.plan === "object" ? wallet.plan : {};
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const catalog = canonicalPackageCatalog(context.packageCatalog);
-    const planName = String(plan.plan_name || plan.current_plan || plan.name || "Chưa có gói canonical");
-    const planStatus = String(plan.plan_status || plan.status || "Chờ Core Bridge");
+    const planName = String(plan.plan_name || plan.current_plan || plan.name || billingCatalogText("membership.defaultPlanName", "Chưa có gói canonical"));
+    const planStatus = String(plan.plan_status || plan.status || billingCatalogText("membership.defaultPlanStatus", "Chờ Core Bridge"));
     const entries = membershipCatalogEntries(context);
     const current = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quyền lợi hiện tại</h2><p class="portal-card-subtitle">Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Gói hiện tại</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái gói</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Tài khoản Web</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
-      : `<section class="portal-card portal-card-pad">${renderEmpty("Chờ quyền lợi canonical", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial.", "◇")}</section>`;
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
+      : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
     const catalogCards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chưa được Core Bridge cấp")}</span><span>${item.status === "read_only" ? "Catalog canonical" : "Chờ xác minh"}</span></span></article>`).join("")}</div>`
-      : renderEmpty("Chờ catalog gói canonical", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi.", "◇");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Nguyên tắc quyền lợi</h2><p class="portal-card-subtitle">Bot là authority cho tier và mọi tác động Xu.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Gói được Bot công bố</h2><p class="portal-card-subtitle">Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">Xem catalog đầy đủ</a><a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá</a><a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu canonical</a></div></section></article>`;
+      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp"))}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
+      : renderEmpty(billingCatalogText("membership.catalog.emptyTitle", "Chờ catalog gói canonical"), billingCatalogText("membership.catalog.emptyBody", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi."), ICONS.package);
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -18541,26 +18554,26 @@
     // bridge is unavailable or its catalog schema drifts.
     const catalog = pricingPage && pricing
       ? [
-        ...pricing.image_tiers.map((item) => ({ title: `Ảnh · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Tier ảnh" })),
-        ...pricing.video_tiers.map((item) => ({ title: `Video · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Tier video" })),
-        ...pricing.video_combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Combo video" }))
+        ...pricing.image_tiers.map((item) => ({ title: `${billingCatalogText("catalog.family.imageTier", "Tier ảnh")} · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.imageTier", "Tier ảnh") })),
+        ...pricing.video_tiers.map((item) => ({ title: `${billingCatalogText("catalog.family.videoTier", "Tier video")} · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.videoTier", "Tier video") })),
+        ...pricing.video_combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.videoCombo", "Combo video") }))
       ]
       : !pricingPage && packages
         ? [
-          ...packages.monthly.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Gói tháng" })),
-          ...packages.combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: "Combo" }))
+          ...packages.monthly.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.monthly", "Gói tháng") })),
+          ...packages.combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.combo", "Combo") }))
         ]
         : [];
     const catalogReady = pricingPage ? Boolean(pricing) : Boolean(packages);
     const hasCatalog = catalog.length > 0;
     const emptyTitle = catalogReady
-      ? (pricingPage ? "Bảng giá hiện chưa có tier active" : "Danh mục hiện chưa có gói active")
-      : (pricingPage ? "Chờ bảng giá canonical" : "Chờ danh mục gói canonical");
+      ? (pricingPage ? billingCatalogText("catalog.pricing.emptyActiveTitle", "Bảng giá hiện chưa có tier active") : billingCatalogText("catalog.packages.emptyActiveTitle", "Danh mục hiện chưa có gói active"))
+      : (pricingPage ? billingCatalogText("catalog.pricing.emptyWaitingTitle", "Chờ bảng giá canonical") : billingCatalogText("catalog.packages.emptyWaitingTitle", "Chờ danh mục gói canonical"));
     const emptyText = catalogReady
-      ? "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."
-      : (pricingPage ? "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh." : "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành.");
-    const cards = hasCatalog ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chưa được Core Bridge cấp")}</span><span>${item.status === "read_only" ? "Catalog canonical" : "Chờ xác minh"}</span></span></section>`).join("") : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
-    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? "Pricing canonical" : "Package catalog canonical"}</span><h2>${pricingPage ? "Bảng giá đúng theo authority" : "Gói dịch vụ không suy đoán"}</h2><p>${pricingPage ? "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp." : "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical."}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Mở nạp Xu canonical</a></div></section></article>`;
+      ? (pricingPage ? billingCatalogText("catalog.pricing.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế.") : billingCatalogText("catalog.packages.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."))
+      : (pricingPage ? billingCatalogText("catalog.pricing.emptyWaitingBody", "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh.") : billingCatalogText("catalog.packages.emptyWaitingBody", "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành."));
+    const cards = hasCatalog ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp"))}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></section>`).join("") : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? billingCatalogText("catalog.pricing.kicker", "Pricing canonical") : billingCatalogText("catalog.packages.kicker", "Package catalog canonical")}</span><h2>${pricingPage ? billingCatalogText("catalog.pricing.introTitle", "Bảng giá đúng theo authority") : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ không suy đoán")}</h2><p>${pricingPage ? billingCatalogText("catalog.pricing.introBody", "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp.") : billingCatalogText("catalog.packages.introBody", "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical.")}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? billingCatalogText("catalog.pricing.cardTitle", "Giá theo catalog") : billingCatalogText("catalog.packages.cardTitle", "Gói hiện có")}</h2><p class="portal-card-subtitle">${billingCatalogText("catalog.card.subtitle", "Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.")}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${billingCatalogText("catalog.footer.note", "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.")}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "Mở nạp Xu canonical")}</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([
