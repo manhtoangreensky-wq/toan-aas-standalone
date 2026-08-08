@@ -7551,6 +7551,70 @@
     "telegramConnection.notReadyTitle": "Telegram 连接尚未就绪"
   });
 
+  // Public legal/privacy shells translate only reviewed framing copy. The
+  // versioned legal text itself is still published by the server.
+  const LEGAL_PRIVACY_MESSAGES = { vi: {}, en: {}, zh: {} };
+
+  Object.assign(LEGAL_PRIVACY_MESSAGES.vi, {
+    "legalPrivacy.page.legal.title": "Điều khoản sử dụng",
+    "legalPrivacy.page.legal.description": "Khung hiển thị điều khoản sử dụng của TOAN AAS; văn bản chính thức được phát hành theo phiên bản và ngày hiệu lực.",
+    "legalPrivacy.page.privacy.title": "Chính sách riêng tư",
+    "legalPrivacy.page.privacy.description": "Khung hiển thị chính sách riêng tư của TOAN AAS; văn bản chính thức được phát hành theo phiên bản và ngày hiệu lực.",
+    "legalPrivacy.notice.title": "Khung nội dung phiên bản hóa",
+    "legalPrivacy.notice.legalBody": "Điều khoản chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực.",
+    "legalPrivacy.notice.privacyBody": "Chính sách chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực.",
+    "legalPrivacy.row.legalFirstTitle": "Sử dụng có trách nhiệm",
+    "legalPrivacy.row.legalFirstBody": "Provider, payment, job và Xu được điều phối bởi Core Bridge canonical.",
+    "legalPrivacy.row.privacyFirstTitle": "Thu thập tối thiểu",
+    "legalPrivacy.row.privacyFirstBody": "Browser không nhận hoặc lưu Telegram ID, OAuth token, password, wallet ledger hay file output. Server chỉ giữ Telegram identity canonical sau xác minh Bot và HMAC-hash identity OAuth để bảo vệ signed session/Core Bridge; OAuth token bị hủy sau xác minh.",
+    "legalPrivacy.row.legalSecondTitle": "Xác nhận rõ ràng",
+    "legalPrivacy.row.legalSecondBody": "Flow feature sử dụng draft → estimate → confirm → queued/processing → completed/failed/guarded.",
+    "legalPrivacy.row.privacySecondTitle": "Quyền truy cập",
+    "legalPrivacy.row.privacySecondBody": "Dữ liệu riêng tư cần ownership và role check server-side trước khi render hoặc tải xuống.",
+    "legalPrivacy.row.thirdTitle": "Thông báo cập nhật",
+    "legalPrivacy.row.thirdBody": "Văn bản pháp lý đầy đủ sẽ thay thế khung này khi module content được đưa vào production."
+  });
+
+  Object.assign(LEGAL_PRIVACY_MESSAGES.en, {
+    "legalPrivacy.page.legal.title": "Terms of Use",
+    "legalPrivacy.page.legal.description": "A reviewed shell for TOAN AAS Terms of Use; the official text is published with a version and effective date.",
+    "legalPrivacy.page.privacy.title": "Privacy Policy",
+    "legalPrivacy.page.privacy.description": "A reviewed shell for the TOAN AAS Privacy Policy; the official text is published with a version and effective date.",
+    "legalPrivacy.notice.title": "Versioned content shell",
+    "legalPrivacy.notice.legalBody": "The official terms must be published by the server with a version and effective date.",
+    "legalPrivacy.notice.privacyBody": "The official privacy policy must be published by the server with a version and effective date.",
+    "legalPrivacy.row.legalFirstTitle": "Responsible use",
+    "legalPrivacy.row.legalFirstBody": "Providers, payments, jobs, and Xu are coordinated by the canonical Core Bridge.",
+    "legalPrivacy.row.privacyFirstTitle": "Data minimization",
+    "legalPrivacy.row.privacyFirstBody": "The browser does not receive or store Telegram IDs, OAuth tokens, passwords, wallet ledgers, or output files. The server keeps canonical Telegram identity only after Bot verification and HMAC-hashes OAuth identity to protect the signed session and Core Bridge; OAuth tokens are revoked after verification.",
+    "legalPrivacy.row.legalSecondTitle": "Clear confirmation",
+    "legalPrivacy.row.legalSecondBody": "Feature flows use draft → estimate → confirm → queued/processing → completed/failed/guarded.",
+    "legalPrivacy.row.privacySecondTitle": "Access controls",
+    "legalPrivacy.row.privacySecondBody": "Private data requires server-side ownership and role checks before it is rendered or downloaded.",
+    "legalPrivacy.row.thirdTitle": "Update notice",
+    "legalPrivacy.row.thirdBody": "The full legal text will replace this shell when the content module is published to production."
+  });
+
+  Object.assign(LEGAL_PRIVACY_MESSAGES.zh, {
+    "legalPrivacy.page.legal.title": "使用条款",
+    "legalPrivacy.page.legal.description": "TOAN AAS 使用条款的已审核框架；正式文本会随版本和生效日期发布。",
+    "legalPrivacy.page.privacy.title": "隐私政策",
+    "legalPrivacy.page.privacy.description": "TOAN AAS 隐私政策的已审核框架；正式文本会随版本和生效日期发布。",
+    "legalPrivacy.notice.title": "版本化内容框架",
+    "legalPrivacy.notice.legalBody": "正式使用条款必须由服务器随版本和生效日期发布。",
+    "legalPrivacy.notice.privacyBody": "正式隐私政策必须由服务器随版本和生效日期发布。",
+    "legalPrivacy.row.legalFirstTitle": "负责任地使用",
+    "legalPrivacy.row.legalFirstBody": "服务商、支付、任务和 Xu 由权威 Core Bridge 协调。",
+    "legalPrivacy.row.privacyFirstTitle": "最小化收集",
+    "legalPrivacy.row.privacyFirstBody": "浏览器不会接收或存储 Telegram ID、OAuth 令牌、密码、钱包账本或输出文件。服务器仅在 Bot 验证后保存权威 Telegram 身份，并对 OAuth 身份进行 HMAC 哈希以保护已签名会话和 Core Bridge；验证后会撤销 OAuth 令牌。",
+    "legalPrivacy.row.legalSecondTitle": "明确确认",
+    "legalPrivacy.row.legalSecondBody": "功能流程使用 draft → estimate → confirm → queued/processing → completed/failed/guarded。",
+    "legalPrivacy.row.privacySecondTitle": "访问控制",
+    "legalPrivacy.row.privacySecondBody": "私有数据在渲染或下载前必须通过服务器端所有权和角色检查。",
+    "legalPrivacy.row.thirdTitle": "更新通知",
+    "legalPrivacy.row.thirdBody": "内容模块发布到生产环境后，完整法律文本将替换此框架。"
+  });
+
   Object.keys(MESSAGES).forEach((locale) => Object.assign(
     MESSAGES[locale],
     INTERFACE_EXTENSION_MESSAGES[locale],
@@ -7570,7 +7634,8 @@
     ACCOUNT_SECURITY_MESSAGES[locale],
     DATA_CONTROLS_MESSAGES[locale],
     ONBOARDING_MESSAGES[locale],
-    TELEGRAM_CONNECTION_MESSAGES[locale]
+    TELEGRAM_CONNECTION_MESSAGES[locale],
+    LEGAL_PRIVACY_MESSAGES[locale]
   ));
 
   function verifyEqualKeysets() {

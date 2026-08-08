@@ -131,6 +131,8 @@ _PORTAL_SHELL_TITLES = {
     "/register": {"vi": "Tạo tài khoản · TOAN AAS", "en": "Create account · TOAN AAS", "zh": "创建账户 · TOAN AAS"},
     "/password-recovery": {"vi": "Khôi phục mật khẩu · TOAN AAS", "en": "Password recovery · TOAN AAS", "zh": "找回密码 · TOAN AAS"},
     "/onboarding": {"vi": "Bắt đầu với TOAN AAS", "en": "Get started with TOAN AAS", "zh": "开始使用 TOAN AAS"},
+    "/legal": {"vi": "Điều khoản sử dụng · TOAN AAS", "en": "Terms of Use · TOAN AAS", "zh": "使用条款 · TOAN AAS"},
+    "/privacy": {"vi": "Chính sách riêng tư · TOAN AAS", "en": "Privacy Policy · TOAN AAS", "zh": "隐私政策 · TOAN AAS"},
     "/account": {"vi": "Tài khoản · TOAN AAS", "en": "Account · TOAN AAS", "zh": "账户 · TOAN AAS"},
     "/account/activity": {"vi": "Hoạt động tài khoản · TOAN AAS", "en": "Account activity · TOAN AAS", "zh": "账户活动 · TOAN AAS"},
     "/account/security": {"vi": "Bảo mật tài khoản · TOAN AAS", "en": "Account security · TOAN AAS", "zh": "账户安全 · TOAN AAS"},
@@ -163,6 +165,16 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "vi": "Bắt đầu với Workspace Web độc lập hoặc liên kết Telegram bằng mã một lần an toàn khi cần dữ liệu canonical do Bot xác minh.",
         "en": "Start with an independent Web Workspace or securely link Telegram with a one-time code when Bot-verified canonical data is needed.",
         "zh": "先独立使用 Web 工作台；仅在需要 Bot 验证的权威数据时，使用一次性代码安全关联 Telegram。",
+    },
+    "/legal": {
+        "vi": "Khung hiển thị điều khoản sử dụng của TOAN AAS; văn bản chính thức được phát hành theo phiên bản và ngày hiệu lực.",
+        "en": "A reviewed shell for TOAN AAS Terms of Use; the official text is published with a version and effective date.",
+        "zh": "TOAN AAS 使用条款的已审核框架；正式文本会随版本和生效日期发布。",
+    },
+    "/privacy": {
+        "vi": "Khung hiển thị chính sách riêng tư của TOAN AAS; văn bản chính thức được phát hành theo phiên bản và ngày hiệu lực.",
+        "en": "A reviewed shell for the TOAN AAS Privacy Policy; the official text is published with a version and effective date.",
+        "zh": "TOAN AAS 隐私政策的已审核框架；正式文本会随版本和生效日期发布。",
     },
     "/account/data-controls": {
         "vi": "Xuất dữ liệu authoring thuộc Web và tạo yêu cầu review xóa theo phạm vi, không tác động Bot hoặc hệ thống canonical khác.",
