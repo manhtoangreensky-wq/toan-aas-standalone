@@ -160,7 +160,7 @@
   --portal-landing-motion-ui: 220ms;
   --portal-landing-motion-reveal: 480ms;
   --portal-landing-motion-hero: 980ms;
-  --portal-landing-motion-stagger: 135ms;
+  --portal-landing-motion-stagger: 110ms;
   --portal-landing-motion-sequence: 1900ms;
   --portal-landing-motion-ease: cubic-bezier(.16,1,.3,1);
   --portal-landing-cinematic-curtain: 1100ms;
@@ -14132,7 +14132,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
 @keyframes portal-landing-motion-enter {
   from {
     opacity: 0;
-    transform: translateY(24px) scale(.985);
+    transform: translateY(28px) scale(.98);
   }
   to {
     opacity: 1;
@@ -14251,7 +14251,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     .portal-landing-preview
   ) {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(24px);
   }
 
   [data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"] .landing-motion-hero.is-ready :is(
@@ -14297,9 +14297,27 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   [data-landing-motion="cinematic-mini"] .landing-motion-hero.is-ready .landing-cinematic-step:nth-child(3) { animation-delay: calc(var(--portal-landing-motion-stagger) * 7); }
   [data-landing-motion="cinematic-mini"] .landing-motion-hero.is-ready .landing-cinematic-step:nth-child(4) { animation-delay: calc(var(--portal-landing-motion-stagger) * 8); }
 
+  /* The preview is a small, bounded workflow playback. The active tile makes
+     the sequence legible even when the intro is replayed after first paint. */
+  [data-landing-motion="cinematic-mini"] .landing-cinematic-step {
+    transition:
+      transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+      background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  }
+
+  [data-landing-motion="cinematic-mini"] .landing-cinematic-step.landing-motion-step-active {
+    border-color: color-mix(in srgb, var(--portal-context) 64%, var(--portal-border));
+    background: color-mix(in srgb, var(--portal-context) 12%, var(--portal-surface-light));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 16%, transparent);
+    color: var(--portal-context);
+    transform: translateY(-3px);
+  }
+
   [data-landing-motion="cinematic-mini"] .landing-motion-reveal.is-pending {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
 
   [data-landing-motion="cinematic-mini"] .landing-motion-reveal.is-pending:focus-within {

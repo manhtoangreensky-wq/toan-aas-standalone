@@ -45,7 +45,7 @@ def test_public_landing_hero_secondary_action_uses_truthful_auth_entry_routes() 
     assert anonymous_secondary in hero_secondary_action
     assert hero_secondary_action.index(signed_secondary) < hero_secondary_action.index(anonymous_secondary)
     assert hero_secondary_action.count("<a ") == 2
-    assert hero_actions == '<div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}</div>'
+    assert hero_actions == '<div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}<button class="portal-button portal-button--quiet portal-landing-motion-replay" type="button" data-landing-motion-replay aria-label="${text("motion.replay")}"><span aria-hidden="true">${portalIcon(ICONS.refresh)}</span><span>${text("motion.replay")}</span></button></div>'
 
 
 def test_public_landing_hero_secondary_action_stays_static_and_reuses_reviewed_copy() -> None:

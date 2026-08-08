@@ -47,7 +47,9 @@ def _theme_rule(selector: str) -> str:
 def test_motion_asset_is_versioned_between_portal_and_integration_and_pre_cached() -> None:
     assert MOTION_ASSET.is_file(), "portal motion must be a checked-in public shell asset"
     assert MOTION_SCRIPT in SHELL_TEMPLATE
-    assert SHELL_TEMPLATE.index(PORTAL_SCRIPT) < SHELL_TEMPLATE.index(MOTION_SCRIPT) < SHELL_TEMPLATE.index(INTEGRATION_SCRIPT)
+    # The motion utility must execute before the Portal mount can read it;
+    # both remain before the integration layer that hydrates signed state.
+    assert SHELL_TEMPLATE.index(MOTION_SCRIPT) < SHELL_TEMPLATE.index(PORTAL_SCRIPT) < SHELL_TEMPLATE.index(INTEGRATION_SCRIPT)
 
     build_sources = _section(PAGES, "_PORTAL_BUILD_SOURCE_FILES = (", ")\n\n# The portal shell")
     local_build_fallback = _section(PAGES, "def _local_portal_build_id()", "\n\ndef _portal_build_id()")

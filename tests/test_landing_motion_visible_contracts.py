@@ -52,9 +52,10 @@ function rootFixture() {
 }
 const frames = [];
 const timers = [];
+let frameRequests = 0;
 const window = {
   matchMedia() { return { matches: false }; },
-  requestAnimationFrame(callback) { frames.push(callback); return frames.length; },
+  requestAnimationFrame(callback) { frameRequests += 1; frames.push(callback); return frameRequests; },
   cancelAnimationFrame() {},
   setTimeout(callback) { timers.push(callback); return timers.length; },
   clearTimeout() {},
@@ -65,8 +66,18 @@ vm.runInNewContext(source, { window, console });
 const motion = window.TOANAASPortalMotion;
 const first = rootFixture();
 motion.mountLanding(first.root);
-const firstFrame = frames.shift();
-if (typeof firstFrame === "function") firstFrame();
+const firstBeforeFrame = {
+  phase: first.attributes.get("data-landing-motion-phase"),
+  ready: first.hero.classList.has("is-ready")
+};
+const firstPaintFrame = frames.shift();
+if (typeof firstPaintFrame === "function") firstPaintFrame();
+const firstAfterPaintFrame = {
+  phase: first.attributes.get("data-landing-motion-phase"),
+  ready: first.hero.classList.has("is-ready")
+};
+const firstActivationFrame = frames.shift();
+if (typeof firstActivationFrame === "function") firstActivationFrame();
 timers.splice(0).forEach((callback) => callback());
 const firstState = {
   phase: first.attributes.get("data-landing-motion-phase"),
@@ -79,8 +90,14 @@ const secondBeforeFrame = {
   phase: second.attributes.get("data-landing-motion-phase"),
   ready: second.hero.classList.has("is-ready")
 };
-const secondFrame = frames.shift();
-if (typeof secondFrame === "function") secondFrame();
+const secondPaintFrame = frames.shift();
+if (typeof secondPaintFrame === "function") secondPaintFrame();
+const secondAfterPaintFrame = {
+  phase: second.attributes.get("data-landing-motion-phase"),
+  ready: second.hero.classList.has("is-ready")
+};
+const secondActivationFrame = frames.shift();
+if (typeof secondActivationFrame === "function") secondActivationFrame();
 timers.splice(0).forEach((callback) => callback());
 const secondState = {
   phase: second.attributes.get("data-landing-motion-phase"),
@@ -88,9 +105,12 @@ const secondState = {
 };
 console.log(JSON.stringify({
   first: firstState,
+  first_before_frame: firstBeforeFrame,
+  first_after_paint_frame: firstAfterPaintFrame,
   second_before_frame: secondBeforeFrame,
+  second_after_paint_frame: secondAfterPaintFrame,
   second: secondState,
-  frame_requests: frames.length + 2
+  frame_requests: frameRequests
 }));
 '''
     result = subprocess.run(
@@ -107,16 +127,19 @@ console.log(JSON.stringify({
 def test_landing_intro_replays_on_each_mount_and_has_a_real_lifecycle() -> None:
     state = _run_motion_harness()
 
+    assert state["first_before_frame"] == {"phase": "intro", "ready": False}
+    assert state["first_after_paint_frame"] == {"phase": "intro", "ready": False}
     assert state["first"] == {"phase": "settled", "ready": True}
     assert state["second_before_frame"] == {"phase": "intro", "ready": False}
+    assert state["second_after_paint_frame"] == {"phase": "intro", "ready": False}
     assert state["second"] == {"phase": "settled", "ready": True}
-    assert state["frame_requests"] == 2
+    assert state["frame_requests"] == 4
     assert "landingHeroHasEntered" not in MOTION
 
 
 def test_visible_sequence_stays_landing_scoped_and_reduced_motion_safe() -> None:
     assert "const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;" in MOTION
-    assert "const LANDING_HERO_KICKOFF_FALLBACK_MS = 90;" in MOTION
+    assert "const LANDING_HERO_KICKOFF_FALLBACK_MS = 160;" in MOTION
     assert 'root.setAttribute("data-landing-motion-phase", "intro")' in MOTION
     assert 'root.setAttribute("data-landing-motion-phase", "settled")' in MOTION
     assert "--portal-landing-motion-sequence: 1900ms;" in THEME

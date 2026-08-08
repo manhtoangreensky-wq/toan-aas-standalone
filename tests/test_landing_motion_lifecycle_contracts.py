@@ -153,6 +153,8 @@ const second = fixture();
 motion.mountLanding(second.root);
 const secondFrame = scheduledFrames[scheduledFrames.length - 1];
 if (secondFrame) secondFrame.callback();
+const secondActivationFrame = scheduledFrames[scheduledFrames.length - 1];
+if (secondActivationFrame && secondActivationFrame !== secondFrame) secondActivationFrame.callback();
 const live = {
   phase: second.root.getAttribute("data-landing-motion-phase"),
   ready: second.hero.classList.has("is-ready")
