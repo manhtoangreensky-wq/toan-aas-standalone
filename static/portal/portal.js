@@ -29141,6 +29141,9 @@
     if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
     const isLanding = page.layout === "landing";
     const isAuth = page.layout === "auth";
+    const landingMotionOptIn = isLanding
+      && window.location.pathname === "/welcome"
+      && new URLSearchParams(window.location.search || "").get("motion") === "1";
     const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
     shell.dataset.portalSurface = surface;
     document.body.dataset.portalSurface = surface;
@@ -29177,6 +29180,8 @@
         render();
       }
     });
+    if (typeof motion.unmountLanding === "function") motion.unmountLanding();
+    main.dataset.portalMotionSkipEnter = landingMotionOptIn ? "true" : "false";
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       header.innerHTML = renderHeader(page, context);
@@ -29212,6 +29217,10 @@
       syncPwaInstallControl();
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
+      mountLandingMotion();
+    }
+    function mountLandingMotion() {
+      if (landingMotionOptIn && typeof motion.mountLanding === "function") motion.mountLanding(main);
     }
     const replaceResult = motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {
