@@ -33,10 +33,17 @@ function rootFixture() {
   const attributes = new Map();
   const header = { classList: classes(), setAttribute() {}, removeAttribute() {} };
   const hero = { classList: classes() };
-  const preview = { classList: classes(), querySelectorAll() { return []; } };
+  const previewSteps = Array.from({ length: 4 }, () => ({ classList: classes() }));
+  const preview = {
+    classList: classes(),
+    querySelectorAll(selector) {
+      return selector === ".portal-landing-preview-steps > span" ? previewSteps : [];
+    }
+  };
   return {
     attributes,
     hero,
+    previewSteps,
     root: {
       setAttribute(name, value) { attributes.set(name, String(value)); },
       removeAttribute(name) { attributes.delete(name); },
@@ -78,6 +85,11 @@ const firstAfterPaintFrame = {
 };
 const firstActivationFrame = frames.shift();
 if (typeof firstActivationFrame === "function") firstActivationFrame();
+const firstPlaybackState = {
+  phase: first.attributes.get("data-landing-motion-phase"),
+  playback: first.attributes.get("data-landing-motion-playback"),
+  active: first.previewSteps.map((step) => step.classList.has("is-active"))
+};
 timers.splice(0).forEach((callback) => callback());
 const firstState = {
   phase: first.attributes.get("data-landing-motion-phase"),
@@ -98,6 +110,11 @@ const secondAfterPaintFrame = {
 };
 const secondActivationFrame = frames.shift();
 if (typeof secondActivationFrame === "function") secondActivationFrame();
+const secondPlaybackState = {
+  phase: second.attributes.get("data-landing-motion-phase"),
+  playback: second.attributes.get("data-landing-motion-playback"),
+  active: second.previewSteps.map((step) => step.classList.has("is-active"))
+};
 timers.splice(0).forEach((callback) => callback());
 const secondState = {
   phase: second.attributes.get("data-landing-motion-phase"),
@@ -107,8 +124,10 @@ console.log(JSON.stringify({
   first: firstState,
   first_before_frame: firstBeforeFrame,
   first_after_paint_frame: firstAfterPaintFrame,
+  first_playback: firstPlaybackState,
   second_before_frame: secondBeforeFrame,
   second_after_paint_frame: secondAfterPaintFrame,
+  second_playback: secondPlaybackState,
   second: secondState,
   frame_requests: frameRequests
 }));
@@ -130,19 +149,27 @@ def test_landing_intro_replays_on_each_mount_and_has_a_real_lifecycle() -> None:
     assert state["first_before_frame"] == {"phase": "intro", "ready": False}
     assert state["first_after_paint_frame"] == {"phase": "intro", "ready": False}
     assert state["first"] == {"phase": "settled", "ready": True}
+    assert state["first_playback"] == {"phase": "intro", "playback": "active", "active": [True, False, False, False]}
     assert state["second_before_frame"] == {"phase": "intro", "ready": False}
     assert state["second_after_paint_frame"] == {"phase": "intro", "ready": False}
     assert state["second"] == {"phase": "settled", "ready": True}
+    assert state["second_playback"] == {"phase": "intro", "playback": "active", "active": [True, False, False, False]}
     assert state["frame_requests"] == 4
     assert "landingHeroHasEntered" not in MOTION
 
 
 def test_visible_sequence_stays_landing_scoped_and_reduced_motion_safe() -> None:
-    assert "const LANDING_SEQUENCE_SETTLE_DELAY_MS = 1900;" in MOTION
+    assert "const LANDING_SEQUENCE_SETTLE_DELAY_MS = 7600;" in MOTION
     assert "const LANDING_HERO_KICKOFF_FALLBACK_MS = 160;" in MOTION
+    assert "const LANDING_PREVIEW_CYCLE_COUNT = 2;" in MOTION
+    assert 'root.setAttribute("data-landing-motion-playback", "active")' in MOTION
+    assert 'root.removeAttribute("data-landing-motion-playback")' in MOTION
+    assert 'landing-motion-step-active", "is-active"' in MOTION
     assert 'root.setAttribute("data-landing-motion-phase", "intro")' in MOTION
     assert 'root.setAttribute("data-landing-motion-phase", "settled")' in MOTION
-    assert "--portal-landing-motion-sequence: 1900ms;" in THEME
+    assert "--portal-landing-motion-sequence: 7600ms;" in THEME
+    assert "@keyframes portal-landing-preview-scan" in THEME
+    assert "portal-landing-preview-scan 1700ms" in THEME
     assert '[data-landing-motion="cinematic-mini"][data-landing-motion-phase="intro"]' in THEME
     assert "@media (prefers-reduced-motion: reduce)" in THEME
     cinematic = THEME[THEME.index('[data-landing-motion="cinematic-mini"]'):]
