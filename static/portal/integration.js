@@ -926,6 +926,16 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  // This helper is intentionally limited to browser-authored access feedback.
+  // Signed API/Bot messages, codes, deep links and error states remain
+  // canonical values and always take precedence over this presentation copy.
+  function publicAccessText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(`access.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   async function copyPaymentBotCommand(value) {
     const command = String(value || "");
     if (!["/naptien", "/thucong"].includes(command)) throw new Error("Lệnh thanh toán canonical không hợp lệ.");
@@ -25052,6 +25062,9 @@
       // challenge. Preserve the public server message and stop polling rather
       // than turning an expired/rejected Bot proof into a noisy retry loop.
       if (["TELEGRAM_LOGIN_ACCOUNT_REQUIRED", "TELEGRAM_LOGIN_EXPIRED", "TELEGRAM_LOGIN_CHALLENGE_REQUIRED"].includes(errorCode)) {
+        const terminalFallback = errorCode === "TELEGRAM_LOGIN_EXPIRED"
+          ? publicAccessText("telegram.expiredFallbackToast", "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.")
+          : publicAccessText("telegram.accountRequiredFallbackToast", "Telegram chưa liên kết với tài khoản Web.");
         const terminalData = {
           ...(failure.data || {}),
           recovered: errorCode !== "TELEGRAM_LOGIN_CHALLENGE_REQUIRED",
@@ -25060,9 +25073,9 @@
         // Do not retain an expired code/deep link in JavaScript state. A stale
         // one-time capability must never look usable after the server has
         // revoked it.
-        merge({ telegramLoginFlow: { status: failure.status || "guarded", message: failure.message || "Telegram chưa liên kết với tài khoản Web.", errorCode, data: terminalData } });
+        merge({ telegramLoginFlow: { status: failure.status || "guarded", message: failure.message || terminalFallback, errorCode, data: terminalData } });
         stopTelegramLoginPolling();
-        if (!silent) toast(failure.message || "Telegram chưa liên kết với tài khoản Web.");
+        if (!silent) toast(failure.message || terminalFallback);
         return false;
       }
       throw error;
@@ -25070,7 +25083,7 @@
     const previous = base().telegramLoginFlow && typeof base().telegramLoginFlow === "object" ? base().telegramLoginFlow : {};
     merge({ telegramLoginFlow: { ...previous, status: status.status || "awaiting_confirm", message: status.message, errorCode: status.error_code || "", data: { ...(previous.data || {}), ...(status.data || {}) } } });
     if (!(status.data && status.data.ready === true)) {
-      if (!silent) toast(status.message);
+      if (!silent) toast(status.message || publicAccessText("telegram.waitingFallback", "Đang chờ Telegram xác minh mã trong Bot."));
       return false;
     }
     return completeTelegramLoginChallenge();
@@ -25114,7 +25127,7 @@
       // Bot after the one-time window elapsed.
       if (errorCode === "TELEGRAM_LOGIN_CHALLENGE_REQUIRED") return false;
       if (errorCode === "TELEGRAM_LOGIN_EXPIRED") {
-        merge({ telegramLoginFlow: { status: failure.status || "failed", message: failure.message || "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.", errorCode, data: { recovered: true, expired: true } } });
+        merge({ telegramLoginFlow: { status: failure.status || "failed", message: failure.message || publicAccessText("telegram.expiredFallbackToast", "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới."), errorCode, data: { recovered: true, expired: true } } });
         stopTelegramLoginPolling();
       }
       return false;
@@ -34461,7 +34474,7 @@
       if (action === "start-telegram-login") {
         const submission = acquireSubmission("telegram-login-start", "one-time-browser-challenge");
         if (!submission) {
-          toast("Mã đăng nhập Telegram đang được tạo. Vui lòng chờ phản hồi.", "error");
+          toast(publicAccessText("telegram.startPending", "Mã đăng nhập Telegram đang được tạo. Vui lòng chờ phản hồi."), "error");
           return;
         }
         setActionBusy(action, route, true);
@@ -34469,7 +34482,7 @@
           stopTelegramLoginPolling();
           const result = await api("/auth/telegram/login/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
           merge({ telegramLoginFlow: { status: result.status || "awaiting_confirm", message: result.message, errorCode: result.error_code || "", data: result.data || {} } });
-          toast(result.message);
+          toast(result.message || publicAccessText("telegram.waitingFallback", "Đang chờ Telegram xác minh mã trong Bot."));
           scheduleTelegramLoginPolling();
         } finally {
           releaseSubmission(submission);
