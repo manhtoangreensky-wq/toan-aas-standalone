@@ -32,6 +32,7 @@ VIDEO_STUDIO_PATH = re.compile(r"^/video-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-
 SUBTITLE_STUDIO_PATH = re.compile(r"^/subtitle-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 IMAGE_STUDIO_PATH = re.compile(r"^/image-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 IMAGE_HUB_PATH = re.compile(r"^/image-hub/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+JOB_DETAIL_PATH = re.compile(r"^/jobs/[A-Za-z0-9._:-]{1,160}$")
 DOCUMENT_WORKSPACE_PATH = re.compile(r"^/document-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CHAT_WORKSPACE_PATH = re.compile(r"^/chat/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ANALYTICS_WORKSPACE_PATH = re.compile(r"^/analytics/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -387,6 +388,12 @@ def _shell_title_for(path: str, locale: str) -> str:
     titles = _PORTAL_SHELL_TITLES.get(normalized)
     if titles:
         return titles[locale]
+    if JOB_DETAIL_PATH.fullmatch(normalized):
+        return {
+            "vi": "Chi tiết job · TOAN AAS",
+            "en": "Job details · TOAN AAS",
+            "zh": "任务详情 · TOAN AAS",
+        }[locale]
     if AUDIO_HUB_PATH.fullmatch(normalized):
         return {
             "vi": "Audio Production Board · TOAN AAS",
@@ -415,6 +422,12 @@ def _shell_description_for(path: str, locale: str) -> str:
     """Return reviewed route metadata without exposing signed Web state."""
 
     normalized = path.rstrip("/") or "/"
+    if JOB_DETAIL_PATH.fullmatch(normalized):
+        return {
+            "vi": "Xem chi tiết job canonical thuộc quyền sở hữu đã xác minh; delivery chỉ mở qua URL ký tạm thời.",
+            "en": "Review owner-scoped canonical job details; delivery opens only through a temporary signed URL.",
+            "zh": "查看已验证所有权范围内的 canonical 任务详情；交付仅通过临时签名 URL 打开。",
+        }[locale]
     descriptions = _PORTAL_SHELL_DESCRIPTIONS.get(normalized)
     return descriptions[locale] if descriptions else _PORTAL_SHELL_COPY[locale]["description"]
 
@@ -434,7 +447,7 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     if normalized.startswith("/image-hub/") and normalized != "/image-hub/new" and not IMAGE_HUB_PATH.fullmatch(normalized):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     locale = _interface_locale(interface_locale)
     shell_copy = _PORTAL_SHELL_COPY[locale]
