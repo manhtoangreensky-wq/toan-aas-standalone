@@ -7650,7 +7650,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1388,
+      "occurrences": 1394,
       "provider": "Telegram"
     }
   ],
@@ -13734,7 +13734,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 141,
   "source_files_scanned": 141,
-  "source_fingerprint_sha256": "1fc8a3949b1f4d2dc025dc6ee2d70426e6d7d374c198eb1e328f44574bfb8b0d",
+  "source_fingerprint_sha256": "a6e91761e5fc5281f69a6a5a23ce6e41569943c17767550ea4e7f8a08ef85770",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-data-controls-locales",
   "ui_path_references": [
     {

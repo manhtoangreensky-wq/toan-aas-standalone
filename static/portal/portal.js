@@ -132,6 +132,12 @@
     return uiText(`telegramConnection.${key}`, fallback, params);
   }
 
+  // Legal and privacy pages are public presentation shells. The actual
+  // versioned policy document remains a server-owned publishing concern.
+  function legalPrivacyText(key, fallback, params) {
+    return uiText(`legalPrivacy.${key}`, fallback, params);
+  }
+
   function adminFinanceText(key, fallback, params) {
     return uiText(`adminFinance.${key}`, fallback, params);
   }
@@ -9242,6 +9248,8 @@
     if (path === "/account/security") return uiText("page.accountSecurity.title", fallback);
     if (path === "/account/data-controls") return uiText("page.dataControls.title", fallback);
     if (path === "/onboarding") return onboardingText("page.title", fallback);
+    if (path === "/legal") return legalPrivacyText("page.legal.title", fallback);
+    if (path === "/privacy") return legalPrivacyText("page.privacy.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.title", fallback);
@@ -9288,6 +9296,8 @@
     if (path === "/account/security") return uiText("page.accountSecurity.description", fallback);
     if (path === "/account/data-controls") return uiText("page.dataControls.description", fallback);
     if (path === "/onboarding") return onboardingText("page.description", fallback);
+    if (path === "/legal") return legalPrivacyText("page.legal.description", fallback);
+    if (path === "/privacy") return legalPrivacyText("page.privacy.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/workspace") return uiText("workspaceDrafts.page.description", fallback);
@@ -23612,10 +23622,22 @@
 
   function renderLegal(page, context) {
     const privacy = page.path === "/privacy";
-    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Khung nội dung phiên bản hóa</strong><p>${privacy ? "Chính sách chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực." : "Điều khoản chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực."}</p></div></div>
-      <div class="portal-panel-list" style="margin-top:16px"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>${privacy ? "Thu thập tối thiểu" : "Sử dụng có trách nhiệm"}</strong><span>${privacy ? "Browser không nhận hoặc lưu Telegram ID, OAuth token, password, wallet ledger hay file output. Server chỉ giữ Telegram identity canonical sau xác minh Bot và HMAC-hash identity OAuth để bảo vệ signed session/Core Bridge; OAuth token bị hủy sau xác minh." : "Provider, payment, job và Xu được điều phối bởi Core Bridge canonical."}</span></div></div>
-        <div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>${privacy ? "Quyền truy cập" : "Xác nhận rõ ràng"}</strong><span>${privacy ? "Dữ liệu riêng tư cần ownership và role check server-side trước khi render hoặc tải xuống." : "Flow feature sử dụng draft → estimate → confirm → queued/processing → completed/failed/guarded."}</span></div></div>
-        <div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Thông báo cập nhật</strong><span>Văn bản pháp lý đầy đủ sẽ thay thế khung này khi module content được đưa vào production.</span></div></div></div>
+    const firstTitle = privacy
+      ? legalPrivacyText("row.privacyFirstTitle", "Thu thập tối thiểu")
+      : legalPrivacyText("row.legalFirstTitle", "Sử dụng có trách nhiệm");
+    const firstBody = privacy
+      ? legalPrivacyText("row.privacyFirstBody", "Browser không nhận hoặc lưu Telegram ID, OAuth token, password, wallet ledger hay file output. Server chỉ giữ Telegram identity canonical sau xác minh Bot và HMAC-hash identity OAuth để bảo vệ signed session/Core Bridge; OAuth token bị hủy sau xác minh.")
+      : legalPrivacyText("row.legalFirstBody", "Provider, payment, job và Xu được điều phối bởi Core Bridge canonical.");
+    const secondTitle = privacy
+      ? legalPrivacyText("row.privacySecondTitle", "Quyền truy cập")
+      : legalPrivacyText("row.legalSecondTitle", "Xác nhận rõ ràng");
+    const secondBody = privacy
+      ? legalPrivacyText("row.privacySecondBody", "Dữ liệu riêng tư cần ownership và role check server-side trước khi render hoặc tải xuống.")
+      : legalPrivacyText("row.legalSecondBody", "Flow feature sử dụng draft → estimate → confirm → queued/processing → completed/failed/guarded.");
+    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.info)}</span><div><strong>${safeText(legalPrivacyText("notice.title", "Khung nội dung phiên bản hóa"))}</strong><p>${safeText(privacy ? legalPrivacyText("notice.privacyBody", "Chính sách chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực.") : legalPrivacyText("notice.legalBody", "Điều khoản chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực."))}</p></div></div>
+      <div class="portal-panel-list" style="margin-top:16px"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><div><strong>${safeText(firstTitle)}</strong><span>${safeText(firstBody)}</span></div></div>
+        <div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><strong>${safeText(secondTitle)}</strong><span>${safeText(secondBody)}</span></div></div>
+        <div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>${safeText(legalPrivacyText("row.thirdTitle", "Thông báo cập nhật"))}</strong><span>${safeText(legalPrivacyText("row.thirdBody", "Văn bản pháp lý đầy đủ sẽ thay thế khung này khi module content được đưa vào production."))}</span></div></div></div>
     </section></article>`;
   }
 
