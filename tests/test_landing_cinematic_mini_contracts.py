@@ -41,8 +41,9 @@ def test_cinematic_motion_is_default_only_for_welcome_with_a_safe_opt_out() -> N
     assert SHELL.index('src="/static/portal/portal-motion.js') < SHELL.index('src="/static/portal/portal.js')
 
     static_state = MOTION.index('root.setAttribute("data-landing-motion", "cinematic-mini")')
-    reduced_exit = MOTION.index("if (prefersReducedMotion()) return;")
+    reduced_exit = MOTION.index("if (prefersReducedMotion()) {")
     assert static_state < reduced_exit
+    assert 'root.setAttribute("data-landing-motion-phase", "settled")' in MOTION
 
 
 def test_landing_has_only_an_explicit_light_dark_control() -> None:
