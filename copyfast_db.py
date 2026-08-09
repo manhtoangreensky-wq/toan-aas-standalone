@@ -298,6 +298,17 @@ def image_brand_overlay_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_background_cleanup_enabled() -> bool:
+    """Whether bounded plain-background cleanup is explicitly enabled.
+
+    This narrow local Pillow operation removes only an edge-connected
+    near-solid background from an owner-scoped image. It never enables the
+    Bot's provider-backed RemoveBG/Cutout path, a Core Bridge call, a wallet
+    mutation, PayOS, a job, or a payment action.
+    """
+    return os.environ.get("WEBAPP_IMAGE_BACKGROUND_CLEANUP_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def storyboard_grid_enabled() -> bool:
     """Whether private Web-native storyboard-grid splitting is enabled.
 

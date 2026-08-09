@@ -514,6 +514,10 @@ def _flags() -> dict[str, bool]:
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
         "image_brand_overlay_enabled": enabled("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", False),
+        # Plain-background cleanup is an independently gated local utility.
+        # It does not unlock Bot/bridge RemoveBG, a provider, wallet/Xu,
+        # PayOS, payment, job or generic image execution.
+        "image_background_cleanup_enabled": enabled("WEBAPP_IMAGE_BACKGROUND_CLEANUP_ENABLED", False),
         # Video Poster is an isolated, FFmpeg-backed private artifact path.
         # It does not imply Video Studio rendering, Bot execution, provider
         # access, wallet/Xu, PayOS or a general media-processing capability.
