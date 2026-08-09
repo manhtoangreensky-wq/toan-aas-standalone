@@ -95,9 +95,13 @@ It is separate from music, voice, audio upload and Bot audio menus.
   The Portal fetches only a typed active Audio Asset Vault selector and the
   narrow operations history, both `no-store`; it never falls back to generic
   Jobs, generic Assets, Bot state or browser cache.
-- Metadata hydration is a Portal read state, not a transform lifecycle. While
-  it loads, the source selector, pager and write action remain locked. Failed
-  reads clear old projections instead of showing stale data.
+- Source metadata and operation history are two independent Portal read
+  states, not a transform lifecycle. While source metadata loads, the source
+  selector, pager and write action remain locked. A failed source read clears
+  its old projection instead of showing stale data. A failed history read
+  clears only history: it must not hide a successfully revalidated typed
+  source or disable its source form; the history panel reports the failure and
+  offers a fresh retry.
 - Route/session/epoch checks fence in-flight responses. Browser state contains
   only bounded display metadata and UUIDs; no source bytes, output URL, path,
   key or digest is persisted.

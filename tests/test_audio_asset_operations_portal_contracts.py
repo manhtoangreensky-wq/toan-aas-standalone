@@ -154,12 +154,12 @@ def test_private_download_requires_verified_attachment_and_is_not_cached() -> No
 
 
 def test_audio_portal_keeps_controls_accessible_and_metadata_is_not_a_job() -> None:
-    surface = _between(PORTAL, "function renderAudioAssetOperations(page, context)", "function renderSubtitleProjectCards")
+    surface = _between(PORTAL, "function renderAudioAssetOperations(page, context)", "const VIDEO_TRANSFORM_PORTAL_RATIOS")
     assert 'label for="audio-asset-source"' in surface
     assert 'aria-describedby="audio-asset-source-hint"' in surface
     assert 'id="audio-asset-source-hint"' in surface
     assert "</label>${sourcePager}" not in surface
-    assert 'const readyForInteraction = readState === "ready";' in surface
+    assert 'const readyForInteraction = referenceReadState === "ready";' in surface
     assert "canSubmit && sources.length && readyForInteraction" in surface
     assert "canView && readyForInteraction && canPrevious" in surface
     assert 'const transform = kind === "audio_convert" || kind === "audio_normalize";' in surface
@@ -175,6 +175,30 @@ def test_audio_portal_keeps_controls_accessible_and_metadata_is_not_a_job() -> N
         assert selector in CSS
 
 
+def test_history_failure_does_not_hide_a_ready_audio_source() -> None:
+    """Asset Vault source metadata and operation history are independent reads."""
+    hydration = _between(
+        INTEGRATION,
+        "async function hydrateAudioAssetOperations(options)",
+        "function audioAssetOperationPayload",
+    )
+    assert "Promise.allSettled([" in hydration
+    assert "audioAssetReferenceReadState" in INTEGRATION
+    assert "referenceOutcome.status === \"fulfilled\"" in hydration
+    assert "operationsOutcome.status === \"fulfilled\"" in hydration
+    assert "audioAssetReferences: references" in hydration
+    assert "audioAssetOperationsReadState: operationsReadState" in hydration
+
+    surface = _between(
+        PORTAL,
+        "function renderAudioAssetOperations(page, context)",
+        "const VIDEO_TRANSFORM_PORTAL_RATIOS",
+    )
+    assert "context.audioAssetReferenceReadState" in surface
+    assert 'const readyForInteraction = referenceReadState === "ready";' in surface
+    assert 'readState === "failed"' in surface
+
+
 def test_write_keeps_idempotency_key_when_receipt_or_private_refresh_is_ambiguous() -> None:
     actions = _between(
         INTEGRATION,
@@ -183,7 +207,8 @@ def test_write_keeps_idempotency_key_when_receipt_or_private_refresh_is_ambiguou
     )
     assert "let receiptAndRefreshConfirmed = false;" in actions
     assert "await hydrateAudioAssetOperations({ selectedId: intent.payload.source_asset_id })" in actions
-    assert "if (!refreshed) throw new Error" in actions
+    assert 'if (!refreshed || refreshed.referenceReadState !== "ready")' in actions
+    assert 'refreshed.operationsReadState === "ready"' in actions
     assert "same idempotency key will be reused" not in actions  # Vietnamese public copy must remain localized.
     assert "cùng idempotency key sẽ được tái sử dụng" in actions
     assert "receiptAndRefreshConfirmed = true;" in actions
@@ -204,6 +229,6 @@ def test_contract_keeps_audio_asset_operations_outside_bot_payment_and_provider_
         "No public URL",
         "fake completed output",
         "WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED",
-        "Metadata hydration is a Portal read state",
+        "Source metadata and operation history are two independent Portal read",
     ):
         assert phrase in CONTRACT
