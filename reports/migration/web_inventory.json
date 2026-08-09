@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 143,
   "source_files_scanned": 143,
-  "source_fingerprint_sha256": "422c2e1bc9ba498d59622a8dc13d5488dcd942cf313d076e17cb07196374ee79",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-clarity",
+  "source_fingerprint_sha256": "f77071c337ed28f87a66be037a0bc250452d7b12e5108f9acfa782d60995404b",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-subtitle-asset-operations-fix",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
