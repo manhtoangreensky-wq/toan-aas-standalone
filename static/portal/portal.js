@@ -9115,7 +9115,12 @@
       const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
       return subtitleAssetOperationsReadBadge(effectiveState);
     }
-    if (route === "/audio/assets") return audioAssetOperationsReadBadge(context && context.audioAssetOperationsReadState);
+    if (route === "/audio/assets") {
+      const referenceState = context && context.audioAssetReferenceReadState;
+      const historyState = context && context.audioAssetOperationsReadState;
+      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
+      return audioAssetOperationsReadBadge(effectiveState);
+    }
     return badge(stateFor(page, context));
   }
 
@@ -16895,6 +16900,8 @@
     const canDownload = Boolean(context.capabilities && context.capabilities["audio-asset-operation-download"] === true);
     const references = context.audioAssetReferences && typeof context.audioAssetReferences === "object" ? context.audioAssetReferences : {};
     const pagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const referenceReadState = ["loading", "ready", "failed", "guarded"].includes(String(context.audioAssetReferenceReadState || ""))
+      ? String(context.audioAssetReferenceReadState) : "guarded";
     const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.audioAssetOperationsReadState || ""))
       ? String(context.audioAssetOperationsReadState) : "guarded";
     const selectedId = references.selected && validVaultAssetId(references.selected.id) ? String(references.selected.id) : "";
@@ -16906,13 +16913,16 @@
       const format = String(item.extension || "").replace(".", "").toUpperCase();
       return `<option value="${safeText(String(item.id))}"${String(item.id) === selectedId ? " selected" : ""}>${safeText(name)} · ${safeText(format)} · ${safeText(vaultBytes(Number(item.byte_size)))}</option>`;
     }).join("");
-    const readyForInteraction = readState === "ready";
+    // Source metadata and operation history are independent private reads.
+    // A history outage must not hide a verified Asset Vault source or disable
+    // the source form; only the history panel remains unavailable.
+    const readyForInteraction = referenceReadState === "ready";
     const disabled = canSubmit && sources.length && readyForInteraction ? "" : " disabled";
     const sourceHint = !canView
       ? "Module đang được bảo vệ cho môi trường này. Asset Vault và audio runtime phải được server bật đầy đủ."
-      : readState === "loading"
+      : referenceReadState === "loading"
         ? "Đang tải metadata audio từ Asset Vault owner-scoped. Browser không đọc file audio, URL hoặc generic Asset history."
-        : readState === "failed"
+        : referenceReadState === "failed"
           ? "Không thể tải metadata private an toàn. Hãy làm mới; danh sách cũ đã được xóa thay vì dùng cache hoặc nguồn khác."
           : !sources.length
             ? "Chưa có MP3, WAV, M4A hoặc OGG active hợp lệ (tối đa 25 MiB) trong Asset Vault. Hãy thêm tệp private rồi quay lại."
@@ -16927,7 +16937,7 @@
     const sourcePager = canPrevious || canNext
       ? `<div class="portal-audio-assets-source-pager" role="group" aria-label="Trang audio private"><span>${sourcePageRange}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-reference-page" data-portal-route="/audio/assets" data-audio-asset-reference-offset="${canPrevious ? safeText(String(previousOffset)) : ""}"${canView && readyForInteraction && canPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-reference-page" data-portal-route="/audio/assets" data-audio-asset-reference-offset="${canNext ? safeText(String(nextOffset)) : ""}"${canView && readyForInteraction && canNext ? "" : " disabled"}>Sau</button></div></div>`
       : "";
-    const stateBadge = audioAssetOperationsReadBadge(readState);
+    const stateBadge = audioAssetOperationsReadBadge(referenceReadState !== "ready" ? referenceReadState : readState);
     const historyMarkup = operations.length ? `<ul class="portal-audio-asset-operation-list">${operations.map((item) => {
       const kind = String(item.kind || "");
       const source = String(item.source_format || "").toUpperCase();

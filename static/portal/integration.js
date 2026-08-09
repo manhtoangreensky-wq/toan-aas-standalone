@@ -13869,6 +13869,7 @@
       // Clear them at bootstrap so a delayed prior-account response can never
       // offer a stale output, filename or selected source in this session.
       audioAssetReferences: { items: [], selected: null, pagination: { limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      audioAssetReferenceReadState: account && assetVaultEnabled && audioAssetOperationsEnabled ? "loading" : "guarded",
       audioAssetOperations: [],
       audioAssetOperationsReadState: account && assetVaultEnabled && audioAssetOperationsEnabled ? "loading" : "guarded",
       // Video Finishing keeps every account-owned source, plan, receipt and
@@ -14630,7 +14631,10 @@
       // local execution receipt. Never substitute generic Asset/Job history,
       // legacy Audio Library metadata or a prior session's private selection.
       if (account && assetVaultEnabled && audioAssetOperationsEnabled) await hydrateAudioAssetOperations();
-      else clearAudioAssetOperationsProjection("guarded");
+      else {
+        clearAudioAssetReferenceProjection("guarded");
+        clearAudioAssetOperationsProjection("guarded");
+      }
     }
     if (currentPath === VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
       // Video Finishing owns one bounded MP4 picker, a fresh estimate and
@@ -20518,13 +20522,45 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
-  function clearAudioAssetOperationsProjection(readState) {
-    const normalizedReadState = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+  function emptyAudioAssetReferences() {
+    return {
+      items: [],
+      selected: null,
+      pagination: {
+        limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT,
+        offset: 0,
+        returned: 0,
+        has_more: false,
+        next_offset: null,
+        previous_offset: null
+      }
+    };
+  }
+
+  function audioAssetReadState(value) {
+    return ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
+      ? String(value) : "guarded";
+  }
+
+  function audioAssetPageState(referenceReadState) {
+    const normalized = audioAssetReadState(referenceReadState);
+    return normalized === "loading" ? "read_only" : normalized === "ready" ? "ready" : "guarded";
+  }
+
+  function clearAudioAssetReferenceProjection(readState) {
+    const normalizedReadState = audioAssetReadState(readState);
     merge({
-      audioAssetReferences: { items: [], selected: null, pagination: { limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      audioAssetReferences: emptyAudioAssetReferences(),
+      audioAssetReferenceReadState: normalizedReadState,
+      pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: audioAssetPageState(normalizedReadState) }
+    });
+  }
+
+  function clearAudioAssetOperationsProjection(readState) {
+    const normalizedReadState = audioAssetReadState(readState);
+    merge({
       audioAssetOperations: [],
       audioAssetOperationsReadState: normalizedReadState,
-      pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: normalizedReadState === "loading" ? "read_only" : normalizedReadState }
     });
   }
 
@@ -20534,30 +20570,54 @@
     const sessionEpoch = assetVaultSessionEpoch;
     const expectedPath = currentPortalPath();
     if (!audioAssetOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().audioAssetOperationsEnabled !== true) {
-      if (audioAssetOperationsPathIsCurrent(expectedPath)) clearAudioAssetOperationsProjection("guarded");
+      if (audioAssetOperationsPathIsCurrent(expectedPath)) {
+        clearAudioAssetReferenceProjection("guarded");
+        clearAudioAssetOperationsProjection("guarded");
+      }
       return null;
     }
     const previous = base().audioAssetReferences && typeof base().audioAssetReferences === "object" ? base().audioAssetReferences : {};
     const previousPagination = previous.pagination && typeof previous.pagination === "object" ? previous.pagination : {};
     const offset = audioAssetReferenceOffset(source.offset === undefined ? previousPagination.offset : source.offset);
     const selectedId = validVaultAssetId(source.selectedId) ? String(source.selectedId).trim() : (audioAssetReferenceItem(previous.selected) || {}).id || "";
-    merge({ audioAssetOperationsReadState: "loading", pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: "read_only" } });
+    merge({
+      audioAssetReferenceReadState: "loading",
+      audioAssetOperationsReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: "read_only" }
+    });
     try {
-      const [referencesResult, operationsResult] = await Promise.all([
+      const [referenceOutcome, operationsOutcome] = await Promise.allSettled([
         api(`/asset-vault?state=active&reference_kind=audio&limit=${AUDIO_ASSET_OPERATIONS_LIST_LIMIT}&offset=${offset}`, { cache: "no-store" }),
         api(`/audio-asset-operations?limit=${AUDIO_ASSET_OPERATIONS_LIST_LIMIT}`, { cache: "no-store" })
       ]);
       if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
-      const references = audioAssetReferencesProjection(referencesResult.data, offset, selectedId, previous);
-      const operations = audioAssetOperationsProjection(operationsResult.data);
+      const referenceReady = referenceOutcome.status === "fulfilled";
+      const operationsReady = operationsOutcome.status === "fulfilled";
+      const references = referenceReady
+        ? audioAssetReferencesProjection(referenceOutcome.value.data, offset, selectedId, previous)
+        : emptyAudioAssetReferences();
+      const operations = operationsReady
+        ? audioAssetOperationsProjection(operationsOutcome.value.data)
+        : [];
+      const referenceReadState = referenceReady ? "ready" : "failed";
+      const operationsReadState = operationsReady ? "ready" : "failed";
       if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
       merge({
-        audioAssetReferences: references, audioAssetOperations: operations, audioAssetOperationsReadState: "ready",
-        pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: "ready" }
+        audioAssetReferences: references,
+        audioAssetReferenceReadState: referenceReadState,
+        audioAssetOperations: operations,
+        audioAssetOperationsReadState: operationsReadState,
+        pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: audioAssetPageState(referenceReadState) }
       });
-      return { references, operations };
+      return {
+        references: referenceReady ? references : null,
+        operations: operationsReady ? operations : null,
+        referenceReadState,
+        operationsReadState
+      };
     } catch (_) {
       if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearAudioAssetReferenceProjection("failed");
       clearAudioAssetOperationsProjection("failed");
       return null;
     }
@@ -26630,11 +26690,12 @@
           // below; it is never placed in a URL, storage, draft, Bot state or
           // write request, and it never starts an operation automatically.
           ++audioAssetOperationsViewEpoch;
+          clearAudioAssetReferenceProjection("loading");
           clearAudioAssetOperationsProjection("loading");
           window.history.pushState({}, "", AUDIO_ASSET_OPERATIONS_ROUTE);
           merge({ path: AUDIO_ASSET_OPERATIONS_ROUTE, title: "TOAN AAS" });
           const refreshed = await hydrateAudioAssetOperations({ selectedId: source.asset_id });
-          if (!refreshed) {
+          if (!refreshed || refreshed.referenceReadState !== "ready") {
             throw new Error("Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.");
           }
           const selected = refreshed.references && refreshed.references.selected;
@@ -30920,10 +30981,17 @@
         try {
           ++audioAssetOperationsViewEpoch;
           const refreshed = await hydrateAudioAssetOperations();
-          if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
+          if (!refreshed && base().audioAssetReferenceReadState !== "ready") {
             throw new Error("Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.");
           }
-          if (refreshed) toast("Đã làm mới nguồn audio và lịch sử private.");
+          if (refreshed) {
+            toast(
+              refreshed.operationsReadState === "ready"
+                ? "Đã làm mới nguồn audio và lịch sử private."
+                : "Đã làm mới nguồn audio private; lịch sử tạm thời chưa tải được, hãy thử lại sau.",
+              refreshed.operationsReadState === "ready" ? "info" : "warning"
+            );
+          }
         } finally {
           setActionBusy(action, route, false);
         }
@@ -30944,10 +31012,17 @@
         try {
           ++audioAssetOperationsViewEpoch;
           const refreshed = await hydrateAudioAssetOperations({ offset, selectedId });
-          if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
+          if (!refreshed && base().audioAssetReferenceReadState !== "ready") {
             throw new Error("Không thể tải trang nguồn audio owner-scoped an toàn. Hãy thử lại.");
           }
-          if (refreshed) toast("Đã tải trang nguồn audio private.");
+          if (refreshed) {
+            toast(
+              refreshed.operationsReadState === "ready"
+                ? "Đã tải trang nguồn audio private."
+                : "Đã tải trang nguồn audio private; lịch sử tạm thời chưa tải được, hãy thử lại sau.",
+              refreshed.operationsReadState === "ready" ? "info" : "warning"
+            );
+          }
         } finally {
           setActionBusy(action, route, false);
         }
@@ -30992,14 +31067,22 @@
           // Do not discard this key when a confirmed write cannot be followed
           // by a fresh private projection. Retrying this exact intent must
           // replay its immutable receipt, never create a second output.
-          if (!refreshed) throw new Error("Máy chủ đã xác nhận thao tác nhưng chưa thể tải lại lịch sử audio private an toàn. Hãy làm mới hoặc thử lại; cùng idempotency key sẽ được tái sử dụng.");
+          if (!refreshed || refreshed.referenceReadState !== "ready") {
+            throw new Error("Máy chủ đã xác nhận thao tác nhưng chưa thể tải lại nguồn audio private an toàn. Hãy làm mới hoặc thử lại; cùng idempotency key sẽ được tái sử dụng.");
+          }
           const fallback = intent.expectedKind === "audio_inspect"
             ? "Đã kiểm định audio private. Thao tác này không tạo file."
             : intent.expectedKind === "audio_normalize"
               ? "Đã chuẩn hóa audio private theo profile M4A cố định và xác minh output."
               : "Đã chuyển đổi audio private sau khi server xác minh output.";
           receiptAndRefreshConfirmed = true;
-          toast(result.message || fallback);
+          const message = result.message || fallback;
+          toast(
+            refreshed.operationsReadState === "ready"
+              ? message
+              : `${message} Lịch sử tạm thời chưa tải được; hãy làm mới để xem đầy đủ.`,
+            refreshed.operationsReadState === "ready" ? "info" : "warning"
+          );
         } finally {
           releaseSubmission(submission);
           if (receiptAndRefreshConfirmed || receiptConfirmedAwayFromView) discardSubmission(intent.scope, submission);
