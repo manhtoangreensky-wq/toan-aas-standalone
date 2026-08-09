@@ -1564,6 +1564,16 @@
       "Công cụ áp preset màu/làm nét cục bộ deterministic. Nó không tạo chi tiết AI, không xóa vật thể/nền, không gọi provider và không thay đổi file gốc."
     ]
   });
+  customerPage("/image/background-cleanup", "Xóa nền màu trơn", "Làm trong suốt phần nền liên thông từ mép ảnh trong Asset Vault; không phải AI cắt chủ thể.", ICONS.image, {
+    // This is deliberately distinct from the guarded canonical `/image/remove-background`
+    // workflow. It only supports the closed local profiles below and never
+    // imports a Bot job, uploaded browser bytes or an external result.
+    layout: "image-background-cleanup", type: "image-operation", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn từ Asset Vault. Không upload bytes, URL hoặc raw file path ở bước này.",
+      "Công cụ chỉ làm trong suốt nền màu trơn liên thông từ mép ảnh theo profile đã review; không phải AI nhận diện/cắt chủ thể và không thay đổi file gốc."
+    ]
+  });
   customerPage("/image/brand-overlay", "Brand Overlay Studio", "Thêm chữ thương hiệu và logo private lên bản sao PNG đã xác minh; không gọi AI, Bot job hoặc provider.", ICONS.image, {
     // The page stays guarded until its own owner-scoped history has hydrated.
     // It never borrows a Resize/Enhance record or an Asset Vault preview.
@@ -1599,7 +1609,7 @@
   customerPage("/image/history", "Lịch sử ảnh", "Theo dõi PNG riêng tư đã được Web Workspace tạo và xác minh; không thay thế lịch sử job Bot.", ICONS.image, {
     layout: "image-operation-history", type: "image-operation", action: "none", status: "guarded", fields: [],
     notes: [
-      "Chỉ gồm output Resize & Aspect Studio, Image Enhance Studio và Brand Overlay Studio do Web Workspace tạo. Job, output hoặc lịch sử provider/Bot không được sao chép sang đây.",
+      "Chỉ gồm output Resize & Aspect Studio, Image Enhance Studio, Brand Overlay Studio và Xóa nền màu trơn do Web Workspace tạo. Job, output hoặc lịch sử provider/Bot không được sao chép sang đây.",
       "Tải xuống luôn kiểm tra signed session, quyền sở hữu và integrity của PNG. Không có preview công khai, URL tĩnh hay PWA cache."
     ]
   }, ["/image/assets"]);
@@ -5167,7 +5177,7 @@
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
     "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
-  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
+  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay", "image_background_cleanup"]);
   // Brand Overlay keeps a dedicated owner-scoped projection for its authoring
   // route, while verified rows also belong to the combined Image History view.
   const IMAGE_BRAND_OVERLAY_HISTORY_KINDS = new Set(["image_brand_overlay"]);
@@ -8598,6 +8608,15 @@
       imageBrandOverlayEnabled: source.imageBrandOverlayEnabled === true,
       imageBrandOverlayOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageBrandOverlayOperationsReadState || ""))
         ? String(source.imageBrandOverlayOperationsReadState)
+        : "guarded",
+      // Plain-background cleanup is a separate owner-scoped projection. It
+      // only exposes verified transparent PNG metadata and never borrows a
+      // row from Enhance, Resize or the Bot asset catalog.
+      imageBackgroundCleanupOperations: Array.isArray(source.imageBackgroundCleanupOperations) ? source.imageBackgroundCleanupOperations.slice(0, OPERATION_HISTORY_LIST_LIMIT) : [],
+      imageBackgroundCleanupOperationListing: normalizeOperationHistoryListing(source.imageBackgroundCleanupOperationListing, IMAGE_OPERATION_HISTORY_KINDS, "image_background_cleanup"),
+      imageBackgroundCleanupEnabled: source.imageBackgroundCleanupEnabled === true,
+      imageBackgroundCleanupOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageBackgroundCleanupOperationsReadState || ""))
+        ? String(source.imageBackgroundCleanupOperationsReadState)
         : "guarded",
       // Storyboard cells are an independent owner-scoped artifact list.  Do
       // not let a previous Image Operation or Asset Vault render stand in for
@@ -19451,6 +19470,14 @@
     );
   }
 
+  function imageBackgroundCleanupOperationHistoryListing(context) {
+    return normalizeOperationHistoryListing(
+      context && context.imageBackgroundCleanupOperationListing,
+      IMAGE_OPERATION_HISTORY_KINDS,
+      "image_background_cleanup"
+    );
+  }
+
   function storyboardGridHistoryListing(context) {
     return normalizeOperationHistoryListing(
       context && context.storyboardGridListing,
@@ -19500,6 +19527,21 @@
       route,
       "data-image-brand-overlay-offset",
       "Phân trang lịch sử Brand Overlay Studio"
+    );
+  }
+
+  function renderImageBackgroundCleanupOperationHistoryPagination(context, enabled, route) {
+    const listing = imageBackgroundCleanupOperationHistoryListing(context);
+    const pagination = listing.pagination || {};
+    if (!pagination.returned && !pagination.has_more && pagination.previous_offset === null) return "";
+    return renderOperationsPagination(
+      listing,
+      enabled,
+      "Xóa nền màu trơn",
+      "image-background-cleanup-operation-page",
+      route,
+      "data-image-background-cleanup-operation-offset",
+      "Phân trang lịch sử Xóa nền màu trơn"
     );
   }
 
@@ -19766,6 +19808,13 @@
       .slice(0, OPERATION_HISTORY_LIST_LIMIT);
   }
 
+  function imageBackgroundCleanupOperationItems(context) {
+    return (Array.isArray(context.imageBackgroundCleanupOperations) ? context.imageBackgroundCleanupOperations : [])
+      .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
+        && String(item.kind || "") === "image_background_cleanup")
+      .slice(0, OPERATION_HISTORY_LIST_LIMIT);
+  }
+
   function storyboardGridOperationItems(context) {
     return normalizeStoryboardGridOperations(context && context.storyboardGridOperations)
       .filter((item) => item && validImageOperationId(item.id))
@@ -19916,6 +19965,24 @@
           { value: "true", label: "Có · tối đa 2×, luôn theo trần 4096 px / 16 MP" }
         ],
         help: "Dùng nội suy LANCZOS và UnsharpMask cục bộ. Không phải AI upscale; ảnh lớn có thể bị hạ về trần output để giữ an toàn."
+      }
+    ];
+  }
+
+  function imageBackgroundCleanupFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: "Chọn ảnh private", required: true,
+        help: "Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện. File gốc luôn giữ nguyên."
+      },
+      {
+        name: "profile", label: "Loại nền màu trơn", control: "select", required: true, options: [
+          { value: "white_studio", label: "Trắng studio · mép nền sáng" },
+          { value: "light_neutral", label: "Trung tính sáng · nền xám/be nhạt" },
+          { value: "dark_neutral", label: "Trung tính tối · nền sẫm đồng đều" }
+        ],
+        help: "Chỉ có ba profile đã review. Không nhập màu tự do, mask, path, URL hay tham số từ browser."
       }
     ];
   }
@@ -20203,6 +20270,82 @@
     }).join("")}</div>`;
   }
 
+  function imageBackgroundCleanupProfileLabel(value) {
+    return ({
+      white_studio: "Trắng studio",
+      light_neutral: "Trung tính sáng",
+      dark_neutral: "Trung tính tối"
+    })[String(value || "")] || "Profile đã kiểm tra";
+  }
+
+  function imageBackgroundCleanupSettings(item) {
+    const settings = item && item.settings && typeof item.settings === "object" ? item.settings : {};
+    return imageBackgroundCleanupProfileLabel(settings.profile);
+  }
+
+  function renderImageBackgroundCleanupOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PNG nền trong suốt", "Bản sao chỉ xuất hiện khi máy chủ tìm được nền màu trơn liên thông từ mép ảnh, mở lại PNG RGBA và xác minh integrity. Không có bản thay thế khi không khớp.", "◇");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = imageOperationState(item);
+      const downloadPath = imageOperationDownloadPath(item);
+      const sourceWidth = Number(item.source_width);
+      const sourceHeight = Number(item.source_height);
+      const targetWidth = Number(item.target_width);
+      const targetHeight = Number(item.target_height);
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "PNG RGBA đã kiểm tra";
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không phát hành PNG vì ảnh không có nền màu trơn phù hợp từ mép. Hãy giữ file nguồn và thử profile khác nếu phù hợp."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; không có PNG thay thế."
+          : "Chỉ tải xuống sau khi máy chủ xác minh PNG RGBA và ownership.";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">◇</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG nền trong suốt private"))}</h2><p class="portal-card-subtitle">${safeText(imageBackgroundCleanupSettings(item))} · nền liên thông từ mép</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG RGBA</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Profile</dt><dd>${safeText(imageBackgroundCleanupSettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderImageBackgroundCleanup(page, context) {
+    const canViewCapability = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-background-cleanup"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["image-background-cleanup-refresh"] === true);
+    if (!canViewCapability) {
+      return `<article class="portal-page portal-image-background-cleanup">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Xóa nền màu trơn đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi signed session, Asset Vault và storage PNG riêng được máy chủ xác nhận.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output thay thế</span></div></div></div></section></article>`;
+    }
+    const assetReadState = String(context.assetVaultReadState || "loading");
+    const operationReadState = String(context.imageBackgroundCleanupOperationsReadState || "loading");
+    const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
+    if (!privateReadsReady) {
+      const loading = assetReadState === "loading" || operationReadState === "loading";
+      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const message = loading
+        ? "Đang tải Asset Vault và lịch sử Xóa nền màu trơn thuộc signed Web account hiện tại. Form chỉ mở sau khi hai phản hồi server-side hoàn tất."
+        : "Asset Vault hoặc lịch sử riêng chưa trả dữ liệu an toàn. Web đã xóa projection cũ và không hiển thị form hay PNG thay thế.";
+      const retry = !loading && canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-background-cleanup-refresh" data-portal-route="/image/background-cleanup">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-image-background-cleanup">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+    }
+    const sources = imageVaultItems(context);
+    const operations = imageBackgroundCleanupOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const runReason = !canRunCapability
+      ? (context.imageBackgroundCleanupEnabled === true
+        ? "Cần signed session, CSRF và capability Xóa nền màu trơn từ server."
+        : "Tính năng đang được server giữ guarded cho đến khi WEBAPP_IMAGE_BACKGROUND_CLEANUP_ENABLED được bật có chủ đích.")
+      : sources.length === 0
+        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo PNG nền trong suốt."
+        : "Ảnh nguồn → hash-copy cô lập → kiểm tra nền liên thông từ mép → PNG RGBA được mở lại và xác minh trước khi tải.";
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-image-background-cleanup">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Làm nền đồng màu trong suốt, có giới hạn rõ ràng</h2><p>Chọn một ảnh private từ Asset Vault và profile nền đã review. Máy chủ chỉ xóa pixel nền liên thông từ mép ảnh; không phải AI cắt chủ thể, không suy đoán phần bị che và không thay đổi file gốc.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG RGBA sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo PNG nền trong suốt</h2><p class="portal-card-subtitle">Không upload bytes, URL hoặc raw file path. Browser chỉ gửi Asset Vault ID, profile đã chọn và idempotency key.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-operation-background-cleanup" data-portal-route="/image/background-cleanup" data-portal-confirm="Tạo một PNG private nền trong suốt theo profile đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageBackgroundCleanupFormFields(), canRun, context, { profile: "white_studio" })}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Giới hạn trung thực</h2><p class="portal-card-subtitle">Đây là cleanup deterministic theo màu nền, không phải AI cắt nền.</p></div></div><ol class="portal-project-steps"><li><strong>1. Chỉ phần nền từ mép</strong><span>Server đi từ các pixel ở viền ảnh và chỉ làm trong suốt vùng cùng profile đang liên thông. Vùng đồng màu nằm trong chủ thể không tự bị xóa.</span></li><li><strong>2. Không khớp thì dừng</strong><span>Nếu không có nền màu trơn phù hợp, thao tác thất bại rõ ràng và không phát PNG thay thế.</span></li><li><strong>3. Delivery riêng tư</strong><span>PNG RGBA mới được mở lại, kiểm tra alpha, hash và ownership trước khi tải bằng signed session.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG nền trong suốt</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-background-cleanup-refresh" data-portal-route="/image/background-cleanup"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageBackgroundCleanupOperationCards(operations)}${renderImageBackgroundCleanupOperationHistoryPagination(context, canViewCapability, "/image/background-cleanup")}</section>
+      <section class="portal-card portal-card-pad">${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderImageHistoryOperationCards(items) {
     if (!items.length) {
       return renderEmpty("Chưa có PNG Web đã xác minh", "Lịch sử này chỉ hiển thị output Resize, Image Enhance hoặc Brand Overlay do signed Web account hiện tại tạo. Nó không suy đoán từ Asset Vault, Bot, provider hay browser.", "▧");
@@ -20211,6 +20354,7 @@
       const kind = String(item.kind || "");
       const isResize = kind === "image_resize";
       const isBrandOverlay = kind === "image_brand_overlay";
+      const isBackgroundCleanup = kind === "image_background_cleanup";
       const status = imageOperationState(item);
       const downloadPath = imageOperationDownloadPath(item);
       const sourceWidth = Number(item.source_width);
@@ -20225,15 +20369,17 @@
         ? `${resizeLabel} · ${String(item.preset || "custom")}`
         : isBrandOverlay
           ? "Brand Overlay Studio · deterministic"
+          : isBackgroundCleanup
+            ? `${imageBackgroundCleanupSettings(item)} · nền liên thông từ mép`
           : (IMAGE_ENHANCE_PRESET_LABELS[preset] || preset);
-      const settings = isResize ? resizeLabel : isBrandOverlay ? imageBrandOverlaySettings(item) : imageEnhanceSettings(item);
-      const fallbackName = isResize ? "PNG private đã resize" : isBrandOverlay ? "PNG private đã gắn thương hiệu" : "PNG private đã chỉnh";
+      const settings = isResize ? resizeLabel : isBrandOverlay ? imageBrandOverlaySettings(item) : isBackgroundCleanup ? imageBackgroundCleanupSettings(item) : imageEnhanceSettings(item);
+      const fallbackName = isResize ? "PNG private đã resize" : isBrandOverlay ? "PNG private đã gắn thương hiệu" : isBackgroundCleanup ? "PNG nền trong suốt private" : "PNG private đã chỉnh";
       const pendingMessage = status === "failed" || status === "unavailable"
         ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
         : status === "guarded"
           ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
           : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : isBrandOverlay ? "▣" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : isBrandOverlay ? "Brand Overlay Studio" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : isBrandOverlay ? "Overlay" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : isBrandOverlay ? "▣" : isBackgroundCleanup ? "◇" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : isBrandOverlay ? "Brand Overlay Studio" : isBackgroundCleanup ? "Xóa nền màu trơn" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : isBrandOverlay ? "Overlay" : isBackgroundCleanup ? "Profile" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -26993,6 +27139,7 @@
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
+      case "image-background-cleanup": return renderImageBackgroundCleanup(page, context);
       case "image-brand-overlay": return renderImageBrandOverlay(page, context);
       case "storyboard-grid": return renderStoryboardGrid(page, context);
       case "image-operation-history": return renderImageOperationHistory(page, context);
@@ -28272,6 +28419,11 @@
     if (String(action || "").startsWith("image-brand-overlay-")) {
       Object.assign(fields, {
         __imageBrandOverlayOperationOffset: source.getAttribute("data-image-brand-overlay-offset") || ""
+      });
+    }
+    if (String(action || "").startsWith("image-background-cleanup-operation-")) {
+      Object.assign(fields, {
+        __imageBackgroundCleanupOperationOffset: source.getAttribute("data-image-background-cleanup-operation-offset") || ""
       });
     }
     if (String(action || "").startsWith("storyboard-grid-")) {

@@ -11,6 +11,7 @@ ledger, a webhook, or browser-supplied paths.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from collections import deque
 import hashlib
 import hmac
 from io import BytesIO
@@ -38,6 +39,7 @@ from copyfast_db import (
     image_operations_directory,
     image_operations_enabled,
     image_brand_overlay_enabled,
+    image_background_cleanup_enabled,
     image_enhance_enabled,
     image_resize_enabled,
     transaction,
@@ -51,19 +53,38 @@ router = APIRouter(prefix="/api/v1/image-operations", tags=["Web Image Operation
 IMAGE_RESIZE_KIND = "image_resize"
 IMAGE_ENHANCE_KIND = "image_enhance"
 IMAGE_BRAND_OVERLAY_KIND = "image_brand_overlay"
-SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_OVERLAY_KIND})
+IMAGE_BACKGROUND_CLEANUP_KIND = "image_background_cleanup"
+SUPPORTED_KINDS = frozenset({
+    IMAGE_RESIZE_KIND,
+    IMAGE_ENHANCE_KIND,
+    IMAGE_BRAND_OVERLAY_KIND,
+    IMAGE_BACKGROUND_CLEANUP_KIND,
+})
 # An omitted kind is the combined history contract used by `/image/history`.
 # Keep it explicit rather than treating every present/future table value as a
 # public Web history row. New operation kinds require a deliberate UI/API
 # contract change before they can appear in this projection.
-IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_OVERLAY_KIND})
+IMAGE_HISTORY_KINDS = frozenset({
+    IMAGE_RESIZE_KIND,
+    IMAGE_ENHANCE_KIND,
+    IMAGE_BRAND_OVERLAY_KIND,
+    IMAGE_BACKGROUND_CLEANUP_KIND,
+})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 FIT_MODES = frozenset({"crop", "pad", "blur"})
 ENHANCE_FIT_MODE = "enhance"
 BRAND_OVERLAY_FIT_MODE = "brand_overlay"
 BRAND_OVERLAY_PRESET = "brand_overlay_v1"
 BRAND_OVERLAY_RENDERER_VERSION = "brand_overlay_v1"
+BACKGROUND_CLEANUP_FIT_MODE = "background_cleanup"
+BACKGROUND_CLEANUP_PRESET = "plain_background_cleanup_v1"
+BACKGROUND_CLEANUP_RENDERER_VERSION = "plain_background_cleanup_v1"
 ENHANCE_TONES = frozenset({"neutral", "warm", "cool", "clean"})
+BACKGROUND_CLEANUP_PROFILES: dict[str, tuple[tuple[int, int, int], int]] = {
+    "white_studio": ((250, 250, 250), 28),
+    "light_neutral": ((232, 232, 232), 34),
+    "dark_neutral": ((34, 34, 34), 30),
+}
 OVERLAY_POSITIONS = frozenset({
     "top_left", "top_center", "top_right",
     "center_left", "center", "center_right",
@@ -91,6 +112,11 @@ MIN_TARGET_DIMENSION = 128
 MAX_TARGET_DIMENSION = 4_096
 MAX_OUTPUT_PIXELS = 16 * 1024 * 1024
 MAX_OUTPUT_ASPECT_RATIO = 12
+# The edge flood-fill must stay meaningfully below the decoder pixel ceiling:
+# a large uniform source would otherwise turn a small request into a Python
+# set with millions of coordinate tuples. Complex/very-large cleanup remains
+# guarded rather than exhausting the app worker.
+MAX_BACKGROUND_CLEANUP_VISITED = 2_000_000
 ORPHAN_RETENTION_SECONDS = 60 * 60
 
 # The bot’s historical local resize presets, expressed as canonical Web
@@ -147,6 +173,7 @@ PNG_MEDIA_TYPE = "image/png"
 OUTPUT_FILENAME = "toan-aas-image-resized.png"
 ENHANCE_OUTPUT_FILENAME = "toan-aas-image-enhanced.png"
 BRAND_OVERLAY_OUTPUT_FILENAME = "toan-aas-image-brand-overlay.png"
+BACKGROUND_CLEANUP_OUTPUT_FILENAME = "toan-aas-image-background-cleanup.png"
 
 # Values and visual treatment intentionally match the Bot's local image editor
 # baseline.  The Web uses the stricter Image Operations source/output limits
@@ -328,6 +355,36 @@ class ImageBrandOverlayRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class ImageBackgroundCleanupRequest(BaseModel):
+    """Remove only a bounded, edge-connected plain background.
+
+    A caller chooses no custom RGB color, mask, geometry, path, URL or
+    provider. The closed profile is an operator-reviewed local policy.
+    """
+
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    profile: str = Field(default="white_studio", min_length=3, max_length=32)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("profile")
+    @classmethod
+    def valid_profile(cls, value: str) -> str:
+        normalized = re.sub(r"[\s-]+", "_", str(value or "").strip().lower())
+        if normalized not in BACKGROUND_CLEANUP_PROFILES:
+            raise ValueError("Profile xóa nền màu trơn không hợp lệ")
+        return normalized
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 def _require_enabled() -> None:
     if not image_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -360,6 +417,15 @@ def _require_brand_overlay_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Brand Overlay Studio chưa được bật; cần WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED và private storage",
+        )
+
+
+def _require_background_cleanup_enabled() -> None:
+    _require_enabled()
+    if not image_background_cleanup_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Xóa nền màu trơn chưa được bật; cần WEBAPP_IMAGE_BACKGROUND_CLEANUP_ENABLED và private storage",
         )
 
 
@@ -737,6 +803,56 @@ def _enhance_request_fingerprint(
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _background_cleanup_request_fingerprint(
+    *,
+    source_asset_id: str,
+    source_sha256: str,
+    source_bytes: int,
+    profile: str,
+) -> str:
+    """Bind the closed cleanup profile to immutable source evidence."""
+    encoded = json.dumps(
+        {
+            "kind": IMAGE_BACKGROUND_CLEANUP_KIND,
+            "renderer_version": BACKGROUND_CLEANUP_RENDERER_VERSION,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+            "profile": profile,
+            "output_format": "png_rgba",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _background_cleanup_settings(profile: str) -> dict[str, str | int]:
+    """Persist only the closed server-normalized profile metadata."""
+    anchor, tolerance = BACKGROUND_CLEANUP_PROFILES[profile]
+    return {
+        "renderer_version": BACKGROUND_CLEANUP_RENDERER_VERSION,
+        "profile": profile,
+        "tolerance": int(tolerance),
+        "anchor": "#%02x%02x%02x" % anchor,
+    }
+
+
+def _background_cleanup_settings_are_valid(settings: dict[str, Any]) -> bool:
+    profile = str(settings.get("profile") or "")
+    expected = _background_cleanup_settings(profile) if profile in BACKGROUND_CLEANUP_PROFILES else {}
+    try:
+        tolerance = int(settings.get("tolerance") or 0)
+    except (TypeError, ValueError):
+        return False
+    return (
+        bool(expected)
+        and str(settings.get("renderer_version") or "") == BACKGROUND_CLEANUP_RENDERER_VERSION
+        and str(settings.get("anchor") or "") == str(expected["anchor"])
+        and tolerance == int(expected["tolerance"])
+    )
+
+
 def _brand_overlay_text_digest(value: str | None) -> str:
     return hashlib.sha256(str(value or "").encode("utf-8")).hexdigest()
 
@@ -897,6 +1013,10 @@ def _brand_overlay_replay_matches(
 def _operation_settings(kind: str, value: Any) -> dict[str, Any]:
     """Expose only server-normalized settings, never arbitrary stored JSON."""
     decoded = _brand_overlay_internal_settings(value)
+    if kind == IMAGE_BACKGROUND_CLEANUP_KIND:
+        if not _background_cleanup_settings_are_valid(decoded):
+            return {}
+        return {"profile": str(decoded["profile"])}
     if kind == IMAGE_BRAND_OVERLAY_KIND:
         if not _brand_overlay_settings_are_valid(decoded):
             return {}
@@ -922,6 +1042,8 @@ def _operation_settings(kind: str, value: Any) -> dict[str, Any]:
 
 
 def _operation_output_filename(kind: str) -> str:
+    if kind == IMAGE_BACKGROUND_CLEANUP_KIND:
+        return BACKGROUND_CLEANUP_OUTPUT_FILENAME
     if kind == IMAGE_ENHANCE_KIND:
         return ENHANCE_OUTPUT_FILENAME
     if kind == IMAGE_BRAND_OVERLAY_KIND:
@@ -962,12 +1084,21 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     kind = str(operation.get("kind") or "")
     is_enhance = kind == IMAGE_ENHANCE_KIND
     is_brand_overlay = kind == IMAGE_BRAND_OVERLAY_KIND
-    label = "Brand Overlay Studio" if is_brand_overlay else ("Image Enhance Studio" if is_enhance else "Resize & Aspect Studio")
+    is_background_cleanup = kind == IMAGE_BACKGROUND_CLEANUP_KIND
+    label = (
+        "Xóa nền màu trơn"
+        if is_background_cleanup
+        else ("Brand Overlay Studio" if is_brand_overlay else ("Image Enhance Studio" if is_enhance else "Resize & Aspect Studio"))
+    )
     if state == "completed":
         message = (
-            "Đã ghép lớp thương hiệu và xác minh PNG riêng tư."
-            if is_brand_overlay
-            else ("Đã nâng chất lượng cơ bản và xác minh PNG riêng tư." if is_enhance else "Đã resize và xác minh PNG riêng tư.")
+            "Đã làm trong suốt nền màu trơn liên thông và xác minh PNG riêng tư."
+            if is_background_cleanup
+            else (
+                "Đã ghép lớp thương hiệu và xác minh PNG riêng tư."
+                if is_brand_overlay
+                else ("Đã nâng chất lượng cơ bản và xác minh PNG riêng tư." if is_enhance else "Đã resize và xác minh PNG riêng tư.")
+            )
         )
         return envelope(True, message, data={"operation": operation}, status_name="completed")
     if state in {"queued", "processing"}:
@@ -994,7 +1125,11 @@ def _source_not_found(kind: str = IMAGE_RESIZE_KIND) -> dict[str, Any]:
         error_code=(
             "WEB_IMAGE_BRAND_OVERLAY_SOURCE_NOT_FOUND"
             if kind == IMAGE_BRAND_OVERLAY_KIND
-            else ("WEB_IMAGE_ENHANCE_SOURCE_NOT_FOUND" if kind == IMAGE_ENHANCE_KIND else "WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND")
+            else (
+                "WEB_IMAGE_BACKGROUND_CLEANUP_SOURCE_NOT_FOUND"
+                if kind == IMAGE_BACKGROUND_CLEANUP_KIND
+                else ("WEB_IMAGE_ENHANCE_SOURCE_NOT_FOUND" if kind == IMAGE_ENHANCE_KIND else "WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND")
+            )
         ),
     )
 
@@ -1417,6 +1552,127 @@ def _render_enhance(
             working.close()
 
 
+def _background_cleanup_edge_coordinates(width: int, height: int):
+    """Yield each edge pixel once without allocating a full image-sized list."""
+    for x in range(width):
+        yield x, 0
+    if height > 1:
+        for x in range(width):
+            yield x, height - 1
+    for y in range(1, max(1, height - 1)):
+        yield 0, y
+        if width > 1:
+            yield width - 1, y
+
+
+def _background_cleanup_neighbors(x: int, y: int, width: int, height: int):
+    if x > 0:
+        yield x - 1, y
+    if x + 1 < width:
+        yield x + 1, y
+    if y > 0:
+        yield x, y - 1
+    if y + 1 < height:
+        yield x, y + 1
+
+
+def _background_cleanup_matches(pixel: tuple[int, int, int, int], *, anchor: tuple[int, int, int], tolerance: int) -> bool:
+    red, green, blue, alpha = pixel
+    return alpha > 0 and max(abs(red - anchor[0]), abs(green - anchor[1]), abs(blue - anchor[2])) <= tolerance
+
+
+def _render_background_cleanup(
+    source_copy: Path,
+    *,
+    extension: str,
+    profile: str,
+    target_width: int,
+    target_height: int,
+):
+    """Remove only edge-connected pixels matching one closed plain-bg profile.
+
+    This is intentionally not semantic subject segmentation: a matching color
+    enclosed by a subject is retained, and a non-matching background is never
+    guessed or sent to a provider.
+    """
+    Image, _, _, ImageOps, UnidentifiedImageError = _image_classes()
+    if profile not in BACKGROUND_CLEANUP_PROFILES:
+        raise ImageOperationError("Profile xóa nền màu trơn không hợp lệ", code="IMAGE_BACKGROUND_PROFILE")
+    anchor, tolerance = BACKGROUND_CLEANUP_PROFILES[profile]
+    rendered = None
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            _inspect_image_source(source_copy, extension=extension)
+            with Image.open(source_copy) as decoded:
+                if not _image_format_matches(extension, decoded.format):
+                    raise ImageOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                    raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Xóa nền màu trơn", code="IMAGE_ANIMATED")
+                decoded.load()
+                normalized = ImageOps.exif_transpose(decoded)
+                try:
+                    rendered = normalized.convert("RGBA")
+                finally:
+                    if normalized is not decoded:
+                        normalized.close()
+            _validate_dimensions(rendered.width, rendered.height, source=True)
+            if rendered.size != (target_width, target_height):
+                resized = rendered.resize((target_width, target_height), resample=Image.Resampling.LANCZOS)
+                rendered.close()
+                rendered = resized
+            if rendered.mode != "RGBA" or rendered.size != (target_width, target_height):
+                raise ImageOperationError("Canvas xóa nền màu trơn không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+            pixels = rendered.load()
+            frontier = deque(_background_cleanup_edge_coordinates(target_width, target_height))
+            visited = set(frontier)
+            removed = 0
+            while frontier:
+                x, y = frontier.popleft()
+                pixel = pixels[x, y]
+                if not _background_cleanup_matches(pixel, anchor=anchor, tolerance=tolerance):
+                    continue
+                pixels[x, y] = (pixel[0], pixel[1], pixel[2], 0)
+                removed += 1
+                for next_x, next_y in _background_cleanup_neighbors(x, y, target_width, target_height):
+                    if (next_x, next_y) not in visited:
+                        if len(visited) >= MAX_BACKGROUND_CLEANUP_VISITED:
+                            raise ImageOperationError(
+                                "Ảnh có vùng nền quá lớn cho Xóa nền màu trơn cục bộ; hãy dùng workflow canonical khi sẵn sàng",
+                                code="IMAGE_BACKGROUND_COMPLEXITY_LIMIT",
+                            )
+                        visited.add((next_x, next_y))
+                        frontier.append((next_x, next_y))
+            if removed < 1:
+                raise ImageOperationError("Không tìm thấy nền màu trơn phù hợp ở mép ảnh", code="IMAGE_BACKGROUND_NOT_DETECTED")
+            if removed >= target_width * target_height:
+                raise ImageOperationError("Nền màu trơn che toàn bộ ảnh; không thể tạo PNG trong suốt an toàn", code="IMAGE_BACKGROUND_ALL_REMOVED")
+            output = rendered
+            rendered = None
+            return output, removed
+    except ImageOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise ImageOperationError("Độ phân giải ảnh nguồn vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ImageOperationError("Không thể decode ảnh cho Xóa nền màu trơn an toàn", code="IMAGE_PARSE_FAILED") from exc
+    finally:
+        # A successful renderer transfers ownership to the caller; failures
+        # must never leave a decoded RGBA canvas alive in a worker thread.
+        if rendered is not None:
+            rendered.close()
+
+
+def _inspect_background_cleanup_geometry(source_copy: Path, *, extension: str) -> tuple[int, int, int, int]:
+    """Reuse safe source/output geometry without Enhance or overlay semantics."""
+    try:
+        return _inspect_enhance_geometry(source_copy, extension=extension, basic_upscale=False)
+    except ImageOperationError as exc:
+        if exc.code == "IMAGE_ANIMATED":
+            raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Xóa nền màu trơn", code=exc.code) from exc
+        raise
+
+
 def _overlay_image_classes():
     """Load the text compositor separately from the shared image decoder."""
     try:
@@ -1808,7 +2064,14 @@ def _parser_copy(stream):
         return BytesIO(payload)
 
 
-def _verify_png_stream(stream, *, expected_width: int, expected_height: int) -> None:
+def _verify_png_stream(
+    stream,
+    *,
+    expected_width: int,
+    expected_height: int,
+    expected_mode: str = "RGB",
+    require_transparent_pixel: bool = False,
+) -> None:
     """Validate a PNG through the exact already-open file handle."""
     Image, ImageFile, _, _, UnidentifiedImageError = _image_classes()
     try:
@@ -1835,9 +2098,21 @@ def _verify_png_stream(stream, *, expected_width: int, expected_height: int) -> 
                         raise ImageOperationError("PNG đầu ra không hợp lệ", code="IMAGE_OUTPUT_INVALID")
                     if tuple(decoded.size) != (expected_width, expected_height):
                         raise ImageOperationError("Kích thước PNG đầu ra không khớp yêu cầu", code="IMAGE_OUTPUT_INVALID")
+                    if str(decoded.mode or "") != expected_mode:
+                        raise ImageOperationError("Định dạng pixel PNG đầu ra không khớp yêu cầu", code="IMAGE_OUTPUT_INVALID")
                     if decoded.getexif():
                         raise ImageOperationError("PNG đầu ra mang metadata không được phép", code="IMAGE_OUTPUT_INVALID")
                     decoded.load()
+                    if require_transparent_pixel:
+                        if expected_mode != "RGBA":
+                            raise ImageOperationError("Contract PNG trong suốt không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+                        alpha = decoded.getchannel("A")
+                        try:
+                            extrema = alpha.getextrema()
+                        finally:
+                            alpha.close()
+                        if not extrema or int(extrema[0]) >= 255:
+                            raise ImageOperationError("PNG xóa nền không có pixel trong suốt hợp lệ", code="IMAGE_OUTPUT_INVALID")
             finally:
                 decoded_stream.close()
             stream.seek(0)
@@ -1861,7 +2136,14 @@ def _digest_open_stream(stream) -> str:
     return digest.hexdigest()
 
 
-def _verify_output_png(path: Path, *, expected_width: int, expected_height: int) -> tuple[int, str]:
+def _verify_output_png(
+    path: Path,
+    *,
+    expected_width: int,
+    expected_height: int,
+    expected_mode: str = "RGB",
+    require_transparent_pixel: bool = False,
+) -> tuple[int, str]:
     """Strictly re-open the generated artifact before it can become completed."""
     try:
         if not path.is_file() or path.is_symlink():
@@ -1870,7 +2152,13 @@ def _verify_output_png(path: Path, *, expected_width: int, expected_height: int)
         if byte_size < 1 or byte_size > _maximum_output_bytes():
             raise ImageOperationError("PNG đầu ra vượt giới hạn lưu trữ", code="IMAGE_OUTPUT_LIMIT")
         with path.open("rb") as stream:
-            _verify_png_stream(stream, expected_width=expected_width, expected_height=expected_height)
+            _verify_png_stream(
+                stream,
+                expected_width=expected_width,
+                expected_height=expected_height,
+                expected_mode=expected_mode,
+                require_transparent_pixel=require_transparent_pixel,
+            )
             digest = _digest_open_stream(stream)
         return byte_size, digest
     except ImageOperationError:
@@ -1886,6 +2174,8 @@ def _open_verified_output_stream(
     expected_digest: str,
     expected_width: int,
     expected_height: int,
+    expected_mode: str = "RGB",
+    require_transparent_pixel: bool = False,
 ):
     """Return the verified open descriptor that will be streamed to the owner.
 
@@ -1904,7 +2194,13 @@ def _open_verified_output_stream(
             raise ImageOperationError("PNG đầu ra vượt giới hạn lưu trữ", code="IMAGE_OUTPUT_LIMIT")
         if not hmac.compare_digest(_digest_open_stream(stream), expected_digest):
             raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
-        _verify_png_stream(stream, expected_width=expected_width, expected_height=expected_height)
+        _verify_png_stream(
+            stream,
+            expected_width=expected_width,
+            expected_height=expected_height,
+            expected_mode=expected_mode,
+            require_transparent_pixel=require_transparent_pixel,
+        )
         return stream
     except ImageOperationError:
         if stream is not None:
@@ -1933,12 +2229,14 @@ def _publish_verified_png(
     *,
     target_width: int,
     target_height: int,
+    expected_mode: str = "RGB",
+    require_transparent_pixel: bool = False,
 ) -> tuple[Path, str, int, str]:
     """Save, hash, parse and atomically publish one private rendered PNG."""
     temporary_output = _staging_path(root, ".output.png")
     final_path: Path | None = None
     try:
-        if getattr(rendered, "mode", "") != "RGB" or tuple(getattr(rendered, "size", ())) != (target_width, target_height):
+        if getattr(rendered, "mode", "") != expected_mode or tuple(getattr(rendered, "size", ())) != (target_width, target_height):
             raise ImageOperationError("Kết quả PNG không khớp contract đầu ra", code="IMAGE_OUTPUT_INVALID")
         try:
             with temporary_output.open("xb") as stream:
@@ -1951,6 +2249,8 @@ def _publish_verified_png(
             temporary_output,
             expected_width=target_width,
             expected_height=target_height,
+            expected_mode=expected_mode,
+            require_transparent_pixel=require_transparent_pixel,
         )
         storage_key = f"outputs/{uuid.uuid4().hex}.png"
         final_path = _output_path(root, storage_key)
@@ -1964,6 +2264,8 @@ def _publish_verified_png(
             final_path,
             expected_width=target_width,
             expected_height=target_height,
+            expected_mode=expected_mode,
+            require_transparent_pixel=require_transparent_pixel,
         )
         if verified_bytes != output_bytes or not hmac.compare_digest(verified_digest, output_digest):
             raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra integrity", code="IMAGE_OUTPUT_INVALID")
@@ -2029,6 +2331,35 @@ def _build_enhance_output(
     return final_path, storage_key, output_bytes, output_digest, target_width, target_height
 
 
+def _build_background_cleanup_output(
+    root: Path,
+    source_copy: Path,
+    *,
+    extension: str,
+    profile: str,
+    target_width: int,
+    target_height: int,
+) -> tuple[Path, str, int, str, int, int, int]:
+    """Render and publish one verified transparent plain-background PNG."""
+    _validate_dimensions(target_width, target_height, source=False)
+    rendered, removed_pixels = _render_background_cleanup(
+        source_copy,
+        extension=extension,
+        profile=profile,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    final_path, storage_key, output_bytes, output_digest = _publish_verified_png(
+        root,
+        rendered,
+        target_width=target_width,
+        target_height=target_height,
+        expected_mode="RGBA",
+        require_transparent_pixel=True,
+    )
+    return final_path, storage_key, output_bytes, output_digest, target_width, target_height, removed_pixels
+
+
 def reconcile_image_operation_storage(*, interrupted_before: str | None = None) -> None:
     """Fail closed for interrupted work, retained artifacts and old orphan files.
 
@@ -2079,21 +2410,27 @@ def reconcile_image_operation_storage(*, interrupted_before: str | None = None) 
             )
             _record_event(conn, operation_id=operation_id, state="failed", when=now)
         rows = conn.execute(
-            f"""SELECT id, account_id, storage_key, byte_size, sha256
+            f"""SELECT id, account_id, kind, storage_key, byte_size, sha256
                  FROM web_image_operations
                  WHERE kind IN ({placeholders}) AND state='completed'""",
             tuple(sorted(SUPPORTED_KINDS)),
         ).fetchall()
     known_storage: set[str] = set()
     for row in rows:
-        operation_id, account_id = str(row[0]), str(row[1])
+        operation_id, account_id, operation_kind = str(row[0]), str(row[1]), str(row[2])
         private_path: Path | None = None
         try:
-            storage_key = str(row[2] or "")
+            storage_key = str(row[3] or "")
             private_path = _output_path(root, storage_key)
-            valid = _verify_file(private_path, expected_bytes=int(row[3] or 0), expected_digest=str(row[4] or ""))
+            valid = _verify_file(private_path, expected_bytes=int(row[4] or 0), expected_digest=str(row[5] or ""))
             if valid:
-                _verify_output_png(private_path, expected_width=_operation_dimensions(operation_id, account_id)[0], expected_height=_operation_dimensions(operation_id, account_id)[1])
+                _verify_output_png(
+                    private_path,
+                    expected_width=_operation_dimensions(operation_id, account_id)[0],
+                    expected_height=_operation_dimensions(operation_id, account_id)[1],
+                    expected_mode="RGBA" if operation_kind == IMAGE_BACKGROUND_CLEANUP_KIND else "RGB",
+                    require_transparent_pixel=operation_kind == IMAGE_BACKGROUND_CLEANUP_KIND,
+                )
                 known_storage.add(storage_key)
         except (ImageOperationError, OSError, RuntimeError):
             valid = False
@@ -2679,6 +3016,286 @@ async def enhance_image(payload: ImageEnhanceRequest, request: Request, account:
             image_decoder_capacity().release()
 
 
+@router.post("/background-cleanup")
+async def cleanup_plain_background(
+    payload: ImageBackgroundCleanupRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Create a verified transparent PNG by removing only a plain edge background.
+
+    The operation is deliberately local and bounded. It does not implement
+    semantic subject segmentation, invoke RemoveBG/Cutout, call the Bot/Core
+    Bridge, create a job, or mutate Xu/PayOS/payment state.
+    """
+    _require_background_cleanup_enabled()
+    root = image_operations_directory()
+    account_id = str(account["id"])
+    source_asset_id = payload.source_asset_id
+    profile = payload.profile
+    settings = _background_cleanup_settings(profile)
+    settings_json = json.dumps(settings, sort_keys=True, separators=(",", ":"))
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    capacity_reserved = False
+    source_storage_key = ""
+    source_project_id: str | None = None
+    source_extension = ""
+    source_bytes = 0
+    source_sha256 = ""
+    source_width = 0
+    source_height = 0
+    target_width = 0
+    target_height = 0
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            # Replays never look up a live source or reserve a decoder slot,
+            # so a previously verified result remains visible after archival.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_BACKGROUND_CLEANUP_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                existing_source_sha256 = str(existing_operation[23] or "")
+                existing_source_bytes = int(existing_operation[22] or 0)
+                if (
+                    re.fullmatch(r"[0-9a-f]{64}", existing_source_sha256)
+                    and existing_source_bytes > 0
+                    and hmac.compare_digest(
+                        str(existing[-1] or ""),
+                        _background_cleanup_request_fingerprint(
+                            source_asset_id=source_asset_id,
+                            source_sha256=existing_source_sha256,
+                            source_bytes=existing_source_bytes,
+                            profile=profile,
+                        ),
+                    )
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Xóa nền màu trơn khác")
+
+            source_row = conn.execute(
+                """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+                   FROM web_asset_files WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if not source_row or str(source_row[7]) != "active":
+                return _source_not_found(IMAGE_BACKGROUND_CLEANUP_KIND)
+            source_extension = str(source_row[2] or "").lower()
+            source_project_id = str(source_row[1]) if source_row[1] else None
+            expected_mime = IMAGE_INPUT_MIME_BY_EXTENSION.get(source_extension)
+            if expected_mime is None or str(source_row[3] or "") != expected_mime:
+                raise HTTPException(status_code=422, detail="Xóa nền màu trơn chỉ nhận JPEG, PNG hoặc WebP private hợp lệ trong Asset Vault")
+            source_bytes = int(source_row[4] or 0)
+            if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+                raise HTTPException(status_code=413, detail="Ảnh nguồn vượt giới hạn 20 MB")
+            source_sha256 = str(source_row[5] or "")
+            source_storage_key = str(source_row[6] or "")
+            if not re.fullmatch(r"[0-9a-f]{64}", source_sha256) or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+                raise HTTPException(status_code=422, detail="Ảnh nguồn không còn sẵn sàng")
+            capacity = image_decoder_capacity()
+            if not capacity.acquire(blocking=False):
+                raise HTTPException(status_code=429, detail="Xóa nền màu trơn đang bận xử lý một ảnh khác; vui lòng thử lại sau ít phút")
+            capacity_reserved = True
+    except Exception:
+        if capacity_reserved:
+            image_decoder_capacity().release()
+        raise
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, f".background-cleanup-source{source_extension}")
+        await run_in_threadpool(
+            _copy_verified_image_source,
+            source_path,
+            source_copy,
+            extension=source_extension,
+            expected_bytes=source_bytes,
+            expected_digest=source_sha256,
+        )
+        await run_in_threadpool(_inspect_image_source, source_copy, extension=source_extension)
+        source_width, source_height, target_width, target_height = await run_in_threadpool(
+            _inspect_background_cleanup_geometry,
+            source_copy,
+            extension=source_extension,
+        )
+
+        with transaction() as conn:
+            # Recheck both request identity and source lifecycle after copying
+            # immutable bytes; this closes archive/tamper and double-submit
+            # races without trusting a browser-side result.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_BACKGROUND_CLEANUP_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                existing_source_sha256 = str(existing_operation[23] or "")
+                existing_source_bytes = int(existing_operation[22] or 0)
+                if (
+                    re.fullmatch(r"[0-9a-f]{64}", existing_source_sha256)
+                    and existing_source_bytes > 0
+                    and hmac.compare_digest(
+                        str(existing[-1] or ""),
+                        _background_cleanup_request_fingerprint(
+                            source_asset_id=source_asset_id,
+                            source_sha256=existing_source_sha256,
+                            source_bytes=existing_source_bytes,
+                            profile=profile,
+                        ),
+                    )
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Xóa nền màu trơn khác")
+            current_source = conn.execute(
+                """SELECT byte_size, sha256, storage_key, state FROM web_asset_files
+                   WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if (
+                not current_source
+                or str(current_source[3]) != "active"
+                or int(current_source[0] or 0) != source_bytes
+                or not hmac.compare_digest(str(current_source[1] or ""), source_sha256)
+                or not hmac.compare_digest(str(current_source[2] or ""), source_storage_key)
+            ):
+                return _source_not_found(IMAGE_BACKGROUND_CLEANUP_KIND)
+            request_fingerprint = _background_cleanup_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=source_sha256,
+                source_bytes=source_bytes,
+                profile=profile,
+            )
+            operation_id = str(uuid.uuid4())
+            now = utc_now()
+            conn.execute(
+                """INSERT INTO web_image_operations
+                   (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                    request_fingerprint, source_sha256, source_byte_size, target_width, target_height,
+                    preset, fit_mode, settings_json, created_at, queued_at, started_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    operation_id,
+                    account_id,
+                    source_asset_id,
+                    source_project_id,
+                    IMAGE_BACKGROUND_CLEANUP_KIND,
+                    payload.idempotency_key,
+                    request_fingerprint,
+                    source_sha256,
+                    source_bytes,
+                    target_width,
+                    target_height,
+                    BACKGROUND_CLEANUP_PRESET,
+                    BACKGROUND_CLEANUP_FIT_MODE,
+                    settings_json,
+                    now,
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="queued", when=now)
+            conn.execute(
+                "UPDATE web_image_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                (now, operation_id, account_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="processing", when=now)
+
+        final_path, output_storage_key, output_bytes, output_digest, output_width, output_height, removed_pixels = await run_in_threadpool(
+            _build_background_cleanup_output,
+            root,
+            source_copy,
+            extension=source_extension,
+            profile=profile,
+            target_width=target_width,
+            target_height=target_height,
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_image_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, IMAGE_BACKGROUND_CLEANUP_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("Xóa nền màu trơn không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Image Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_image_operations
+                   SET state='completed', source_width=?, source_height=?, target_width=?, target_height=?, storage_key=?,
+                       original_filename=?, content_type=?, byte_size=?, sha256=?,
+                       completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_width,
+                    source_height,
+                    output_width,
+                    output_height,
+                    output_storage_key,
+                    BACKGROUND_CLEANUP_OUTPUT_FILENAME,
+                    PNG_MEDIA_TYPE,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.image_operation.image_background_cleanup",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"profile={profile};source={source_width}x{source_height};output={output_width}x{output_height};"
+                    f"removed_pixels={removed_pixels};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_image_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc Xóa nền màu trơn vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except ImageOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        _mark_failed(operation_id, account_id, request=request, code=exc.code, kind=IMAGE_BACKGROUND_CLEANUP_KIND)
+        raise HTTPException(status_code=_image_operation_error_status(exc.code), detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            request=request,
+            code="IMAGE_QUOTA" if exc.status_code == 413 else "IMAGE_OPERATION",
+            kind=IMAGE_BACKGROUND_CLEANUP_KIND,
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, request=request, code="IMAGE_OPERATION", kind=IMAGE_BACKGROUND_CLEANUP_KIND)
+        raise HTTPException(status_code=500, detail="Không thể xóa nền màu trơn an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        if capacity_reserved:
+            image_decoder_capacity().release()
+
+
 @router.post("/brand-overlay")
 async def create_brand_overlay(
     payload: ImageBrandOverlayRequest,
@@ -3069,6 +3686,8 @@ async def download_image_operation(operation_id: str, account: dict = Depends(re
             expected_digest=str(row[21] or ""),
             expected_width=int(row[5]),
             expected_height=int(row[6]),
+            expected_mode="RGBA" if operation_kind == IMAGE_BACKGROUND_CLEANUP_KIND else "RGB",
+            require_transparent_pixel=operation_kind == IMAGE_BACKGROUND_CLEANUP_KIND,
         )
     except (ImageOperationError, OSError, RuntimeError):
         _mark_output_unavailable(operation_id, account_id)

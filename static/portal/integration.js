@@ -192,6 +192,7 @@
   let imageOperationHistoryHydrationEpoch = 0;
   let imageEnhanceOperationHistoryHydrationEpoch = 0;
   let imageBrandOverlayOperationHistoryHydrationEpoch = 0;
+  let imageBackgroundCleanupOperationHistoryHydrationEpoch = 0;
   let storyboardGridHydrationEpoch = 0;
   let imageHistoryOperationHydrationEpoch = 0;
   // Asset Vault is shared by private owner workflows, but it is never a
@@ -12355,6 +12356,7 @@
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
     const imageBrandOverlayEnabled = Boolean(status.flags && status.flags.image_brand_overlay_enabled === true);
+    const imageBackgroundCleanupEnabled = Boolean(status.flags && status.flags.image_background_cleanup_enabled === true);
     // Storyboard Grid is a Web-native utility that shares the server's
     // hardened Image Operations runtime. Its flag does not imply Bot/Core
     // Bridge, provider, jobs, wallet/Xu or payment readiness.
@@ -12631,6 +12633,7 @@
       // server-enabled native page can truthfully show a ready badge.
       "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
       "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded",
+      "/image/background-cleanup": account && assetVaultEnabled && imageOperationsEnabled && imageBackgroundCleanupEnabled ? "processing" : "guarded",
       "/image/brand-overlay": account && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled ? "processing" : "guarded",
       "/image/storyboard-grid": account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "processing" : "guarded",
       // History only reads already verified output. It remains available when a
@@ -12810,6 +12813,8 @@
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
       "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-operation-background-cleanup": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBackgroundCleanupEnabled),
+      "image-background-cleanup-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-brand-overlay-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-brand-overlay-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled),
       "image-brand-overlay-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
@@ -13505,6 +13510,7 @@
       imageResizeEnabled,
       imageEnhanceEnabled,
       imageBrandOverlayEnabled,
+      imageBackgroundCleanupEnabled,
       storyboardGridEnabled,
       memoryCenterEnabled,
       promptLibraryEnabled,
@@ -14107,6 +14113,7 @@
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageBrandOverlayOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageBackgroundCleanupOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection("", 0, {}, 0),
@@ -14119,6 +14126,8 @@
       imageEnhanceOperations: [],
       imageBrandOverlayOperations: [],
       imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
+      imageBackgroundCleanupOperations: [],
+      imageBackgroundCleanupOperationListing: operationHistoryListingProjection("image_background_cleanup", 0, {}, 0),
       storyboardGridOperations: [],
       storyboardGridListing: storyboardGridListingProjection(0, {}, 0),
       storyboardGridReadState: account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "loading" : "guarded",
@@ -14265,8 +14274,8 @@
       projectPackageListing: projectPackageListingProjection("", 0, {}, 0),
       pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" }
     });
-    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/background-cleanup", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/background-cleanup", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultListing: assetVaultListingProjection({ q: "", state: "active" }, 0, {}, 0),
       assetVaultReadState: "guarded",
@@ -14302,6 +14311,13 @@
       imageEnhanceOperationsReadState: "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
       imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && imageBackgroundCleanupEnabled && currentPath === "/image/background-cleanup") await hydrateImageBackgroundCleanupOperations();
+    else if (account && currentPath === "/image/background-cleanup") merge({
+      imageBackgroundCleanupOperations: [],
+      imageBackgroundCleanupOperationListing: operationHistoryListingProjection("image_background_cleanup", 0, {}, 0),
+      imageBackgroundCleanupOperationsReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
     if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/brand-overlay") await Promise.all([hydrateImageBrandOverlayOperations(), hydrateImageOperationAssetReferences()]);
@@ -19903,6 +19919,13 @@
     return "guarded";
   }
 
+  function imageBackgroundCleanupPrivateReadPageState(assetState, operationState) {
+    if (base().imageBackgroundCleanupEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading") return "processing";
+    return "guarded";
+  }
+
   function storyboardGridPrivateReadPageState(assetState, operationState, referenceState) {
     if (base().storyboardGridEnabled !== true || base().imageOperationsEnabled !== true) return "guarded";
     if (assetState === "ready" && operationState === "ready" && referenceState === "ready") return "ready";
@@ -22079,7 +22102,7 @@
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
     "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
-  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
+  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay", "image_background_cleanup"]);
 
   function operationHistoryListOffset(value) {
     const offset = Number(value);
@@ -22373,6 +22396,50 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageBackgroundCleanupOperations(offsetValue) {
+    const expectedPath = "/image/background-cleanup";
+    const kind = "image_background_cleanup";
+    const listing = base().imageBackgroundCleanupOperationListing;
+    const offset = operationHistoryOffsetForKind(listing, kind, offsetValue);
+    const requestEpoch = ++imageBackgroundCleanupOperationHistoryHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    const isCurrent = () => requestEpoch === imageBackgroundCleanupOperationHistoryHydrationEpoch
+      && sessionEpoch === operationHistorySessionEpoch
+      && currentPortalPath() === expectedPath
+      && Boolean(base().session && base().session.authenticated === true);
+    try {
+      const result = await api(imageOperationHistoryPath(kind, offset));
+      if (!isCurrent()) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validImageOperationId(item.id) && String(item.kind || "") === kind).slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      if (!isCurrent()) return null;
+      merge({
+        imageBackgroundCleanupOperations: items,
+        imageBackgroundCleanupOperationListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        imageBackgroundCleanupOperationsReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          [expectedPath]: imageBackgroundCleanupPrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!isCurrent()) return null;
+      merge({
+        imageBackgroundCleanupOperations: [],
+        imageBackgroundCleanupOperationListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        imageBackgroundCleanupOperationsReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          [expectedPath]: imageBackgroundCleanupPrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
         }
       });
       return [];
@@ -33829,6 +33896,62 @@
           if (acknowledged) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "image-operation-background-cleanup") {
+        const expectedPath = "/image/background-cleanup";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) throw new Error("Chỉ có thể tạo PNG từ trang Xóa nền màu trơn hiện tại.");
+        if (!(base().capabilities && base().capabilities["image-operation-background-cleanup"] === true)) throw new Error("Xóa nền màu trơn chưa sẵn sàng cho signed Web account.");
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const profile = String(fields.profile || "white_studio").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một ảnh private hợp lệ từ Asset Vault.");
+        if (!["white_studio", "light_neutral", "dark_neutral"].includes(profile)) throw new Error("Profile nền màu trơn chưa hợp lệ.");
+        const scope = `image-operation:background-cleanup:${sourceAssetId}:${profile}`;
+        const submission = acquireSubmission(scope, sourceAssetId);
+        if (!submission) {
+          toast("Xóa nền màu trơn đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/image-operations/background-cleanup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              profile,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validImageOperationId(operation.id) || String(operation.kind || "") !== "image_background_cleanup") {
+            throw new Error("Máy chủ chưa trả metadata Xóa nền màu trơn hợp lệ.");
+          }
+          await Promise.all([hydrateImageBackgroundCleanupOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã tạo và xác minh PNG nền trong suốt private.");
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateImageBackgroundCleanupOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "image-background-cleanup-refresh") {
+        if (!(base().capabilities && base().capabilities["image-background-cleanup-refresh"] === true)) throw new Error("Bạn không có quyền làm mới Xóa nền màu trơn.");
+        await Promise.all([hydrateImageBackgroundCleanupOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Xóa nền màu trơn.");
+        return;
+      }
+      if (action === "image-background-cleanup-operation-page") {
+        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) throw new Error("Bạn không có quyền xem lịch sử Xóa nền màu trơn.");
+        const refreshed = await hydrateImageBackgroundCleanupOperations(operationHistoryListOffset(fields.__imageBackgroundCleanupOperationOffset));
+        if (!refreshed) throw new Error("Không thể tải trang lịch sử Xóa nền màu trơn.");
         return;
       }
       if (action === "image-operation-enhance") {

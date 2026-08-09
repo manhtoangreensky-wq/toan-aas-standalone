@@ -27,6 +27,7 @@ def make_client(
     image_resize_enabled: bool = True,
     image_enhance_enabled: bool = True,
     image_brand_overlay_enabled: bool = True,
+    image_background_cleanup_enabled: bool = True,
 ) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-image-operations-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-image-operations-session-secret")
@@ -41,6 +42,7 @@ def make_client(
     monkeypatch.setenv("WEBAPP_IMAGE_RESIZE_ENABLED", "true" if image_resize_enabled else "false")
     monkeypatch.setenv("WEBAPP_IMAGE_ENHANCE_ENABLED", "true" if image_enhance_enabled else "false")
     monkeypatch.setenv("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "true" if image_brand_overlay_enabled else "false")
+    monkeypatch.setenv("WEBAPP_IMAGE_BACKGROUND_CLEANUP_ENABLED", "true" if image_background_cleanup_enabled else "false")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "false")
@@ -211,6 +213,39 @@ def brand_overlay(
     )
 
 
+def background_cleanup(
+    client: TestClient,
+    csrf: str,
+    *,
+    asset_id: str,
+    key: str,
+    profile: str = "white_studio",
+):
+    return client.post(
+        "/api/v1/image-operations/background-cleanup",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "source_asset_id": asset_id,
+            "profile": profile,
+            "idempotency_key": key,
+        },
+    )
+
+
+def plain_background_image_bytes(*, size: tuple[int, int] = (96, 96)) -> bytes:
+    image = Image.new("RGB", size, (248, 248, 248))
+    pixels = image.load()
+    for y in range(28, 70):
+        for x in range(30, 66):
+            pixels[x, y] = (18, 118, 198)
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
 def logo_bytes(*, size: tuple[int, int] = (80, 40)) -> bytes:
     image = Image.new("RGBA", size, (232, 36, 70, 255))
     stream = BytesIO()
@@ -321,6 +356,103 @@ def test_resize_is_private_idempotent_and_generates_verified_png(tmp_path, monke
         database_module = importlib.import_module("copyfast_db")
         with database_module.transaction() as conn:
             assert operations_module._quota_available(conn, account_id=owner_id, additional_bytes=1024 * 1024)
+
+
+def test_background_cleanup_is_private_idempotent_and_generates_verified_transparent_png(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "cleanup-owner@example.com")
+        source = upload_image(
+            client,
+            csrf,
+            key="cleanup-source-0001",
+            body=plain_background_image_bytes(),
+            name="product.png",
+            content_type="image/png",
+        )
+
+        created = background_cleanup(client, csrf, asset_id=source["id"], key="cleanup-create-0001")
+        assert created.status_code == 200
+        operation = created.json()["data"]["operation"]
+        assert operation["kind"] == "image_background_cleanup"
+        assert operation["state"] == "completed"
+
+        image = output_image(client, operation["id"])
+        try:
+            assert image.mode == "RGBA"
+            assert image.size == (96, 96)
+            assert image.getpixel((0, 0))[3] == 0
+            assert image.getpixel((48, 48))[3] == 255
+        finally:
+            image.close()
+
+        replay = background_cleanup(client, csrf, asset_id=source["id"], key="cleanup-create-0001")
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+
+
+def test_background_cleanup_fails_closed_for_profile_no_match_owner_gate_and_tamper(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "cleanup-boundary@example.com")
+        source = upload_image(
+            client,
+            csrf,
+            key="cleanup-boundary-source-0001",
+            body=image_bytes("PNG"),
+            name="source.png",
+            content_type="image/png",
+        )
+
+        invalid_profile = background_cleanup(client, csrf, asset_id=source["id"], key="cleanup-profile-0001", profile="provider")
+        assert invalid_profile.status_code == 422
+
+        no_match = background_cleanup(client, csrf, asset_id=source["id"], key="cleanup-no-match-0001")
+        assert no_match.status_code == 422
+        assert "Không tìm thấy nền màu trơn" in no_match.json()["message"]
+        db_path = tmp_path / "copyfast-image-operations-test.db"
+        with sqlite3.connect(db_path) as conn:
+            row = conn.execute(
+                "SELECT state, storage_key FROM web_image_operations WHERE kind='image_background_cleanup'"
+            ).fetchone()
+        assert row == ("failed", None)
+
+        clean_source = upload_image(
+            client,
+            csrf,
+            key="cleanup-boundary-source-0002",
+            body=plain_background_image_bytes(),
+            name="product.png",
+            content_type="image/png",
+        )
+        completed = background_cleanup(client, csrf, asset_id=clean_source["id"], key="cleanup-boundary-complete-0001")
+        assert completed.status_code == 200
+        operation = completed.json()["data"]["operation"]
+        with sqlite3.connect(db_path) as conn:
+            storage_key = conn.execute("SELECT storage_key FROM web_image_operations WHERE id=?", (operation["id"],)).fetchone()[0]
+
+        with make_client(tmp_path, monkeypatch) as other:
+            csrf_other = register_and_login(other, "cleanup-boundary-other@example.com")
+            hidden = background_cleanup(other, csrf_other, asset_id=clean_source["id"], key="cleanup-other-0001")
+            assert hidden.json()["error_code"] == "WEB_IMAGE_BACKGROUND_CLEANUP_SOURCE_NOT_FOUND"
+
+        (tmp_path / "private-image-outputs" / storage_key).write_bytes(b"tampered-cleanup-png")
+        unavailable = client.get(f"/api/v1/image-operations/{operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_IMAGE_OPERATION_UNAVAILABLE"
+
+    disabled_root = tmp_path / "cleanup-disabled"
+    with make_client(disabled_root, monkeypatch, image_background_cleanup_enabled=False) as disabled:
+        csrf = register_and_login(disabled, "cleanup-disabled@example.com")
+        blocked_source = upload_image(
+            disabled,
+            csrf,
+            key="cleanup-disabled-source-0001",
+            body=plain_background_image_bytes(),
+            name="product.png",
+            content_type="image/png",
+        )
+        blocked = background_cleanup(disabled, csrf, asset_id=blocked_source["id"], key="cleanup-disabled-create-0001")
+        assert blocked.status_code == 503
+        with sqlite3.connect(disabled_root / "copyfast-image-operations-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_image_operations").fetchone()[0] == 0
 
 
 def test_resize_crop_pad_blur_are_real_png_modes_and_strip_source_metadata(tmp_path, monkeypatch):
