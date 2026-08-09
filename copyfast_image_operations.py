@@ -56,7 +56,7 @@ SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_
 # Keep it explicit rather than treating every present/future table value as a
 # public Web history row. New operation kinds require a deliberate UI/API
 # contract change before they can appear in this projection.
-IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
+IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_OVERLAY_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 FIT_MODES = frozenset({"crop", "pad", "blur"})
 ENHANCE_FIT_MODE = "enhance"

@@ -111,6 +111,11 @@ def test_image_history_is_a_private_web_native_projection_not_a_bot_asset_proxy(
     assert "fetch(" not in history_surface
     assert "api(" not in history_surface
     assert "localStorage" not in history_surface
+    history_cards_start = PORTAL.index("function renderImageHistoryOperationCards(items)")
+    history_cards_end = PORTAL.index("function renderDocumentOperationCards", history_cards_start)
+    history_cards = PORTAL[history_cards_start:history_cards_end]
+    for token in ('const isBrandOverlay = kind === "image_brand_overlay";', '"Brand Overlay Studio · deterministic"', "imageBrandOverlaySettings(item)"):
+        assert token in history_cards
     assert '"/image/history": account && assetVaultEnabled && imageOperationsEnabled ? "processing" : "guarded"' in INTEGRATION
     assert 'imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded"' in INTEGRATION
     assert "async function hydrateImageHistoryOperations(offsetValue)" in INTEGRATION
@@ -125,7 +130,7 @@ def test_image_history_is_a_private_web_native_projection_not_a_bot_asset_proxy(
     legacy_assets_end = INTEGRATION.index('} else if (path === "/video/progress")', legacy_assets_start)
     assert '"/image/history"' not in INTEGRATION[legacy_assets_start:legacy_assets_end]
     assert 'path === "/image/resize" || path === "/image/edit" || path === "/image/history"' in INTEGRATION
-    for phrase in ("image_resize", "image_enhance", "No Bot bridge", "PayOS", "No public preview URL"):
+    for phrase in ("image_resize", "image_enhance", "image_brand_overlay", "No Bot bridge", "PayOS", "No public preview URL"):
         assert phrase in HISTORY_CONTRACT
 
 

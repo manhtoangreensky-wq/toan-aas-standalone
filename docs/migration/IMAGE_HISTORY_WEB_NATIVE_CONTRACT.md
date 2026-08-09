@@ -3,16 +3,19 @@
 ## Scope
 
 `/image/history` is a signed, read-only Web Workspace projection over verified
-PNG artifacts produced by these two **Web-native** operation kinds only:
+PNG artifacts produced by these three **Web-native** operation kinds only:
 
 - `image_resize` — Resize & Aspect Studio
 - `image_enhance` — Image Enhance Studio
+- `image_brand_overlay` — Brand Overlay Studio
 
 The route reads `GET /api/v1/image-operations?limit=<bounded>&offset=<bounded>`
 without a `kind` filter. The server remains responsible for the authenticated
 account scope, kind allow-list, pagination bounds, metadata redaction and
-storage reconciliation. The browser narrows the response again to those two
-kind values before rendering it.
+storage reconciliation. The browser narrows the response again to those three
+kind values before rendering it. Brand Overlay keeps its dedicated
+`/image/brand-overlay` authoring and filtered-history surface, but a verified
+Brand Overlay row is also included in this unified read-only projection.
 
 ## Readiness and pagination
 
