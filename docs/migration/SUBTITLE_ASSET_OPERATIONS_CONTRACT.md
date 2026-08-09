@@ -97,6 +97,13 @@ legacy /subtitle family, Subtitle Studio and the text-only SRT/VTT Lab.
   the typed Asset Vault selector for active subtitle metadata and the narrow
   Subtitle Asset Operations history endpoint; it never uses generic Jobs,
   generic Assets, Bot state or a browser cache as a fallback.
+- Asset Vault source metadata and operation history are independent signed
+  reads. A history 401, rate limit or server/schema failure clears only the
+  history projection and leaves a successfully loaded SRT/VTT selector usable;
+  the history panel stays visibly failed and offers retry. If the source read
+  fails, the selector is cleared and guarded while an independently successful
+  history projection may remain visible. Neither partial state changes the
+  server-side ownership, validation or output-delivery boundary.
 - The typed selector accepts only canonical active .srt/application/x-subrip
   and .vtt/text/vtt records. Browser state holds bounded display metadata and
   a current picker page only; it never holds subtitle bytes, text, path, URL,

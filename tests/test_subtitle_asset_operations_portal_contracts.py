@@ -25,7 +25,10 @@ def test_subtitle_asset_operations_is_a_distinct_private_portal_route() -> None:
     assert 'layout: "subtitle-asset-operations", type: "subtitle-asset-operations"' in PORTAL
     assert "function renderSubtitleAssetOperations(page, context)" in PORTAL
     assert 'case "subtitle-asset-operations": return renderSubtitleAssetOperations(page, context);' in PORTAL
-    assert '["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle]' in PORTAL
+    # The current application shell localizes navigation labels instead of
+    # retaining the older fixed-array menu catalog. Keep this route visible to
+    # the shell translation layer without coupling the contract to its layout.
+    assert '"Subtitle Asset Operations": "shellNav.subtitleAssetOps"' in PORTAL
     assert 'if (linkPath === "/subtitle/assets") return path === "/subtitle/assets";' in PORTAL
     assert '"/subtitle/assets": "subtitle_asset_operations"' in INTEGRATION
     assert 'const SUBTITLE_ASSET_OPERATIONS_ROUTE = "/subtitle/assets";' in INTEGRATION
@@ -151,7 +154,7 @@ def test_portal_keeps_source_target_selection_accessible_and_mobile_sized() -> N
         ".portal-subtitle-assets-source-pager",
         ".portal-subtitle-assets-source-pager .portal-button { min-height: 44px;",
         ".portal-subtitle-asset-operation-actions .portal-button { min-height: 44px;",
-        ".portal-subtitle-assets-source-pager { align-items: flex-start; flex-direction: column; }",
+        ".portal-subtitle-assets-source-pager, .portal-subtitle-language-source-pager { align-items: flex-start; flex-direction: column; }",
     ):
         assert selector in CSS
 
@@ -169,6 +172,32 @@ def test_metadata_loading_and_unverified_conversion_never_claim_a_job_success() 
     assert "canView && readyForInteraction && canPrevious" in surface
     assert 'String(item.kind || "") === "subtitle_convert" && String(item.state || "") === "completed" && !outputReady' in surface
     assert '? "unavailable" : String(item.state || "guarded")' in surface
+
+
+def test_history_failure_does_not_hide_a_ready_subtitle_source() -> None:
+    hydration = _between(
+        INTEGRATION,
+        "async function hydrateSubtitleAssetOperations(options)",
+        "function subtitleAssetOperationPayload",
+    )
+    assert "Promise.allSettled([" in hydration
+    assert "subtitleAssetReferenceReadState" in INTEGRATION
+    assert "referenceOutcome.status === \"fulfilled\"" in hydration
+    assert "operationsOutcome.status === \"fulfilled\"" in hydration
+    assert "subtitleAssetReferences: references" in hydration
+    assert "subtitleAssetOperationsReadState: operationsReadState" in hydration
+    actions = _between(
+        INTEGRATION,
+        'if (action === "subtitle-asset-operation-refresh")',
+        'if (action === "subtitle-format-convert")',
+    )
+    assert 'refreshed.referenceReadState !== "ready"' in actions
+    assert 'refreshed.operationsReadState === "ready"' in actions
+
+    surface = _between(PORTAL, "function renderSubtitleAssetOperations(page, context)", "function renderSubtitleProjectCards")
+    assert "context.subtitleAssetReferenceReadState" in surface
+    assert 'const readyForInteraction = referenceReadState === "ready";' in surface
+    assert 'readState === "failed"' in surface
 
 
 def test_contract_keeps_subtitle_asset_operations_outside_bot_payment_and_provider_scope() -> None:

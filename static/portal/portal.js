@@ -9109,7 +9109,12 @@
 
   function pageStatusBadge(page, context) {
     const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
-    if (route === "/subtitle/assets") return subtitleAssetOperationsReadBadge(context && context.subtitleAssetOperationsReadState);
+    if (route === "/subtitle/assets") {
+      const referenceState = context && context.subtitleAssetReferenceReadState;
+      const historyState = context && context.subtitleAssetOperationsReadState;
+      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
+      return subtitleAssetOperationsReadBadge(effectiveState);
+    }
     if (route === "/audio/assets") return audioAssetOperationsReadBadge(context && context.audioAssetOperationsReadState);
     return badge(stateFor(page, context));
   }
@@ -16767,6 +16772,8 @@
     const canDownload = Boolean(context.capabilities && context.capabilities["subtitle-asset-operation-download"] === true);
     const references = context.subtitleAssetReferences && typeof context.subtitleAssetReferences === "object" ? context.subtitleAssetReferences : {};
     const pagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const referenceReadState = ["loading", "ready", "failed", "guarded"].includes(String(context.subtitleAssetReferenceReadState || ""))
+      ? String(context.subtitleAssetReferenceReadState) : "guarded";
     const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.subtitleAssetOperationsReadState || ""))
       ? String(context.subtitleAssetOperationsReadState) : "guarded";
     const selectedId = references.selected && validVaultAssetId(references.selected.id) ? String(references.selected.id) : "";
@@ -16782,14 +16789,17 @@
     // A refresh/page change intentionally keeps safe metadata visible, but
     // must not let an older selection be submitted while a new owner-scoped
     // read is still in flight.
-    const readyForInteraction = readState === "ready";
+    // Source metadata and operation history are independent private reads.
+    // A history outage must not hide a verified Asset Vault source or disable
+    // the source/target form; only the history panel remains unavailable.
+    const readyForInteraction = referenceReadState === "ready";
     const disabled = canSubmit && sources.length && readyForInteraction ? "" : " disabled";
     const sourceHint = !canView
       ? "Module đang được bảo vệ cho môi trường này. Asset Vault và subtitle storage phải được server bật đầy đủ."
-      : readState === "loading"
+      : referenceReadState === "loading"
         ? "Đang tải metadata SRT/VTT từ Asset Vault owner-scoped. Browser không đọc raw file hoặc generic Asset history."
-        : readState === "failed"
-          ? "Không thể tải metadata private an toàn. Hãy làm mới; browser đã xóa danh sách cũ thay vì dùng cache hoặc nguồn khác."
+        : referenceReadState === "failed"
+          ? "Không thể tải metadata SRT/VTT private an toàn. Hãy làm mới; browser đã xóa danh sách cũ thay vì dùng cache hoặc nguồn khác."
       : !sources.length
         ? "Chưa có SRT/VTT active hợp lệ (tối đa 96 KiB) trong Asset Vault. Hãy thêm tệp private rồi quay lại."
         : "Chỉ metadata SRT/VTT đã được server lọc theo ownership mới xuất hiện ở đây; không có raw upload hoặc URL nguồn.";
