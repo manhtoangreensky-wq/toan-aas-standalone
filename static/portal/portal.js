@@ -16413,6 +16413,15 @@
   const SUBTITLE_STUDIO_FORMATS = Object.freeze([["srt", "SRT · text preview"], ["vtt", "WebVTT · text preview"]]);
   const SUBTITLE_STUDIO_INTENTS = Object.freeze([["subtitle", "Subtitle biên tập"], ["translation", "Bản nháp ngôn ngữ"], ["asr_review", "ASR review (không chạy ASR)"], ["dubbing_direction", "Dubbing direction (không tạo dubbing)"]]);
   const SUBTITLE_STUDIO_INTENT_KEYS = new Set(SUBTITLE_STUDIO_INTENTS.map(([key]) => key));
+  const SUBTITLE_STUDIO_TRANSLATION_PRESETS = Object.freeze([
+    ["vi-en", "Tiếng Việt → English", "vi", "en"],
+    ["en-vi", "English → Tiếng Việt", "en", "vi"],
+    ["vi-zh", "Tiếng Việt → 中文", "vi", "zh"],
+    ["zh-vi", "中文 → Tiếng Việt", "zh", "vi"],
+    ["en-zh", "English → 中文", "en", "zh"],
+    ["zh-en", "中文 → English", "zh", "en"]
+  ]);
+  const SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS = new Set(SUBTITLE_STUDIO_TRANSLATION_PRESETS.map(([key]) => key));
   const SUBTITLE_LANGUAGE_SOURCE_MODE_KEYS = new Set(["manual", "asset_reference"]);
   const SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS = new Set([
     ".mp4|video/mp4", ".mov|video/quicktime", ".webm|video/webm",
@@ -16550,12 +16559,19 @@
     const count = Math.min(SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT, SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED - loaded);
     return `<div class="portal-subtitle-language-source-pager" data-subtitle-language-source-dependent="asset"><span aria-live="polite">${safeText(uiText("subtitleSource.assetPageStatus", `Đã nạp ${loaded} nguồn metadata riêng tư.`))}</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-language-source-more" data-portal-route="${safeText(route)}" data-subtitle-language-source-offset="${safeText(String(next))}"${canLoad ? "" : " disabled"}>${safeText(uiText("subtitleSource.assetLoadMore", `Tải thêm ${count} nguồn`))}</button></div>`;
   }
-  function subtitleStudioProjectFields(context, includeLanguageSource) {
+  function subtitleStudioProjectFields(context, includeLanguageSource, options) {
+    const translationPreset = Boolean(options && options.translationPreset === true);
+    const languageFields = translationPreset
+      ? [{ name: "translation_pair", labelKey: "subtitlePreset.field", label: "Cặp ngôn ngữ bản nháp", control: "select", required: true, options: subtitleStudioTranslationPresetOptions(), helpKey: "subtitlePreset.help", help: "Chỉ chọn metadata cho bản nháp thủ công; không gọi dịch máy, Bot hoặc provider." }]
+      : [
+        { name: "source_language", label: "Ngôn ngữ nguồn", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+        { name: "target_language", label: "Ngôn ngữ bản nháp", placeholder: "en", required: true, minLength: 1, maxLength: 100, help: "Chỉ là nhãn bản nháp để bạn biên tập; không gọi dịch máy." }
+      ];
+    const intentField = { name: "intent", label: "Mục đích workspace", control: "select", required: true, options: SUBTITLE_STUDIO_INTENTS, help: "Nhãn kiểm soát phạm vi; không kích hoạt ASR, dịch, TTS hoặc dubbing.", disabled: translationPreset };
     const fields = [
       { name: "title", label: "Tên transcript project", placeholder: "Ví dụ: Launch summer — phụ đề Việt/Anh", required: true, minLength: 2, maxLength: 180 },
-      { name: "source_language", label: "Ngôn ngữ nguồn", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "target_language", label: "Ngôn ngữ bản nháp", placeholder: "en", required: true, minLength: 1, maxLength: 100, help: "Chỉ là nhãn bản nháp để bạn biên tập; không gọi dịch máy." },
-      { name: "intent", label: "Mục đích workspace", control: "select", required: true, options: SUBTITLE_STUDIO_INTENTS, help: "Nhãn kiểm soát phạm vi; không kích hoạt ASR, dịch, TTS hoặc dubbing." },
+      ...languageFields,
+      intentField,
       { name: "caption_format", label: "Chuẩn preview", control: "select", required: true, options: SUBTITLE_STUDIO_FORMATS },
       { name: "context", label: "Review context", control: "textarea", placeholder: "Mục đích hiển thị, thuật ngữ, quy tắc viết hoa và điểm cần tự rà soát…", maxLength: 5000, wide: true },
       { name: "tags", label: "Tags", placeholder: "launch, accessibility, review", maxLength: 1000 },
@@ -16570,14 +16586,26 @@
       ...fields.slice(3)
     ];
   }
-  function subtitleStudioProjectValues(value, includeLanguageSource) {
+  function subtitleStudioProjectValues(value, includeLanguageSource, options) {
     const source = value && typeof value === "object" ? value : {};
     const format = String(source.caption_format || source.format || "").toLowerCase();
+    const translationPreset = Boolean(options && options.translationPreset === true);
+    const requestedPair = String(source.translation_pair || "").trim().toLowerCase();
+    const displaySourceLanguage = String(source.source_language || "vi");
+    const displayTargetLanguage = String(source.target_language || "en");
+    const sourceLanguage = displaySourceLanguage.trim().toLowerCase();
+    const targetLanguage = displayTargetLanguage.trim().toLowerCase();
+    const matchedPair = SUBTITLE_STUDIO_TRANSLATION_PRESETS.find(([, , from, to]) => from === sourceLanguage && to === targetLanguage);
+    const configuredPair = String(options && options.translationPair || "").trim().toLowerCase();
+    const translationPair = SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has(requestedPair)
+      ? requestedPair
+      : (matchedPair ? matchedPair[0] : (SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has(configuredPair) ? configuredPair : "vi-en"));
     const result = {
-      title: String(source.title || ""), source_language: String(source.source_language || "vi"), target_language: String(source.target_language || "en"), intent: SUBTITLE_STUDIO_INTENTS.some(([key]) => key === String(source.intent || "")) ? String(source.intent) : "subtitle",
+      title: String(source.title || ""), source_language: displaySourceLanguage, target_language: displayTargetLanguage, intent: SUBTITLE_STUDIO_INTENTS.some(([key]) => key === String(source.intent || "")) ? String(source.intent) : "subtitle",
       caption_format: SUBTITLE_STUDIO_FORMATS.some(([key]) => key === format) ? format : "srt",
       context: String(source.context || source.review_context || ""), tags: subtitleStudioTags(source.tags).join(", "), project_id: String(source.project_id || "")
     };
+    if (translationPreset) result.translation_pair = translationPair;
     if (includeLanguageSource) {
       const languageSource = source.language_source && typeof source.language_source === "object" ? source.language_source : {};
       const mode = SUBTITLE_LANGUAGE_SOURCE_MODE_KEYS.has(String(source.source_mode || languageSource.mode || ""))
@@ -16658,6 +16686,35 @@
     } catch (_) {
       return "subtitle";
     }
+  }
+  function subtitleStudioTranslationPresetFromQuery(page, intent) {
+    // Pair metadata is accepted only for the fresh, already allowlisted
+    // translation-authoring route. It is never a Bot target, runtime request
+    // or browser capability outside this closed form.
+    const route = String(page && (page.routePath || page.path) || "");
+    if (!subtitleStudioTranslationPresetQueryIsValid(page, intent)) return "";
+    try {
+      const pairs = new URLSearchParams(window.location.search).getAll("pair");
+      return pairs.length === 1 && SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has(pairs[0]) ? pairs[0] : "";
+    } catch (_) {
+      return "";
+    }
+  }
+  function subtitleStudioTranslationPresetQueryIsValid(page, intent) {
+    const route = String(page && (page.routePath || page.path) || "");
+    if (route !== "/subtitle-studio/new") return false;
+    try {
+      const query = new URLSearchParams(window.location.search);
+      const intents = query.getAll("intent");
+      const pairs = query.getAll("pair");
+      return intents.length === 1 && intents[0] === "translation"
+        && pairs.length === 1 && SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has(pairs[0]);
+    } catch (_) {
+      return false;
+    }
+  }
+  function subtitleStudioTranslationPresetOptions() {
+    return SUBTITLE_STUDIO_TRANSLATION_PRESETS.map(([key, label]) => [key, uiText(`subtitlePreset.${key}`, label)]);
   }
   function subtitleStudioCueFields() {
     return [
@@ -17742,17 +17799,22 @@
     const review = Number(stats.review || 0);
     const approved = Number(stats.approved || 0);
     const draft = transientFormValues(page.routePath || page.path);
+    const newProjectIntent = subtitleStudioNewProjectIntentFromQuery(page);
+    const isTranslationIntake = subtitleStudioTranslationPresetQueryIsValid(page, newProjectIntent);
+    const translationPair = subtitleStudioTranslationPresetFromQuery(page, newProjectIntent);
+    const translationIntentLock = isTranslationIntake ? '<input type="hidden" name="intent" value="translation">' : "";
     const values = subtitleStudioProjectValues({
       ...draft,
       source_language: draft.source_language || "vi",
       target_language: draft.target_language || "en",
-      intent: draft.intent || subtitleStudioNewProjectIntentFromQuery(page),
+      translation_pair: draft.translation_pair || translationPair,
+      intent: isTranslationIntake ? "translation" : (draft.intent || newProjectIntent),
       caption_format: draft.caption_format || "srt",
       source_mode: draft.source_mode || "manual"
-    }, true);
+    }, true, { translationPreset: isTranslationIntake, translationPair });
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
       <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">Web-native subtitle authoring</span><h2>Biên tập transcript và caption có cấu trúc, dễ review.</h2><p>Tổ chức cue, timing, bản nháp ngôn ngữ và self-review trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, dubbing hay file xuất.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Transcript projects</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
-      <div class="portal-subtitle-studio-layout"><section class="portal-card portal-card-pad portal-subtitle-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.intakeTitle", "Lập project subtitle"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.intakeBody", "Chọn tự soạn transcript hoặc tham chiếu một Asset Vault của chính bạn, rồi đặt ngôn ngữ và review context. Mỗi lần ghi được server kiểm tra session, CSRF, ownership, revision và idempotency."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(subtitleStudioProjectFields(context, true), canCreate, context, values)}${renderSubtitleLanguageSourcePager(context, page)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("subtitleSource.intakeNotice", "Asset Vault chỉ là metadata reference. Không nhập secret, chứng từ thanh toán, provider/job/file handle hoặc URL; không có upload, preview, ASR, dịch máy hay output được tạo."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(uiText("subtitleSource.create", "Tạo transcript project"))}</button></div></form></section>${renderSubtitleStudioBoundary()}</div>
+      <div class="portal-subtitle-studio-layout"><section class="portal-card portal-card-pad portal-subtitle-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.intakeTitle", "Lập project subtitle"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.intakeBody", "Chọn tự soạn transcript hoặc tham chiếu một Asset Vault của chính bạn, rồi đặt ngôn ngữ và review context. Mỗi lần ghi được server kiểm tra session, CSRF, ownership, revision và idempotency."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(subtitleStudioProjectFields(context, true, { translationPreset: isTranslationIntake }), canCreate, context, values)}${translationIntentLock}${renderSubtitleLanguageSourcePager(context, page)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("subtitleSource.intakeNotice", "Asset Vault chỉ là metadata reference. Không nhập secret, chứng từ thanh toán, provider/job/file handle hoặc URL; không có upload, preview, ASR, dịch máy hay output được tạo."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(uiText("subtitleSource.create", "Tạo transcript project"))}</button></div></form></section>${renderSubtitleStudioBoundary()}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Transcript library</span><h2 class="portal-card-title">Tiếp tục công việc</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở project để nạp cue, preview text và version sau owner check.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-studio-refresh" data-portal-route="/subtitle-studio">Làm mới</button></div>${renderSubtitleProjectCards(projects, context, listing)}</section>
     </article>`;
   }

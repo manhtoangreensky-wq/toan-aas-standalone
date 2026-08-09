@@ -39,6 +39,14 @@ prompt, caption, upload, media, account state, Core Bridge result hay status
 từ legacy flow; giá trị thiếu/sai luôn về `subtitle`. Đây không phải redirect
 hay alias: legacy route và contract guarded/Core của nó vẫn giữ nguyên.
 
+Khi route là chính xác `/subtitle-studio/new?intent=translation`, form mới có
+thể nhận thêm một preference local `pair` trong catalog kín `vi-en`, `en-vi`,
+`vi-zh`, `zh-vi`, `en-zh`, `zh-en`. Browser chỉ chuyển key này thành metadata
+`source_language`/`target_language` của project thủ công mới; nó không nhận
+pair từ Bot callback, không đổi interface locale hay Bot locale, và không gọi
+dịch máy. Chi tiết chính xác ở
+[`TRANSLATION_WEB_NATIVE_TARGET_PRESET_CONTRACT.md`](TRANSLATION_WEB_NATIVE_TARGET_PRESET_CONTRACT.md).
+
 ## Đối chiếu Bot tĩnh
 
 Inventory tĩnh ghi nhận các command customer như `/translate`,

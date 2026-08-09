@@ -13843,8 +13843,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 143,
   "source_files_scanned": 143,
-  "source_fingerprint_sha256": "d7b25c7d489b77f2d79050f0b9fecb3bbeeda8bd512ab1fba65d6ef780de8627",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-translation-workspace",
+  "source_fingerprint_sha256": "067fbed7206dd8f3ecda3cc8aedf131a6d0a0043a2f7122acfb1e621daa2cf01",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-translation-target-preset",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
