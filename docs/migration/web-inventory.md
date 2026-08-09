@@ -91,6 +91,7 @@
 | /audio-assets | GET | list_audio_assets |
 | /audit-events | GET | audit_events |
 | /b2b-app | GET | legacy_b2b_redirect |
+| /background-cleanup | POST | cleanup_plain_background |
 | /banners | POST | add_banner |
 | /banners | GET | get_banners |
 | /blueprint | POST | create_media_factory_blueprint |
@@ -161,6 +162,5 @@
 | /consultation-brief/compose | POST | compose_consultation_brief |
 | /consultations | POST | confirm_consultation |
 | /consultations/catalog | GET | consultation_catalog |
-| /consultations/preview | POST | preview_consultation |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
