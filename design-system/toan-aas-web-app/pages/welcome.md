@@ -62,6 +62,16 @@ action has already happened.
 - The cinematic lifecycle is default on `/welcome`; `?motion=0` is reserved for
   a no-motion comparison. `prefers-reduced-motion` keeps the aperture static
   and reveals every control/content item immediately.
-- Keep the aperture as one quiet background frame. Do not add looping glow,
-  ambient video, parallax, decorative blobs, raw colors or copied visual
-  identity from a reference site.
+- Keep the aperture as one quiet background frame. The scroll-continuity
+  extension may add bounded, CSS-variable-driven parallax on the semantic
+  preview, a section progress wash, and pointer tilt on the preview/studio
+  surfaces. It must never pin the whole page, scroll-jack, animate body copy
+  independently, use ambient video, or add an unbounded looping glow.
+- Reference-derived motion is limited to the interaction grammar (sticky
+  compact header, masked transition, depth layers, section reveal and hover
+  response); it does not copy Lisa Nail & Spa's imagery, typography, palette or
+  brand identity. All content stays code-native and truthful to Web capability.
+- Every continuous effect is presentation-only, uses transform/opacity/CSS
+  variables, is throttled through one `requestAnimationFrame` scroll loop, and
+  fails open to a fully visible static page under `prefers-reduced-motion` or
+  `?motion=0`.

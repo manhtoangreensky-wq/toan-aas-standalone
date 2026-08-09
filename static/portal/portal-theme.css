@@ -166,6 +166,9 @@
   --portal-landing-cinematic-curtain: 1100ms;
   --portal-landing-cinematic-aperture: 1200ms;
   --portal-landing-cinematic-step: 520ms;
+  --portal-landing-scroll-scrub: 220ms;
+  --portal-landing-scroll-parallax: 26px;
+  --portal-landing-pointer-tilt: 2.4deg;
   --portal-elevation-float: 0 12px 30px rgba(2, 20, 29, .16);
   --portal-rail-width: 272px;
   --portal-content-max-width: 1600px;
@@ -896,6 +899,188 @@ body {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Scroll Continuity layer.  This extends Cinematic Mini across the public
+   page without hijacking scroll: the browser only updates compositor-friendly
+   CSS variables, while every section remains readable and in normal flow. */
+.landing-motion-scroll[data-landing-scroll-motion="active"] {
+  --landing-scroll-progress: 0;
+  --landing-hero-progress: 0;
+  --landing-pointer-x: 0;
+  --landing-pointer-y: 0;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-scroll-scene {
+  position: relative;
+  isolation: isolate;
+  --landing-section-progress: 0;
+  --landing-section-offset: 0px;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-hero::after {
+  position: absolute;
+  z-index: 0;
+  right: clamp(-170px, -12vw, -28px);
+  bottom: clamp(-110px, -8vw, -22px);
+  width: min(50vw, 620px);
+  height: min(50vw, 620px);
+  border: 1px solid color-mix(in srgb, var(--portal-context) 24%, var(--portal-border));
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 45%, color-mix(in srgb, var(--portal-brand) 15%, transparent), transparent 68%);
+  content: "";
+  opacity: calc(.16 + (var(--landing-hero-progress, 0) * .28));
+  pointer-events: none;
+  transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -22px), 0) scale(calc(.96 + (var(--landing-hero-progress, 0) * .06)));
+  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-hero > * {
+  z-index: 1;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-hero-copy {
+  transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -8px), 0);
+  transition: transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax {
+  transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -26px), 0) rotate(1.4deg);
+  transition: transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax::before {
+  opacity: calc(.26 + (var(--landing-hero-progress, 0) * .3));
+  transform: translate3d(calc(var(--landing-hero-progress, 0) * -14px), calc(var(--landing-hero-progress, 0) * 10px), 0);
+  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studios::before,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust::before {
+  position: absolute;
+  z-index: -1;
+  top: 16%;
+  right: -12%;
+  width: min(44vw, 520px);
+  height: min(44vw, 520px);
+  border: 1px solid color-mix(in srgb, var(--portal-context) 18%, var(--portal-border));
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--portal-brand) 12%, transparent), transparent 70%);
+  content: "";
+  opacity: calc(.12 + (var(--landing-section-progress, 0) * .24));
+  pointer-events: none;
+  transform: translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 24px), 0);
+  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio {
+  --landing-pointer-x: 0;
+  --landing-pointer-y: 0;
+  transform: perspective(900px) rotateX(calc(var(--landing-pointer-y, 0) * -1 * var(--portal-landing-pointer-tilt))) rotateY(calc(var(--landing-pointer-x, 0) * var(--portal-landing-pointer-tilt))) translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 5px), 0);
+  transform-style: preserve-3d;
+  transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio::after {
+  position: absolute;
+  top: -30%;
+  left: -45%;
+  width: 36%;
+  height: 170%;
+  background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--portal-brand) 18%, transparent), transparent);
+  content: "";
+  opacity: calc(.08 + (var(--landing-section-progress, 0) * .16));
+  pointer-events: none;
+  transform: translateX(calc(var(--landing-section-progress, 0) * 320%)) rotate(14deg);
+  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+/* The studio card already has a legacy hover lift.  Keep that lift while
+   giving the pointer layer enough specificity to add the bounded tilt. */
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio.landing-motion-pointer {
+  transform: perspective(900px) rotateX(calc(var(--landing-pointer-y, 0) * -1 * var(--portal-landing-pointer-tilt))) rotateY(calc(var(--landing-pointer-x, 0) * var(--portal-landing-pointer-tilt))) translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 5px), 0);
+  transform-style: preserve-3d;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio.landing-motion-pointer.is-pointer-active {
+  transform: perspective(900px) rotateX(calc(var(--landing-pointer-y, 0) * -1 * var(--portal-landing-pointer-tilt))) rotateY(calc(var(--landing-pointer-x, 0) * var(--portal-landing-pointer-tilt))) translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 5px), 0) !important;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-pointer.is-pointer-active {
+  border-color: color-mix(in srgb, var(--portal-context) 58%, var(--portal-border));
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--portal-context) 16%, transparent), 0 0 0 3px color-mix(in srgb, var(--portal-brand) 11%, transparent);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow ol::before {
+  opacity: clamp(0, var(--landing-section-progress, 0), 1);
+  transform: scaleY(clamp(0, var(--landing-section-progress, 0), 1));
+  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article {
+  transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li:hover,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li:focus-within {
+  transform: translate3d(6px, 0, 0);
+  border-color: color-mix(in srgb, var(--portal-context) 38%, var(--portal-border));
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article:hover,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article:focus-within {
+  transform: translate3d(0, -5px, 0);
+  border-color: color-mix(in srgb, var(--portal-brand) 44%, var(--portal-border));
+  box-shadow: var(--portal-elevation-2);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-final {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-final::before {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: calc((var(--landing-scroll-progress, 0) * 130%) - 30%);
+  width: 42%;
+  height: 180%;
+  background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--portal-context) 12%, transparent), transparent);
+  content: "";
+  opacity: .5;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(12deg);
+  transition: left var(--portal-landing-scroll-scrub) linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-motion-scroll[data-landing-scroll-motion="active"] :is(
+    .landing-scroll-scene,
+    .portal-landing-hero-copy,
+    .landing-motion-parallax,
+    .landing-motion-pointer,
+    .landing-motion-workflow li,
+    .landing-motion-trust-grid > article,
+    .landing-motion-final::before,
+    .landing-motion-hero::after,
+    .landing-motion-studios::before,
+    .landing-motion-trust::before
+  ) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 @media (max-width: 600px) {
   .portal-auth-page--access .portal-auth-brand strong {
     white-space: nowrap;
@@ -1093,15 +1278,6 @@ body {
   }
 
   .portal-auth-context { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
 }
 
 /* Signed Workspace shell alignment. */

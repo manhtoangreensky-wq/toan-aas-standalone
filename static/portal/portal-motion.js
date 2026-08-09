@@ -19,8 +19,23 @@
   const LANDING_PREVIEW_STEP_INTERVAL_MS = 900;
   const LANDING_PREVIEW_CYCLE_PAUSE_MS = 700;
   const LANDING_PREVIEW_CYCLE_COUNT = 2;
+  const LANDING_SCROLL_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
   let landingCleanup = null;
   let landingGeneration = 0;
+
+  function clamp(value, minimum, maximum) {
+    return Math.min(maximum, Math.max(minimum, Number(value) || 0));
+  }
+
+  function setStyleProperty(element, property, value) {
+    if (!element || !element.style || typeof element.style.setProperty !== "function") return;
+    element.style.setProperty(property, String(value));
+  }
+
+  function removeStyleProperty(element, property) {
+    if (!element || !element.style || typeof element.style.removeProperty !== "function") return;
+    element.style.removeProperty(property);
+  }
 
   function prefersReducedMotion() {
     return typeof window.matchMedia === "function"
@@ -86,10 +101,17 @@
     if (!root || typeof window !== "object") return;
 
     root.setAttribute("data-landing-motion", "cinematic-mini");
+    root.setAttribute("data-landing-scroll-motion", "active");
+    root.setAttribute("data-landing-scroll-progress", "0");
     root.setAttribute("data-landing-motion-phase", "intro");
+    if (root.classList && typeof root.classList.add === "function") root.classList.add("landing-motion-scroll");
     const header = root.querySelector(".portal-landing-header");
     const hero = root.querySelector(".portal-landing-hero");
     const preview = root.querySelector(".portal-landing-preview");
+    const scrollLayers = Array.from(root.querySelectorAll("[data-landing-layer]"));
+    const pointerTargets = Array.from(root.querySelectorAll(
+      "[data-landing-pointer], .portal-landing-workflow li, .portal-landing-trust-grid > article, .portal-landing-final .portal-button"
+    ));
     const revealTargets = Array.from(root.querySelectorAll(
       ".portal-landing-section, .portal-landing-workflow, .portal-landing-trust, .portal-landing-final"
     ));
@@ -114,22 +136,34 @@
     const replayControl = root.querySelector("[data-landing-motion-replay]");
     const generation = landingGeneration;
     const isCurrentMount = () => landingGeneration === generation;
+    let pointerHandlers = [];
     if (header) header.classList.add("landing-motion-header");
     if (hero) hero.classList.add("landing-motion-hero", "landing-cinematic-hero");
     if (preview) {
-      preview.classList.add("landing-cinematic-preview");
+      preview.classList.add("landing-cinematic-preview", "landing-motion-parallax");
       previewSteps.forEach((step) => step.classList.add("landing-cinematic-step"));
     }
+    scrollLayers.forEach((layer) => {
+      if (!layer || !layer.classList || typeof layer.classList.add !== "function") return;
+      const layerName = layer.getAttribute && layer.getAttribute("data-landing-layer");
+      layer.classList.add("landing-scroll-scene");
+      if (layerName && /^[a-z]+$/.test(String(layerName))) layer.classList.add(`landing-motion-${layerName}`);
+    });
 
     const clearLandingDecorations = () => {
       root.removeAttribute("data-landing-motion-phase");
       root.removeAttribute("data-landing-motion");
+      root.removeAttribute("data-landing-scroll-motion");
+      root.removeAttribute("data-landing-scroll-progress");
+      root.removeAttribute("data-landing-motion-section");
+      if (root.classList && typeof root.classList.remove === "function") root.classList.remove("landing-motion-scroll");
+      ["--landing-scroll-progress", "--landing-hero-progress", "--landing-pointer-x", "--landing-pointer-y"].forEach((property) => removeStyleProperty(root, property));
       if (header) {
         header.classList.remove("landing-motion-header");
         header.removeAttribute("data-landing-motion-header");
       }
       if (hero) hero.classList.remove("landing-motion-hero", "landing-cinematic-hero", "is-ready");
-      if (preview) preview.classList.remove("landing-cinematic-preview");
+      if (preview) preview.classList.remove("landing-cinematic-preview", "landing-motion-parallax", "landing-motion-pointer", "is-pointer-active");
       previewSteps.forEach((step) => step.classList.remove("landing-cinematic-step", "landing-motion-step-active", "is-active"));
       if (previewSteps[0]) previewSteps[0].classList.add("is-active");
       root.removeAttribute("data-landing-motion-run");
@@ -143,8 +177,23 @@
           "is-visible"
         );
         if (title) title.classList.remove("landing-motion-reveal-title");
-        cards.forEach((card) => card.classList.remove("landing-motion-card"));
+        cards.forEach((card) => card.classList.remove("landing-motion-card", "landing-motion-studio"));
       });
+      scrollLayers.forEach((layer) => {
+        if (layer && layer.classList && typeof layer.classList.remove === "function") {
+          layer.classList.remove("landing-scroll-scene", "landing-motion-hero", "landing-motion-studios", "landing-motion-workflow", "landing-motion-trust", "landing-motion-final");
+        }
+        ["--landing-section-progress", "--landing-section-offset"].forEach((property) => removeStyleProperty(layer, property));
+      });
+      pointerHandlers.forEach(({ target, move, leave }) => {
+        if (!target || typeof target.removeEventListener !== "function") return;
+        target.removeEventListener("pointermove", move);
+        target.removeEventListener("pointerleave", leave);
+        target.removeEventListener("pointercancel", leave);
+        if (target.classList && typeof target.classList.remove === "function") target.classList.remove("landing-motion-pointer", "is-pointer-active");
+        ["--landing-pointer-x", "--landing-pointer-y"].forEach((property) => removeStyleProperty(target, property));
+      });
+      pointerHandlers = [];
       landingCtas.forEach((cta) => cta.classList.remove("landing-motion-cta"));
     };
     // The aperture remains a quiet static frame for motion-sensitive visitors.
@@ -152,6 +201,7 @@
     // visible or operable. Cleanup still has to run on the next route mount.
     landingCleanup = clearLandingDecorations;
     if (prefersReducedMotion()) {
+      root.setAttribute("data-landing-scroll-motion", "static");
       root.setAttribute("data-landing-motion-phase", "settled");
       return;
     }
@@ -164,6 +214,80 @@
     let previewStepTimers = [];
     let introRun = 0;
     let observer = null;
+
+    const syncScrollMotion = () => {
+      if (!isCurrentMount()) return;
+      const viewportHeight = Math.max(1, Number(window.innerHeight) || 800);
+      const scrollY = Math.max(0, Number(window.scrollY) || 0);
+      const documentElement = typeof document === "object" && document ? document.documentElement : null;
+      const documentHeight = Math.max(viewportHeight, Number(documentElement && documentElement.scrollHeight) || viewportHeight);
+      const pageProgress = clamp(scrollY / Math.max(1, documentHeight - viewportHeight), 0, 1);
+      setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
+      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
+
+      const heroRect = hero && typeof hero.getBoundingClientRect === "function" ? hero.getBoundingClientRect() : null;
+      const heroProgress = heroRect
+        ? clamp((viewportHeight * 0.38 - Number(heroRect.top || 0)) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
+        : pageProgress;
+      setStyleProperty(root, "--landing-hero-progress", heroProgress.toFixed(4));
+      setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
+
+      let activeLayer = "hero";
+      let activeDistance = Number.POSITIVE_INFINITY;
+      scrollLayers.forEach((layer) => {
+        if (!layer || typeof layer.getBoundingClientRect !== "function") return;
+        const rect = layer.getBoundingClientRect();
+        const height = Math.max(1, Number(rect.height) || viewportHeight);
+        const center = Number(rect.top || 0) + (height / 2);
+        const travel = Math.max(1, (height + viewportHeight) * 0.55);
+        const progress = clamp(1 - (Math.abs(center - (viewportHeight * 0.52)) / travel), 0, 1);
+        const distance = clamp((center - (viewportHeight * 0.52)) / travel, -1, 1);
+        setStyleProperty(layer, "--landing-section-progress", progress.toFixed(4));
+        setStyleProperty(layer, "--landing-section-offset", `${Math.round(distance * 18)}px`);
+        if (layer.getAttribute) {
+          const name = String(layer.getAttribute("data-landing-layer") || "");
+          const currentDistance = Math.abs(center - (viewportHeight * 0.52));
+          if (name && currentDistance < activeDistance) {
+            activeDistance = currentDistance;
+            activeLayer = name;
+          }
+        }
+      });
+      root.setAttribute("data-landing-motion-section", activeLayer);
+    };
+
+    const resetPointer = (target) => {
+      if (!target) return;
+      removeStyleProperty(target, "--landing-pointer-x");
+      removeStyleProperty(target, "--landing-pointer-y");
+      if (target.classList && typeof target.classList.remove === "function") target.classList.remove("is-pointer-active");
+    };
+
+    const setupPointerMotion = () => {
+      const pointerFine = typeof window.matchMedia !== "function"
+        || window.matchMedia(LANDING_SCROLL_POINTER_QUERY).matches;
+      if (!pointerFine) return;
+      pointerTargets.forEach((target) => {
+        if (!target || typeof target.addEventListener !== "function") return;
+        if (target.classList && typeof target.classList.add === "function") target.classList.add("landing-motion-pointer");
+        const move = (event) => {
+          if (!isCurrentMount() || !event || typeof target.getBoundingClientRect !== "function") return;
+          const rect = target.getBoundingClientRect();
+          const width = Math.max(1, Number(rect.width) || 1);
+          const height = Math.max(1, Number(rect.height) || 1);
+          const x = clamp(((Number(event.clientX) - Number(rect.left || 0)) / width) * 2 - 1, -1, 1);
+          const y = clamp(((Number(event.clientY) - Number(rect.top || 0)) / height) * 2 - 1, -1, 1);
+          setStyleProperty(target, "--landing-pointer-x", x.toFixed(3));
+          setStyleProperty(target, "--landing-pointer-y", y.toFixed(3));
+          if (target.classList && typeof target.classList.add === "function") target.classList.add("is-pointer-active");
+        };
+        const leave = () => resetPointer(target);
+        target.addEventListener("pointermove", move, { passive: true });
+        target.addEventListener("pointerleave", leave, { passive: true });
+        target.addEventListener("pointercancel", leave, { passive: true });
+        pointerHandlers.push({ target, move, leave });
+      });
+    };
 
     const clearIntroSchedule = () => {
       if (heroFrame) window.cancelAnimationFrame(heroFrame);
@@ -272,11 +396,13 @@
     const syncHeader = () => {
       scrollFrame = 0;
       if (!isCurrentMount()) return;
-      if (!header) return;
-      header.setAttribute(
-        "data-landing-motion-header",
-        window.scrollY > 20 ? "compact" : "default"
-      );
+      if (header) {
+        header.setAttribute(
+          "data-landing-motion-header",
+          window.scrollY > 20 ? "compact" : "default"
+        );
+      }
+      syncScrollMotion();
     };
     const onScroll = () => {
       if (!isCurrentMount()) return;
@@ -289,6 +415,8 @@
       window.addEventListener("scroll", onScroll, { passive: true });
     }
 
+    if (!header) syncScrollMotion();
+
     if (hero) heroStages.forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
 
     revealDetails.forEach(({ target, title, cards }) => {
@@ -296,10 +424,14 @@
       if (target.matches(".portal-landing-workflow")) target.classList.add("landing-motion-workflow");
       if (target.matches(".portal-landing-final")) target.classList.add("landing-motion-final");
       if (title) title.classList.add("landing-motion-reveal-title");
-      cards.forEach((card) => card.classList.add("landing-motion-card"));
+      cards.forEach((card) => {
+        card.classList.add("landing-motion-card");
+        if (target.matches && target.matches(".portal-landing-section")) card.classList.add("landing-motion-studio");
+      });
     });
     landingCtas.forEach((cta) => cta.classList.add("landing-motion-cta"));
     if (replayControl) replayControl.addEventListener("click", replayIntro);
+    setupPointerMotion();
 
     const revealTarget = (target) => {
       if (!isCurrentMount()) return;
