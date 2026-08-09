@@ -21,7 +21,7 @@ def test_brand_overlay_registry_and_engine_are_explicitly_web_native() -> None:
     assert '"web_native_image_brand_overlay_required"' in api
 
 
-def test_brand_overlay_portal_is_separate_from_generic_image_history() -> None:
+def test_brand_overlay_keeps_its_dedicated_portal_and_joins_unified_image_history() -> None:
     portal = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
     integration = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
     operations = (ROOT / "copyfast_image_operations.py").read_text(encoding="utf-8")
@@ -51,9 +51,9 @@ def test_brand_overlay_portal_is_separate_from_generic_image_history() -> None:
     assert "acquireSubmission(scope, requestFingerprint)" in integration
     assert "${logoAssetId}:${overlayText}:${textPosition}" not in integration
     assert 'const opacityText = String(fields.logo_opacity_percent || "78").trim();' in integration
-    # The server, rather than a browser list projection, owns the deliberate
-    # generic-history exclusion. The client has its own dedicated route/list.
-    assert "IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})" in operations
+    # The dedicated route/list remains scoped to Brand Overlay authoring, but
+    # verified output also belongs to the server-owned unified history.
+    assert "IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_OVERLAY_KIND})" in operations
     assert '"/image/history": account && assetVaultEnabled && imageOperationsEnabled' in integration
 
 

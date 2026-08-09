@@ -1599,7 +1599,7 @@
   customerPage("/image/history", "Lịch sử ảnh", "Theo dõi PNG riêng tư đã được Web Workspace tạo và xác minh; không thay thế lịch sử job Bot.", ICONS.image, {
     layout: "image-operation-history", type: "image-operation", action: "none", status: "guarded", fields: [],
     notes: [
-      "Chỉ gồm output Resize & Aspect Studio và Image Enhance Studio do Web Workspace tạo. Job, output hoặc lịch sử provider/Bot không được sao chép sang đây.",
+      "Chỉ gồm output Resize & Aspect Studio, Image Enhance Studio và Brand Overlay Studio do Web Workspace tạo. Job, output hoặc lịch sử provider/Bot không được sao chép sang đây.",
       "Tải xuống luôn kiểm tra signed session, quyền sở hữu và integrity của PNG. Không có preview công khai, URL tĩnh hay PWA cache."
     ]
   }, ["/image/assets"]);
@@ -5167,10 +5167,9 @@
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
     "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
-  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance"]);
-  // Brand overlays have a separate owner-scoped projection.  Do not add this
-  // kind to the generic image history, which intentionally remains Resize +
-  // Enhance only and must never accidentally show a route it did not hydrate.
+  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
+  // Brand Overlay keeps a dedicated owner-scoped projection for its authoring
+  // route, while verified rows also belong to the combined Image History view.
   const IMAGE_BRAND_OVERLAY_HISTORY_KINDS = new Set(["image_brand_overlay"]);
   // Storyboard Grid uses a separate endpoint and output schema.  In
   // particular, its individual cell downloads are not Image Operation
@@ -20206,11 +20205,12 @@
 
   function renderImageHistoryOperationCards(items) {
     if (!items.length) {
-      return renderEmpty("Chưa có PNG Web đã xác minh", "Lịch sử này chỉ hiển thị output Resize hoặc Image Enhance do signed Web account hiện tại tạo. Nó không suy đoán từ Asset Vault, Bot, provider hay browser.", "▧");
+      return renderEmpty("Chưa có PNG Web đã xác minh", "Lịch sử này chỉ hiển thị output Resize, Image Enhance hoặc Brand Overlay do signed Web account hiện tại tạo. Nó không suy đoán từ Asset Vault, Bot, provider hay browser.", "▧");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const kind = String(item.kind || "");
       const isResize = kind === "image_resize";
+      const isBrandOverlay = kind === "image_brand_overlay";
       const status = imageOperationState(item);
       const downloadPath = imageOperationDownloadPath(item);
       const sourceWidth = Number(item.source_width);
@@ -20223,15 +20223,17 @@
       const resizeLabel = { crop: "Crop giữa khung", pad: "Pad nền trắng", blur: "Blur nền" }[String(item.fit_mode || "")] || "Đang kiểm tra";
       const operationLabel = isResize
         ? `${resizeLabel} · ${String(item.preset || "custom")}`
-        : (IMAGE_ENHANCE_PRESET_LABELS[preset] || preset);
-      const settings = isResize ? resizeLabel : imageEnhanceSettings(item);
-      const fallbackName = isResize ? "PNG private đã resize" : "PNG private đã chỉnh";
+        : isBrandOverlay
+          ? "Brand Overlay Studio · deterministic"
+          : (IMAGE_ENHANCE_PRESET_LABELS[preset] || preset);
+      const settings = isResize ? resizeLabel : isBrandOverlay ? imageBrandOverlaySettings(item) : imageEnhanceSettings(item);
+      const fallbackName = isResize ? "PNG private đã resize" : isBrandOverlay ? "PNG private đã gắn thương hiệu" : "PNG private đã chỉnh";
       const pendingMessage = status === "failed" || status === "unavailable"
         ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
         : status === "guarded"
           ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
           : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : isBrandOverlay ? "▣" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : isBrandOverlay ? "Brand Overlay Studio" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : isBrandOverlay ? "Overlay" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -20612,7 +20614,7 @@
       return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Lịch sử ảnh đang ở chế độ an toàn</h2><p>Máy chủ chỉ mở lịch sử PNG Web-native sau khi signed session, Asset Vault và Image Operations được xác minh. Không fallback sang danh sách Asset, Bot job hoặc output provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
     }
     if (readState === "loading") {
-      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử ảnh private</h2><p>Web Workspace đang tải projection Resize và Image Enhance thuộc signed account hiện tại. Không hiển thị dữ liệu route trước, browser cache hay danh sách Bot trong khi chờ.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử ảnh private</h2><p>Web Workspace đang tải projection Resize, Image Enhance và Brand Overlay thuộc signed account hiện tại. Không hiển thị dữ liệu route trước, browser cache hay danh sách Bot trong khi chờ.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
     }
     if (readState !== "ready") {
       const retry = canRefresh
@@ -20625,9 +20627,9 @@
     const returned = Number(listing.pagination && listing.pagination.returned) || operations.length;
     return `<article class="portal-page portal-image-operation-history">
       ${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Image History</span><h2>Một lịch sử PNG đã xác minh, không trộn authority</h2><p>Chỉ output Resize & Aspect Studio và Image Enhance Studio của signed Web account hiện tại xuất hiện tại đây. Mỗi download được server kiểm tra lại ownership, integrity và trạng thái hoàn tất trước khi stream file.</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>PNG Web ở trang này</dd></div><div><dt>Ngoài phạm vi</dt><dd>Bot job / provider output không được truy vấn</dd></div></dl></section>
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Image History</span><h2>Một lịch sử PNG đã xác minh, không trộn authority</h2><p>Chỉ output Resize & Aspect Studio, Image Enhance Studio và Brand Overlay Studio của signed Web account hiện tại xuất hiện tại đây. Mỗi download được server kiểm tra lại ownership, integrity và trạng thái hoàn tất trước khi stream file.</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>PNG Web ở trang này</dd></div><div><dt>Ngoài phạm vi</dt><dd>Bot job / provider output không được truy vấn</dd></div></dl></section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã xử lý</h2><p class="portal-card-subtitle">Không dùng URL tĩnh, preview công khai, PWA cache hoặc lịch sử Asset/Bot thay thế khi một đọc private thất bại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageHistoryOperationCards(operations)}${renderImageHistoryOperationPagination(context, canView, "/image/history")}</section>
-      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới dữ liệu</h2><p>Đây là output storage riêng của Web Workspace, không phải delivery center chung.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu hoặc webhook.</li><li>Không ghi đè file gốc, không tạo preview và không suy đoán output từ Asset Vault.</li><li>Muốn tạo bản mới, mở <a href="/image/resize">Resize &amp; Aspect Studio</a> hoặc <a href="/image/edit">Image Enhance Studio</a>.</li></ul></section>
+      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới dữ liệu</h2><p>Đây là output storage riêng của Web Workspace, không phải delivery center chung.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu hoặc webhook.</li><li>Không ghi đè file gốc, không tạo preview và không suy đoán output từ Asset Vault.</li><li>Muốn tạo bản mới, mở <a href="/image/resize">Resize &amp; Aspect Studio</a>, <a href="/image/edit">Image Enhance Studio</a> hoặc <a href="/image/brand-overlay">Brand Overlay Studio</a>.</li></ul></section>
       ${renderNotes(page)}
     </article>`;
   }

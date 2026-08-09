@@ -19,7 +19,6 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from pypdf import PdfWriter
 
-
 ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
@@ -48,6 +47,7 @@ def make_client(tmp_path, monkeypatch) -> TestClient:
     monkeypatch.setenv("WEBAPP_IMAGE_OPERATIONS_QUOTA_MB", "100")
     monkeypatch.setenv("WEBAPP_IMAGE_RESIZE_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_IMAGE_ENHANCE_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "false")
@@ -179,6 +179,21 @@ def enhance_image(client: TestClient, csrf: str, asset_id: str, index: int) -> d
     return response.json()["data"]["operation"]
 
 
+def brand_overlay_image(client: TestClient, csrf: str, asset_id: str) -> dict:
+    response = client.post(
+        "/api/v1/image-operations/brand-overlay",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "source_asset_id": asset_id,
+            "overlay_text": "TOAN AAS",
+            "text_position": "bottom_center",
+            "idempotency_key": "history-image-brand-overlay-0001",
+        },
+    )
+    assert response.status_code == 200
+    return response.json()["data"]["operation"]
+
+
 def make_listing_order(db_path: Path, table: str, operations: list[dict], secret: str) -> None:
     assert table in {"web_document_operations", "web_image_operations"}
     with sqlite3.connect(db_path) as conn:
@@ -276,7 +291,7 @@ def test_document_operation_history_paginates_owner_scoped_redacted_rows(tmp_pat
         assert_paged_response(combined_hidden, [], has_more=False, next_offset=None, secret=secret)
 
 
-def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross_owner_leaks(tmp_path, monkeypatch) -> None:
+def test_image_operation_history_paginates_all_reviewed_web_native_rows_without_cross_owner_leaks(tmp_path, monkeypatch) -> None:
     secret = "PRIVATE_IMAGE_FAILURE_CODE_MUST_NOT_LEAK"
     db_path = tmp_path / "operation-history-pagination.db"
     with make_client(tmp_path, monkeypatch) as client:
@@ -284,8 +299,8 @@ def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross
         source = upload_image(client, csrf)
         resize_operations = [resize_image(client, csrf, source["id"], index) for index in (1, 2, 3)]
         enhance_operations = [enhance_image(client, csrf, source["id"], index) for index in (1, 2, 3)]
-        make_listing_order(db_path, "web_image_operations", resize_operations, secret)
-        make_listing_order(db_path, "web_image_operations", enhance_operations, secret)
+        brand_overlay_operation = brand_overlay_image(client, csrf, source["id"])
+        make_listing_order(db_path, "web_image_operations", resize_operations + enhance_operations + [brand_overlay_operation], secret)
 
         resize_first = client.get("/api/v1/image-operations?kind=image_resize&limit=2&offset=0")
         assert_paged_response(
@@ -318,15 +333,15 @@ def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross
         # The combined `/image/history` reader intentionally omits `kind`.
         # A future/untrusted DB value must not leak into that projection or
         # consume a pagination slot merely because this test can insert it
-        # directly into SQLite.
+        # directly into SQLite; only the three reviewed Web-native kinds count.
         with sqlite3.connect(db_path) as conn:
             conn.execute(
                 "UPDATE web_image_operations SET kind=?, updated_at=? WHERE id=?",
                 ("future_image_internal", "2026-07-16T00:00:09+00:00", resize_operations[2]["id"]),
             )
-        expected_history_ids = {operation["id"] for operation in resize_operations[:2] + enhance_operations}
+        expected_history_ids = {operation["id"] for operation in resize_operations[:2] + enhance_operations + [brand_overlay_operation]}
         combined_ids: list[str] = []
-        for offset, expected_count, has_more, next_offset in ((0, 2, True, 2), (2, 2, True, 4), (4, 1, False, None)):
+        for offset, expected_count, has_more, next_offset in ((0, 2, True, 2), (2, 2, True, 4), (4, 2, False, None)):
             response = client.get(f"/api/v1/image-operations?limit=2&offset={offset}")
             assert response.status_code == 200
             data = response.json()["data"]
@@ -335,7 +350,7 @@ def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross
             assert data["next_offset"] == next_offset
             assert secret not in response.text
             for item in data["items"]:
-                assert item["kind"] in {"image_resize", "image_enhance"}
+                assert item["kind"] in {"image_resize", "image_enhance", "image_brand_overlay"}
                 assert_private_listing(item, secret)
                 combined_ids.append(item["id"])
         assert set(combined_ids) == expected_history_ids
@@ -343,7 +358,7 @@ def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross
 
     with make_client(tmp_path, monkeypatch) as other:
         register_and_login(other, "image-history-other@example.com")
-        for kind in ("image_resize", "image_enhance"):
+        for kind in ("image_resize", "image_enhance", "image_brand_overlay"):
             hidden = other.get(f"/api/v1/image-operations?kind={kind}&limit=2&offset=0")
             assert_paged_response(hidden, [], has_more=False, next_offset=None, secret=secret)
         combined_hidden = other.get("/api/v1/image-operations?limit=2&offset=0")

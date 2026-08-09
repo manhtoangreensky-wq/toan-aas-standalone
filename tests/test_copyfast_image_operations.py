@@ -1118,7 +1118,7 @@ def test_brand_overlay_is_private_idempotent_and_keeps_logo_metadata_internal(tm
         assert [item["id"] for item in history.json()["data"]["items"]] == [operation["id"]]
         combined_history = client.get("/api/v1/image-operations?limit=100")
         assert combined_history.status_code == 200
-        assert operation["id"] not in [item["id"] for item in combined_history.json()["data"]["items"]]
+        assert operation["id"] in [item["id"] for item in combined_history.json()["data"]["items"]]
 
         downloaded = client.get(f"/api/v1/image-operations/{operation['id']}/download")
         assert downloaded.status_code == 200

@@ -12,10 +12,11 @@ state, Bot jobs, Bot assets or webhook records.
 ## Lifecycle and owner boundary
 
 - API: `POST /api/v1/image-operations/brand-overlay`.
-- Reads: `GET /api/v1/image-operations?kind=image_brand_overlay`, operation
-  detail and owner-scoped download.
-- Kind: `image_brand_overlay`; this dedicated history is intentionally not
-  mixed into the generic `/image/history` projection for Resize/Enhance.
+- Reads: `GET /api/v1/image-operations?kind=image_brand_overlay`, the unified
+  `/image/history` projection, operation detail and owner-scoped download.
+- Kind: `image_brand_overlay`; the dedicated route remains the filtered
+  authoring/history surface, while verified rows are also included in the
+  generic `/image/history` projection alongside Resize/Enhance.
 - Normal lifecycle is `queued → processing → completed`. A PNG is completed
   only after it is re-opened, parsed, dimension-checked, hashed and atomically
   promoted into private Image Operations storage.

@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 143,
   "source_files_scanned": 143,
-  "source_fingerprint_sha256": "12c617895e27403e680b06dca8cb0e86d40601fc519b59d7d99c36bfba0ff2e8",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-audio-asset-hydration",
+  "source_fingerprint_sha256": "7b89e104533da0705ffe57d45a2b14e381f39bd3dbf397a8785244d4e3be6ca3",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-image-history-unified",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
