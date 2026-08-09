@@ -11283,6 +11283,14 @@
   // stays escaped plain text in the portal and is never clickable or fetched.
   const SUBTITLE_STUDIO_FORMATS = new Set(["srt", "vtt"]);
   const SUBTITLE_STUDIO_INTENTS = new Set(["subtitle", "translation", "asr_review", "dubbing_direction"]);
+  const SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS = new Map([
+    ["vi-en", Object.freeze({ source_language: "vi", target_language: "en" })],
+    ["en-vi", Object.freeze({ source_language: "en", target_language: "vi" })],
+    ["vi-zh", Object.freeze({ source_language: "vi", target_language: "zh" })],
+    ["zh-vi", Object.freeze({ source_language: "zh", target_language: "vi" })],
+    ["en-zh", Object.freeze({ source_language: "en", target_language: "zh" })],
+    ["zh-en", Object.freeze({ source_language: "zh", target_language: "en" })]
+  ]);
   const SUBTITLE_STUDIO_PROJECT_STATES = new Set(["draft", "review", "approved", "archived"]);
   const SUBTITLE_FORMAT_TOOL_MODES = new Set(["srt_to_vtt", "vtt_to_srt", "text_to_srt"]);
   const SUBTITLE_LANGUAGE_SOURCE_MODES = new Set(["manual", "asset_reference"]);
@@ -11347,12 +11355,35 @@
     if (id && !validSubtitleStudioProjectId(id)) throw new Error(label + " không hợp lệ.");
     return id;
   }
+  function subtitleStudioTranslationPreset(fields) {
+    const key = String(fields && fields.translation_pair || "").trim().toLowerCase();
+    const preset = SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.get(key);
+    if (!preset) throw new Error("WEB_SUBTITLE_TRANSLATION_PRESET_INVALID");
+    return preset;
+  }
+  function subtitleStudioTranslationPresetQueryIsValid(route) {
+    if (route !== "/subtitle-studio/new") return false;
+    try {
+      const query = new URLSearchParams(window.location.search);
+      const intents = query.getAll("intent");
+      const pairs = query.getAll("pair");
+      return intents.length === 1 && intents[0] === "translation"
+        && pairs.length === 1 && SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has(pairs[0]);
+    } catch (_) {
+      return false;
+    }
+  }
+  function subtitleStudioTranslationPresetIntake(route) {
+    return subtitleStudioTranslationPresetQueryIsValid(route);
+  }
   function subtitleProjectPayload(fields, options) {
     const sourceIntake = Boolean(options && options.sourceIntake === true);
+    const translationPresetIntake = Boolean(options && options.translationPresetIntake === true);
     const title = subtitleStudioLine(fields.title, "Tên transcript project", 2, 180, false);
-    const sourceLanguage = subtitleStudioLine(fields.source_language || "vi", "Ngôn ngữ nguồn", 1, 100, false);
-    const targetLanguage = subtitleStudioLine(fields.target_language || "en", "Ngôn ngữ bản nháp", 1, 100, false);
     const intent = subtitleStudioLine(fields.intent || "subtitle", "Mục đích workspace", 1, 32, false).toLowerCase();
+    const translationPreset = sourceIntake && translationPresetIntake && intent === "translation" ? subtitleStudioTranslationPreset(fields) : null;
+    const sourceLanguage = subtitleStudioLine(translationPreset ? translationPreset.source_language : (fields.source_language || "vi"), "Ngôn ngữ nguồn", 1, 100, false);
+    const targetLanguage = subtitleStudioLine(translationPreset ? translationPreset.target_language : (fields.target_language || "en"), "Ngôn ngữ bản nháp", 1, 100, false);
     const captionFormat = subtitleStudioLine(fields.caption_format || "srt", "Chuẩn preview", 1, 16, false).toLowerCase();
     const context = subtitleStudioBody(fields.context, "Review context", 5000, true);
     const tags = subtitleStudioTags(fields.tags);
@@ -31774,7 +31805,8 @@
         return;
       }
       if (action === "subtitle-project-create") {
-        const payload = subtitleProjectPayload(fields, { sourceIntake: true });
+        const translationPresetIntake = subtitleStudioTranslationPresetIntake(route);
+        const payload = subtitleProjectPayload(fields, { sourceIntake: true, translationPresetIntake });
         await subtitleStudioMutation({
           action, route, scope: "subtitle-studio:project:create", path: "/subtitle-studio/projects", payload,
           onSuccess: async (result) => {

@@ -5,7 +5,9 @@ subtitle/translate/dubbing/ASR screens.  These checks keep all text authoring
 private, revisioned and honest about its lack of media/provider execution.
 """
 
+import json
 from pathlib import Path
+import subprocess
 
 
 ROOT = Path(__file__).parents[1]
@@ -14,7 +16,9 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "SUBTITLE_TRANSCRIPT_WORKSPACE_CONTRACT.md").read_text(encoding="utf-8")
+TRANSLATION_PRESET_CONTRACT = (ROOT / "docs" / "migration" / "TRANSLATION_WEB_NATIVE_TARGET_PRESET_CONTRACT.md").read_text(encoding="utf-8")
 SERVER = (ROOT / "copyfast_subtitle_workspace.py").read_text(encoding="utf-8")
 
 
@@ -81,7 +85,8 @@ def test_subtitle_studio_new_project_query_is_allowlisted_and_form_only() -> Non
     assert 'if (route !== "/subtitle-studio/new") return "subtitle";' in new_project
     assert 'new URLSearchParams(window.location.search).get("intent")' in new_project
     assert 'SUBTITLE_STUDIO_INTENT_KEYS.has(candidate) ? candidate : "subtitle"' in new_project
-    assert 'intent: draft.intent || subtitleStudioNewProjectIntentFromQuery(page)' in PORTAL
+    assert "const newProjectIntent = subtitleStudioNewProjectIntentFromQuery(page);" in PORTAL
+    assert 'intent: isTranslationIntake ? "translation" : (draft.intent || newProjectIntent)' in PORTAL
     query_start = PORTAL.index("function subtitleStudioNewProjectIntentFromQuery(page)")
     query_end = PORTAL.index("function subtitleStudioCueFields", query_start)
     query_helper = PORTAL[query_start:query_end].lower()
@@ -96,6 +101,167 @@ def test_subtitle_studio_new_project_query_is_allowlisted_and_form_only() -> Non
         assert mapping in CONTRACT
     assert "không mang theo" in CONTRACT
     assert "không phải redirect\nhay alias" in CONTRACT
+
+
+def test_translation_target_preset_is_closed_and_web_native() -> None:
+    """Translation intake may choose a manual language pair, never runtime."""
+    portal_start = PORTAL.index("const SUBTITLE_STUDIO_INTENTS")
+    portal_end = PORTAL.index("function subtitleStudioCueFields", portal_start)
+    portal = PORTAL[portal_start:portal_end]
+    assert "const SUBTITLE_STUDIO_TRANSLATION_PRESETS = Object.freeze" in portal
+    assert "function subtitleStudioTranslationPresetFromQuery(page, intent)" in portal
+    assert 'route !== "/subtitle-studio/new"' in portal
+    assert 'new URLSearchParams(window.location.search).getAll("pair")' in portal
+    for key in ("vi-en", "en-vi", "vi-zh", "zh-vi", "en-zh", "zh-en"):
+        assert f'"{key}"' in portal
+    assert "const displaySourceLanguage = String(source.source_language || \"vi\")" in portal
+    assert "const displayTargetLanguage = String(source.target_language || \"en\")" in portal
+    assert "source_language: displaySourceLanguage" in portal
+    assert "target_language: displayTargetLanguage" in portal
+    helper_start = PORTAL.index("function subtitleStudioTranslationPresetFromQuery(page, intent)")
+    helper_end = PORTAL.index("function subtitleStudioCueFields", helper_start)
+    helper = PORTAL[helper_start:helper_end].lower()
+    for forbidden in ("api(", "fetch(", "bridge", "payos", "/payments", "/jobs", "provider"):
+        assert forbidden not in helper
+
+    integration_start = INTEGRATION.index("const SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS")
+    map_end = INTEGRATION.index("const SUBTITLE_STUDIO_PROJECT_STATES", integration_start)
+    assert "const SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS = new Map" in INTEGRATION[integration_start:map_end]
+    helper_start = INTEGRATION.index("function subtitleStudioTranslationPreset(fields)")
+    payload_start = INTEGRATION.index("function subtitleProjectPayload", helper_start)
+    payload_end = INTEGRATION.index("function subtitleCuePayload", payload_start)
+    integration = INTEGRATION[helper_start:payload_end]
+    assert "function subtitleStudioTranslationPreset(fields)" in integration
+    assert "WEB_SUBTITLE_TRANSLATION_PRESET_INVALID" in integration
+    assert 'sourceIntake && translationPresetIntake && intent === "translation"' in integration
+    assert "translationPreset ? translationPreset.source_language" in integration
+    assert "translationPreset ? translationPreset.target_language" in integration
+    for forbidden in ("api(", "fetch(", "bridge", "payos", "/payments", "/jobs", "provider"):
+        assert forbidden not in integration.lower()
+    for required in ("`vi-en`", "`en-vi`", "`vi-zh`", "`zh-vi`", "`en-zh`", "`zh-en`", "CORE_CANONICAL_TRANSLATION_GUARDED"):
+        assert required in TRANSLATION_PRESET_CONTRACT
+    assert "function subtitleStudioTranslationPresetOptions()" in portal
+    for key in ("subtitlePreset.field", "subtitlePreset.help", "subtitlePreset.vi-en", "subtitlePreset.en-vi", "subtitlePreset.vi-zh", "subtitlePreset.zh-vi", "subtitlePreset.en-zh", "subtitlePreset.zh-en"):
+        assert key in I18N
+
+
+def test_translation_target_preset_is_only_enabled_for_exact_new_translation_route() -> None:
+    """Generic manual projects never require the closed translation-pair field."""
+    intake_start = INTEGRATION.index("function subtitleStudioTranslationPresetIntake(route)")
+    payload_start = INTEGRATION.index("function subtitleProjectPayload", intake_start)
+    intake = INTEGRATION[intake_start:payload_start]
+    assert "return subtitleStudioTranslationPresetQueryIsValid(route);" in intake
+
+    payload_end = INTEGRATION.index("function subtitleCuePayload", payload_start)
+    payload = INTEGRATION[payload_start:payload_end]
+    assert "const translationPresetIntake = Boolean(options && options.translationPresetIntake === true);" in payload
+    assert 'sourceIntake && translationPresetIntake && intent === "translation" ? subtitleStudioTranslationPreset(fields) : null;' in payload
+    assert 'translationPreset ? translationPreset.source_language : (fields.source_language || "vi")' in payload
+    assert 'translationPreset ? translationPreset.target_language : (fields.target_language || "en")' in payload
+
+    create_start = INTEGRATION.index('if (action === "subtitle-project-create")')
+    create_end = INTEGRATION.index('if (action === "subtitle-project-update")', create_start)
+    create_action = INTEGRATION[create_start:create_end]
+    assert "const translationPresetIntake = subtitleStudioTranslationPresetIntake(route);" in create_action
+    assert "subtitleProjectPayload(fields, { sourceIntake: true, translationPresetIntake });" in create_action
+
+    subtitle_view_start = PORTAL.index("function renderSubtitleStudio(page, context)")
+    subtitle_view_end = PORTAL.index("function renderSubtitleStudioDetail", subtitle_view_start)
+    subtitle_view = PORTAL[subtitle_view_start:subtitle_view_end]
+    assert "const isTranslationIntake = subtitleStudioTranslationPresetQueryIsValid(page, newProjectIntent);" in subtitle_view
+    assert "const translationIntentLock = isTranslationIntake ? '<input type=\"hidden\" name=\"intent\" value=\"translation\">' : \"\";" in subtitle_view
+    assert "${translationIntentLock}" in subtitle_view
+    assert "disabled: translationPreset" in PORTAL
+
+
+def test_translation_target_preset_requires_valid_pair_query() -> None:
+    """Missing/invalid pair metadata keeps the manual source/target form active."""
+    assert "only when the route is exactly `/subtitle-studio/new`" in TRANSLATION_PRESET_CONTRACT
+    assert "exactly one raw decoded `intent` parameter with the exact value `translation`" in TRANSLATION_PRESET_CONTRACT
+    assert "exactly one raw decoded `pair` parameter with one of the closed values" in TRANSLATION_PRESET_CONTRACT
+    contract = " ".join(TRANSLATION_PRESET_CONTRACT.split())
+    assert "Uppercase, whitespace-padded, duplicate relevant parameters, absent, malformed, unknown, non-exact or wrong-route values preserve the manual `source_language` and `target_language` fields." in contract
+    assert "Any absent, malformed, unknown or wrong-route value becomes `vi-en`." not in TRANSLATION_PRESET_CONTRACT
+    portal_start = PORTAL.index("function subtitleStudioTranslationPresetFromQuery(page, intent)")
+    portal_end = PORTAL.index("function subtitleStudioTranslationPresetOptions", portal_start)
+    portal_helper = PORTAL[portal_start:portal_end]
+    assert "function subtitleStudioTranslationPresetQueryIsValid(page, intent)" in portal_helper
+    assert "if (!subtitleStudioTranslationPresetQueryIsValid(page, intent)) return \"\";" in portal_helper
+    assert "getAll(\"pair\")" in portal_helper
+    assert "SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has" in portal_helper
+    subtitle_view_start = PORTAL.index("function renderSubtitleStudio(page, context)")
+    subtitle_view_end = PORTAL.index("function renderSubtitleStudioDetail", subtitle_view_start)
+    subtitle_view = PORTAL[subtitle_view_start:subtitle_view_end]
+    assert "const isTranslationIntake = subtitleStudioTranslationPresetQueryIsValid(page, newProjectIntent);" in subtitle_view
+    assert "translation_pair: draft.translation_pair || translationPair" in subtitle_view
+
+    intake_start = INTEGRATION.index("function subtitleStudioTranslationPresetQueryIsValid(route)")
+    intake_end = INTEGRATION.index("function subtitleProjectPayload", intake_start)
+    integration_intake = INTEGRATION[intake_start:intake_end]
+    assert "function subtitleStudioTranslationPresetQueryIsValid(route)" in integration_intake
+    assert "getAll(\"intent\")" in integration_intake
+    assert "getAll(\"pair\")" in integration_intake
+    assert "SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS.has" in integration_intake
+    assert "return subtitleStudioTranslationPresetQueryIsValid(route);" in integration_intake
+
+
+def test_translation_target_preset_query_gates_require_exact_unique_decoded_values() -> None:
+    """Render and submit gates independently reject non-exact relevant queries."""
+    cases = {
+        "?intent=translation&pair=vi-en": True,
+        "?intent=Translation&pair=VI-EN": False,
+        "?intent=%20translation%20&pair=%20vi-en%20": False,
+        "?intent=translation&intent=subtitle&pair=vi-en": False,
+        "?intent=translation&pair=vi-en&pair=unknown": False,
+        "?intent=translation": False,
+        "?intent=translation&pair=unknown": False,
+    }
+    portals = _translation_preset_query_gate_results(PORTAL, "subtitleStudioTranslationPresetQueryIsValid", cases, portal=True)
+    integrations = _translation_preset_query_gate_results(INTEGRATION, "subtitleStudioTranslationPresetQueryIsValid", cases, portal=False)
+    assert portals == cases
+    assert integrations == cases
+    assert _translation_preset_query_gate_results(
+        PORTAL,
+        "subtitleStudioTranslationPresetQueryIsValid",
+        {"?intent=translation&pair=vi-en": True},
+        portal=True,
+        route="/subtitle-studio",
+    ) == {"?intent=translation&pair=vi-en": False}
+    assert _translation_preset_query_gate_results(
+        INTEGRATION,
+        "subtitleStudioTranslationPresetQueryIsValid",
+        {"?intent=translation&pair=vi-en": True},
+        portal=False,
+        route="/subtitle-studio",
+    ) == {"?intent=translation&pair=vi-en": False}
+
+
+def _translation_preset_query_gate_results(source: str, helper_name: str, cases: dict[str, bool], *, portal: bool, route: str = "/subtitle-studio/new") -> dict[str, bool]:
+    start = source.index(f"function {helper_name}(")
+    end = source.index("\n  function ", start + 1)
+    helper = source[start:end]
+    runner = """
+const vm = require("vm");
+const helper = %s;
+const cases = %s;
+const route = %s;
+const portal = %s;
+const results = {};
+for (const query of cases) {
+  const context = {
+    URLSearchParams,
+    SUBTITLE_STUDIO_TRANSLATION_PRESET_KEYS: new Set(["vi-en", "en-vi", "vi-zh", "zh-vi", "en-zh", "zh-en"]),
+    window: { location: { search: query } },
+  };
+  vm.runInNewContext(helper, context);
+  results[query] = portal
+    ? context.subtitleStudioTranslationPresetQueryIsValid({ routePath: route }, "translation")
+    : context.subtitleStudioTranslationPresetQueryIsValid(route);
+}
+process.stdout.write(JSON.stringify(results));
+""" % (json.dumps(helper), json.dumps(list(cases)), json.dumps(route), "true" if portal else "false")
+    result = subprocess.run(["node", "-e", runner], check=True, capture_output=True, text=True)
+    return json.loads(result.stdout)
 
 
 def test_subtitle_studio_uses_private_text_only_api_and_server_revision_controls() -> None:
@@ -259,7 +425,7 @@ def test_language_source_intake_is_new_project_only_and_metadata_only() -> None:
     create_view = PORTAL[create_start:create_end]
     detail_end = PORTAL.index("function renderSubtitleStudioCompanionLink", create_end)
     detail_view = PORTAL[create_end:detail_end]
-    assert "subtitleStudioProjectFields(context, true)" in create_view
+    assert "subtitleStudioProjectFields(context, true, { translationPreset: isTranslationIntake })" in create_view
     assert "subtitleStudioProjectFields(context)" in detail_view
     assert "subtitleStudioProjectFields(context, true)" not in detail_view
     assert "renderSubtitleStudioLanguageSource(project)" in detail_view
@@ -300,7 +466,8 @@ def test_language_source_frontend_contract_is_signed_private_and_has_no_executio
     create_action = INTEGRATION[create_action_start:create_action_end]
     update_action_end = INTEGRATION.index('if (action === "subtitle-project-state")', create_action_end)
     update_action = INTEGRATION[create_action_end:update_action_end]
-    assert "subtitleProjectPayload(fields, { sourceIntake: true })" in create_action
+    assert "const translationPresetIntake = subtitleStudioTranslationPresetIntake(route);" in create_action
+    assert "subtitleProjectPayload(fields, { sourceIntake: true, translationPresetIntake });" in create_action
     assert "subtitleProjectPayload(fields)" in update_action
     assert "sourceIntake: true" not in update_action
 

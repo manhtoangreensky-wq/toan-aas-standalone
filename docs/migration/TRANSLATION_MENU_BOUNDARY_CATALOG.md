@@ -19,6 +19,11 @@ asset's bytes, opens a player/preview/download, imports a Telegram file ID or
 runs ASR, translation, TTS, dubbing, media processing, a provider, Bot bridge,
 job, payment or delivery.
 
+The fresh `?intent=translation` form has a closed Web-only pair chooser for
+`vi-en`, `en-vi`, `vi-zh`, `zh-vi`, `en-zh` and `zh-en`. It is an authoring
+preference, not a transfer of a Bot target or translation session; see
+[`TRANSLATION_WEB_NATIVE_TARGET_PRESET_CONTRACT.md`](TRANSLATION_WEB_NATIVE_TARGET_PRESET_CONTRACT.md).
+
 ## Finite translation-picker callbacks
 
 The `tr_*` handler consumes Bot-local recent-file/recent-audio/pending-text
