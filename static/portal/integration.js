@@ -294,6 +294,10 @@
   let subtitleStudioSessionEpoch = 0;
   let subtitleStudioListHydrationEpoch = 0;
   let subtitleStudioDetailHydrationEpoch = 0;
+  // Quality is a separate, read-only structural projection. Keep its own
+  // sequence so a delayed quality response cannot refill a newer project,
+  // route or signed account after its detail record has been replaced.
+  let subtitleProjectQualityHydrationEpoch = 0;
   // The Language Source picker is a separately paged, metadata-only read.
   // Keep its epoch independent so a late "load more" response cannot replace
   // a newer signed Subtitle Studio projection.
@@ -11514,6 +11518,127 @@
       && boundary.translation_called === false
     );
   }
+
+  const SUBTITLE_QUALITY_TRACKS = new Set(["source", "translation", "both"]);
+  const SUBTITLE_QUALITY_PROFILES = new Set(["generic", "vi", "en", "zh"]);
+  const SUBTITLE_QUALITY_REVIEW_STATUSES = new Set(["clear", "needs_review", "not_assessed"]);
+  const SUBTITLE_QUALITY_REVIEW_REASONS = new Set(["no_active_cues", "translation_incomplete"]);
+  const SUBTITLE_QUALITY_BOUNDARY_KEYS = new Set([
+    "execution", "source_bytes_read", "provider_called", "bot_called", "bridge_called",
+    "asr_called", "tts_called", "dubbing_called", "translation_called", "job_created",
+    "output_created", "download_created", "media_uploads", "preview_available", "payment_started",
+    "payment_processed", "wallet_mutated", "output_delivery"
+  ]);
+  const SUBTITLE_QUALITY_PAYLOAD_KEYS = new Set([
+    "project_id", "project_revision", "track", "profile", "profile_unit", "checked_cue_count",
+    "translation_requested", "tracks", "review_status", "review_reasons", "notice"
+  ]);
+  const SUBTITLE_QUALITY_METRIC_KEYS = new Set([
+    "applicable", "present_cue_count", "empty_cue_count", "unit_count", "max_units_per_cue",
+    "present_duration_ms", "units_per_minute", "coverage_percent"
+  ]);
+  const SUBTITLE_QUALITY_MAX_CUES = 500;
+  const SUBTITLE_QUALITY_MAX_DURATION_MS = 50_000_000_000;
+  const SUBTITLE_QUALITY_MAX_UNITS_PER_MINUTE = 1_000_000_000;
+
+  function subtitleStudioQualityMetricIsSafe(value, checkedCueCount) {
+    const metric = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!metric || Object.keys(metric).length !== SUBTITLE_QUALITY_METRIC_KEYS.size || !Object.keys(metric).every((key) => SUBTITLE_QUALITY_METRIC_KEYS.has(key))) return false;
+    const present = Number(metric.present_cue_count);
+    const empty = Number(metric.empty_cue_count);
+    const units = Number(metric.unit_count);
+    const maximum = Number(metric.max_units_per_cue);
+    const duration = Number(metric.present_duration_ms);
+    const rate = Number(metric.units_per_minute);
+    const coverage = metric.coverage_percent;
+    const countShapeIsSafe = metric.applicable === true
+      ? present + empty === checkedCueCount
+      : present === 0 && empty === 0 && units === 0 && maximum === 0 && duration === 0 && rate === 0 && coverage === null;
+    return Boolean(
+      typeof metric.applicable === "boolean"
+      && Number.isInteger(present) && present >= 0 && present <= checkedCueCount
+      && Number.isInteger(empty) && empty >= 0 && empty <= checkedCueCount && countShapeIsSafe
+      && Number.isInteger(units) && units >= 0 && units <= 6_000_000
+      && Number.isInteger(maximum) && maximum >= 0 && maximum <= units
+      && Number.isInteger(duration) && duration >= 0 && duration <= SUBTITLE_QUALITY_MAX_DURATION_MS
+      && Number.isFinite(rate) && rate >= 0 && rate <= SUBTITLE_QUALITY_MAX_UNITS_PER_MINUTE
+      && (coverage === null || (Number.isFinite(Number(coverage)) && Number(coverage) >= 0 && Number(coverage) <= 100))
+    );
+  }
+
+  function subtitleStudioQualityIsSafe(value, expectedProjectId) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const expectedId = String(expectedProjectId || "").trim();
+    if (!data || !validSubtitleStudioProjectId(expectedId) || !subtitleStudioBoundaryIsSafe(data)) return false;
+    const keys = Object.keys(data);
+    if (!keys.every((key) => SUBTITLE_QUALITY_BOUNDARY_KEYS.has(key) || SUBTITLE_QUALITY_PAYLOAD_KEYS.has(key))) return false;
+    const projectId = String(data.project_id || "").trim();
+    const track = String(data.track || "");
+    const profile = String(data.profile || "");
+    const checkedCueCount = Number(data.checked_cue_count);
+    const reasons = Array.isArray(data.review_reasons) ? data.review_reasons : null;
+    const tracks = data.tracks && typeof data.tracks === "object" && !Array.isArray(data.tracks) ? data.tracks : null;
+    const expectedTrackKeys = track === "both" ? ["source", "translation"] : [track];
+    const expectedUnit = profile === "vi" || profile === "en" ? "whitespace_tokens" : "non_whitespace_characters";
+    if (!validSubtitleStudioProjectId(projectId) || projectId !== expectedId || !validSubtitleStudioRevision(data.project_revision)
+      || !SUBTITLE_QUALITY_TRACKS.has(track) || !SUBTITLE_QUALITY_PROFILES.has(profile)
+      || String(data.profile_unit || "") !== expectedUnit || !Number.isInteger(checkedCueCount) || checkedCueCount < 0 || checkedCueCount > SUBTITLE_QUALITY_MAX_CUES
+      || typeof data.translation_requested !== "boolean" || !tracks || Object.keys(tracks).length !== expectedTrackKeys.length
+      || !expectedTrackKeys.every((key) => Object.prototype.hasOwnProperty.call(tracks, key) && subtitleStudioQualityMetricIsSafe(tracks[key], checkedCueCount))
+      || !SUBTITLE_QUALITY_REVIEW_STATUSES.has(String(data.review_status || "")) || !reasons || reasons.length > SUBTITLE_QUALITY_REVIEW_REASONS.size
+      || !reasons.every((reason) => SUBTITLE_QUALITY_REVIEW_REASONS.has(String(reason))) || new Set(reasons).size !== reasons.length
+      || typeof data.notice !== "string" || data.notice.length < 1 || data.notice.length > 600 || /[\u0000-\u001f\u007f]/.test(data.notice)
+      || data.media_uploads !== false || data.preview_available !== false || data.output_delivery !== "guarded") return false;
+    const translationMetric = tracks.translation;
+    if (Object.prototype.hasOwnProperty.call(tracks, "source") && tracks.source.applicable !== true) return false;
+    if (translationMetric && translationMetric.applicable !== data.translation_requested) return false;
+    if (translationMetric && translationMetric.applicable === false && translationMetric.coverage_percent !== null) return false;
+    if (translationMetric && translationMetric.applicable === true && !Number.isFinite(Number(translationMetric.coverage_percent))) return false;
+    const status = String(data.review_status || "");
+    if (status === "clear" && reasons.length) return false;
+    if (status === "needs_review" && !reasons.length) return false;
+    return !(status === "not_assessed" && (track !== "translation" || data.translation_requested !== false));
+  }
+
+  function subtitleStudioQualityProjection(value, expectedProjectId, expectedProjectRevision) {
+    if (!subtitleStudioQualityIsSafe(value, expectedProjectId)) return null;
+    const data = value;
+    const expectedRevision = Number(expectedProjectRevision);
+    // Detail and quality are separate reads. Never combine a report created
+    // after another tab changed the project with the currently rendered cue
+    // snapshot; the normal refresh path will request a matching pair.
+    if (!validSubtitleStudioRevision(expectedRevision) || Number(data.project_revision) !== expectedRevision) return null;
+    const copyMetric = (metric) => ({
+      applicable: metric.applicable === true,
+      present_cue_count: Number(metric.present_cue_count),
+      empty_cue_count: Number(metric.empty_cue_count),
+      unit_count: Number(metric.unit_count),
+      max_units_per_cue: Number(metric.max_units_per_cue),
+      present_duration_ms: Number(metric.present_duration_ms),
+      units_per_minute: Number(metric.units_per_minute),
+      coverage_percent: metric.coverage_percent === null ? null : Number(metric.coverage_percent)
+    });
+    const tracks = {};
+    if (data.tracks.source) tracks.source = copyMetric(data.tracks.source);
+    if (data.tracks.translation) tracks.translation = copyMetric(data.tracks.translation);
+    return {
+      project_id: String(data.project_id),
+      project_revision: Number(data.project_revision),
+      track: String(data.track),
+      profile: String(data.profile),
+      profile_unit: String(data.profile_unit),
+      checked_cue_count: Number(data.checked_cue_count),
+      translation_requested: data.translation_requested === true,
+      tracks,
+      review_status: String(data.review_status),
+      review_reasons: data.review_reasons.map((reason) => String(reason))
+    };
+  }
+
+  function subtitleProjectQualityRequestIsCurrent(qualityEpoch, detailEpoch, sessionEpoch, expectedPath) {
+    return qualityEpoch === subtitleProjectQualityHydrationEpoch
+      && subtitleStudioRequestIsCurrent(detailEpoch, subtitleStudioDetailHydrationEpoch, sessionEpoch, expectedPath);
+  }
   function subtitleLanguageSourceAssetIsSafe(value) {
     const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
     const id = String(item.id || "").trim();
@@ -13884,6 +14009,8 @@
       subtitleProjects: [],
       subtitleProjectDetail: {},
       subtitleProjectEstimate: {},
+      subtitleProjectQuality: {},
+      subtitleProjectQualityReadState: account && subtitleStudioEnabled ? "loading" : "guarded",
       subtitleStudioReferences: {},
       subtitleLanguageSources: {},
       subtitleStudioEvents: [],
@@ -14660,7 +14787,7 @@
       // Never fall back to legacy subtitle/translate/dubbing/ASR state.  This
       // surface owns only signed Web authoring metadata and fails closed.
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleProjectQuality: {}, subtitleProjectQualityReadState: "guarded", subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: { q: "", state: "active" }, subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         subtitleStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
@@ -18226,7 +18353,7 @@
       merge({
         subtitleStudioSummary: summary, subtitleProjects: projects, subtitleStudioEvents: events,
         subtitleStudioReferences: references, subtitleLanguageSources: languageSourceState,
-        subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioFilter: listing.filters, subtitleStudioListing: listing, subtitleStudioReadState: "ready",
+        subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleProjectQuality: {}, subtitleProjectQualityReadState: "guarded", subtitleStudioFilter: listing.filters, subtitleStudioListing: listing, subtitleStudioReadState: "ready",
         pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "ready", "/subtitle-studio/new": "ready" }
       });
       return { projects, events, listing };
@@ -18234,7 +18361,7 @@
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       const listing = { filters: { q: requested.q, state: requested.state }, pagination: { limit: SUBTITLE_STUDIO_LIST_LIMIT, offset: requested.offset, returned: 0, has_more: false, next_offset: null, previous_offset: requested.offset >= SUBTITLE_STUDIO_LIST_LIMIT ? requested.offset - SUBTITLE_STUDIO_LIST_LIMIT : null } };
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleProjectQuality: {}, subtitleProjectQualityReadState: "guarded", subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: listing.filters, subtitleStudioListing: listing, subtitleStudioReadState: "failed",
         pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "guarded", "/subtitle-studio/new": "guarded" }
       });
@@ -18266,11 +18393,30 @@
     return state;
   }
 
+  function subtitleProjectQualityPath(projectId) {
+    const endpoint = "/subtitle-studio/projects/" + encodeURIComponent(String(projectId)) + "/quality";
+    return `${endpoint}?track=both&profile=generic`;
+  }
+
+  async function hydrateSubtitleProjectQuality(projectId, detailEpoch, sessionEpoch, expectedPath, expectedProjectRevision) {
+    const qualityEpoch = ++subtitleProjectQualityHydrationEpoch;
+    try {
+      const result = await api(subtitleProjectQualityPath(projectId), { cache: "no-store" });
+      if (!subtitleProjectQualityRequestIsCurrent(qualityEpoch, detailEpoch, sessionEpoch, expectedPath)) return { quality: {}, readState: "guarded", stale: true };
+      const quality = subtitleStudioQualityProjection(result.data, projectId, expectedProjectRevision);
+      return quality ? { quality, readState: "ready", stale: false } : { quality: {}, readState: "guarded", stale: false };
+    } catch (_) {
+      if (!subtitleProjectQualityRequestIsCurrent(qualityEpoch, detailEpoch, sessionEpoch, expectedPath)) return { quality: {}, readState: "guarded", stale: true };
+      return { quality: {}, readState: "guarded", stale: false };
+    }
+  }
+
   async function hydrateSubtitleProject(projectId) {
     if (!validSubtitleStudioProjectId(projectId)) throw new Error("Mã transcript project không hợp lệ.");
     const route = "/subtitle-studio/" + encodeURIComponent(String(projectId));
     const requestEpoch = ++subtitleStudioDetailHydrationEpoch;
     const sessionEpoch = subtitleStudioSessionEpoch;
+    merge({ subtitleProjectQuality: {}, subtitleProjectQualityReadState: "loading" });
     try {
       const [detailResult, referencesResult] = await Promise.all([
         api("/subtitle-studio/projects/" + encodeURIComponent(String(projectId))),
@@ -18285,11 +18431,17 @@
       }
       const archived = String(project.state || "") === "archived";
       let estimate = {};
+      let quality = {};
+      let qualityReadState = archived ? "archived" : "loading";
       if (!archived) {
         const estimateResult = await api("/subtitle-studio/projects/" + encodeURIComponent(String(projectId)) + "/estimate");
         if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioDetailHydrationEpoch, sessionEpoch, route)) return null;
         estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
         if (!subtitleStudioBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận timeline estimate an toàn.");
+        const qualityResult = await hydrateSubtitleProjectQuality(projectId, requestEpoch, sessionEpoch, route, project.revision);
+        if (qualityResult.stale) return null;
+        quality = qualityResult.quality;
+        qualityReadState = qualityResult.readState;
       }
       const cues = Array.isArray(data.cues)
         ? data.cues.filter((item) => item && validSubtitleStudioCueId(item.id) && String(item.project_id || "") === String(projectId) && validSubtitleStudioRevision(item.revision)).slice(0, SUBTITLE_STUDIO_CUE_LIMIT)
@@ -18302,8 +18454,10 @@
         : [];
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        subtitleProjectDetail: { project, cues, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate },
+        subtitleProjectDetail: { project, cues, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate, quality },
         subtitleProjectEstimate: estimate,
+        subtitleProjectQuality: quality,
+        subtitleProjectQualityReadState: qualityReadState,
         subtitleStudioReferences: references,
         subtitleStudioReadState: "ready", pageStates: { ...(base().pageStates || {}), [route]: archived ? "archived" : "ready" }
       });
@@ -18311,7 +18465,7 @@
     } catch (_) {
       if (!subtitleStudioRequestIsCurrent(requestEpoch, subtitleStudioDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleProjectQuality: {}, subtitleProjectQualityReadState: "guarded", subtitleStudioReferences: {}, subtitleLanguageSources: {}, subtitleStudioEvents: [],
         subtitleStudioFilter: { q: "", state: "active" }, subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: SUBTITLE_STUDIO_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         subtitleStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });

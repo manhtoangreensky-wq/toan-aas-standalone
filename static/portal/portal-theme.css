@@ -7235,6 +7235,31 @@ body {
   color: var(--portal-ink);
 }
 
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-shadow);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality:is(.is-guarded, .is-archived) {
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality-summary span,
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality-track,
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality-metrics > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality :is(.portal-card-title, .portal-subtitle-quality-summary strong, .portal-subtitle-quality-track-heading strong, .portal-subtitle-quality-metrics dd, .portal-subtitle-quality-review > strong) {
+  color: var(--portal-ink);
+}
+
+.portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-quality :is(.portal-card-subtitle, .portal-subtitle-quality-summary span, .portal-subtitle-quality-track-heading span, .portal-subtitle-quality-metrics dt, .portal-subtitle-quality-reasons li, .portal-subtitle-quality-clear) {
+  color: var(--portal-muted);
+}
+
 .portal-page:is(.portal-subtitle-studio, .portal-subtitle-studio-detail) .portal-subtitle-cue-card {
   border-color: var(--portal-border);
   background: var(--portal-surface-light);

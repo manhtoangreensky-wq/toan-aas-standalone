@@ -17819,6 +17819,97 @@
     </article>`;
   }
 
+  function subtitleQualityText(key, fallback, params) {
+    return uiText(`subtitleQuality.${key}`, fallback, params);
+  }
+
+  function subtitleQualityMetricPresentationIsSafe(value, checkedCueCount) {
+    const metric = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const checked = Number(checkedCueCount);
+    if (!metric || !Number.isInteger(checked) || checked < 0 || checked > 500) return false;
+    const present = Number(metric.present_cue_count);
+    const empty = Number(metric.empty_cue_count);
+    const units = Number(metric.unit_count);
+    const maximum = Number(metric.max_units_per_cue);
+    const duration = Number(metric.present_duration_ms);
+    const rate = Number(metric.units_per_minute);
+    const countShapeIsSafe = metric.applicable === true
+      ? present + empty === checked
+      : present === 0 && empty === 0 && units === 0 && maximum === 0 && duration === 0 && rate === 0 && metric.coverage_percent === null;
+    return Boolean(
+      typeof metric.applicable === "boolean"
+      && Number.isInteger(present) && present >= 0 && present <= checked
+      && Number.isInteger(empty) && empty >= 0 && empty <= checked && countShapeIsSafe
+      && Number.isInteger(units) && units >= 0 && units <= 6_000_000
+      && Number.isInteger(maximum) && maximum >= 0 && maximum <= units
+      && Number.isInteger(duration) && duration >= 0 && duration <= 50_000_000_000
+      && Number.isFinite(rate) && rate >= 0 && rate <= 1_000_000_000
+      && (metric.coverage_percent === null || (Number.isFinite(Number(metric.coverage_percent)) && Number(metric.coverage_percent) >= 0 && Number(metric.coverage_percent) <= 100))
+    );
+  }
+
+  function subtitleQualityPresentationIsSafe(value, projectId) {
+    const quality = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const tracks = quality && quality.tracks && typeof quality.tracks === "object" && !Array.isArray(quality.tracks) ? quality.tracks : null;
+    const checked = Number(quality && quality.checked_cue_count);
+    const expectedTracks = quality && quality.track === "both" ? ["source", "translation"] : quality && [quality.track];
+    return Boolean(
+      quality && String(quality.project_id || "") === String(projectId || "")
+      && Number.isInteger(Number(quality.project_revision)) && Number(quality.project_revision) >= 1
+      && ["source", "translation", "both"].includes(String(quality.track || ""))
+      && ["generic", "vi", "en", "zh"].includes(String(quality.profile || ""))
+      && ["non_whitespace_characters", "whitespace_tokens"].includes(String(quality.profile_unit || ""))
+      && Number.isInteger(checked) && checked >= 0 && checked <= 500
+      && typeof quality.translation_requested === "boolean"
+      && ["clear", "needs_review", "not_assessed"].includes(String(quality.review_status || ""))
+      && Array.isArray(quality.review_reasons) && quality.review_reasons.every((reason) => ["no_active_cues", "translation_incomplete"].includes(String(reason)))
+      && tracks && Array.isArray(expectedTracks) && Object.keys(tracks).length === expectedTracks.length
+      && expectedTracks.every((key) => subtitleQualityMetricPresentationIsSafe(tracks[key], checked))
+    );
+  }
+
+  function subtitleQualityNumber(value, fractionDigits) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return "—";
+    return fractionDigits ? numeric.toFixed(fractionDigits) : String(Math.trunc(numeric));
+  }
+
+  function renderSubtitleQuality(project, qualityValue, readStateValue) {
+    const readState = ["loading", "ready", "guarded", "archived"].includes(String(readStateValue || "")) ? String(readStateValue) : "guarded";
+    if (readState === "archived") {
+      return `<section class="portal-card portal-card-pad portal-subtitle-quality is-archived"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(subtitleQualityText("kicker", "Rà soát cấu trúc"))}</span><h2 class="portal-card-title">${safeText(subtitleQualityText("archivedTitle", "Báo cáo đã khóa"))}</h2><p class="portal-card-subtitle">${safeText(subtitleQualityText("archivedBody", "Project đang archive nên báo cáo cấu trúc không được tính lại. Khôi phục về Draft để kiểm tra phiên bản cue hiện tại."))}</p></div>${badge("archived")}</div></section>`;
+    }
+    if (readState === "loading") {
+      return `<section class="portal-card portal-card-pad portal-subtitle-quality"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(subtitleQualityText("kicker", "Rà soát cấu trúc"))}</span><h2 class="portal-card-title">${safeText(subtitleQualityText("loadingTitle", "Đang tổng hợp chỉ số"))}</h2><p class="portal-card-subtitle">${safeText(subtitleQualityText("loadingBody", "Đang kiểm tra cấu trúc cue từ project hiện tại. Panel này không thay đổi project."))}</p></div>${badge("read_only")}</div></section>`;
+    }
+    const quality = subtitleQualityPresentationIsSafe(qualityValue, project && project.id) ? qualityValue : null;
+    if (!quality) {
+      return `<section class="portal-card portal-card-pad portal-subtitle-quality is-guarded"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(subtitleQualityText("kicker", "Rà soát cấu trúc"))}</span><h2 class="portal-card-title">${safeText(subtitleQualityText("guardedTitle", "Chỉ số chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(subtitleQualityText("guardedBody", "Portal giữ panel ở trạng thái protected khi báo cáo chưa đúng contract. Hãy làm mới project để yêu cầu lại dữ liệu owner-scoped."))}</p></div>${badge("guarded")}</div></section>`;
+    }
+    const unitLabel = quality.profile_unit === "whitespace_tokens"
+      ? subtitleQualityText("unit.tokens", "từ")
+      : subtitleQualityText("unit.characters", "ký tự");
+    const tracks = ["source", "translation"].filter((key) => Object.prototype.hasOwnProperty.call(quality.tracks, key));
+    const trackMarkup = tracks.map((key) => {
+      const metric = quality.tracks[key];
+      const title = key === "source" ? subtitleQualityText("track.source", "Caption nguồn") : subtitleQualityText("track.translation", "Bản dịch") ;
+      const coverage = metric.coverage_percent === null ? subtitleQualityText("notRequested", "Chưa yêu cầu") : `${subtitleQualityNumber(metric.coverage_percent, 1)}%`;
+      const applicable = metric.applicable ? "" : " is-unavailable";
+      return `<article class="portal-subtitle-quality-track${applicable}"><div class="portal-subtitle-quality-track-heading"><strong>${safeText(title)}</strong><span>${safeText(metric.applicable ? subtitleQualityText("assessed", "Đã tổng hợp") : subtitleQualityText("notAssessed", "Chưa đánh giá"))}</span></div><dl class="portal-subtitle-quality-metrics"><div><dt>${safeText(subtitleQualityText("metric.present", "Cue có nội dung"))}</dt><dd>${safeText(subtitleQualityNumber(metric.present_cue_count))}</dd></div><div><dt>${safeText(subtitleQualityText("metric.empty", "Cue trống"))}</dt><dd>${safeText(subtitleQualityNumber(metric.empty_cue_count))}</dd></div><div><dt>${safeText(subtitleQualityText("metric.units", "Đơn vị văn bản"))}</dt><dd>${safeText(`${subtitleQualityNumber(metric.unit_count)} ${unitLabel}`)}</dd></div><div><dt>${safeText(subtitleQualityText("metric.rate", "Đơn vị / phút"))}</dt><dd>${safeText(`${subtitleQualityNumber(metric.units_per_minute, 1)} ${unitLabel}`)}</dd></div><div><dt>${safeText(subtitleQualityText("metric.max", "Cue lớn nhất"))}</dt><dd>${safeText(`${subtitleQualityNumber(metric.max_units_per_cue)} ${unitLabel}`)}</dd></div>${key === "translation" ? `<div><dt>${safeText(subtitleQualityText("metric.coverage", "Độ phủ"))}</dt><dd>${safeText(coverage)}</dd></div>` : ""}</dl></article>`;
+    }).join("");
+    const notAssessed = quality.review_status === "not_assessed";
+    const reviewTitle = notAssessed
+      ? subtitleQualityText("notAssessedTitle", "Chưa áp dụng")
+      : subtitleQualityText("reviewTitle", "Điểm cần tự xem lại");
+    const reasonMarkup = notAssessed
+      ? `<p class="portal-subtitle-quality-clear">${safeText(subtitleQualityText("notAssessedBody", "Project chưa yêu cầu ngôn ngữ đích nên chưa có báo cáo cấu trúc cho bản dịch."))}</p>`
+      : quality.review_reasons.length
+        ? `<ul class="portal-subtitle-quality-reasons">${quality.review_reasons.map((reason) => `<li>${safeText(subtitleQualityText(`reason.${reason}`, reason))}</li>`).join("")}</ul>`
+        : `<p class="portal-subtitle-quality-clear">${safeText(subtitleQualityText("clearBody", "Không có lý do cấu trúc cần xem lại trong báo cáo hiện tại."))}</p>`;
+    const statusKey = `status.${quality.review_status}`;
+    return `<section class="portal-card portal-card-pad portal-subtitle-quality"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(subtitleQualityText("kicker", "Rà soát cấu trúc"))}</span><h2 class="portal-card-title">${safeText(subtitleQualityText("title", "Khả năng đọc subtitle"))}</h2><p class="portal-card-subtitle">${safeText(subtitleQualityText("body", "Số liệu cấu trúc từ cue đang active để bạn tự review. Không đánh giá ý nghĩa nội dung hoặc tạo output."))}</p></div>${badge(quality.review_status === "clear" ? "ready" : quality.review_status === "needs_review" ? "review" : "read_only")}</div><div class="portal-subtitle-quality-summary"><span><strong>${safeText(subtitleQualityNumber(quality.checked_cue_count))}</strong>${safeText(subtitleQualityText("checkedCues", "cue đã kiểm tra"))}</span><span><strong>${safeText(subtitleQualityText(statusKey, quality.review_status))}</strong>${safeText(subtitleQualityText("statusLabel", "Trạng thái review"))}</span></div><div class="portal-subtitle-quality-grid">${trackMarkup}</div><div class="portal-subtitle-quality-review"><strong>${safeText(reviewTitle)}</strong>${reasonMarkup}</div></section>`;
+  }
+
   function renderSubtitleCueCard(cue, project, context, route, order, total) {
     const cueId = String(cue.id || "");
     const active = String(cue.state || "active") === "active";
@@ -17872,11 +17963,13 @@
     }).join("") : renderEmpty("Chưa có cue", "Thêm cue thủ công để bắt đầu biên tập timing và caption. Workspace không tạo transcript thay bạn.", ICONS.subtitle);
     const preview = subtitleStudioPreview(activeCues, project.caption_format || project.format);
     const estimate = detail.estimate && typeof detail.estimate === "object" ? detail.estimate : (context.subtitleProjectEstimate && typeof context.subtitleProjectEstimate === "object" ? context.subtitleProjectEstimate : {});
+    const quality = detail.quality && typeof detail.quality === "object" ? detail.quality : (context.subtitleProjectQuality && typeof context.subtitleProjectQuality === "object" ? context.subtitleProjectQuality : {});
     const estimateMarkup = state === "archived" ? `<section class="portal-card portal-card-pad portal-subtitle-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Timeline estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Project đang archive nên cue và estimate không được tính lại. Khôi phục về Draft khi muốn tiếp tục review.</p></div>${badge("archived")}</div></section>` : `<section class="portal-card portal-card-pad portal-subtitle-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Timeline estimate</span><h2 class="portal-card-title">Kiểm tra timing cục bộ</h2><p class="portal-card-subtitle">${safeText(String(estimate.message || "Tổng hợp timing từ cue hiện tại; không đọc media, không chạy ASR hoặc render."))}</p></div>${badge("read_only")}</div><div class="portal-subtitle-estimate-grid"><span><strong>${safeText(String(estimate.cue_count ?? activeCues.length))}</strong> cues active</span><span><strong>${safeText(String(estimate.duration_ms ?? "—"))}</strong> ms metadata</span><span><strong>${safeText(String(estimate.overlap_count ?? 0))}</strong> overlaps cần review</span></div></section>`;
+    const qualityMarkup = renderSubtitleQuality(project, quality, state === "archived" ? "archived" : context.subtitleProjectQualityReadState);
     return `<article class="portal-page portal-subtitle-studio-detail">${renderHero(page, context)}
       <section class="portal-subtitle-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(String(project.caption_format || project.format || "srt").toUpperCase())} · ${safeText(String(project.source_language || "—"))} → ${safeText(String(project.target_language || "—"))}</span><h2>${safeText(String(project.title || "Transcript project"))}</h2><p>${safeText(String(project.context || project.context_excerpt || "Chưa có review context hiển thị."))}</p>${renderSubtitleStudioTags(project.tags)}</div><dl><div><dt>Intent</dt><dd>${safeText((SUBTITLE_STUDIO_INTENTS.find(([key]) => key === String(project.intent || "")) || ["", "Subtitle biên tập"])[1])}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(project.revision || 1))}</dd></div><div><dt>Cues</dt><dd>${safeText(String(activeCues.length))}</dd></div></dl></section>
       ${renderSubtitleStudioLanguageSource(project)}
-      <div class="portal-subtitle-studio-detail-grid"><section class="portal-card portal-card-pad portal-subtitle-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Project editor</span><h2 class="portal-card-title">Ngôn ngữ & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>${subtitleStudioStateBadge(state)}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-update" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioProjectFields(context), canUpdate, context, subtitleStudioProjectValues(project))}<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Khi đang self-review, approved hoặc archived, hãy dùng “Trả về Draft” sau khi server xác nhận.</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision project</button></div></div></form></section>${estimateMarkup}</div>
+        <div class="portal-subtitle-studio-detail-grid"><section class="portal-card portal-card-pad portal-subtitle-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Project editor</span><h2 class="portal-card-title">Ngôn ngữ & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>${subtitleStudioStateBadge(state)}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-update" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioProjectFields(context), canUpdate, context, subtitleStudioProjectValues(project))}<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Khi đang self-review, approved hoặc archived, hãy dùng “Trả về Draft” sau khi server xác nhận.</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision project</button></div></div></form></section><div class="portal-subtitle-readonly-stack">${estimateMarkup}${qualityMarkup}</div></div>
       <section class="portal-card portal-card-pad portal-subtitle-cue-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual cue authoring</span><h2 class="portal-card-title">Thêm cue thủ công</h2><p class="portal-card-subtitle">Cue có timing, caption nguồn, bản nháp ngôn ngữ và history riêng. Server kiểm tra thứ tự/revision trước khi lưu.</p></div>${badge(canCueCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-cue-create" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioCueFields(), canCueCreate, context, { start_ms: "0", end_ms: "1800" })}<div class="portal-form-footer"><span class="portal-form-note">Không upload hoặc tạo ASR/dịch/TTS/dubbing. URL trong caption hợp lệ sẽ chỉ là text để review.</span><button class="portal-button portal-button--primary" type="submit"${canCueCreate ? "" : " disabled"}>Thêm cue</button></div></form></section>
       <section class="portal-card portal-card-pad portal-subtitle-text-import"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only import</span><h2 class="portal-card-title">Dán & parse SRT/VTT</h2><p class="portal-card-subtitle">Chỉ dán văn bản tác giả để server parse thành cue có revision/owner check. Không chọn file, không upload, không gọi ASR hoặc dịch máy.</p></div>${badge(canCueImport ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-cue-import" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioImportFields(), canCueImport, context, { format: String(project.caption_format || project.format || "srt") })}<div class="portal-form-footer"><span class="portal-form-note">Trong Draft, thao tác này sẽ archive toàn bộ cue active rồi thay bằng cue đã parse; history cũ vẫn được giữ. URL trong caption chỉ là text.</span><button class="portal-button portal-button--primary" type="submit" data-portal-confirm="Xác nhận: archive toàn bộ cue active và thay bằng cue parse từ văn bản tác giả này? History cũ vẫn được giữ; không đọc file hoặc tạo output media."${canCueImport ? "" : " disabled"}>Parse & thay cue active</button></div></form></section>
       <div class="portal-subtitle-preview-grid"><section class="portal-card portal-card-pad portal-subtitle-text-preview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(project.caption_format || project.format || "srt").toUpperCase())} text preview</span><h2 class="portal-card-title">Preview để rà soát định dạng</h2><p class="portal-card-subtitle">Đây là văn bản dựng từ cue active để review. Bạn có thể yêu cầu server trả văn bản tương đương rồi sao chép; không có file, output provider hoặc delivery.</p></div>${badge("read_only")}</div><pre class="portal-subtitle-preview-text">${safeText(preview)}</pre><div class="portal-form-footer"><span class="portal-form-note">Sao chép text không tạo download, tệp hoặc trạng thái completed.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-text-export" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-export-format="srt"${canTextExport ? "" : " disabled"}>Sao chép SRT text</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-text-export" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-export-format="vtt"${canTextExport ? "" : " disabled"}>Sao chép VTT text</button></div></div></section>${renderSubtitleStudioBoundary()}</div>

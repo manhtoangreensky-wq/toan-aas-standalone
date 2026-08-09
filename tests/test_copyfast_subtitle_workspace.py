@@ -268,6 +268,211 @@ def test_subtitle_review_approved_archive_freezes_and_estimate_never_completes(t
         assert export.status_code == 200 and export.json()["error_code"] == "WEB_SUBTITLE_PROJECT_ARCHIVED"
 
 
+def test_subtitle_quality_is_owner_scoped_read_only_deterministic_and_redacted(tmp_path, monkeypatch):
+    db_path = tmp_path / "subtitle-studio-test.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "subtitle-quality-owner@example.com")
+        project = create_project(client, csrf, "subtitle-quality-project-0001")
+        first = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload(
+                "subtitle-quality-cue-0001",
+                project["revision"],
+                start=0,
+                end=1_000,
+                source_text="Một câu rất dài " * 12,
+                translated_text="",
+            ),
+        )
+        assert first.status_code == 200 and first.json()["ok"] is True
+        second = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload(
+                "subtitle-quality-cue-0002",
+                first.json()["data"]["project"]["revision"],
+                start=1_000,
+                end=2_000,
+                source_text="Ngắn",
+                translated_text="Short",
+            ),
+        )
+        assert second.status_code == 200 and second.json()["ok"] is True
+        with sqlite3.connect(db_path) as conn:
+            before_events = conn.execute(
+                "SELECT COUNT(*) FROM web_subtitle_workspace_events WHERE subtitle_project_id=?",
+                (project["id"],),
+            ).fetchone()[0]
+        path = f"/api/v1/subtitle-studio/projects/{project['id']}/quality?track=both&profile=en"
+        first_report = client.get(path)
+        replay_report = client.get(path)
+        assert first_report.status_code == 200
+        assert first_report.json() == replay_report.json()
+        payload = first_report.json()
+        assert payload["ok"] is True and payload["status"] == "read_only"
+        data = payload["data"]
+        assert data["project_id"] == project["id"]
+        assert data["track"] == "both" and data["profile"] == "en"
+        assert data["review_status"] == "needs_review"
+        assert data["review_reasons"] == ["translation_incomplete"]
+        assert data["tracks"]["source"]["present_cue_count"] == 2
+        assert data["tracks"]["translation"]["present_cue_count"] == 1
+        assert data["tracks"]["translation"]["coverage_percent"] == 50.0
+        assert "Một câu rất dài" not in first_report.text
+        assert "source_text" not in data and "translated_text" not in data
+        assert "warnings" not in data and "items" not in data
+        assert_language_source_boundary(data)
+        with sqlite3.connect(db_path) as conn:
+            after_events = conn.execute(
+                "SELECT COUNT(*) FROM web_subtitle_workspace_events WHERE subtitle_project_id=?",
+                (project["id"],),
+            ).fetchone()[0]
+        assert after_events == before_events
+
+        with make_client(tmp_path, monkeypatch) as other:
+            login(other, "subtitle-quality-other@example.com")
+            hidden = other.get(path)
+            assert hidden.status_code == 200 and hidden.json()["ok"] is False
+            assert hidden.json()["error_code"] == "WEB_SUBTITLE_PROJECT_NOT_FOUND"
+
+
+def test_subtitle_quality_fails_closed_for_archived_or_malformed_rows(tmp_path, monkeypatch):
+    db_path = tmp_path / "subtitle-studio-test.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "subtitle-quality-guard@example.com")
+        project = create_project(client, csrf, "subtitle-quality-guard-project-0001")
+        cue = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload("subtitle-quality-guard-cue-0001", project["revision"]),
+        )
+        assert cue.status_code == 200 and cue.json()["ok"] is True
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_subtitle_cues SET end_ms=start_ms WHERE id=?",
+                (cue.json()["data"]["cue"]["id"],),
+            )
+        malformed = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/quality")
+        assert malformed.status_code == 200 and malformed.json()["ok"] is False
+        assert malformed.json()["error_code"] == "WEB_SUBTITLE_QUALITY_DATA_GUARDED"
+        assert "source_text" not in malformed.text
+
+        archived = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/lifecycle",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "state": "archived",
+                "expected_revision": cue.json()["data"]["project"]["revision"],
+                "idempotency_key": "subtitle-quality-guard-archive-0001",
+            },
+        )
+        assert archived.status_code == 200 and archived.json()["ok"] is True
+        frozen = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/quality")
+        assert frozen.status_code == 200 and frozen.json()["ok"] is False
+        assert frozen.json()["error_code"] == "WEB_SUBTITLE_PROJECT_ARCHIVED"
+
+
+def test_subtitle_quality_rejects_empty_query_values_and_preserves_a_redacted_read_only_shape(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        unknown = client.get(f"/api/v1/subtitle-studio/projects/{uuid.uuid4()}/quality")
+        assert unknown.status_code == 401
+        csrf = login(client, "subtitle-quality-query@example.com")
+        project = create_project(client, csrf, "subtitle-quality-query-project-0001")
+        cue = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload("subtitle-quality-query-cue-0001", project["revision"], source_text="Caption private only", translated_text="Translation private only", notes="Private note only"),
+        )
+        assert cue.status_code == 200 and cue.json()["ok"] is True
+        base_path = f"/api/v1/subtitle-studio/projects/{project['id']}/quality"
+        for query in ("?track=", "?profile=", "?track=unknown", "?profile=unknown"):
+            response = client.get(base_path + query)
+            assert response.status_code == 422
+        source = client.get(base_path + "?track=source")
+        translation = client.get(base_path + "?track=translation")
+        assert source.status_code == 200 and set(source.json()["data"]["tracks"]) == {"source"}
+        assert translation.status_code == 200 and set(translation.json()["data"]["tracks"]) == {"translation"}
+        payload = source.json()["data"]
+        assert payload["media_uploads"] is False
+        assert payload["preview_available"] is False
+        assert payload["output_delivery"] == "guarded"
+        forbidden_keys = {"source_text", "translated_text", "notes", "cue_id", "ordinal", "source_excerpt", "translated_excerpt", "notes_excerpt"}
+
+        def assert_redacted(value):
+            if isinstance(value, dict):
+                assert not (forbidden_keys & set(value))
+                for item in value.values():
+                    assert_redacted(item)
+            elif isinstance(value, list):
+                for item in value:
+                    assert_redacted(item)
+
+        assert_redacted(payload)
+        assert "Caption private only" not in source.text
+        assert "Translation private only" not in source.text
+        assert "Private note only" not in source.text
+
+
+def test_subtitle_quality_fails_closed_for_overlapping_active_rows_and_does_not_write_subtitle_domain(tmp_path, monkeypatch):
+    db_path = tmp_path / "subtitle-studio-test.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "subtitle-quality-overlap@example.com")
+        project = create_project(client, csrf, "subtitle-quality-overlap-project-0001")
+        first = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload("subtitle-quality-overlap-cue-0001", project["revision"], start=0, end=1_000),
+        )
+        second = client.post(
+            f"/api/v1/subtitle-studio/projects/{project['id']}/cues",
+            headers={"X-CSRF-Token": csrf},
+            json=cue_payload("subtitle-quality-overlap-cue-0002", first.json()["data"]["project"]["revision"], start=1_000, end=2_000),
+        )
+        assert first.status_code == 200 and second.status_code == 200
+        with sqlite3.connect(db_path) as conn:
+            before = {
+                "project": conn.execute("SELECT revision, updated_at FROM web_subtitle_projects WHERE id=?", (project["id"],)).fetchall(),
+                "cues": conn.execute("SELECT id, revision, updated_at FROM web_subtitle_cues WHERE subtitle_project_id=? ORDER BY id", (project["id"],)).fetchall(),
+                "project_versions": conn.execute("SELECT revision FROM web_subtitle_project_versions WHERE subtitle_project_id=? ORDER BY revision", (project["id"],)).fetchall(),
+                "cue_versions": conn.execute("SELECT v.cue_id, v.revision FROM web_subtitle_cue_versions v JOIN web_subtitle_cues c ON c.id=v.cue_id WHERE c.subtitle_project_id=? ORDER BY v.cue_id, v.revision", (project["id"],)).fetchall(),
+                "events": conn.execute("SELECT id FROM web_subtitle_workspace_events WHERE subtitle_project_id=? ORDER BY id", (project["id"],)).fetchall(),
+                "idempotency": conn.execute("SELECT scope, key FROM web_idempotency WHERE scope LIKE 'web-subtitle-studio:%' ORDER BY scope, key").fetchall(),
+                "audit": conn.execute("SELECT id FROM web_audit_events ORDER BY id").fetchall(),
+            }
+        report = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/quality?track=both&profile=vi")
+        assert report.status_code == 200 and report.json()["ok"] is True
+        with sqlite3.connect(db_path) as conn:
+            after = {
+                "project": conn.execute("SELECT revision, updated_at FROM web_subtitle_projects WHERE id=?", (project["id"],)).fetchall(),
+                "cues": conn.execute("SELECT id, revision, updated_at FROM web_subtitle_cues WHERE subtitle_project_id=? ORDER BY id", (project["id"],)).fetchall(),
+                "project_versions": conn.execute("SELECT revision FROM web_subtitle_project_versions WHERE subtitle_project_id=? ORDER BY revision", (project["id"],)).fetchall(),
+                "cue_versions": conn.execute("SELECT v.cue_id, v.revision FROM web_subtitle_cue_versions v JOIN web_subtitle_cues c ON c.id=v.cue_id WHERE c.subtitle_project_id=? ORDER BY v.cue_id, v.revision", (project["id"],)).fetchall(),
+                "events": conn.execute("SELECT id FROM web_subtitle_workspace_events WHERE subtitle_project_id=? ORDER BY id", (project["id"],)).fetchall(),
+                "idempotency": conn.execute("SELECT scope, key FROM web_idempotency WHERE scope LIKE 'web-subtitle-studio:%' ORDER BY scope, key").fetchall(),
+                "audit": conn.execute("SELECT id FROM web_audit_events ORDER BY id").fetchall(),
+            }
+        assert after == before
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE web_subtitle_cues SET start_ms=500, end_ms=1_500 WHERE id=?", (second.json()["data"]["cue"]["id"],))
+        guarded = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/quality")
+        assert guarded.status_code == 200 and guarded.json()["ok"] is False
+        assert guarded.json()["error_code"] == "WEB_SUBTITLE_QUALITY_DATA_GUARDED"
+
+
+def test_subtitle_quality_marks_translation_not_assessed_without_track_reasons(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "subtitle-quality-not-requested@example.com")
+        project = create_project(client, csrf, "subtitle-quality-not-requested-project-0001", target_language="")
+        response = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/quality?track=translation")
+        assert response.status_code == 200 and response.json()["ok"] is True
+        data = response.json()["data"]
+        assert data["translation_requested"] is False
+        assert data["review_status"] == "not_assessed"
+        assert data["review_reasons"] == []
+        assert data["tracks"]["translation"]["applicable"] is False
+
+
 def test_subtitle_reorder_exact_active_set_survives_archives_and_restore(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = login(client, "subtitle-order@example.com")

@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import re
+import unicodedata
 import uuid
 from typing import Any, Callable
 
@@ -107,6 +108,15 @@ IDEMPOTENCY_RETENTION = timedelta(hours=24)
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1024
 ARCHIVED_ORDINAL_BASE = 1_000_000
 REORDER_TEMPORARY_ORDINAL_BASE = 2_000_000
+QUALITY_TRACKS = frozenset({"source", "translation", "both"})
+QUALITY_PROFILES = frozenset({"generic", "vi", "en", "zh"})
+QUALITY_PROFILE_UNITS = {
+    "generic": "non_whitespace_characters",
+    "vi": "whitespace_tokens",
+    "en": "whitespace_tokens",
+    "zh": "non_whitespace_characters",
+}
+QUALITY_REVIEW_REASONS = frozenset({"no_active_cues", "translation_incomplete"})
 
 
 def _require_enabled() -> None:
@@ -1238,6 +1248,170 @@ def _estimate(conn: Any, *, project: tuple[Any, ...], account_id: str) -> dict[s
                    "has_source_text": bool(str(row[4]).strip()), "has_translated_text": bool(str(row[5]).strip())} for row in rows],
         "notice": "Đây là kiểm tra cue do người dùng soạn; không chạy ASR, dịch, TTS, dubbing, media hoặc delivery.",
         **_boundary()}, status_name="read_only")
+
+
+def _quality_option(value: Any, *, allowed: frozenset[str], label: str, default: str) -> str:
+    # Omission accepts the documented default, while an explicitly supplied
+    # blank query is malformed and must not silently become a new request.
+    normalized = str(default if value is None else value).strip().lower()
+    if normalized not in allowed:
+        raise HTTPException(status_code=422, detail=f"{label} không hợp lệ")
+    return normalized
+
+
+def _quality_units(text: str, *, profile: str) -> int:
+    normalized = unicodedata.normalize("NFC", text).strip()
+    if profile in {"vi", "en"}:
+        return len(normalized.split())
+    return sum(1 for char in normalized if not char.isspace())
+
+
+def _quality_metric(rows: list[tuple[Any, ...]], *, text_index: int, profile: str, applicable: bool) -> dict[str, Any]:
+    if not applicable:
+        return {
+            "applicable": False,
+            "present_cue_count": 0,
+            "empty_cue_count": 0,
+            "unit_count": 0,
+            "max_units_per_cue": 0,
+            "present_duration_ms": 0,
+            "units_per_minute": 0.0,
+            "coverage_percent": None,
+        }
+    present = [row for row in rows if str(row[text_index]).strip()]
+    durations = [int(row[3]) - int(row[2]) for row in present]
+    units = [_quality_units(str(row[text_index]), profile=profile) for row in present]
+    duration = sum(durations)
+    unit_count = sum(units)
+    return {
+        "applicable": True,
+        "present_cue_count": len(present),
+        "empty_cue_count": len(rows) - len(present),
+        "unit_count": unit_count,
+        "max_units_per_cue": max(units, default=0),
+        # This duration intentionally covers only cues that contain text for
+        # the selected track. It is not a media duration or total timeline.
+        "present_duration_ms": duration,
+        "units_per_minute": round(unit_count * 60_000 / duration, 1) if duration else 0.0,
+        "coverage_percent": None,
+    }
+
+
+def _quality_rows_are_valid(rows: list[tuple[Any, ...]]) -> bool:
+    if len(rows) > MAX_CUES_PER_PROJECT:
+        return False
+    intervals: list[tuple[int, int, str]] = []
+    ordinals: set[int] = set()
+    for row in rows:
+        if len(row) < 6:
+            return False
+        try:
+            cue_id = uuid.UUID(str(row[0]))
+        except (TypeError, ValueError, AttributeError):
+            return False
+        if str(cue_id) != str(row[0]):
+            return False
+        if any(type(row[index]) is not int for index in (1, 2, 3)):
+            return False
+        if not 1 <= row[1] <= MAX_CUES_PER_PROJECT:
+            return False
+        if row[1] in ordinals:
+            return False
+        ordinals.add(row[1])
+        if not 0 <= row[2] < row[3] <= 86_400_000:
+            return False
+        if not isinstance(row[4], str) or not row[4].strip():
+            return False
+        if not isinstance(row[5], str):
+            return False
+        intervals.append((row[2], row[3], str(row[0])))
+    # Manual writes prevent overlap, but persisted rows can still become
+    # corrupt outside that path. The read-only report must fail closed rather
+    # than making an ambiguous timeline look trustworthy.
+    previous_end = -1
+    for start, end, _ in sorted(intervals, key=lambda item: (item[0], item[1], item[2])):
+        if start < previous_end:
+            return False
+        previous_end = max(previous_end, end)
+    return True
+
+
+def _quality_payload(rows: list[tuple[Any, ...]], *, project: tuple[Any, ...], track: str, profile: str) -> dict[str, Any]:
+    if not _quality_rows_are_valid(rows):
+        raise ValueError("persisted subtitle quality row is invalid")
+    translation_requested = bool(isinstance(project[4], str) and project[4].strip())
+    if track == "translation" and not translation_requested:
+        # A translation-only request is not applicable when the project has
+        # no target language. Do not mix source-timeline reasons into that
+        # explicit non-assessment state.
+        reasons: list[str] = []
+        status = "not_assessed"
+    else:
+        reasons = []
+        if not rows:
+            reasons.append("no_active_cues")
+        translated_count = sum(1 for row in rows if row[5].strip())
+        if translation_requested and translated_count < len(rows) and track in {"translation", "both"}:
+            reasons.append("translation_incomplete")
+        status = "needs_review" if reasons else "clear"
+    translated_count = sum(1 for row in rows if row[5].strip())
+    tracks: dict[str, Any] = {}
+    if track in {"source", "both"}:
+        tracks["source"] = _quality_metric(rows, text_index=4, profile=profile, applicable=True)
+    if track in {"translation", "both"}:
+        translation = _quality_metric(rows, text_index=5, profile=profile, applicable=translation_requested)
+        if translation_requested:
+            translation["coverage_percent"] = round(translated_count * 100 / len(rows), 1) if rows else 0.0
+        tracks["translation"] = translation
+    return {
+        "project_id": str(project[0]),
+        "project_revision": int(project[10]),
+        "track": track,
+        "profile": profile,
+        "profile_unit": QUALITY_PROFILE_UNITS[profile],
+        "checked_cue_count": len(rows),
+        "translation_requested": translation_requested,
+        "tracks": tracks,
+        "review_status": status,
+        "review_reasons": reasons,
+        "notice": "Chỉ tổng hợp số liệu cấu trúc do Web account soạn; không đánh giá ý nghĩa, không hiển thị nội dung cue và không gọi provider.",
+    }
+
+
+@router.get("/projects/{project_id}/quality")
+async def subtitle_quality(
+    project_id: str,
+    track: str = Query(default="both", max_length=16),
+    profile: str = Query(default="generic", max_length=16),
+    account: dict = Depends(require_account),
+):
+    _require_enabled()
+    resolved = _uuid(project_id, label="Subtitle project ID")
+    normalized_track = _quality_option(track, allowed=QUALITY_TRACKS, label="Track", default="both")
+    normalized_profile = _quality_option(profile, allowed=QUALITY_PROFILES, label="Profile", default="generic")
+    with read_transaction() as conn:
+        project = _project_row(conn, project_id=resolved, account_id=str(account["id"]))
+        if not project:
+            return _project_not_found()
+        if str(project[9]) == "archived":
+            return _guarded("Subtitle project đã archive; kiểm tra cấu trúc bị khóa cho đến khi khôi phục về Draft.", "WEB_SUBTITLE_PROJECT_ARCHIVED")
+        rows = conn.execute(
+            """SELECT id, ordinal, start_ms, end_ms, source_text, translated_text
+               FROM web_subtitle_cues
+               WHERE subtitle_project_id=? AND account_id=? AND state='active'
+               ORDER BY ordinal ASC, id ASC LIMIT ?""",
+            (resolved, str(account["id"]), MAX_CUES_PER_PROJECT + 1),
+        ).fetchall()
+        try:
+            payload = _quality_payload(
+                rows,
+                project=project,
+                track=normalized_track,
+                profile=normalized_profile,
+            )
+        except (TypeError, ValueError, KeyError, IndexError):
+            return _guarded("Dữ liệu subtitle hiện tại chưa đủ an toàn để tổng hợp.", "WEB_SUBTITLE_QUALITY_DATA_GUARDED")
+        return envelope(True, "Đã tổng hợp cấu trúc subtitle cục bộ.", data={**payload, **_boundary()}, status_name="read_only")
 
 
 def _validate_no_overlap(conn: Any, *, project_id: str, account_id: str, candidates: list[dict[str, Any]], exclude_cue_id: str | None = None, include_existing: bool = True) -> None:

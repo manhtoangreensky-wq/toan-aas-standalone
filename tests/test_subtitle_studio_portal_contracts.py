@@ -332,6 +332,49 @@ def test_subtitle_studio_uses_private_text_only_api_and_server_revision_controls
         assert action in actions
 
 
+def test_subtitle_quality_panel_uses_a_redacted_owner_scoped_read_only_contract() -> None:
+    assert '"/subtitle-studio/projects/" + encodeURIComponent(String(projectId)) + "/quality"' in INTEGRATION
+    assert "function subtitleStudioQualityIsSafe" in INTEGRATION
+    assert "function subtitleStudioQualityProjection" in INTEGRATION
+    assert "subtitleProjectQualityHydrationEpoch" in INTEGRATION
+    assert "subtitleProjectQualityReadState" in INTEGRATION
+    assert '"present_duration_ms"' in INTEGRATION
+    assert "function renderSubtitleQuality" in PORTAL
+    assert "subtitleProjectQuality" in INTEGRATION
+    assert "portal-subtitle-quality" in PORTAL
+    quality_start = PORTAL.index("function renderSubtitleQuality")
+    quality_end = PORTAL.index("function renderSubtitleCueCard", quality_start)
+    quality = PORTAL[quality_start:quality_end]
+    for forbidden in ("source_text", "translated_text", "fetch(", "api(", "/jobs", "/payments", "provider"):
+        assert forbidden not in quality
+    assert "portal-subtitle-quality" in CSS
+    assert "portal-subtitle-quality" in (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
+    i18n = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
+    assert i18n.count('"subtitleQuality.kicker"') == 3
+    assert i18n.count('"subtitleQuality.reason.translation_incomplete"') == 3
+
+
+def test_subtitle_quality_projection_requires_the_same_project_revision_as_detail() -> None:
+    # Detail and quality are separate owner-scoped GETs. A mutation in another
+    # tab between them must leave the quality panel guarded rather than mixing
+    # aggregate metrics from revision N+1 with cue detail from revision N.
+    assert "function subtitleStudioQualityProjection(value, expectedProjectId, expectedProjectRevision)" in INTEGRATION
+    assert "const expectedRevision = Number(expectedProjectRevision);" in INTEGRATION
+    assert "Number(data.project_revision) !== expectedRevision" in INTEGRATION
+    assert "subtitleStudioQualityProjection(result.data, projectId, expectedProjectRevision)" in INTEGRATION
+    assert "hydrateSubtitleProjectQuality(projectId, requestEpoch, sessionEpoch, route, project.revision)" in INTEGRATION
+
+
+def test_subtitle_quality_not_assessed_copy_is_not_rendered_as_clear() -> None:
+    quality_start = PORTAL.index("function renderSubtitleQuality")
+    quality_end = PORTAL.index("function renderSubtitleCueCard", quality_start)
+    quality = PORTAL[quality_start:quality_end]
+    assert 'quality.review_status === "not_assessed"' in quality
+    assert 'subtitleQualityText("notAssessedBody"' in quality
+    i18n = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
+    assert i18n.count('"subtitleQuality.notAssessedBody"') == 3
+
+
 def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
     # The safe boundary explicitly rejects successful provider/media claims.
     for flag in (
