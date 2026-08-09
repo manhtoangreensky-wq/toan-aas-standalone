@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-09T05:23:24+00:00",
+  "generated_at_utc": "2026-08-09T06:11:51+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,12 +35,12 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "2fcf0e2aad5303a7a5a03bb46171064e067ac810",
+      "checkout_sha": "6440abfbf32a484e2eb0ebbbbc25d1018bf657c8",
       "requested_relation": "exact",
-      "requested_sha": "2fcf0e2aad5303a7a5a03bb46171064e067ac810",
-      "source_fingerprint_sha256": "1127637f7a0496d3986f3785e140779c10727eecc48bebb439cb472b885e394e",
+      "requested_sha": "6440abfbf32a484e2eb0ebbbbc25d1018bf657c8",
+      "source_fingerprint_sha256": "422c2e1bc9ba498d59622a8dc13d5488dcd942cf313d076e17cb07196374ee79",
       "working_tree_state": "clean"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-scroll"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-landing-motion-clarity"
   }
 }

@@ -956,6 +956,19 @@ body {
   transition: transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
 }
 
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax.landing-motion-pointer {
+  transform:
+    perspective(1000px)
+    rotateX(calc(var(--landing-pointer-y, 0) * -1.1deg))
+    rotateY(calc(var(--landing-pointer-x, 0) * 1.1deg))
+    translate3d(
+      calc(var(--landing-pointer-x, 0) * -5px),
+      calc((var(--landing-hero-progress, 0) * -26px) + (var(--landing-pointer-y, 0) * -3px)),
+      0
+    )
+    rotate(1.4deg);
+}
+
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax::before {
   opacity: calc(.26 + (var(--landing-hero-progress, 0) * .3));
   transform: translate3d(calc(var(--landing-hero-progress, 0) * -14px), calc(var(--landing-hero-progress, 0) * 10px), 0);
@@ -1025,8 +1038,32 @@ body {
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li,
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article {
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article {
   transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li.landing-motion-pointer {
+  transform: translate3d(calc((1 - var(--landing-section-progress, 0)) * 10px), 0, 0);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li.landing-motion-pointer.is-pointer-active {
+  transform: translate3d(
+    calc(((1 - var(--landing-section-progress, 0)) * 10px) + (var(--landing-pointer-x, 0) * 4px)),
+    calc(var(--landing-pointer-y, 0) * -2px),
+    0
+  );
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article.landing-motion-pointer {
+  transform: translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 8px), 0) scale(calc(.985 + (var(--landing-section-progress, 0) * .015)));
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article.landing-motion-pointer.is-pointer-active {
+  transform: translate3d(
+    calc(var(--landing-pointer-x, 0) * 3px),
+    calc(((1 - var(--landing-section-progress, 0)) * 8px) + (var(--landing-pointer-y, 0) * -3px)),
+    0
+  ) scale(calc(.985 + (var(--landing-section-progress, 0) * .015)));
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li:hover,
@@ -1035,8 +1072,8 @@ body {
   border-color: color-mix(in srgb, var(--portal-context) 38%, var(--portal-border));
 }
 
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article:hover,
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust-grid > article:focus-within {
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article:hover,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article:focus-within {
   transform: translate3d(0, -5px, 0);
   border-color: color-mix(in srgb, var(--portal-brand) 44%, var(--portal-border));
   box-shadow: var(--portal-elevation-2);
@@ -1070,7 +1107,7 @@ body {
     .landing-motion-parallax,
     .landing-motion-pointer,
     .landing-motion-workflow li,
-    .landing-motion-trust-grid > article,
+    .portal-landing-trust-grid > article,
     .landing-motion-final::before,
     .landing-motion-hero::after,
     .landing-motion-studios::before,
@@ -14384,23 +14421,21 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
-/* A finite scan/glow gives the Workspace preview a clearly observable
-   playback cue. It is removed by portal-motion.js after the two cycles, so
-   the landing page never becomes an attention-seeking infinite animation. */
+/* A finite scan gives the Workspace preview a clearly observable playback
+   cue using only opacity and transform. It is removed by portal-motion.js
+   after the two cycles, so the landing page never loops attention-seeking
+   paint work. */
 @keyframes portal-landing-preview-scan {
   0% {
     opacity: .34;
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-context) 0%, transparent);
     transform: translate3d(-10px, 5px, 0) scale(.985);
   }
   45% {
     opacity: .92;
-    box-shadow: 0 0 0 5px color-mix(in srgb, var(--portal-context) 14%, transparent);
     transform: translate3d(5px, -2px, 0) scale(1.005);
   }
   100% {
     opacity: .46;
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-context) 0%, transparent);
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
@@ -14585,7 +14620,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 
   /* Keyboard focus is always more important than a decorative delayed reveal. */
-  [data-landing-motion="cinematic-mini"] .landing-motion-hero:focus-within :is(
+  [data-landing-motion="cinematic-mini"] .landing-motion-hero:focus-within:not(:has([data-landing-motion-replay]:focus)) :is(
     .portal-landing-hero-copy h1,
     .portal-landing-hero-copy p,
     .portal-landing-hero-actions,

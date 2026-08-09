@@ -69,3 +69,39 @@ def test_motion_fails_open_for_content_and_respects_reduced_motion() -> None:
     assert "content-visibility" not in motion
     for declaration in ("opacity: 1 !important;", "transform: none !important;", "clip-path: none !important;"):
         assert declaration in motion
+
+
+def test_motion_opt_out_does_not_leave_an_inert_replay_control() -> None:
+    """The visible replay affordance must reflect the selected motion mode."""
+    assert "setReplayAvailability" in MOTION
+    assert "replayControl.hidden = !enabled" in MOTION
+    assert "replayControl.disabled = !enabled" in MOTION
+    assert 'data-landing-motion-replay-disabled' in MOTION
+    assert "if (!landingMotionEnabled)" in PORTAL
+    assert 'data-landing-motion-replay-disabled' in PORTAL
+
+
+def test_replay_focus_does_not_cancel_the_hero_replay_animation() -> None:
+    """Keyboard focus on replay is an action, not a reason to clear the hero."""
+    assert '.landing-motion-hero:focus-within:not(:has([data-landing-motion-replay]:focus))' in THEME
+
+
+def test_preview_scan_uses_compositor_friendly_keyframes() -> None:
+    """The finite preview scan must not repaint a box shadow every frame."""
+    start = THEME.index("@keyframes portal-landing-preview-scan")
+    end = THEME.index("@media (prefers-reduced-motion: no-preference)", start)
+    keyframes = THEME[start:end]
+    assert "opacity:" in keyframes
+    assert "transform:" in keyframes
+    assert "box-shadow:" not in keyframes
+
+
+def test_each_scroll_section_has_a_distinct_pointer_response() -> None:
+    motion = THEME[THEME.index('.landing-motion-scroll[data-landing-scroll-motion="active"]') :]
+    for marker in (
+        ".landing-motion-parallax.landing-motion-pointer",
+        ".landing-motion-workflow li.landing-motion-pointer.is-pointer-active",
+        ".portal-landing-trust-grid > article.landing-motion-pointer.is-pointer-active",
+    ):
+        assert marker in motion
+    assert ".landing-motion-trust-grid" not in motion

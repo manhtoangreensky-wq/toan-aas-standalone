@@ -29239,6 +29239,16 @@
       mountLandingMotion();
     }
     function mountLandingMotion() {
+      const replayControl = main.querySelector("[data-landing-motion-replay]");
+      if (!landingMotionEnabled) {
+        if (replayControl) {
+          replayControl.hidden = true;
+          replayControl.disabled = true;
+          replayControl.setAttribute("data-landing-motion-replay-disabled", "true");
+          replayControl.setAttribute("aria-hidden", "true");
+        }
+        return;
+      }
       if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
     }
     const replaceResult = motion.replace(shell, main, renderShell);
