@@ -37,6 +37,19 @@
     element.style.removeProperty(property);
   }
 
+  function setReplayAvailability(replayControl, enabled) {
+    if (!replayControl) return;
+    replayControl.hidden = !enabled;
+    replayControl.disabled = !enabled;
+    if (enabled) {
+      replayControl.removeAttribute("data-landing-motion-replay-disabled");
+      replayControl.removeAttribute("aria-hidden");
+      return;
+    }
+    replayControl.setAttribute("data-landing-motion-replay-disabled", "true");
+    replayControl.setAttribute("aria-hidden", "true");
+  }
+
   function prefersReducedMotion() {
     return typeof window.matchMedia === "function"
       && window.matchMedia(REDUCED_MOTION_QUERY).matches;
@@ -134,6 +147,7 @@
     }));
     const landingCtas = Array.from(root.querySelectorAll(".portal-button"));
     const replayControl = root.querySelector("[data-landing-motion-replay]");
+    setReplayAvailability(replayControl, !prefersReducedMotion());
     const generation = landingGeneration;
     const isCurrentMount = () => landingGeneration === generation;
     let pointerHandlers = [];
@@ -195,6 +209,7 @@
       });
       pointerHandlers = [];
       landingCtas.forEach((cta) => cta.classList.remove("landing-motion-cta"));
+      setReplayAvailability(replayControl, true);
     };
     // The aperture remains a quiet static frame for motion-sensitive visitors.
     // Only animation setup is skipped; no content relies on this helper to be
@@ -346,6 +361,9 @@
         settledTimer = 0;
         root.removeAttribute("data-landing-motion-playback");
         root.setAttribute("data-landing-motion-phase", "settled");
+        // A settled preview returns to its neutral first step. The public
+        // landing communicates a guarded plan, never a completed delivery.
+        setActivePreviewStep(0);
       }, LANDING_SEQUENCE_SETTLE_DELAY_MS);
     };
     const replayIntro = () => {
