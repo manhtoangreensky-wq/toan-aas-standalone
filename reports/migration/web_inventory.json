@@ -13734,8 +13734,8 @@
   "schema_version": "2.0",
   "source_files_discovered": 143,
   "source_files_scanned": 143,
-  "source_fingerprint_sha256": "f77071c337ed28f87a66be037a0bc250452d7b12e5108f9acfa782d60995404b",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-subtitle-asset-operations-fix",
+  "source_fingerprint_sha256": "12c617895e27403e680b06dca8cb0e86d40601fc519b59d7d99c36bfba0ff2e8",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-audio-asset-hydration",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
