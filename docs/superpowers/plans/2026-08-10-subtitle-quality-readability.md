@@ -42,8 +42,9 @@ existing teal/cyan token surface.
   file.
 - [x] Run the targeted regression suite and protected comparators, including
       revision-mismatch and `not_assessed` portal regression checks.
-- [ ] Commit the cohesive feature, fast-forward/merge it into the Web App
-  source-of-truth `main`, and push it. Do not deploy or modify ENV.
+- [x] Commit the cohesive feature (`6a080a7`), fast-forward it into the Web
+  App source-of-truth `main`, and push it. Remote `origin/main` was verified
+  at the same SHA; Railway was not deployed and ENV was not modified.
 
 ## Non-goals
 
