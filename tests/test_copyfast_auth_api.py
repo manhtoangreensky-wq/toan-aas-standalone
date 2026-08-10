@@ -520,6 +520,25 @@ def test_catalog_declares_exact_web_workspace_draft_support(tmp_path, monkeypatc
         assert support["workspace_drafts"] is False
 
 
+def test_catalog_projects_the_closed_product_readiness_taxonomy(tmp_path, monkeypatch):
+    """Catalog readiness is descriptive and must not turn paused work into ready work."""
+    with make_client(tmp_path, monkeypatch) as client:
+        response = client.get("/api/v1/catalog")
+
+    assert response.status_code == 200
+    features = {item["key"]: item for item in response.json()["data"]["features"]}
+    allowed = {"available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"}
+    assert all(item["readiness"] == {"status": item["readiness"]["status"]} for item in features.values())
+    assert {item["readiness"]["status"] for item in features.values()} <= allowed
+    assert features["dashboard"]["readiness"] == {"status": "available"}
+    assert features["video_studio"]["readiness"] == {"status": "planning_only"}
+    assert features["documents_merge"]["readiness"] == {"status": "disabled"}
+    assert features["wallet"]["readiness"] == {"status": "guarded"}
+    assert features["wallet_topup"]["readiness"] == {"status": "guarded"}
+    assert features["pricing"]["readiness"] == {"status": "guarded"}
+    assert features["partner_readiness"]["readiness"] == {"status": "available"}
+
+
 def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path, monkeypatch):
     """Menu metadata may navigate, but it must never replay Bot callbacks."""
     with make_client(tmp_path, monkeypatch) as client:

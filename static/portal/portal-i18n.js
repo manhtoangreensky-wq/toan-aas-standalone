@@ -117,6 +117,14 @@
       "nav.pricing": "Bảng giá",
       "nav.admin": "Quản trị",
 
+      "catalog.readiness.title": "Phân loại readiness; không xác nhận job, payment hoặc output.",
+      "catalog.readiness.available": "Sẵn sàng",
+      "catalog.readiness.planning_only": "Lập kế hoạch",
+      "catalog.readiness.local_execution": "Xử lý tại Web",
+      "catalog.readiness.canonical_read": "Đọc canonical",
+      "catalog.readiness.guarded": "Đang bảo vệ",
+      "catalog.readiness.disabled": "Tạm dừng",
+
       "account.title": "Tài khoản",
       "account.subtitle": "Quản lý hồ sơ, quyền riêng tư và phương thức truy cập của bạn.",
       "account.profile": "Hồ sơ",
@@ -427,6 +435,14 @@
       "nav.pricing": "Pricing",
       "nav.admin": "Administration",
 
+      "catalog.readiness.title": "Readiness classification; it does not confirm a job, payment, or output.",
+      "catalog.readiness.available": "Available",
+      "catalog.readiness.planning_only": "Planning only",
+      "catalog.readiness.local_execution": "Local execution",
+      "catalog.readiness.canonical_read": "Canonical read",
+      "catalog.readiness.guarded": "Guarded",
+      "catalog.readiness.disabled": "Paused",
+
       "account.title": "Account",
       "account.subtitle": "Manage your profile, privacy and access methods.",
       "account.profile": "Profile",
@@ -736,6 +752,14 @@
       "nav.support": "支持",
       "nav.pricing": "价格",
       "nav.admin": "管理",
+
+      "catalog.readiness.title": "就绪状态分类；不确认任务、付款或输出。",
+      "catalog.readiness.available": "可用",
+      "catalog.readiness.planning_only": "仅规划",
+      "catalog.readiness.local_execution": "本地处理",
+      "catalog.readiness.canonical_read": "读取 canonical",
+      "catalog.readiness.guarded": "受保护",
+      "catalog.readiness.disabled": "已暂停",
 
       "account.title": "账户",
       "account.subtitle": "管理您的个人资料、隐私和访问方式。",

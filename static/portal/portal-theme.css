@@ -4080,6 +4080,48 @@ body {
   color: var(--portal-warning);
 }
 
+.portal-page .portal-module-card .portal-readiness-label {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="available"] {
+  border-color: color-mix(in srgb, var(--portal-action) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="planning_only"] {
+  border-color: color-mix(in srgb, var(--portal-context) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="local_execution"] {
+  border-color: color-mix(in srgb, var(--portal-success) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-success);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="canonical_read"] {
+  border-color: color-mix(in srgb, var(--portal-context) 45%, var(--portal-border));
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="guarded"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 42%, var(--portal-border));
+  background: var(--portal-surface-light);
+  color: var(--portal-warning);
+}
+
+.portal-page .portal-module-card .portal-readiness-label[data-readiness="disabled"] {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted);
+}
+
 /* Canonical planning suggestions are read-only reference material. Keep the
    title, source label and generated prompt readable when their legacy card
    container inherits the light application surface. */
