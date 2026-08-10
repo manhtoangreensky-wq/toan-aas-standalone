@@ -74,6 +74,13 @@ def rgb_png_with_malformed_exif_chunk() -> bytes:
     return payload
 
 
+def directory_symlink_or_skip(link: Path, target: Path) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"Directory symlinks unavailable on this test host: {exc}")
+
+
 def seed_completed_operation(db, *, byte_size: int, digest: str) -> None:
     now = db.utc_now()
     with db.transaction() as conn:
@@ -172,6 +179,54 @@ def test_finalizing_current_lease_creates_one_independent_private_asset(tmp_path
     assert asset[6] == "active"
     copied = tmp_path / "private-web-assets" / asset[5]
     assert copied.read_bytes() == payload
+
+
+def test_finalizer_fails_closed_when_objects_is_an_external_symlink(tmp_path, monkeypatch) -> None:
+    db, assets = load_modules(tmp_path, monkeypatch)
+    payload = rgb_png()
+    digest = hashlib.sha256(payload).hexdigest()
+    seed_completed_operation(db, byte_size=len(payload), digest=digest)
+    reservation = assets.reserve_image_operation_asset_export(
+        account_id=ACCOUNT_ID,
+        operation_id=OPERATION_ID,
+        idempotency_key="export-finalization-objects-link-0001",
+        request_fingerprint=digest,
+        expected_bytes=len(payload),
+    )
+    assert reservation.lease is not None
+    sentinel = tmp_path / "external-sentinel"
+    sentinel.mkdir()
+    directory_symlink_or_skip(tmp_path / "private-web-assets" / "objects", sentinel)
+
+    with pytest.raises(RuntimeError, match="Asset Vault"):
+        assets.finalize_image_operation_asset_export(
+            lease=reservation.lease,
+            source=assets.ImageOperationAssetExportSource(
+                account_id=ACCOUNT_ID,
+                operation_id=OPERATION_ID,
+                kind="image_resize",
+                project_id=None,
+                original_filename="resized.png",
+                byte_size=len(payload),
+                sha256=digest,
+                width=128,
+                height=128,
+                stream=BytesIO(payload),
+            ),
+            request_id="test-export-objects-link",
+        )
+
+    with sqlite3.connect(tmp_path / "export-finalization.db") as conn:
+        copied_asset_count = conn.execute(
+            "SELECT COUNT(*) FROM web_asset_files WHERE id != ?",
+            (SOURCE_ASSET_ID,),
+        ).fetchone()[0]
+        audit_count = conn.execute(
+            "SELECT COUNT(*) FROM web_audit_events WHERE action='web.image_operation.export_to_asset_vault'"
+        ).fetchone()[0]
+    assert copied_asset_count == 0
+    assert audit_count == 0
+    assert list(sentinel.iterdir()) == []
 
 
 def test_export_receipt_replays_the_asset_current_lifecycle_not_a_stale_snapshot(tmp_path, monkeypatch) -> None:

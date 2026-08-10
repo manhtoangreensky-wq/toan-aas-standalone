@@ -438,9 +438,21 @@ def _request_id(request: Request) -> str:
     return request.headers.get("X-Request-ID", "")[:80]
 
 
+def _enabled(name: str, default: bool = False) -> bool:
+    """Read one public capability flag without exposing its configured value."""
+
+    return os.environ.get(name, str(default).lower()).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def document_operation_export_enabled() -> bool:
+    """Keep the Document Operation → Asset Vault copy switch fail-closed."""
+
+    return _enabled("WEBAPP_DOCUMENT_OPERATION_EXPORT_ENABLED", False)
+
+
 def _flags() -> dict[str, bool]:
     def enabled(name: str, default: bool = False) -> bool:
-        return os.environ.get(name, str(default).lower()).strip().lower() in {"1", "true", "yes", "on"}
+        return _enabled(name, default)
     return {
         "copyfast_enabled": enabled("WEBAPP_COPYFAST_ENABLED", True),
         "provider_calls_enabled": enabled("WEBAPP_PROVIDER_CALLS_ENABLED", False),
@@ -483,6 +495,15 @@ def _flags() -> dict[str, bool]:
         # Web-native document operations remain off until both private input
         # storage and a separate generated-output volume boundary exist.
         "document_operations_enabled": enabled("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", False),
+        # Copying an already completed Document Operation into the private
+        # Asset Vault is a separate fail-closed capability.  Publish only the
+        # effective conjunction: this status field never enables a route,
+        # Bot, provider, wallet/Xu, PayOS, payment or public delivery path.
+        "document_operation_export_enabled": (
+            enabled("WEBAPP_ASSET_VAULT_ENABLED", False)
+            and enabled("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", False)
+            and document_operation_export_enabled()
+        ),
         # Image decoding is a distinct capability and stays disabled until
         # Pillow plus the bounded private storage contract are deployed.
         "image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False),

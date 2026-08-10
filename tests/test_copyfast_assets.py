@@ -73,6 +73,13 @@ def upload_text(
     )
 
 
+def directory_symlink_or_skip(link: Path, target: Path) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"Directory symlinks unavailable on this test host: {exc}")
+
+
 def seed_typed_reference_assets(db_path: Path, email: str, *, kind: str, count: int = 101) -> list[str]:
     """Seed a realistic large owner-scoped reference library without uploads.
 
@@ -283,6 +290,28 @@ def test_asset_vault_is_web_owned_private_and_idempotent(tmp_path, monkeypatch):
         assert first.get(f"/api/v1/asset-vault/{asset['id']}/download").json()["error_code"] == "WEB_ASSET_NOT_FOUND"
         archived_list = first.get("/api/v1/asset-vault?state=archived")
         assert archived_list.json()["data"]["items"][0]["id"] == asset["id"]
+
+
+def test_upload_fails_closed_when_objects_is_an_external_symlink(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "asset-objects-link@example.com")
+        sentinel = tmp_path / "external-sentinel"
+        sentinel.mkdir()
+        vault_root = tmp_path / "private-web-assets"
+        vault_root.mkdir(exist_ok=True)
+        directory_symlink_or_skip(vault_root / "objects", sentinel)
+
+        with pytest.raises(RuntimeError, match="Asset Vault"):
+            upload_text(client, csrf, key="asset-vault-objects-link-0001")
+
+        with sqlite3.connect(tmp_path / "copyfast-assets-test.db") as conn:
+            asset_count = conn.execute("SELECT COUNT(*) FROM web_asset_files").fetchone()[0]
+            audit_count = conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action='web.asset_vault.upload'"
+            ).fetchone()[0]
+        assert asset_count == 0
+        assert audit_count == 0
+        assert list(sentinel.iterdir()) == []
 
 
 def test_asset_vault_library_search_filters_pagination_and_owner_scope(tmp_path, monkeypatch):

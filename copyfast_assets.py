@@ -10,7 +10,7 @@ only; it does not represent a generated job result or an account balance.
 from __future__ import annotations
 
 import codecs
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -19,17 +19,22 @@ import os
 from pathlib import Path
 import re
 import stat
+import struct
 import tempfile
+from types import MappingProxyType
+import unicodedata
 import uuid
 import warnings
 from typing import Annotated, Any, BinaryIO, Iterator
 from urllib.parse import quote
+from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pypdf import PdfReader
 from starlette.background import BackgroundTask
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
@@ -37,6 +42,8 @@ from copyfast_db import (
     asset_vault_directory,
     asset_vault_enabled,
     asset_vault_video_preview_enabled,
+    document_operation_export_enabled,
+    document_operations_enabled,
     ensure_copyfast_schema,
     image_operation_export_enabled,
     image_operations_enabled,
@@ -63,6 +70,7 @@ PENDING_MARKER_KEY = "_web_asset_vault_pending"
 PENDING_SECONDS = 5 * 60
 ORPHAN_RETENTION_SECONDS = 60 * 60
 IMAGE_OPERATION_EXPORT_LEASE_SECONDS = 5 * 60
+DOCUMENT_OPERATION_ASSET_EXPORT_LEASE_SECONDS = 5 * 60
 CHUNK_BYTES = 1024 * 1024
 IMAGE_OPERATION_EXPORT_KINDS = frozenset({
     "image_resize",
@@ -70,6 +78,52 @@ IMAGE_OPERATION_EXPORT_KINDS = frozenset({
     "image_background_cleanup",
     "image_brand_overlay",
 })
+# This map is deliberately local instead of importing the Document Operations
+# module: the finalizer must independently enforce the exact sealed output
+# contract without creating an import cycle or accepting browser metadata.
+DOCUMENT_OPERATION_ASSET_EXPORT_SPECS = MappingProxyType({
+    "pdf_split": (".pdf", "application/pdf", "toan-aas-pdf-split.pdf"),
+    "pdf_merge": (".pdf", "application/pdf", "toan-aas-pdf-merged.pdf"),
+    "pdf_optimize": (".pdf", "application/pdf", "toan-aas-pdf-optimized.pdf"),
+    "image_to_pdf": (".pdf", "application/pdf", "toan-aas-images.pdf"),
+    "pdf_to_word_text": (
+        ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "toan-aas-pdf-text.docx",
+    ),
+    "pdf_ocr_word": (
+        ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "toan-aas-pdf-ocr.docx",
+    ),
+    "image_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
+    "pdf_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-pdf-ocr.txt"),
+})
+DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES = MappingProxyType({
+    "pdf_merge": "toan-aas-merged-pdf.pdf",
+    "pdf_optimize": "toan-aas-optimized-pdf.pdf",
+    "image_to_pdf": "toan-aas-images.pdf",
+    "pdf_to_word_text": "toan-aas-pdf-text.docx",
+    "pdf_ocr_word": "toan-aas-pdf-ocr.docx",
+    "image_ocr": "toan-aas-image-ocr.txt",
+    "pdf_ocr": "toan-aas-pdf-ocr.txt",
+})
+PDF_EOF_SCAN_BYTES = 64 * 1024
+PDF_TRAILING_WHITESPACE = b"\x00\x09\x0a\x0c\x0d\x20"
+DOCUMENT_OPERATION_ASSET_EXPORT_TEXT_MAX_BYTES = 2 * 1024 * 1024
+DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_MEMBERS = 200
+DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_UNCOMPRESSED_BYTES = 8 * 1024 * 1024
+DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_CENTRAL_DIRECTORY_BYTES = 1024 * 1024
+DOCX_CLASSIC_EOCD_BYTES = 22
+DOCX_MAX_COMMENT_BYTES = 65_535
+DOCX_RELATIONSHIPS_NAMESPACE = "http://schemas.openxmlformats.org/package/2006/relationships"
+DOCX_CONTENT_TYPES_NAMESPACE = "http://schemas.openxmlformats.org/package/2006/content-types"
+DOCX_OFFICE_DOCUMENT_RELATIONSHIP = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+)
+DOCX_WORD_MAIN_CONTENT_TYPE = (
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+)
 VIDEO_PREVIEW_MAX_BYTES = 20 * 1024 * 1024
 VIDEO_PREVIEW_MEDIA_PAIRS = frozenset({
     (".mp4", "video/mp4"),
@@ -123,6 +177,14 @@ def _require_image_operation_export_enabled() -> None:
         raise HTTPException(status_code=503, detail="Lưu PNG Image Operations vào Asset Vault chưa được bật")
 
 
+def _require_document_operation_asset_export_enabled() -> None:
+    """Keep completed Document Operation copies behind every private gate."""
+
+    _require_enabled()
+    if not document_operations_enabled() or not document_operation_export_enabled():
+        raise HTTPException(status_code=503, detail="Lưu Document Operations vào Asset Vault chưa được bật")
+
+
 def _maximum_bytes() -> int:
     raw = os.environ.get("WEBAPP_ASSET_VAULT_MAX_FILE_MB", "25").strip()
     try:
@@ -162,6 +224,13 @@ def _image_operation_id(value: str) -> str:
     candidate = str(value or "").strip()
     if not ASSET_ID_PATTERN.fullmatch(candidate):
         raise HTTPException(status_code=422, detail="Mã thao tác ảnh không hợp lệ")
+    return str(uuid.UUID(candidate))
+
+
+def _document_operation_id(value: str) -> str:
+    candidate = str(value or "").strip()
+    if not ASSET_ID_PATTERN.fullmatch(candidate):
+        raise HTTPException(status_code=422, detail="Mã thao tác tài liệu không hợp lệ")
     return str(uuid.UUID(candidate))
 
 
@@ -218,6 +287,57 @@ class ImageOperationAssetExportSource:
 @dataclass(frozen=True)
 class ImageOperationAssetExportFinalization:
     """Fresh public Asset Vault receipt after a completed fenced copy."""
+
+    state: str
+    asset: dict[str, Any] | None
+
+
+@dataclass(frozen=True)
+class DocumentOperationAssetExportLease:
+    """One attempt-owned, fenced reservation for a Document Operation copy."""
+
+    account_id: str
+    operation_id: str
+    generation: int
+    token: str
+    expires_at: str
+    pending_storage_key: str
+    reserved_bytes: int
+    request_fingerprint: str
+
+
+@dataclass(frozen=True)
+class DocumentOperationAssetExportReservation:
+    """A document-export reservation without an Asset Vault snapshot cache."""
+
+    state: str
+    lease: DocumentOperationAssetExportLease | None = None
+
+
+@dataclass(frozen=True)
+class DocumentOperationAssetExportSource:
+    """One server-derived Document Operation output pinned to an open stream.
+
+    The Document Operations boundary constructs this descriptor from its
+    owner-scoped completed row.  The finalizer owns ``stream`` after entry and
+    never accepts a browser path, URL, or replacement bytes.
+    """
+
+    account_id: str = field(repr=False)
+    operation_id: str = field(repr=False)
+    kind: str
+    project_id: str | None = field(repr=False)
+    original_filename: str = field(repr=False)
+    extension: str
+    content_type: str
+    byte_size: int
+    sha256: str = field(repr=False)
+    stream: BinaryIO = field(repr=False, compare=False)
+
+
+@dataclass(frozen=True)
+class DocumentOperationAssetExportFinalization:
+    """Fresh public Asset Vault receipt for a completed Document export."""
 
     state: str
     asset: dict[str, Any] | None
@@ -338,9 +458,48 @@ def _storage_path(root: Path, storage_key: str) -> Path:
     return candidate
 
 
+def _private_asset_vault_child_directory(root: Path, name: str) -> Path:
+    """Return one safe Vault-owned generated directory without following links."""
+
+    if name not in {".staging", "objects"}:
+        raise RuntimeError("Thư mục riêng tư Asset Vault không hợp lệ")
+    try:
+        resolved_root = root.resolve(strict=True)
+    except OSError as exc:
+        raise RuntimeError("Không thể xác minh thư mục riêng tư Asset Vault") from exc
+    directory = root / name
+
+    def checked_lstat() -> os.stat_result | None:
+        try:
+            metadata = os.lstat(directory)
+        except FileNotFoundError:
+            return None
+        except OSError as exc:
+            raise RuntimeError("Không thể xác minh thư mục riêng tư Asset Vault") from exc
+        is_reparse_point = bool(
+            getattr(metadata, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x0400)
+        )
+        if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISDIR(metadata.st_mode) or is_reparse_point:
+            raise RuntimeError("Thư mục riêng tư Asset Vault không hợp lệ")
+        return metadata
+
+    checked_lstat()
+    try:
+        directory.mkdir(parents=False, exist_ok=True)
+    except OSError as exc:
+        raise RuntimeError("Không thể tạo thư mục riêng tư Asset Vault") from exc
+    if checked_lstat() is None:
+        raise RuntimeError("Không thể xác minh thư mục riêng tư Asset Vault")
+    try:
+        resolved_directory = directory.resolve(strict=True)
+        resolved_directory.relative_to(resolved_root)
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("Thư mục riêng tư Asset Vault không hợp lệ") from exc
+    return directory
+
+
 def _staging_path(root: Path) -> Path:
-    directory = root / ".staging"
-    directory.mkdir(parents=True, exist_ok=True)
+    directory = _private_asset_vault_child_directory(root, ".staging")
     return directory / f"{uuid.uuid4().hex}.upload"
 
 
@@ -779,7 +938,72 @@ def _store_response(conn, *, scope: str, key: str, marker: str, fingerprint: str
         raise RuntimeError("Không thể hoàn tất idempotency Asset Vault")
 
 
-def _pending_image_operation_export_bytes(conn, account_id: str) -> int:
+def _document_operation_export_expected_bytes(value: int) -> int:
+    """Accept only a canonical positive byte count supplied by trusted code."""
+
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise HTTPException(status_code=422, detail="Kích thước export tài liệu không hợp lệ")
+    if value < 1:
+        raise HTTPException(status_code=422, detail="Kích thước export tài liệu không hợp lệ")
+    if value > _maximum_bytes():
+        raise HTTPException(status_code=413, detail="Document export vượt quá giới hạn Asset Vault")
+    return value
+
+
+def _document_operation_export_lease_expiry() -> str:
+    return (
+        datetime.now(timezone.utc) + timedelta(seconds=DOCUMENT_OPERATION_ASSET_EXPORT_LEASE_SECONDS)
+    ).isoformat(timespec="seconds")
+
+
+def _document_operation_export_lease_is_expired(
+    value: str | None,
+    *,
+    reference_now: datetime | None = None,
+) -> bool:
+    try:
+        expires_at = datetime.fromisoformat(str(value or ""))
+        if expires_at.tzinfo is None or (reference_now is not None and reference_now.tzinfo is None):
+            return True
+        return expires_at <= (reference_now or datetime.now(timezone.utc))
+    except (TypeError, ValueError):
+        return True
+
+
+def _document_operation_export_pending_storage_key() -> str:
+    return f"objects/{uuid.uuid4().hex}.blob"
+
+
+def _pending_document_operation_asset_export_bytes(
+    conn,
+    account_id: str,
+    *,
+    reference_now: datetime | None = None,
+) -> int:
+    """Return bytes held by current fenced Document Operation exports."""
+
+    rows = conn.execute(
+        """SELECT reserved_bytes, lease_expires_at
+           FROM web_document_operation_asset_exports
+           WHERE account_id=? AND state='copying' AND lease_token IS NOT NULL""",
+        (account_id,),
+    ).fetchall()
+    return sum(
+        max(0, int(row[0] or 0))
+        for row in rows
+        if not _document_operation_export_lease_is_expired(
+            str(row[1] or ""),
+            reference_now=reference_now,
+        )
+    )
+
+
+def _pending_image_operation_export_bytes(
+    conn,
+    account_id: str,
+    *,
+    reference_now: datetime | None = None,
+) -> int:
     """Return bytes held by current fenced exports for one signed account."""
 
     rows = conn.execute(
@@ -794,11 +1018,17 @@ def _pending_image_operation_export_bytes(conn, account_id: str) -> int:
     return sum(
         max(0, int(row[0] or 0))
         for row in rows
-        if not _lease_is_expired(str(row[1] or ""))
+        if not _lease_is_expired(str(row[1] or ""), reference_now=reference_now)
     )
 
 
-def _quota_available(conn, account_id: str, additional_bytes: int) -> bool:
+def _quota_available(
+    conn,
+    account_id: str,
+    additional_bytes: int,
+    *,
+    reference_now: datetime | None = None,
+) -> bool:
     # Archive deliberately removes download access but does not erase its
     # private blob. Count every retained row so a customer cannot bypass the
     # storage quota by repeatedly upload → archive cycling.
@@ -807,7 +1037,10 @@ def _quota_available(conn, account_id: str, additional_bytes: int) -> bool:
         (account_id,),
     ).fetchone()
     used = int(row[0] or 0) if row else 0
-    reserved = _pending_image_operation_export_bytes(conn, account_id)
+    reserved = (
+        _pending_image_operation_export_bytes(conn, account_id, reference_now=reference_now)
+        + _pending_document_operation_asset_export_bytes(conn, account_id, reference_now=reference_now)
+    )
     return used + reserved + additional_bytes <= _maximum_account_bytes()
 
 
@@ -817,12 +1050,16 @@ def _lease_expiry() -> str:
     )
 
 
-def _lease_is_expired(value: str | None) -> bool:
+def _lease_is_expired(
+    value: str | None,
+    *,
+    reference_now: datetime | None = None,
+) -> bool:
     try:
         expires_at = datetime.fromisoformat(str(value or ""))
-        if expires_at.tzinfo is None:
+        if expires_at.tzinfo is None or (reference_now is not None and reference_now.tzinfo is None):
             return True
-        return expires_at <= datetime.now(timezone.utc)
+        return expires_at <= (reference_now or datetime.now(timezone.utc))
     except (TypeError, ValueError):
         return True
 
@@ -929,6 +1166,11 @@ def reserve_image_operation_asset_export(
                 return ImageOperationAssetExportReservation(state="completed")
             if state != "copying" or not _lease_is_expired(str(relation[7] or "")):
                 return ImageOperationAssetExportReservation(state="pending")
+            # An expired row no longer consumes quota. Recheck before making
+            # it live again, because a separate image/document lease may have
+            # claimed that capacity while this worker was stale.
+            if not _quota_available(conn, scoped_account_id, int(relation[8])):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
             previous_generation = int(relation[5])
             next_generation = previous_generation + 1
             token = uuid.uuid4().hex
@@ -1276,7 +1518,7 @@ def finalize_image_operation_asset_export(
         staging = _staging_path(root)
         copied_bytes, copied_digest = _copy_image_operation_export_source(source, staging)
         final_path = _storage_path(root, lease.pending_storage_key)
-        final_path.parent.mkdir(parents=True, exist_ok=True)
+        _private_asset_vault_child_directory(root, "objects")
         _promote_image_operation_export_staging(staging, final_path)
         staging = None
         if not _verify_image_operation_export_destination_png(
@@ -1456,6 +1698,1154 @@ def replay_image_operation_asset_export(
             now=now,
         )
     return get_image_operation_asset_export_receipt(
+        account_id=scoped_account_id,
+        operation_id=scoped_operation_id,
+    )
+
+
+def _document_operation_export_lease_from_row(row: tuple[Any, ...]) -> DocumentOperationAssetExportLease:
+    return DocumentOperationAssetExportLease(
+        account_id=str(row[1]),
+        operation_id=str(row[0]),
+        generation=int(row[5]),
+        token=str(row[6]),
+        expires_at=str(row[7]),
+        reserved_bytes=int(row[8]),
+        pending_storage_key=str(row[9]),
+        request_fingerprint=str(row[4]),
+    )
+
+
+def _insert_document_operation_asset_export_request_mapping(
+    conn,
+    *,
+    account_id: str,
+    idempotency_key: str,
+    operation_id: str,
+    request_fingerprint: str,
+    now: str,
+) -> None:
+    row = conn.execute(
+        """SELECT operation_id, request_fingerprint
+           FROM web_document_operation_asset_export_requests
+           WHERE account_id=? AND idempotency_key=?""",
+        (account_id, idempotency_key),
+    ).fetchone()
+    if row:
+        if str(row[0]) != operation_id or not hmac.compare_digest(str(row[1]), request_fingerprint):
+            raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho document export khác")
+        return
+    conn.execute(
+        """INSERT INTO web_document_operation_asset_export_requests
+           (account_id, idempotency_key, operation_id, request_fingerprint, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (account_id, idempotency_key, operation_id, request_fingerprint, now, now),
+    )
+
+
+def _completed_document_operation_asset_export_snapshot_is_valid(
+    conn,
+    *,
+    account_id: str,
+    operation_id: str,
+    asset_id: object,
+    export_fingerprint: object,
+) -> bool:
+    """Return whether a completed export still exactly matches its sealed spec."""
+
+    row = conn.execute(
+        """SELECT operation.kind, operation.sha256, operation.byte_size,
+                  asset.extension, asset.content_type, asset.original_filename,
+                  asset.storage_key, asset.byte_size, asset.sha256, asset.state
+           FROM web_document_operations AS operation
+           JOIN web_asset_files AS asset
+             ON asset.id=? AND asset.account_id=operation.account_id
+           WHERE operation.id=? AND operation.account_id=?""",
+        (asset_id, operation_id, account_id),
+    ).fetchone()
+    if not row:
+        return False
+    expected_spec = DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(str(row[0] or ""))
+    if expected_spec is None or str(row[9] or "") != ACTIVE_STATE:
+        return False
+    expected_extension, expected_content_type, expected_original_filename = expected_spec
+    if (
+        str(row[3] or "") != expected_extension
+        or str(row[4] or "") != expected_content_type
+        or str(row[5] or "") != expected_original_filename
+        or not STORAGE_KEY_PATTERN.fullmatch(str(row[6] or ""))
+    ):
+        return False
+    normalized_fingerprints = tuple(
+        str(value or "").strip().lower()
+        for value in (export_fingerprint, row[1], row[8])
+    )
+    if not all(re.fullmatch(r"[0-9a-f]{64}", value) for value in normalized_fingerprints):
+        return False
+    try:
+        operation_byte_size = int(row[2])
+        asset_byte_size = int(row[7])
+    except (TypeError, ValueError):
+        return False
+    return (
+        operation_byte_size > 0
+        and operation_byte_size == asset_byte_size
+        and all(
+            hmac.compare_digest(normalized_fingerprints[0], value)
+            for value in normalized_fingerprints[1:]
+        )
+    )
+
+
+def reserve_document_operation_asset_export(
+    *,
+    account_id: str,
+    operation_id: str,
+    idempotency_key: str,
+    request_fingerprint: str,
+    expected_bytes: int,
+) -> DocumentOperationAssetExportReservation:
+    """Reserve one fenced private-object attempt for a completed Document Operation.
+
+    This records only immutable, owner-scoped intent.  It deliberately does
+    not open a document output, write a filesystem blob, or create an Asset
+    Vault row; a later document-specific finalizer must hold this exact lease.
+    """
+
+    _require_document_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _document_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    fingerprint = _export_request_fingerprint(request_fingerprint)
+    byte_size = _document_operation_export_expected_bytes(expected_bytes)
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        operation = conn.execute(
+            "SELECT state, sha256, byte_size FROM web_document_operations WHERE id=? AND account_id=?",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if not operation:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thao tác tài liệu thuộc Web account hiện tại")
+        if str(operation[0]) != "completed":
+            raise HTTPException(status_code=409, detail="Document Operation chưa sẵn sàng để lưu")
+        if not hmac.compare_digest(str(operation[1] or ""), fingerprint):
+            raise HTTPException(status_code=409, detail="Document export này không còn khớp output đã xác minh")
+        try:
+            operation_bytes = int(operation[2])
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail="Bản ghi Document Operation không hợp lệ") from exc
+        if operation_bytes != byte_size:
+            raise HTTPException(status_code=409, detail="Document export này không còn khớp kích thước đã xác minh")
+        relation = conn.execute(
+            """SELECT operation_id, account_id, asset_id, state, request_fingerprint,
+                      lease_generation, lease_token, lease_expires_at, reserved_bytes,
+                      pending_storage_key, created_at, updated_at, completed_at
+               FROM web_document_operation_asset_exports
+               WHERE operation_id=? AND account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if relation:
+            if not hmac.compare_digest(str(relation[4]), fingerprint):
+                raise HTTPException(status_code=409, detail="Document export này không còn khớp output đã xác minh")
+            state = str(relation[3])
+            # A completed relation intentionally clears its transient lease
+            # reservation to zero.  Its independent Asset Vault row retains
+            # the output byte count, so preserve the size fence there without
+            # comparing a later source to the cleared transient field.
+            if state == "completed":
+                if not _completed_document_operation_asset_export_snapshot_is_valid(
+                    conn,
+                    account_id=scoped_account_id,
+                    operation_id=scoped_operation_id,
+                    asset_id=relation[2],
+                    export_fingerprint=relation[4],
+                ):
+                    return DocumentOperationAssetExportReservation(state="guarded")
+                _insert_document_operation_asset_export_request_mapping(
+                    conn,
+                    account_id=scoped_account_id,
+                    idempotency_key=key,
+                    operation_id=scoped_operation_id,
+                    request_fingerprint=fingerprint,
+                    now=now,
+                )
+                return DocumentOperationAssetExportReservation(state="completed")
+            try:
+                reserved_bytes = int(relation[8])
+            except (TypeError, ValueError) as exc:
+                raise HTTPException(status_code=409, detail="Bản ghi document export không hợp lệ") from exc
+            if reserved_bytes != byte_size:
+                raise HTTPException(status_code=409, detail="Document export này không còn khớp kích thước đã xác minh")
+            _insert_document_operation_asset_export_request_mapping(
+                conn,
+                account_id=scoped_account_id,
+                idempotency_key=key,
+                operation_id=scoped_operation_id,
+                request_fingerprint=fingerprint,
+                now=now,
+            )
+            if state != "copying" or not _document_operation_export_lease_is_expired(str(relation[7] or "")):
+                return DocumentOperationAssetExportReservation(state="pending")
+            # An expired row no longer consumes quota.  Recheck before making
+            # it live again, because a separate image/document lease may have
+            # claimed that capacity while this worker was stale.
+            if not _quota_available(conn, scoped_account_id, reserved_bytes):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            previous_generation = int(relation[5])
+            next_generation = previous_generation + 1
+            token = uuid.uuid4().hex
+            expires_at = _document_operation_export_lease_expiry()
+            pending_storage_key = _document_operation_export_pending_storage_key()
+            updated = conn.execute(
+                """UPDATE web_document_operation_asset_exports
+                   SET lease_generation=?, lease_token=?, lease_expires_at=?,
+                       pending_storage_key=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying'
+                     AND lease_generation=? AND lease_token=? AND lease_expires_at=?""",
+                (
+                    next_generation,
+                    token,
+                    expires_at,
+                    pending_storage_key,
+                    now,
+                    scoped_operation_id,
+                    scoped_account_id,
+                    previous_generation,
+                    relation[6],
+                    relation[7],
+                ),
+            )
+            if updated.rowcount != 1:
+                return DocumentOperationAssetExportReservation(state="pending")
+            return DocumentOperationAssetExportReservation(
+                state="leased",
+                lease=DocumentOperationAssetExportLease(
+                    account_id=scoped_account_id,
+                    operation_id=scoped_operation_id,
+                    generation=next_generation,
+                    token=token,
+                    expires_at=expires_at,
+                    pending_storage_key=pending_storage_key,
+                    reserved_bytes=reserved_bytes,
+                    request_fingerprint=fingerprint,
+                ),
+            )
+        if not _quota_available(conn, scoped_account_id, byte_size):
+            raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+        token = uuid.uuid4().hex
+        expires_at = _document_operation_export_lease_expiry()
+        pending_storage_key = _document_operation_export_pending_storage_key()
+        conn.execute(
+            """INSERT INTO web_document_operation_asset_exports
+               (operation_id, account_id, asset_id, state, request_fingerprint,
+                lease_generation, lease_token, lease_expires_at, reserved_bytes,
+                pending_storage_key, created_at, updated_at, completed_at)
+               VALUES (?, ?, NULL, 'copying', ?, 1, ?, ?, ?, ?, ?, ?, NULL)""",
+            (
+                scoped_operation_id,
+                scoped_account_id,
+                fingerprint,
+                token,
+                expires_at,
+                byte_size,
+                pending_storage_key,
+                now,
+                now,
+            ),
+        )
+        _insert_document_operation_asset_export_request_mapping(
+            conn,
+            account_id=scoped_account_id,
+            idempotency_key=key,
+            operation_id=scoped_operation_id,
+            request_fingerprint=fingerprint,
+            now=now,
+        )
+    return DocumentOperationAssetExportReservation(
+        state="leased",
+        lease=DocumentOperationAssetExportLease(
+            account_id=scoped_account_id,
+            operation_id=scoped_operation_id,
+            generation=1,
+            token=token,
+            expires_at=expires_at,
+            pending_storage_key=pending_storage_key,
+            reserved_bytes=byte_size,
+            request_fingerprint=fingerprint,
+        ),
+    )
+
+
+def release_document_operation_asset_export_lease(lease: DocumentOperationAssetExportLease) -> bool:
+    """Release only the caller's current Document Operation export lease."""
+
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        released = conn.execute(
+            """UPDATE web_document_operation_asset_exports
+               SET lease_expires_at=?, updated_at=?
+               WHERE operation_id=? AND account_id=? AND state='copying'
+                 AND lease_generation=? AND lease_token=? AND lease_expires_at=?
+                 AND lease_expires_at > ?""",
+            (
+                now,
+                now,
+                lease.operation_id,
+                lease.account_id,
+                lease.generation,
+                lease.token,
+                lease.expires_at,
+                now,
+            ),
+        )
+        if released.rowcount != 1:
+            return False
+    return True
+
+
+def _copy_document_operation_asset_export_source(
+    source: DocumentOperationAssetExportSource,
+    destination: Path,
+) -> tuple[int, str]:
+    """Boundedly copy and rehash the already-pinned Document Operation stream."""
+
+    digest = hashlib.sha256()
+    copied = 0
+    try:
+        source.stream.seek(0)
+        with destination.open("xb") as staged:
+            while True:
+                chunk = source.stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                copied += len(chunk)
+                if copied > source.byte_size or copied > _maximum_bytes():
+                    raise RuntimeError("Document Operation vượt giới hạn Asset Vault")
+                digest.update(chunk)
+                staged.write(chunk)
+            staged.flush()
+            os.fsync(staged.fileno())
+    except Exception:
+        _safe_unlink(destination)
+        raise
+    if copied != source.byte_size or not hmac.compare_digest(digest.hexdigest(), source.sha256):
+        _safe_unlink(destination)
+        raise RuntimeError("Document Operation không còn integrity")
+    return copied, digest.hexdigest()
+
+
+def _verify_document_operation_asset_export_destination_pdf(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> bool:
+    """Strictly parse and rehash the promoted PDF on one pinned descriptor."""
+
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        if not _pdf_has_terminal_eof(stream, expected_bytes=expected_bytes):
+            return False
+        reader = PdfReader(stream, strict=True)
+        if reader.is_encrypted or len(reader.pages) < 1:
+            return False
+        # Rehash after pypdf consumed the descriptor; this confirms the same
+        # pinned file still has the exact accepted bytes at finalization time.
+        return _verify_pinned_private_file(
+            stream,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    except Exception:
+        return False
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+
+
+def _document_operation_docx_member_name_is_safe(name: str) -> bool:
+    """Keep DOCX ZIP members strictly relative, normalized and file-shaped."""
+
+    if not name or "\x00" in name or name.startswith("/") or "\\" in name:
+        return False
+    parts = name.split("/")
+    return all(
+        part and part not in {".", ".."} and ":" not in part
+        for part in parts
+    )
+
+
+def _document_operation_docx_safe_xml_root(payload: bytes):
+    """Decode XML as strict UTF-8 data and reject active declaration syntax."""
+
+    try:
+        if not isinstance(payload, bytes):
+            return None
+        text = payload.decode("utf-8-sig", errors="strict")
+        if "\x00" in text or re.search(r"<!\s*(?:DOCTYPE|ENTITY)\b", text, flags=re.IGNORECASE):
+            return None
+        return ElementTree.fromstring(text)
+    except (ElementTree.ParseError, TypeError, UnicodeDecodeError, ValueError):
+        return None
+
+
+def _document_operation_docx_relationships_are_safe(payload: bytes) -> bool:
+    """Reject relationship parts that can make a DOCX dereference a URL."""
+
+    root = _document_operation_docx_safe_xml_root(payload)
+    relationships_tag = f"{{{DOCX_RELATIONSHIPS_NAMESPACE}}}Relationships"
+    relationship_tag = f"{{{DOCX_RELATIONSHIPS_NAMESPACE}}}Relationship"
+    if root is None or root.tag != relationships_tag:
+        return False
+    for relationship in root.iter(relationship_tag):
+        if str(relationship.attrib.get("TargetMode", "")).strip().casefold() == "external":
+            return False
+    return True
+
+
+def _document_operation_docx_package_relationships_are_valid(payload: bytes) -> bool:
+    """Require one internal package-root relationship to the main Word part."""
+
+    root = _document_operation_docx_safe_xml_root(payload)
+    relationships_tag = f"{{{DOCX_RELATIONSHIPS_NAMESPACE}}}Relationships"
+    relationship_tag = f"{{{DOCX_RELATIONSHIPS_NAMESPACE}}}Relationship"
+    if root is None or root.tag != relationships_tag:
+        return False
+    office_documents = []
+    relationship_ids: set[str] = set()
+    for relationship in root:
+        if relationship.tag != relationship_tag:
+            return False
+        relationship_id = relationship.attrib.get("Id", "")
+        if (
+            not relationship_id
+            or relationship_id in relationship_ids
+            or any(
+                character.isspace() or unicodedata.category(character) == "Cc"
+                for character in relationship_id
+            )
+        ):
+            return False
+        relationship_ids.add(relationship_id)
+        if relationship.attrib.get("Type") == DOCX_OFFICE_DOCUMENT_RELATIONSHIP:
+            office_documents.append(relationship)
+    if len(office_documents) != 1:
+        return False
+    relationship = office_documents[0]
+    return (
+        str(relationship.attrib.get("TargetMode", "")).strip().casefold() in {"", "internal"}
+        and relationship.attrib.get("Target") == "word/document.xml"
+    )
+
+
+def _document_operation_docx_required_xml_is_valid(payload: bytes, *, expected_tag: str) -> bool:
+    """Require one required OOXML part to be parseable with its exact root."""
+
+    root = _document_operation_docx_safe_xml_root(payload)
+    return root is not None and root.tag == expected_tag
+
+
+def _document_operation_docx_content_types_are_valid(payload: bytes) -> bool:
+    """Require the canonical content-type override for the main Word part."""
+
+    root = _document_operation_docx_safe_xml_root(payload)
+    types_tag = f"{{{DOCX_CONTENT_TYPES_NAMESPACE}}}Types"
+    override_tag = f"{{{DOCX_CONTENT_TYPES_NAMESPACE}}}Override"
+    if root is None or root.tag != types_tag:
+        return False
+    document_overrides = [
+        override
+        for override in root.findall(override_tag)
+        if override.attrib.get("PartName") == "/word/document.xml"
+    ]
+    return (
+        len(document_overrides) == 1
+        and document_overrides[0].attrib.get("ContentType") == DOCX_WORD_MAIN_CONTENT_TYPE
+    )
+
+
+def _document_operation_docx_has_safe_classic_eocd(stream: BinaryIO) -> bool:
+    """Preflight a bounded classic ZIP directory before allocating ZipInfo objects."""
+
+    try:
+        stream.seek(0, os.SEEK_END)
+        archive_bytes = stream.tell()
+        if archive_bytes < DOCX_CLASSIC_EOCD_BYTES:
+            return False
+        scan_bytes = min(
+            archive_bytes,
+            DOCX_CLASSIC_EOCD_BYTES + DOCX_MAX_COMMENT_BYTES,
+        )
+        stream.seek(-scan_bytes, os.SEEK_END)
+        tail = stream.read(scan_bytes)
+        eocd_in_tail = tail.rfind(b"PK\x05\x06")
+        if eocd_in_tail < 0 or len(tail) - eocd_in_tail < DOCX_CLASSIC_EOCD_BYTES:
+            return False
+        (
+            disk_number,
+            central_directory_disk,
+            entries_on_disk,
+            entry_count,
+            central_directory_bytes,
+            central_directory_offset,
+            comment_bytes,
+        ) = struct.unpack_from("<4H2IH", tail, eocd_in_tail + 4)
+        if eocd_in_tail + DOCX_CLASSIC_EOCD_BYTES + comment_bytes != len(tail):
+            return False
+        eocd_offset = archive_bytes - len(tail) + eocd_in_tail
+        if (
+            disk_number != 0
+            or central_directory_disk != 0
+            or entries_on_disk != entry_count
+            or entry_count in {0, 0xFFFF}
+            or central_directory_bytes == 0xFFFFFFFF
+            or central_directory_offset == 0xFFFFFFFF
+            or entry_count > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_MEMBERS
+            or central_directory_bytes > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_CENTRAL_DIRECTORY_BYTES
+            or central_directory_bytes < entry_count * 46
+            or central_directory_offset + central_directory_bytes != eocd_offset
+        ):
+            return False
+        if eocd_offset >= 20:
+            stream.seek(eocd_offset - 20)
+            if stream.read(4) == b"PK\x06\x07":
+                return False
+        stream.seek(central_directory_offset)
+        central_directory = stream.read(central_directory_bytes)
+        if len(central_directory) != central_directory_bytes:
+            return False
+        central_directory_cursor = 0
+        actual_entry_count = 0
+        while central_directory_cursor < central_directory_bytes:
+            if central_directory_bytes - central_directory_cursor < 46:
+                return False
+            (
+                signature,
+                _version_made_by,
+                _version_needed,
+                _flags,
+                _compression,
+                _modified_time,
+                _modified_date,
+                _crc,
+                _compressed_size,
+                _uncompressed_size,
+                filename_bytes,
+                extra_bytes,
+                entry_comment_bytes,
+                _disk_start,
+                _internal_attributes,
+                _external_attributes,
+                _local_header_offset,
+            ) = struct.unpack_from(
+                "<4s6H3I5H2I",
+                central_directory,
+                central_directory_cursor,
+            )
+            if signature != b"PK\x01\x02":
+                return False
+            actual_entry_count += 1
+            if actual_entry_count > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_MEMBERS:
+                return False
+            central_directory_cursor += 46 + filename_bytes + extra_bytes + entry_comment_bytes
+            if central_directory_cursor > central_directory_bytes:
+                return False
+        return (
+            central_directory_cursor == central_directory_bytes
+            and actual_entry_count == entry_count
+        )
+    except (OSError, TypeError, ValueError, struct.error):
+        return False
+    finally:
+        try:
+            stream.seek(0)
+        except (OSError, ValueError):
+            pass
+
+
+def _document_operation_docx_stream_is_safe(stream: BinaryIO) -> bool:
+    """Fully consume a bounded DOCX archive and validate every member CRC."""
+
+    try:
+        stream.seek(0)
+        if not _document_operation_docx_has_safe_classic_eocd(stream):
+            return False
+        with ZipFile(stream, "r") as archive:
+            members = archive.infolist()
+            if not members or len(members) > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_MEMBERS:
+                return False
+            names: set[str] = set()
+            declared_total = 0
+            relationship_members: list[tuple[Any, str]] = []
+            required_xml_members = {
+                "[Content_Types].xml": bytearray(),
+                "_rels/.rels": bytearray(),
+                "word/document.xml": bytearray(),
+            }
+            for member in members:
+                name = str(member.filename or "")
+                lower_name = name.casefold()
+                if (
+                    not _document_operation_docx_member_name_is_safe(name)
+                    or member.is_dir()
+                    or name in names
+                    or bool(member.flag_bits & 0x1)
+                    or stat.S_ISLNK(member.external_attr >> 16)
+                ):
+                    return False
+                names.add(name)
+                parts = tuple(part.casefold() for part in name.split("/"))
+                if (
+                    parts[-1].startswith("vba")
+                    or "embeddings" in parts
+                    or "activex" in parts
+                ):
+                    return False
+                try:
+                    member_size = int(member.file_size)
+                except (TypeError, ValueError):
+                    return False
+                if member_size < 0:
+                    return False
+                declared_total += member_size
+                if declared_total > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_UNCOMPRESSED_BYTES:
+                    return False
+                if lower_name.endswith(".rels"):
+                    relationship_members.append((member, lower_name))
+            if not {"[Content_Types].xml", "_rels/.rels", "word/document.xml"}.issubset(names):
+                return False
+
+            consumed_total = 0
+            for member in members:
+                member_name = str(member.filename)
+                relationship_bytes = bytearray() if member_name.casefold().endswith(".rels") else None
+                required_xml_bytes = required_xml_members.get(member_name)
+                consumed_member = 0
+                with archive.open(member, "r") as member_stream:
+                    while True:
+                        chunk = member_stream.read(CHUNK_BYTES)
+                        if not chunk:
+                            break
+                        consumed_member += len(chunk)
+                        consumed_total += len(chunk)
+                        if (
+                            consumed_member > int(member.file_size)
+                            or consumed_total > DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_UNCOMPRESSED_BYTES
+                        ):
+                            return False
+                        if relationship_bytes is not None:
+                            relationship_bytes.extend(chunk)
+                        if required_xml_bytes is not None:
+                            required_xml_bytes.extend(chunk)
+                # Exhausting the ZipExtFile before close makes ``zipfile``
+                # verify the member CRC; never treat central-directory claims
+                # alone as a valid OOXML payload.
+                if consumed_member != int(member.file_size):
+                    return False
+                if relationship_bytes is not None and not _document_operation_docx_relationships_are_safe(bytes(relationship_bytes)):
+                    return False
+            if not _document_operation_docx_content_types_are_valid(
+                bytes(required_xml_members["[Content_Types].xml"]),
+            ):
+                return False
+            if not _document_operation_docx_package_relationships_are_valid(
+                bytes(required_xml_members["_rels/.rels"]),
+            ):
+                return False
+            if not _document_operation_docx_required_xml_is_valid(
+                bytes(required_xml_members["word/document.xml"]),
+                expected_tag="{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document",
+            ):
+                return False
+            return consumed_total == declared_total
+    except (BadZipFile, NotImplementedError, OSError, RuntimeError, ValueError):
+        return False
+    finally:
+        try:
+            stream.seek(0)
+        except (OSError, ValueError):
+            pass
+
+
+def _verify_document_operation_asset_export_destination_docx(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> bool:
+    """Validate an OOXML output and rehash its exact pinned descriptor."""
+
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        if not _document_operation_docx_stream_is_safe(stream):
+            return False
+        return _verify_pinned_private_file(
+            stream,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+
+
+def _verify_document_operation_asset_export_destination_text(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> bool:
+    """Validate bounded strict UTF-8 text and rehash its pinned descriptor."""
+
+    if expected_bytes < 1 or expected_bytes > DOCUMENT_OPERATION_ASSET_EXPORT_TEXT_MAX_BYTES:
+        return False
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="strict")
+        has_non_whitespace = False
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            text = decoder.decode(chunk, final=False)
+            if "\x00" in text:
+                return False
+            has_non_whitespace = has_non_whitespace or bool(text.strip())
+        tail = decoder.decode(b"", final=True)
+        if "\x00" in tail:
+            return False
+        has_non_whitespace = has_non_whitespace or bool(tail.strip())
+        if not has_non_whitespace:
+            return False
+        return _verify_pinned_private_file(
+            stream,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    except (OSError, UnicodeDecodeError, ValueError):
+        return False
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+
+
+def _verify_document_operation_asset_export_destination(
+    path: Path,
+    *,
+    extension: str,
+    expected_bytes: int,
+    expected_digest: str,
+) -> bool:
+    """Dispatch only the server-selected output validator for this export."""
+
+    if extension == ".pdf":
+        return _verify_document_operation_asset_export_destination_pdf(
+            path,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    if extension == ".docx":
+        return _verify_document_operation_asset_export_destination_docx(
+            path,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    if extension == ".txt":
+        return _verify_document_operation_asset_export_destination_text(
+            path,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    return False
+
+
+def _pdf_has_terminal_eof(stream: BinaryIO, *, expected_bytes: int) -> bool:
+    """Require the final PDF EOF marker to have only PDF whitespace after it."""
+
+    try:
+        if expected_bytes < len(b"%%EOF"):
+            return False
+        stream.seek(0, os.SEEK_END)
+        if stream.tell() != expected_bytes:
+            return False
+        scan_bytes = min(expected_bytes, PDF_EOF_SCAN_BYTES)
+        stream.seek(-scan_bytes, os.SEEK_END)
+        tail = stream.read(scan_bytes)
+        marker = tail.rfind(b"%%EOF")
+        return marker >= 0 and not tail[marker + len(b"%%EOF"):].strip(PDF_TRAILING_WHITESPACE)
+    except (OSError, ValueError):
+        return False
+
+
+def _document_operation_output_filename_has_provenance(
+    *,
+    kind: str,
+    original_filename: object,
+    selected_start_page: object,
+    selected_end_page: object,
+    source_page_count: object,
+    output_page_count: object,
+) -> bool:
+    """Match only filenames emitted by the real completion writer for ``kind``."""
+
+    if not isinstance(original_filename, str):
+        return False
+    if kind != "pdf_split":
+        return original_filename == DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES.get(kind)
+    page_values = (
+        selected_start_page,
+        selected_end_page,
+        source_page_count,
+        output_page_count,
+    )
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in page_values):
+        return False
+    start_page, end_page, source_pages, output_pages = page_values
+    return (
+        1 <= start_page <= end_page <= source_pages
+        and output_pages == end_page - start_page + 1
+        and original_filename == f"toan-aas-pdf-pages-{start_page}-{end_page}.pdf"
+    )
+
+
+def finalize_document_operation_asset_export(
+    *,
+    lease: DocumentOperationAssetExportLease,
+    source: DocumentOperationAssetExportSource,
+    request_id: str,
+) -> DocumentOperationAssetExportFinalization:
+    """Finalize one current fenced Document Operation output privately.
+
+    The output contract comes only from the local server-owned kind map.  The
+    caller's descriptor supplies a pre-opened source stream, never a path,
+    URL, browser bytes, or output metadata that can widen that contract.
+    """
+
+    final_path: Path | None = None
+    staging: Path | None = None
+    owns_final_path = False
+    completed = False
+    try:
+        _require_document_operation_asset_export_enabled()
+        try:
+            expected_bytes = _document_operation_export_expected_bytes(lease.reserved_bytes)
+            source_digest = _export_request_fingerprint(source.sha256)
+            lease_fingerprint = _export_request_fingerprint(lease.request_fingerprint)
+        except HTTPException as exc:
+            raise RuntimeError("Nguồn Document Operation không khớp export lease") from exc
+        expected_spec = (
+            DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(source.kind)
+            if isinstance(source.kind, str)
+            else None
+        )
+        if expected_spec is None:
+            raise RuntimeError("Loại Document Operation không có export Asset Vault hợp lệ")
+        expected_extension, expected_content_type, expected_filename = expected_spec
+        if (
+            source.account_id != lease.account_id
+            or source.operation_id != lease.operation_id
+            or source.extension != expected_extension
+            or source.content_type != expected_content_type
+            or source.original_filename != expected_filename
+            or isinstance(source.byte_size, bool)
+            or not isinstance(source.byte_size, int)
+            or source.byte_size != expected_bytes
+            or source.byte_size > _maximum_bytes()
+            or not hmac.compare_digest(source_digest, lease_fingerprint)
+        ):
+            raise RuntimeError("Nguồn Document Operation không khớp export lease")
+        try:
+            original_filename, extension = _safe_filename(expected_filename)
+        except HTTPException as exc:
+            raise RuntimeError("Tên tệp Document Operation không hợp lệ") from exc
+        if original_filename != expected_filename or extension != expected_extension:
+            raise RuntimeError("Tên tệp Document Operation không khớp nguồn máy chủ")
+
+        root = asset_vault_directory()
+        staging = _staging_path(root)
+        copied_bytes, copied_digest = _copy_document_operation_asset_export_source(source, staging)
+        final_path = _storage_path(root, lease.pending_storage_key)
+        _private_asset_vault_child_directory(root, "objects")
+        _promote_image_operation_export_staging(staging, final_path)
+        staging = None
+        owns_final_path = True
+        if not _verify_document_operation_asset_export_destination(
+            final_path,
+            extension=expected_extension,
+            expected_bytes=copied_bytes,
+            expected_digest=copied_digest,
+        ):
+            raise RuntimeError(
+                f"{expected_extension.removeprefix('.').upper()} đã sao chép không vượt qua kiểm tra Asset Vault"
+            )
+
+        asset_id = str(uuid.uuid4())
+        resolved_project_id: str | None = None
+        with transaction() as conn:
+            # ``transaction`` has acquired SQLite's write lock before yielding
+            # here.  Sample one time for both quota reservations and the
+            # expiry fence so a lease cannot expire while waiting for that
+            # lock and still be finalized against an older timestamp.
+            now = utc_now()
+            fence_now = datetime.fromisoformat(now)
+            if fence_now.tzinfo is None:
+                raise RuntimeError("Thời điểm export lease không hợp lệ")
+            operation = conn.execute(
+                """SELECT state, kind, sha256, byte_size, project_id, content_type,
+                          storage_key, original_filename, selected_start_page,
+                          selected_end_page, source_page_count, output_page_count
+                   FROM web_document_operations WHERE id=? AND account_id=?""",
+                (lease.operation_id, lease.account_id),
+            ).fetchone()
+            operation_project_id = str(operation[4]) if operation and operation[4] else None
+            operation_kind = str(operation[1] or "") if operation else ""
+            current_spec = DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(operation_kind)
+            if (
+                not operation
+                or str(operation[0] or "") != "completed"
+                or operation_kind != source.kind
+                or current_spec != expected_spec
+                or not hmac.compare_digest(str(operation[2] or ""), source_digest)
+                or int(operation[3] or 0) != copied_bytes
+                or source.project_id != operation_project_id
+                or str(operation[5] or "") != expected_content_type
+                or re.fullmatch(
+                    rf"outputs/[0-9a-f]{{32}}{re.escape(expected_extension)}",
+                    str(operation[6] or ""),
+                ) is None
+                or not _document_operation_output_filename_has_provenance(
+                    kind=operation_kind,
+                    original_filename=operation[7],
+                    selected_start_page=operation[8],
+                    selected_end_page=operation[9],
+                    source_page_count=operation[10],
+                    output_page_count=operation[11],
+                )
+            ):
+                raise RuntimeError("Nguồn Document Operation không còn khớp export lease")
+            if operation_project_id:
+                project = conn.execute(
+                    "SELECT id FROM web_projects WHERE id=? AND account_id=? AND state='active'",
+                    (operation_project_id, lease.account_id),
+                ).fetchone()
+                if project:
+                    resolved_project_id = str(project[0])
+            # The current lease remains part of pending capacity until the
+            # fenced relation update clears it later in this same transaction.
+            if not _quota_available(
+                conn,
+                lease.account_id,
+                0,
+                reference_now=fence_now,
+            ):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            conn.execute(
+                """INSERT INTO web_asset_files
+                   (id, account_id, project_id, display_name, original_filename, extension, content_type,
+                    byte_size, sha256, storage_key, state, created_at, updated_at, archived_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, NULL)""",
+                (
+                    asset_id,
+                    lease.account_id,
+                    resolved_project_id,
+                    f"Bản sao {original_filename}",
+                    original_filename,
+                    expected_extension,
+                    expected_content_type,
+                    copied_bytes,
+                    copied_digest,
+                    lease.pending_storage_key,
+                    now,
+                    now,
+                ),
+            )
+            updated = conn.execute(
+                """UPDATE web_document_operation_asset_exports
+                   SET asset_id=?, state='completed', lease_token=NULL, lease_expires_at=NULL,
+                       reserved_bytes=0, pending_storage_key=NULL, completed_at=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying'
+                     AND request_fingerprint=? AND lease_generation=? AND lease_token=?
+                     AND lease_expires_at=? AND lease_expires_at > ? AND reserved_bytes=?
+                     AND pending_storage_key=? AND asset_id IS NULL""",
+                (
+                    asset_id,
+                    now,
+                    now,
+                    lease.operation_id,
+                    lease.account_id,
+                    lease_fingerprint,
+                    lease.generation,
+                    lease.token,
+                    lease.expires_at,
+                    now,
+                    expected_bytes,
+                    lease.pending_storage_key,
+                ),
+            )
+            if updated.rowcount != 1:
+                raise RuntimeError("Document export lease không còn hiện tại khi hoàn tất Asset Vault")
+            _record_audit(
+                conn,
+                account_id=lease.account_id,
+                canonical_user_id=None,
+                action="web.document_operation.export_to_asset_vault",
+                request_id=str(request_id or "")[:160],
+                target=asset_id,
+                detail=f"kind={source.kind};bytes={copied_bytes}",
+            )
+        completed = True
+        return DocumentOperationAssetExportFinalization(
+            state="completed",
+            asset={
+                "id": asset_id,
+                "project_id": resolved_project_id,
+                "display_name": f"Bản sao {original_filename}",
+                "original_filename": original_filename,
+                "extension": expected_extension,
+                "content_type": expected_content_type,
+                "byte_size": copied_bytes,
+                "state": ACTIVE_STATE,
+                "created_at": now,
+                "updated_at": now,
+                "archived_at": None,
+            },
+        )
+    finally:
+        try:
+            source.stream.close()
+        except (AttributeError, OSError, ValueError):
+            pass
+        if staging is not None:
+            _safe_unlink(staging)
+        if not completed and owns_final_path:
+            _safe_unlink(final_path)
+
+
+def get_document_operation_asset_export_receipt(
+    *,
+    account_id: str,
+    operation_id: str,
+) -> DocumentOperationAssetExportFinalization | None:
+    """Return the current relation and Asset Vault lifecycle, never a cache."""
+
+    _require_document_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _document_operation_id(operation_id)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT export.state, export.asset_id,
+                      asset.id, asset.project_id, asset.display_name, asset.original_filename,
+                      asset.extension, asset.content_type, asset.byte_size, asset.state,
+                      asset.created_at, asset.updated_at, asset.archived_at,
+                      asset.sha256, export.request_fingerprint,
+                      operation.sha256, operation.byte_size
+               FROM web_document_operation_asset_exports AS export
+               LEFT JOIN web_asset_files AS asset
+                 ON asset.id=export.asset_id AND asset.account_id=export.account_id
+               LEFT JOIN web_document_operations AS operation
+                 ON operation.id=export.operation_id AND operation.account_id=export.account_id
+               WHERE export.operation_id=? AND export.account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+    if not row:
+        return None
+    relation_state = str(row[0] or "")
+    if relation_state != "completed":
+        return DocumentOperationAssetExportFinalization(state=relation_state or "guarded", asset=None)
+    with transaction() as conn:
+        valid_snapshot = _completed_document_operation_asset_export_snapshot_is_valid(
+            conn,
+            account_id=scoped_account_id,
+            operation_id=scoped_operation_id,
+            asset_id=row[1],
+            export_fingerprint=row[14],
+        )
+    if not valid_snapshot:
+        return DocumentOperationAssetExportFinalization(state="guarded", asset=None)
+    return DocumentOperationAssetExportFinalization(
+        state="completed",
+        asset=_asset_public(tuple(row[2:13])),
+    )
+
+
+def replay_document_operation_asset_export(
+    *,
+    account_id: str,
+    operation_id: str,
+    idempotency_key: str,
+) -> DocumentOperationAssetExportFinalization | None:
+    """Bind a fresh replay key to a current document-export lifecycle."""
+
+    _require_document_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _document_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        relation = conn.execute(
+            """SELECT request_fingerprint, state, lease_expires_at, asset_id
+               FROM web_document_operation_asset_exports
+               WHERE operation_id=? AND account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        existing_key = conn.execute(
+            """SELECT operation_id FROM web_document_operation_asset_export_requests
+               WHERE account_id=? AND idempotency_key=?""",
+            (scoped_account_id, key),
+        ).fetchone()
+        if existing_key and str(existing_key[0]) != scoped_operation_id:
+            raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho document export khác")
+        if not relation:
+            return None
+        if str(relation[1] or "") == "copying" and _document_operation_export_lease_is_expired(
+            str(relation[2] or "")
+        ):
+            return None
+        if str(relation[1] or "") == "completed" and not _completed_document_operation_asset_export_snapshot_is_valid(
+            conn,
+            account_id=scoped_account_id,
+            operation_id=scoped_operation_id,
+            asset_id=relation[3],
+            export_fingerprint=relation[0],
+        ):
+            return DocumentOperationAssetExportFinalization(state="guarded", asset=None)
+        _insert_document_operation_asset_export_request_mapping(
+            conn,
+            account_id=scoped_account_id,
+            idempotency_key=key,
+            operation_id=scoped_operation_id,
+            request_fingerprint=str(relation[0]),
+            now=now,
+        )
+    return get_document_operation_asset_export_receipt(
         account_id=scoped_account_id,
         operation_id=scoped_operation_id,
     )
@@ -1898,10 +3288,8 @@ def reconcile_asset_vault_storage() -> None:
         return
     ensure_copyfast_schema()
     root = asset_vault_directory()
-    staging = root / ".staging"
-    objects = root / "objects"
-    staging.mkdir(parents=True, exist_ok=True)
-    objects.mkdir(parents=True, exist_ok=True)
+    staging = _private_asset_vault_child_directory(root, ".staging")
+    objects = _private_asset_vault_child_directory(root, "objects")
     with transaction() as conn:
         referenced = {
             str(row[0])
@@ -1918,6 +3306,17 @@ def reconcile_asset_vault_storage() -> None:
             str(row[0])
             for row in pending_rows
             if row[0] and not _lease_is_expired(str(row[1] or ""))
+        )
+        pending_document_rows = conn.execute(
+            """SELECT pending_storage_key, lease_expires_at
+               FROM web_document_operation_asset_exports
+               WHERE state='copying' AND lease_token IS NOT NULL
+                 AND pending_storage_key IS NOT NULL"""
+        ).fetchall()
+        referenced.update(
+            str(row[0])
+            for row in pending_document_rows
+            if row[0] and not _document_operation_export_lease_is_expired(str(row[1] or ""))
         )
     cutoff = datetime.now(timezone.utc).timestamp() - ORPHAN_RETENTION_SECONDS
     for directory, match_key in ((staging, False), (objects, True)):
@@ -2258,7 +3657,7 @@ async def upload_asset(
         asset_id = str(uuid.uuid4())
         storage_key = f"objects/{uuid.uuid4().hex}.blob"
         final_path = _storage_path(root, storage_key)
-        final_path.parent.mkdir(parents=True, exist_ok=True)
+        _private_asset_vault_child_directory(root, "objects")
         os.replace(temporary, final_path)
 
         with transaction() as conn:

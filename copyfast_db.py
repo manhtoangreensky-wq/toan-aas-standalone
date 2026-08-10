@@ -108,6 +108,18 @@ def document_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def document_operation_export_enabled() -> bool:
+    """Whether completed Document Operation outputs may enter Asset Vault.
+
+    The copy capability is distinct from both Document Operations and Asset
+    Vault.  Callers must still require their effective private storage gates;
+    this switch never enables Bot, provider, wallet/Xu, PayOS or public
+    delivery behavior on its own.
+    """
+
+    return os.environ.get("WEBAPP_DOCUMENT_OPERATION_EXPORT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def subtitle_asset_operations_enabled() -> bool:
     """Whether private SRT/VTT Asset Vault operations are deliberately enabled.
 
@@ -4087,6 +4099,70 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # A completed Document Operation may become exactly one independent
+        # private Asset Vault record.  Keep this fence distinct from Image
+        # Operations: it contains no source path, provider/Bot, wallet, PayOS
+        # or public-delivery fields, and no existing operation table is
+        # rewritten during bootstrap.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_operation_asset_exports (
+                operation_id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                asset_id TEXT UNIQUE,
+                state TEXT NOT NULL CHECK(state IN ('copying', 'completed')),
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                lease_generation INTEGER NOT NULL CHECK(lease_generation >= 1),
+                lease_token TEXT,
+                lease_expires_at TEXT,
+                reserved_bytes INTEGER NOT NULL CHECK(reserved_bytes >= 0),
+                pending_storage_key TEXT UNIQUE,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                completed_at TEXT,
+                UNIQUE(operation_id, account_id),
+                CHECK(
+                    (state = 'copying'
+                        AND asset_id IS NULL
+                        AND lease_token IS NOT NULL
+                        AND lease_expires_at IS NOT NULL
+                        AND pending_storage_key IS NOT NULL
+                        AND reserved_bytes > 0
+                        AND completed_at IS NULL)
+                    OR
+                    (state = 'completed'
+                        AND asset_id IS NOT NULL
+                        AND lease_token IS NULL
+                        AND lease_expires_at IS NULL
+                        AND pending_storage_key IS NULL
+                        AND reserved_bytes = 0
+                        AND completed_at IS NOT NULL)
+                ),
+                FOREIGN KEY(operation_id) REFERENCES web_document_operations(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        # Opaque idempotency keys bind one signed account to one Document
+        # Operation/source fingerprint.  A later exporter uses this map to
+        # replay a lease or completed relation rather than create a duplicate
+        # Asset Vault object.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_operation_asset_export_requests (
+                account_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                operation_id TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (account_id, idempotency_key),
+                FOREIGN KEY(operation_id, account_id)
+                    REFERENCES web_document_operation_asset_exports(operation_id, account_id)
+            )
+            """
+        )
         # Image operations have an independent lifecycle and artifact store.
         # Do not reuse `web_document_operations`: an image transform has a
         # different decoder boundary, output contract and retention policy.
@@ -5591,6 +5667,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_document_operation_sources_operation_order ON web_document_operation_sources(operation_id, source_index ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operation_asset_exports_account_state_updated ON web_document_operation_asset_exports(account_id, state, updated_at DESC, operation_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operation_asset_exports_expiry ON web_document_operation_asset_exports(state, lease_expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operation_asset_export_requests_operation_account ON web_document_operation_asset_export_requests(operation_id, account_id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_image_operations_account_updated ON web_image_operations(account_id, updated_at DESC, id DESC)"
