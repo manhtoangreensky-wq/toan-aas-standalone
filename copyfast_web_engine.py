@@ -215,6 +215,11 @@ ENGINE_SPECS.update(_many(("chat",), mode=ENGINE_MODE_WEB_NATIVE, flags=("chat_w
 ENGINE_SPECS.update(_many(("analytics_workspace",), mode=ENGINE_MODE_WEB_NATIVE, flags=("analytics_workspace_enabled",), handler="analytics_workspace"))
 ENGINE_SPECS.update(_many(("workboard",), mode=ENGINE_MODE_WEB_NATIVE, flags=("workboard_enabled",), handler="workboard"))
 ENGINE_SPECS.update(_many(("support", "tickets"), mode=ENGINE_MODE_WEB_NATIVE, flags=("support_desk_enabled",), handler="support_desk"))
+# Partner Readiness owns only the signed Web profile and interest receipt.  Its
+# maintenance gate cannot be bypassed by a catalog descriptor; it never grants
+# matching, contact release, referral, payout, payment, provider, Bot or job
+# capabilities.
+ENGINE_SPECS.update(_many(("partner_readiness",), mode=ENGINE_MODE_WEB_NATIVE, flags=("partner_readiness_enabled",), handler="partner_readiness"))
 
 # Initial verified artifact scope. It includes only opt-in local image OCR;
 # PDF OCR, AI edit/upscale, provider generation, translation, TTS, music and
@@ -252,6 +257,7 @@ ENGINE_SPECS.update(_many(
         "campaign_report", "video_progress",
         "video_export", "voice_vault", "voice_preview", "voice_outputs",
         "music_library", "sfx_library", "music_upload", "service_status",
+        "pricing",
     ),
     mode=ENGINE_MODE_BOT_COMPANION,
     flags=("copyfast_enabled",),

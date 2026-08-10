@@ -640,6 +640,13 @@ a { color: inherit; text-decoration: none; }
 .portal-engine-label[data-engine-mode="web_native"] { border-color: rgba(99, 225, 208, .38); background: rgba(99, 225, 208, .08); color: var(--portal-accent); }
 .portal-engine-label[data-engine-mode="bot_companion"] { border-color: rgba(98, 155, 255, .38); background: rgba(98, 155, 255, .08); color: #9ec5ff; }
 .portal-engine-label[data-engine-mode="guarded"] { border-color: rgba(225, 165, 76, .35); background: rgba(225, 165, 76, .08); color: #e8bf7e; }
+.portal-readiness-label { display: inline-flex; min-height: 23px; align-items: center; padding: 3px 8px; border: 1px solid var(--portal-border); border-radius: 999px; background: rgba(255, 255, 255, .025); color: var(--portal-muted); font-size: 9px; font-weight: 780; line-height: 1.1; letter-spacing: .01em; white-space: nowrap; }
+.portal-readiness-label[data-readiness="available"] { border-color: rgba(99, 225, 208, .38); background: rgba(99, 225, 208, .08); color: var(--portal-accent); }
+.portal-readiness-label[data-readiness="planning_only"] { border-color: rgba(98, 155, 255, .38); background: rgba(98, 155, 255, .08); color: #9ec5ff; }
+.portal-readiness-label[data-readiness="local_execution"] { border-color: rgba(99, 218, 139, .38); background: rgba(99, 218, 139, .08); color: #a6f1bd; }
+.portal-readiness-label[data-readiness="canonical_read"] { border-color: rgba(126, 186, 255, .42); background: rgba(126, 186, 255, .08); color: #b5d5ff; }
+.portal-readiness-label[data-readiness="guarded"] { border-color: rgba(225, 165, 76, .35); background: rgba(225, 165, 76, .08); color: #e8bf7e; }
+.portal-readiness-label[data-readiness="disabled"] { border-color: rgba(165, 182, 192, .28); background: rgba(165, 182, 192, .06); color: #b7c9d2; }
 .portal-module-icon { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 11px; background: rgba(99, 225, 208, .1); color: var(--portal-accent); font-size: 17px; }
 .portal-module-card h3 { margin: 0; color: #def2f8; font-size: 13px; }
 .portal-module-card p { margin: 4px 0 0; color: var(--portal-muted); font-size: 11px; line-height: 1.52; }

@@ -53,6 +53,7 @@ from copyfast_native_read_models import (
     parse_native_asset_id,
     parse_native_job_id,
 )
+from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
 from copyfast_web_engine import engine_descriptor
 
@@ -2992,6 +2993,7 @@ async def feature_catalog():
     # read-only/history surface never renders a save button which would later
     # be rejected by the owner-scoped API.
     flags = _flags()
+    bridge_ready = bridge_configured()
     features = []
     for entry in catalog():
         item = dict(entry)
@@ -3000,6 +3002,13 @@ async def feature_catalog():
         # canonical job, payment, output or delivery; every actionable route
         # still owns its signed-session, CSRF, ownership and engine checks.
         item["engine"] = engine_descriptor(str(item.get("key") or ""), flags)
+        # This is only a product-facing descriptor. It cannot grant a
+        # provider call, canonical job, payment, output or delivery.
+        item["readiness"] = readiness_descriptor(
+            str(item.get("key") or ""),
+            flags,
+            bridge_ready=bridge_ready,
+        )
         features.append(item)
     # The Capability Hub is an aggregate of the sanitized static migration
     # audit.  It deliberately has no raw Bot commands/callbacks, handlers,
@@ -3018,7 +3027,7 @@ async def feature_catalog():
             # authorization and capability checks.
             "menu_capabilities": menu_capability_catalog(),
             "flags": flags,
-            "bridge_configured": bridge_configured(),
+            "bridge_configured": bridge_ready,
             "capability_hub": capability_hub(),
         },
     )

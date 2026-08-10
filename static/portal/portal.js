@@ -10390,6 +10390,7 @@
   const FEATURE_FAMILY_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"]);
   const CATALOG_ENGINE_MODES = new Set(["web_native", "bot_companion", "guarded"]);
   const CATALOG_ENGINE_STATES = new Set(["ready", "guarded"]);
+  const CATALOG_READINESS_STATES = new Set(["available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"]);
 
   function featureCatalogGroup(key) {
     return FEATURE_CATALOG_GROUPS.find((group) => group.key === key) || null;
@@ -10450,6 +10451,29 @@
     return `<span class="portal-engine-label" data-engine-mode="${safeText(engine.mode)}" title="${safeText(title)}">${safeText(labels[engine.mode] || labels.guarded)}${safeText(suffix)}</span>`;
   }
 
+  // Product readiness is a small server-provided description of the intended
+  // route boundary. It is deliberately separate from current user authority,
+  // execution checks and the Engine taxonomy above.
+  function normalizeCatalogReadiness(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const status = CATALOG_READINESS_STATES.has(source.status) ? source.status : "guarded";
+    return { status };
+  }
+
+  function renderReadinessLabel(module) {
+    const readiness = normalizeCatalogReadiness(module && typeof module === "object" ? module.readiness : null);
+    const labels = {
+      available: uiText("catalog.readiness.available", "Sẵn sàng"),
+      planning_only: uiText("catalog.readiness.planning_only", "Lập kế hoạch"),
+      local_execution: uiText("catalog.readiness.local_execution", "Xử lý tại Web"),
+      canonical_read: uiText("catalog.readiness.canonical_read", "Đọc canonical"),
+      guarded: uiText("catalog.readiness.guarded", "Đang bảo vệ"),
+      disabled: uiText("catalog.readiness.disabled", "Tạm dừng")
+    };
+    const title = uiText("catalog.readiness.title", "Phân loại readiness; không xác nhận job, payment hoặc output.");
+    return `<span class="portal-readiness-label" data-readiness="${safeText(readiness.status)}" title="${safeText(title)}">${safeText(labels[readiness.status] || labels.guarded)}</span>`;
+  }
+
   function catalogEntryState(module, page, context) {
     // Prompt Studio now owns a narrow Web-native Blueprint composer. Its
     // readiness must never be inferred from the historical `prompt_studio`
@@ -10481,8 +10505,11 @@
       ? String(module.state || module.availability).toLowerCase()
       : (String(module && module.availability || "").toLowerCase() === "available" ? "read_only" : "");
     const displayState = declaredState || catalogEntryState(module, page, context);
+    // The catalog already exposes both execution taxonomy and product
+    // readiness.  Do not add the older generic badge here: its independent
+    // route-state wording can contradict those two display-only labels.
     const signals = options && options.showEngineLabel === true
-      ? `<span class="portal-module-card-signals">${renderEngineLabel(module)}${badge(displayState)}</span>`
+      ? `<span class="portal-module-card-signals">${renderEngineLabel(module)}${renderReadinessLabel(module)}</span>`
       : badge(displayState);
     return `<a class="portal-module-card" href="${safeText(route)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(module.icon || page.icon || ICONS.default)}</span>${signals}</div>
       <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || "Mở workspace")}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
