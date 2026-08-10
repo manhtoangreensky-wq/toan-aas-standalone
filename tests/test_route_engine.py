@@ -107,6 +107,32 @@ def test_route_catalog_fails_closed_when_candidates_is_not_a_container() -> None
     assert decision.retail_price_minor is None
 
 
+def test_resolve_route_guards_invalid_request_before_field_access() -> None:
+    catalog = RouteCatalog(
+        version="costs-2026-08-10",
+        approval_status=CatalogApproval.CANONICAL_APPROVED,
+        candidates=(candidate("primary", 11),),
+    )
+
+    decision = resolve_route(None, catalog)  # type: ignore[arg-type]
+
+    assert decision.status is RouteStatus.GUARDED
+    assert decision.catalog_version == "costs-2026-08-10"
+    assert decision.primary is None
+    assert decision.retail_price_minor is None
+    assert decision.guard_reason == "ROUTE_INVALID_REQUEST"
+
+
+def test_resolve_route_guards_invalid_catalog_before_field_access() -> None:
+    decision = resolve_route(request(), None)  # type: ignore[arg-type]
+
+    assert decision.status is RouteStatus.GUARDED
+    assert decision.catalog_version == "unconfigured"
+    assert decision.primary is None
+    assert decision.retail_price_minor is None
+    assert decision.guard_reason == "ROUTE_INVALID_CATALOG"
+
+
 def test_resolve_route_guards_when_catalog_contains_malformed_candidate() -> None:
     catalog = RouteCatalog(
         version="costs-2026-08-10",

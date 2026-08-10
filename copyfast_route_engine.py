@@ -98,6 +98,10 @@ def unconfigured_catalog() -> RouteCatalog:
 
 def resolve_route(request: RouteRequest, catalog: RouteCatalog) -> RouteDecision:
     """Select the cheapest exact approved route, or fail closed without a quote."""
+    if type(catalog) is not RouteCatalog:
+        return RouteDecision.guarded("unconfigured", "ROUTE_INVALID_CATALOG")
+    if type(request) is not RouteRequest:
+        return RouteDecision.guarded(catalog.version, "ROUTE_INVALID_REQUEST")
     if catalog.approval_status is not CatalogApproval.CANONICAL_APPROVED:
         return RouteDecision.guarded(catalog.version, "ROUTE_CATALOG_NOT_APPROVED")
     if not _has_nonempty_strings(
