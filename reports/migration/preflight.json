@@ -22,7 +22,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-08-10T03:49:11+00:00",
+  "generated_at_utc": "2026-08-10T09:03:48+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "accf99e7ae7a0fc585ab06c74005195aff373fa2",
+      "checkout_sha": "6797b7cb7f382d7b07cdfcc31a5d2db400beab53",
       "requested_relation": "exact",
-      "requested_sha": "accf99e7ae7a0fc585ab06c74005195aff373fa2",
-      "source_fingerprint_sha256": "8397a35b00efb9367fe383c23185572b8d8f7bc0b0f81167f95c68b95625147e",
+      "requested_sha": "6797b7cb7f382d7b07cdfcc31a5d2db400beab53",
+      "source_fingerprint_sha256": "f9283738da4118e748f021b126c31d6823c7a6ec02277db0318423fdf39d8cb9",
       "working_tree_state": "clean"
     },
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-capability-readiness"
