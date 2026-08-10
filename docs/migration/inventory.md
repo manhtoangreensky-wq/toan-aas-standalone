@@ -10,10 +10,10 @@
 | Legacy handlers/ package records outside observed runtime | 57 | Evidence only; excluded from product-action coverage |
 | Unresolved callback templates | 475 | n/a |
 | Conversation handlers | 0 | n/a |
-| FastAPI routes | 139 | 677 |
+| FastAPI routes | 139 | 678 |
 | Background/job signals | 194 | 40 |
-| Database tables | 97 | 216 |
-| Environment names | 376 | 317 |
+| Database tables | 97 | 218 |
+| Environment names | 376 | 321 |
 | Provider names | 15 | 7 |
 
 Reports contain the complete machine-readable records. Values matching secret formats are redacted.

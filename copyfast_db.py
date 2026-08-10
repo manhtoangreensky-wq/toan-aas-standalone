@@ -221,6 +221,17 @@ def image_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_operation_export_enabled() -> bool:
+    """Whether verified local image outputs may be copied into Asset Vault.
+
+    This is a separate, fail-closed opt-in from Image Operations and Asset
+    Vault.  It grants no Bot, provider, wallet, PayOS or public delivery
+    authority; callers still require the other effective capability gates.
+    """
+
+    return os.environ.get("WEBAPP_IMAGE_OPERATION_EXPORT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def video_operations_enabled() -> bool:
     """Whether bounded, Web-native private video operations are enabled.
 
@@ -4123,6 +4134,78 @@ def ensure_copyfast_schema() -> None:
             # and immutable request/asset evidence while adding canonical
             # server-normalized settings for later Web-native image kinds.
             conn.execute("ALTER TABLE web_image_operations ADD COLUMN settings_json TEXT NOT NULL DEFAULT '{}'")
+        # A completed Image Operation may become exactly one independent
+        # private Asset Vault record.  Export copying has an explicit fence so
+        # a stale writer cannot finalize or delete a newer attempt.  This
+        # metadata boundary contains no source path, provider/Bot, wallet,
+        # PayOS or public-delivery fields.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_operation_asset_exports (
+                operation_id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                asset_id TEXT UNIQUE,
+                state TEXT NOT NULL CHECK(state IN ('copying', 'completed')),
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                lease_generation INTEGER NOT NULL CHECK(lease_generation >= 1),
+                lease_token TEXT,
+                lease_expires_at TEXT,
+                reserved_bytes INTEGER NOT NULL CHECK(reserved_bytes >= 0),
+                pending_storage_key TEXT UNIQUE,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                completed_at TEXT,
+                UNIQUE(operation_id, account_id),
+                CHECK(
+                    (state = 'copying'
+                        AND asset_id IS NULL
+                        AND lease_token IS NOT NULL
+                        AND lease_expires_at IS NOT NULL
+                        AND pending_storage_key IS NOT NULL
+                        AND reserved_bytes > 0
+                        AND completed_at IS NULL)
+                    OR
+                    (state = 'completed'
+                        AND asset_id IS NOT NULL
+                        AND lease_token IS NULL
+                        AND lease_expires_at IS NULL
+                        AND pending_storage_key IS NULL
+                        AND reserved_bytes = 0
+                        AND completed_at IS NOT NULL)
+                ),
+                FOREIGN KEY(operation_id) REFERENCES web_image_operations(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        image_operation_export_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(web_image_operation_asset_exports)").fetchall()
+        }
+        if "completed_at" not in image_operation_export_columns:
+            # Legacy databases already have the core fenced state CHECK.  Keep
+            # this append-only migration so completed export evidence can be
+            # recorded without rebuilding a live private-storage table.
+            conn.execute("ALTER TABLE web_image_operation_asset_exports ADD COLUMN completed_at TEXT")
+        # Opaque idempotency keys are mapped to a fenced export relation,
+        # rather than a generic response snapshot.  Multiple valid keys may
+        # replay the same operation, but a signed account cannot reuse one key
+        # for another operation.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_operation_asset_export_requests (
+                account_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                operation_id TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (account_id, idempotency_key),
+                FOREIGN KEY(operation_id, account_id)
+                    REFERENCES web_image_operation_asset_exports(operation_id, account_id)
+            )
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_image_operation_events (
@@ -5514,6 +5597,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_image_operations_source_account ON web_image_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operation_asset_exports_account_state_updated ON web_image_operation_asset_exports(account_id, state, updated_at DESC, operation_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operation_asset_exports_expiry ON web_image_operation_asset_exports(state, lease_expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operation_asset_export_requests_operation_account ON web_image_operation_asset_export_requests(operation_id, account_id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_image_operation_events_operation_sequence ON web_image_operation_events(operation_id, sequence ASC, id ASC)"

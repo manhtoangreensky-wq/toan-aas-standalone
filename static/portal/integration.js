@@ -12509,6 +12509,7 @@
     // payment capability.
     const pdfOcrWordEnabled = Boolean(status.flags && status.flags.pdf_ocr_word_enabled === true);
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
+    const imageOperationExportEnabled = Boolean(status.flags && status.flags.image_operation_export_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
     const imageBrandOverlayEnabled = Boolean(status.flags && status.flags.image_brand_overlay_enabled === true);
@@ -12967,6 +12968,7 @@
       "image-operation-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-resize": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled),
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-operation-export-to-asset-vault": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageOperationExportEnabled),
       "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
       "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-background-cleanup": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBackgroundCleanupEnabled),
@@ -13663,6 +13665,7 @@
       pdfOcrEnabled,
       pdfOcrWordEnabled,
       imageOperationsEnabled,
+      imageOperationExportEnabled,
       imageResizeEnabled,
       imageEnhanceEnabled,
       imageBrandOverlayEnabled,
@@ -34266,6 +34269,64 @@
           // Re-read only the server-owned private state after acknowledgment.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "image-operation-export-to-asset-vault") {
+        const operationId = String(fields.__imageOperationId || "").trim();
+        const refreshOperationHistory = route === "/image/resize"
+          ? () => hydrateImageOperations()
+          : route === "/image/edit"
+            ? () => hydrateImageEnhanceOperations()
+            : route === "/image/background-cleanup"
+              ? () => hydrateImageBackgroundCleanupOperations()
+              : route === "/image/brand-overlay"
+                ? () => hydrateImageBrandOverlayOperations()
+                : null;
+        if (!validImageOperationId(operationId)) {
+          throw new Error("PNG đã chọn không còn hợp lệ để lưu.");
+        }
+        if (!refreshOperationHistory || currentPortalPath() !== route) {
+          throw new Error("Chỉ có thể lưu PNG từ Image Operations đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["image-operation-export-to-asset-vault"] === true)) {
+          throw new Error("Tính năng lưu PNG vào Asset Vault chưa sẵn sàng cho signed session này.");
+        }
+        const scope = `image-operation-export:${operationId}`;
+        const submission = acquireSubmission(scope, operationId);
+        if (!submission) {
+          toast("PNG này đang được lưu. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        const refreshPrivateState = () => Promise.all([refreshOperationHistory(), hydrateAssetVault()]);
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/image-operations/${encodeURIComponent(operationId)}/export-to-asset-vault`, {
+            method: "POST",
+            headers: { "Idempotency-Key": submission.key }
+          });
+          acknowledged = true;
+          const asset = result && result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
+          const assetState = String(asset && asset.state || "");
+          if (!asset || !validVaultAssetId(asset.id) || !["active", "archived", "unavailable"].includes(assetState)) {
+            throw new Error("Máy chủ chưa trả xác nhận Asset Vault hợp lệ.");
+          }
+          await refreshPrivateState();
+          toast(
+            assetState === "unavailable"
+              ? "PNG đã được lưu nhưng Asset Vault đang đánh dấu file không khả dụng. Hãy kiểm tra lại trạng thái."
+              : (result.message || "Đã lưu PNG đã xác minh vào Asset Vault riêng tư."),
+            assetState === "unavailable" ? "error" : undefined
+          );
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await refreshPrivateState();
           throw error;
         } finally {
           releaseSubmission(submission);

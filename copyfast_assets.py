@@ -10,6 +10,7 @@ only; it does not represent a generated job result or an account balance.
 from __future__ import annotations
 
 import codecs
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -20,12 +21,14 @@ import re
 import stat
 import tempfile
 import uuid
+import warnings
 from typing import Annotated, Any, BinaryIO, Iterator
 from urllib.parse import quote
 from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
+from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.background import BackgroundTask
 
@@ -35,6 +38,8 @@ from copyfast_db import (
     asset_vault_enabled,
     asset_vault_video_preview_enabled,
     ensure_copyfast_schema,
+    image_operation_export_enabled,
+    image_operations_enabled,
     transaction,
     utc_now,
 )
@@ -57,7 +62,14 @@ STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
 PENDING_MARKER_KEY = "_web_asset_vault_pending"
 PENDING_SECONDS = 5 * 60
 ORPHAN_RETENTION_SECONDS = 60 * 60
+IMAGE_OPERATION_EXPORT_LEASE_SECONDS = 5 * 60
 CHUNK_BYTES = 1024 * 1024
+IMAGE_OPERATION_EXPORT_KINDS = frozenset({
+    "image_resize",
+    "image_enhance",
+    "image_background_cleanup",
+    "image_brand_overlay",
+})
 VIDEO_PREVIEW_MAX_BYTES = 20 * 1024 * 1024
 VIDEO_PREVIEW_MEDIA_PAIRS = frozenset({
     (".mp4", "video/mp4"),
@@ -103,6 +115,14 @@ def _require_enabled() -> None:
         raise HTTPException(status_code=503, detail="Asset Vault chưa được bật cho môi trường này")
 
 
+def _require_image_operation_export_enabled() -> None:
+    """Keep the internal export boundary closed unless all storage gates hold."""
+
+    _require_enabled()
+    if not image_operations_enabled() or not image_operation_export_enabled():
+        raise HTTPException(status_code=503, detail="Lưu PNG Image Operations vào Asset Vault chưa được bật")
+
+
 def _maximum_bytes() -> int:
     raw = os.environ.get("WEBAPP_ASSET_VAULT_MAX_FILE_MB", "25").strip()
     try:
@@ -136,6 +156,71 @@ def _idempotency_key(value: str | None) -> str:
     if not IDEMPOTENCY_PATTERN.fullmatch(key):
         raise HTTPException(status_code=422, detail="Idempotency key không hợp lệ")
     return key
+
+
+def _image_operation_id(value: str) -> str:
+    candidate = str(value or "").strip()
+    if not ASSET_ID_PATTERN.fullmatch(candidate):
+        raise HTTPException(status_code=422, detail="Mã thao tác ảnh không hợp lệ")
+    return str(uuid.UUID(candidate))
+
+
+def _export_request_fingerprint(value: str) -> str:
+    candidate = str(value or "").strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{64}", candidate):
+        raise HTTPException(status_code=422, detail="Dấu vân tay export không hợp lệ")
+    return candidate
+
+
+@dataclass(frozen=True)
+class ImageOperationAssetExportLease:
+    """One attempt-owned, fenced reservation for a private PNG copy."""
+
+    account_id: str
+    operation_id: str
+    generation: int
+    token: str
+    expires_at: str
+    pending_storage_key: str
+    reserved_bytes: int
+    request_fingerprint: str
+
+
+@dataclass(frozen=True)
+class ImageOperationAssetExportReservation:
+    """A reservation result without an Asset Vault snapshot cache."""
+
+    state: str
+    lease: ImageOperationAssetExportLease | None = None
+
+
+@dataclass
+class ImageOperationAssetExportSource:
+    """One already-verified Image Operation output pinned to an open stream.
+
+    The Image Operations boundary constructs this only from its owner-scoped
+    database row and keeps ``stream`` open until this exporter closes it.  No
+    caller-provided path, URL or browser bytes can enter the Vault copy path.
+    """
+
+    account_id: str
+    operation_id: str
+    kind: str
+    project_id: str | None
+    original_filename: str
+    byte_size: int
+    sha256: str
+    width: int
+    height: int
+    stream: BinaryIO
+
+
+@dataclass(frozen=True)
+class ImageOperationAssetExportFinalization:
+    """Fresh public Asset Vault receipt after a completed fenced copy."""
+
+    state: str
+    asset: dict[str, Any] | None
 
 
 class AssetRestoreRequest(BaseModel):
@@ -417,6 +502,13 @@ def _lifecycle_reference_summary(conn, *, asset_id: str, account_id: str) -> dic
             (asset_id, account_id),
         ),
         (
+            "image_operation_export",
+            False,
+            """SELECT COUNT(*) FROM web_image_operation_asset_exports
+               WHERE asset_id=? AND account_id=? AND state='completed'""",
+            (asset_id, account_id),
+        ),
+        (
             "frame_video_operation_source",
             False,
             "SELECT COUNT(*) FROM web_frame_video_operation_sources AS source "
@@ -687,6 +779,25 @@ def _store_response(conn, *, scope: str, key: str, marker: str, fingerprint: str
         raise RuntimeError("Không thể hoàn tất idempotency Asset Vault")
 
 
+def _pending_image_operation_export_bytes(conn, account_id: str) -> int:
+    """Return bytes held by current fenced exports for one signed account."""
+
+    rows = conn.execute(
+        """SELECT reserved_bytes, lease_expires_at
+           FROM web_image_operation_asset_exports
+           WHERE account_id=? AND state='copying' AND lease_token IS NOT NULL""",
+        (account_id,),
+    ).fetchall()
+    # ``_lease_is_expired`` treats malformed and timezone-naive timestamps as
+    # expired.  A damaged/legacy row therefore cannot fail open by retaining
+    # a customer's quota indefinitely.
+    return sum(
+        max(0, int(row[0] or 0))
+        for row in rows
+        if not _lease_is_expired(str(row[1] or ""))
+    )
+
+
 def _quota_available(conn, account_id: str, additional_bytes: int) -> bool:
     # Archive deliberately removes download access but does not erase its
     # private blob. Count every retained row so a customer cannot bypass the
@@ -696,7 +807,658 @@ def _quota_available(conn, account_id: str, additional_bytes: int) -> bool:
         (account_id,),
     ).fetchone()
     used = int(row[0] or 0) if row else 0
-    return used + additional_bytes <= _maximum_account_bytes()
+    reserved = _pending_image_operation_export_bytes(conn, account_id)
+    return used + reserved + additional_bytes <= _maximum_account_bytes()
+
+
+def _lease_expiry() -> str:
+    return (datetime.now(timezone.utc) + timedelta(seconds=IMAGE_OPERATION_EXPORT_LEASE_SECONDS)).isoformat(
+        timespec="seconds"
+    )
+
+
+def _lease_is_expired(value: str | None) -> bool:
+    try:
+        expires_at = datetime.fromisoformat(str(value or ""))
+        if expires_at.tzinfo is None:
+            return True
+        return expires_at <= datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return True
+
+
+def _export_pending_storage_key() -> str:
+    return f"objects/{uuid.uuid4().hex}.blob"
+
+
+def _export_lease_from_row(row: tuple[Any, ...]) -> ImageOperationAssetExportLease:
+    return ImageOperationAssetExportLease(
+        account_id=str(row[1]),
+        operation_id=str(row[0]),
+        generation=int(row[5]),
+        token=str(row[6]),
+        expires_at=str(row[7]),
+        reserved_bytes=int(row[8]),
+        pending_storage_key=str(row[9]),
+        request_fingerprint=str(row[4]),
+    )
+
+
+def _insert_export_request_mapping(
+    conn,
+    *,
+    account_id: str,
+    idempotency_key: str,
+    operation_id: str,
+    request_fingerprint: str,
+    now: str,
+) -> None:
+    row = conn.execute(
+        """SELECT operation_id, request_fingerprint
+           FROM web_image_operation_asset_export_requests
+           WHERE account_id=? AND idempotency_key=?""",
+        (account_id, idempotency_key),
+    ).fetchone()
+    if row:
+        if str(row[0]) != operation_id or not hmac.compare_digest(str(row[1]), request_fingerprint):
+            raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho export khác")
+        return
+    conn.execute(
+        """INSERT INTO web_image_operation_asset_export_requests
+           (account_id, idempotency_key, operation_id, request_fingerprint, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (account_id, idempotency_key, operation_id, request_fingerprint, now, now),
+    )
+
+
+def reserve_image_operation_asset_export(
+    *,
+    account_id: str,
+    operation_id: str,
+    idempotency_key: str,
+    request_fingerprint: str,
+    expected_bytes: int,
+) -> ImageOperationAssetExportReservation:
+    """Reserve exactly one private-object attempt for an Image Operation.
+
+    This writes only the fenced intent. It deliberately does not copy a byte,
+    open an Image Operation path, or create Asset Vault metadata; callers must
+    finish through a matching current lease.
+    """
+
+    _require_image_operation_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _image_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    fingerprint = _export_request_fingerprint(request_fingerprint)
+    byte_size = int(expected_bytes)
+    if byte_size < 1 or byte_size > _maximum_bytes():
+        raise HTTPException(status_code=413, detail="PNG export vượt quá giới hạn Asset Vault")
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        operation = conn.execute(
+            "SELECT state FROM web_image_operations WHERE id=? AND account_id=?",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if not operation:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thao tác ảnh thuộc Web account hiện tại")
+        if str(operation[0]) != "completed":
+            raise HTTPException(status_code=409, detail="PNG Image Operation chưa sẵn sàng để lưu")
+        relation = conn.execute(
+            """SELECT operation_id, account_id, asset_id, state, request_fingerprint,
+                      lease_generation, lease_token, lease_expires_at, reserved_bytes,
+                      pending_storage_key, created_at, updated_at, completed_at
+               FROM web_image_operation_asset_exports
+               WHERE operation_id=? AND account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if relation:
+            if not hmac.compare_digest(str(relation[4]), fingerprint):
+                raise HTTPException(status_code=409, detail="Export này không còn khớp output đã xác minh")
+            state = str(relation[3])
+            _insert_export_request_mapping(
+                conn,
+                account_id=scoped_account_id,
+                idempotency_key=key,
+                operation_id=scoped_operation_id,
+                request_fingerprint=fingerprint,
+                now=now,
+            )
+            if state == "completed":
+                return ImageOperationAssetExportReservation(state="completed")
+            if state != "copying" or not _lease_is_expired(str(relation[7] or "")):
+                return ImageOperationAssetExportReservation(state="pending")
+            previous_generation = int(relation[5])
+            next_generation = previous_generation + 1
+            token = uuid.uuid4().hex
+            expires_at = _lease_expiry()
+            pending_storage_key = _export_pending_storage_key()
+            updated = conn.execute(
+                """UPDATE web_image_operation_asset_exports
+                   SET lease_generation=?, lease_token=?, lease_expires_at=?,
+                       pending_storage_key=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying'
+                     AND lease_generation=? AND lease_token=? AND lease_expires_at=?""",
+                (
+                    next_generation,
+                    token,
+                    expires_at,
+                    pending_storage_key,
+                    now,
+                    scoped_operation_id,
+                    scoped_account_id,
+                    previous_generation,
+                    relation[6],
+                    relation[7],
+                ),
+            )
+            if updated.rowcount != 1:
+                return ImageOperationAssetExportReservation(state="pending")
+            return ImageOperationAssetExportReservation(
+                state="leased",
+                lease=ImageOperationAssetExportLease(
+                    account_id=scoped_account_id,
+                    operation_id=scoped_operation_id,
+                    generation=next_generation,
+                    token=token,
+                    expires_at=expires_at,
+                    pending_storage_key=pending_storage_key,
+                    reserved_bytes=int(relation[8]),
+                    request_fingerprint=fingerprint,
+                ),
+            )
+        if not _quota_available(conn, scoped_account_id, byte_size):
+            raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+        token = uuid.uuid4().hex
+        expires_at = _lease_expiry()
+        pending_storage_key = _export_pending_storage_key()
+        conn.execute(
+            """INSERT INTO web_image_operation_asset_exports
+               (operation_id, account_id, asset_id, state, request_fingerprint,
+                lease_generation, lease_token, lease_expires_at, reserved_bytes,
+                pending_storage_key, created_at, updated_at, completed_at)
+               VALUES (?, ?, NULL, 'copying', ?, 1, ?, ?, ?, ?, ?, ?, NULL)""",
+            (
+                scoped_operation_id,
+                scoped_account_id,
+                fingerprint,
+                token,
+                expires_at,
+                byte_size,
+                pending_storage_key,
+                now,
+                now,
+            ),
+        )
+        _insert_export_request_mapping(
+            conn,
+            account_id=scoped_account_id,
+            idempotency_key=key,
+            operation_id=scoped_operation_id,
+            request_fingerprint=fingerprint,
+            now=now,
+        )
+    return ImageOperationAssetExportReservation(
+        state="leased",
+        lease=ImageOperationAssetExportLease(
+            account_id=scoped_account_id,
+            operation_id=scoped_operation_id,
+            generation=1,
+            token=token,
+            expires_at=expires_at,
+            pending_storage_key=pending_storage_key,
+            reserved_bytes=byte_size,
+            request_fingerprint=fingerprint,
+        ),
+    )
+
+
+def release_image_operation_asset_export_lease(lease: ImageOperationAssetExportLease) -> bool:
+    """Release only the caller's live fenced lease; a stale worker is a no-op."""
+
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        current = conn.execute(
+            """SELECT 1 FROM web_image_operation_asset_exports
+               WHERE operation_id=? AND account_id=? AND state='copying'
+                 AND lease_generation=? AND lease_token=? AND lease_expires_at=?
+                 AND lease_expires_at > ?""",
+            (
+                lease.operation_id,
+                lease.account_id,
+                lease.generation,
+                lease.token,
+                lease.expires_at,
+                now,
+            ),
+        ).fetchone()
+        if not current:
+            return False
+        # The request map is a child of the export relation.  Delete it only
+        # after proving this exact lease is still live, then delete the parent
+        # under the same fence in the same writer transaction.
+        conn.execute(
+            "DELETE FROM web_image_operation_asset_export_requests WHERE operation_id=? AND account_id=?",
+            (lease.operation_id, lease.account_id),
+        )
+        removed = conn.execute(
+            """DELETE FROM web_image_operation_asset_exports
+               WHERE operation_id=? AND account_id=? AND state='copying'
+                 AND lease_generation=? AND lease_token=? AND lease_expires_at=?
+                 AND lease_expires_at > ?""",
+            (
+                lease.operation_id,
+                lease.account_id,
+                lease.generation,
+                lease.token,
+                lease.expires_at,
+                now,
+            ),
+        )
+        if removed.rowcount != 1:
+            raise RuntimeError("Không thể giải phóng export lease hiện tại")
+    return True
+
+
+def _copy_image_operation_export_source(source: ImageOperationAssetExportSource, destination: Path) -> tuple[int, str]:
+    """Boundedly copy the pinned source stream into Vault staging and rehash it."""
+
+    digest = hashlib.sha256()
+    copied = 0
+    try:
+        source.stream.seek(0)
+        with destination.open("xb") as staged:
+            while True:
+                chunk = source.stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                copied += len(chunk)
+                if copied > source.byte_size or copied > _maximum_bytes():
+                    raise RuntimeError("PNG Image Operation vượt giới hạn Asset Vault")
+                digest.update(chunk)
+                staged.write(chunk)
+            staged.flush()
+            os.fsync(staged.fileno())
+    except Exception:
+        _safe_unlink(destination)
+        raise
+    if copied != source.byte_size or not hmac.compare_digest(digest.hexdigest(), source.sha256):
+        _safe_unlink(destination)
+        raise RuntimeError("PNG Image Operation không còn integrity")
+    return copied, digest.hexdigest()
+
+
+def _promote_image_operation_export_staging(staging: Path, destination: Path) -> None:
+    """Create the attempt-owned Vault object without replacing any existing file."""
+
+    try:
+        # A hard link gives same-filesystem staging an exclusive destination
+        # creation primitive: unlike ``replace``, it cannot overwrite a newer
+        # fenced attempt or an unexpected object at this random key.
+        os.link(staging, destination, follow_symlinks=False)
+    except FileExistsError as exc:
+        raise RuntimeError("Khóa lưu PNG Image Operation không còn độc quyền") from exc
+    except OSError as exc:
+        raise RuntimeError("Không thể tạo vùng lưu Asset Vault riêng tư") from exc
+    finally:
+        _safe_unlink(staging)
+
+
+def _image_operation_export_png_contract(source: ImageOperationAssetExportSource) -> tuple[int, int, str, bool] | None:
+    """Derive the exact destination PNG rules from an allow-listed source.
+
+    The finalizer receives a descriptor-pinned source from Image Operations,
+    but its own private object must still be parsed independently.  Keep the
+    derived contract local to the narrow export boundary instead of accepting
+    a caller-provided MIME/mode/dimension assertion.
+    """
+
+    if source.kind not in IMAGE_OPERATION_EXPORT_KINDS:
+        return None
+    if isinstance(source.width, bool) or isinstance(source.height, bool):
+        return None
+    try:
+        width = int(source.width)
+        height = int(source.height)
+    except (TypeError, ValueError):
+        return None
+    if width < 1 or height < 1:
+        return None
+    is_background_cleanup = source.kind == "image_background_cleanup"
+    return width, height, "RGBA" if is_background_cleanup else "RGB", is_background_cleanup
+
+
+def _png_stream_has_no_exif_chunk(stream: BinaryIO) -> bool:
+    """Reject a PNG eXIf chunk even when Pillow exposes an empty EXIF map."""
+
+    signature = b"\x89PNG\r\n\x1a\n"
+    try:
+        stream.seek(0)
+        if stream.read(len(signature)) != signature:
+            return False
+        while True:
+            header = stream.read(8)
+            if len(header) != 8:
+                return False
+            payload_size = int.from_bytes(header[:4], byteorder="big", signed=False)
+            chunk_type = header[4:]
+            if chunk_type == b"eXIf":
+                return False
+            remaining = payload_size
+            while remaining:
+                chunk = stream.read(min(CHUNK_BYTES, remaining))
+                if not chunk:
+                    return False
+                remaining -= len(chunk)
+            if len(stream.read(4)) != 4:
+                return False
+            if chunk_type == b"IEND":
+                return not bool(stream.read(1))
+    except (OSError, ValueError):
+        return False
+    finally:
+        try:
+            stream.seek(0)
+        except (OSError, ValueError):
+            pass
+
+
+def _verify_image_operation_export_destination_png(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+    source: ImageOperationAssetExportSource,
+) -> bool:
+    """Parse the final pinned Vault object against the Image Operation contract.
+
+    Hash/size equality proves copied bytes, but it cannot establish that those
+    bytes are a complete, static PNG with the allowed pixel mode.  Open the
+    promoted final object exactly once through the descriptor-pinned Asset
+    Vault reader, verify/decode it, then rehash that same descriptor before
+    metadata can be committed.
+    """
+
+    contract = _image_operation_export_png_contract(source)
+    if contract is None:
+        return False
+    expected_width, expected_height, expected_mode, require_transparent_pixel = contract
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        if not _png_stream_has_no_exif_chunk(stream):
+            return False
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            stream.seek(0)
+            with Image.open(stream) as verifier:
+                # Pillow requires this as the first parser action.
+                verifier.verify()
+            stream.seek(0)
+            with Image.open(stream) as decoded:
+                if str(decoded.format or "").upper() != "PNG":
+                    return False
+                if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                    return False
+                if tuple(decoded.size) != (expected_width, expected_height):
+                    return False
+                if str(decoded.mode or "") != expected_mode:
+                    return False
+                if decoded.getexif():
+                    return False
+                decoded.load()
+                if require_transparent_pixel:
+                    alpha = decoded.getchannel("A")
+                    try:
+                        extrema = alpha.getextrema()
+                    finally:
+                        alpha.close()
+                    if not extrema or int(extrema[0]) >= 255:
+                        return False
+        return _verify_pinned_private_file(
+            stream,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    except (
+        Image.DecompressionBombWarning,
+        Image.DecompressionBombError,
+        UnidentifiedImageError,
+        OSError,
+        ValueError,
+    ):
+        return False
+    finally:
+        stream.close()
+
+
+def finalize_image_operation_asset_export(
+    *,
+    lease: ImageOperationAssetExportLease,
+    source: ImageOperationAssetExportSource,
+    request_id: str,
+) -> ImageOperationAssetExportFinalization:
+    """Finalize one current fenced source copy as an independent private asset.
+
+    This function owns the source descriptor after entry and always closes it.
+    Source verification is deliberately performed by the Image Operations
+    boundary before constructing ``source``; this persistence half rehashes
+    the stream and the promoted Vault object before committing any metadata.
+    """
+
+    _require_image_operation_export_enabled()
+    final_path: Path | None = None
+    staging: Path | None = None
+    completed = False
+    try:
+        if (
+            source.account_id != lease.account_id
+            or source.operation_id != lease.operation_id
+            or source.kind not in IMAGE_OPERATION_EXPORT_KINDS
+            or source.byte_size < 1
+            or source.byte_size != lease.reserved_bytes
+            or source.byte_size > _maximum_bytes()
+            or not hmac.compare_digest(_export_request_fingerprint(source.sha256), lease.request_fingerprint)
+        ):
+            raise RuntimeError("Nguồn PNG Image Operation không khớp export lease")
+        original_filename, extension = _safe_filename(source.original_filename)
+        if extension != ".png":
+            raise RuntimeError("Nguồn Image Operation không phải PNG hợp lệ")
+
+        root = asset_vault_directory()
+        staging = _staging_path(root)
+        copied_bytes, copied_digest = _copy_image_operation_export_source(source, staging)
+        final_path = _storage_path(root, lease.pending_storage_key)
+        final_path.parent.mkdir(parents=True, exist_ok=True)
+        _promote_image_operation_export_staging(staging, final_path)
+        staging = None
+        if not _verify_image_operation_export_destination_png(
+            final_path,
+            expected_bytes=copied_bytes,
+            expected_digest=copied_digest,
+            source=source,
+        ):
+            raise RuntimeError("PNG đã sao chép không vượt qua kiểm tra Asset Vault")
+
+        now = utc_now()
+        asset_id = str(uuid.uuid4())
+        resolved_project_id: str | None = None
+        with transaction() as conn:
+            if source.project_id:
+                project = conn.execute(
+                    "SELECT id FROM web_projects WHERE id=? AND account_id=? AND state='active'",
+                    (source.project_id, lease.account_id),
+                ).fetchone()
+                if project:
+                    resolved_project_id = str(project[0])
+            if not _quota_available(conn, lease.account_id, 0):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            conn.execute(
+                """INSERT INTO web_asset_files
+                   (id, account_id, project_id, display_name, original_filename, extension, content_type,
+                    byte_size, sha256, storage_key, state, created_at, updated_at, archived_at)
+                   VALUES (?, ?, ?, ?, ?, '.png', 'image/png', ?, ?, ?, 'active', ?, ?, NULL)""",
+                (
+                    asset_id,
+                    lease.account_id,
+                    resolved_project_id,
+                    f"Bản sao {original_filename}",
+                    original_filename,
+                    copied_bytes,
+                    copied_digest,
+                    lease.pending_storage_key,
+                    now,
+                    now,
+                ),
+            )
+            updated = conn.execute(
+                """UPDATE web_image_operation_asset_exports
+                   SET asset_id=?, state='completed', lease_token=NULL, lease_expires_at=NULL,
+                       reserved_bytes=0, pending_storage_key=NULL, completed_at=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying'
+                     AND request_fingerprint=? AND lease_generation=? AND lease_token=?
+                     AND lease_expires_at=? AND lease_expires_at > ? AND asset_id IS NULL""",
+                (
+                    asset_id,
+                    now,
+                    now,
+                    lease.operation_id,
+                    lease.account_id,
+                    lease.request_fingerprint,
+                    lease.generation,
+                    lease.token,
+                    lease.expires_at,
+                    now,
+                ),
+            )
+            if updated.rowcount != 1:
+                raise RuntimeError("Export lease không còn hiện tại khi hoàn tất Asset Vault")
+            _record_audit(
+                conn,
+                account_id=lease.account_id,
+                canonical_user_id=None,
+                action="web.image_operation.export_to_asset_vault",
+                request_id=str(request_id or "")[:160],
+                target=asset_id,
+                detail=f"kind={source.kind};bytes={copied_bytes}",
+            )
+        completed = True
+        return ImageOperationAssetExportFinalization(
+            state="completed",
+            asset={
+                "id": asset_id,
+                "project_id": resolved_project_id,
+                "display_name": f"Bản sao {original_filename}",
+                "original_filename": original_filename,
+                "extension": ".png",
+                "content_type": "image/png",
+                "byte_size": copied_bytes,
+                "state": ACTIVE_STATE,
+                "created_at": now,
+                "updated_at": now,
+                "archived_at": None,
+            },
+        )
+    finally:
+        try:
+            source.stream.close()
+        except OSError:
+            pass
+        _safe_unlink(staging) if staging is not None else None
+        if not completed:
+            _safe_unlink(final_path)
+
+
+def get_image_operation_asset_export_receipt(
+    *,
+    account_id: str,
+    operation_id: str,
+) -> ImageOperationAssetExportFinalization | None:
+    """Read the relation and its Asset Vault lifecycle at response time.
+
+    This intentionally does not consult ``web_idempotency``.  A replay must
+    describe the independent asset as it exists now (including archived or
+    unavailable), never return an old serialized success snapshot.
+    """
+
+    _require_image_operation_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _image_operation_id(operation_id)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT export.state, export.asset_id,
+                      asset.id, asset.project_id, asset.display_name, asset.original_filename,
+                      asset.extension, asset.content_type, asset.byte_size, asset.state,
+                      asset.created_at, asset.updated_at, asset.archived_at
+               FROM web_image_operation_asset_exports AS export
+               LEFT JOIN web_asset_files AS asset
+                 ON asset.id=export.asset_id AND asset.account_id=export.account_id
+               WHERE export.operation_id=? AND export.account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+    if not row:
+        return None
+    relation_state = str(row[0] or "")
+    if relation_state != "completed":
+        return ImageOperationAssetExportFinalization(state=relation_state or "guarded", asset=None)
+    if not row[1] or not row[2]:
+        return ImageOperationAssetExportFinalization(state="guarded", asset=None)
+    return ImageOperationAssetExportFinalization(
+        state="completed",
+        asset=_asset_public(tuple(row[2:])),
+    )
+
+
+def replay_image_operation_asset_export(
+    *,
+    account_id: str,
+    operation_id: str,
+    idempotency_key: str,
+) -> ImageOperationAssetExportFinalization | None:
+    """Join an existing export lifecycle and bind a fresh opaque replay key."""
+
+    _require_image_operation_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _image_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        relation = conn.execute(
+            """SELECT request_fingerprint, state, lease_expires_at
+               FROM web_image_operation_asset_exports
+               WHERE operation_id=? AND account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if not relation:
+            return None
+        # A copying relation whose fence has expired is not a live replay.
+        # Return control to the reservation path so its CAS reclaim can mint a
+        # new generation.  Binding a replay key here would otherwise leave the
+        # endpoint permanently reporting ``processing`` without ever reaching
+        # the reclaim logic.
+        if str(relation[1] or "") == "copying" and _lease_is_expired(str(relation[2] or "")):
+            return None
+        _insert_export_request_mapping(
+            conn,
+            account_id=scoped_account_id,
+            idempotency_key=key,
+            operation_id=scoped_operation_id,
+            request_fingerprint=str(relation[0]),
+            now=now,
+        )
+    return get_image_operation_asset_export_receipt(
+        account_id=scoped_account_id,
+        operation_id=scoped_operation_id,
+    )
 
 
 def _ensure_project_scope(conn, *, project_id: str | None, account_id: str) -> None:
@@ -1141,7 +1903,22 @@ def reconcile_asset_vault_storage() -> None:
     staging.mkdir(parents=True, exist_ok=True)
     objects.mkdir(parents=True, exist_ok=True)
     with transaction() as conn:
-        referenced = {str(row[0]) for row in conn.execute("SELECT storage_key FROM web_asset_files").fetchall()}
+        referenced = {
+            str(row[0])
+            for row in conn.execute("SELECT storage_key FROM web_asset_files").fetchall()
+            if row[0]
+        }
+        pending_rows = conn.execute(
+            """SELECT pending_storage_key, lease_expires_at
+               FROM web_image_operation_asset_exports
+               WHERE state='copying' AND lease_token IS NOT NULL
+                 AND pending_storage_key IS NOT NULL"""
+        ).fetchall()
+        referenced.update(
+            str(row[0])
+            for row in pending_rows
+            if row[0] and not _lease_is_expired(str(row[1] or ""))
+        )
     cutoff = datetime.now(timezone.utc).timestamp() - ORPHAN_RETENTION_SECONDS
     for directory, match_key in ((staging, False), (objects, True)):
         try:

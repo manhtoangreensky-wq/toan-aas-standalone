@@ -1305,6 +1305,22 @@ async def security_headers(request: Request, call_next):
             "/api/v1/image-operations/enhance",
         }
     )
+    # A private image-operation export is a fixed five-segment route.  Check
+    # its UUID segment here so arbitrary suffixes cannot claim this dedicated
+    # pre-CSRF rate family or grow a path-derived in-memory key.
+    image_export_parts = request.url.path.split("/")
+    image_export_operation_id = image_export_parts[4] if len(image_export_parts) == 6 else ""
+    try:
+        image_export_canonical_id = str(uuid.UUID(image_export_operation_id))
+    except (TypeError, ValueError, AttributeError):
+        image_export_canonical_id = ""
+    image_operation_asset_export = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/image-operations/")
+        and request.url.path.endswith("/export-to-asset-vault")
+        and len(image_export_parts) == 6
+        and image_export_canonical_id == image_export_operation_id.lower()
+    )
     # Subtitle Asset Operations are a bounded private file executor, distinct
     # from the authored Subtitle Studio. Keep the run/read/download buckets
     # fixed before CSRF, owner lookup, parsing or SQLite work.
@@ -1708,6 +1724,11 @@ async def security_headers(request: Request, call_next):
         # source/page/pixel/output limits, while this early gate blocks repeat
         # work before the operation's idempotency record can be observed.
         rate_limit = 10
+    if image_operation_asset_export:
+        # The export copies one verified local artifact into a separate
+        # private vault record. Keep repeat clicks below generic writes before
+        # session, CSRF, owner lookup, source verification or disk work.
+        rate_limit = 12
     if subtitle_asset_operation_write:
         rate_limit = 20
     if subtitle_asset_operation_download:
@@ -1890,6 +1911,7 @@ async def security_headers(request: Request, call_next):
         # the gate or allocating one in-memory key per requested path.
         rate_scope = (
             "support-resolution-feedback-write" if support_resolution_feedback_write
+            else "image-operation-asset-export" if image_operation_asset_export
             else "prompt-library-export" if prompt_library_export
             else "prompt-library-write" if prompt_library_write
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
