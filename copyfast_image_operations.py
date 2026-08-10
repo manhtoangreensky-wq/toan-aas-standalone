@@ -10,8 +10,10 @@ ledger, a webhook, or browser-supplied paths.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from collections import deque
+from enum import Enum
 import hashlib
 import hmac
 from io import BytesIO
@@ -25,7 +27,7 @@ from typing import Any
 import uuid
 import warnings
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from starlette.background import BackgroundTask
@@ -55,6 +57,15 @@ IMAGE_ENHANCE_KIND = "image_enhance"
 IMAGE_BRAND_OVERLAY_KIND = "image_brand_overlay"
 IMAGE_BACKGROUND_CLEANUP_KIND = "image_background_cleanup"
 SUPPORTED_KINDS = frozenset({
+    IMAGE_RESIZE_KIND,
+    IMAGE_ENHANCE_KIND,
+    IMAGE_BRAND_OVERLAY_KIND,
+    IMAGE_BACKGROUND_CLEANUP_KIND,
+})
+# Export intentionally has its own closed allow-list.  Do not inherit a future
+# Image Operation kind into Asset Vault export merely because it is rendered by
+# this module.
+IMAGE_OPERATION_EXPORT_KINDS = frozenset({
     IMAGE_RESIZE_KIND,
     IMAGE_ENHANCE_KIND,
     IMAGE_BRAND_OVERLAY_KIND,
@@ -200,6 +211,85 @@ class ImageOperationError(Exception):
         super().__init__(message)
         self.public_message = message
         self.code = code
+
+
+class ImageOperationExportFailureDomain(str, Enum):
+    """Safe ownership boundary for a later fenced Asset Vault finalizer.
+
+    ``SOURCE_INTEGRITY`` is the only domain eligible to transition a completed
+    Image Operation output to ``unavailable``.  A lease, quota, staging,
+    destination-object, or database failure belongs to the finalizer's
+    ``DESTINATION`` path and must preserve the completed source for retry.
+    """
+
+    PRECONDITION = "precondition"
+    SOURCE_INTEGRITY = "source_integrity"
+    DESTINATION = "destination"
+
+
+@dataclass(frozen=True)
+class ImageOperationExportFailure:
+    """Public-safe error detail; it intentionally contains no storage detail."""
+
+    domain: ImageOperationExportFailureDomain
+    code: str
+    public_message: str
+
+    @property
+    def should_mark_output_unavailable(self) -> bool:
+        return self.domain is ImageOperationExportFailureDomain.SOURCE_INTEGRITY
+
+
+@dataclass(frozen=True)
+class ImageOperationExportPngContract:
+    """Exact persisted PNG contract for one allowed completed operation."""
+
+    kind: str
+    expected_width: int
+    expected_height: int
+    expected_mode: str
+    require_transparent_pixel: bool
+
+
+@dataclass
+class ImageOperationExportSource:
+    """A descriptor-pinned, fully validated PNG retained for one copy attempt."""
+
+    stream: Any = field(repr=False)
+    byte_size: int
+    expected_sha256: str = field(repr=False)
+    contract: ImageOperationExportPngContract
+    # This field is read only from the completed, owner-scoped operation row.
+    # The finalizer independently re-resolves it as an active owned Project,
+    # or deliberately stores NULL when the Project archived while copying.
+    project_id: str | None
+
+    def close(self) -> None:
+        self.stream.close()
+
+    def __enter__(self) -> "ImageOperationExportSource":
+        return self
+
+    def __exit__(self, _exc_type, _exc_value, _traceback) -> None:
+        self.close()
+
+
+@dataclass
+class ImageOperationExportSourceResult:
+    """Result of source opening, kept internal until a finalizer maps it safely."""
+
+    source: ImageOperationExportSource | None
+    failure: ImageOperationExportFailure | None
+    _operation_id: str = field(repr=False)
+    _account_id: str = field(repr=False)
+
+    @property
+    def is_source_integrity_failure(self) -> bool:
+        return bool(self.failure and self.failure.should_mark_output_unavailable)
+
+    def close(self) -> None:
+        if self.source is not None:
+            self.source.close()
 
 
 class ImageResizeRequest(BaseModel):
@@ -2064,6 +2154,53 @@ def _parser_copy(stream):
         return BytesIO(payload)
 
 
+def _reject_png_exif_chunk(stream) -> None:
+    """Fail closed on an official PNG ``eXIf`` metadata chunk.
+
+    Pillow's ``getexif()`` treats malformed TIFF bytes inside an ``eXIf``
+    chunk as an empty mapping.  That is useful to viewers but not a safe
+    export boundary: an output either has no eXIf chunk at all or it is not
+    eligible for independent retention.  Parse only the bounded PNG chunk
+    framing on the already-open descriptor; Pillow still verifies CRCs and
+    full image decode below.
+    """
+
+    signature = b"\x89PNG\r\n\x1a\n"
+    try:
+        stream.seek(0)
+        if stream.read(len(signature)) != signature:
+            raise ImageOperationError("Định dạng PNG đầu ra không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+        while True:
+            header = stream.read(8)
+            if len(header) != 8:
+                raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+            payload_size = int.from_bytes(header[:4], byteorder="big", signed=False)
+            chunk_type = header[4:]
+            if chunk_type == b"eXIf":
+                raise ImageOperationError("PNG đầu ra mang metadata không được phép", code="IMAGE_OUTPUT_INVALID")
+            remaining = payload_size
+            while remaining:
+                chunk = stream.read(min(CHUNK_BYTES, remaining))
+                if not chunk:
+                    raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+                remaining -= len(chunk)
+            if len(stream.read(4)) != 4:
+                raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+            if chunk_type == b"IEND":
+                if stream.read(1):
+                    raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+                return
+    except ImageOperationError:
+        raise
+    except (OSError, ValueError) as exc:
+        raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID") from exc
+    finally:
+        try:
+            stream.seek(0)
+        except (OSError, ValueError):
+            pass
+
+
 def _verify_png_stream(
     stream,
     *,
@@ -2077,6 +2214,7 @@ def _verify_png_stream(
     try:
         if ImageFile.LOAD_TRUNCATED_IMAGES:
             raise ImageOperationError("Image runtime không ở chế độ kiểm tra đầy đủ", code="IMAGE_RUNTIME_UNAVAILABLE")
+        _reject_png_exif_chunk(stream)
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             verifier_stream = _parser_copy(stream)
@@ -2210,6 +2348,328 @@ def _open_verified_output_stream(
         if stream is not None:
             stream.close()
         raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID") from exc
+
+
+def _image_operation_export_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+    domain: ImageOperationExportFailureDomain,
+    code: str,
+    public_message: str,
+) -> ImageOperationExportSourceResult:
+    """Build a result that never carries a filesystem path, key or digest."""
+    return ImageOperationExportSourceResult(
+        source=None,
+        failure=ImageOperationExportFailure(domain=domain, code=code, public_message=public_message),
+        _operation_id=operation_id,
+        _account_id=account_id,
+    )
+
+
+def _same_file_identity(left: Any, right: Any) -> bool:
+    """Require a usable device/inode pair instead of accepting weak metadata."""
+    try:
+        left_device, left_inode = int(left.st_dev), int(left.st_ino)
+        right_device, right_inode = int(right.st_dev), int(right.st_ino)
+    except (AttributeError, TypeError, ValueError):
+        return False
+    if left_device == 0 or left_inode == 0 or right_device == 0 or right_inode == 0:
+        return False
+    return left_device == right_device and left_inode == right_inode
+
+
+def _require_regular_file(metadata: Any) -> None:
+    if not stat.S_ISREG(int(metadata.st_mode)):
+        raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+
+
+def _require_private_directory(metadata: Any) -> None:
+    if not stat.S_ISDIR(int(metadata.st_mode)):
+        raise ImageOperationError("Vùng PNG riêng tư không còn integrity", code="IMAGE_OUTPUT_INVALID")
+
+
+def _export_read_flags(*, directory: bool = False) -> int:
+    flags = os.O_RDONLY | int(getattr(os, "O_BINARY", 0)) | int(getattr(os, "O_NOFOLLOW", 0))
+    if directory:
+        flags |= int(getattr(os, "O_DIRECTORY", 0))
+    return flags
+
+
+def _supports_descriptor_relative_open() -> bool:
+    supported = getattr(os, "supports_dir_fd", frozenset())
+    return bool(getattr(os, "O_DIRECTORY", 0)) and os.open in supported and os.stat in supported
+
+
+def _descriptor_pinned_output_stream(root: Path, storage_key: str):
+    """Open one ``outputs/<hex>.png`` without resolving its final component."""
+    if not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+    filename = storage_key.removeprefix("outputs/")
+    if not filename or "/" in filename or "\\" in filename:
+        raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+    if not _supports_descriptor_relative_open():
+        return _fallback_pinned_output_stream(root, filename)
+
+    root_fd: int | None = None
+    outputs_fd: int | None = None
+    file_fd: int | None = None
+    stream = None
+    try:
+        root_fd = os.open(os.fspath(root), _export_read_flags(directory=True))
+        _require_private_directory(os.fstat(root_fd))
+        outputs_before = os.stat("outputs", dir_fd=root_fd, follow_symlinks=False)
+        _require_private_directory(outputs_before)
+        outputs_fd = os.open("outputs", _export_read_flags(directory=True), dir_fd=root_fd)
+        outputs_opened = os.fstat(outputs_fd)
+        _require_private_directory(outputs_opened)
+        if not _same_file_identity(outputs_before, outputs_opened):
+            raise ImageOperationError("Vùng PNG riêng tư không còn integrity", code="IMAGE_OUTPUT_INVALID")
+        file_before = os.stat(filename, dir_fd=outputs_fd, follow_symlinks=False)
+        _require_regular_file(file_before)
+        file_fd = os.open(filename, _export_read_flags(), dir_fd=outputs_fd)
+        stream = os.fdopen(file_fd, "rb", closefd=True)
+        file_fd = None
+        file_opened = os.fstat(stream.fileno())
+        _require_regular_file(file_opened)
+        if not _same_file_identity(file_before, file_opened):
+            raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+        return stream
+    except ImageOperationError:
+        if stream is not None:
+            stream.close()
+        raise
+    except (OSError, TypeError, ValueError) as exc:
+        if stream is not None:
+            stream.close()
+        raise ImageOperationError("Không thể mở PNG đầu ra riêng tư", code="IMAGE_OUTPUT_UNAVAILABLE") from exc
+    finally:
+        if file_fd is not None:
+            try:
+                os.close(file_fd)
+            except OSError:
+                pass
+        if outputs_fd is not None:
+            try:
+                os.close(outputs_fd)
+            except OSError:
+                pass
+        if root_fd is not None:
+            try:
+                os.close(root_fd)
+            except OSError:
+                pass
+
+
+def _fallback_pinned_output_stream(root: Path, filename: str):
+    """Reject parent/final symlink or identity drift where dir-FDs are absent."""
+    stream = None
+    try:
+        root_before = os.lstat(root)
+        _require_private_directory(root_before)
+        outputs = root / "outputs"
+        outputs_before = os.lstat(outputs)
+        _require_private_directory(outputs_before)
+        candidate = outputs / filename
+        file_before = os.lstat(candidate)
+        _require_regular_file(file_before)
+        stream = os.fdopen(os.open(candidate, _export_read_flags()), "rb", closefd=True)
+        root_after = os.lstat(root)
+        outputs_after = os.lstat(outputs)
+        file_after = os.lstat(candidate)
+        file_opened = os.fstat(stream.fileno())
+        _require_private_directory(root_after)
+        _require_private_directory(outputs_after)
+        _require_regular_file(file_after)
+        _require_regular_file(file_opened)
+        if not (
+            _same_file_identity(root_before, root_after)
+            and _same_file_identity(outputs_before, outputs_after)
+            and _same_file_identity(file_before, file_after)
+            and _same_file_identity(file_before, file_opened)
+        ):
+            raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+        return stream
+    except ImageOperationError:
+        if stream is not None:
+            stream.close()
+        raise
+    except (OSError, TypeError, ValueError) as exc:
+        if stream is not None:
+            stream.close()
+        raise ImageOperationError("Không thể mở PNG đầu ra riêng tư", code="IMAGE_OUTPUT_UNAVAILABLE") from exc
+
+
+def _image_operation_export_png_contract(
+    *,
+    kind: str,
+    target_width: Any,
+    target_height: Any,
+) -> ImageOperationExportPngContract:
+    if kind not in IMAGE_OPERATION_EXPORT_KINDS:
+        raise ValueError("kind")
+    if isinstance(target_width, bool) or isinstance(target_height, bool):
+        raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+    try:
+        width, height = int(target_width), int(target_height)
+    except (TypeError, ValueError) as exc:
+        raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID") from exc
+    _validate_dimensions(width, height, source=False)
+    is_cleanup = kind == IMAGE_BACKGROUND_CLEANUP_KIND
+    return ImageOperationExportPngContract(
+        kind=kind,
+        expected_width=width,
+        expected_height=height,
+        expected_mode="RGBA" if is_cleanup else "RGB",
+        require_transparent_pixel=is_cleanup,
+    )
+
+
+def open_image_operation_export_source(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> ImageOperationExportSourceResult:
+    """Return a completed Image Operation's validated, descriptor-pinned PNG.
+
+    This is deliberately a read-only helper.  A later Asset Vault finalizer
+    must make the explicit decision to mark a source-integrity failure as
+    unavailable; staging/destination/lease/database failures never arrive here
+    as a signal to poison the completed Image Operation.
+    """
+    try:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            row = conn.execute(
+                """SELECT kind, state, target_width, target_height, content_type,
+                          byte_size, sha256, storage_key, project_id
+                   FROM web_image_operations
+                   WHERE id=? AND account_id=?""",
+                (operation_id, account_id),
+            ).fetchone()
+    except Exception:
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=ImageOperationExportFailureDomain.DESTINATION,
+            code="WEB_IMAGE_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
+            public_message="Chưa thể chuẩn bị lưu PNG riêng tư. Hãy thử lại sau.",
+        )
+    if not row or str(row[1] or "") != "completed":
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=ImageOperationExportFailureDomain.PRECONDITION,
+            code="WEB_IMAGE_OPERATION_EXPORT_NOT_READY",
+            public_message="PNG chưa sẵn sàng để lưu vào Asset Vault.",
+        )
+    kind = str(row[0] or "")
+    if kind not in IMAGE_OPERATION_EXPORT_KINDS or str(row[4] or "") != PNG_MEDIA_TYPE:
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=ImageOperationExportFailureDomain.PRECONDITION,
+            code="WEB_IMAGE_OPERATION_EXPORT_NOT_ELIGIBLE",
+            public_message="Thao tác ảnh này chưa hỗ trợ lưu vào Asset Vault.",
+        )
+    try:
+        root = image_operations_directory()
+    except Exception:
+        # A configured root/mount failure is not evidence that this completed
+        # PNG was altered.  Leave it retryable for the destination/finalizer.
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=ImageOperationExportFailureDomain.DESTINATION,
+            code="WEB_IMAGE_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
+            public_message="Chưa thể chuẩn bị lưu PNG riêng tư. Hãy thử lại sau.",
+        )
+    try:
+        contract = _image_operation_export_png_contract(
+            kind=kind,
+            target_width=row[2],
+            target_height=row[3],
+        )
+        expected_bytes = int(row[5])
+        expected_digest = str(row[6] or "")
+        storage_key = str(row[7] or "")
+        if (
+            expected_bytes < 1
+            or expected_bytes > _maximum_output_bytes()
+            or re.fullmatch(r"[0-9a-f]{64}", expected_digest) is None
+            or OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key) is None
+        ):
+            raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+        stream = _descriptor_pinned_output_stream(root, storage_key)
+        try:
+            metadata_before = os.fstat(stream.fileno())
+            _require_regular_file(metadata_before)
+            if int(metadata_before.st_size) != expected_bytes:
+                raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+            first_digest = _digest_open_stream(stream)
+            if not hmac.compare_digest(first_digest, expected_digest):
+                raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+            _verify_png_stream(
+                stream,
+                expected_width=contract.expected_width,
+                expected_height=contract.expected_height,
+                expected_mode=contract.expected_mode,
+                require_transparent_pixel=contract.require_transparent_pixel,
+            )
+            metadata_after = os.fstat(stream.fileno())
+            second_digest = _digest_open_stream(stream)
+            if (
+                int(metadata_after.st_size) != expected_bytes
+                or not hmac.compare_digest(second_digest, expected_digest)
+            ):
+                raise ImageOperationError("PNG đầu ra không còn integrity", code="IMAGE_OUTPUT_INVALID")
+            return ImageOperationExportSourceResult(
+                source=ImageOperationExportSource(
+                    stream=stream,
+                    byte_size=expected_bytes,
+                    expected_sha256=expected_digest,
+                    contract=contract,
+                    project_id=str(row[8]) if row[8] else None,
+                ),
+                failure=None,
+                _operation_id=operation_id,
+                _account_id=account_id,
+            )
+        except Exception:
+            stream.close()
+            raise
+    except ImageOperationError as exc:
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=(
+                ImageOperationExportFailureDomain.DESTINATION
+                if exc.code == "IMAGE_RUNTIME_UNAVAILABLE"
+                else ImageOperationExportFailureDomain.SOURCE_INTEGRITY
+            ),
+            code="WEB_IMAGE_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+            public_message=(
+                "Chưa thể kiểm tra PNG để lưu vào Asset Vault. Hãy thử lại sau."
+                if exc.code == "IMAGE_RUNTIME_UNAVAILABLE"
+                else "PNG đầu ra không còn integrity để lưu vào Asset Vault."
+            ),
+        )
+    except Exception:
+        return _image_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=ImageOperationExportFailureDomain.SOURCE_INTEGRITY,
+            code="WEB_IMAGE_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+            public_message="PNG đầu ra không còn integrity để lưu vào Asset Vault.",
+        )
+
+
+def mark_image_operation_export_source_unavailable(result: ImageOperationExportSourceResult) -> bool:
+    """Explicitly apply the existing output-unavailable transition when warranted."""
+    if not isinstance(result, ImageOperationExportSourceResult) or not result.is_source_integrity_failure:
+        return False
+    _mark_output_unavailable(result._operation_id, result._account_id)
+    return True
 
 
 def _stream_open_file(stream):
@@ -3659,6 +4119,152 @@ async def create_brand_overlay(
         _safe_unlink(logo_copy)
         if capacity_reserved:
             image_decoder_capacity().release()
+
+
+@router.post("/{operation_id}/export-to-asset-vault")
+async def export_image_operation_to_asset_vault(
+    operation_id: str,
+    request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    account: dict = Depends(require_csrf),
+):
+    """Explicitly retain one verified local PNG as an independent Vault asset.
+
+    The browser supplies only an operation UUID and opaque idempotency key.  It
+    never uploads bytes or selects a pathname, URL, provider, Bot/job, wallet
+    or payment authority.  Existing export relations replay their *current*
+    Vault lifecycle before opening the Image Operation source again.
+    """
+
+    operation_id = _uuid(operation_id, label="Mã thao tác ảnh")
+    account_id = str(account["id"])
+    from copyfast_assets import (
+        ImageOperationAssetExportSource as VaultExportSource,
+        finalize_image_operation_asset_export,
+        get_image_operation_asset_export_receipt,
+        release_image_operation_asset_export_lease,
+        replay_image_operation_asset_export,
+        reserve_image_operation_asset_export,
+    )
+
+    key = _idempotency_key(idempotency_key)
+    replay = replay_image_operation_asset_export(
+        account_id=account_id,
+        operation_id=operation_id,
+        idempotency_key=key,
+    )
+    if replay is not None:
+        if replay.state == "completed" and replay.asset is not None:
+            return envelope(
+                True,
+                "PNG đã có trong Asset Vault riêng tư.",
+                data={"asset": replay.asset},
+                status_name="completed",
+            )
+        return envelope(
+            False,
+            "PNG đang được lưu vào Asset Vault. Hãy tải lại sau.",
+            status_name="processing",
+            error_code="WEB_IMAGE_OPERATION_EXPORT_PENDING",
+        )
+
+    source_result = open_image_operation_export_source(
+        operation_id=operation_id,
+        account_id=account_id,
+    )
+    if source_result.source is None:
+        if source_result.is_source_integrity_failure:
+            mark_image_operation_export_source_unavailable(source_result)
+        failure = source_result.failure
+        return envelope(
+            False,
+            failure.public_message if failure is not None else "PNG chưa thể lưu vào Asset Vault.",
+            status_name="guarded",
+            error_code=failure.code if failure is not None else "WEB_IMAGE_OPERATION_EXPORT_GUARDED",
+        )
+
+    pinned_source = source_result.source
+    contract = pinned_source.contract
+    if contract is None:
+        source_result.close()
+        return envelope(
+            False,
+            "PNG chưa thể lưu vào Asset Vault.",
+            status_name="guarded",
+            error_code="WEB_IMAGE_OPERATION_EXPORT_GUARDED",
+        )
+    try:
+        reservation = reserve_image_operation_asset_export(
+            account_id=account_id,
+            operation_id=operation_id,
+            idempotency_key=key,
+            request_fingerprint=pinned_source.expected_sha256,
+            expected_bytes=pinned_source.byte_size,
+        )
+    except Exception:
+        source_result.close()
+        raise
+    if reservation.state != "leased" or reservation.lease is None:
+        source_result.close()
+        receipt = get_image_operation_asset_export_receipt(account_id=account_id, operation_id=operation_id)
+        if receipt is not None and receipt.state == "completed" and receipt.asset is not None:
+            return envelope(True, "PNG đã có trong Asset Vault riêng tư.", data={"asset": receipt.asset}, status_name="completed")
+        return envelope(
+            False,
+            "PNG đang được lưu vào Asset Vault. Hãy tải lại sau.",
+            status_name="processing",
+            error_code="WEB_IMAGE_OPERATION_EXPORT_PENDING",
+        )
+
+    # Transfer sole stream ownership to the finalizer. The source result must
+    # not close this descriptor a second time on the success/failure path.
+    source_result.source = None
+    vault_source = VaultExportSource(
+        account_id=account_id,
+        operation_id=operation_id,
+        kind=contract.kind,
+        project_id=pinned_source.project_id,
+        original_filename=_operation_output_filename(contract.kind),
+        byte_size=pinned_source.byte_size,
+        sha256=pinned_source.expected_sha256,
+        width=contract.expected_width,
+        height=contract.expected_height,
+        stream=pinned_source.stream,
+    )
+    try:
+        finalize_image_operation_asset_export(
+            lease=reservation.lease,
+            source=vault_source,
+            request_id=_request_id(request),
+        )
+        receipt = get_image_operation_asset_export_receipt(
+            account_id=account_id,
+            operation_id=operation_id,
+        )
+    except HTTPException:
+        release_image_operation_asset_export_lease(reservation.lease)
+        raise
+    except Exception:
+        release_image_operation_asset_export_lease(reservation.lease)
+        return envelope(
+            False,
+            "Chưa thể lưu PNG vào Asset Vault. PNG gốc vẫn giữ nguyên để bạn thử lại.",
+            status_name="guarded",
+            error_code="WEB_IMAGE_OPERATION_EXPORT_RETRY",
+        )
+    if receipt is None or receipt.state != "completed" or receipt.asset is None:
+        return envelope(
+            False,
+            "Chưa thể xác nhận trạng thái PNG trong Asset Vault. Hãy tải lại sau.",
+            status_name="processing",
+            error_code="WEB_IMAGE_OPERATION_EXPORT_PENDING",
+        )
+    return envelope(
+        True,
+        "Đã lưu PNG đã xác minh vào Asset Vault riêng tư.",
+        data={"asset": receipt.asset},
+        status_name="completed",
+    )
 
 
 @router.get("/{operation_id}/download")

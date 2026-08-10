@@ -510,6 +510,15 @@ def _flags() -> dict[str, bool]:
         # Image transforms have their own private output root and bounded
         # decoder runtime. Neither flag grants generic image/bridge execution.
         "image_operations_enabled": enabled("WEBAPP_IMAGE_OPERATIONS_ENABLED", False),
+        # Saving a completed local Image Operation into Asset Vault is a
+        # separate private-copy capability. Publish only its effective three
+        # gate state; it never enables a provider, Bot bridge, job, wallet or
+        # payment path.
+        "image_operation_export_enabled": (
+            enabled("WEBAPP_ASSET_VAULT_ENABLED", False)
+            and enabled("WEBAPP_IMAGE_OPERATIONS_ENABLED", False)
+            and enabled("WEBAPP_IMAGE_OPERATION_EXPORT_ENABLED", False)
+        ),
         "image_resize_enabled": enabled("WEBAPP_IMAGE_RESIZE_ENABLED", False),
         # Local Image Enhance uses the same private output boundary but remains
         # independently guarded; it never implies provider-backed AI editing.
