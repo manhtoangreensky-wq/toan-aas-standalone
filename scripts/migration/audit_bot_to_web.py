@@ -14539,7 +14539,12 @@ def run_audit(
             else str(audit_bot_root)
         )
         bot = _summarize_inventory("telegram_bot", audit_bot_root, source_root_label=bot_source_root_label)
-        web = _summarize_inventory("webapp", web_root, excluded_source_roots=web_output_roots)
+        web = _summarize_inventory(
+            "webapp",
+            web_root,
+            excluded_source_roots=web_output_roots,
+            source_root_label="webapp-root",
+        )
         preflight = {
             "schema_version": SCHEMA_VERSION,
             "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
@@ -14561,7 +14566,7 @@ def run_audit(
                 "baseline_bridge_source": _baseline_bridge_source_context(bot_root, bot_baseline_sha),
             },
             "webapp": {
-                "root": str(web_root),
+                "root": "repository-root",
                 "entrypoint_present": (web_root / "app.py").is_file(),
                 "revision": _web_revision_context(
                     web_root,

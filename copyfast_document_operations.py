@@ -10,7 +10,10 @@ browser-supplied path.
 from __future__ import annotations
 
 from contextlib import ExitStack
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from enum import Enum
+import errno
 import hashlib
 import hmac
 from io import BytesIO
@@ -23,13 +26,14 @@ import stat
 import threading
 import tempfile
 import time
+from types import MappingProxyType
 import uuid
 from typing import Any, BinaryIO, Callable, Iterator
 from urllib.parse import quote
 import warnings
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
@@ -184,9 +188,8 @@ ORPHAN_RETENTION_SECONDS = 60 * 60
 PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
 
 OUTPUT_SPEC_BY_KIND = {
-    PDF_SPLIT_KIND: (".pdf", "application/pdf", "toan-aas-pdf-split.pdf"),
-    PDF_MERGE_KIND: (".pdf", "application/pdf", "toan-aas-pdf-merged.pdf"),
-    PDF_OPTIMIZE_KIND: (".pdf", "application/pdf", "toan-aas-pdf-optimized.pdf"),
+    PDF_MERGE_KIND: (".pdf", "application/pdf", "toan-aas-merged-pdf.pdf"),
+    PDF_OPTIMIZE_KIND: (".pdf", "application/pdf", "toan-aas-optimized-pdf.pdf"),
     IMAGE_TO_PDF_KIND: (".pdf", "application/pdf", "toan-aas-images.pdf"),
     # The single-page PNG case is resolved dynamically in `_output_spec`;
     # multi-page outputs use this canonical ZIP contract.
@@ -196,6 +199,48 @@ OUTPUT_SPEC_BY_KIND = {
     PDF_OCR_KIND: (".txt", "text/plain; charset=utf-8", "toan-aas-pdf-ocr.txt"),
     PDF_OCR_WORD_KIND: (".docx", DOCX_MEDIA_TYPE, "toan-aas-pdf-ocr.docx"),
 }
+
+# The completed Document Operation keeps the exact name emitted by its writer;
+# the retained Asset Vault copy uses the stable name from ``OUTPUT_SPEC_BY_KIND``.
+# These names intentionally differ for PDF Split/Merge/Optimize.
+COMPLETED_OPERATION_OUTPUT_FILENAMES = MappingProxyType({
+    PDF_MERGE_KIND: "toan-aas-merged-pdf.pdf",
+    PDF_OPTIMIZE_KIND: "toan-aas-optimized-pdf.pdf",
+    IMAGE_TO_PDF_KIND: "toan-aas-images.pdf",
+    PDF_TO_WORD_KIND: "toan-aas-pdf-text.docx",
+    IMAGE_OCR_KIND: "toan-aas-image-ocr.txt",
+    PDF_OCR_KIND: "toan-aas-pdf-ocr.txt",
+    PDF_OCR_WORD_KIND: "toan-aas-pdf-ocr.docx",
+})
+
+# A Document Operation can enter the Asset Vault only through its sealed output
+# descriptor.  PDF → images is deliberately absent even for its one-page PNG
+# form: it needs a dedicated per-file/ZIP export contract rather than this
+# document-attachment boundary.
+DOCUMENT_OPERATION_EXPORT_KINDS = frozenset({
+    PDF_SPLIT_KIND,
+    PDF_MERGE_KIND,
+    PDF_OPTIMIZE_KIND,
+    IMAGE_TO_PDF_KIND,
+    PDF_TO_WORD_KIND,
+    IMAGE_OCR_KIND,
+    PDF_OCR_KIND,
+    PDF_OCR_WORD_KIND,
+})
+DOCUMENT_OPERATION_EXPORT_MEDIA = MappingProxyType({
+    PDF_SPLIT_KIND: (".pdf", "application/pdf"),
+    PDF_MERGE_KIND: (".pdf", "application/pdf"),
+    PDF_OPTIMIZE_KIND: (".pdf", "application/pdf"),
+    IMAGE_TO_PDF_KIND: (".pdf", "application/pdf"),
+    PDF_TO_WORD_KIND: (".docx", DOCX_MEDIA_TYPE),
+    PDF_OCR_WORD_KIND: (".docx", DOCX_MEDIA_TYPE),
+    IMAGE_OCR_KIND: (".txt", "text/plain; charset=utf-8"),
+    PDF_OCR_KIND: (".txt", "text/plain; charset=utf-8"),
+})
+DOCUMENT_OPERATION_EXPORT_TEXT_MAX_BYTES = min(
+    MAX_IMAGE_OCR_OUTPUT_BYTES,
+    MAX_PDF_OCR_OUTPUT_BYTES,
+)
 
 OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_page_range,
                       selected_start_page, selected_end_page, source_page_count, output_page_count,
@@ -211,6 +256,83 @@ class DocumentOperationError(Exception):
         super().__init__(message)
         self.public_message = message
         self.code = code
+
+
+class DocumentOperationExportFailureDomain(str, Enum):
+    """Failure ownership for the later Document Operation Asset Vault finalizer.
+
+    Only a verified source-integrity failure may demote a completed operation.
+    A storage/database/runtime issue remains retryable so it cannot poison a
+    valid source while its destination copy has not yet been attempted.
+    """
+
+    PRECONDITION = "precondition"
+    SOURCE_INTEGRITY = "source_integrity"
+    DESTINATION = "destination"
+
+
+@dataclass(frozen=True)
+class DocumentOperationExportFailure:
+    """Safe result detail; it deliberately has no path, key, or source bytes."""
+
+    domain: DocumentOperationExportFailureDomain
+    code: str
+    public_message: str
+
+    @property
+    def should_mark_output_unavailable(self) -> bool:
+        return self.domain is DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
+
+
+@dataclass(frozen=True)
+class DocumentOperationExportSource:
+    """One immutable, server-derived, descriptor-pinned document output."""
+
+    account_id: str = field(repr=False)
+    operation_id: str = field(repr=False)
+    kind: str
+    project_id: str | None = field(repr=False)
+    original_filename: str = field(repr=False)
+    extension: str
+    content_type: str
+    byte_size: int
+    sha256: str = field(repr=False)
+    stream: BinaryIO = field(repr=False, compare=False)
+
+    def close(self) -> None:
+        self.stream.close()
+
+    def __enter__(self) -> "DocumentOperationExportSource":
+        return self
+
+    def __exit__(self, _exc_type, _exc_value, _traceback) -> None:
+        self.close()
+
+
+@dataclass(frozen=True)
+class DocumentOperationExportSourceResult:
+    """Internal source-opening result for a later fenced Asset Vault copy."""
+
+    source: DocumentOperationExportSource | None = field(repr=False)
+    failure: DocumentOperationExportFailure | None
+    _operation_id: str = field(repr=False)
+    _account_id: str = field(repr=False)
+
+    @property
+    def is_source_integrity_failure(self) -> bool:
+        return bool(self.failure and self.failure.should_mark_output_unavailable)
+
+    def close(self) -> None:
+        if self.source is not None:
+            self.source.close()
+
+
+class _DocumentOperationExportDestinationError(RuntimeError):
+    """Retryable preparation failure that is not evidence of source tampering."""
+
+
+class _DocumentOperationExportSourceIntegrityError(RuntimeError):
+    """A structural nofollow-open failure proves the export source is unsafe."""
 
 
 class _SealedOperationDeliveryError(RuntimeError):
@@ -822,9 +944,13 @@ def _output_path(root: Path, storage_key: str, *, expected_suffix: str | None = 
     match = OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key)
     if not match or (expected_suffix is not None and f".{match.group('suffix')}" != expected_suffix):
         raise RuntimeError("Storage key Document Operation không hợp lệ")
-    candidate = (root / storage_key).resolve()
+    # Resolve only the configured private root.  Resolving the whole candidate
+    # would erase a final ``outputs/<key>`` symlink before the descriptor-pinned
+    # O_NOFOLLOW open can reject it as a source-integrity failure.
+    private_root = root.resolve()
+    candidate = private_root / storage_key
     try:
-        candidate.relative_to(root.resolve())
+        candidate.relative_to(private_root)
     except ValueError as exc:
         raise RuntimeError("Storage key Document Operation vượt ngoài thư mục riêng") from exc
     return candidate
@@ -898,7 +1024,45 @@ def _operation_directory_fd_supported() -> bool:
     )
 
 
-def _open_private_operation_outputs_directory(path: Path) -> tuple[int, int] | None:
+def _raise_typed_document_operation_output_open_error(exc: OSError) -> None:
+    """Classify only a clear nofollow symlink failure as source integrity."""
+
+    # POSIX O_NOFOLLOW reports a final symlink race as ELOOP. Other open
+    # failures can be transient storage/runtime conditions and cannot prove
+    # that the completed source was altered.
+    if exc.errno == errno.ELOOP:
+        raise _DocumentOperationExportSourceIntegrityError(
+            "Document Operation output became structurally unsafe"
+        ) from exc
+    raise _DocumentOperationExportDestinationError(
+        "Document Operation output storage is temporarily unavailable"
+    ) from exc
+
+
+def _open_nofollow_document_operation_output(
+    path: str | Path,
+    flags: int,
+    *,
+    dir_fd: int | None,
+    raise_retryable_storage_error: bool,
+) -> int:
+    """Open the final artifact and preserve its explicit nofollow error type."""
+
+    try:
+        if dir_fd is None:
+            return os.open(path, flags)
+        return os.open(path, flags, dir_fd=dir_fd)
+    except OSError as exc:
+        if raise_retryable_storage_error:
+            _raise_typed_document_operation_output_open_error(exc)
+        raise
+
+
+def _open_private_operation_outputs_directory(
+    path: Path,
+    *,
+    raise_retryable_storage_error: bool = False,
+) -> tuple[int, int] | None:
     """Pin the operation root and `outputs/` before opening one artifact.
 
     Railway runs the descriptor-hardened POSIX branch. The lstat fallback is
@@ -915,11 +1079,19 @@ def _open_private_operation_outputs_directory(path: Path) -> tuple[int, int] | N
         root_descriptor = os.open(path.parent.parent, directory_flags)
         outputs_descriptor = os.open("outputs", directory_flags, dir_fd=root_descriptor)
         return root_descriptor, outputs_descriptor
-    except OSError:
+    except OSError as exc:
         if outputs_descriptor >= 0:
-            os.close(outputs_descriptor)
+            try:
+                os.close(outputs_descriptor)
+            except OSError:
+                pass
         if root_descriptor >= 0:
-            os.close(root_descriptor)
+            try:
+                os.close(root_descriptor)
+            except OSError:
+                pass
+        if raise_retryable_storage_error:
+            _raise_typed_document_operation_output_open_error(exc)
         return None
 
 
@@ -938,6 +1110,7 @@ def _open_verified_operation_output(
     *,
     expected_bytes: int,
     expected_digest: str,
+    raise_retryable_storage_error: bool = False,
 ) -> BinaryIO | None:
     """Open, hash and pin an artifact without a check/open race.
 
@@ -951,7 +1124,14 @@ def _open_verified_operation_output(
     descriptor = -1
     stream: BinaryIO | None = None
     try:
-        directories = _open_private_operation_outputs_directory(path) if _operation_directory_fd_supported() else None
+        directories = (
+            _open_private_operation_outputs_directory(
+                path,
+                raise_retryable_storage_error=raise_retryable_storage_error,
+            )
+            if _operation_directory_fd_supported()
+            else None
+        )
         if _operation_directory_fd_supported() and directories is None:
             return None
         if directories is not None:
@@ -959,7 +1139,12 @@ def _open_verified_operation_output(
             try:
                 before = os.stat(path.name, dir_fd=outputs_descriptor, follow_symlinks=False)
                 flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
-                descriptor = os.open(path.name, flags, dir_fd=outputs_descriptor)
+                descriptor = _open_nofollow_document_operation_output(
+                    path.name,
+                    flags,
+                    dir_fd=outputs_descriptor,
+                    raise_retryable_storage_error=raise_retryable_storage_error,
+                )
             finally:
                 _close_private_operation_outputs_directory(directories)
         else:
@@ -972,7 +1157,12 @@ def _open_verified_operation_output(
             ):
                 return None
             flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
-            descriptor = os.open(path, flags)
+            descriptor = _open_nofollow_document_operation_output(
+                path,
+                flags,
+                dir_fd=None,
+                raise_retryable_storage_error=raise_retryable_storage_error,
+            )
         if not stat.S_ISREG(before.st_mode):
             return None
         pinned = os.fstat(descriptor)
@@ -998,7 +1188,11 @@ def _open_verified_operation_output(
         accepted = stream
         stream = None
         return accepted
-    except (OSError, ValueError):
+    except (OSError, ValueError) as exc:
+        if raise_retryable_storage_error:
+            raise _DocumentOperationExportDestinationError(
+                "Document Operation output storage is temporarily unavailable"
+            ) from exc
         return None
     finally:
         if stream is not None:
@@ -1553,14 +1747,485 @@ def _pdf_to_images_request_fingerprint(*, source_asset_id: str, source_sha256: s
     return hashlib.sha256(payload).hexdigest()
 
 
-def _output_spec(kind: str, *, output_page_count: int | None = None) -> tuple[str, str, str]:
+def _output_spec(
+    kind: str,
+    *,
+    output_page_count: int | None = None,
+    selected_start_page: int | None = None,
+    selected_end_page: int | None = None,
+) -> tuple[str, str, str]:
     """Return server-owned suffix, MIME and attachment name for one kind."""
+    if kind == PDF_SPLIT_KIND:
+        if (
+            isinstance(selected_start_page, bool)
+            or not isinstance(selected_start_page, int)
+            or isinstance(selected_end_page, bool)
+            or not isinstance(selected_end_page, int)
+            or selected_start_page < 1
+            or selected_end_page < selected_start_page
+        ):
+            raise RuntimeError("PDF Split chưa có vùng trang đầu ra hợp lệ")
+        return ".pdf", "application/pdf", f"toan-aas-pdf-pages-{selected_start_page}-{selected_end_page}.pdf"
     if kind == PDF_TO_IMAGES_KIND and int(output_page_count or 0) == 1:
         return ".png", "image/png", "toan-aas-pdf-page-001.png"
     try:
         return OUTPUT_SPEC_BY_KIND[kind]
     except KeyError as exc:
         raise RuntimeError("Loại artifact Document Operation không hợp lệ") from exc
+
+
+def _completed_operation_output_filename(
+    kind: str,
+    *,
+    selected_start_page: object,
+    selected_end_page: object,
+) -> str:
+    """Return the immutable filename that the completed operation writer emits."""
+
+    if kind == PDF_SPLIT_KIND:
+        if (
+            isinstance(selected_start_page, bool)
+            or not isinstance(selected_start_page, int)
+            or isinstance(selected_end_page, bool)
+            or not isinstance(selected_end_page, int)
+            or selected_start_page < 1
+            or selected_end_page < selected_start_page
+        ):
+            raise _document_operation_export_invalid_source()
+        return f"toan-aas-pdf-pages-{selected_start_page}-{selected_end_page}.pdf"
+    try:
+        return COMPLETED_OPERATION_OUTPUT_FILENAMES[kind]
+    except KeyError as exc:
+        raise _document_operation_export_invalid_source() from exc
+
+
+def _document_operation_export_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+    domain: DocumentOperationExportFailureDomain,
+    code: str,
+    public_message: str,
+) -> DocumentOperationExportSourceResult:
+    """Create a result which never carries storage internals to a caller."""
+
+    return DocumentOperationExportSourceResult(
+        source=None,
+        failure=DocumentOperationExportFailure(
+            domain=domain,
+            code=code,
+            public_message=public_message,
+        ),
+        _operation_id=operation_id,
+        _account_id=account_id,
+    )
+
+
+def _document_operation_export_precondition_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+    code: str,
+    public_message: str,
+) -> DocumentOperationExportSourceResult:
+    return _document_operation_export_failure(
+        operation_id=operation_id,
+        account_id=account_id,
+        domain=DocumentOperationExportFailureDomain.PRECONDITION,
+        code=code,
+        public_message=public_message,
+    )
+
+
+def _document_operation_export_source_integrity_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> DocumentOperationExportSourceResult:
+    return _document_operation_export_failure(
+        operation_id=operation_id,
+        account_id=account_id,
+        domain=DocumentOperationExportFailureDomain.SOURCE_INTEGRITY,
+        code="WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+        public_message="Tài liệu đầu ra không còn integrity để lưu vào Asset Vault.",
+    )
+
+
+def _document_operation_export_destination_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> DocumentOperationExportSourceResult:
+    return _document_operation_export_failure(
+        operation_id=operation_id,
+        account_id=account_id,
+        domain=DocumentOperationExportFailureDomain.DESTINATION,
+        code="WEB_DOCUMENT_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
+        public_message="Chưa thể chuẩn bị lưu tài liệu riêng tư. Hãy thử lại sau.",
+    )
+
+
+def _document_operation_export_invalid_source() -> DocumentOperationError:
+    return DocumentOperationError(
+        "Tài liệu đầu ra không còn integrity để lưu vào Asset Vault.",
+        code="DOCUMENT_OPERATION_EXPORT_SOURCE_INVALID",
+    )
+
+
+def _close_document_operation_export_stream(stream: BinaryIO | None) -> None:
+    if stream is None:
+        return
+    try:
+        stream.close()
+    except (OSError, ValueError):
+        pass
+
+
+def _validate_document_operation_export_pdf(stream: BinaryIO, *, expected_bytes: int) -> None:
+    """Require a bounded, ordinary PDF before it can leave Document Operations."""
+
+    try:
+        PdfReader, _ = _pdf_classes()
+        from pypdf.errors import PdfReadError, PdfStreamError
+    except DocumentOperationError as exc:
+        # A missing parser/runtime cannot prove this already completed output
+        # was altered.  It remains retryable rather than being demoted.
+        raise _DocumentOperationExportDestinationError("PDF validation runtime unavailable") from exc
+    try:
+        stream.seek(0)
+        payload = stream.read(expected_bytes + 1)
+        if len(payload) != expected_bytes:
+            raise _document_operation_export_invalid_source()
+        terminal_eof = payload.rfind(b"%%EOF")
+        if terminal_eof < 0 or any(byte not in b"\x09\x0a\x0c\x0d\x20" for byte in payload[terminal_eof + 5:]):
+            raise _document_operation_export_invalid_source()
+        reader = PdfReader(BytesIO(payload), strict=True)
+        if reader.is_encrypted:
+            raise _document_operation_export_invalid_source()
+        page_count = len(reader.pages)
+        if page_count < 1 or page_count > MAX_PAGES:
+            raise _document_operation_export_invalid_source()
+    except DocumentOperationError:
+        raise
+    except (PdfReadError, PdfStreamError) as exc:
+        raise _document_operation_export_invalid_source() from exc
+    except (OSError, ValueError) as exc:
+        raise _DocumentOperationExportDestinationError("PDF export source could not be read") from exc
+    except Exception as exc:
+        raise _DocumentOperationExportDestinationError("PDF validation runtime unavailable") from exc
+
+
+def _document_operation_export_safe_docx_name(value: str) -> str:
+    """Return a non-ambiguous OOXML member name or reject the archive."""
+
+    name = str(value or "")
+    posix_name = name.replace("\\", "/")
+    parts = posix_name.split("/")
+    if (
+        not name
+        or name != posix_name
+        or posix_name.startswith("/")
+        or re.match(r"^[A-Za-z]:", posix_name) is not None
+        or any(part in {"", ".", ".."} for part in parts[:-1])
+        or (not posix_name.endswith("/") and parts[-1] in {"", ".", ".."})
+    ):
+        raise _document_operation_export_invalid_source()
+    return posix_name
+
+
+def _validate_document_operation_export_docx(stream: BinaryIO) -> None:
+    """Use the same bounded OOXML parser policy before and after Vault copy.
+
+    The finalizer already owns the strict archive implementation: bounded
+    classic central-directory preflight, CRC/full member consumption, required
+    OPC relationships/content types, UTF-8 XML and DTD/entity rejection.  A
+    local import keeps the general Document Operations module acyclic while
+    ensuring a malicious DOCX is rejected before a lease can copy it.
+    """
+
+    try:
+        from copyfast_assets import _document_operation_docx_stream_is_safe
+    except Exception as exc:
+        raise _DocumentOperationExportDestinationError("DOCX validation runtime unavailable") from exc
+    try:
+        if not _document_operation_docx_stream_is_safe(stream):
+            raise _document_operation_export_invalid_source()
+    except DocumentOperationError:
+        raise
+    except (OSError, ValueError) as exc:
+        raise _DocumentOperationExportDestinationError("DOCX export source could not be read") from exc
+    except Exception as exc:
+        raise _DocumentOperationExportDestinationError("DOCX validation runtime unavailable") from exc
+
+
+def _validate_document_operation_export_text(stream: BinaryIO, *, expected_bytes: int) -> None:
+    """Require a bounded, non-empty, strict UTF-8 text artifact."""
+
+    if expected_bytes < 1 or expected_bytes > DOCUMENT_OPERATION_EXPORT_TEXT_MAX_BYTES:
+        raise _document_operation_export_invalid_source()
+    try:
+        stream.seek(0)
+        payload = stream.read(DOCUMENT_OPERATION_EXPORT_TEXT_MAX_BYTES + 1)
+    except (OSError, ValueError) as exc:
+        raise _DocumentOperationExportDestinationError("Text export source could not be read") from exc
+    if len(payload) != expected_bytes or not payload or len(payload) > DOCUMENT_OPERATION_EXPORT_TEXT_MAX_BYTES:
+        raise _document_operation_export_invalid_source()
+    try:
+        payload.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise _document_operation_export_invalid_source() from exc
+    if b"\x00" in payload or not payload.strip():
+        raise _document_operation_export_invalid_source()
+
+
+def _validate_document_operation_export_artifact(
+    *,
+    kind: str,
+    extension: str,
+    stream: BinaryIO,
+    expected_bytes: int,
+) -> None:
+    if kind in {PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND, IMAGE_TO_PDF_KIND} and extension == ".pdf":
+        _validate_document_operation_export_pdf(stream, expected_bytes=expected_bytes)
+        return
+    if kind in {PDF_TO_WORD_KIND, PDF_OCR_WORD_KIND} and extension == ".docx":
+        _validate_document_operation_export_docx(stream)
+        return
+    if kind in {IMAGE_OCR_KIND, PDF_OCR_KIND} and extension == ".txt":
+        _validate_document_operation_export_text(stream, expected_bytes=expected_bytes)
+        return
+    raise _document_operation_export_invalid_source()
+
+
+def _rehash_document_operation_export_stream(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> None:
+    """Recheck the exact pinned descriptor after the format parser consumed it."""
+
+    try:
+        metadata = os.fstat(stream.fileno())
+        if not stat.S_ISREG(metadata.st_mode) or int(metadata.st_size) != expected_bytes:
+            raise _document_operation_export_invalid_source()
+        digest = hashlib.sha256()
+        total = 0
+        stream.seek(0)
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > expected_bytes:
+                raise _document_operation_export_invalid_source()
+            digest.update(chunk)
+        if total != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            raise _document_operation_export_invalid_source()
+        stream.seek(0)
+    except DocumentOperationError:
+        raise
+    except (OSError, ValueError, AttributeError) as exc:
+        raise _DocumentOperationExportDestinationError("Document export source could not be rechecked") from exc
+
+
+def open_document_operation_export_source(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> DocumentOperationExportSourceResult:
+    """Open a completed owner-scoped document artifact for a future private copy.
+
+    The helper is read-only: it never writes an Asset Vault row and never
+    changes the operation lifecycle.  A caller must explicitly invoke
+    ``mark_document_operation_export_source_unavailable`` after a typed source
+    integrity failure, so retryable lease/destination failures cannot demote a
+    completed document by accident.
+    """
+
+    safe_operation_id = str(operation_id or "")
+    safe_account_id = str(account_id or "")
+    try:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            row = conn.execute(
+                f"""SELECT account_id, {OPERATION_SELECT}
+                    FROM web_document_operations
+                    WHERE id=? AND account_id=?""",
+                (safe_operation_id, safe_account_id),
+            ).fetchone()
+    except Exception:
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+
+    # A foreign/missing/non-completed row deliberately receives the same safe
+    # precondition response; no existence, filename or storage detail leaks.
+    if not row or str(row[0] or "") != safe_account_id or str(row[5] or "") != "completed":
+        return _document_operation_export_precondition_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+            code="WEB_DOCUMENT_OPERATION_EXPORT_NOT_READY",
+            public_message="Tài liệu chưa sẵn sàng để lưu vào Asset Vault.",
+        )
+
+    kind = str(row[4] or "")
+    if kind not in DOCUMENT_OPERATION_EXPORT_KINDS:
+        return _document_operation_export_precondition_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+            code="WEB_DOCUMENT_OPERATION_EXPORT_NOT_ELIGIBLE",
+            public_message="Thao tác tài liệu này chưa hỗ trợ lưu vào Asset Vault.",
+        )
+
+    stream: BinaryIO | None = None
+    try:
+        extension, content_type, vault_original_filename = _output_spec(
+            kind,
+            output_page_count=row[10],
+            selected_start_page=row[7],
+            selected_end_page=row[8],
+        )
+        stored_expected_filename = _completed_operation_output_filename(
+            kind,
+            selected_start_page=row[7],
+            selected_end_page=row[8],
+        )
+        if kind == PDF_SPLIT_KIND:
+            # PDF Split delivery names include page bounds, whereas the Vault
+            # finalizer owns one stable retained-copy name.
+            vault_original_filename = "toan-aas-pdf-split.pdf"
+        if DOCUMENT_OPERATION_EXPORT_MEDIA.get(kind) != (extension, content_type):
+            raise _document_operation_export_invalid_source()
+        stored_content_type = row[12]
+        stored_original_filename = row[11]
+        byte_size = row[13]
+        storage_key = row[20]
+        sha256 = row[21]
+        if (
+            not isinstance(stored_content_type, str)
+            or not hmac.compare_digest(stored_content_type, content_type)
+            or not isinstance(stored_original_filename, str)
+            or not hmac.compare_digest(stored_original_filename, stored_expected_filename)
+            or isinstance(byte_size, bool)
+            or not isinstance(byte_size, int)
+            or byte_size < 1
+            or byte_size > _maximum_output_bytes()
+            or not isinstance(storage_key, str)
+            or OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key) is None
+            or not isinstance(sha256, str)
+            or re.fullmatch(r"[0-9a-f]{64}", sha256) is None
+        ):
+            raise _document_operation_export_invalid_source()
+        if extension == ".txt" and byte_size > DOCUMENT_OPERATION_EXPORT_TEXT_MAX_BYTES:
+            raise _document_operation_export_invalid_source()
+    except DocumentOperationError:
+        return _document_operation_export_source_integrity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except Exception:
+        return _document_operation_export_source_integrity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+
+    try:
+        root = document_operations_directory()
+    except Exception:
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    try:
+        output_path = _output_path(root, storage_key, expected_suffix=extension)
+    except RuntimeError:
+        return _document_operation_export_source_integrity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except (OSError, ValueError):
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+
+    try:
+        stream = _open_verified_operation_output(
+            output_path,
+            expected_bytes=byte_size,
+            expected_digest=sha256,
+            raise_retryable_storage_error=True,
+        )
+        if stream is None:
+            raise _document_operation_export_invalid_source()
+        _validate_document_operation_export_artifact(
+            kind=kind,
+            extension=extension,
+            stream=stream,
+            expected_bytes=byte_size,
+        )
+        _rehash_document_operation_export_stream(
+            stream,
+            expected_bytes=byte_size,
+            expected_digest=sha256,
+        )
+        source = DocumentOperationExportSource(
+            account_id=str(row[0]),
+            operation_id=str(row[1]),
+            kind=kind,
+            project_id=str(row[3]) if row[3] else None,
+            original_filename=vault_original_filename,
+            extension=extension,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            stream=stream,
+        )
+        stream = None
+        return DocumentOperationExportSourceResult(
+            source=source,
+            failure=None,
+            _operation_id=safe_operation_id,
+            _account_id=safe_account_id,
+        )
+    except _DocumentOperationExportSourceIntegrityError:
+        return _document_operation_export_source_integrity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except _DocumentOperationExportDestinationError:
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except DocumentOperationError:
+        return _document_operation_export_source_integrity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except (OSError, ValueError):
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    except Exception:
+        return _document_operation_export_destination_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+        )
+    finally:
+        _close_document_operation_export_stream(stream)
+
+
+def mark_document_operation_export_source_unavailable(result: DocumentOperationExportSourceResult) -> bool:
+    """Explicitly apply the narrow unavailable transition for typed integrity loss."""
+
+    if not isinstance(result, DocumentOperationExportSourceResult) or not result.is_source_integrity_failure:
+        return False
+    _mark_output_unavailable(result._operation_id, result._account_id)
+    return True
 
 
 def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
@@ -5238,8 +5903,184 @@ async def optimize_pdf(payload: PdfOptimizeRequest, request: Request, account: d
         _safe_unlink(source_copy)
 
 
-@router.get("/{operation_id}/download")
-async def download_document_operation(operation_id: str, account: dict = Depends(require_account)):
+async def _export_document_operation_to_asset_vault(
+    operation_id: str,
+    request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    account: dict = Depends(require_csrf),
+):
+    """Explicitly retain one verified document output as a private Vault asset.
+
+    The browser supplies only an operation UUID and opaque idempotency key. It
+    never uploads bytes, chooses a pathname or URL, or invokes a provider,
+    bridge, Bot, wallet, payment, or job authority. Existing export relations
+    replay their current Vault lifecycle before the sealed document source is
+    opened again.
+    """
+
+    operation_id = _uuid(operation_id, label="Mã thao tác tài liệu")
+    account_id = str(account["id"])
+    from copyfast_assets import (
+        DocumentOperationAssetExportSource as VaultExportSource,
+        finalize_document_operation_asset_export,
+        get_document_operation_asset_export_receipt,
+        release_document_operation_asset_export_lease,
+        replay_document_operation_asset_export,
+        reserve_document_operation_asset_export,
+    )
+
+    key = _idempotency_key(idempotency_key)
+    replay = replay_document_operation_asset_export(
+        account_id=account_id,
+        operation_id=operation_id,
+        idempotency_key=key,
+    )
+    if replay is not None:
+        if replay.state == "completed" and replay.asset is not None:
+            return envelope(
+                True,
+                "Tài liệu đã có trong Asset Vault riêng tư.",
+                data={"asset": replay.asset},
+                status_name="completed",
+            )
+        if replay.state == "guarded":
+            return envelope(
+                False,
+                "Tài liệu chưa thể lưu vào Asset Vault.",
+                status_name="guarded",
+                error_code="WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+            )
+        if replay.state != "copying":
+            return envelope(
+                False,
+                "Chưa thể xác nhận trạng thái tài liệu trong Asset Vault.",
+                status_name="guarded",
+                error_code="WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+            )
+        return envelope(
+            False,
+            "Tài liệu đang được lưu vào Asset Vault. Hãy tải lại sau.",
+            status_name="processing",
+            error_code="WEB_DOCUMENT_OPERATION_EXPORT_PENDING",
+        )
+
+    source_result = open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=account_id,
+    )
+    if source_result.source is None:
+        if source_result.is_source_integrity_failure:
+            mark_document_operation_export_source_unavailable(source_result)
+        failure = source_result.failure
+        return envelope(
+            False,
+            failure.public_message if failure is not None else "Tài liệu chưa thể lưu vào Asset Vault.",
+            status_name="guarded",
+            error_code=failure.code if failure is not None else "WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+        )
+
+    pinned_source = source_result.source
+    try:
+        reservation = reserve_document_operation_asset_export(
+            account_id=account_id,
+            operation_id=operation_id,
+            idempotency_key=key,
+            request_fingerprint=pinned_source.sha256,
+            expected_bytes=pinned_source.byte_size,
+        )
+    except Exception:
+        source_result.close()
+        raise
+    if reservation.state != "leased" or reservation.lease is None:
+        source_result.close()
+        receipt = get_document_operation_asset_export_receipt(account_id=account_id, operation_id=operation_id)
+        if receipt is not None and receipt.state == "completed" and receipt.asset is not None:
+            return envelope(
+                True,
+                "Tài liệu đã có trong Asset Vault riêng tư.",
+                data={"asset": receipt.asset},
+                status_name="completed",
+            )
+        if reservation.state == "guarded" or (receipt is not None and receipt.state == "guarded"):
+            return envelope(
+                False,
+                "Tài liệu chưa thể lưu vào Asset Vault.",
+                status_name="guarded",
+                error_code="WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+            )
+        if reservation.state == "pending" and receipt is not None and receipt.state == "copying":
+            return envelope(
+                False,
+                "Tài liệu đang được lưu vào Asset Vault. Hãy tải lại sau.",
+                status_name="processing",
+                error_code="WEB_DOCUMENT_OPERATION_EXPORT_PENDING",
+            )
+        return envelope(
+            False,
+            "Chưa thể xác nhận trạng thái tài liệu trong Asset Vault.",
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+        )
+
+    # The finalizer owns the descriptor stream after entry. Do not call
+    # ``source_result.close`` after this hand-off or a second close could mask
+    # a finalization failure on unusual file objects.
+    vault_source = VaultExportSource(
+        account_id=account_id,
+        operation_id=operation_id,
+        kind=pinned_source.kind,
+        project_id=pinned_source.project_id,
+        original_filename=pinned_source.original_filename,
+        extension=pinned_source.extension,
+        content_type=pinned_source.content_type,
+        byte_size=pinned_source.byte_size,
+        sha256=pinned_source.sha256,
+        stream=pinned_source.stream,
+    )
+    try:
+        finalize_document_operation_asset_export(
+            lease=reservation.lease,
+            source=vault_source,
+            request_id=_request_id(request),
+        )
+        receipt = get_document_operation_asset_export_receipt(
+            account_id=account_id,
+            operation_id=operation_id,
+        )
+    except HTTPException:
+        release_document_operation_asset_export_lease(reservation.lease)
+        raise
+    except Exception:
+        release_document_operation_asset_export_lease(reservation.lease)
+        return envelope(
+            False,
+            "Chưa thể lưu tài liệu vào Asset Vault. Tài liệu gốc vẫn giữ nguyên để bạn thử lại.",
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OPERATION_EXPORT_RETRY",
+        )
+    if receipt is not None and receipt.state == "copying":
+        return envelope(
+            False,
+            "Chưa thể xác nhận trạng thái tài liệu trong Asset Vault. Hãy tải lại sau.",
+            status_name="processing",
+            error_code="WEB_DOCUMENT_OPERATION_EXPORT_PENDING",
+        )
+    if receipt is None or receipt.state != "completed" or receipt.asset is None:
+        return envelope(
+            False,
+            "Chưa thể xác nhận trạng thái tài liệu trong Asset Vault.",
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OPERATION_EXPORT_GUARDED",
+        )
+    return envelope(
+        True,
+        "Đã lưu tài liệu đã xác minh vào Asset Vault riêng tư.",
+        data={"asset": receipt.asset},
+        status_name="completed",
+    )
+
+
+async def _download_document_operation(operation_id: str, account: dict):
     _require_enabled()
     operation_id = _uuid(operation_id, label="Mã thao tác tài liệu")
     account_id = str(account["id"])
@@ -5255,6 +6096,8 @@ async def download_document_operation(operation_id: str, account: dict = Depends
         suffix, media_type, download_filename = _output_spec(
             str(row[3] or ""),
             output_page_count=int(row[9]) if row[9] is not None else None,
+            selected_start_page=row[6],
+            selected_end_page=row[7],
         )
         # Content-type and extension are canonical server data for the known
         # operation kind. Never let a mutable database filename/MIME value
@@ -5341,3 +6184,27 @@ async def get_document_operation(operation_id: str, account: dict = Depends(requ
         },
         status_name=str(row[4]) if str(row[4]) in OPERATION_STATES else "guarded",
     )
+
+
+@router.post("/{operation_id}/export-to-asset-vault")
+async def export_document_operation_to_asset_vault(
+    operation_id: str,
+    request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    account: dict = Depends(require_csrf),
+):
+    """Save one sealed completed document output as a private Vault asset."""
+
+    return await _export_document_operation_to_asset_vault(
+        operation_id=operation_id,
+        request=request,
+        idempotency_key=idempotency_key,
+        account=account,
+    )
+
+
+@router.get("/{operation_id}/download")
+async def download_document_operation(operation_id: str, account: dict = Depends(require_account)):
+    """Download one owner-scoped verified document output."""
+
+    return await _download_document_operation(operation_id=operation_id, account=account)

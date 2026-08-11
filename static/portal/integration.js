@@ -1712,6 +1712,26 @@
     return payload;
   }
 
+  function assetExportNonterminalEnvelope(error) {
+    // `api()` intentionally throws every { ok: false } envelope.  Asset
+    // export is one of the narrow exceptions where an acknowledged 200 can
+    // truthfully mean a live copy lease or a guarded no-output result.
+    const payload = error && error.payload;
+    if (
+      Number(error && error.status) !== 200
+      || !payload
+      || typeof payload !== "object"
+      || Array.isArray(payload)
+      || payload.ok !== false
+    ) return null;
+    const status = String(payload.status || "").trim().toLowerCase();
+    if (!["queued", "processing", "guarded"].includes(status)) return null;
+    return {
+      status,
+      message: typeof payload.message === "string" ? payload.message : ""
+    };
+  }
+
   function merge(next) {
     window.__TOAN_AAS_PORTAL__ = { ...base(), ...next };
     if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__);
@@ -12491,6 +12511,7 @@
     const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
     const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
     const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
+    const documentOperationExportEnabled = Boolean(status.flags && status.flags.document_operation_export_enabled === true);
     const imageToPdfEnabled = Boolean(status.flags && status.flags.image_to_pdf_enabled === true);
     const pdfToImagesEnabled = Boolean(status.flags && status.flags.pdf_to_images_enabled === true);
     const pdfToWordEnabled = Boolean(status.flags && status.flags.pdf_to_word_enabled === true);
@@ -12962,6 +12983,7 @@
       "document-operation-ocr-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrEnabled),
       "document-operation-pdf-ocr-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-export-to-asset-vault": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && documentOperationExportEnabled),
       // Resize & Aspect Studio is a separate Web-native image contract. It
       // needs no Telegram link/Core Bridge/provider/wallet, but remains
       // guarded until its own isolated storage and narrow decoder flag exist.
@@ -13658,6 +13680,7 @@
       assetVaultEnabled,
       projectPackageEnabled,
       documentOperationsEnabled,
+      documentOperationExportEnabled,
       imageToPdfEnabled,
       pdfToImagesEnabled,
       pdfToWordEnabled,
@@ -34312,9 +34335,10 @@
             headers: { "Idempotency-Key": submission.key }
           });
           acknowledged = true;
+          const responseStatus = String(result && result.status || "");
           const asset = result && result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
           const assetState = String(asset && asset.state || "");
-          if (!asset || !validVaultAssetId(asset.id) || !["active", "archived", "unavailable"].includes(assetState)) {
+          if (responseStatus !== "completed" || !asset || !validVaultAssetId(asset.id) || !["active", "archived", "unavailable"].includes(assetState)) {
             throw new Error("Máy chủ chưa trả xác nhận Asset Vault hợp lệ.");
           }
           await refreshPrivateState();
@@ -34325,6 +34349,18 @@
             assetState === "unavailable" ? "error" : undefined
           );
         } catch (error) {
+          const nonterminal = assetExportNonterminalEnvelope(error);
+          if (nonterminal) {
+            acknowledged = true;
+            await refreshPrivateState();
+            toast(
+              nonterminal.message || (nonterminal.status === "guarded"
+                ? "PNG chưa thể lưu an toàn; Web không tạo Asset Vault thay thế."
+                : "PNG đang được máy chủ xác minh; chưa có Asset Vault mới."),
+              nonterminal.status === "guarded" ? "error" : undefined
+            );
+            return;
+          }
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await refreshPrivateState();
           throw error;
@@ -34439,6 +34475,80 @@
         }
         const refreshed = await hydrateDocumentOperations(operationHistoryListOffset(fields.__documentOperationOffset));
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Document Operations.");
+        return;
+      }
+      if (action === "document-operation-export-to-asset-vault") {
+        const operationId = String(fields.__documentOperationId || "").trim();
+        const documentPath = currentPortalPath();
+        const isDocumentBoard = documentPath === "/documents" || documentPath === "/documents/pdf";
+        if (!validDocumentOperationId(operationId)) {
+          throw new Error("Artifact đã chọn không còn hợp lệ để lưu.");
+        }
+        if (route !== documentPath || (!isDocumentBoard && !documentOperationKindForCurrentRoute())) {
+          throw new Error("Chỉ có thể lưu artifact từ Document Operations đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["document-operation-export-to-asset-vault"] === true)) {
+          throw new Error("Tính năng lưu artifact vào Asset Vault chưa sẵn sàng cho signed session này.");
+        }
+        const scope = `document-operation-export:${operationId}`;
+        const submission = acquireSubmission(scope, operationId);
+        if (!submission) {
+          toast("Artifact này đang được lưu. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        const refreshPrivateState = () => Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/document-operations/${encodeURIComponent(operationId)}/export-to-asset-vault`, {
+            method: "POST",
+            headers: { "Idempotency-Key": submission.key }
+          });
+          acknowledged = true;
+          const responseStatus = String(result && result.status || "");
+          if (["queued", "processing"].includes(responseStatus)) {
+            await refreshPrivateState();
+            toast(result.message || "Artifact đang được máy chủ xác minh; chưa có Asset Vault mới.");
+            return;
+          }
+          if (responseStatus === "guarded") {
+            await refreshPrivateState();
+            toast(result.message || "Artifact chưa thể lưu an toàn; Web không tạo Asset Vault thay thế.", "error");
+            return;
+          }
+          const asset = result && result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
+          const assetState = String(asset && asset.state || "");
+          if (responseStatus !== "completed" || !asset || !validVaultAssetId(asset.id) || !["active", "archived", "unavailable"].includes(assetState)) {
+            throw new Error("Máy chủ chưa trả xác nhận Asset Vault hợp lệ.");
+          }
+          await refreshPrivateState();
+          toast(
+            assetState === "unavailable"
+              ? "Artifact đã được lưu nhưng Asset Vault đang đánh dấu file không khả dụng. Hãy kiểm tra lại trạng thái."
+              : (result.message || "Đã lưu artifact đã xác minh vào Asset Vault riêng tư."),
+            assetState === "unavailable" ? "error" : undefined
+          );
+        } catch (error) {
+          const nonterminal = assetExportNonterminalEnvelope(error);
+          if (nonterminal) {
+            acknowledged = true;
+            await refreshPrivateState();
+            toast(
+              nonterminal.message || (nonterminal.status === "guarded"
+                ? "Artifact chưa thể lưu an toàn; Web không tạo Asset Vault thay thế."
+                : "Artifact đang được máy chủ xác minh; chưa có Asset Vault mới."),
+              nonterminal.status === "guarded" ? "error" : undefined
+            );
+            return;
+          }
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await refreshPrivateState();
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "project-package-export") {

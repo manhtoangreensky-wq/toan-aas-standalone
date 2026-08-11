@@ -18,36 +18,36 @@ Status: **BOT_BRIDGE_SOURCE_MISSING**. Web outbound calls matched: `0/30`. The c
 
 | Method | Web request | Web source | Line |
 | --- | --- | --- | --- |
-| POST | /internal/v1/admin/features/{*}/freeze | copyfast_api.py | 4555 |
-| GET | /internal/v1/admin/jobs | copyfast_api.py | 4439 |
-| POST | /internal/v1/admin/jobs/{*}/refund | copyfast_api.py | 4531 |
-| POST | /internal/v1/admin/jobs/{*}/retry | copyfast_api.py | 4508 |
-| GET | /internal/v1/admin/modules/{*} | copyfast_api.py | 4478 |
-| GET | /internal/v1/admin/payments | copyfast_api.py | 4444 |
-| GET | /internal/v1/admin/providers | copyfast_api.py | 4449 |
-| GET | /internal/v1/admin/summary | copyfast_api.py | 4429 |
-| GET | /internal/v1/admin/tickets | copyfast_api.py | 4454 |
-| GET | /internal/v1/admin/users | copyfast_api.py | 4434 |
-| GET | /internal/v1/assets | copyfast_api.py | 4230 |
-| GET | /internal/v1/assets | copyfast_api.py | 4233 |
-| GET | /internal/v1/assets/{*}/download | copyfast_api.py | 2966 |
-| GET | /internal/v1/features/status | copyfast_api.py | 4329 |
-| POST | /internal/v1/features/{*}/{*} | copyfast_api.py | 4371 |
+| POST | /internal/v1/admin/features/{*}/freeze | copyfast_api.py | 4576 |
+| GET | /internal/v1/admin/jobs | copyfast_api.py | 4460 |
+| POST | /internal/v1/admin/jobs/{*}/refund | copyfast_api.py | 4552 |
+| POST | /internal/v1/admin/jobs/{*}/retry | copyfast_api.py | 4529 |
+| GET | /internal/v1/admin/modules/{*} | copyfast_api.py | 4499 |
+| GET | /internal/v1/admin/payments | copyfast_api.py | 4465 |
+| GET | /internal/v1/admin/providers | copyfast_api.py | 4470 |
+| GET | /internal/v1/admin/summary | copyfast_api.py | 4450 |
+| GET | /internal/v1/admin/tickets | copyfast_api.py | 4475 |
+| GET | /internal/v1/admin/users | copyfast_api.py | 4455 |
+| GET | /internal/v1/assets | copyfast_api.py | 4251 |
+| GET | /internal/v1/assets | copyfast_api.py | 4254 |
+| GET | /internal/v1/assets/{*}/download | copyfast_api.py | 2987 |
+| GET | /internal/v1/features/status | copyfast_api.py | 4350 |
 | POST | /internal/v1/features/{*}/{*} | copyfast_api.py | 4392 |
-| GET | /internal/v1/jobs | copyfast_api.py | 4171 |
-| GET | /internal/v1/jobs | copyfast_api.py | 4174 |
-| GET | /internal/v1/jobs/{*} | copyfast_api.py | 4214 |
+| POST | /internal/v1/features/{*}/{*} | copyfast_api.py | 4413 |
+| GET | /internal/v1/jobs | copyfast_api.py | 4192 |
+| GET | /internal/v1/jobs | copyfast_api.py | 4195 |
+| GET | /internal/v1/jobs/{*} | copyfast_api.py | 4235 |
 | GET | /internal/v1/me | copyfast_auth.py | 1287 |
-| GET | /internal/v1/packages | copyfast_api.py | 4067 |
-| POST | /internal/v1/payments/create | copyfast_api.py | 4151 |
-| GET | /internal/v1/payments/{*} | copyfast_api.py | 4161 |
-| GET | /internal/v1/pricing | copyfast_api.py | 4062 |
-| GET | /internal/v1/support/tickets | copyfast_api.py | 4306 |
-| POST | /internal/v1/support/tickets | copyfast_api.py | 4317 |
-| POST | /internal/v1/uploads | copyfast_api.py | 4288 |
-| GET | /internal/v1/voice/profiles | copyfast_api.py | 4263 |
-| GET | /internal/v1/wallet | copyfast_api.py | 4051 |
-| GET | /internal/v1/wallet/history | copyfast_api.py | 4056 |
+| GET | /internal/v1/packages | copyfast_api.py | 4088 |
+| POST | /internal/v1/payments/create | copyfast_api.py | 4172 |
+| GET | /internal/v1/payments/{*} | copyfast_api.py | 4182 |
+| GET | /internal/v1/pricing | copyfast_api.py | 4083 |
+| GET | /internal/v1/support/tickets | copyfast_api.py | 4327 |
+| POST | /internal/v1/support/tickets | copyfast_api.py | 4338 |
+| POST | /internal/v1/uploads | copyfast_api.py | 4309 |
+| GET | /internal/v1/voice/profiles | copyfast_api.py | 4284 |
+| GET | /internal/v1/wallet | copyfast_api.py | 4072 |
+| GET | /internal/v1/wallet/history | copyfast_api.py | 4077 |
 
 ## Telegram one-time identity callback
 

@@ -617,6 +617,8 @@ def provenance():
     )
 
     webapp = result["preflight"]["webapp"]
+    assert webapp["root"] == "repository-root"
+    assert result["web_inventory"]["source_root"] == "webapp-root"
     assert webapp["revision"]["checkout_sha"] == web_sha
     assert webapp["revision"]["requested_sha"] == web_sha
     assert webapp["revision"]["requested_relation"] == "exact"
