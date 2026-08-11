@@ -34305,8 +34305,9 @@
         }
         return;
       }
-      if (action === "image-operation-export-to-asset-vault") {
+      if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff"].includes(action)) {
         const operationId = String(fields.__imageOperationId || "").trim();
+        const preparingContentHandoff = action === "image-operation-export-to-content-handoff";
         const refreshOperationHistory = route === "/image/resize"
           ? () => hydrateImageOperations()
           : route === "/image/edit"
@@ -34324,6 +34325,9 @@
         }
         if (!(base().capabilities && base().capabilities["image-operation-export-to-asset-vault"] === true)) {
           throw new Error("Tính năng lưu PNG vào Asset Vault chưa sẵn sàng cho signed session này.");
+        }
+        if (preparingContentHandoff && !(base().capabilities && base().capabilities["content-handoff-create"] === true)) {
+          throw new Error("Content Handoff chưa sẵn sàng cho signed session này.");
         }
         const scope = `image-operation-export:${operationId}`;
         const submission = acquireSubmission(scope, operationId);
@@ -34347,6 +34351,16 @@
             throw new Error("Máy chủ chưa trả xác nhận Asset Vault hợp lệ.");
           }
           await refreshPrivateState();
+          if (preparingContentHandoff) {
+            if (assetState !== "active") {
+              toast("PNG đã lưu nhưng Asset Vault chưa ở trạng thái active; không mở draft bàn giao.", "error");
+              return;
+            }
+            const handoffPath = contentHandoffDraftPath(asset.id);
+            if (!handoffPath) throw new Error("Máy chủ chưa trả Asset Vault ID hợp lệ để mở Content Handoff.");
+            window.location.assign(handoffPath);
+            return;
+          }
           toast(
             assetState === "unavailable"
               ? "PNG đã được lưu nhưng Asset Vault đang đánh dấu file không khả dụng. Hãy kiểm tra lại trạng thái."
