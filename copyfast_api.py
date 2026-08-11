@@ -1412,7 +1412,7 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
         return result
     if surface == "packages":
         result = _project_record(value, ("available",))
-        package_fields = ("code", "type", "label", "note", "default_days", "price_vnd", "manual")
+        package_fields = ("code", "type", "label", "note", "default_days", "manual")
         for group in ("monthly", "combos"):
             rows: list[dict[str, Any]] = []
             raw_rows = value.get(group) if isinstance(value.get(group), list) else []

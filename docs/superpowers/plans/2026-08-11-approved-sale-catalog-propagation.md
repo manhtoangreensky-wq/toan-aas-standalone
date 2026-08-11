@@ -60,6 +60,8 @@ approved price index does not yet exist.
 - Modify: `copyfast_api.py:surface == "packages"`
 - Modify: `static/portal/portal.js:canonicalPackageCatalog`,
   `membershipCatalogEntries`, `renderMembership`, and `renderCatalog`
+- Modify: `static/portal/integration.js:hydrateCanonicalPage` package and
+  membership branches
 
 - [ ] **Step 1: Remove `price_vnd` from the packages projection allowlist**
 
@@ -117,8 +119,14 @@ Expected: all tests pass.
 - [ ] **Step 1: Run pricing/billing and portal static contracts**
 
 ```powershell
-python -m pytest -q tests/test_public_sale_pricing_projection_contracts.py tests/test_billing_canonical_journey_portal_contracts.py tests/test_portal_safety_contracts.py -p no:cacheprovider
+python -m pytest -q tests/test_public_sale_pricing_projection_contracts.py tests/test_billing_canonical_journey_contracts.py tests/test_portal_safety_contracts.py -p no:cacheprovider
 ```
+
+The focused pricing contract also asserts that direct `/packages` and
+`/membership` hydration fetch `/pricing` and merge `pricingCatalog` before the
+renderer can join an approved SKU. It also asserts that both routes clear
+catalog projections before fetch and again on a guarded failure, preventing a
+previous price revision from rendering during a current signed-session read.
 
 - [ ] **Step 2: Regenerate and verify migration evidence with the clean feature revision**
 

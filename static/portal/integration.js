@@ -25288,14 +25288,25 @@
         if (!isCurrent()) return null;
         merge({ pricingCatalog: pricing.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/packages") {
-        const packages = await api("/packages");
+        merge({
+          pricingCatalog: {},
+          packageCatalog: {},
+          pageStates: { ...(base().pageStates || {}), [path]: "loading" }
+        });
+        const [pricing, packages] = await Promise.all([api("/pricing"), api("/packages")]);
         if (!isCurrent()) return null;
-        merge({ packageCatalog: packages.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
+        merge({ pricingCatalog: pricing.data || {}, packageCatalog: packages.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/membership") {
-        const [wallet, packages, readiness] = await Promise.all([api("/wallet"), api("/packages"), api("/features/status")]);
+        merge({
+          pricingCatalog: {},
+          packageCatalog: {},
+          pageStates: { ...(base().pageStates || {}), [path]: "loading" }
+        });
+        const [wallet, pricing, packages, readiness] = await Promise.all([api("/wallet"), api("/pricing"), api("/packages"), api("/features/status")]);
         if (!isCurrent()) return null;
         merge({
           wallet: wallet.data || null,
+          pricingCatalog: pricing.data || {},
           packageCatalog: packages.data || {},
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
@@ -25428,6 +25439,19 @@
           pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
         });
         toast("Không thể xác minh số dư Xu canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
+        return null;
+      }
+      if (path === "/packages" || path === "/membership") {
+        // Never keep a previously approved SKU price while this signed route
+        // is refreshing or when its canonical reads fail. A missing current
+        // public-sale catalogue is guarded, not permission to reuse a prior
+        // account or earlier revision's price.
+        merge({
+          pricingCatalog: {},
+          packageCatalog: {},
+          pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
+        });
+        toast("Không thể xác minh catalog giá bán canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
         return null;
       }
       if (error && error.payload && error.payload.message) toast(error.payload.message, "error");

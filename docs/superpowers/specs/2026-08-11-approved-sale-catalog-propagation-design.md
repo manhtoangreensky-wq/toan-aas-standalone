@@ -15,9 +15,10 @@ the versioned `public_sale_catalog` that the Core Bridge marks
   canonical status, but a numeric price is rendered only when its package
   `code` exactly matches an approved public-sale SKU.
 - A package without a matching approved SKU is rendered as metadata with the
-  existing guarded "Giá bán đang chờ phát hành" state. The browser must not
-  infer a substitute amount from `price_vnd`, legacy tier fields, a feature
-  registry, or client calculation.
+  existing guarded no-price state. `/pricing` says "Giá bán đang chờ phát
+  hành"; `/packages` preserves its existing honest "Giá chưa được Core Bridge
+  cấp" copy. The browser must not infer a substitute amount from `price_vnd`,
+  legacy tier fields, a feature registry, or client calculation.
 - The package bridge projection removes `price_vnd` before it reaches the
   browser. The existing pricing projection is not broadened or used for
   payment, wallet, PayOS, provider, or job behavior.
@@ -37,6 +38,14 @@ Core Bridge /packages
   -> no match: guarded no-price state
 ```
 
+Packages and Membership hydrate `/pricing` and `/packages` together on every
+direct route visit. The approved index therefore never depends on a previous
+visit to the pricing page, browser storage, or a stale account projection.
+Before those reads start, and again if either read fails, both catalog
+projections are cleared and the route is marked `loading` then `guarded`.
+The browser must never retain an earlier approved SKU price during a current
+signed-session refresh or bridge failure.
+
 ## Rejections and non-goals
 
 - Reject an unavailable, unapproved, unversioned, malformed, duplicate or
@@ -51,6 +60,9 @@ Core Bridge /packages
 1. A server projector contract proves `price_vnd` is absent from `/packages`.
 2. Portal contracts prove package and membership price labels use only the
    validated public-sale SKU index and use the guarded copy on a missing SKU.
-3. Existing public-sale, billing and portal regression tests remain green.
-4. Static migration evidence is regenerated only after source is clean and
+3. Integration contracts prove `/packages` and `/membership` fetch `/pricing`
+   on direct visits, clear prior catalogs while loading, and clear them again
+   in the guarded failure path before merging their page state.
+4. Existing public-sale, billing and portal regression tests remain green.
+5. Static migration evidence is regenerated only after source is clean and
    passes the committed-evidence verifier.
