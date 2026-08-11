@@ -12,6 +12,7 @@ from copyfast_api import _project_surface_data
 ROOT = Path(__file__).resolve().parents[1]
 API = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 
 
@@ -170,3 +171,105 @@ def test_legacy_tier_costs_stay_outside_the_public_price_page() -> None:
     assert "feature-estimate" not in catalog
     assert "feature-confirm" not in catalog
     assert "payment-create" not in catalog
+
+
+def test_package_projection_strips_unapproved_price_vnd_before_browser_delivery() -> None:
+    projected = _project_surface_data(
+        {
+            "available": True,
+            "monthly": [
+                {
+                    "code": "starter_monthly",
+                    "type": "monthly",
+                    "label": "Starter",
+                    "note": "Metadata package",
+                    "price_vnd": 99_000,
+                    "provider": "must-not-leak",
+                    "items": {"credits": 100},
+                }
+            ],
+        },
+        "packages",
+    )
+
+    assert projected == {
+        "available": True,
+        "monthly": [
+            {
+                "code": "starter_monthly",
+                "type": "monthly",
+                "label": "Starter",
+                "note": "Metadata package",
+                "items": {"credits": 100},
+            }
+        ],
+        "combos": [],
+    }
+
+
+def test_package_and_membership_prices_use_only_approved_public_sale_skus() -> None:
+    package_projection = _section(API, 'if surface == "packages":', 'if surface == "payment":')
+    assert '"price_vnd"' not in package_projection
+
+    package_normalizer = _section(PORTAL, "function canonicalPackageCatalog(value)", "function safePayosCheckout")
+    assert "price_vnd" not in package_normalizer
+    assert "priceLabel" not in package_normalizer
+    assert "function approvedPublicSalePriceIndex(catalog)" in PORTAL
+
+    membership = _section(PORTAL, "function membershipCatalogEntries(context)", "function renderServiceStatus")
+    assert "approvedPublicSalePriceIndex(publicSalePricing)" in membership
+    assert "catalog.publicSale.priceMissing" in membership
+
+    catalog = _section(PORTAL, "function renderCatalog(page, context)", "const JOB_FILTERS")
+    assert "approvedPublicSalePriceIndex(publicSalePricing)" in catalog
+    assert "approvedSalePrices.get(item.code)" in catalog
+    assert "price_vnd" not in catalog
+
+
+def test_packages_and_membership_hydrate_approved_sale_catalog_on_direct_visit() -> None:
+    packages_route = _section(
+        INTEGRATION,
+        '} else if (path === "/packages")',
+        '} else if (path === "/membership")',
+    )
+    membership_route = _section(
+        INTEGRATION,
+        '} else if (path === "/membership")',
+        '} else if (path === "/wallet" || path === "/wallet/topup")',
+    )
+
+    for route in (packages_route, membership_route):
+        assert 'api("/pricing")' in route
+        assert "pricingCatalog: pricing.data || {}" in route
+        assert "localStorage" not in route
+
+    assert "const [pricing, packages] = await Promise.all" in packages_route
+    assert "const [wallet, pricing, packages, readiness] = await Promise.all" in membership_route
+
+
+def test_packages_and_membership_clear_stale_catalogs_while_loading_or_guarded() -> None:
+    packages_route = _section(
+        INTEGRATION,
+        '} else if (path === "/packages")',
+        '} else if (path === "/membership")',
+    )
+    membership_route = _section(
+        INTEGRATION,
+        '} else if (path === "/membership")',
+        '} else if (path === "/wallet" || path === "/wallet/topup")',
+    )
+
+    for route in (packages_route, membership_route):
+        assert "pricingCatalog: {}" in route
+        assert "packageCatalog: {}" in route
+        assert '[path]: "loading"' in route
+        assert route.index("pricingCatalog: {}") < route.index('api("/pricing")')
+
+    assert 'if (path === "/packages" || path === "/membership")' in INTEGRATION
+    failure = _section(
+        INTEGRATION,
+        'if (path === "/packages" || path === "/membership")',
+        "if (error && error.payload && error.payload.message)",
+    )
+    for token in ("pricingCatalog: {}", "packageCatalog: {}", '[path]: "guarded"'):
+        assert token in failure

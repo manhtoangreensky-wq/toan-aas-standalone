@@ -1032,7 +1032,7 @@ def test_customer_parity_hubs_split_membership_status_tools_and_media_navigation
     assert 'case "service-status": return renderServiceStatus(page, context);' in PORTAL
     assert 'case "media-studio": return renderMediaStudio(page, context);' in PORTAL
     assert 'path === "/membership"' in INTEGRATION
-    assert 'api("/wallet"), api("/packages"), api("/features/status")' in INTEGRATION
+    assert 'api("/wallet"), api("/pricing"), api("/packages"), api("/features/status")' in INTEGRATION
     contract = (ROOT / "docs" / "migration" / "FEATURE_FAMILY_NAVIGATION.md").read_text(encoding="utf-8")
     assert "Customer parity hubs" in contract
     assert "`/membership`" in contract
