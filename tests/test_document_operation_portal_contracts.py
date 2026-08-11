@@ -29,6 +29,7 @@ def test_document_command_navigation_only_opens_existing_private_web_surfaces() 
         "/merge_pdf": "/documents/merge",
         "/image_to_pdf": "/documents/image-to-pdf",
         "/ocr_pdf": "/documents/pdf-ocr",
+        "/ocr_image": "/documents/ocr",
     }
     for command, route in expected.items():
         assert command in DOCUMENT_COMMAND_NAVIGATION_CONTRACT

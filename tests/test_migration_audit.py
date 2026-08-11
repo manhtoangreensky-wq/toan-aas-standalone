@@ -1459,6 +1459,7 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         "merge_pdf": ("/documents/merge", "documents_merge", "documents_merge", "pdf_merge"),
         "image_to_pdf": ("/documents/image-to-pdf", "documents_image_to_pdf", "documents_image_to_pdf", "image_to_pdf"),
         "ocr_pdf": ("/documents/pdf-ocr", "documents_pdf_ocr", "documents_pdf_ocr", "pdf_ocr"),
+        "ocr_image": ("/documents/ocr", "documents_ocr", "documents_ocr", "image_ocr"),
     }
 
     for command, (target, capability, feature, surface) in expected.items():
@@ -1477,7 +1478,7 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         assert mapped["document_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
         assert mapped["document_launch_mode"] == "WEB_NAVIGATION"
 
-    for command in ("translate_file", "pdf_to_images", "ocr_image"):
+    for command in ("translate_file", "pdf_to_images"):
         mapped = audit._map_command(
             {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
             routes,
