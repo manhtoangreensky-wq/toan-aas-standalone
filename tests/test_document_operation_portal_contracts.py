@@ -52,6 +52,18 @@ def test_document_command_navigation_only_opens_existing_private_web_surfaces() 
     assert "`/translate_file` stays outside this catalog" in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
 
 
+def test_image_ocr_navigation_contract_never_reuses_bot_state_or_a_raw_api_target() -> None:
+    for phrase in (
+        "`/ocr_image`",
+        "`/documents/ocr`",
+        "no Bot image, language, confirmation or output is reused",
+        "Telegram identity",
+        "Bot `USER_PENDING`",
+        "raw `/api/v1/...` write endpoint",
+    ):
+        assert phrase in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+
+
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
     assert 'customerPage("/documents/split", "Tách PDF riêng tư"' in PORTAL
     assert 'layout: "pdf-split", type: "document-operation", action: "none"' in PORTAL

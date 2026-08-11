@@ -1478,12 +1478,42 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         assert mapped["document_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
         assert mapped["document_launch_mode"] == "WEB_NAVIGATION"
 
-    for command in ("translate_file", "pdf_to_images"):
+    expected_dispositions = (
+        "FRESH_SIGNED_WEB_DOCUMENT_NAVIGATION",
+        "BOT_PENDING_DOCUMENT_STATE_NOT_REPLAYED",
+        "BOT_EXECUTION_DELIVERY_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM",
+    )
+    assert audit.DOCUMENT_FRESH_WEB_NAVIGATION_DISPOSITIONS == expected_dispositions
+
+    ocr_image = audit._map_command(
+        {"command": "ocr_image", "handler": "customer_handler", "file": "bot.py", "line": 1},
+        routes,
+    )
+    assert ocr_image["source_dispositions"] == expected_dispositions
+    assert ocr_image["target"] != "/api/v1/document-operations/ocr-image"
+
+    expected_negative = {
+        "translate_file": ("/features/subtitle", "COPIED_GUARDED"),
+        "pdf_to_images": ("/documents/pdf-to-images", "COPIED_GUARDED"),
+    }
+    for command, (target, status) in expected_negative.items():
+        assert command not in audit.DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS
         mapped = audit._map_command(
             {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
             routes,
         )
-        assert "document_capability_key" not in mapped
+        assert mapped["target"] == target
+        assert mapped["status"] == status
+        assert mapped["resolution"] == "explicit_static_route_mapping"
+        for key in (
+            "document_capability_key",
+            "document_feature_key",
+            "document_surface",
+            "document_authority",
+            "document_launch_mode",
+        ):
+            assert key not in mapped
 
 
 def test_static_audit_maps_only_exact_public_community_commands_to_read_only_trust_center() -> None:
