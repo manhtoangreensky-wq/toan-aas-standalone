@@ -17,6 +17,7 @@ OPERATIONS = (ROOT / "copyfast_image_operations.py").read_text(encoding="utf-8")
 
 ACTION = 'image-operation-export-to-asset-vault'
 CONTINUATION_ACTION = 'image-operation-export-to-content-handoff'
+LOCAL_CONTINUATION_ACTION = 'image-operation-export-to-continue'
 ROUTE_SUFFIX = "/export-to-asset-vault"
 
 
@@ -25,7 +26,16 @@ def _action_source() -> str:
 
 
 def _export_actions_source() -> str:
-    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}"].includes(action))'
+    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}", "{LOCAL_CONTINUATION_ACTION}"].includes(action))'
+    assert marker in INTEGRATION
+    start = INTEGRATION.index(marker)
+    following = re.search(r"\n\s*if \(action === ", INTEGRATION[start + len(marker):])
+    end = len(INTEGRATION) if following is None else start + len(marker) + following.start()
+    return INTEGRATION[start:end]
+
+
+def _local_continuation_source() -> str:
+    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}", "{LOCAL_CONTINUATION_ACTION}"].includes(action))'
     assert marker in INTEGRATION
     start = INTEGRATION.index(marker)
     following = re.search(r"\n\s*if \(action === ", INTEGRATION[start + len(marker):])
@@ -69,6 +79,25 @@ def test_portal_offers_a_separate_gated_image_export_to_content_handoff_action()
     assert "item.download_ready === true" in control
 
 
+def test_verified_image_export_can_continue_only_from_a_fresh_active_asset_receipt() -> None:
+    marker = "function imageOperationAssetExportControl(item, context)"
+    assert marker in PORTAL
+    start = PORTAL.index(marker)
+    control = PORTAL[start:PORTAL.index("function storyboardGridDownloadPath", start)]
+    assert f'data-portal-action="{LOCAL_CONTINUATION_ACTION}"' in control
+    assert "data-image-operation-continue-target" in control
+    assert "IMAGE_OPERATION_CONTINUATION_TARGETS" in PORTAL
+    assert "restoreImageOperationContinuation" in PORTAL
+    action = _local_continuation_source()
+    assert 'const preparingContinuation = action === "image-operation-export-to-continue"' in action
+    assert 'const continueTarget = String(fields.__imageOperationContinueTarget || "").trim();' in action
+    assert 'assetState !== "active"' in action
+    assert "restoreImageOperationContinuation(continueTarget, asset.id)" in action
+    assert 'window.history.pushState({}, "", continueTarget)' in action
+    for forbidden in ("provider", "bridge", "telegram", "bot", "wallet", "payment", "payos", "source_asset_id"):
+        assert forbidden not in action.lower()
+
+
 def test_image_export_handoff_reuses_the_fence_and_navigates_only_from_active_receipt() -> None:
     action = _export_actions_source()
     assert "const preparingContentHandoff = action === \"image-operation-export-to-content-handoff\"" in action
@@ -82,8 +111,8 @@ def test_image_export_handoff_reuses_the_fence_and_navigates_only_from_active_re
         assert forbidden not in action.lower()
 
 
-def test_portal_event_extraction_accepts_both_image_export_actions() -> None:
-    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}"].includes(action))'
+def test_portal_event_extraction_accepts_all_image_export_actions() -> None:
+    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}", "{LOCAL_CONTINUATION_ACTION}"].includes(action))'
     assert marker in PORTAL
     start = PORTAL.index(marker)
     source = PORTAL[start:PORTAL.index('if (String(action || "").startsWith("image-enhance-operation-"))', start)]

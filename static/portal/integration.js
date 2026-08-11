@@ -34443,9 +34443,11 @@
         }
         return;
       }
-      if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff"].includes(action)) {
+      if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff", "image-operation-export-to-continue"].includes(action)) {
         const operationId = String(fields.__imageOperationId || "").trim();
         const preparingContentHandoff = action === "image-operation-export-to-content-handoff";
+        const preparingContinuation = action === "image-operation-export-to-continue";
+        const continueTarget = String(fields.__imageOperationContinueTarget || "").trim();
         const refreshOperationHistory = route === "/image/resize"
           ? () => hydrateImageOperations()
           : route === "/image/edit"
@@ -34466,6 +34468,9 @@
         }
         if (preparingContentHandoff && !(base().capabilities && base().capabilities["content-handoff-create"] === true)) {
           throw new Error("Content Handoff chưa sẵn sàng cho signed session này.");
+        }
+        if (preparingContinuation && !continueTarget) {
+          throw new Error("Thao tác tiếp theo không thuộc Image Operations local đã được review.");
         }
         const scope = `image-operation-export:${operationId}`;
         const submission = acquireSubmission(scope, operationId);
@@ -34497,6 +34502,21 @@
             const handoffPath = contentHandoffDraftPath(asset.id);
             if (!handoffPath) throw new Error("Máy chủ chưa trả Asset Vault ID hợp lệ để mở Content Handoff.");
             window.location.assign(handoffPath);
+            return;
+          }
+          if (preparingContinuation) {
+            if (assetState !== "active") {
+              toast("PNG đã lưu nhưng Asset Vault chưa ở trạng thái active; không mở thao tác mới.", "error");
+              return;
+            }
+            const continued = window.TOANAASPortal && typeof window.TOANAASPortal.restoreImageOperationContinuation === "function"
+              ? window.TOANAASPortal.restoreImageOperationContinuation(continueTarget, asset.id)
+              : false;
+            if (!continued) throw new Error("Máy chủ chưa trả Asset Vault ID hợp lệ để mở thao tác mới.");
+            window.history.pushState({}, "", continueTarget);
+            merge({ path: continueTarget, title: "TOAN AAS" });
+            await hydrate();
+            toast("Đã mở thao tác Image mới với PNG private trong Asset Vault. Thông số cũ không được chuyển.");
             return;
           }
           toast(
