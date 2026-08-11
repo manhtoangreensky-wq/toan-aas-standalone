@@ -20034,7 +20034,14 @@
     );
     if (!eligible) return "";
     const route = String(context && context.path || "");
-    return `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-asset-vault" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault riêng tư?">Lưu vào Asset Vault</button>`;
+    const canPrepareContentHandoff = Boolean(
+      context && context.capabilities && context.capabilities["content-handoff-create"] === true
+    );
+    const exportControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-asset-vault" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault riêng tư?">Lưu vào Asset Vault</button>`;
+    const handoffControl = canPrepareContentHandoff
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-content-handoff" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault rồi mở draft Content Handoff? Chưa có record nào được tạo cho tới khi bạn gửi form.">Lưu & chuẩn bị bàn giao</button>`
+      : "";
+    return exportControl + handoffControl;
   }
 
   function storyboardGridDownloadPath(item) {
@@ -28633,7 +28640,7 @@
         __imageOperationOffset: source.getAttribute("data-image-operation-offset") || ""
       });
     }
-    if (action === "image-operation-export-to-asset-vault") {
+    if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff"].includes(action)) {
       Object.assign(fields, {
         __imageOperationId: source.getAttribute("data-image-operation-id") || ""
       });

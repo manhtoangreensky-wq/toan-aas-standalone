@@ -16,11 +16,16 @@ OPERATIONS = (ROOT / "copyfast_image_operations.py").read_text(encoding="utf-8")
 
 
 ACTION = 'image-operation-export-to-asset-vault'
+CONTINUATION_ACTION = 'image-operation-export-to-content-handoff'
 ROUTE_SUFFIX = "/export-to-asset-vault"
 
 
 def _action_source() -> str:
-    marker = f'if (action === "{ACTION}")'
+    return _export_actions_source()
+
+
+def _export_actions_source() -> str:
+    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}"].includes(action))'
     assert marker in INTEGRATION
     start = INTEGRATION.index(marker)
     following = re.search(r"\n\s*if \(action === ", INTEGRATION[start + len(marker):])
@@ -49,6 +54,41 @@ def test_portal_exposes_one_explicit_confirmed_export_action_only_for_verified_c
         '"image-operation-export-to-asset-vault": Boolean(account && me.csrf_token && assetVaultEnabled '
         "&& imageOperationsEnabled && imageOperationExportEnabled)"
     ) in INTEGRATION
+
+
+def test_portal_offers_a_separate_gated_image_export_to_content_handoff_action() -> None:
+    marker = "function imageOperationAssetExportControl(item, context)"
+    assert marker in PORTAL
+    start = PORTAL.index(marker)
+    control = PORTAL[start:PORTAL.index("function storyboardGridDownloadPath", start)]
+    assert f'data-portal-action="{ACTION}"' in control
+    assert f'data-portal-action="{CONTINUATION_ACTION}"' in control
+    assert 'context.capabilities["content-handoff-create"] === true' in control
+    assert "Lưu & chuẩn bị bàn giao" in control
+    assert "imageOperationState(item) === \"completed\"" in control
+    assert "item.download_ready === true" in control
+
+
+def test_image_export_handoff_reuses_the_fence_and_navigates_only_from_active_receipt() -> None:
+    action = _export_actions_source()
+    assert "const preparingContentHandoff = action === \"image-operation-export-to-content-handoff\"" in action
+    assert '"content-handoff-create"' in action
+    assert "/image-operations/${encodeURIComponent(operationId)}/export-to-asset-vault" in action
+    assert 'assetState !== "active"' in action
+    assert "contentHandoffDraftPath(asset.id)" in action
+    assert "window.location.assign(handoffPath)" in action
+    assert "/content-handoffs/records" not in action
+    for forbidden in ("provider", "bridge", "telegram", "bot", "wallet", "payment", "payos"):
+        assert forbidden not in action.lower()
+
+
+def test_portal_event_extraction_accepts_both_image_export_actions() -> None:
+    marker = f'if (["{ACTION}", "{CONTINUATION_ACTION}"].includes(action))'
+    assert marker in PORTAL
+    start = PORTAL.index(marker)
+    source = PORTAL[start:PORTAL.index('if (String(action || "").startsWith("image-enhance-operation-"))', start)]
+    assert "__imageOperationId" in source
+    assert "data-image-operation-id" in source
 
 
 def test_portal_export_handler_has_only_an_opaque_same_origin_csrf_idempotent_request() -> None:

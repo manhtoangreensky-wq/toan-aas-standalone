@@ -15,6 +15,8 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 
 ACTION = "document-operation-export-to-asset-vault"
 HANDOFF_ACTION = "document-operation-export-to-content-handoff"
+IMAGE_ACTION = "image-operation-export-to-asset-vault"
+IMAGE_HANDOFF_ACTION = "image-operation-export-to-content-handoff"
 HANDOFF_CREATE_CAPABILITY = "content-handoff-create"
 ROUTE_SUFFIX = "/export-to-asset-vault"
 
@@ -36,6 +38,12 @@ def _action_source() -> str:
 def _named_action_source(action: str) -> str:
     if action == ACTION:
         return _action_source()
+    if action in {IMAGE_ACTION, IMAGE_HANDOFF_ACTION}:
+        return _between(
+            INTEGRATION,
+            f'if (["{IMAGE_ACTION}", "{IMAGE_HANDOFF_ACTION}"].includes(action))',
+            r"\n\s*if \(action === ",
+        )
     return _between(INTEGRATION, f'if (action === "{action}")', r"\n\s*if \(action === ")
 
 
@@ -277,7 +285,7 @@ process.stdout.write(JSON.stringify({ processing, guarded, queued, rejected, mal
     assert payload["rejected"] is None
     assert payload["malformed"] is None
 
-    for action_name in (ACTION, "image-operation-export-to-asset-vault"):
+    for action_name in (ACTION, IMAGE_ACTION, IMAGE_HANDOFF_ACTION):
         action = _named_action_source(action_name)
         assert "const nonterminal = assetExportNonterminalEnvelope(error);" in action
         assert "if (nonterminal) {" in action
@@ -285,7 +293,7 @@ process.stdout.write(JSON.stringify({ processing, guarded, queued, rejected, mal
         assert "return;" in action[action.index("if (nonterminal) {"):]
         assert "if (acknowledged) discardSubmission(scope, submission);" in action
 
-    image_action = _named_action_source("image-operation-export-to-asset-vault")
+    image_action = _named_action_source(IMAGE_ACTION)
     assert 'const responseStatus = String(result && result.status || "");' in image_action
     assert 'if (responseStatus !== "completed" || !asset' in image_action
 
