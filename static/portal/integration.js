@@ -2932,6 +2932,11 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function contentHandoffDraftPath(assetId) {
+    const id = String(assetId || "").trim();
+    return validVaultAssetId(id) ? "/content/handoffs/new?asset_id=" + encodeURIComponent(id) : "";
+  }
+
   const SUPPORT_ATTACHMENT_ASSET_LIST_LIMIT = 50;
   const SUPPORT_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
   const SUPPORT_ATTACHMENT_TYPES = new Set([
@@ -34477,8 +34482,9 @@
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Document Operations.");
         return;
       }
-      if (action === "document-operation-export-to-asset-vault") {
+      if (["document-operation-export-to-asset-vault", "document-operation-export-to-content-handoff"].includes(action)) {
         const operationId = String(fields.__documentOperationId || "").trim();
+        const preparingContentHandoff = action === "document-operation-export-to-content-handoff";
         const documentPath = currentPortalPath();
         const isDocumentBoard = documentPath === "/documents" || documentPath === "/documents/pdf";
         if (!validDocumentOperationId(operationId)) {
@@ -34489,6 +34495,9 @@
         }
         if (!(base().capabilities && base().capabilities["document-operation-export-to-asset-vault"] === true)) {
           throw new Error("Tính năng lưu artifact vào Asset Vault chưa sẵn sàng cho signed session này.");
+        }
+        if (preparingContentHandoff && !(base().capabilities && base().capabilities["content-handoff-create"] === true)) {
+          throw new Error("Content Handoff chưa sẵn sàng cho signed session này.");
         }
         const scope = `document-operation-export:${operationId}`;
         const submission = acquireSubmission(scope, operationId);
@@ -34522,6 +34531,16 @@
             throw new Error("Máy chủ chưa trả xác nhận Asset Vault hợp lệ.");
           }
           await refreshPrivateState();
+          if (preparingContentHandoff) {
+            if (assetState !== "active") {
+              toast("Artifact đã lưu nhưng Asset Vault chưa ở trạng thái active; không mở draft bàn giao.", "error");
+              return;
+            }
+            const handoffPath = contentHandoffDraftPath(asset.id);
+            if (!handoffPath) throw new Error("Máy chủ chưa trả Asset Vault ID hợp lệ để mở Content Handoff.");
+            window.location.assign(handoffPath);
+            return;
+          }
           toast(
             assetState === "unavailable"
               ? "Artifact đã được lưu nhưng Asset Vault đang đánh dấu file không khả dụng. Hãy kiểm tra lại trạng thái."
