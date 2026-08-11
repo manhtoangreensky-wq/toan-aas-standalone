@@ -6,6 +6,7 @@ or a generic Jobs/Assets fallback.
 """
 
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).parents[1]
@@ -18,6 +19,13 @@ CONTRACT = (ROOT / "docs" / "migration" / "AUDIO_ASSET_OPERATIONS_CONTRACT.md").
 
 def _between(source: str, start: str, end: str) -> str:
     return source[source.index(start) : source.index(end, source.index(start))]
+
+
+def _near(source: str, marker: str, *, before: int = 0, after: int = 2400) -> str:
+    """Keep an assertion local to the behavior, not declaration ordering."""
+
+    position = source.index(marker)
+    return source[max(0, position - before) : position + after]
 
 
 def test_audio_asset_operations_is_a_distinct_private_portal_route() -> None:
@@ -232,3 +240,107 @@ def test_contract_keeps_audio_asset_operations_outside_bot_payment_and_provider_
         "Source metadata and operation history are two independent Portal read",
     ):
         assert phrase in CONTRACT
+
+
+def test_portal_audio_export_is_default_off_capability_gated_and_only_offered_for_verified_transforms() -> None:
+    # The raw flag and the Portal bootstrap projection must both default to
+    # false unless the server expressly returns true.
+    assert re.search(r"audio_asset_operation_export_enabled\s*===\s*true", INTEGRATION)
+    assert re.search(r"\b\w*export\w*\s*:\s*source\.\w*export\w*\s*===\s*true", PORTAL, re.I)
+
+    capability = re.search(
+        r'["\']audio-asset-operation-export-to-asset-vault["\']\s*:\s*(?P<gate>[^,\n]+)',
+        INTEGRATION,
+    )
+    assert capability is not None
+    gate = capability.group("gate").lower()
+    for required in ("account", "csrf", "assetvault", "audioassetoperations", "export"):
+        assert required in gate
+
+    surface = _between(PORTAL, "function renderAudioAssetOperations(page, context)", "const VIDEO_TRANSFORM_PORTAL_RATIOS")
+    for required in (
+        "Lưu vào Asset Vault",
+        "data-audio-asset-operation-id",
+        "data-portal-confirm",
+    ):
+        assert required in surface
+    assert re.search(r'kind\s*===\s*["\']audio_convert["\']\s*\|\|\s*kind\s*===\s*["\']audio_normalize["\']', surface)
+    assert re.search(r'(?:String\([^)]*state[^)]*\)|\w+\.state)\s*===\s*["\']completed["\']', surface)
+    assert "audioAssetOperationCanDownload(item)" in surface
+    assert "audio_inspect" not in _near(surface, "Lưu vào Asset Vault", after=900)
+    dispatcher = _near(PORTAL, 'const confirmation = source.getAttribute("data-portal-confirm")', after=900)
+    assert 'source.getAttribute("data-portal-confirm")' in dispatcher
+    assert "window.confirm(confirmation)" in PORTAL
+
+
+def test_portal_export_action_extracts_only_the_opaque_operation_id_from_its_control() -> None:
+    extraction = _between(
+        PORTAL,
+        'if (action === "audio-asset-operation-export-to-asset-vault")',
+        "// Audio Asset Operations keeps its UUID selection and pagination",
+    )
+    assert re.search(
+        r'(?:getAttribute\(\s*["\']data-audio-asset-operation-id["\']\s*\)|dataset\.\w+)',
+        extraction,
+    )
+    for forbidden in (
+        "source_asset_id", "storage_key", "sha256", "path", "filename", "content_type",
+        "extension", "format", "media", "file", "body",
+    ):
+        assert forbidden not in extraction.lower()
+
+
+def test_portal_export_uses_only_opaque_operation_id_and_refreshes_real_receipts_under_a_view_fence() -> None:
+    export_action = _between(
+        INTEGRATION,
+        'if (action === "audio-asset-operation-export-to-asset-vault")',
+        'if (action === "audio-asset-operation-download")',
+    )
+    for required in (
+        'credentials: "same-origin"',
+        '"Idempotency-Key": submission.key',
+        "await hydrateAudioAssetOperations()",
+        "await hydrateAssetVaultList()",
+    ):
+        assert required in export_action
+    assert re.search(r"audio-asset-operations/\$\{encodeURIComponent\([^)]*\)\}/export-to-asset-vault", export_action)
+    assert re.search(r"valid\w*(?:id|uuid)\s*\([^)]*\)", export_action, re.I)
+    assert 'String(asset.state || "") !== "active"' in export_action
+    assert re.search(r"(?:view|path).*?(?:current|epoch)|(?:current|epoch).*?(?:view|path)", export_action, re.I | re.S)
+    unavailable = _between(
+        INTEGRATION,
+        "function audioAssetExportNonterminalEnvelope(error)",
+        "function audioAssetOperationsPathIsCurrent(path)",
+    )
+    assert 'status !== "unavailable"' in unavailable
+    assert "audioAssetExportNonterminalEnvelope(error)" in export_action
+    for forbidden in (
+        "source_asset_id", "storage_key", "sha256", "filename", "content_type", "body",
+        "content handoff", "content-handoff", "contentHandoff", "/content/handoffs",
+        "content-handoff-create", "contentHandoffDraftPath", "window.location", "location.assign",
+        "location.href", "provider", "bot", "wallet", "payment", "payos", "bridge",
+    ):
+        assert forbidden.lower() not in export_action.lower()
+
+    # Bootstrap normalization is security-relevant: it must retain the
+    # bounded audio projection/read states and export flag that this route
+    # needs, rather than dropping them before Portal rendering.
+    normalization = _between(PORTAL, "function normalizeAudioAssetReferences", "function operationAssetReferenceRows")
+    for mapping in (
+        "audioAssetOperationsEnabled: source.audioAssetOperationsEnabled === true",
+        "audioAssetOperationExportEnabled: source.audioAssetOperationExportEnabled === true",
+        "audioAssetReferences: normalizeAudioAssetReferences(source.audioAssetReferences)",
+        "audioAssetReferenceReadState",
+        "audioAssetOperations: normalizeAudioAssetOperations(source.audioAssetOperations)",
+        "audioAssetOperationsReadState",
+    ):
+        assert mapping in PORTAL
+    for forbidden in (
+        "storage_key", "sha256", "source_asset_id", "path", "original_filename",
+        "media", "blob", "arraybuffer",
+    ):
+        assert forbidden not in normalization.lower()
+
+    shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
+    assert '"/audio/assets"' not in shell
+    assert '"/api/v1/audio-asset-operations"' not in shell

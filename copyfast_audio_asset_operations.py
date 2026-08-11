@@ -15,7 +15,9 @@ before and after atomic publication to an isolated private root.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 import hashlib
 import hmac
 import json
@@ -28,7 +30,7 @@ import subprocess
 from typing import Any, BinaryIO, Callable
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
 
@@ -41,6 +43,7 @@ from copyfast_auth import _record_audit, _request_id, envelope, require_account,
 from copyfast_db import (
     asset_vault_enabled,
     audio_asset_operations_directory,
+    audio_asset_operation_export_enabled,
     audio_asset_operations_enabled,
     ensure_copyfast_schema,
     transaction,
@@ -121,6 +124,65 @@ class AudioAssetOperationError(Exception):
         self.code = code
 
 
+class AudioOperationAssetExportFailureDomain(str, Enum):
+    """Classify source-opening failures without leaking private storage details."""
+
+    PRECONDITION = "precondition"
+    SOURCE_INTEGRITY = "source_integrity"
+    RETRYABLE = "retryable"
+
+
+@dataclass(frozen=True)
+class AudioOperationAssetExportFailure:
+    domain: AudioOperationAssetExportFailureDomain
+    code: str
+    public_message: str
+    status_name: str = "guarded"
+
+    @property
+    def should_mark_output_unavailable(self) -> bool:
+        return self.domain is AudioOperationAssetExportFailureDomain.SOURCE_INTEGRITY
+
+
+@dataclass
+class AudioOperationAssetExportPinnedSource:
+    """A completed transform verified through the exact descriptor to copy."""
+
+    stream: BinaryIO = field(repr=False)
+    kind: str
+    project_id: str | None
+    target_format: str
+    extension: str
+    content_type: str
+    byte_size: int
+    digest: str = field(repr=False)
+    duration_seconds: float
+    duration_ms: int
+    channels: int
+    sample_rate: int
+    codec: str
+    format_name: str
+
+    def close(self) -> None:
+        self.stream.close()
+
+
+@dataclass
+class AudioOperationAssetExportSourceResult:
+    source: AudioOperationAssetExportPinnedSource | None
+    failure: AudioOperationAssetExportFailure | None
+    _operation_id: str = field(repr=False)
+    _account_id: str = field(repr=False)
+
+    @property
+    def is_source_integrity_failure(self) -> bool:
+        return bool(self.failure and self.failure.should_mark_output_unavailable)
+
+    def close(self) -> None:
+        if self.source is not None:
+            self.source.close()
+
+
 class _BaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -195,6 +257,16 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Audio Asset Operations chỉ chạy trên topology SQLite single-replica đã được xác nhận.",
+        )
+
+
+def _require_asset_export_enabled() -> None:
+    """Fail closed before any account-scoped export lookup or source I/O."""
+
+    if not asset_vault_enabled() or not audio_asset_operations_enabled() or not audio_asset_operation_export_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Lưu Audio Asset Operations vào Asset Vault chưa được bật",
         )
 
 
@@ -522,8 +594,13 @@ def _audio_magic_matches(fmt: str, prefix: bytes) -> bool:
     return False
 
 
-def _probe_audio(ffprobe: str, source: Path) -> dict[str, Any]:
-    """Probe one local audio file with fixed non-shell argv only."""
+def _probe_audio(
+    ffprobe: str,
+    source: Path | str,
+    *,
+    input_bytes: bytes | None = None,
+) -> dict[str, Any]:
+    """Probe one local file or server-owned byte stream with fixed argv only."""
 
     command = [
         ffprobe,
@@ -533,15 +610,23 @@ def _probe_audio(ffprobe: str, source: Path) -> dict[str, Any]:
         "-of", "json",
         str(source),
     ]
+    run_options: dict[str, Any] = {
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.DEVNULL,
+        "timeout": PROBE_TIMEOUT_SECONDS,
+        "shell": False,
+        "check": False,
+    }
+    if input_bytes is None:
+        run_options["stdin"] = subprocess.DEVNULL
+    else:
+        if not isinstance(input_bytes, bytes) or len(input_bytes) > MAX_OUTPUT_BYTES:
+            raise AudioAssetOperationError("Audio vượt giới hạn Audio Asset Operations", code="AUDIO_PROBE_LIMIT")
+        run_options["input"] = input_bytes
     try:
         completed = subprocess.run(
             command,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            timeout=PROBE_TIMEOUT_SECONDS,
-            shell=False,
-            check=False,
+            **run_options,
         )
     except subprocess.TimeoutExpired as exc:
         raise AudioAssetOperationError("Kiểm tra audio vượt thời gian an toàn", code="AUDIO_PROBE_TIMEOUT") from exc
@@ -587,6 +672,20 @@ def _probe_audio(ffprobe: str, source: Path) -> dict[str, Any]:
         "codec": codec[:48],
         "format_name": format_name[:160],
     }
+
+
+def _probe_pinned_audio_export_stream(ffprobe: str, stream: BinaryIO) -> dict[str, Any]:
+    """Probe exactly the server-pinned export bytes, never their pathname."""
+
+    try:
+        stream.seek(0)
+        payload = stream.read(MAX_OUTPUT_BYTES + 1)
+        stream.seek(0)
+    except (OSError, ValueError) as exc:
+        raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID") from exc
+    if not isinstance(payload, bytes) or len(payload) > MAX_OUTPUT_BYTES:
+        raise AudioAssetOperationError("Output audio vượt giới hạn lưu trữ", code="AUDIO_OUTPUT_LIMIT")
+    return _probe_audio(ffprobe, "pipe:0", input_bytes=payload)
 
 
 def _copy_verified_source(source: dict[str, Any], destination: Path) -> None:
@@ -1511,6 +1610,469 @@ async def normalize_audio_asset(
         request=request,
         account=account,
     )
+
+
+def _audio_operation_export_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+    domain: AudioOperationAssetExportFailureDomain,
+    code: str,
+    public_message: str,
+    status_name: str = "guarded",
+) -> AudioOperationAssetExportSourceResult:
+    return AudioOperationAssetExportSourceResult(
+        source=None,
+        failure=AudioOperationAssetExportFailure(
+            domain=domain,
+            code=code,
+            public_message=public_message,
+            status_name=status_name,
+        ),
+        _operation_id=operation_id,
+        _account_id=account_id,
+    )
+
+
+def _audio_export_read_flags(*, directory: bool = False) -> int:
+    flags = os.O_RDONLY | int(getattr(os, "O_BINARY", 0)) | int(getattr(os, "O_NOFOLLOW", 0))
+    if directory:
+        flags |= int(getattr(os, "O_DIRECTORY", 0))
+    return flags
+
+
+def _audio_export_same_identity(left: Any, right: Any) -> bool:
+    try:
+        return (
+            int(left.st_dev) != 0
+            and int(left.st_ino) != 0
+            and int(left.st_dev) == int(right.st_dev)
+            and int(left.st_ino) == int(right.st_ino)
+        )
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
+def _open_pinned_audio_export_stream(root: Path, storage_key: str) -> BinaryIO:
+    """Open one private output without accepting a browser-controlled path."""
+    match = OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key)
+    if not match:
+        raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+    leaf = storage_key.removeprefix("outputs/")
+    if not leaf or "/" in leaf or "\\" in leaf:
+        raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+    stream: BinaryIO | None = None
+    root_fd: int | None = None
+    outputs_fd: int | None = None
+    file_fd: int | None = None
+    descriptor_open = (
+        bool(getattr(os, "O_DIRECTORY", 0))
+        and os.open in getattr(os, "supports_dir_fd", frozenset())
+        and os.stat in getattr(os, "supports_dir_fd", frozenset())
+    )
+    try:
+        if descriptor_open:
+            root_fd = os.open(os.fspath(root), _audio_export_read_flags(directory=True))
+            if not stat.S_ISDIR(os.fstat(root_fd).st_mode):
+                raise AudioAssetOperationError("Vùng audio riêng tư không còn integrity", code="AUDIO_OUTPUT_INVALID")
+            outputs_before = os.stat("outputs", dir_fd=root_fd, follow_symlinks=False)
+            if not stat.S_ISDIR(outputs_before.st_mode):
+                raise AudioAssetOperationError("Vùng audio riêng tư không còn integrity", code="AUDIO_OUTPUT_INVALID")
+            outputs_fd = os.open("outputs", _audio_export_read_flags(directory=True), dir_fd=root_fd)
+            if not stat.S_ISDIR(os.fstat(outputs_fd).st_mode) or not _audio_export_same_identity(outputs_before, os.fstat(outputs_fd)):
+                raise AudioAssetOperationError("Vùng audio riêng tư không còn integrity", code="AUDIO_OUTPUT_INVALID")
+            before = os.stat(leaf, dir_fd=outputs_fd, follow_symlinks=False)
+            if not stat.S_ISREG(before.st_mode):
+                raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+            file_fd = os.open(leaf, _audio_export_read_flags(), dir_fd=outputs_fd)
+            stream = os.fdopen(file_fd, "rb", closefd=True)
+            file_fd = None
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode) or not _audio_export_same_identity(before, os.fstat(stream.fileno())):
+                raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+            return stream
+        outputs = root / "outputs"
+        root_before = os.lstat(root)
+        outputs_before = os.lstat(outputs)
+        candidate = outputs / leaf
+        before = os.lstat(candidate)
+        if not stat.S_ISDIR(root_before.st_mode) or not stat.S_ISDIR(outputs_before.st_mode) or not stat.S_ISREG(before.st_mode):
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        stream = os.fdopen(os.open(candidate, _audio_export_read_flags()), "rb", closefd=True)
+        if not (
+            _audio_export_same_identity(root_before, os.lstat(root))
+            and _audio_export_same_identity(outputs_before, os.lstat(outputs))
+            and _audio_export_same_identity(before, os.lstat(candidate))
+            and _audio_export_same_identity(before, os.fstat(stream.fileno()))
+        ):
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        return stream
+    except AudioAssetOperationError:
+        if stream is not None:
+            stream.close()
+        raise
+    except (OSError, TypeError, ValueError) as exc:
+        if stream is not None:
+            stream.close()
+        raise AudioAssetOperationError("Không thể mở output audio riêng tư", code="AUDIO_OUTPUT_INVALID") from exc
+    finally:
+        for descriptor in (file_fd, outputs_fd, root_fd):
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+
+
+def _digest_pinned_audio_export_stream(stream: BinaryIO, *, maximum_bytes: int) -> tuple[int, str, bytes]:
+    stream.seek(0)
+    digest = hashlib.sha256()
+    total = 0
+    prefix = bytearray()
+    while True:
+        chunk = stream.read(CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > maximum_bytes:
+            raise AudioAssetOperationError("Output audio vượt giới hạn lưu trữ", code="AUDIO_OUTPUT_LIMIT")
+        if len(prefix) < 64:
+            prefix.extend(chunk[: 64 - len(prefix)])
+        digest.update(chunk)
+    stream.seek(0)
+    return total, digest.hexdigest(), bytes(prefix)
+
+
+def _open_audio_operation_asset_export_source_unfenced(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> AudioOperationAssetExportSourceResult:
+    """Open and verify one owner-scoped completed transform for a fenced copy."""
+    try:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            row = conn.execute(
+                """SELECT kind, state, target_format, normalization_profile, project_id,
+                          content_type, byte_size, sha256, storage_key, original_filename,
+                          output_duration_ms, output_channels, output_sample_rate, output_codec
+                     FROM web_audio_asset_operations WHERE id=? AND account_id=?""",
+                (operation_id, account_id),
+            ).fetchone()
+    except Exception:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.RETRYABLE,
+            code="WEB_AUDIO_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
+            public_message="Chưa thể chuẩn bị lưu audio riêng tư. Hãy thử lại sau.",
+        )
+    if not row:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.PRECONDITION,
+            code="WEB_AUDIO_OPERATION_EXPORT_NOT_READY",
+            public_message="Audio chưa sẵn sàng để lưu vào Asset Vault.",
+        )
+    state, kind = str(row[1] or ""), str(row[0] or "")
+    if state in {"queued", "processing"}:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.PRECONDITION,
+            code="WEB_AUDIO_OPERATION_EXPORT_PENDING",
+            public_message="Audio đang xử lý; chưa thể lưu vào Asset Vault.",
+            status_name="processing",
+        )
+    if state != "completed" or kind not in TRANSFORM_KINDS:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.PRECONDITION,
+            code="WEB_AUDIO_OPERATION_EXPORT_NOT_READY",
+            public_message="Audio chưa sẵn sàng để lưu vào Asset Vault.",
+        )
+    target = str(row[2] or "")
+    extension = EXTENSION_BY_FORMAT.get(target)
+    expected_bytes = _safe_int(row[6])
+    expected_duration_ms = _safe_int(row[10])
+    expected_digest = str(row[7] or "").lower()
+    expected_codec = OUTPUT_CODEC_BY_FORMAT.get(target)
+    descriptor_valid = (
+        extension is not None
+        and str(row[5] or "") == MIME_BY_FORMAT[target]
+        and str(row[9] or "") == OUTPUT_FILENAME_BY_FORMAT[target]
+        and OUTPUT_STORAGE_KEY_PATTERN.fullmatch(str(row[8] or "")) is not None
+        and str(row[8] or "").endswith(extension)
+        and expected_bytes is not None and 0 < expected_bytes <= MAX_OUTPUT_BYTES
+        and SHA256_PATTERN.fullmatch(expected_digest) is not None
+        and expected_duration_ms is not None and expected_duration_ms >= int(MIN_DURATION_SECONDS * 1000)
+        and _safe_int(row[11]) in {1, 2}
+        and _safe_int(row[12]) == 48_000
+        and str(row[13] or "") == expected_codec
+        and ((kind == AUDIO_NORMALIZE_KIND and row[3] == NORMALIZE_PROFILE) or (kind == AUDIO_CONVERT_KIND and row[3] is None))
+    )
+    if not descriptor_valid:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.SOURCE_INTEGRITY,
+            code="WEB_AUDIO_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+            public_message="Output audio không còn integrity để lưu vào Asset Vault.",
+            status_name="unavailable",
+        )
+    try:
+        root = audio_asset_operations_directory()
+    except Exception:
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.RETRYABLE,
+            code="WEB_AUDIO_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
+            public_message="Chưa thể chuẩn bị lưu audio riêng tư. Hãy thử lại sau.",
+        )
+    stream: BinaryIO | None = None
+    try:
+        stream = _open_pinned_audio_export_stream(root, str(row[8]))
+        opened = os.fstat(stream.fileno())
+        if not stat.S_ISREG(opened.st_mode) or int(opened.st_size) != expected_bytes:
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        copied_bytes, copied_digest, prefix = _digest_pinned_audio_export_stream(stream, maximum_bytes=MAX_OUTPUT_BYTES)
+        if copied_bytes != expected_bytes or not hmac.compare_digest(copied_digest, expected_digest) or not _audio_magic_matches(target, prefix):
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        _ffmpeg, ffprobe = _audio_runtime()
+        metadata = _probe_pinned_audio_export_stream(ffprobe, stream)
+        if (
+            not _format_name_matches(target, str(metadata["format_name"]))
+            or str(metadata["codec"]) != expected_codec
+            or int(metadata["duration_ms"]) != expected_duration_ms
+            or int(metadata["channels"]) != int(row[11])
+            or int(metadata["sample_rate"]) != int(row[12])
+        ):
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        final_bytes, final_digest, _prefix = _digest_pinned_audio_export_stream(stream, maximum_bytes=MAX_OUTPUT_BYTES)
+        if final_bytes != expected_bytes or not hmac.compare_digest(final_digest, expected_digest):
+            raise AudioAssetOperationError("Output audio không còn integrity", code="AUDIO_OUTPUT_INVALID")
+        return AudioOperationAssetExportSourceResult(
+            source=AudioOperationAssetExportPinnedSource(
+                stream=stream, kind=kind, project_id=str(row[4]) if row[4] else None,
+                target_format=target, extension=extension, content_type=MIME_BY_FORMAT[target],
+                byte_size=expected_bytes, digest=expected_digest,
+                duration_seconds=float(metadata["duration_seconds"]), duration_ms=int(metadata["duration_ms"]),
+                channels=int(metadata["channels"]), sample_rate=int(metadata["sample_rate"]),
+                codec=str(metadata["codec"]), format_name=str(metadata["format_name"]),
+            ),
+            failure=None, _operation_id=operation_id, _account_id=account_id,
+        )
+    except AudioAssetOperationError as exc:
+        if stream is not None:
+            stream.close()
+        retryable = exc.code == "AUDIO_RUNTIME_UNAVAILABLE"
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=(AudioOperationAssetExportFailureDomain.RETRYABLE if retryable else AudioOperationAssetExportFailureDomain.SOURCE_INTEGRITY),
+            code="WEB_AUDIO_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+            public_message=("Chưa thể kiểm tra audio để lưu vào Asset Vault. Hãy thử lại sau." if retryable else "Output audio không còn integrity để lưu vào Asset Vault."),
+            status_name=("guarded" if retryable else "unavailable"),
+        )
+    except Exception:
+        if stream is not None:
+            stream.close()
+        return _audio_operation_export_failure(
+            operation_id=operation_id, account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.SOURCE_INTEGRITY,
+            code="WEB_AUDIO_OPERATION_EXPORT_SOURCE_UNAVAILABLE",
+            public_message="Output audio không còn integrity để lưu vào Asset Vault.",
+            status_name="unavailable",
+        )
+
+
+def open_audio_operation_asset_export_source(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> AudioOperationAssetExportSourceResult:
+    """Verify a private export source under the existing single-media fence.
+
+    This remains synchronous by design so it can safely hold a server-opened
+    stream, but the async route always invokes it through ``run_in_threadpool``
+    after it owns the account/operation export lease.  The narrow media gate
+    prevents ffprobe work from competing with a running transform.
+    """
+
+    acquired = media_ffmpeg_capacity().acquire(timeout=RENDER_TIMEOUT_SECONDS)
+    if not acquired:
+        return _audio_operation_export_failure(
+            operation_id=operation_id,
+            account_id=account_id,
+            domain=AudioOperationAssetExportFailureDomain.RETRYABLE,
+            code="WEB_AUDIO_OPERATION_EXPORT_RUNTIME_BUSY",
+            public_message="Audio Asset Operations đang bận; hãy thử lại sau.",
+        )
+    try:
+        return _open_audio_operation_asset_export_source_unfenced(
+            operation_id=operation_id,
+            account_id=account_id,
+        )
+    finally:
+        media_ffmpeg_capacity().release()
+
+
+def mark_audio_operation_asset_export_source_unavailable(result: AudioOperationAssetExportSourceResult) -> bool:
+    if not isinstance(result, AudioOperationAssetExportSourceResult) or not result.is_source_integrity_failure:
+        return False
+    _mark_output_unavailable(result._operation_id, result._account_id)
+    return True
+
+
+def _audio_operation_asset_export_vault_source(
+    *,
+    account_id: str,
+    operation_id: str,
+    pinned: AudioOperationAssetExportPinnedSource,
+):
+    from copyfast_assets import AudioOperationAssetExportSource
+
+    return AudioOperationAssetExportSource(
+        account_id=account_id,
+        operation_id=operation_id,
+        kind=pinned.kind,
+        project_id=pinned.project_id,
+        original_filename=OUTPUT_FILENAME_BY_FORMAT[pinned.target_format],
+        target_format=pinned.target_format,
+        extension=pinned.extension,
+        content_type=pinned.content_type,
+        byte_size=pinned.byte_size,
+        sha256=pinned.digest,
+        duration_seconds=pinned.duration_seconds,
+        duration_ms=pinned.duration_ms,
+        channels=pinned.channels,
+        sample_rate=pinned.sample_rate,
+        codec=pinned.codec,
+        format_name=pinned.format_name,
+        stream=pinned.stream,
+    )
+
+
+def _release_current_audio_export_lease(lease: Any) -> None:
+    """Best-effort release of only the lease held by this request."""
+    from copyfast_assets import release_audio_operation_asset_export_lease
+
+    try:
+        release_audio_operation_asset_export_lease(lease)
+    except Exception:
+        # A transient DB/lease failure must not mutate the completed transform
+        # into an unavailable result or turn a retryable export into success.
+        pass
+
+
+def _audio_operation_asset_export_nonterminal_response(state: object):
+    """Keep an invalidated export receipt distinct from an active copy."""
+
+    if str(state or "") == "guarded":
+        return envelope(
+            False,
+            "Không thể xác nhận Audio trong Asset Vault. Audio gốc vẫn giữ nguyên để bạn thử lại.",
+            status_name="guarded",
+            error_code="WEB_AUDIO_OPERATION_EXPORT_GUARDED",
+        )
+    return envelope(
+        False,
+        "Audio đang được lưu vào Asset Vault. Hãy tải lại sau.",
+        status_name="processing",
+        error_code="WEB_AUDIO_OPERATION_EXPORT_PENDING",
+    )
+
+
+@router.post("/{operation_id}/export-to-asset-vault")
+async def export_audio_operation_to_asset_vault(
+    operation_id: str,
+    request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
+    account: dict = Depends(require_csrf),
+):
+    _require_asset_export_enabled()
+    operation_id = _uuid(operation_id, label="Mã Audio Asset Operation")
+    account_id = str(account["id"])
+    from copyfast_assets import (
+        finalize_audio_operation_asset_export,
+        get_audio_operation_asset_export_receipt,
+        replay_audio_operation_asset_export,
+        reserve_audio_operation_asset_export,
+    )
+
+    key = _idempotency_key(idempotency_key)
+    replay = replay_audio_operation_asset_export(account_id=account_id, operation_id=operation_id, idempotency_key=key)
+    if replay is not None:
+        if replay.state == "completed" and replay.asset is not None:
+            return envelope(True, "Audio đã có trong Asset Vault riêng tư.", data={"asset": replay.asset}, status_name="completed")
+        return _audio_operation_asset_export_nonterminal_response(replay.state)
+
+    try:
+        # Reserve from the immutable operation row before opening, hashing or
+        # probing the private output. The browser never supplies a descriptor,
+        # so this transaction establishes the per-operation fence first.
+        reservation = reserve_audio_operation_asset_export(
+            account_id=account_id,
+            operation_id=operation_id,
+            idempotency_key=key,
+        )
+    except HTTPException as exc:
+        # The reservation lookup happens before source I/O. Keep foreign or
+        # malformed completed-operation state indistinguishable to callers,
+        # as the old owner-scoped source opener did; quota and other explicit
+        # public request errors retain their existing HTTP semantics.
+        if exc.status_code in {404, 409}:
+            return envelope(
+                False,
+                "Audio chưa sẵn sàng để lưu vào Asset Vault.",
+                status_name="guarded",
+                error_code="WEB_AUDIO_OPERATION_EXPORT_GUARDED",
+            )
+        raise
+    if reservation.state != "leased" or reservation.lease is None:
+        receipt = get_audio_operation_asset_export_receipt(account_id=account_id, operation_id=operation_id)
+        if receipt is not None and receipt.state == "completed" and receipt.asset is not None:
+            return envelope(True, "Audio đã có trong Asset Vault riêng tư.", data={"asset": receipt.asset}, status_name="completed")
+        return _audio_operation_asset_export_nonterminal_response(
+            "guarded" if reservation.state == "guarded" else (receipt.state if receipt is not None else reservation.state)
+        )
+
+    try:
+        source_result = await run_in_threadpool(
+            open_audio_operation_asset_export_source,
+            operation_id=operation_id,
+            account_id=account_id,
+        )
+    except Exception:
+        _release_current_audio_export_lease(reservation.lease)
+        return envelope(False, "Chưa thể kiểm tra audio để lưu vào Asset Vault. Hãy thử lại sau.", status_name="guarded", error_code="WEB_AUDIO_OPERATION_EXPORT_RETRY")
+    if source_result.source is None:
+        _release_current_audio_export_lease(reservation.lease)
+        if source_result.is_source_integrity_failure:
+            mark_audio_operation_asset_export_source_unavailable(source_result)
+        failure = source_result.failure
+        return envelope(False, failure.public_message if failure else "Audio chưa thể lưu vào Asset Vault.", status_name=failure.status_name if failure else "guarded", error_code=failure.code if failure else "WEB_AUDIO_OPERATION_EXPORT_GUARDED")
+
+    pinned = source_result.source
+    source_result.source = None
+    vault_source = _audio_operation_asset_export_vault_source(
+        account_id=account_id,
+        operation_id=operation_id,
+        pinned=pinned,
+    )
+    try:
+        await run_in_threadpool(
+            finalize_audio_operation_asset_export,
+            lease=reservation.lease,
+            source=vault_source,
+            request_id=_request_id(request),
+        )
+        receipt = get_audio_operation_asset_export_receipt(account_id=account_id, operation_id=operation_id)
+    except HTTPException:
+        _release_current_audio_export_lease(reservation.lease)
+        raise
+    except Exception:
+        _release_current_audio_export_lease(reservation.lease)
+        return envelope(False, "Chưa thể lưu audio vào Asset Vault. Audio gốc vẫn giữ nguyên để bạn thử lại.", status_name="guarded", error_code="WEB_AUDIO_OPERATION_EXPORT_RETRY")
+    if receipt is None or receipt.state != "completed" or receipt.asset is None:
+        return envelope(False, "Chưa thể xác nhận trạng thái audio trong Asset Vault. Hãy tải lại sau.", status_name="processing", error_code="WEB_AUDIO_OPERATION_EXPORT_PENDING")
+    return envelope(True, "Đã lưu audio đã xác minh vào Asset Vault riêng tư.", data={"asset": receipt.asset}, status_name="completed")
 
 
 async def download_audio_asset_operation(operation_id: str, account: dict):

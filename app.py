@@ -1338,6 +1338,22 @@ async def security_headers(request: Request, call_next):
         and len(document_export_parts) == 6
         and document_export_canonical_id == document_export_operation_id.lower()
     )
+    # Audio export is also an exact UUID route. Keep it isolated from the
+    # synchronous transform bucket so repeat clicks are stopped before any
+    # session, source, storage or lease work begins.
+    audio_export_parts = request.url.path.split("/")
+    audio_export_operation_id = audio_export_parts[4] if len(audio_export_parts) == 6 else ""
+    try:
+        audio_export_canonical_id = str(uuid.UUID(audio_export_operation_id))
+    except (TypeError, ValueError, AttributeError):
+        audio_export_canonical_id = ""
+    audio_asset_operation_asset_export = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/audio-asset-operations/")
+        and request.url.path.endswith("/export-to-asset-vault")
+        and len(audio_export_parts) == 6
+        and audio_export_canonical_id == audio_export_operation_id.lower()
+    )
     # Subtitle Asset Operations are a bounded private file executor, distinct
     # from the authored Subtitle Studio. Keep the run/read/download buckets
     # fixed before CSRF, owner lookup, parsing or SQLite work.
@@ -1751,6 +1767,8 @@ async def security_headers(request: Request, call_next):
         # stay below generic writes before session, CSRF, owner lookup, source
         # verification or disk work, but is not a parser/executor request.
         rate_limit = 12
+    if audio_asset_operation_asset_export:
+        rate_limit = 12
     if subtitle_asset_operation_write:
         rate_limit = 20
     if subtitle_asset_operation_download:
@@ -1935,6 +1953,7 @@ async def security_headers(request: Request, call_next):
             "support-resolution-feedback-write" if support_resolution_feedback_write
             else "image-operation-asset-export" if image_operation_asset_export
             else "document-operation-asset-export" if document_operation_asset_export
+            else "audio-asset-operation-asset-export" if audio_asset_operation_asset_export
             else "prompt-library-export" if prompt_library_export
             else "prompt-library-write" if prompt_library_write
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
