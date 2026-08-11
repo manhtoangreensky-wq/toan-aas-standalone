@@ -14536,7 +14536,7 @@ def run_audit(
         bot_source_root_label = (
             f"git-baseline:{audit_source['revision']}"
             if audit_source.get("mode") == "git_baseline_snapshot"
-            else str(audit_bot_root)
+            else "telegram-bot-root"
         )
         bot = _summarize_inventory("telegram_bot", audit_bot_root, source_root_label=bot_source_root_label)
         web = _summarize_inventory(
@@ -14558,7 +14558,7 @@ def run_audit(
                 "Report/document text is sanitized for secret-shaped literals.",
             ],
             "bot": {
-                "root": str(bot_root),
+                "root": "repository-root",
                 "entrypoint_present": bot_entrypoint.is_file(),
                 "baseline_sha_requested": bot_baseline_sha,
                 "revision": _git_revision_context(bot_root, bot_baseline_sha),

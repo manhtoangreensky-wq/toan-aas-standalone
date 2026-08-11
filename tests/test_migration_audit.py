@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -13,6 +14,14 @@ import pytest
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "migration" / "audit_bot_to_web.py"
 REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
 FROZEN_BOT_BASELINE = "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
+WINDOWS_DRIVE_PATH_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]")
+WINDOWS_UNC_PATH_RE = re.compile(
+    r"\\\\(?:\?\\UNC\\)?[A-Za-z0-9][A-Za-z0-9._-]*\\[A-Za-z0-9][A-Za-z0-9._ -]*"
+)
+
+
+def _contains_absolute_windows_path(text: str) -> bool:
+    return bool(WINDOWS_DRIVE_PATH_RE.search(text) or WINDOWS_UNC_PATH_RE.search(text))
 
 
 def _load_audit_module():
@@ -21,6 +30,15 @@ def _load_audit_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_windows_absolute_path_guard_recognizes_both_path_separators() -> None:
+    assert _contains_absolute_windows_path(r"C:\workspace\artifact")
+    assert _contains_absolute_windows_path("C:/workspace/artifact")
+    assert _contains_absolute_windows_path(r"\\server\share\artifact")
+    assert _contains_absolute_windows_path(r"\\?\UNC\server\share\artifact")
+    assert not _contains_absolute_windows_path("https://example.com/path")
+    assert not _contains_absolute_windows_path(r"image_story_aspect\\|.+\|image_story_render_hint")
 
 
 def test_static_audit_preserves_finance_planning_authority_and_redacts_secret_literals(tmp_path: Path) -> None:
@@ -90,6 +108,10 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert result["bot_inventory"]["env_references"][0]["name"] == "BOT_TOKEN"
     assert result["web_inventory"]["routes"][0]["path"] == "/dashboard"
     assert result["parity_gap"]["command_mappings"][0]["status"] == "NAVIGATION_ENTRYPOINT"
+    assert result["preflight"]["bot"]["root"] == "repository-root"
+    assert result["preflight"]["webapp"]["root"] == "repository-root"
+    assert result["bot_inventory"]["source_root"] == "telegram-bot-root"
+    assert result["web_inventory"]["source_root"] == "webapp-root"
     assert result["preflight"]["bot"]["revision"] == {
         "checkout_sha": "",
         "baseline_relation": "not_a_git_worktree",
@@ -103,6 +125,8 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     }
 
     serialized = json.dumps(result, ensure_ascii=False)
+    assert str(bot_root) not in serialized
+    assert str(web_root) not in serialized
     assert "sk-live-super-secret-value-123456789" not in serialized
     assert "***REDACTED***" in serialized or "source_literal" not in serialized
     for name in ("preflight.json", "bot_inventory.json", "web_inventory.json", "parity_gap.json"):
@@ -334,6 +358,11 @@ def test_current_migration_evidence_records_frozen_baseline_and_historical_bridg
     bot_inventory = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "bot_inventory.json").read_text(encoding="utf-8"))
     web_inventory = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "web_inventory.json").read_text(encoding="utf-8"))
     parity_gap = json.loads((REPOSITORY_ROOT / "reports" / "migration" / "parity_gap.json").read_text(encoding="utf-8"))
+
+    for evidence_root in (REPOSITORY_ROOT / "docs" / "migration", REPOSITORY_ROOT / "reports" / "migration"):
+        for artifact in evidence_root.rglob("*"):
+            if artifact.is_file():
+                assert not _contains_absolute_windows_path(artifact.read_text(encoding="utf-8")), artifact
 
     assert preflight["bot"]["baseline_sha_requested"] == FROZEN_BOT_BASELINE
     assert preflight["bot"]["baseline_bridge_source"] == {
