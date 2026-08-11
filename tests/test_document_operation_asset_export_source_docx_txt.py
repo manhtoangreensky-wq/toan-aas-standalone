@@ -636,7 +636,7 @@ def test_single_page_pdf_to_images_rejects_unsafe_png_source(tmp_path, monkeypat
     assert operation_state(tmp_path, operation_id) == "unavailable"
 
 
-def test_pdf_to_images_rejects_truncated_png_when_pillow_global_allows_truncation(tmp_path, monkeypatch) -> None:
+def test_pdf_to_images_retries_when_pillow_global_allows_truncation(tmp_path, monkeypatch) -> None:
     db, operations = load_modules(tmp_path, monkeypatch)
     operation_id = "30000000-0000-4000-8000-000000000030"
     seed_completed_operation(
@@ -661,5 +661,19 @@ def test_pdf_to_images_rejects_truncated_png_when_pillow_global_allows_truncatio
 
     assert result.source is None
     assert result.failure is not None
-    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
-    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE"
+    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.DESTINATION
+    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_BUSY"
+    assert operations.mark_document_operation_export_source_unavailable(result) is False
+    assert operation_state(tmp_path, operation_id) == "completed"
+
+    retry = operations.open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=ACCOUNT_ID,
+    )
+
+    assert retry.source is None
+    assert retry.failure is not None
+    assert retry.failure.domain is operations.DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
+    assert retry.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE"
+    assert operations.mark_document_operation_export_source_unavailable(retry) is True
+    assert operation_state(tmp_path, operation_id) == "unavailable"

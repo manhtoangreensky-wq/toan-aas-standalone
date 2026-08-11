@@ -53,7 +53,7 @@ from copyfast_db import (
     transaction,
     utc_now,
 )
-from copyfast_image_runtime import reserve_image_decoder_capacity
+from copyfast_image_runtime import ImageDecoderCapacityBusy, reserve_image_decoder_capacity
 
 
 router = APIRouter(prefix="/api/v1/asset-vault", tags=["Web Asset Vault"])
@@ -2640,9 +2640,14 @@ def _document_operation_export_png_stream_is_safe(
         or not isinstance(expected_bytes, int)
         or expected_bytes < 1
         or expected_bytes > DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_BYTES
-        or ImageFile.LOAD_TRUNCATED_IMAGES
     ):
         return False
+    # ``LOAD_TRUNCATED_IMAGES`` is a process-global Pillow switch.  A true
+    # value makes strict source validation impossible, but does not prove that
+    # this immutable PNG is corrupt.  Surface a retryable runtime boundary so
+    # Document Operations cannot demote a completed source to unavailable.
+    if ImageFile.LOAD_TRUNCATED_IMAGES:
+        raise ImageDecoderCapacityBusy("Pillow strict PNG validation is temporarily unavailable")
     try:
         with reserve_image_decoder_capacity():
             stream.seek(0, os.SEEK_END)
