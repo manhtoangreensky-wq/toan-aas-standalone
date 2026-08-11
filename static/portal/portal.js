@@ -20607,6 +20607,10 @@
         && status === "completed"
         && item.download_ready === true
       );
+      const canPrepareContentHandoff = Boolean(
+        canExportToAssetVault
+        && context && context.capabilities && context.capabilities["content-handoff-create"] === true
+      );
       const start = Number(item.selected_start_page);
       const end = Number(item.selected_end_page);
       const sourceCount = Math.max(1, Number(item.source_count) || 1);
@@ -20668,7 +20672,7 @@
       const artifactLabel = isOcrText ? "TXT" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG" : "ZIP") : (isOptimize ? "Đã giảm" : "Artifact")));
       const downloadLabel = isOcrText ? "Tải TXT riêng tư" : ((isPdfToWord || isPdfOcrWord) ? "Tải DOCX riêng tư" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "Tải PNG riêng tư" : "Tải ZIP riêng tư") : "Tải PDF riêng tư"));
       const fallbackFilename = isPdfOcrWord ? "DOCX OCR PDF riêng tư" : (isPdfOcr ? "TXT OCR PDF riêng tư" : (isImageOcr ? "TXT OCR riêng tư" : (isPdfToWord ? "DOCX riêng tư" : (isPdfToImages ? "PNG / ZIP riêng tư" : "PDF riêng tư"))));
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isOcrText ? "OCR" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF")))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${canExportToAssetVault ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-export-to-asset-vault" data-portal-route="${safeText(String(context.path || ""))}" data-document-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu artifact đã xác minh vào Asset Vault? Web chỉ sao chép output private sau khi máy chủ kiểm tra lại ownership và integrity.">Lưu vào Asset Vault</button>` : ""}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isOcrText ? "OCR" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF")))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${canExportToAssetVault ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-export-to-asset-vault" data-portal-route="${safeText(String(context.path || ""))}" data-document-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu artifact đã xác minh vào Asset Vault? Web chỉ sao chép output private sau khi máy chủ kiểm tra lại ownership và integrity.">Lưu vào Asset Vault</button>` : ""}${canPrepareContentHandoff ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-export-to-content-handoff" data-portal-route="${safeText(String(context.path || ""))}" data-document-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu artifact đã xác minh vào Asset Vault rồi mở draft Content Handoff? Chưa có record nào được tạo cho tới khi bạn gửi form.">Lưu & chuẩn bị bàn giao</button>` : ""}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -26961,11 +26965,17 @@
     const disabled = enabled ? "" : " disabled";
     return '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="partner-crm-manager-filter" data-portal-route="/admin/crm/leads" novalidate><div class="portal-fields"><label class="portal-field"><span>Lọc theo stage</span><select class="portal-select" name="stage"' + disabled + '>' + options.map(([key, label]) => '<option value="' + safeText(key) + '"' + (key === stage ? " selected" : "") + '>' + safeText(label) + '</option>').join("") + '</select></label></div><div class="portal-form-footer"><span class="portal-form-note">Directory vẫn chỉ hiển thị metadata pipeline đã redact, không cấp quyền cross-account.</span><button class="portal-button portal-button--quiet" type="submit"' + disabled + '>Áp dụng</button></div></form>';
   }
+  function contentHandoffDraftAssetId(context, record) {
+    if (record || typeof window === "undefined") return "";
+    const candidate = String(new URLSearchParams(window.location.search || "").get("asset_id") || "").trim();
+    if (!validVaultAssetId(candidate)) return "";
+    return vaultItems(context).some((item) => String(item.id || "") === candidate) ? candidate : "";
+  }
   function contentHandoffReferenceFields(context, record, enabled) {
     const refs = record && record.references && typeof record.references === "object" ? record.references : {};
     const projectId = String(refs.project_id || "");
     const campaignId = String(refs.campaign_id || "");
-    const assetId = Array.isArray(refs.asset_ids) ? String(refs.asset_ids[0] || "") : "";
+    const assetId = Array.isArray(refs.asset_ids) ? String(refs.asset_ids[0] || "") : contentHandoffDraftAssetId(context, record);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && validProjectId(item.id) && String(item.state || "active") === "active").slice(0, 100);
     const campaigns = (Array.isArray(context.campaignPlans) ? context.campaignPlans : []).filter((item) => item && validProjectId(item.id)).slice(0, 100);
     const assets = vaultItems(context).slice(0, 100);
@@ -28605,7 +28615,7 @@
         __documentOperationOffset: source.getAttribute("data-document-operation-offset") || ""
       });
     }
-    if (action === "document-operation-export-to-asset-vault") {
+    if (["document-operation-export-to-asset-vault", "document-operation-export-to-content-handoff"].includes(action)) {
       Object.assign(fields, {
         __documentOperationId: source.getAttribute("data-document-operation-id") || ""
       });

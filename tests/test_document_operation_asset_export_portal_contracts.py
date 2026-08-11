@@ -14,6 +14,8 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 
 ACTION = "document-operation-export-to-asset-vault"
+HANDOFF_ACTION = "document-operation-export-to-content-handoff"
+HANDOFF_CREATE_CAPABILITY = "content-handoff-create"
 ROUTE_SUFFIX = "/export-to-asset-vault"
 
 
@@ -26,10 +28,14 @@ def _between(source: str, start_marker: str, end_pattern: str) -> str:
 
 
 def _action_source() -> str:
-    return _between(INTEGRATION, f'if (action === "{ACTION}")', r"\n\s*if \(action === ")
+    paired_marker = f'if (["{ACTION}", "{HANDOFF_ACTION}"].includes(action))'
+    marker = paired_marker if paired_marker in INTEGRATION else f'if (action === "{ACTION}")'
+    return _between(INTEGRATION, marker, r"\n\s*if \(action === ")
 
 
 def _named_action_source(action: str) -> str:
+    if action == ACTION:
+        return _action_source()
     return _between(INTEGRATION, f'if (action === "{action}")', r"\n\s*if \(action === ")
 
 
@@ -53,7 +59,18 @@ def test_document_cards_offer_a_confirmed_quiet_export_only_for_verified_pdf_doc
     assert '"pdf_to_images"' not in _between(cards, "const canExport", "const start")
 
 
-def test_completed_document_card_renders_the_export_control_with_its_active_context() -> None:
+def test_document_cards_offer_an_explicit_handoff_continuation_only_when_the_existing_create_capability_is_ready() -> None:
+    """The owner deliberately opts in; export alone never creates a record."""
+
+    cards = _between(PORTAL, "function renderDocumentOperationCards", "function renderDocumentHub")
+    assert f'data-portal-action="{HANDOFF_ACTION}"' in cards
+    assert "Lưu & chuẩn bị bàn giao" in cards
+    assert "const canPrepareContentHandoff = Boolean(" in cards
+    assert f'context.capabilities["{HANDOFF_CREATE_CAPABILITY}"] === true' in cards
+    assert re.search(r"canExportToAssetVault\s*&&", cards)
+
+
+def test_completed_document_card_renders_export_and_opt_in_handoff_with_its_active_context() -> None:
     """Execute the card helper so an undeclared `context` cannot hide in static checks."""
 
     helper = _between(PORTAL, "function renderDocumentOperationCards", "function renderDocumentHub")
@@ -62,11 +79,16 @@ def test_completed_document_card_renders_the_export_control_with_its_active_cont
         "path": "/documents/split",
         "capabilities": {ACTION: True},
     }
+    handoff_context = {
+        "path": "/documents/split",
+        "capabilities": {ACTION: True, HANDOFF_CREATE_CAPABILITY: True},
+    }
     runner = """
 const vm = require("vm");
 const helper = %s;
 const operation = %s;
 const renderContext = %s;
+const handoffContext = %s;
 const sandbox = {
   renderEmpty: () => "",
   documentOperationState: (item) => String(item.state || "guarded"),
@@ -78,7 +100,8 @@ const sandbox = {
 };
 vm.runInNewContext(helper, sandbox);
 const markup = sandbox.renderDocumentOperationCards([operation], renderContext, "", "");
-process.stdout.write(JSON.stringify({ markup }));
+const handoffMarkup = sandbox.renderDocumentOperationCards([operation], handoffContext, "", "");
+process.stdout.write(JSON.stringify({ markup, handoffMarkup }));
 """ % (json.dumps(helper), json.dumps({
         "id": operation_id,
         "kind": "pdf_split",
@@ -90,12 +113,16 @@ process.stdout.write(JSON.stringify({ markup }));
         "source_page_count": 2,
         "output_page_count": 2,
         "byte_size": 512,
-    }), json.dumps(context))
+    }), json.dumps(context), json.dumps(handoff_context))
     result = subprocess.run(["node", "-e", runner], check=True, capture_output=True, text=True)
-    markup = json.loads(result.stdout)["markup"]
+    result_payload = json.loads(result.stdout)
+    markup = result_payload["markup"]
+    handoff_markup = result_payload["handoffMarkup"]
     assert f'data-portal-action="{ACTION}"' in markup
+    assert f'data-portal-action="{HANDOFF_ACTION}"' not in markup
     assert f'data-document-operation-id="{operation_id}"' in markup
     assert 'data-portal-route="/documents/split"' in markup
+    assert f'data-portal-action="{HANDOFF_ACTION}"' in handoff_markup
 
 
 def test_document_operation_routes_pass_their_live_context_to_history_cards() -> None:
@@ -141,10 +168,74 @@ def test_document_export_action_keeps_the_browser_to_one_opaque_same_origin_post
 
 
 def test_document_export_action_extracts_only_the_card_operation_uuid() -> None:
-    extraction = _between(PORTAL, f'if (action === "{ACTION}")', r"\n\s*if \(")
+    marker = f'if (["{ACTION}", "{HANDOFF_ACTION}"].includes(action))'
+    extraction = _between(PORTAL, marker if marker in PORTAL else f'if (action === "{ACTION}")', r"\n\s*if \(")
     assert '__documentOperationId: source.getAttribute("data-document-operation-id") || ""' in extraction
     for forbidden in ("path", "blob", "filename", "source_asset_id", "storage_key"):
         assert forbidden not in extraction.lower()
+
+
+def test_export_and_handoff_reuses_the_fenced_export_and_navigates_only_from_an_active_receipt() -> None:
+    action = _action_source()
+    assert f'action === "{HANDOFF_ACTION}"' in action
+    assert "const preparingContentHandoff" in action
+    assert ROUTE_SUFFIX in action
+    assert '"Idempotency-Key": submission.key' in action
+    assert "contentHandoffDraftPath(asset.id)" in action
+    assert 'assetState !== "active"' in action
+    assert "window.location.assign(handoffPath)" in action
+    assert "/content-handoffs/records" not in action
+    assert "record_persisted" not in action
+
+
+def test_content_handoff_prefill_accepts_only_the_current_active_owner_asset() -> None:
+    asset_id = "12345678-1234-4234-8234-1234567890ab"
+    other_id = "87654321-4321-4234-8234-ba0987654321"
+    id_validator = _between(PORTAL, "function validVaultAssetId", "function vaultItems")
+    assets_helper = _between(PORTAL, "function vaultItems", "function assetVaultListing")
+    prefill_helper = _between(PORTAL, "function contentHandoffDraftAssetId", "function contentHandoffReferenceFields")
+    runner = """
+const vm = require("vm");
+const idValidator = %s;
+const assetsHelper = %s;
+const prefillHelper = %s;
+const assetId = %s;
+const otherId = %s;
+const sandbox = { URLSearchParams, window: { location: { search: "?asset_id=" + assetId } } };
+vm.runInNewContext(idValidator + "\\n" + assetsHelper + "\\n" + prefillHelper, sandbox);
+const active = sandbox.contentHandoffDraftAssetId({ vaultItems: [{ id: assetId, state: "active" }] }, null);
+const archived = sandbox.contentHandoffDraftAssetId({ vaultItems: [{ id: assetId, state: "archived" }] }, null);
+sandbox.window.location.search = "?asset_id=" + otherId;
+const absent = sandbox.contentHandoffDraftAssetId({ vaultItems: [{ id: assetId, state: "active" }] }, null);
+sandbox.window.location.search = "?asset_id=" + assetId;
+const editing = sandbox.contentHandoffDraftAssetId({ vaultItems: [{ id: assetId, state: "active" }] }, { references: { asset_ids: [otherId] } });
+process.stdout.write(JSON.stringify({ active, archived, absent, editing }));
+""" % (json.dumps(id_validator), json.dumps(assets_helper), json.dumps(prefill_helper), json.dumps(asset_id), json.dumps(other_id))
+    result = subprocess.run(["node", "-e", runner], check=True, capture_output=True, text=True)
+    payload = json.loads(result.stdout)
+    assert payload == {"active": asset_id, "archived": "", "absent": "", "editing": ""}
+
+
+def test_content_handoff_draft_path_contains_only_a_valid_opaque_asset_id() -> None:
+    asset_id = "12345678-1234-4234-8234-1234567890ab"
+    validator = _between(PORTAL, "function validVaultAssetId", "function vaultItems")
+    helper = _between(INTEGRATION, "function contentHandoffDraftPath", "const SUPPORT_ATTACHMENT_ASSET_LIST_LIMIT")
+    runner = """
+const vm = require("vm");
+const validator = %s;
+const helper = %s;
+const sandbox = {};
+vm.runInNewContext(validator + "\\n" + helper, sandbox);
+process.stdout.write(JSON.stringify({
+  active: sandbox.contentHandoffDraftPath(%s),
+  malformed: sandbox.contentHandoffDraftPath("../../foreign")
+}));
+""" % (json.dumps(validator), json.dumps(helper), json.dumps(asset_id))
+    result = subprocess.run(["node", "-e", runner], check=True, capture_output=True, text=True)
+    assert json.loads(result.stdout) == {
+        "active": "/content/handoffs/new?asset_id=" + asset_id,
+        "malformed": "",
+    }
 
 
 def test_asset_export_nonterminal_receipts_are_handled_without_generic_error_flow() -> None:
