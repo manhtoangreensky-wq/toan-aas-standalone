@@ -18679,6 +18679,47 @@
     };
   }
 
+  function canonicalPublicSalePricingCatalog(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value)
+      ? value.public_sale_catalog
+      : null;
+    if (!source || typeof source !== "object" || Array.isArray(source) || source.available !== true || source.approval_status !== "owner_approved") return null;
+    const version = canonicalCatalogCode(source.catalog_version);
+    if (!version || !Array.isArray(source.items) || source.items.length > 100) return null;
+    const seenCodes = new Set();
+    const items = source.items.flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+      const code = canonicalCatalogCode(item.code);
+      const salePrice = canonicalNonnegativeInteger(item.sale_price_xu);
+      if (!code || salePrice === null || salePrice <= 0 || seenCodes.has(code)) return [];
+      seenCodes.add(code);
+      return [{
+        code,
+        family: canonicalShortText(item.family, 80) || "service",
+        label: canonicalShortText(item.label, 120) || code,
+        priceLabel: `${salePrice} Xu`,
+        status: "read_only"
+      }];
+    });
+    return items.length ? { version, items } : null;
+  }
+
+  function publicSaleCatalogEntries(catalog, familyLabels) {
+    if (!catalog || !Array.isArray(catalog.items)) return [];
+    const labels = familyLabels && typeof familyLabels === "object" ? familyLabels : {};
+    return catalog.items.map((item) => {
+      const normalizedFamily = String(item.family || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+      const familyKey = ["video", "image", "music", "audio", "video_combo"].includes(normalizedFamily) ? normalizedFamily : "service";
+      return {
+        title: item.label,
+        description: billingCatalogText("catalog.publicSale.cardDescription", "Giá bán được phát hành theo catalog đã phê duyệt."),
+        priceLabel: item.priceLabel,
+        status: item.status,
+        family: labels[familyKey] || labels.service || "Dịch vụ"
+      };
+    });
+  }
+
   function canonicalPackageCatalog(value) {
     if (!value || typeof value !== "object" || Array.isArray(value) || value.available !== true) return null;
     const rows = (source) => (Array.isArray(source) ? source.slice(0, 100) : []).flatMap((item) => {
@@ -18857,33 +18898,64 @@
   function renderCatalog(page, context) {
     const billingNav = renderBillingWorkspaceNav(page.path);
     const pricing = canonicalPricingCatalog(context.pricingCatalog);
+    const publicSalePricing = pricing ? canonicalPublicSalePricingCatalog(context.pricingCatalog) : null;
     const packages = canonicalPackageCatalog(context.packageCatalog);
     const pricingPage = page.path === "/pricing";
+    const publicSaleFamilyLabels = pricingPage ? {
+      service: billingCatalogText("catalog.publicSale.family.service", "Dịch vụ"),
+      video: billingCatalogText("catalog.publicSale.family.video", billingCatalogText("catalog.family.videoTier", "Video")),
+      image: billingCatalogText("catalog.publicSale.family.image", billingCatalogText("catalog.family.imageTier", "Ảnh")),
+      music: billingCatalogText("catalog.publicSale.family.music", "Nhạc"),
+      audio: billingCatalogText("catalog.publicSale.family.audio", "Âm thanh"),
+      video_combo: billingCatalogText("catalog.family.videoCombo", "Combo video")
+    } : {};
     // Pricing/packages must never fall back to the feature registry: a list
-    // of tools presented as prices would be misleading when the canonical bot
-    // bridge is unavailable or its catalog schema drifts.
-    const catalog = pricingPage && pricing
-      ? [
-        ...pricing.image_tiers.map((item) => ({ title: `${billingCatalogText("catalog.family.imageTier", "Tier ảnh")} · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.imageTier", "Tier ảnh") })),
-        ...pricing.video_tiers.map((item) => ({ title: `${billingCatalogText("catalog.family.videoTier", "Tier video")} · ${item.label}`, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.videoTier", "Tier video") })),
-        ...pricing.video_combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.videoCombo", "Combo video") }))
-      ]
+    // of tools presented as prices would be misleading when the signed Bridge
+    // has not published an approved public sales catalogue.
+    const catalog = pricingPage
+      ? publicSaleCatalogEntries(publicSalePricing, publicSaleFamilyLabels)
       : !pricingPage && packages
         ? [
           ...packages.monthly.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.monthly", "Gói tháng") })),
           ...packages.combos.map((item) => ({ title: item.label, description: item.note, priceLabel: item.priceLabel, status: item.status, family: billingCatalogText("catalog.family.combo", "Combo") }))
         ]
         : [];
-    const catalogReady = pricingPage ? Boolean(pricing) : Boolean(packages);
+    const catalogReady = pricingPage ? Boolean(publicSalePricing) : Boolean(packages);
     const hasCatalog = catalog.length > 0;
     const emptyTitle = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.pricing.emptyActiveTitle", "Bảng giá hiện chưa có tier active") : billingCatalogText("catalog.packages.emptyActiveTitle", "Danh mục hiện chưa có gói active"))
-      : (pricingPage ? billingCatalogText("catalog.pricing.emptyWaitingTitle", "Chờ bảng giá canonical") : billingCatalogText("catalog.packages.emptyWaitingTitle", "Chờ danh mục gói canonical"));
+      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyActiveTitle", "Catalog giá bán chưa có dòng đủ điều kiện")) : billingCatalogText("catalog.packages.emptyActiveTitle", "Danh mục hiện chưa có gói active"))
+      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyWaitingTitle", "Chờ catalog giá bán được phát hành")) : billingCatalogText("catalog.packages.emptyWaitingTitle", "Chờ danh mục gói canonical"));
     const emptyText = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.pricing.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế.") : billingCatalogText("catalog.packages.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."))
-      : (pricingPage ? billingCatalogText("catalog.pricing.emptyWaitingBody", "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh.") : billingCatalogText("catalog.packages.emptyWaitingBody", "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành."));
-    const cards = hasCatalog ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp"))}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></section>`).join("") : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
-    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${pricingPage ? billingCatalogText("catalog.pricing.kicker", "Pricing canonical") : billingCatalogText("catalog.packages.kicker", "Package catalog canonical")}</span><h2>${pricingPage ? billingCatalogText("catalog.pricing.introTitle", "Bảng giá đúng theo authority") : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ không suy đoán")}</h2><p>${pricingPage ? billingCatalogText("catalog.pricing.introBody", "Mỗi giá Xu/VND được hiển thị nguyên trạng khi Core Bridge đã cấp đủ schema. Web không đổi tỷ lệ, tự tính discount hoặc biến workflow thành mệnh giá nạp.") : billingCatalogText("catalog.packages.introBody", "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical.")}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${pricingPage ? billingCatalogText("catalog.pricing.cardTitle", "Giá theo catalog") : billingCatalogText("catalog.packages.cardTitle", "Gói hiện có")}</h2><p class="portal-card-subtitle">${billingCatalogText("catalog.card.subtitle", "Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.")}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${billingCatalogText("catalog.footer.note", "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.")}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "Mở nạp Xu canonical")}</a></div></section></article>`;
+      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyActiveBody", "Core Bridge đã phát hành catalog nhưng không có dòng giá bán hợp lệ để hiển thị.")) : billingCatalogText("catalog.packages.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."))
+      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyWaitingBody", "Bảng giá chỉ xuất hiện khi Core Bridge phát hành SKU, giá bán và phiên bản đã phê duyệt. Web không tự đoán từ tier cũ.")) : billingCatalogText("catalog.packages.emptyWaitingBody", "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành."));
+    const missingPrice = pricingPage
+      ? billingCatalogText("catalog.publicSale.priceMissing", "Giá bán đang chờ phát hành")
+      : billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp");
+    const cardStatus = (item) => pricingPage
+      ? (item.status === "read_only" ? billingCatalogText("catalog.publicSale.statusApproved", "Giá bán đã phê duyệt") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"))
+      : (item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"));
+    const cards = hasCatalog
+      ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
+      : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
+    const kicker = pricingPage
+      ? billingCatalogText("catalog.publicSale.kicker", billingCatalogText("catalog.pricing.kicker", "Bảng giá bán công khai"))
+      : billingCatalogText("catalog.packages.kicker", "Package catalog canonical");
+    const introTitle = pricingPage
+      ? billingCatalogText("catalog.publicSale.introTitle", billingCatalogText("catalog.pricing.introTitle", "Giá bán được phát hành theo catalog"))
+      : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ không suy đoán");
+    const introBody = pricingPage
+      ? billingCatalogText("catalog.publicSale.introBody", billingCatalogText("catalog.pricing.introBody", "Web chỉ hiển thị giá bán đã có SKU và phiên bản phê duyệt từ Core Bridge. Xác nhận của hệ thống xử lý vẫn là nguồn quyết định cho từng yêu cầu."))
+      : billingCatalogText("catalog.packages.introBody", "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical.");
+    const cardTitle = pricingPage
+      ? billingCatalogText("catalog.publicSale.cardTitle", billingCatalogText("catalog.pricing.cardTitle", "Bảng giá dịch vụ"))
+      : billingCatalogText("catalog.packages.cardTitle", "Gói hiện có");
+    const cardSubtitle = pricingPage
+      ? billingCatalogText("catalog.publicSale.cardDescription", "Giá bán được phát hành theo catalog đã phê duyệt.")
+      : billingCatalogText("catalog.card.subtitle", "Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.");
+    const footerNote = pricingPage
+      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ được trừ Xu sau khi xác nhận yêu cầu trong luồng canonical.")
+      : billingCatalogText("catalog.footer.note", "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.");
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${kicker}</span><h2>${introTitle}</h2><p>${introBody}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${cardTitle}</h2><p class="portal-card-subtitle">${cardSubtitle}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${footerNote}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "Mở nạp Xu canonical")}</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([

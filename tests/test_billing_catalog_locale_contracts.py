@@ -74,6 +74,21 @@ FIXED_KEYS = frozenset(
         "catalog.packages.emptyWaitingBody",
         "catalog.footer.note",
         "catalog.footer.topupAction",
+        "catalog.publicSale.kicker",
+        "catalog.publicSale.introTitle",
+        "catalog.publicSale.introBody",
+        "catalog.publicSale.cardTitle",
+        "catalog.publicSale.cardDescription",
+        "catalog.publicSale.emptyTitle",
+        "catalog.publicSale.emptyBody",
+        "catalog.publicSale.priceMissing",
+        "catalog.publicSale.statusApproved",
+        "catalog.publicSale.family.service",
+        "catalog.publicSale.family.video",
+        "catalog.publicSale.family.image",
+        "catalog.publicSale.family.music",
+        "catalog.publicSale.family.audio",
+        "catalog.publicSale.footerNote",
     }
 )
 
@@ -167,7 +182,7 @@ def test_billing_catalog_first_paint_is_route_and_locale_specific() -> None:
             ),
             "/pricing": (
                 "Bảng giá · TOAN AAS",
-                "Xem bảng giá canonical theo schema đã xác minh; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
+                "Xem bảng giá bán công khai do Core Bridge phát hành; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
             ),
         },
         "en": {
@@ -181,7 +196,7 @@ def test_billing_catalog_first_paint_is_route_and_locale_specific() -> None:
             ),
             "/pricing": (
                 "Pricing · TOAN AAS",
-                "Review canonical pricing from a verified schema; the Web does not infer rates, promotions, or credit limits.",
+                "Review public sale prices published by Core Bridge; the Web does not infer rates, promotions, or credit limits.",
             ),
         },
         "zh": {
@@ -195,7 +210,7 @@ def test_billing_catalog_first_paint_is_route_and_locale_specific() -> None:
             ),
             "/pricing": (
                 "价格 · TOAN AAS",
-                "查看来自已验证 schema 的 canonical 价格；Web 不会推测费率、优惠或积分限额。",
+                "查看由 Core Bridge 发布的公开销售价格；Web 不会推测费率、优惠或积分限额。",
             ),
         },
     }
