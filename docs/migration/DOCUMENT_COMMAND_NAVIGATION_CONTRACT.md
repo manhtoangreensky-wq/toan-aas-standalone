@@ -24,6 +24,7 @@ for that operation succeeds.
 | `/split_pdf` | `/documents/split` | Fresh private PDF and page range selection. |
 | `/merge_pdf` | `/documents/merge` | Fresh owner-scoped PDF source/order selection. |
 | `/image_to_pdf` | `/documents/image-to-pdf` | Fresh private image selection/order and bounded image decoding. |
+| `/ocr_image` | `/documents/ocr` | Fresh owner-scoped image selection for the existing private OCR flow; no Bot image, language, confirmation or output is reused. |
 | `/ocr_pdf` | `/documents/pdf-ocr` | Bounded local private PDF OCR to verified TXT, not a raw API or browser OCR flow. |
 
 These mappings are classified as `NAVIGATION_ONLY`, with
@@ -55,9 +56,9 @@ private download rules.
   source validation and delivery require their own asset/runtime contract; the
   existing guarded subtitle/translation workspace is not a safe replay of a
   Bot file command.
-- `/pdf_to_images` and `/ocr_image` already have independent Web pages, but
-  they are not reclassified by this contract because this batch only repairs
-  the reviewed stale/misaligned Document command entrypoints above.
+- `/pdf_to_images` already has an independent Web page, but is not
+  reclassified by this contract because its image-list output boundary requires
+  a separate review.
 - `docflow|*` callbacks remain governed by
   [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md). They retain
   their source-state dispositions and cannot inherit a command navigation

@@ -29,6 +29,7 @@ def test_document_command_navigation_only_opens_existing_private_web_surfaces() 
         "/merge_pdf": "/documents/merge",
         "/image_to_pdf": "/documents/image-to-pdf",
         "/ocr_pdf": "/documents/pdf-ocr",
+        "/ocr_image": "/documents/ocr",
     }
     for command, route in expected.items():
         assert command in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
@@ -49,6 +50,18 @@ def test_document_command_navigation_only_opens_existing_private_web_surfaces() 
     assert "/api/v1/..." in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
     assert "raw `/api/v1/...` write endpoint" in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
     assert "`/translate_file` stays outside this catalog" in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+
+
+def test_image_ocr_navigation_contract_never_reuses_bot_state_or_a_raw_api_target() -> None:
+    for phrase in (
+        "`/ocr_image`",
+        "`/documents/ocr`",
+        "no Bot image, language, confirmation or output is reused",
+        "Telegram identity",
+        "Bot `USER_PENDING`",
+        "raw `/api/v1/...` write endpoint",
+    ):
+        assert phrase in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
