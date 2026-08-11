@@ -61,6 +61,16 @@
 
   let interactionsBound = false;
   const transientFormDrafts = new Map();
+  // A continuation may only open one of these finite local Image Operations.
+  // It never carries an operation config, file bytes, URL, Bot state or an
+  // unverified reference; the target server still verifies Asset Vault
+  // ownership when the customer submits the new form.
+  const IMAGE_OPERATION_CONTINUATION_TARGETS = Object.freeze([
+    "/image/edit",
+    "/image/resize",
+    "/image/background-cleanup",
+    "/image/brand-overlay"
+  ]);
   const transientWorkspaceDraftIds = new Map();
   let sidebarReturnFocus = null;
   let commandPaletteReturnFocus = null;
@@ -10246,6 +10256,19 @@
     transientWorkspaceDraftIds.delete(targetRoute);
   }
 
+  function restoreImageOperationContinuation(route, assetId) {
+    const targetRoute = normalizePath(route || "");
+    const normalizedAssetId = String(assetId || "").trim();
+    if (!IMAGE_OPERATION_CONTINUATION_TARGETS.includes(targetRoute) || !validVaultAssetId(normalizedAssetId)) {
+      return false;
+    }
+    // An exported PNG begins a new local operation. Clear every old form
+    // selection before storing only the server-returned Asset Vault UUID.
+    clearTransientFormDraft(targetRoute);
+    transientFormDrafts.set(targetRoute, { source_asset_id: normalizedAssetId });
+    return true;
+  }
+
   function featureKeyForPage(page, context) {
     const routes = [page && page.path, page && page.routePath]
       .filter((value) => typeof value === "string" && value)
@@ -20249,6 +20272,13 @@
       : "";
   }
 
+  const IMAGE_OPERATION_CONTINUATION_BY_ORIGIN_ROUTE = Object.freeze({
+    "/image/resize": Object.freeze({ target: "/image/edit", label: "Lưu & tinh chỉnh" }),
+    "/image/edit": Object.freeze({ target: "/image/resize", label: "Lưu & đổi canvas" }),
+    "/image/background-cleanup": Object.freeze({ target: "/image/brand-overlay", label: "Lưu & gắn thương hiệu" }),
+    "/image/brand-overlay": Object.freeze({ target: "/image/resize", label: "Lưu & đổi canvas" })
+  });
+
   function imageOperationAssetExportControl(item, context) {
     const operationId = String(item && item.id || "").trim();
     const eligible = Boolean(
@@ -20260,6 +20290,7 @@
     );
     if (!eligible) return "";
     const route = String(context && context.path || "");
+    const continuation = IMAGE_OPERATION_CONTINUATION_BY_ORIGIN_ROUTE[route] || null;
     const canPrepareContentHandoff = Boolean(
       context && context.capabilities && context.capabilities["content-handoff-create"] === true
     );
@@ -20267,7 +20298,10 @@
     const handoffControl = canPrepareContentHandoff
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-content-handoff" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault rồi mở draft Content Handoff? Chưa có record nào được tạo cho tới khi bạn gửi form.">Lưu & chuẩn bị bàn giao</button>`
       : "";
-    return exportControl + handoffControl;
+    const continuationControl = continuation
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-continue" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-image-operation-continue-target="${safeText(continuation.target)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault rồi mở thao tác mới? Chỉ Asset UUID mới được chọn; thông số cũ không được chuyển.">${safeText(continuation.label)}</button>`
+      : "";
+    return exportControl + continuationControl + handoffControl;
   }
 
   function storyboardGridDownloadPath(item) {
@@ -28871,9 +28905,10 @@
         __imageOperationOffset: source.getAttribute("data-image-operation-offset") || ""
       });
     }
-    if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff"].includes(action)) {
+    if (["image-operation-export-to-asset-vault", "image-operation-export-to-content-handoff", "image-operation-export-to-continue"].includes(action)) {
       Object.assign(fields, {
-        __imageOperationId: source.getAttribute("data-image-operation-id") || ""
+        __imageOperationId: source.getAttribute("data-image-operation-id") || "",
+        __imageOperationContinueTarget: source.getAttribute("data-image-operation-continue-target") || ""
       });
     }
     if (String(action || "").startsWith("image-enhance-operation-")) {
@@ -29904,6 +29939,7 @@
     resolvePage,
     mount: mountPortal,
     clearTransientFormDraft,
+    restoreImageOperationContinuation,
     restoreWorkspaceDraft,
     states: Object.freeze({ ...STATE_LABELS })
   });
