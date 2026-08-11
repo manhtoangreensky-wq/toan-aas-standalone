@@ -422,6 +422,12 @@ DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS: dict[str, dict[str, str]] = {
         "feature_key": "documents_image_to_pdf",
         "surface": "image_to_pdf",
     },
+    "pdf_to_images": {
+        "target": "/documents/pdf-to-images",
+        "capability_key": "documents_pdf_to_images",
+        "feature_key": "documents_pdf_to_images",
+        "surface": "pdf_to_images",
+    },
     "ocr_image": {
         "target": "/documents/ocr",
         "capability_key": "documents_ocr",

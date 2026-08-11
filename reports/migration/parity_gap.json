@@ -69013,15 +69013,27 @@
     },
     {
       "classification": "customer",
+      "document_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "document_capability_key": "documents_pdf_to_images",
+      "document_feature_key": "documents_pdf_to_images",
+      "document_launch_mode": "WEB_NAVIGATION",
+      "document_surface": "pdf_to_images",
       "evidence": {
         "file": "bot.py",
         "line": 128663
       },
       "handler": "cmd_pdf_to_images",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_document_fresh_web_navigation",
       "source": "/pdf_to_images",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_DOCUMENT_NAVIGATION",
+        "BOT_PENDING_DOCUMENT_STATE_NOT_REPLAYED",
+        "BOT_EXECUTION_DELIVERY_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The command may only open a fresh signed Web-native document surface. Bot pending files, file order, page range, compression profile, confirmation, execution, charge and delivery state are never transferred.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "NAVIGATION_ONLY",
       "target": "/documents/pdf-to-images"
     },
     {
@@ -75186,9 +75198,9 @@
   },
   "mapping_coverage_percent": 83.91,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1569,
+    "COPIED_GUARDED": 1568,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 917,
+    "NAVIGATION_ONLY": 918,
     "NEEDS_FEATURE_DISPOSITION": 652,
     "TELEGRAM_ONLY": 908,
     "WEB_NATIVE_READ_ONLY": 5
@@ -75230,7 +75242,7 @@
     "unresolved_callback_templates": 96,
     "unresolved_source_count": 652
   },
-  "static_web_surface_coverage_percent": 38.71,
+  "static_web_surface_coverage_percent": 38.69,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

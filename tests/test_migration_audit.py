@@ -1458,6 +1458,7 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         "split_pdf": ("/documents/split", "documents_split", "documents_split", "pdf_split"),
         "merge_pdf": ("/documents/merge", "documents_merge", "documents_merge", "pdf_merge"),
         "image_to_pdf": ("/documents/image-to-pdf", "documents_image_to_pdf", "documents_image_to_pdf", "image_to_pdf"),
+        "pdf_to_images": ("/documents/pdf-to-images", "documents_pdf_to_images", "documents_pdf_to_images", "pdf_to_images"),
         "ocr_pdf": ("/documents/pdf-ocr", "documents_pdf_ocr", "documents_pdf_ocr", "pdf_ocr"),
         "ocr_image": ("/documents/ocr", "documents_ocr", "documents_ocr", "image_ocr"),
     }
@@ -1495,7 +1496,6 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
 
     expected_negative = {
         "translate_file": ("/features/subtitle", "COPIED_GUARDED"),
-        "pdf_to_images": ("/documents/pdf-to-images", "COPIED_GUARDED"),
     }
     for command, (target, status) in expected_negative.items():
         assert command not in audit.DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS
