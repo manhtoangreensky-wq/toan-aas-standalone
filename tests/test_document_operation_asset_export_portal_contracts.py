@@ -39,11 +39,13 @@ def _named_action_source(action: str) -> str:
     if action == ACTION:
         return _action_source()
     if action in {IMAGE_ACTION, IMAGE_HANDOFF_ACTION}:
-        return _between(
-            INTEGRATION,
+        for marker in (
+            f'if (["{IMAGE_ACTION}", "{IMAGE_HANDOFF_ACTION}", "image-operation-export-to-continue"].includes(action))',
             f'if (["{IMAGE_ACTION}", "{IMAGE_HANDOFF_ACTION}"].includes(action))',
-            r"\n\s*if \(action === ",
-        )
+        ):
+            if marker in INTEGRATION:
+                return _between(INTEGRATION, marker, r"\n\s*if \(action === ")
+        raise AssertionError("Image Operation export action group is missing")
     return _between(INTEGRATION, f'if (action === "{action}")', r"\n\s*if \(action === ")
 
 
@@ -54,7 +56,7 @@ def test_portal_publishes_the_effective_document_export_capability_through_boots
     assert "documentOperationExportEnabled: source.documentOperationExportEnabled === true" in bootstrap
 
 
-def test_document_cards_offer_a_confirmed_quiet_export_only_for_verified_pdf_docx_or_txt_outputs() -> None:
+def test_document_cards_offer_a_confirmed_quiet_export_only_for_verified_outputs() -> None:
     cards = _between(PORTAL, "function renderDocumentOperationCards", "function renderDocumentHub")
     assert f'data-portal-action="{ACTION}"' in cards
     assert "data-portal-confirm=" in cards
@@ -64,7 +66,75 @@ def test_document_cards_offer_a_confirmed_quiet_export_only_for_verified_pdf_doc
     assert "item.download_ready === true" in cards
     for allowed_kind in ("pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"):
         assert f'"{allowed_kind}"' in cards
-    assert '"pdf_to_images"' not in _between(cards, "const canExport", "const start")
+    can_export = _between(cards, "const canExport", "const start")
+    assert "isSinglePagePdfToImages" in can_export
+
+
+def test_pdf_to_images_cards_offer_vault_export_only_for_a_completed_single_page_png() -> None:
+    helper = _between(PORTAL, "function renderDocumentOperationCards", "function renderDocumentHub")
+    action = "document-operation-export-to-asset-vault"
+    handoff = "document-operation-export-to-content-handoff"
+    single_id = "12345678-1234-4234-8234-1234567890ab"
+    multi_id = "87654321-4321-4234-8234-ba0987654321"
+    mismatched_id = "45678901-2345-4234-8234-1234567890ab"
+    runner = """
+const vm = require("vm");
+const helper = %s;
+const items = %s;
+const context = %s;
+const sandbox = {
+  renderEmpty: () => "",
+  documentOperationState: (item) => String(item.state || "guarded"),
+  documentOperationDownloadPath: (item) => item.download_ready === true ? "/private-download" : "",
+  imageOcrLanguageLabel: () => "auto",
+  vaultBytes: (value) => String(value),
+  safeText: (value) => String(value),
+  badge: (value) => `<span>${value}</span>`,
+};
+vm.runInNewContext(helper, sandbox);
+process.stdout.write(sandbox.renderDocumentOperationCards(items, context, "", ""));
+""" % (json.dumps(helper), json.dumps([
+        {
+            "id": single_id,
+            "kind": "pdf_to_images",
+            "state": "completed",
+            "download_ready": True,
+            "source_page_count": 1,
+            "output_page_count": 1,
+            "original_filename": "toan-aas-pdf-page-001.png",
+            "byte_size": 512,
+        },
+        {
+            "id": multi_id,
+            "kind": "pdf_to_images",
+            "state": "completed",
+            "download_ready": True,
+            "source_page_count": 2,
+            "output_page_count": 2,
+            "original_filename": "toan-aas-pdf-pages.zip",
+            "byte_size": 1024,
+        },
+        {
+            "id": mismatched_id,
+            "kind": "pdf_to_images",
+            "state": "completed",
+            "download_ready": True,
+            "source_page_count": 2,
+            "output_page_count": 1,
+            "original_filename": "toan-aas-pdf-page-001.png",
+            "byte_size": 512,
+        },
+    ]), json.dumps({
+        "path": "/documents/pdf-to-images",
+        "capabilities": {action: True, "content-handoff-create": True},
+    }))
+    result = subprocess.run(["node", "-e", runner], check=True, capture_output=True, text=True)
+    markup = result.stdout
+    assert markup.count(f'data-portal-action="{action}"') == 1
+    assert f'data-document-operation-id="{single_id}"' in markup
+    assert f'data-document-operation="{multi_id}"' in markup
+    assert f'data-document-operation="{mismatched_id}"' in markup
+    assert f'data-portal-action="{handoff}"' not in markup
 
 
 def test_document_cards_offer_an_explicit_handoff_continuation_only_when_the_existing_create_capability_is_ready() -> None:

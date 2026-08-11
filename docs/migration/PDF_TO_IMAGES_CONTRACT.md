@@ -82,6 +82,20 @@ then serves an attachment with `Cache-Control: no-store, private`, `nosniff`,
 filename/MIME fields, exposes storage keys/hashes, or creates a public/static
 URL. Service worker policy must continue to exclude this private route.
 
+## Asset Vault retention
+
+After a completed single-page result is available, its signed owner may choose
+**Lưu vào Asset Vault** from the PDF-to-images card. This is an independent,
+fenced server-side copy: the browser sends only the operation UUID and an
+idempotency key, while the server rechecks account ownership, state,
+`source_page_count == output_page_count == 1`, canonical PNG name/MIME/suffix, byte count and
+SHA-256. It then reopens, parses and decodes the copied RGB PNG before creating
+a private Asset Vault row.
+
+The action is absent for every multi-page PDF-to-images result. Those results
+remain `toan-aas-pdf-pages.zip` downloads only; this product does not unpack
+ZIP files, offer per-page selection or create an archive-derived asset.
+
 ## Configuration
 
 The feature is fail-closed unless all storage and renderer boundaries are

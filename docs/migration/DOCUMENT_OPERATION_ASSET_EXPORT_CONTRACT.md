@@ -26,10 +26,13 @@ The server, not the browser, owns the fixed kind-to-artifact map.
 | `pdf_split`, `pdf_merge`, `pdf_optimize`, `image_to_pdf` | PDF (`.pdf`, `application/pdf`) |
 | `pdf_to_word_text`, `pdf_ocr_word` | DOCX (`.docx`, OOXML Word MIME type) |
 | `image_ocr`, `pdf_ocr` | UTF-8 TXT (`.txt`, `text/plain; charset=utf-8`) |
+| `pdf_to_images` with `source_page_count == output_page_count == 1` | PNG (`.png`, `image/png`, `toan-aas-pdf-page-001.png`) |
 
-`pdf_to_images` is deliberately excluded, including its one-page PNG form.
-PNG/ZIP output needs a dedicated per-file or archive export contract and must
-not be widened through this attachment copy flow.
+`pdf_to_images` has one intentionally narrow per-file rule: only its sealed,
+completed one-page PNG may be retained. A multi-page result remains a ZIP and
+is always ineligible. This flow does not accept a ZIP, unpack an archive, pick
+an individual page or let the browser select a filename, MIME type, page count
+or Asset Vault destination.
 
 ## Request and response boundary
 
@@ -83,6 +86,11 @@ Current format verification is deliberately strict:
   embeddings, ActiveX or external relationships.
 - TXT must be bounded strict UTF-8, contain non-whitespace text and contain no
   NUL character.
+- A retained PDF-to-images artifact must be one static RGB PNG with the exact
+  one-page descriptor, PNG magic, full parser/decode, no eXIf chunk, one frame,
+  no animation, at most 8 MiB, 8,192 pixels per edge and 8 MP total. The copied
+  Vault file is reopened and rechecked for byte count and SHA-256 before its
+  metadata row is committed.
 
 Parser/runtime failures are treated as retryable destination failure and do
 not silently demote the original completed document artifact.
@@ -107,6 +115,9 @@ not owned by a live lease.
 - Downloads remain signed-session, owner-scoped Asset Vault downloads; there
   is no public URL, browser Blob cache, PWA cache or raw storage key in the
   public response.
+- A multi-page PDF-to-images ZIP remains private only to its Document
+  Operation download; it cannot be uploaded, unpacked or retained by this
+  Asset Vault export path.
 - The feature does not modify `bot.py`, Core Bridge, Telegram identity,
   providers, Key4U, jobs, wallet/Xu, pricing, PayOS, webhooks or admin write
   authority.

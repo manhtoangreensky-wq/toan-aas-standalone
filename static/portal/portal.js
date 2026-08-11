@@ -21319,14 +21319,20 @@
       const isPdfOcr = kind === "pdf_ocr";
       const isPdfOcrWord = kind === "pdf_ocr_word";
       const isOcrText = isImageOcr || isPdfOcr;
+      const sourcePages = Number(item.source_page_count);
+      const outputPages = Number(item.output_page_count);
+      const isSinglePagePdfToImages = isPdfToImages
+        && Number.isInteger(sourcePages) && sourcePages === 1
+        && Number.isInteger(outputPages) && outputPages === 1;
       const canExportToAssetVault = Boolean(
         context && context.capabilities && context.capabilities["document-operation-export-to-asset-vault"] === true
-        && ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"].includes(kind)
+        && (["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"].includes(kind) || isSinglePagePdfToImages)
         && status === "completed"
         && item.download_ready === true
       );
       const canPrepareContentHandoff = Boolean(
         canExportToAssetVault
+        && !isPdfToImages
         && context && context.capabilities && context.capabilities["content-handoff-create"] === true
       );
       const start = Number(item.selected_start_page);
@@ -21347,8 +21353,6 @@
         : isOcrText
         ? `${isPdfOcr ? "OCR PDF private" : "OCR ảnh private"} · ${imageOcrLanguageLabel(item.language || item.requested_language)}`
         : (Number.isInteger(start) && Number.isInteger(end) ? (start === end ? `Trang ${start}` : `Trang ${start}–${end}`) : "Đang xác minh phạm vi");
-      const sourcePages = Number(item.source_page_count);
-      const outputPages = Number(item.output_page_count);
       const sourceMetric = isOptimize
         ? (Number.isFinite(Number(item.input_byte_size)) ? vaultBytes(item.input_byte_size) : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra"))
         : isMerge

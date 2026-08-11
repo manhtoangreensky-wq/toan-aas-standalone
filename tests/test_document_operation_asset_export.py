@@ -11,6 +11,7 @@ import sys
 
 from docx import Document
 from fastapi.testclient import TestClient
+from PIL import Image
 from pypdf import PdfWriter
 
 
@@ -152,6 +153,28 @@ def docx_bytes() -> bytes:
     return stream.getvalue()
 
 
+def png_bytes() -> bytes:
+    """Return a real, single-frame RGB PNG for the sealed export contract."""
+
+    image = Image.new("RGB", (8, 6), color=(22, 163, 183))
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
+def non_rgb_png_bytes() -> bytes:
+    image = Image.new("L", (8, 6), color=128)
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
 def seed_verified_completed_operation(
     tmp_path: Path,
     *,
@@ -263,6 +286,190 @@ def test_verified_seeded_docx_and_text_outputs_export_through_real_asset_vault_f
             assert downloaded.content == payload
 
 
+def test_verified_single_page_pdf_to_images_output_exports_to_a_private_png_asset(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """One sealed PNG may enter the Vault; no ZIP/archive path is involved."""
+
+    email = "document-export-pdf-image-route@example.com"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email)
+        source = upload_pdf(client, csrf, key="document-export-pdf-image-source-0001")
+        operation_id = "40000000-0000-4000-8000-000000000003"
+        payload = png_bytes()
+        seed_verified_completed_operation(
+            tmp_path,
+            email=email,
+            source_asset_id=source["id"],
+            operation_id=operation_id,
+            kind="pdf_to_images",
+            extension=".png",
+            content_type="image/png",
+            original_filename="toan-aas-pdf-page-001.png",
+            payload=payload,
+        )
+
+        exported = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-route-0001",
+        )
+
+        assert exported.status_code == 200, exported.text
+        body = exported.json()
+        assert body["ok"] is True
+        assert body["status"] == "completed"
+        asset = body["data"]["asset"]
+        assert asset["original_filename"] == "toan-aas-pdf-page-001.png"
+        assert asset["extension"] == ".png"
+        assert asset["content_type"] == "image/png"
+        assert {"storage_key", "sha256", "account_id", "source_asset_id"}.isdisjoint(asset)
+        downloaded = client.get(f"/api/v1/asset-vault/{asset['id']}/download")
+        assert downloaded.status_code == 200, downloaded.text
+        assert downloaded.content == payload
+
+
+def test_single_page_pdf_to_images_export_retries_after_shared_decoder_capacity_is_released(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """A busy shared PNG decoder is retryable, never source corruption."""
+
+    email = "document-export-pdf-image-decoder-capacity@example.com"
+    db_path = tmp_path / "document-operation-asset-export.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email)
+        source = upload_pdf(client, csrf, key="document-export-pdf-image-capacity-source-0001")
+        operation_id = "40000000-0000-4000-8000-000000000006"
+        seed_verified_completed_operation(
+            tmp_path,
+            email=email,
+            source_asset_id=source["id"],
+            operation_id=operation_id,
+            kind="pdf_to_images",
+            extension=".png",
+            content_type="image/png",
+            original_filename="toan-aas-pdf-page-001.png",
+            payload=png_bytes(),
+        )
+        before = asset_count(db_path)
+        runtime = importlib.import_module("copyfast_image_runtime")
+        capacity = runtime.image_decoder_capacity()
+        assert capacity.acquire(blocking=False)
+        try:
+            busy = export_operation(
+                client,
+                csrf,
+                operation_id,
+                "document-export-pdf-image-capacity-retry-0001",
+            )
+            assert_guarded_without_asset(busy, db_path, before)
+            assert busy.json()["error_code"] == "WEB_DOCUMENT_OPERATION_EXPORT_BUSY"
+            with sqlite3.connect(db_path) as conn:
+                operation = conn.execute(
+                    "SELECT state FROM web_document_operations WHERE id=?",
+                    (operation_id,),
+                ).fetchone()
+                relation_count = conn.execute(
+                    "SELECT COUNT(*) FROM web_document_operation_asset_exports WHERE operation_id=?",
+                    (operation_id,),
+                ).fetchone()[0]
+            assert operation == ("completed",)
+            assert relation_count == 0
+        finally:
+            capacity.release()
+
+        retry = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-capacity-retry-0001",
+        )
+        assert retry.status_code == 200, retry.text
+        assert retry.json()["ok"] is True
+        assert retry.json()["status"] == "completed"
+        assert asset_count(db_path) == before + 1
+
+
+def test_pdf_to_images_export_releases_lease_when_destination_decoder_is_busy(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """A post-copy decoder busy result leaves no active export lease behind."""
+
+    email = "document-export-pdf-image-destination-capacity@example.com"
+    db_path = tmp_path / "document-operation-asset-export.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email)
+        source = upload_pdf(client, csrf, key="document-export-pdf-image-destination-source-0001")
+        operation_id = "40000000-0000-4000-8000-000000000007"
+        seed_verified_completed_operation(
+            tmp_path,
+            email=email,
+            source_asset_id=source["id"],
+            operation_id=operation_id,
+            kind="pdf_to_images",
+            extension=".png",
+            content_type="image/png",
+            original_filename="toan-aas-pdf-page-001.png",
+            payload=png_bytes(),
+        )
+        before = asset_count(db_path)
+        assets = importlib.import_module("copyfast_assets")
+        runtime = importlib.import_module("copyfast_image_runtime")
+        capacity = runtime.image_decoder_capacity()
+        original_reserve = assets.reserve_document_operation_asset_export
+        held_capacity = False
+
+        def reserve_then_hold_decoder(**kwargs):
+            nonlocal held_capacity
+            reservation = original_reserve(**kwargs)
+            if reservation.state == "leased" and not held_capacity:
+                assert capacity.acquire(blocking=False)
+                held_capacity = True
+            return reservation
+
+        monkeypatch.setattr(assets, "reserve_document_operation_asset_export", reserve_then_hold_decoder)
+        try:
+            busy = export_operation(
+                client,
+                csrf,
+                operation_id,
+                "document-export-pdf-image-destination-retry-0001",
+            )
+            assert_guarded_without_asset(busy, db_path, before)
+            assert busy.json()["error_code"] == "WEB_DOCUMENT_OPERATION_EXPORT_BUSY"
+            with sqlite3.connect(db_path) as conn:
+                operation = conn.execute(
+                    "SELECT state FROM web_document_operations WHERE id=?",
+                    (operation_id,),
+                ).fetchone()
+                export = conn.execute(
+                    "SELECT state, lease_expires_at, updated_at FROM web_document_operation_asset_exports WHERE operation_id=?",
+                    (operation_id,),
+                ).fetchone()
+            assert operation == ("completed",)
+            assert export is not None
+            assert export[0] == "copying"
+            assert export[1] == export[2]
+        finally:
+            if held_capacity:
+                capacity.release()
+
+        retry = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-destination-retry-0001",
+        )
+        assert retry.status_code == 200, retry.text
+        assert retry.json()["ok"] is True
+        assert retry.json()["status"] == "completed"
+        assert asset_count(db_path) == before + 1
+
+
 def assert_guarded_without_asset(response, db_path: Path, expected_count: int) -> None:
     assert response.status_code == 200, response.text
     body = response.json()
@@ -270,6 +477,92 @@ def assert_guarded_without_asset(response, db_path: Path, expected_count: int) -
     assert body["status"] == "guarded"
     assert "asset" not in body.get("data", {})
     assert asset_count(db_path) == expected_count
+
+
+def test_single_page_pdf_to_images_rejects_non_rgb_png_without_creating_an_asset(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    email = "document-export-pdf-image-invalid@example.com"
+    db_path = tmp_path / "document-operation-asset-export.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email)
+        source = upload_pdf(client, csrf, key="document-export-pdf-image-invalid-source-0001")
+        operation_id = "40000000-0000-4000-8000-000000000004"
+        seed_verified_completed_operation(
+            tmp_path,
+            email=email,
+            source_asset_id=source["id"],
+            operation_id=operation_id,
+            kind="pdf_to_images",
+            extension=".png",
+            content_type="image/png",
+            original_filename="toan-aas-pdf-page-001.png",
+            payload=non_rgb_png_bytes(),
+        )
+        before = asset_count(db_path)
+
+        response = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-invalid-0001",
+        )
+
+        assert_guarded_without_asset(response, db_path, before)
+        with sqlite3.connect(db_path) as conn:
+            row = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=?",
+                (operation_id,),
+            ).fetchone()
+        assert row == ("unavailable",)
+
+
+def test_pdf_to_images_export_replay_is_guarded_after_page_metadata_is_tampered(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    email = "document-export-pdf-image-replay@example.com"
+    db_path = tmp_path / "document-operation-asset-export.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email)
+        source = upload_pdf(client, csrf, key="document-export-pdf-image-replay-source-0001")
+        operation_id = "40000000-0000-4000-8000-000000000005"
+        seed_verified_completed_operation(
+            tmp_path,
+            email=email,
+            source_asset_id=source["id"],
+            operation_id=operation_id,
+            kind="pdf_to_images",
+            extension=".png",
+            content_type="image/png",
+            original_filename="toan-aas-pdf-page-001.png",
+            payload=png_bytes(),
+        )
+        first = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-replay-first-0001",
+        )
+        assert first.status_code == 200, first.text
+        assert first.json()["status"] == "completed"
+        before = asset_count(db_path)
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_document_operations SET source_page_count=2 WHERE id=?",
+                (operation_id,),
+            )
+            conn.commit()
+
+        replay = export_operation(
+            client,
+            csrf,
+            operation_id,
+            "document-export-pdf-image-replay-second-0001",
+        )
+
+        assert_guarded_without_asset(replay, db_path, before)
 
 
 def test_completed_pdf_operation_exports_to_a_distinct_private_asset(tmp_path, monkeypatch) -> None:
