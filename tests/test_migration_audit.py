@@ -90,6 +90,10 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     assert result["bot_inventory"]["env_references"][0]["name"] == "BOT_TOKEN"
     assert result["web_inventory"]["routes"][0]["path"] == "/dashboard"
     assert result["parity_gap"]["command_mappings"][0]["status"] == "NAVIGATION_ENTRYPOINT"
+    assert result["preflight"]["bot"]["root"] == "repository-root"
+    assert result["preflight"]["webapp"]["root"] == "repository-root"
+    assert result["bot_inventory"]["source_root"] == "telegram-bot-root"
+    assert result["web_inventory"]["source_root"] == "webapp-root"
     assert result["preflight"]["bot"]["revision"] == {
         "checkout_sha": "",
         "baseline_relation": "not_a_git_worktree",
@@ -103,6 +107,8 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     }
 
     serialized = json.dumps(result, ensure_ascii=False)
+    assert str(bot_root) not in serialized
+    assert str(web_root) not in serialized
     assert "sk-live-super-secret-value-123456789" not in serialized
     assert "***REDACTED***" in serialized or "source_literal" not in serialized
     for name in ("preflight.json", "bot_inventory.json", "web_inventory.json", "parity_gap.json"):
