@@ -28,6 +28,7 @@ def test_document_command_navigation_only_opens_existing_private_web_surfaces() 
         "/split_pdf": "/documents/split",
         "/merge_pdf": "/documents/merge",
         "/image_to_pdf": "/documents/image-to-pdf",
+        "/pdf_to_images": "/documents/pdf-to-images",
         "/ocr_pdf": "/documents/pdf-ocr",
         "/ocr_image": "/documents/ocr",
     }
@@ -59,6 +60,19 @@ def test_image_ocr_navigation_contract_never_reuses_bot_state_or_a_raw_api_targe
         "no Bot image, language, confirmation or output is reused",
         "Telegram identity",
         "Bot `USER_PENDING`",
+        "raw `/api/v1/...` write endpoint",
+    ):
+        assert phrase in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+
+
+def test_pdf_to_images_navigation_contract_never_reuses_bot_state_or_a_raw_api_target() -> None:
+    for phrase in (
+        "`/pdf_to_images`",
+        "`/documents/pdf-to-images`",
+        "fresh owner-scoped Asset Vault PDF",
+        "Telegram identity",
+        "Bot `USER_PENDING`",
+        "page range",
         "raw `/api/v1/...` write endpoint",
     ):
         assert phrase in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
