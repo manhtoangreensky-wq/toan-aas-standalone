@@ -269,6 +269,7 @@ FINANCE_PLANNING_ENABLED = _flag('WEBAPP_FINANCE_PLANNING_ENABLED', default=True
     # dropping the guard docs after a source inventory refresh.
     for marker in (
         "SUBTITLE_ASSET_OPERATIONS_CONTRACT.md",
+        "AUDIO_OPERATION_ASSET_EXPORT_CONTRACT.md",
         "VIDEO_POSTER_OPERATION_CONTRACT.md",
         "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md",
     ):

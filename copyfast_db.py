@@ -144,6 +144,17 @@ def audio_asset_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def audio_asset_operation_export_enabled() -> bool:
+    """Whether completed Audio Asset Operation outputs may enter Asset Vault.
+
+    This is intentionally a third, fail-closed storage capability: enabling
+    Audio Asset Operations never implicitly grants its private outputs a new
+    Vault lifecycle.
+    """
+
+    return os.environ.get("WEBAPP_AUDIO_ASSET_OPERATION_EXPORT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def audio_change_requests_enabled() -> bool:
     """Whether the Audio Hub draft/estimate/confirm layer is deliberately enabled.
 
@@ -4423,6 +4434,57 @@ def ensure_copyfast_schema() -> None:
         if "sequence" not in audio_asset_event_columns:
             conn.execute("ALTER TABLE web_audio_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
 
+        # A completed Audio Asset Operation may have one independent private
+        # Vault copy.  This fence is separate from document/image exports and
+        # never rewrites the audio operation's retained output record.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_audio_operation_asset_exports (
+                operation_id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                asset_id TEXT UNIQUE,
+                state TEXT NOT NULL CHECK(state IN ('copying', 'completed')),
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                lease_generation INTEGER NOT NULL CHECK(lease_generation >= 1),
+                lease_token TEXT,
+                lease_expires_at TEXT,
+                reserved_bytes INTEGER NOT NULL CHECK(reserved_bytes >= 0),
+                pending_storage_key TEXT UNIQUE,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                completed_at TEXT,
+                UNIQUE(operation_id, account_id),
+                CHECK(
+                    (state = 'copying' AND asset_id IS NULL AND lease_token IS NOT NULL
+                     AND lease_expires_at IS NOT NULL AND pending_storage_key IS NOT NULL
+                     AND reserved_bytes > 0 AND completed_at IS NULL)
+                    OR
+                    (state = 'completed' AND asset_id IS NOT NULL AND lease_token IS NULL
+                     AND lease_expires_at IS NULL AND pending_storage_key IS NULL
+                     AND reserved_bytes = 0 AND completed_at IS NOT NULL)
+                ),
+                FOREIGN KEY(operation_id) REFERENCES web_audio_asset_operations(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_audio_operation_asset_export_requests (
+                account_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                operation_id TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL CHECK(length(request_fingerprint) = 64),
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (account_id, idempotency_key),
+                FOREIGN KEY(operation_id, account_id)
+                    REFERENCES web_audio_operation_asset_exports(operation_id, account_id)
+            )
+            """
+        )
+
         # Audio Change Requests bind a collection-attached Asset Vault audio
         # item to an explicit Web-native draft -> estimate -> confirm flow.
         # Snapshots retain only immutable identifiers/digests/revisions needed
@@ -5728,6 +5790,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operation_events_operation_sequence ON web_audio_asset_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_operation_asset_exports_account_state_updated ON web_audio_operation_asset_exports(account_id, state, updated_at DESC, operation_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_operation_asset_exports_expiry ON web_audio_operation_asset_exports(state, lease_expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_operation_asset_export_requests_operation_account ON web_audio_operation_asset_export_requests(operation_id, account_id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audio_change_requests_account_collection_updated ON web_audio_change_requests(account_id, collection_id, updated_at DESC, id DESC)"

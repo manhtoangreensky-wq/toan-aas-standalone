@@ -3010,6 +3010,7 @@
   function isAssetVaultReadPath(path) {
     const normalized = String(path || "").split("?")[0];
     return ["/asset-vault", "/dashboard", ...DOCUMENT_ASSET_REFERENCE_ROUTES, ...IMAGE_OPERATION_ASSET_REFERENCE_ROUTES].includes(normalized)
+      || normalized === AUDIO_ASSET_OPERATIONS_ROUTE
       || isNativeContentHandoffPath(normalized);
   }
 
@@ -12692,6 +12693,10 @@
     // wallet/Xu, PayOS, canonical jobs, a public media URL or a browser-owned
     // audio processor. Asset Vault, topology and runtime checks stay server-side.
     const audioAssetOperationsEnabled = Boolean(status.flags && status.flags.audio_asset_operations_enabled === true);
+    // Export remains a separate default-off retention decision. A true value
+    // only permits the explicit Web-native Asset Vault request after the
+    // server verifies the completed private transform again.
+    const audioAssetOperationExportEnabled = Boolean(status.flags && status.flags.audio_asset_operation_export_enabled === true);
     // This false-by-default flag adds only a Web-native confirmation layer on
     // top of an existing private audio executor. It never grants a Bot,
     // provider, wallet/Xu, PayOS, price or payment capability to the Portal.
@@ -13196,6 +13201,7 @@
       "audio-asset-operation-refresh": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-download": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
+      "audio-asset-operation-export-to-asset-vault": Boolean(account && me.csrf_token && assetVaultEnabled && audioAssetOperationsEnabled && audioAssetOperationExportEnabled),
       "audio-change-request-view": Boolean(account && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
       "audio-change-request-refresh": Boolean(account && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
       "audio-change-request-draft": Boolean(account && me.csrf_token && mediaWorkspaceEnabled && assetVaultEnabled && audioAssetOperationsEnabled && audioChangeRequestsEnabled),
@@ -13737,6 +13743,7 @@
       subtitleFormatToolsEnabled,
       subtitleAssetOperationsEnabled,
       audioAssetOperationsEnabled,
+      audioAssetOperationExportEnabled,
       audioChangeRequestsEnabled,
       videoTransformOperationsEnabled,
       frameVideoOperationsEnabled,
@@ -20206,6 +20213,10 @@
     }
   }
 
+  async function hydrateAssetVaultList() {
+    return hydrateAssetVault();
+  }
+
   async function hydrateAssetVaultLifecycle(assetId) {
     const selectedAssetId = String(assetId || "").trim();
     if (!validVaultAssetId(selectedAssetId)) throw new Error("Tệp Asset Vault không hợp lệ để kiểm tra vòng đời.");
@@ -20621,6 +20632,25 @@
     anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
     return true;
+  }
+
+  function audioAssetExportNonterminalEnvelope(error) {
+    const retained = assetExportNonterminalEnvelope(error);
+    if (retained) return retained;
+    const payload = error && error.payload;
+    const status = String(payload && payload.status || "").trim().toLowerCase();
+    if (
+      Number(error && error.status) !== 200
+      || !payload
+      || typeof payload !== "object"
+      || Array.isArray(payload)
+      || payload.ok !== false
+      || status !== "unavailable"
+    ) return null;
+    return {
+      status,
+      message: typeof payload.message === "string" ? payload.message : ""
+    };
   }
 
   function audioAssetOperationsPathIsCurrent(path) {
@@ -31369,6 +31399,90 @@
         } finally {
           releaseSubmission(submission);
           if (receiptAndRefreshConfirmed || receiptConfirmedAwayFromView) discardSubmission(intent.scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-asset-operation-export-to-asset-vault") {
+        if (route !== AUDIO_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== AUDIO_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể lưu output audio từ Audio Asset Operations đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-export-to-asset-vault"] === true)) {
+          throw new Error("Tính năng lưu audio vào Asset Vault chưa sẵn sàng cho signed session này.");
+        }
+        const operationId = String(fields.__audioAssetOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output audio private không hợp lệ để lưu.");
+        const scope = `audio-asset-operation-export:${operationId}`;
+        const submission = acquireSubmission(scope, operationId);
+        if (!submission) {
+          toast("Output audio này đang được lưu. Vui lòng chờ máy chủ xác nhận.", "warning");
+          return;
+        }
+        let receiptAndRefreshConfirmed = false;
+        let receiptConfirmedAwayFromView = false;
+        const submissionViewEpoch = audioAssetOperationsViewEpoch;
+        const submissionPath = AUDIO_ASSET_OPERATIONS_ROUTE;
+        setActionBusy(action, route, true);
+        try {
+          ++audioAssetOperationsHydrationEpoch;
+          const result = await api(`/audio-asset-operations/${encodeURIComponent(operationId)}/export-to-asset-vault`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Idempotency-Key": submission.key }
+          });
+          const responseStatus = String(result && result.status || "");
+          if (["queued", "processing", "guarded", "unavailable"].includes(responseStatus)) {
+            if (audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+              await hydrateAudioAssetOperations();
+              if (audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) await hydrateAssetVaultList();
+            } else {
+              receiptConfirmedAwayFromView = true;
+            }
+            toast(result.message || (responseStatus === "guarded" ? "Output audio chưa thể lưu an toàn; Web không tạo Asset Vault thay thế." : responseStatus === "unavailable" ? "Output audio không còn sẵn sàng để lưu; Web không tạo Asset Vault thay thế." : "Output audio đang được máy chủ xác minh; chưa có Asset Vault mới."), ["guarded", "unavailable"].includes(responseStatus) ? "error" : "warning");
+            return;
+          }
+          const asset = result && result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
+          if (responseStatus !== "completed" || !asset || !validVaultAssetId(asset.id) || String(asset.state || "") !== "active") {
+            throw new Error("Máy chủ chưa trả Asset Vault active hợp lệ cho output audio.");
+          }
+          if (!audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+            receiptConfirmedAwayFromView = true;
+            return;
+          }
+          const refreshed = await hydrateAudioAssetOperations();
+          if (!refreshed || refreshed.operationsReadState !== "ready") {
+            throw new Error("Máy chủ đã xác nhận lưu audio nhưng chưa thể tải lại lịch sử private an toàn. Hãy thử lại; idempotency key sẽ được tái sử dụng.");
+          }
+          if (!audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+            receiptConfirmedAwayFromView = true;
+            return;
+          }
+          await hydrateAssetVaultList();
+          if (!audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+            receiptConfirmedAwayFromView = true;
+            return;
+          }
+          if (base().assetVaultReadState !== "ready") {
+            throw new Error("Audio đã được lưu nhưng Asset Vault chưa tải lại an toàn. Hãy thử lại; idempotency key sẽ được tái sử dụng.");
+          }
+          receiptAndRefreshConfirmed = true;
+          toast(result.message || "Đã lưu audio đã xác minh vào Asset Vault riêng tư.");
+        } catch (error) {
+          const nonterminal = audioAssetExportNonterminalEnvelope(error);
+          if (nonterminal) {
+            if (audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) {
+              await hydrateAudioAssetOperations();
+              if (audioAssetOperationsViewIsCurrent(submissionViewEpoch, submissionPath)) await hydrateAssetVaultList();
+            } else {
+              receiptConfirmedAwayFromView = true;
+            }
+            toast(nonterminal.message || (nonterminal.status === "guarded" ? "Output audio chưa thể lưu an toàn; Web không tạo Asset Vault thay thế." : nonterminal.status === "unavailable" ? "Output audio không còn sẵn sàng để lưu; Web không tạo Asset Vault thay thế." : "Output audio đang được máy chủ xác minh; chưa có Asset Vault mới."), ["guarded", "unavailable"].includes(nonterminal.status) ? "error" : "warning");
+            return;
+          }
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (receiptAndRefreshConfirmed || receiptConfirmedAwayFromView) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
         }
         return;

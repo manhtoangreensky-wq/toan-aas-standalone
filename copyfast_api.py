@@ -670,6 +670,14 @@ def _flags() -> dict[str, bool]:
         # default and never grants Bot/Core Bridge, provider, TTS/ASR/dubbing,
         # wallet/Xu or PayOS authority.
         "audio_asset_operations_enabled": enabled("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", False),
+        # Publish the effective private-copy capability, never a raw export
+        # switch. The route and finalizer still re-check every gate, ownership,
+        # integrity and lease condition before a copy can occur.
+        "audio_asset_operation_export_enabled": (
+            enabled("WEBAPP_ASSET_VAULT_ENABLED", False)
+            and enabled("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", False)
+            and enabled("WEBAPP_AUDIO_ASSET_OPERATION_EXPORT_ENABLED", False)
+        ),
         # Audio Change Requests add an explicit Web-owned confirmation layer
         # for a collection-attached private audio asset.  This false-by-default
         # flag does not enable an audio provider, Bot/Core Bridge, canonical

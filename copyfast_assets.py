@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -42,6 +43,8 @@ from copyfast_db import (
     asset_vault_directory,
     asset_vault_enabled,
     asset_vault_video_preview_enabled,
+    audio_asset_operation_export_enabled,
+    audio_asset_operations_enabled,
     document_operation_export_enabled,
     document_operations_enabled,
     ensure_copyfast_schema,
@@ -71,6 +74,7 @@ PENDING_SECONDS = 5 * 60
 ORPHAN_RETENTION_SECONDS = 60 * 60
 IMAGE_OPERATION_EXPORT_LEASE_SECONDS = 5 * 60
 DOCUMENT_OPERATION_ASSET_EXPORT_LEASE_SECONDS = 5 * 60
+AUDIO_OPERATION_ASSET_EXPORT_LEASE_SECONDS = 5 * 60
 CHUNK_BYTES = 1024 * 1024
 IMAGE_OPERATION_EXPORT_KINDS = frozenset({
     "image_resize",
@@ -185,6 +189,14 @@ def _require_document_operation_asset_export_enabled() -> None:
         raise HTTPException(status_code=503, detail="Lưu Document Operations vào Asset Vault chưa được bật")
 
 
+def _require_audio_operation_asset_export_enabled() -> None:
+    """Keep Audio Operation output copies behind all three private gates."""
+
+    _require_enabled()
+    if not audio_asset_operations_enabled() or not audio_asset_operation_export_enabled():
+        raise HTTPException(status_code=503, detail="Lưu Audio Asset Operations vào Asset Vault chưa được bật")
+
+
 def _maximum_bytes() -> int:
     raw = os.environ.get("WEBAPP_ASSET_VAULT_MAX_FILE_MB", "25").strip()
     try:
@@ -231,6 +243,13 @@ def _document_operation_id(value: str) -> str:
     candidate = str(value or "").strip()
     if not ASSET_ID_PATTERN.fullmatch(candidate):
         raise HTTPException(status_code=422, detail="Mã thao tác tài liệu không hợp lệ")
+    return str(uuid.UUID(candidate))
+
+
+def _audio_operation_id(value: str) -> str:
+    candidate = str(value or "").strip()
+    if not ASSET_ID_PATTERN.fullmatch(candidate):
+        raise HTTPException(status_code=422, detail="Mã thao tác audio không hợp lệ")
     return str(uuid.UUID(candidate))
 
 
@@ -339,6 +358,53 @@ class DocumentOperationAssetExportSource:
 class DocumentOperationAssetExportFinalization:
     """Fresh public Asset Vault receipt for a completed Document export."""
 
+    state: str
+    asset: dict[str, Any] | None
+
+
+@dataclass(frozen=True)
+class AudioOperationAssetExportLease:
+    account_id: str
+    operation_id: str
+    generation: int
+    token: str
+    expires_at: str
+    pending_storage_key: str
+    reserved_bytes: int
+    request_fingerprint: str
+
+
+@dataclass(frozen=True)
+class AudioOperationAssetExportReservation:
+    state: str
+    lease: AudioOperationAssetExportLease | None = None
+
+
+@dataclass(frozen=True)
+class AudioOperationAssetExportSource:
+    """A server-derived, pre-opened completed Audio Operation output."""
+
+    account_id: str = field(repr=False)
+    operation_id: str = field(repr=False)
+    kind: str
+    project_id: str | None = field(repr=False)
+    original_filename: str = field(repr=False)
+    target_format: str
+    extension: str
+    content_type: str
+    byte_size: int
+    sha256: str = field(repr=False)
+    duration_seconds: float
+    duration_ms: int
+    channels: int
+    sample_rate: int
+    codec: str
+    format_name: str
+    stream: BinaryIO = field(repr=False, compare=False)
+
+
+@dataclass(frozen=True)
+class AudioOperationAssetExportFinalization:
     state: str
     asset: dict[str, Any] | None
 
@@ -998,6 +1064,57 @@ def _pending_document_operation_asset_export_bytes(
     )
 
 
+def _audio_operation_export_lease_is_expired(value: str | None, *, reference_now: datetime | None = None) -> bool:
+    return _document_operation_export_lease_is_expired(value, reference_now=reference_now)
+
+
+def _audio_operation_export_expected_bytes(value: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise HTTPException(status_code=422, detail="Kích thước export audio không hợp lệ")
+    if value > _maximum_bytes():
+        raise HTTPException(status_code=413, detail="Audio export vượt quá giới hạn Asset Vault")
+    return value
+
+
+def _audio_operation_export_lease_expiry() -> str:
+    return (datetime.now(timezone.utc) + timedelta(seconds=AUDIO_OPERATION_ASSET_EXPORT_LEASE_SECONDS)).isoformat(timespec="seconds")
+
+
+def _audio_operation_export_pending_storage_key() -> str:
+    return f"objects/{uuid.uuid4().hex}.blob"
+
+
+def _pending_audio_operation_asset_export_bytes(conn, account_id: str, *, reference_now: datetime | None = None) -> int:
+    rows = conn.execute(
+        """SELECT reserved_bytes, lease_expires_at FROM web_audio_operation_asset_exports
+           WHERE account_id=? AND state='copying' AND lease_token IS NOT NULL""",
+        (account_id,),
+    ).fetchall()
+    return sum(max(0, int(row[0] or 0)) for row in rows if not _audio_operation_export_lease_is_expired(str(row[1] or ""), reference_now=reference_now))
+
+
+def _cleanup_reclaimed_audio_operation_export_blob(storage_key: object) -> None:
+    """Remove only an unreferenced object abandoned by a superseded lease."""
+
+    key = str(storage_key or "")
+    if not STORAGE_KEY_PATTERN.fullmatch(key):
+        return
+    try:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            referenced = conn.execute(
+                "SELECT 1 FROM web_asset_files WHERE storage_key=? LIMIT 1",
+                (key,),
+            ).fetchone()
+        if referenced:
+            return
+        _safe_unlink(_storage_path(asset_vault_directory(), key))
+    except (OSError, RuntimeError):
+        # A later bounded Asset Vault reconciliation can retry a failed
+        # filesystem cleanup. Never roll back the newly fenced lease for it.
+        return
+
+
 def _pending_image_operation_export_bytes(
     conn,
     account_id: str,
@@ -1040,6 +1157,7 @@ def _quota_available(
     reserved = (
         _pending_image_operation_export_bytes(conn, account_id, reference_now=reference_now)
         + _pending_document_operation_asset_export_bytes(conn, account_id, reference_now=reference_now)
+        + _pending_audio_operation_asset_export_bytes(conn, account_id, reference_now=reference_now)
     )
     return used + reserved + additional_bytes <= _maximum_account_bytes()
 
@@ -2851,6 +2969,447 @@ def replay_document_operation_asset_export(
     )
 
 
+def _audio_operation_export_lease_from_row(row: tuple[Any, ...]) -> AudioOperationAssetExportLease:
+    return AudioOperationAssetExportLease(
+        account_id=str(row[1]), operation_id=str(row[0]), generation=int(row[5]),
+        token=str(row[6]), expires_at=str(row[7]), reserved_bytes=int(row[8]),
+        pending_storage_key=str(row[9]), request_fingerprint=str(row[4]),
+    )
+
+
+def _insert_audio_operation_asset_export_request_mapping(conn, *, account_id: str, idempotency_key: str, operation_id: str, request_fingerprint: str, now: str) -> None:
+    row = conn.execute(
+        "SELECT operation_id, request_fingerprint FROM web_audio_operation_asset_export_requests WHERE account_id=? AND idempotency_key=?",
+        (account_id, idempotency_key),
+    ).fetchone()
+    if row:
+        if str(row[0]) != operation_id or not hmac.compare_digest(str(row[1]), request_fingerprint):
+            raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho audio export khác")
+        return
+    conn.execute(
+        """INSERT INTO web_audio_operation_asset_export_requests
+           (account_id, idempotency_key, operation_id, request_fingerprint, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (account_id, idempotency_key, operation_id, request_fingerprint, now, now),
+    )
+
+
+def _audio_operation_export_contract(target_format: object) -> tuple[str, str, str, frozenset[str]] | None:
+    target = str(target_format or "").strip().lower()
+    if target == "mp3":
+        return (".mp3", "audio/mpeg", "mp3", frozenset({"mp3"}))
+    if target == "m4a":
+        return (".m4a", "audio/mp4", "aac", frozenset({"mov", "mp4", "m4a"}))
+    return None
+
+
+def _audio_operation_export_format_name_matches(value: object, accepted: frozenset[str]) -> bool:
+    names = {item.strip().lower() for item in str(value or "").split(",") if item.strip()}
+    return bool(names & accepted)
+
+
+def _audio_operation_export_profile_is_canonical(kind: object, normalization_profile: object) -> bool:
+    return (
+        (kind == "audio_normalize" and normalization_profile == "speech_safe_v1")
+        or (kind == "audio_convert" and normalization_profile is None)
+    )
+
+
+def _audio_operation_asset_export_not_ready() -> HTTPException:
+    detail = "Audio Operation chưa sẵn sàng để lưu"
+    error = HTTPException(status_code=409, detail=detail)
+    error.args = (detail,)
+    return error
+
+
+def _audio_operation_export_source_provenance_mismatch(
+    source: AudioOperationAssetExportSource, *, operation_kind: object, operation_project_id: object
+) -> str | None:
+    if source.kind != operation_kind:
+        return "kind"
+    if source.project_id != operation_project_id:
+        return "project"
+    return None
+
+
+def _audio_operation_export_magic_matches(target: str, prefix: bytes) -> bool:
+    if target == "mp3":
+        return prefix.startswith(b"ID3") or (len(prefix) >= 2 and prefix[0] == 0xFF and (prefix[1] & 0xE0) == 0xE0)
+    return len(prefix) >= 12 and prefix[4:8] == b"ftyp"
+
+
+def _copy_audio_operation_asset_export_source(source: AudioOperationAssetExportSource, destination: Path) -> tuple[int, str]:
+    digest = hashlib.sha256()
+    copied = 0
+    try:
+        source.stream.seek(0)
+        with destination.open("xb") as staged:
+            while True:
+                chunk = source.stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                copied += len(chunk)
+                if copied > source.byte_size or copied > _maximum_bytes():
+                    raise RuntimeError("Audio Operation vượt giới hạn Asset Vault")
+                digest.update(chunk)
+                staged.write(chunk)
+            staged.flush()
+            os.fsync(staged.fileno())
+    except Exception:
+        _safe_unlink(destination)
+        raise
+    if copied != source.byte_size or not hmac.compare_digest(digest.hexdigest(), source.sha256):
+        _safe_unlink(destination)
+        raise RuntimeError("Audio Operation không còn integrity")
+    return copied, digest.hexdigest()
+
+
+def _verify_audio_operation_asset_export_destination(path: Path, *, target_format: str, expected_bytes: int, expected_digest: str) -> bool:
+    stream = _open_verified_private_file(path, expected_bytes=expected_bytes, expected_digest=expected_digest)
+    if stream is None:
+        return False
+    try:
+        prefix = stream.read(32)
+        return _audio_operation_export_magic_matches(target_format, prefix) and _verify_pinned_private_file(
+            stream, expected_bytes=expected_bytes, expected_digest=expected_digest
+        )
+    except OSError:
+        return False
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+
+
+def _completed_audio_operation_asset_export_snapshot_is_valid(conn, *, account_id: str, operation_id: str, asset_id: object, export_fingerprint: object) -> bool:
+    row = conn.execute(
+        """SELECT operation.state, operation.kind, operation.target_format, operation.sha256, operation.byte_size,
+                  operation.content_type, operation.storage_key, operation.original_filename,
+                  asset.extension, asset.content_type, asset.original_filename, asset.storage_key,
+                  asset.byte_size, asset.sha256, asset.state, operation.normalization_profile
+           FROM web_audio_asset_operations AS operation
+           JOIN web_asset_files AS asset ON asset.id=? AND asset.account_id=operation.account_id
+           WHERE operation.id=? AND operation.account_id=?""",
+        (asset_id, operation_id, account_id),
+    ).fetchone()
+    if (
+        not row
+        or str(row[0]) != "completed"
+        or str(row[1]) not in {"audio_convert", "audio_normalize"}
+        or not _audio_operation_export_profile_is_canonical(row[1], row[15])
+    ):
+        return False
+    spec = _audio_operation_export_contract(row[2])
+    if spec is None:
+        return False
+    extension, content_type, _codec, _names = spec
+    values = tuple(str(value or "").strip().lower() for value in (export_fingerprint, row[3], row[13]))
+    if not all(re.fullmatch(r"[0-9a-f]{64}", value) for value in values):
+        return False
+    try:
+        operation_bytes, asset_bytes = int(row[4]), int(row[12])
+    except (TypeError, ValueError):
+        return False
+    return (
+        operation_bytes > 0 and operation_bytes == asset_bytes
+        and str(row[5] or "") == content_type
+        and re.fullmatch(rf"outputs/[0-9a-f]{{32}}{re.escape(extension)}", str(row[6] or "")) is not None
+        and str(row[7] or "") == f"toan-aas-audio{extension}"
+        and str(row[8] or "") == extension and str(row[9] or "") == content_type
+        and str(row[10] or "") == f"toan-aas-audio{extension}"
+        and STORAGE_KEY_PATTERN.fullmatch(str(row[11] or "")) is not None
+        and str(row[14] or "") == ACTIVE_STATE
+        and all(hmac.compare_digest(values[0], value) for value in values[1:])
+    )
+
+
+def reserve_audio_operation_asset_export(
+    *,
+    account_id: str,
+    operation_id: str,
+    idempotency_key: str,
+    request_fingerprint: str | None = None,
+    expected_bytes: int | None = None,
+) -> AudioOperationAssetExportReservation:
+    """Reserve one fenced copy from DB-bound output metadata before file I/O.
+
+    Route callers deliberately omit the optional descriptor values: the only
+    safe reservation inputs are then derived from the completed operation row
+    within this transaction.  Existing internal integrity tests may still
+    supply both values to prove that a source descriptor matches the row.
+    """
+    _require_audio_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _audio_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    ensure_copyfast_schema()
+    now = utc_now()
+    reclaimed_pending_storage_key: str | None = None
+    with transaction() as conn:
+        operation = conn.execute(
+            "SELECT state, kind, sha256, byte_size, target_format, content_type, storage_key, original_filename, normalization_profile FROM web_audio_asset_operations WHERE id=? AND account_id=?",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        spec = _audio_operation_export_contract(operation[4] if operation else None)
+        if not operation:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thao tác audio thuộc Web account hiện tại")
+        if (
+            str(operation[0]) != "completed"
+            or str(operation[1]) not in {"audio_convert", "audio_normalize"}
+            or not _audio_operation_export_profile_is_canonical(operation[1], operation[8])
+            or spec is None
+        ):
+            raise _audio_operation_asset_export_not_ready()
+        extension, content_type, _codec, _names = spec
+        try:
+            stored_fingerprint = _export_request_fingerprint(str(operation[2] or ""))
+            stored_bytes = _audio_operation_export_expected_bytes(operation[3])
+        except HTTPException as exc:
+            raise HTTPException(status_code=409, detail="Audio export này không còn khớp output đã xác minh") from exc
+        fingerprint = (
+            stored_fingerprint
+            if request_fingerprint is None
+            else _export_request_fingerprint(request_fingerprint)
+        )
+        byte_size = (
+            stored_bytes
+            if expected_bytes is None
+            else _audio_operation_export_expected_bytes(expected_bytes)
+        )
+        if (not hmac.compare_digest(stored_fingerprint, fingerprint) or stored_bytes != byte_size
+                or str(operation[5] or "") != content_type
+                or re.fullmatch(rf"outputs/[0-9a-f]{{32}}{re.escape(extension)}", str(operation[6] or "")) is None
+                or str(operation[7] or "") != f"toan-aas-audio{extension}"):
+            raise HTTPException(status_code=409, detail="Audio export này không còn khớp output đã xác minh")
+        relation = conn.execute(
+            """SELECT operation_id, account_id, asset_id, state, request_fingerprint, lease_generation,
+                      lease_token, lease_expires_at, reserved_bytes, pending_storage_key
+               FROM web_audio_operation_asset_exports WHERE operation_id=? AND account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if relation:
+            if not hmac.compare_digest(str(relation[4]), fingerprint):
+                raise HTTPException(status_code=409, detail="Audio export này không còn khớp output đã xác minh")
+            if str(relation[3]) == "completed":
+                if not _completed_audio_operation_asset_export_snapshot_is_valid(conn, account_id=scoped_account_id, operation_id=scoped_operation_id, asset_id=relation[2], export_fingerprint=relation[4]):
+                    return AudioOperationAssetExportReservation(state="guarded")
+                _insert_audio_operation_asset_export_request_mapping(conn, account_id=scoped_account_id, idempotency_key=key, operation_id=scoped_operation_id, request_fingerprint=fingerprint, now=now)
+                return AudioOperationAssetExportReservation(state="completed")
+            if int(relation[8]) != byte_size:
+                raise HTTPException(status_code=409, detail="Audio export này không còn khớp kích thước đã xác minh")
+            _insert_audio_operation_asset_export_request_mapping(conn, account_id=scoped_account_id, idempotency_key=key, operation_id=scoped_operation_id, request_fingerprint=fingerprint, now=now)
+            if str(relation[3]) != "copying" or not _audio_operation_export_lease_is_expired(str(relation[7] or "")):
+                return AudioOperationAssetExportReservation(state="pending")
+            if not _quota_available(conn, scoped_account_id, byte_size):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            generation, token, expires_at, pending_key = int(relation[5]) + 1, uuid.uuid4().hex, _audio_operation_export_lease_expiry(), _audio_operation_export_pending_storage_key()
+            updated = conn.execute(
+                """UPDATE web_audio_operation_asset_exports SET lease_generation=?, lease_token=?, lease_expires_at=?, pending_storage_key=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying' AND lease_generation=? AND lease_token=? AND lease_expires_at=?""",
+                (generation, token, expires_at, pending_key, now, scoped_operation_id, scoped_account_id, relation[5], relation[6], relation[7]),
+            )
+            if updated.rowcount != 1:
+                return AudioOperationAssetExportReservation(state="pending")
+            old_pending_key = str(relation[9] or "")
+            if old_pending_key and old_pending_key != pending_key:
+                reclaimed_pending_storage_key = old_pending_key
+        else:
+            if not _quota_available(conn, scoped_account_id, byte_size):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            generation, token, expires_at, pending_key = 1, uuid.uuid4().hex, _audio_operation_export_lease_expiry(), _audio_operation_export_pending_storage_key()
+            conn.execute(
+                """INSERT INTO web_audio_operation_asset_exports (operation_id, account_id, asset_id, state, request_fingerprint, lease_generation, lease_token, lease_expires_at, reserved_bytes, pending_storage_key, created_at, updated_at, completed_at)
+                   VALUES (?, ?, NULL, 'copying', ?, ?, ?, ?, ?, ?, ?, ?, NULL)""",
+                (scoped_operation_id, scoped_account_id, fingerprint, generation, token, expires_at, byte_size, pending_key, now, now),
+            )
+            _insert_audio_operation_asset_export_request_mapping(conn, account_id=scoped_account_id, idempotency_key=key, operation_id=scoped_operation_id, request_fingerprint=fingerprint, now=now)
+    if reclaimed_pending_storage_key is not None:
+        _cleanup_reclaimed_audio_operation_export_blob(reclaimed_pending_storage_key)
+    return AudioOperationAssetExportReservation(state="leased", lease=AudioOperationAssetExportLease(scoped_account_id, scoped_operation_id, generation, token, expires_at, pending_key, byte_size, fingerprint))
+
+
+def release_audio_operation_asset_export_lease(lease: AudioOperationAssetExportLease) -> bool:
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        updated = conn.execute(
+            """UPDATE web_audio_operation_asset_exports SET lease_expires_at=?, updated_at=?
+               WHERE operation_id=? AND account_id=? AND state='copying' AND lease_generation=? AND lease_token=? AND lease_expires_at=? AND lease_expires_at > ?""",
+            (now, now, lease.operation_id, lease.account_id, lease.generation, lease.token, lease.expires_at, now),
+        )
+    return updated.rowcount == 1
+
+
+def finalize_audio_operation_asset_export(*, lease: AudioOperationAssetExportLease, source: AudioOperationAssetExportSource, request_id: str) -> AudioOperationAssetExportFinalization:
+    """Copy only a current server-derived MP3/M4A output into Asset Vault."""
+    final_path: Path | None = None
+    staging: Path | None = None
+    owns_final_path = False
+    completed = False
+    try:
+        _require_audio_operation_asset_export_enabled()
+        try:
+            expected_bytes = _audio_operation_export_expected_bytes(lease.reserved_bytes)
+            digest = _export_request_fingerprint(source.sha256)
+            fingerprint = _export_request_fingerprint(lease.request_fingerprint)
+        except HTTPException as exc:
+            raise RuntimeError("Nguồn Audio Operation không khớp export lease") from exc
+        spec = _audio_operation_export_contract(source.target_format)
+        if spec is None:
+            raise RuntimeError("Định dạng Audio Operation không có export Asset Vault hợp lệ")
+        extension, content_type, codec, format_names = spec
+        if (
+            source.account_id != lease.account_id or source.operation_id != lease.operation_id
+            or source.kind not in {"audio_convert", "audio_normalize"}
+            or source.extension != extension or source.content_type != content_type
+            or source.original_filename != f"toan-aas-audio{extension}"
+            or isinstance(source.byte_size, bool) or not isinstance(source.byte_size, int)
+            or source.byte_size != expected_bytes or source.byte_size > _maximum_bytes()
+            or not hmac.compare_digest(digest, fingerprint)
+            or source.codec != codec or source.sample_rate != 48000 or source.channels not in {1, 2}
+            or not isinstance(source.duration_ms, int) or source.duration_ms < 1
+            or not isinstance(source.duration_seconds, (int, float)) or isinstance(source.duration_seconds, bool)
+            or not math.isfinite(float(source.duration_seconds)) or source.duration_seconds <= 0
+            or abs(float(source.duration_seconds) * 1000 - source.duration_ms) > 1.0
+            or not _audio_operation_export_format_name_matches(source.format_name, format_names)
+        ):
+            raise RuntimeError("Nguồn Audio Operation không khớp export lease")
+        with transaction() as conn:
+            operation = conn.execute(
+                "SELECT kind, project_id, normalization_profile FROM web_audio_asset_operations WHERE id=? AND account_id=?",
+                (lease.operation_id, lease.account_id),
+            ).fetchone()
+            if not operation or not _audio_operation_export_profile_is_canonical(operation[0], operation[2]):
+                raise RuntimeError("Nguồn Audio Operation không còn khớp export lease")
+            mismatch = _audio_operation_export_source_provenance_mismatch(
+                source, operation_kind=operation[0], operation_project_id=operation[1]
+            )
+            if mismatch:
+                raise RuntimeError(f"Nguồn Audio Operation {mismatch} không khớp export lease")
+        root = asset_vault_directory()
+        staging = _staging_path(root)
+        copied_bytes, copied_digest = _copy_audio_operation_asset_export_source(source, staging)
+        final_path = _storage_path(root, lease.pending_storage_key)
+        _private_asset_vault_child_directory(root, "objects")
+        _promote_image_operation_export_staging(staging, final_path)
+        staging = None
+        owns_final_path = True
+        if not _verify_audio_operation_asset_export_destination(final_path, target_format=str(source.target_format), expected_bytes=copied_bytes, expected_digest=copied_digest):
+            raise RuntimeError("Audio đã sao chép không vượt qua kiểm tra Asset Vault")
+
+        asset_id = str(uuid.uuid4())
+        resolved_project_id: str | None = None
+        with transaction() as conn:
+            now = utc_now()
+            operation = conn.execute(
+                """SELECT state, kind, target_format, sha256, byte_size, project_id, content_type, storage_key,
+                          original_filename, output_duration_ms, output_channels, output_sample_rate, output_codec,
+                          normalization_profile
+                   FROM web_audio_asset_operations WHERE id=? AND account_id=?""",
+                (lease.operation_id, lease.account_id),
+            ).fetchone()
+            if not operation:
+                raise RuntimeError("Nguồn Audio Operation không còn khớp export lease")
+            operation_spec = _audio_operation_export_contract(operation[2])
+            if (
+                str(operation[0]) != "completed" or str(operation[1]) not in {"audio_convert", "audio_normalize"}
+                or not _audio_operation_export_profile_is_canonical(operation[1], operation[13])
+                or _audio_operation_export_source_provenance_mismatch(
+                    source, operation_kind=operation[1], operation_project_id=operation[5]
+                ) is not None
+                or operation_spec != spec or not hmac.compare_digest(str(operation[3] or ""), digest)
+                or int(operation[4] or 0) != copied_bytes or str(operation[6] or "") != content_type
+                or re.fullmatch(rf"outputs/[0-9a-f]{{32}}{re.escape(extension)}", str(operation[7] or "")) is None
+                or str(operation[8] or "") != f"toan-aas-audio{extension}"
+                or int(operation[9] or 0) != source.duration_ms or int(operation[10] or 0) != source.channels
+                or int(operation[11] or 0) != source.sample_rate or str(operation[12] or "") != codec
+            ):
+                raise RuntimeError("Nguồn Audio Operation không còn khớp export lease")
+            operation_project_id = str(operation[5]) if operation[5] else None
+            if operation_project_id:
+                project = conn.execute("SELECT id FROM web_projects WHERE id=? AND account_id=? AND state='active'", (operation_project_id, lease.account_id)).fetchone()
+                if project:
+                    resolved_project_id = str(project[0])
+            fence_now = datetime.fromisoformat(now)
+            if fence_now.tzinfo is None or not _quota_available(conn, lease.account_id, 0, reference_now=fence_now):
+                raise HTTPException(status_code=413, detail="Asset Vault đã đạt quota của Web account")
+            conn.execute(
+                """INSERT INTO web_asset_files (id, account_id, project_id, display_name, original_filename, extension, content_type, byte_size, sha256, storage_key, state, created_at, updated_at, archived_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, NULL)""",
+                (asset_id, lease.account_id, resolved_project_id, f"Bản sao toan-aas-audio{extension}", f"toan-aas-audio{extension}", extension, content_type, copied_bytes, copied_digest, lease.pending_storage_key, now, now),
+            )
+            updated = conn.execute(
+                """UPDATE web_audio_operation_asset_exports SET asset_id=?, state='completed', lease_token=NULL, lease_expires_at=NULL, reserved_bytes=0, pending_storage_key=NULL, completed_at=?, updated_at=?
+                   WHERE operation_id=? AND account_id=? AND state='copying' AND request_fingerprint=?
+                     AND lease_generation=? AND lease_token=? AND lease_expires_at=? AND lease_expires_at > ?
+                     AND reserved_bytes=? AND pending_storage_key=? AND asset_id IS NULL""",
+                (asset_id, now, now, lease.operation_id, lease.account_id, fingerprint, lease.generation, lease.token, lease.expires_at, now, expected_bytes, lease.pending_storage_key),
+            )
+            if updated.rowcount != 1:
+                raise RuntimeError("Audio export lease không còn hiện tại khi hoàn tất Asset Vault")
+            _record_audit(conn, account_id=lease.account_id, canonical_user_id=None, action="web.audio_operation.export_to_asset_vault", request_id=str(request_id or "")[:160], target=asset_id, detail=f"kind={source.kind};format={source.target_format};bytes={copied_bytes}")
+        completed = True
+        return AudioOperationAssetExportFinalization(state="completed", asset={
+            "id": asset_id, "project_id": resolved_project_id, "display_name": f"Bản sao toan-aas-audio{extension}",
+            "original_filename": f"toan-aas-audio{extension}", "extension": extension, "content_type": content_type,
+            "byte_size": copied_bytes, "state": ACTIVE_STATE, "created_at": now, "updated_at": now, "archived_at": None,
+        })
+    finally:
+        try:
+            source.stream.close()
+        except (AttributeError, OSError, ValueError):
+            pass
+        if staging is not None:
+            _safe_unlink(staging)
+        if not completed and owns_final_path:
+            _safe_unlink(final_path)
+
+
+def get_audio_operation_asset_export_receipt(*, account_id: str, operation_id: str) -> AudioOperationAssetExportFinalization | None:
+    _require_audio_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _audio_operation_id(operation_id)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT export.state, export.asset_id, asset.id, asset.project_id, asset.display_name, asset.original_filename,
+                      asset.extension, asset.content_type, asset.byte_size, asset.state, asset.created_at, asset.updated_at, asset.archived_at,
+                      export.request_fingerprint
+               FROM web_audio_operation_asset_exports AS export
+               LEFT JOIN web_asset_files AS asset ON asset.id=export.asset_id AND asset.account_id=export.account_id
+               WHERE export.operation_id=? AND export.account_id=?""",
+            (scoped_operation_id, scoped_account_id),
+        ).fetchone()
+        if not row:
+            return None
+        if str(row[0] or "") != "completed":
+            return AudioOperationAssetExportFinalization(state=str(row[0] or "guarded"), asset=None)
+        if not _completed_audio_operation_asset_export_snapshot_is_valid(conn, account_id=scoped_account_id, operation_id=scoped_operation_id, asset_id=row[1], export_fingerprint=row[13]):
+            return AudioOperationAssetExportFinalization(state="guarded", asset=None)
+    return AudioOperationAssetExportFinalization(state="completed", asset=_asset_public(tuple(row[2:13])))
+
+
+def replay_audio_operation_asset_export(*, account_id: str, operation_id: str, idempotency_key: str) -> AudioOperationAssetExportFinalization | None:
+    _require_audio_operation_asset_export_enabled()
+    scoped_account_id = _validate_id(account_id, label="Web account ID")
+    scoped_operation_id = _audio_operation_id(operation_id)
+    key = _idempotency_key(idempotency_key)
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        relation = conn.execute("SELECT request_fingerprint, state, lease_expires_at, asset_id FROM web_audio_operation_asset_exports WHERE operation_id=? AND account_id=?", (scoped_operation_id, scoped_account_id)).fetchone()
+        existing = conn.execute("SELECT operation_id FROM web_audio_operation_asset_export_requests WHERE account_id=? AND idempotency_key=?", (scoped_account_id, key)).fetchone()
+        if existing and str(existing[0]) != scoped_operation_id:
+            raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho audio export khác")
+        if not relation or (str(relation[1] or "") == "copying" and _audio_operation_export_lease_is_expired(str(relation[2] or ""))):
+            return None
+        if str(relation[1] or "") == "completed" and not _completed_audio_operation_asset_export_snapshot_is_valid(conn, account_id=scoped_account_id, operation_id=scoped_operation_id, asset_id=relation[3], export_fingerprint=relation[0]):
+            return AudioOperationAssetExportFinalization(state="guarded", asset=None)
+        _insert_audio_operation_asset_export_request_mapping(conn, account_id=scoped_account_id, idempotency_key=key, operation_id=scoped_operation_id, request_fingerprint=str(relation[0]), now=now)
+    return get_audio_operation_asset_export_receipt(account_id=scoped_account_id, operation_id=scoped_operation_id)
+
+
 def _ensure_project_scope(conn, *, project_id: str | None, account_id: str) -> None:
     if not project_id:
         return
@@ -3317,6 +3876,17 @@ def reconcile_asset_vault_storage() -> None:
             str(row[0])
             for row in pending_document_rows
             if row[0] and not _document_operation_export_lease_is_expired(str(row[1] or ""))
+        )
+        pending_audio_rows = conn.execute(
+            """SELECT pending_storage_key, lease_expires_at
+               FROM web_audio_operation_asset_exports
+               WHERE state='copying' AND lease_token IS NOT NULL
+                 AND pending_storage_key IS NOT NULL"""
+        ).fetchall()
+        referenced.update(
+            str(row[0])
+            for row in pending_audio_rows
+            if row[0] and not _audio_operation_export_lease_is_expired(str(row[1] or ""))
         )
     cutoff = datetime.now(timezone.utc).timestamp() - ORPHAN_RETENTION_SECONDS
     for directory, match_key in ((staging, False), (objects, True)):

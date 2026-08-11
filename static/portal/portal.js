@@ -8567,6 +8567,19 @@
         ? String(source.reliabilityReadState)
         : "guarded",
       supportCaseTriage: source.supportCaseTriage && typeof source.supportCaseTriage === "object" ? source.supportCaseTriage : {},
+      // Audio Operations keeps its bounded owner-scoped source and receipt
+      // metadata through presentation normalization. The renderer never reads
+      // a generic library as a substitute for this typed private projection.
+      audioAssetOperationsEnabled: source.audioAssetOperationsEnabled === true,
+      audioAssetOperationExportEnabled: source.audioAssetOperationExportEnabled === true,
+      audioAssetReferences: normalizeAudioAssetReferences(source.audioAssetReferences),
+      audioAssetReferenceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.audioAssetReferenceReadState || ""))
+        ? String(source.audioAssetReferenceReadState)
+        : "guarded",
+      audioAssetOperations: normalizeAudioAssetOperations(source.audioAssetOperations),
+      audioAssetOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.audioAssetOperationsReadState || ""))
+        ? String(source.audioAssetOperationsReadState)
+        : "guarded",
       // Document Operations output is a third, independent private surface:
       // it is neither an Asset Vault source blob nor a Bot delivery/job.
       documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, OPERATION_HISTORY_LIST_LIMIT) : [],
@@ -17001,6 +17014,7 @@
     const canView = Boolean(context.capabilities && context.capabilities["audio-asset-operation-view"] === true);
     const canSubmit = Boolean(context.capabilities && context.capabilities["audio-asset-operation-submit"] === true);
     const canDownload = Boolean(context.capabilities && context.capabilities["audio-asset-operation-download"] === true);
+    const canExport = Boolean(context.capabilities && context.capabilities["audio-asset-operation-export-to-asset-vault"] === true);
     const references = context.audioAssetReferences && typeof context.audioAssetReferences === "object" ? context.audioAssetReferences : {};
     const pagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
     const referenceReadState = ["loading", "ready", "failed", "guarded"].includes(String(context.audioAssetReferenceReadState || ""))
@@ -17057,7 +17071,10 @@
       const download = outputReady && canDownload
         ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-operation-download" data-portal-route="/audio/assets" data-audio-asset-operation-id="${safeText(String(item.id))}">Tải private</button>`
         : "";
-      return `<li><div class="portal-audio-asset-operation-meta"><div><strong>${safeText(audioAssetOperationKindLabel(kind))}</strong><span>${safeText(detail)} · ${safeText(audioFacts)}</span><small>${safeText(file)}</small></div>${badge(displayState)}</div><div class="portal-audio-asset-operation-actions"><span>${safeText(audioAssetOperationStateLabel(displayState))}</span>${download}</div></li>`;
+      const exportControl = transform && String(item.state || "") === "completed" && item.output_available === true && outputReady && canExport
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-operation-export-to-asset-vault" data-portal-route="/audio/assets" data-audio-asset-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu bản audio đã được xác minh vào Asset Vault riêng tư? Thao tác không tạo output mới hoặc thay đổi file gốc.">Lưu vào Asset Vault</button>`
+        : "";
+      return `<li><div class="portal-audio-asset-operation-meta"><div><strong>${safeText(audioAssetOperationKindLabel(kind))}</strong><span>${safeText(detail)} · ${safeText(audioFacts)}</span><small>${safeText(file)}</small></div>${badge(displayState)}</div><div class="portal-audio-asset-operation-actions"><span>${safeText(audioAssetOperationStateLabel(displayState))}</span>${download}${exportControl}</div></li>`;
     }).join("")}</ul>` : `<div class="portal-audio-asset-empty"><strong>${readState === "loading" ? "Đang tải lịch sử audio" : readState === "failed" ? "Chưa thể tải lịch sử audio private" : "Chưa có thao tác audio"}</strong><span>${readState === "loading" ? "Đang đọc metadata owner-scoped; browser chưa suy đoán trạng thái hoặc output nào." : readState === "failed" ? "Hãy làm mới để yêu cầu lại API private. Danh sách cũ đã được xóa, không dùng cache hoặc dữ liệu của account khác." : "Chọn một audio private để kiểm định, tạo bản chuyển định dạng hoặc chuẩn hóa bằng profile server cố định."}</span></div>`;
     return `<article class="portal-page portal-audio-asset-operations">${renderHero(page, context)}
       <section class="portal-audio-assets-intro"><div><span class="portal-section-kicker">Private deterministic operation</span><h2>Audio private, xử lý rõ ràng và kiểm chứng trước khi tải.</h2><p>Chọn audio đã có trong Asset Vault để kiểm định metadata, tạo một bản MP3/M4A hoặc chuẩn hóa âm lượng theo profile cố định. Máy chủ giữ ownership, codec settings và kiểm tra output cuối cùng.</p></div><dl><div><dt>25 MiB</dt><dd>Input tối đa</dd></div><div><dt>10 phút</dt><dd>Thời lượng tối đa</dd></div><div><dt>Private</dt><dd>Không public URL hay cache</dd></div></dl></section>
@@ -19562,6 +19579,123 @@
       pinned: operationAssetReferenceItems(source.pinned, "image").slice(0, 16),
       listing: operationAssetReferenceListing(source.listing, "image")
     };
+  }
+
+  function normalizeAudioAssetReference(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = String(source.created_at || "").trim();
+    const typedAudio = (extension === ".mp3" && contentType === "audio/mpeg")
+      || (extension === ".wav" && (contentType === "audio/wav" || contentType === "audio/x-wav"))
+      || (extension === ".m4a" && contentType === "audio/mp4")
+      || (extension === ".ogg" && (contentType === "audio/ogg" || contentType === "application/ogg"));
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !typedAudio || !Number.isInteger(byteSize) || byteSize < 1 || byteSize > 25 * 1024 * 1024
+      || (createdAt && (createdAt.length > 80 || /[\u0000-\u001f\u007f]/.test(createdAt)))) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function normalizeAudioAssetReferencePagination(value, returned) {
+    const source = value && typeof value === "object" ? value : {};
+    const offset = Number(source.offset);
+    const currentOffset = Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+    const nextOffset = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(nextOffset) && nextOffset > currentOffset && nextOffset <= 10000;
+    return {
+      limit: 50,
+      offset: currentOffset,
+      returned: Math.max(0, Math.min(50, Number.isInteger(Number(returned)) ? Number(returned) : 0)),
+      has_more: hasMore,
+      next_offset: hasMore ? nextOffset : null,
+      previous_offset: currentOffset >= 50 ? currentOffset - 50 : null
+    };
+  }
+
+  function normalizeAudioAssetReferences(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const seen = new Set();
+    const items = (Array.isArray(source.items) ? source.items : []).map(normalizeAudioAssetReference).filter((item) => {
+      if (!item || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    }).slice(0, 50);
+    const requested = normalizeAudioAssetReference(source.selected);
+    const selected = requested && !seen.has(requested.id) ? requested : (items.find((item) => requested && item.id === requested.id) || null);
+    return { items, selected, pagination: normalizeAudioAssetReferencePagination(source.pagination, items.length) };
+  }
+
+  function normalizeAudioAssetMeasurement(value, minimum, maximum) {
+    if (value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function normalizeAudioAssetOperation(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const sourceFormat = source.source_format === null ? null : String(source.source_format || "").trim().toLowerCase();
+    const targetFormat = source.target_format === null ? null : String(source.target_format || "").trim().toLowerCase();
+    const normalizationProfile = source.normalization_profile === null ? null : String(source.normalization_profile || "").trim();
+    const sourceDuration = normalizeAudioAssetMeasurement(source.source_duration_ms, 0, 600000);
+    const sourceChannels = normalizeAudioAssetMeasurement(source.source_channels, 1, 2);
+    const sourceSampleRate = normalizeAudioAssetMeasurement(source.source_sample_rate, 8000, 48000);
+    const outputDuration = normalizeAudioAssetMeasurement(source.output_duration_ms, 0, 600000);
+    const outputChannels = normalizeAudioAssetMeasurement(source.output_channels, 1, 2);
+    const outputSampleRate = normalizeAudioAssetMeasurement(source.output_sample_rate, 8000, 48000);
+    const sourceCodec = String(source.source_codec || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    const outputCodec = String(source.output_codec || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    const filename = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = String(source.created_at || "").trim();
+    const updatedAt = String(source.updated_at || "").trim();
+    const allowedFormats = new Set(["mp3", "wav", "m4a", "ogg"]);
+    const allowedTargets = new Set(["mp3", "m4a"]);
+    const allowedStates = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+    if (!validVaultAssetId(id) || !["audio_inspect", "audio_convert", "audio_normalize"].includes(kind) || !allowedStates.has(state)
+      || (sourceFormat !== null && !allowedFormats.has(sourceFormat)) || (targetFormat !== null && !allowedTargets.has(targetFormat))
+      || (normalizationProfile !== null && normalizationProfile !== "speech_safe_v1")
+      || (kind === "audio_inspect" && (targetFormat !== null || normalizationProfile !== null))
+      || (kind === "audio_normalize" && targetFormat !== null && targetFormat !== "m4a")
+      || (kind === "audio_normalize" && normalizationProfile !== null && normalizationProfile !== "speech_safe_v1")
+      || (source.source_duration_ms !== null && source.source_duration_ms !== undefined && sourceDuration === null)
+      || (source.source_channels !== null && source.source_channels !== undefined && sourceChannels === null)
+      || (source.source_sample_rate !== null && source.source_sample_rate !== undefined && sourceSampleRate === null)
+      || (source.output_duration_ms !== null && source.output_duration_ms !== undefined && outputDuration === null)
+      || (source.output_channels !== null && source.output_channels !== undefined && outputChannels === null)
+      || (source.output_sample_rate !== null && source.output_sample_rate !== undefined && outputSampleRate === null)
+      || sourceCodec.length > 48 || outputCodec.length > 48 || !createdAt || createdAt.length > 80 || updatedAt.length > 80
+      || /[\u0000-\u001f\u007f]/.test(createdAt + updatedAt)) return null;
+    const expectedMime = targetFormat === "mp3" ? "audio/mpeg" : targetFormat === "m4a" ? "audio/mp4" : "";
+    const expectedCodec = targetFormat === "mp3" ? "mp3" : targetFormat === "m4a" ? "aac" : "";
+    const outputAvailable = source.output_available === true && (kind === "audio_convert" || kind === "audio_normalize") && state === "completed"
+      && Boolean(expectedMime) && contentType === expectedMime && outputCodec === expectedCodec && Number.isInteger(outputDuration) && Number.isInteger(outputChannels)
+      && outputSampleRate === 48000 && filename.length > 0 && filename.length <= 180
+      && Number.isInteger(byteSize) && byteSize > 0 && byteSize <= 12 * 1024 * 1024;
+    return {
+      id, kind, state, status: state, source_format: sourceFormat, target_format: targetFormat,
+      normalization_profile: kind === "audio_normalize" && normalizationProfile === "speech_safe_v1" ? normalizationProfile : null,
+      source_duration_ms: sourceDuration, source_channels: sourceChannels, source_sample_rate: sourceSampleRate, source_codec: sourceCodec || null,
+      output_duration_ms: outputAvailable ? outputDuration : null, output_channels: outputAvailable ? outputChannels : null,
+      output_sample_rate: outputAvailable ? outputSampleRate : null, output_codec: outputAvailable ? outputCodec : null, output_available: outputAvailable,
+      filename: outputAvailable ? filename : null, content_type: outputAvailable ? contentType : null,
+      byte_size: outputAvailable ? byteSize : null, created_at: createdAt, updated_at: updatedAt
+    };
+  }
+
+  function normalizeAudioAssetOperations(value) {
+    const seen = new Set();
+    return (Array.isArray(value) ? value : []).map(normalizeAudioAssetOperation).filter((item) => {
+      if (!item || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    }).slice(0, 50);
   }
 
   function operationAssetReferenceRows(context, surface, kind) {
@@ -28557,10 +28691,15 @@
         __subtitleLanguageSourceOffset: source.getAttribute("data-subtitle-language-source-offset") || ""
       });
     }
+    if (action === "audio-asset-operation-export-to-asset-vault") {
+      Object.assign(fields, {
+        __audioAssetOperationId: source.getAttribute("data-audio-asset-operation-id") || ""
+      });
+    }
     // Audio Asset Operations keeps its UUID selection and pagination in the
     // immediate owner-scoped event. Never retain raw audio, paths, URLs,
     // hashes, codecs or FFmpeg arguments in generic browser state.
-    if (String(action || "").startsWith("audio-asset-")) {
+    else if (String(action || "").startsWith("audio-asset-")) {
       const audioSource = form && form.querySelector('select[name="source_asset_id"]');
       Object.assign(fields, {
         __audioAssetReferenceOffset: source.getAttribute("data-audio-asset-reference-offset") || "",
