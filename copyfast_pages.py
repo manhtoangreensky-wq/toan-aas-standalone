@@ -180,9 +180,9 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "zh": "浏览 canonical 来源发布的服务套餐；Web 不会创建购买、结账或积分变更。",
     },
     "/pricing": {
-        "vi": "Xem bảng giá canonical theo schema đã xác minh; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
-        "en": "Review canonical pricing from a verified schema; the Web does not infer rates, promotions, or credit limits.",
-        "zh": "查看来自已验证 schema 的 canonical 价格；Web 不会推测费率、优惠或积分限额。",
+        "vi": "Xem bảng giá bán công khai do Core Bridge phát hành; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
+        "en": "Review public sale prices published by Core Bridge; the Web does not infer rates, promotions, or credit limits.",
+        "zh": "查看由 Core Bridge 发布的公开销售价格；Web 不会推测费率、优惠或积分限额。",
     },
     "/jobs": {
         "vi": "Theo dõi job thuộc sở hữu của phiên hiện tại; không hiện output giả khi chưa có delivery hợp lệ.",

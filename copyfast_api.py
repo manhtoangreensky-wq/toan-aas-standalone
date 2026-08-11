@@ -18,7 +18,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 from zipfile import BadZipFile, ZipFile
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -1399,6 +1399,16 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
         result["image_tiers"] = _project_items(value.get("image_tiers"), tier_fields)
         result["video_tiers"] = _project_items(value.get("video_tiers"), tier_fields)
         result["video_combos"] = _project_items(value.get("video_combos"), combo_fields)
+        public_sale_catalog = value.get("public_sale_catalog")
+        if isinstance(public_sale_catalog, dict):
+            public_sale_fields = ("code", "family", "label", "sale_price_xu", "status")
+            result["public_sale_catalog"] = {
+                **_project_record(
+                    public_sale_catalog,
+                    ("available", "catalog_version", "approval_status"),
+                ),
+                "items": _project_items(public_sale_catalog.get("items"), public_sale_fields),
+            }
         return result
     if surface == "packages":
         result = _project_record(value, ("available",))
@@ -4087,7 +4097,12 @@ async def wallet_history(request: Request, account: dict = Depends(require_accou
 
 
 @router.get("/pricing")
-async def pricing(request: Request, account: dict = Depends(require_account)):
+async def pricing(
+    request: Request,
+    response: Response,
+    account: dict = Depends(require_account),
+):
+    response.headers["Cache-Control"] = "no-store, private"
     return await _bridge("GET", "/internal/v1/pricing", account=account, request=request)
 
 

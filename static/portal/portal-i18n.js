@@ -7925,7 +7925,7 @@
     "billingCatalog.page.packages.title": "Gói dịch vụ",
     "billingCatalog.page.packages.description": "Duyệt danh mục gói do nguồn canonical công bố; Web không tạo mua hàng, checkout hoặc thay đổi Xu.",
     "billingCatalog.page.pricing.title": "Bảng giá",
-    "billingCatalog.page.pricing.description": "Xem bảng giá canonical theo schema đã xác minh; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
+    "billingCatalog.page.pricing.description": "Xem bảng giá bán công khai do Core Bridge phát hành; Web không suy đoán tỷ lệ, ưu đãi hoặc hạn mức Xu.",
     "billingCatalog.membership.defaultPlanName": "Chưa có gói canonical",
     "billingCatalog.membership.defaultPlanStatus": "Chờ Core Bridge",
     "billingCatalog.membership.defaultCatalogNote": "Quyền lợi do Bot canonical xác minh.",
@@ -7972,7 +7972,22 @@
     "billingCatalog.catalog.pricing.emptyWaitingBody": "Bảng giá chỉ xuất hiện sau khi Bot canonical trả schema đã được Core Bridge xác minh.",
     "billingCatalog.catalog.packages.emptyWaitingBody": "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành.",
     "billingCatalog.catalog.footer.note": "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.",
-    "billingCatalog.catalog.footer.topupAction": "Mở nạp Xu canonical"
+    "billingCatalog.catalog.footer.topupAction": "Mở nạp Xu canonical",
+    "billingCatalog.catalog.publicSale.kicker": "Bảng giá bán công khai",
+    "billingCatalog.catalog.publicSale.introTitle": "Giá bán được phát hành theo catalog",
+    "billingCatalog.catalog.publicSale.introBody": "Web chỉ hiển thị giá bán đã có SKU và phiên bản phê duyệt từ Core Bridge. Xác nhận của hệ thống xử lý vẫn là nguồn quyết định cho từng yêu cầu.",
+    "billingCatalog.catalog.publicSale.cardTitle": "Bảng giá dịch vụ",
+    "billingCatalog.catalog.publicSale.cardDescription": "Giá bán được phát hành theo catalog đã phê duyệt.",
+    "billingCatalog.catalog.publicSale.emptyTitle": "Chờ catalog giá bán được phát hành",
+    "billingCatalog.catalog.publicSale.emptyBody": "Bảng giá chỉ xuất hiện khi Core Bridge phát hành SKU, giá bán và phiên bản đã phê duyệt. Web không tự đoán từ tier cũ.",
+    "billingCatalog.catalog.publicSale.priceMissing": "Giá bán đang chờ phát hành",
+    "billingCatalog.catalog.publicSale.statusApproved": "Giá bán đã phê duyệt",
+    "billingCatalog.catalog.publicSale.family.service": "Dịch vụ",
+    "billingCatalog.catalog.publicSale.family.video": "Video",
+    "billingCatalog.catalog.publicSale.family.image": "Ảnh",
+    "billingCatalog.catalog.publicSale.family.music": "Nhạc",
+    "billingCatalog.catalog.publicSale.family.audio": "Âm thanh",
+    "billingCatalog.catalog.publicSale.footerNote": "Bạn chỉ được trừ Xu sau khi xác nhận yêu cầu trong luồng canonical."
   });
 
   Object.assign(BILLING_CATALOG_MESSAGES.en, {
@@ -7981,7 +7996,7 @@
     "billingCatalog.page.packages.title": "Service packages",
     "billingCatalog.page.packages.description": "Browse packages published by the canonical source; the Web does not create a purchase, checkout, or credit change.",
     "billingCatalog.page.pricing.title": "Pricing",
-    "billingCatalog.page.pricing.description": "Review canonical pricing from a verified schema; the Web does not infer rates, promotions, or credit limits.",
+    "billingCatalog.page.pricing.description": "Review public sale prices published by Core Bridge; the Web does not infer rates, promotions, or credit limits.",
     "billingCatalog.membership.defaultPlanName": "No canonical plan yet",
     "billingCatalog.membership.defaultPlanStatus": "Waiting for Core Bridge",
     "billingCatalog.membership.defaultCatalogNote": "Benefits are verified by the canonical Bot.",
@@ -8028,7 +8043,22 @@
     "billingCatalog.catalog.pricing.emptyWaitingBody": "Pricing appears only after the canonical Bot returns a schema verified by Core Bridge.",
     "billingCatalog.catalog.packages.emptyWaitingBody": "Packages appear only after the canonical Bot confirms the current catalog.",
     "billingCatalog.catalog.footer.note": "Need to top up credits? Open only the checkout or handoff permitted by the current canonical authority.",
-    "billingCatalog.catalog.footer.topupAction": "Open canonical credit top-up"
+    "billingCatalog.catalog.footer.topupAction": "Open canonical credit top-up",
+    "billingCatalog.catalog.publicSale.kicker": "Public sale pricing",
+    "billingCatalog.catalog.publicSale.introTitle": "Prices published by the catalogue",
+    "billingCatalog.catalog.publicSale.introBody": "The Web shows only sale prices with an approved SKU and version from Core Bridge. The signed processing confirmation remains authoritative for each request.",
+    "billingCatalog.catalog.publicSale.cardTitle": "Service pricing",
+    "billingCatalog.catalog.publicSale.cardDescription": "Sale price published by the approved catalogue.",
+    "billingCatalog.catalog.publicSale.emptyTitle": "Waiting for the public sale catalogue",
+    "billingCatalog.catalog.publicSale.emptyBody": "Prices appear only after Core Bridge publishes approved SKUs, sale prices, and a catalogue version. The Web does not infer them from legacy tiers.",
+    "billingCatalog.catalog.publicSale.priceMissing": "Sale price is awaiting publication",
+    "billingCatalog.catalog.publicSale.statusApproved": "Approved sale price",
+    "billingCatalog.catalog.publicSale.family.service": "Service",
+    "billingCatalog.catalog.publicSale.family.video": "Video",
+    "billingCatalog.catalog.publicSale.family.image": "Image",
+    "billingCatalog.catalog.publicSale.family.music": "Music",
+    "billingCatalog.catalog.publicSale.family.audio": "Audio",
+    "billingCatalog.catalog.publicSale.footerNote": "Credits are deducted only after you confirm the request through the canonical flow."
   });
 
   Object.assign(BILLING_CATALOG_MESSAGES.zh, {
@@ -8037,7 +8067,7 @@
     "billingCatalog.page.packages.title": "服务套餐",
     "billingCatalog.page.packages.description": "浏览 canonical 来源发布的服务套餐；Web 不会创建购买、结账或积分变更。",
     "billingCatalog.page.pricing.title": "价格",
-    "billingCatalog.page.pricing.description": "查看来自已验证 schema 的 canonical 价格；Web 不会推测费率、优惠或积分限额。",
+    "billingCatalog.page.pricing.description": "查看由 Core Bridge 发布的公开销售价格；Web 不会推测费率、优惠或积分限额。",
     "billingCatalog.membership.defaultPlanName": "尚无 canonical 套餐",
     "billingCatalog.membership.defaultPlanStatus": "等待 Core Bridge",
     "billingCatalog.membership.defaultCatalogNote": "权益由 canonical Bot 验证。",
@@ -8084,7 +8114,22 @@
     "billingCatalog.catalog.pricing.emptyWaitingBody": "只有在 canonical Bot 返回经 Core Bridge 验证的 schema 后，价格才会显示。",
     "billingCatalog.catalog.packages.emptyWaitingBody": "只有在 canonical Bot 确认当前目录后，套餐才会显示。",
     "billingCatalog.catalog.footer.note": "需要充值积分？仅打开当前 canonical authority 允许的结账或交接方式。",
-    "billingCatalog.catalog.footer.topupAction": "打开 canonical 积分充值"
+    "billingCatalog.catalog.footer.topupAction": "打开 canonical 积分充值",
+    "billingCatalog.catalog.publicSale.kicker": "公开销售价格",
+    "billingCatalog.catalog.publicSale.introTitle": "目录发布的销售价格",
+    "billingCatalog.catalog.publicSale.introBody": "Web 仅显示 Core Bridge 提供的已批准 SKU 和版本的销售价格。每个请求的签名确认仍是最终依据。",
+    "billingCatalog.catalog.publicSale.cardTitle": "服务价格",
+    "billingCatalog.catalog.publicSale.cardDescription": "已批准目录发布的销售价格。",
+    "billingCatalog.catalog.publicSale.emptyTitle": "等待公开销售目录",
+    "billingCatalog.catalog.publicSale.emptyBody": "Core Bridge 发布已批准的 SKU、销售价格和目录版本后才会显示价格。Web 不会根据旧档位推测价格。",
+    "billingCatalog.catalog.publicSale.priceMissing": "销售价格等待发布",
+    "billingCatalog.catalog.publicSale.statusApproved": "已批准的销售价格",
+    "billingCatalog.catalog.publicSale.family.service": "服务",
+    "billingCatalog.catalog.publicSale.family.video": "视频",
+    "billingCatalog.catalog.publicSale.family.image": "图像",
+    "billingCatalog.catalog.publicSale.family.music": "音乐",
+    "billingCatalog.catalog.publicSale.family.audio": "音频",
+    "billingCatalog.catalog.publicSale.footerNote": "只有在 canonical 流程确认请求后才会扣除积分。"
   });
 
   // Delivery Center copy is fixed interface guidance only. Job/asset records,
