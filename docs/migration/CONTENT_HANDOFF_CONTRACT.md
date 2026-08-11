@@ -94,7 +94,7 @@ tự suy diễn endpoint này là một publishing integration.
 ## Focused evidence
 
 ```powershell
-C:\Users\toann\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m pytest -q tests\test_copyfast_content_handoff.py
+python -m pytest -q tests/test_copyfast_content_handoff.py
 ```
 
 Kết quả local: `4 passed` (một cảnh báo deprecation từ dependency

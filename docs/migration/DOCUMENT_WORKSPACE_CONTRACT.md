@@ -40,7 +40,7 @@ generic feature endpoint có thể lén execute plan.
 
 ## Đối chiếu Bot tĩnh và phân loại bắt buộc
 
-Audit chỉ đọc `D:\TOANAAS\bot telegram\bot.py` ở frozen baseline. Inventory
+Audit chỉ đọc `bot.py` ở frozen Git baseline. Inventory
 tĩnh ghi nhận các customer command `doc_tools`, `pdf_to_word`, `image_to_pdf`,
 `pdf_to_images`, `compress_pdf`, `split_pdf`, `merge_pdf`, `ocr_image`,
 `ocr_pdf`, `translate_file`; các tool test liên quan; callback/menu `main_docs`,
