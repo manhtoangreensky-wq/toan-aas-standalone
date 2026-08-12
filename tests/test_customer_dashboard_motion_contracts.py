@@ -146,6 +146,16 @@ def test_dashboard_skips_shared_main_and_document_route_entrances() -> None:
     assert 'const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";' in mount
     assert 'main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? "true" : "false";' in mount
 
+
+def test_mount_portal_synchronizes_document_motion_route_before_replacing_the_shell() -> None:
+    """An in-place mount cannot inherit a root-transition marker from its prior page."""
+
+    mount = _section(PORTAL, "function mountPortal(override) {", "\n\n  window.TOANAASPortal")
+    marker = 'document.documentElement.dataset.portalMotionRoute = dashboardMotionRoute ? "dashboard" : "default";'
+
+    assert marker in mount
+    assert mount.index(marker) < mount.index("const replaceResult = motion.replace(shell, main, renderShell);")
+
     assert 'data-portal-motion-route="__PORTAL_MOTION_ROUTE__"' in SHELL
     fallback_template = _section(PAGES, "def _fallback_template()", "\n\ndef render_portal")
     assert 'data-portal-motion-route=\\"__PORTAL_MOTION_ROUTE__\\"' in fallback_template

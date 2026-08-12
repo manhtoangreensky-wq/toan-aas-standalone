@@ -30021,6 +30021,7 @@
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
     main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? "true" : "false";
+    document.documentElement.dataset.portalMotionRoute = dashboardMotionRoute ? "dashboard" : "default";
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       header.innerHTML = renderHeader(page, context);
