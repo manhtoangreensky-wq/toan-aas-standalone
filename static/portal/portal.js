@@ -10554,6 +10554,12 @@
   // bot command into a new execution endpoint: cards are sourced from the
   // existing registry/manifest and retain their canonical readiness state.
   const FEATURE_FAMILY_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"]);
+  // This is a deliberately closed navigation directory.  It is not built
+  // from remote catalogue, bridge or capability data, so the customer can
+  // orient within the product before detailed workflow metadata arrives.
+  // Every rendered destination must still resolve through the local member
+  // manifest below; a family key alone never becomes a route or permission.
+  const FEATURE_FAMILY_EXPLORER_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"]);
   const CATALOG_ENGINE_MODES = new Set(["web_native", "bot_companion", "guarded"]);
   const CATALOG_ENGINE_STATES = new Set(["ready", "guarded"]);
   const CATALOG_READINESS_STATES = new Set(["available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"]);
@@ -10580,6 +10586,23 @@
     };
     return icons[key] || ICONS.prompt;
   }
+
+  // Register the seven stable directory destinations explicitly so visual
+  // discovery never relies on a dynamic fallback route.  They remain
+  // navigation-only, and the destination independently verifies its signed
+  // session, route scope and actual workflow records.
+  FEATURE_FAMILY_EXPLORER_KEYS.forEach((familyKey) => {
+    const family = featureCatalogGroup(familyKey);
+    if (!family) return;
+    customerPage(`/features/${familyKey}`, family.title, family.description, featureFamilyIcon(familyKey), {
+      section: "AI Studio", type: "feature-family", featureFamily: familyKey,
+      layout: "feature-family", action: "none", status: "read_only",
+      notes: [
+        "Đây là điều hướng cho các workflow đã đăng ký, không phải endpoint chạy provider.",
+        "Card guarded giữ nguyên trạng thái cho đến khi Web Engine hoặc integration tùy chọn công bố adapter đã kiểm thử."
+      ]
+    });
+  });
 
   function safeCatalogRoute(value) {
     if (typeof value !== "string") return "";
@@ -10701,10 +10724,15 @@
     return "support";
   }
 
+  function isFeatureFamilyExplorerRoute(path) {
+    const normalized = normalizePath(path);
+    return FEATURE_FAMILY_EXPLORER_KEYS.some((familyKey) => normalized === `/features/${familyKey}`);
+  }
+
   function fallbackFeatureCatalog() {
     const seen = new Set();
     return Object.values(manifest).filter((page) => {
-      if (!page || page.access === "admin" || ["/features", "/login", "/register", "/password-recovery", "/onboarding", "/not-found"].includes(page.path) || seen.has(page.path)) return false;
+      if (!page || page.access === "admin" || isFeatureFamilyExplorerRoute(page.path) || ["/features", "/login", "/register", "/password-recovery", "/onboarding", "/not-found"].includes(page.path) || seen.has(page.path)) return false;
       seen.add(page.path);
       return true;
     }).map((page) => ({
@@ -10720,7 +10748,7 @@
   function customerCatalog(context) {
     const entries = (context.catalog || []).filter((entry) => {
       const route = catalogEntryRoute(entry);
-      return route && route !== "/features" && (!entry || typeof entry !== "object" || entry.kind !== "admin");
+      return route && route !== "/features" && !isFeatureFamilyExplorerRoute(route) && (!entry || typeof entry !== "object" || entry.kind !== "admin");
     });
     return entries.length ? entries : fallbackFeatureCatalog();
   }
@@ -10786,6 +10814,18 @@
     return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Con số này chỉ phản ánh phạm vi Bot đã được phân loại vào nhóm. Route Web và engine vẫn được kiểm tra độc lập theo signed session và capability."))}</p></div></details>`;
   }
 
+  function renderFeatureFamilyExplorer() {
+    const cards = FEATURE_FAMILY_EXPLORER_KEYS.map((familyKey) => {
+      const route = `/features/${familyKey}`;
+      const page = manifest[normalizePath(route)];
+      const family = featureCatalogGroup(familyKey);
+      if (!family || !(page && page.access === "member")) return "";
+      return `<a class="portal-feature-family-explorer-card" href="${safeText(route)}"><span class="portal-feature-family-explorer-icon" aria-hidden="true">${portalIcon(featureFamilyIcon(familyKey))}</span><span class="portal-feature-family-explorer-copy"><strong>${safeText(featureCatalogGroupCopy(family, "title"))}</strong><span>${safeText(featureCatalogGroupCopy(family, "description"))}</span></span><span class="portal-feature-family-explorer-open">${safeText(featureCatalogText("familyExplorer.open", "Mở studio"))}<b aria-hidden="true">→</b></span></a>`;
+    }).filter(Boolean).join("");
+    if (!cards) return "";
+    return `<section class="portal-feature-family-explorer" aria-labelledby="portal-feature-family-explorer-title"><div class="portal-feature-family-explorer-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("familyExplorer.kicker", "AI Studio"))}</span><h2 id="portal-feature-family-explorer-title">${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}</h2><p>${safeText(featureCatalogText("familyExplorer.body", "Chọn một studio để xem các workflow đã được định tuyến cho công việc của bạn."))}</p></div></div><nav class="portal-feature-family-explorer-grid" aria-label="${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}">${cards}</nav></section>`;
+  }
+
   function renderModuleCards(context) {
     const quickRoutes = ["/chat", "/content/pack", "/image/create", "/image/edit", "/video/product", "/video/multiscene", "/voice/tts", "/voice/clone", "/music/create", "/subtitle", "/dubbing", "/documents"];
     const cards = quickRoutes.map((path) => manifest[path]).filter(Boolean).map((module) => moduleCard(module, context, "Mở workspace")).join("");
@@ -10832,7 +10872,7 @@
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
     const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ ràng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${studioContinuation}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${studioContinuation}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${renderFeatureFamilyExplorer()}${jumps}${body}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {

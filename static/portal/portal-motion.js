@@ -140,6 +140,7 @@
       ".portal-catalog-context",
       ".portal-feature-catalog > .portal-section-heading",
       ".portal-feature-guided-start",
+      ".portal-feature-family-explorer",
       ".portal-capability-hub",
       ".portal-catalog-search",
       ".portal-feature-jumps",
@@ -153,6 +154,7 @@
     ].join(", ");
     const itemSelector = [
       ".portal-start-guide-step",
+      ".portal-feature-family-explorer-card",
       ".portal-capability-hub-card",
       ".portal-feature-jump",
       ".portal-catalog-item",
