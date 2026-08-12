@@ -72,8 +72,24 @@ def test_reference_first_welcome_turns_existing_studios_into_a_scannable_discove
     assert 'const studioCards = studios.map(' in landing
     assert "studioCards" in landing
     assert landing.index("portal-landing-discovery-rail") < landing.index('id="workflow"')
-    for route in ("/chat", "/image/create", "/video/create", "/voice/tts", "/subtitle", "/documents"):
-        assert route in landing
+
+
+def test_reference_first_welcome_studio_cards_open_family_directories_before_details() -> None:
+    landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
+    studios = _between(landing, "const studios = [", "const featureStrip = [")
+
+    for route in (
+        "/features/content",
+        "/features/image",
+        "/features/video",
+        "/features/voice",
+        "/features/subtitle",
+        "/features/documents",
+    ):
+        assert f'href: "{route}"' in studios
+
+    for action_route in ("/chat", "/image/create", "/video/create", "/voice/tts", "/subtitle", "/documents"):
+        assert f'href: "{action_route}"' not in studios
 
 
 def test_reference_first_welcome_has_complete_trilingual_structural_copy() -> None:

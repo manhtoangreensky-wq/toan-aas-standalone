@@ -26749,12 +26749,12 @@
       : `<a class="portal-button portal-button--quiet" href="/login">${text("cta.signIn")}</a>`;
     const studioHref = (route) => signedIn ? route : `/login?next=${encodeURIComponent(route)}`;
     const studios = [
-      { icon: ICONS.chat, key: "content", tone: "cyan", href: "/chat" },
-      { icon: ICONS.image, key: "image", tone: "blue", href: "/image/create" },
-      { icon: ICONS.video, key: "video", tone: "violet", href: "/video/create" },
-      { icon: ICONS.voice, key: "audio", tone: "amber", href: "/voice/tts" },
-      { icon: ICONS.subtitle, key: "subtitle", tone: "rose", href: "/subtitle" },
-      { icon: ICONS.document, key: "document", tone: "mint", href: "/documents" }
+      { icon: ICONS.chat, key: "content", tone: "cyan", href: "/features/content" },
+      { icon: ICONS.image, key: "image", tone: "blue", href: "/features/image" },
+      { icon: ICONS.video, key: "video", tone: "violet", href: "/features/video" },
+      { icon: ICONS.voice, key: "audio", tone: "amber", href: "/features/voice" },
+      { icon: ICONS.subtitle, key: "subtitle", tone: "rose", href: "/features/subtitle" },
+      { icon: ICONS.document, key: "document", tone: "mint", href: "/features/documents" }
     ];
     const featureStrip = [
       { icon: ICONS.prompt, key: "content" },
