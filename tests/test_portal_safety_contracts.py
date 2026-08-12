@@ -389,7 +389,7 @@ def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_
     assert 'customerPage("/music/sfx-library", "Thư viện SFX"' in PORTAL
     assert 'page.path === "/music/sfx-library" ? "sfx"' in PORTAL
     assert 'href: "/music/sfx-library", label: "Mở thư viện SFX"' in PORTAL
-    assert 'class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ"' in PORTAL
+    assert 'class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}"' in PORTAL
     assert 'href="#feature-group-${safeText(group.key)}"' in PORTAL
     assert ".portal-feature-jumps" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
     assert 'data-portal-catalog-search' in PORTAL
