@@ -7625,6 +7625,24 @@
     };
   }
 
+  function routeEngineText(key, fallback, params) {
+    return uiText(`routeEngine.${key}`, fallback, params);
+  }
+
+  function normalizeRouteEngineDescriptor(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!source) return { state: "loading" };
+    if (
+      source.state !== "deferred"
+      || source.catalog_version !== "unconfigured"
+      || source.catalog_approval !== "unconfigured"
+      || source.price_display !== false
+    ) {
+      return { state: "guarded" };
+    }
+    return { state: "deferred", catalogVersion: "unconfigured" };
+  }
+
   function normalizeBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const session = source.session && typeof source.session === "object" ? source.session : {};
@@ -7632,6 +7650,7 @@
     const capabilities = source.capabilities && typeof source.capabilities === "object" ? source.capabilities : {};
     const pageStates = source.pageStates && typeof source.pageStates === "object" ? source.pageStates : {};
     const featureFlows = source.featureFlows && typeof source.featureFlows === "object" ? source.featureFlows : {};
+    const routeEngine = normalizeRouteEngineDescriptor(source.routeEngine);
     const workspaceDraftFeatures = Array.isArray(source.workspaceDraftFeatures)
       ? [...new Set(source.workspaceDraftFeatures.filter((item) => typeof item === "string" && /^[a-z][a-z0-9_]{1,120}$/.test(item)))].slice(0, 200)
       : [];
@@ -7773,6 +7792,7 @@
           ? "guarded"
           : "loading",
       capabilityHub: normalizeCapabilityHub(source.capabilityHub),
+      routeEngine,
       workspaceDraftFeatures,
       apiBase: typeof source.apiBase === "string" ? source.apiBase : "",
       session,
@@ -10071,18 +10091,14 @@
             .filter((tier) => tier && tier.code)
             .map((tier) => ({
               value: String(tier.code),
-              label: `${tier.label || tier.code}${Number.isFinite(Number(tier.cost_xu)) ? ` · ${tier.cost_xu} Xu` : ""}`
+              label: String(tier.label || tier.code)
             }));
         }
         if (field.optionsFrom === "packages") {
           const catalog = context && context.packageCatalog && typeof context.packageCatalog === "object" ? context.packageCatalog : {};
           options = [...(Array.isArray(catalog.monthly) ? catalog.monthly : []), ...(Array.isArray(catalog.combos) ? catalog.combos : [])]
             .filter((item) => item && item.code && item.manual !== true)
-            .map((item) => {
-              const price = Number(item.price_vnd);
-              const priceLabel = Number.isFinite(price) && price > 0 ? ` · ${price.toLocaleString("vi-VN")}đ` : " · Chờ giá canonical";
-              return { value: String(item.code), label: `${item.label || item.code}${priceLabel}` };
-            });
+            .map((item) => ({ value: String(item.code), label: String(item.label || item.code) }));
         }
         if (field.optionsFrom === "projects") {
           const projects = context && Array.isArray(context.projects) ? context.projects : [];
@@ -10670,6 +10686,16 @@
     return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">Guided Start</span><h2 id="feature-guided-start-title">Bạn muốn bắt đầu việc gì?</h2><p>Chọn một lối đi ngắn hoặc duyệt toàn bộ catalog. Khi mở workspace, ứng dụng sẽ kiểm tra quyền và trạng thái thực tế của phiên hiện tại.</p></div><span class="portal-start-guide-note">${safeText(String(steps.length))} lối đi ngắn</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
   }
 
+  function renderRouteEngineBoundary(context) {
+    const routeEngine = normalizeRouteEngineDescriptor(context && context.routeEngine);
+    const messages = routeEngine.state === "deferred"
+      ? { modifier: "deferred", title: "notice.deferred.title", body: "notice.deferred.body" }
+      : routeEngine.state === "loading"
+        ? { modifier: "loading", title: "notice.loading.title", body: "notice.loading.body" }
+        : { modifier: "guarded", title: "notice.guarded.title", body: "notice.guarded.body" };
+    return `<section class="portal-route-engine-notice portal-route-engine-notice--${safeText(messages.modifier)}" role="status" aria-live="polite"><span class="portal-route-engine-notice-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div class="portal-route-engine-notice-copy"><span class="portal-route-engine-notice-kicker">${safeText(routeEngineText("notice.kicker", "Định tuyến xử lý"))}</span><h2>${safeText(routeEngineText(messages.title, "Trạng thái định tuyến"))}</h2><p>${safeText(routeEngineText(messages.body, "Trạng thái này chỉ cung cấp thông tin cho danh mục."))}</p></div></section>`;
+  }
+
   function renderFeatureCatalog(page, context) {
     const entries = customerCatalog(context);
     const grouped = FEATURE_CATALOG_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry && typeof entry === "object" && entry.group === group.key) })).filter((group) => group.entries.length);
@@ -10686,7 +10712,7 @@
     const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>Chọn theo mục tiêu, không theo lệnh chat</strong><p>Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng.</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">Chuyển workspace</a><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">Chuyển workspace</a><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -18191,7 +18217,7 @@
     const cards = entries.length
       ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })).join("")}</div>`
       : renderEmpty("Nhóm đang chờ registry", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế.", "⌁");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div><section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(family.title)}</span><h2>Chọn workflow phù hợp</h2><p>${safeText(family.description)} Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem mọi công cụ →</a></div>${familyNav}${cards}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(family.title)}</span><h2>Chọn workflow phù hợp</h2><p>${safeText(family.description)} Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem mọi công cụ →</a></div>${familyNav}${cards}</section></article>`;
   }
 
   function normalizeCatalogSearch(value) {
@@ -18673,13 +18699,12 @@
     const tierRows = (rows) => (Array.isArray(rows) ? rows.slice(0, 100) : []).flatMap((item) => {
       if (!item || typeof item !== "object" || Array.isArray(item)) return [];
       const code = canonicalCatalogCode(item.code);
-      const cost = canonicalNonnegativeInteger(item.cost_xu);
-      if (!code || cost === null) return [];
+      if (!code) return [];
       return [{
         code,
         label: canonicalShortText(item.label, 120) || code,
         note: canonicalShortText(item.note, 240) || "Tier canonical do Core Bridge cấp.",
-        priceLabel: `${cost} Xu`,
+        retryWarrantyCount: canonicalNonnegativeInteger(item.retry_warranty_count),
         status: "read_only"
       }];
     });
@@ -18687,15 +18712,11 @@
       if (!item || typeof item !== "object" || Array.isArray(item)) return [];
       const code = canonicalCatalogCode(item.code);
       if (!code) return [];
-      const displayPrice = canonicalShortText(item.display_price, 80);
-      const priceVnd = canonicalNonnegativeInteger(item.price_vnd);
-      const priceLabel = displayPrice || (priceVnd === null ? "" : `${priceVnd.toLocaleString("vi-VN")}đ`);
       return [{
         code,
         label: canonicalShortText(item.label, 120) || code,
         note: canonicalShortText(item.summary, 240) || "Combo canonical do Core Bridge cấp.",
-        priceLabel,
-        status: priceLabel ? "read_only" : "guarded"
+        status: "read_only"
       }];
     });
     return {

@@ -55,6 +55,7 @@ from copyfast_native_read_models import (
 )
 from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
+from copyfast_route_engine import unconfigured_catalog
 from copyfast_web_engine import engine_descriptor
 
 
@@ -1393,9 +1394,13 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
             result["plan"] = plan
         return result
     if surface == "pricing":
-        result = _project_record(value, ("available", "billing_mode", "price_table_source", "trend_workflow_content_total_cost_xu"))
-        tier_fields = ("code", "label", "cost_xu", "note", "retry_warranty_count")
-        combo_fields = ("code", "label", "price_vnd", "display_price", "summary")
+        # The generic key redactor intentionally treats ``bill`` as private,
+        # so use the original mapping only for this fixed scalar metadata
+        # allowlist.  Pricing rows and every other field still use redacted
+        # data plus their stricter surface-specific projections below.
+        result = _project_record(raw_value, ("available", "billing_mode", "price_table_source"))
+        tier_fields = ("code", "label", "note", "retry_warranty_count")
+        combo_fields = ("code", "label", "summary")
         result["image_tiers"] = _project_items(value.get("image_tiers"), tier_fields)
         result["video_tiers"] = _project_items(value.get("video_tiers"), tier_fields)
         result["video_combos"] = _project_items(value.get("video_combos"), combo_fields)
@@ -3034,6 +3039,16 @@ async def _asset_delivery_redirect(asset_id: str, request: Request, account: dic
     return response
 
 
+def _route_engine_deferred_descriptor() -> dict[str, str | bool]:
+    route_catalog = unconfigured_catalog()
+    return {
+        "state": "deferred",
+        "catalog_version": route_catalog.version,
+        "catalog_approval": route_catalog.approval_status.value,
+        "price_display": False,
+    }
+
+
 @router.get("/catalog")
 async def feature_catalog():
     # The catalog is static, browser-safe route metadata.  Keep the local
@@ -3068,6 +3083,7 @@ async def feature_catalog():
         "Danh mục tính năng Web App",
         data={
             "features": features,
+            "route_engine": _route_engine_deferred_descriptor(),
             # This closed, browser-safe navigation catalog contains only
             # product-facing Web destinations.  It never exposes raw Bot
             # callbacks or makes a route appear to be an engine/payment/job
