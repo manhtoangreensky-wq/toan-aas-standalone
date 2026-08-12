@@ -135,3 +135,25 @@ def test_feature_family_navigation_routes_do_not_reenter_the_detailed_catalogue(
     assert "normalizePath(path)" in helper
     assert "isFeatureFamilyExplorerRoute(page.path)" in fallback
     assert "!isFeatureFamilyExplorerRoute(route)" in customer_catalog
+
+
+def test_feature_family_explorer_registers_every_closed_family_and_localizes_its_navigation_label() -> None:
+    navigation = _between(PORTAL, "const NAVIGATION_I18N_KEYS", "function localizedNavigationLabel")
+    registration = _between(
+        PORTAL,
+        "FEATURE_FAMILY_EXPLORER_KEYS.forEach((familyKey) => {",
+        "function safeCatalogRoute",
+    )
+
+    for family in FAMILY_KEYS:
+        assert f'"{family}"' in PORTAL
+    assert 'customerPage(`/features/${familyKey}`' in registration
+    assert "featureCatalogGroup(familyKey)" in registration
+    for requirement in ('type: "feature-family"', 'layout: "feature-family"', 'status: "read_only"'):
+        assert requirement in registration
+    for label, key in (
+        ("Music & SFX", "featureCatalog.group.music.title"),
+        ("Phụ đề & ngôn ngữ", "featureCatalog.group.subtitle.title"),
+        ("Documents & PDF", "featureCatalog.group.documents.title"),
+    ):
+        assert f'"{label}": "{key}"' in navigation

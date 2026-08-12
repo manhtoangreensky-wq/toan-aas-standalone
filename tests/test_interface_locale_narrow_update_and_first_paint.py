@@ -203,6 +203,65 @@ def test_signed_public_welcome_keeps_its_exact_query_locale_over_profile_prefere
         assert "welcome-query-locale@example.com" not in welcome.text
 
 
+def test_public_welcome_locale_selector_wins_against_signed_profile_during_hydration() -> None:
+    portal = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+    node = __import__("shutil").which("node")
+    assert node, "Node.js is required for the public-locale hydration harness"
+
+    script = r"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync(process.argv[1], "utf8");
+const start = source.indexOf("function portalI18n()");
+const end = source.indexOf("const ALLOWED_STATES", start);
+if (start < 0 || end < 0) throw new Error("Locale helpers not found");
+const events = [];
+const context = {
+  normalizePath: (value) => String(value || "/").split("?")[0].replace(/\/+$/, "") || "/",
+  window: {
+    location: { pathname: "/welcome" },
+    TOANAASI18n: {
+      t: () => "",
+      normalizeLocale: (value, fallback) => ["vi", "en", "zh"].includes(value) ? value : fallback,
+      setLocale: (value) => events.push(value)
+    }
+  }
+};
+vm.createContext(context);
+vm.runInContext(source.slice(start, end), context);
+const first = context.applyInterfaceLocale({
+  path: "/welcome",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+const hydrated = context.applyInterfaceLocale({
+  path: "/welcome",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+const signed = context.applyInterfaceLocale({
+  path: "/dashboard",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+process.stdout.write(JSON.stringify({ first, hydrated, signed, events }));
+"""
+    result = __import__("subprocess").run(
+        [node, "-e", script, str(ROOT / "static" / "portal" / "portal.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert __import__("json").loads(result.stdout) == {
+        "first": "vi",
+        "hydrated": "vi",
+        "signed": "en",
+        "events": ["vi", "vi", "en"],
+    }
+
+
 def test_locale_navigator_uses_only_the_narrow_receipt_and_endpoint() -> None:
     portal = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
     integration = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")

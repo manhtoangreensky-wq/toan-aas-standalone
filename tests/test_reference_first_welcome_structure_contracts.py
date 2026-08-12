@@ -119,3 +119,10 @@ def test_reference_first_welcome_uses_token_only_responsive_motion_safe_presenta
     assert "@media (max-width: 600px)" in THEME
     assert "@media (prefers-reduced-motion: reduce)" in THEME
     assert "#" not in THEME[THEME.index(".portal-landing-hero-stage"):]
+
+
+def test_reference_first_product_surface_copy_keeps_its_compact_preview_type_scale() -> None:
+    preview_copy = _rule(THEME, ".portal-landing-hero .portal-landing-product-surface-copy")
+
+    assert "font-size: 12px;" in preview_copy
+    assert "line-height: 1.55;" in preview_copy

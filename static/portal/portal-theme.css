@@ -2326,6 +2326,14 @@ body {
   line-height: 1.7;
 }
 
+/* This sentence belongs to the compact product preview, not the editorial
+   hero copy. Keep the preview's denser type scale when the general hero rule
+   above is applied. */
+.portal-landing-hero .portal-landing-product-surface-copy {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .portal-landing-hero-actions {
   flex-wrap: wrap;
   gap: 10px;
