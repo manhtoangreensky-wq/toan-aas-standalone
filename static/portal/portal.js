@@ -9789,23 +9789,107 @@
   // routes. It does not show balance, job counts, provider readiness or any
   // other private state, so it remains a navigation aid rather than a second
   // dashboard with stale or browser-owned data.
+  // These are the five customer-facing wayfinding buckets, not a capability
+  // registry. They classify only a page path that the server has already
+  // selected and do not grant routes, inspect a role, infer readiness, or
+  // expose any record. Keep the list deliberately explicit so a newly added
+  // route cannot silently change the meaning of a top-level PWA destination.
+  const CUSTOMER_MOBILE_NAV_GROUPS = Object.freeze({
+    dashboard: Object.freeze({
+      exact: Object.freeze([
+        "/dashboard", "/onboarding", "/workspace/setup", "/starter-kits",
+        "/workspace-menu", "/guides", "/guides/source-rights", "/community", "/app"
+      ]),
+      prefixes: Object.freeze(["/starter-kits/"])
+    }),
+    studio: Object.freeze({
+      exact: Object.freeze([
+        "/features", "/tools", "/studio", "/chat", "/prompt-studio",
+        "/prompts", "/image", "/image/create", "/video", "/video/create",
+        "/pdf", "/mux", "/voice/tts", "/music", "/subtitle",
+        "/translate", "/dubbing", "/asr", "/documents", "/content-studio",
+        "/content/prompt-pack", "/content/publish-review", "/content/contextual-prompt",
+        "/trend-research", "/media-factory", "/creative-flow", "/image-studio",
+        "/voice-studio", "/media-workspace", "/audio-hub", "/document-workspace",
+        "/subtitle-studio"
+      ]),
+      prefixes: Object.freeze([
+        "/features/", "/chat/", "/prompt-studio/", "/content/", "/caption",
+        "/hashtag", "/hook", "/script", "/storyboard", "/content-pack",
+        "/image/", "/video/", "/video-studio", "/voice/", "/tts", "/music/",
+        "/subtitle", "/translate/", "/dubbing/", "/asr/", "/documents/",
+        "/content-studio/", "/image-studio/", "/voice-studio/", "/media-workspace/", "/audio-hub/",
+        "/document-workspace/", "/subtitle-studio/"
+      ])
+    }),
+    jobs: Object.freeze({
+      exact: Object.freeze([
+        "/jobs", "/projects", "/workboard", "/workspace", "/project-packages",
+        "/content/channel-strategy", "/content/handoffs", "/crm/leads",
+        "/campaigns", "/calendar", "/approvals", "/notes", "/reminders",
+        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
+        "/video/progress"
+      ]),
+      prefixes: Object.freeze([
+        "/jobs/", "/projects/", "/workboard/",
+        "/content/channel-strategy/", "/content/handoffs/", "/crm/leads/",
+        "/campaigns/", "/calendar/", "/approvals/", "/analytics/"
+      ])
+    }),
+    assets: Object.freeze({
+      exact: Object.freeze([
+        "/assets", "/asset-vault", "/prompt-library", "/free-prompt-gallery",
+        "/image-hub", "/image/history",
+        "/image/assets", "/video/preview", "/video/export", "/voice", "/voice-vault",
+        "/voice/preview", "/voice/outputs", "/music/library",
+        "/music-library", "/music/sfx-library", "/subtitle/formats"
+      ]),
+      prefixes: Object.freeze([
+        "/assets/", "/asset-vault/", "/prompt-library/", "/image-hub/", "/audio/"
+      ])
+    }),
+    account: Object.freeze({
+      exact: Object.freeze([
+        "/account", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
+        "/automation", "/tickets", "/support", "/operations", "/rewards",
+        "/status", "/legal", "/privacy", "/referrals", "/crm/consultations/new"
+      ]),
+      prefixes: Object.freeze([
+        "/account/", "/wallet/", "/membership/", "/packages/", "/pricing/",
+        "/inbox/", "/automation/", "/tickets/", "/support/", "/operations/",
+        "/rewards/", "/status/"
+      ])
+    })
+  });
+
+  // Some creator routes live below broad URL families such as `/video/` and
+  // `/voice/`, while their saved output/history routes live in the Library
+  // and job progress lives in Work.  Resolve the fixed, more specific groups
+  // first so a customer sees one truthful active dock destination at a time.
+  const CUSTOMER_MOBILE_NAV_GROUP_ORDER = Object.freeze([
+    "dashboard", "account", "assets", "jobs", "studio"
+  ]);
+
+  function customerMobileNavGroupMatches(group, path) {
+    const routes = CUSTOMER_MOBILE_NAV_GROUPS[group];
+    if (!routes || !path) return false;
+    return routes.exact.includes(path) || routes.prefixes.some((prefix) => (
+      prefix.endsWith("/") ? path.startsWith(prefix) : matchesRouteFamily(path, prefix)
+    ));
+  }
+
+  function customerMobileNavGroupForPath(path) {
+    const normalized = normalizePath(path);
+    if (normalized === "/admin" || normalized.startsWith("/admin/")) return null;
+    return CUSTOMER_MOBILE_NAV_GROUP_ORDER.find((group) => (
+      customerMobileNavGroupMatches(group, normalized)
+    )) || null;
+  }
+
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
-    if (key === "dashboard") {
-      return ["/dashboard", "/starter-kits", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/image-hub", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/assets", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/starter-kits/") || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/") || path.startsWith("/image-hub/");
-    }
-    if (key === "studio") {
-      return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
-        || isNavCurrent("/chat", page) || isNavCurrent("/prompt-studio", page) || isNavCurrent("/image/create", page)
-        || isNavCurrent("/video/create", page) || isNavCurrent("/voice/tts", page) || isNavCurrent("/music", page)
-        || isNavCurrent("/subtitle", page) || isNavCurrent("/documents", page) || matchesRouteFamily(path, "/video-studio");
-    }
-    if (key === "jobs") return matchesRouteFamily(path, "/jobs");
-    if (key === "assets") return matchesRouteFamily(path, "/assets") || matchesRouteFamily(path, "/asset-vault");
-    if (key === "account") {
-      return isNavCurrent("/account", page) || ["/account/interface-language", "/account/activity", "/account/data-controls", "/account/workspace-care", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
-    }
-    return false;
+    if (path === "/admin" || path.startsWith("/admin/")) return false;
+    return customerMobileNavGroupForPath(path) === key;
   }
 
   function renderMobileNav(page) {
@@ -29932,6 +30016,7 @@
       }
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
+    if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
     main.dataset.portalMotionSkipEnter = landingMotionRoute ? "true" : "false";
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
@@ -29969,6 +30054,7 @@
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
       mountLandingMotion();
+      mountWorkspaceMotion();
     }
     function mountLandingMotion() {
       const replayControl = main.querySelector("[data-landing-motion-replay]");
@@ -29982,6 +30068,10 @@
         return;
       }
       if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
+    }
+    function mountWorkspaceMotion() {
+      if (minimalShell || isAdminPortalSurface(page) || typeof motion.mountWorkspace !== "function") return;
+      motion.mountWorkspace(main);
     }
     const replaceResult = motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {

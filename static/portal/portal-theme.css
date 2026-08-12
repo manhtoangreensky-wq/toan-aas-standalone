@@ -5430,7 +5430,45 @@ body {
   }
 }
 
+/* Portal uses server-rendered document navigations so signed guards remain
+   authoritative. Modern browsers can still carry the rendered surface from
+   one approved route to the next without a browser-side router, fetch, or
+   state hand-off. Browsers without Document View Transitions simply retain
+   their normal navigation behavior. */
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes portal-route-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes portal-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: portal-route-exit var(--portal-motion-fast) var(--portal-motion-ease-standard) both;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-new(root) {
+    animation: portal-route-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+    mix-blend-mode: normal;
+  }
+
   [data-portal-motion="enter"] {
     animation: portal-motion-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
   }
@@ -5448,6 +5486,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
   [data-portal-motion] {
     animation: none !important;
     transform: none !important;
@@ -14946,6 +14988,98 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   .portal-shell[data-portal-app-kind] .portal-dashboard-app .portal-dashboard-overview,
   .portal-shell[data-portal-app-kind] .portal-admin-home > :is(.portal-admin-guard, .portal-admin-grid),
   .portal-shell[data-portal-app-kind] :is(.portal-dashboard-draft, .portal-admin-work-queue) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* Customer workspace reveal ------------------------------------------------
+   Feature discovery and the Workspace Menu are long, signed application
+   surfaces. Their completed semantic content becomes readable immediately;
+   this small layer only gives each decision group a calmer arrival.  It
+   intentionally has no status-, job- or readiness-dependent selector. */
+@keyframes portal-workspace-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-pending {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-pending:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible {
+    animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible .portal-workspace-motion-item {
+    animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) backwards;
+    animation-delay: calc(var(--portal-workspace-motion-index, 0) * 34ms);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ) {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ):is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ):active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-workspace-motion-target,
+    .portal-workspace-motion-item,
+    .portal-start-guide-step,
+    .portal-capability-hub-card,
+    .portal-feature-jump,
+    .portal-catalog-item .portal-module-card,
+    .portal-workspace-menu-card
+  ) {
     animation: none !important;
     transition: none !important;
     transform: none !important;

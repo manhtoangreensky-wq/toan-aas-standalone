@@ -22,6 +22,8 @@
   const LANDING_SCROLL_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
   let landingCleanup = null;
   let landingGeneration = 0;
+  let workspaceCleanup = null;
+  let workspaceGeneration = 0;
 
   function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, Number(value) || 0));
@@ -107,6 +109,114 @@
     // a stale callback can never mutate the old or newly rendered landing.
     landingGeneration += 1;
     if (typeof cleanup === "function") cleanup();
+  }
+
+  // Signed workspace motion is a thin lifecycle enhancement. It has no
+  // access to route data, account state, storage, actions, requests or feature
+  // readiness. Portal calls it only after the semantic workspace is rendered.
+  function unmountWorkspace() {
+    const cleanup = workspaceCleanup;
+    workspaceCleanup = null;
+    workspaceGeneration += 1;
+    if (typeof cleanup === "function") cleanup();
+  }
+
+  function mountWorkspace(root) {
+    unmountWorkspace();
+    if (!root || typeof window !== "object" || prefersReducedMotion()) return;
+
+    const targetSelector = [
+      ".portal-catalog-context",
+      ".portal-feature-catalog > .portal-section-heading",
+      ".portal-feature-guided-start",
+      ".portal-capability-hub",
+      ".portal-catalog-search",
+      ".portal-feature-jumps",
+      ".portal-feature-group",
+      ".portal-workspace-menu-intro",
+      ".portal-workspace-menu-group",
+      ".portal-workspace-menu-boundary"
+    ].join(", ");
+    const itemSelector = [
+      ".portal-start-guide-step",
+      ".portal-capability-hub-card",
+      ".portal-feature-jump",
+      ".portal-catalog-item",
+      ".portal-workspace-menu-card"
+    ].join(", ");
+    const targets = Array.from(root.querySelectorAll(targetSelector));
+    if (!targets.length) return;
+
+    const generation = workspaceGeneration;
+    const isCurrentMount = () => workspaceGeneration === generation;
+    const focusHandlers = [];
+    let observer = null;
+    let removeReducedMotionListener = () => {};
+    const revealTarget = (target) => {
+      if (!isCurrentMount() || !target) return;
+      target.classList.remove("is-pending");
+      target.classList.add("is-visible");
+      if (observer) observer.unobserve(target);
+    };
+
+    targets.forEach((target) => {
+      target.classList.add("portal-workspace-motion-target", "is-pending");
+      Array.from(target.querySelectorAll(itemSelector)).slice(0, 6).forEach((item, index) => {
+        item.classList.add("portal-workspace-motion-item");
+        setStyleProperty(item, "--portal-workspace-motion-index", index);
+      });
+      const onFocus = (event) => revealTarget(event.currentTarget);
+      target.addEventListener("focusin", onFocus);
+      focusHandlers.push({ target, onFocus });
+    });
+
+    if (typeof window.IntersectionObserver === "function") {
+      observer = new window.IntersectionObserver((entries) => {
+        if (!isCurrentMount()) return;
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) revealTarget(entry.target);
+        });
+      // Reveal as soon as a primary group enters the readable viewport. A
+      // higher ratio can leave the first visible part of a tall group blank,
+      // which reads as unfinished content rather than a deliberate entrance.
+      }, { rootMargin: "0px 0px -8%", threshold: 0 });
+      targets.forEach((target) => observer.observe(target));
+    } else {
+      targets.forEach(revealTarget);
+    }
+
+    // An OS preference can change while this signed page remains open. Stop
+    // this optional presentation layer immediately and restore its semantic
+    // content instead of leaving a pending/staggered group in the DOM until a
+    // route change or reload. We intentionally do not restart the animation
+    // when the preference changes back: static content is the calmest state
+    // and a future Portal mount can opt in again.
+    if (typeof window.matchMedia === "function") {
+      const reducedMotionMedia = window.matchMedia(REDUCED_MOTION_QUERY);
+      const onReducedMotionChange = (event) => {
+        if (event && event.matches) unmountWorkspace();
+      };
+      if (reducedMotionMedia && typeof reducedMotionMedia.addEventListener === "function") {
+        reducedMotionMedia.addEventListener("change", onReducedMotionChange);
+        removeReducedMotionListener = () => reducedMotionMedia.removeEventListener("change", onReducedMotionChange);
+      } else if (reducedMotionMedia && typeof reducedMotionMedia.addListener === "function") {
+        reducedMotionMedia.addListener(onReducedMotionChange);
+        removeReducedMotionListener = () => reducedMotionMedia.removeListener(onReducedMotionChange);
+      }
+    }
+
+    workspaceCleanup = () => {
+      if (observer) observer.disconnect();
+      removeReducedMotionListener();
+      focusHandlers.forEach(({ target, onFocus }) => target.removeEventListener("focusin", onFocus));
+      targets.forEach((target) => {
+        target.classList.remove("portal-workspace-motion-target", "is-pending", "is-visible");
+        Array.from(target.querySelectorAll(".portal-workspace-motion-item")).forEach((item) => {
+          item.classList.remove("portal-workspace-motion-item");
+          removeStyleProperty(item, "--portal-workspace-motion-index");
+        });
+      });
+    };
   }
 
   function mountLanding(root) {
@@ -494,6 +604,8 @@
     replace,
     prefersReducedMotion,
     mountLanding,
-    unmountLanding
+    unmountLanding,
+    mountWorkspace,
+    unmountWorkspace
   });
 })();

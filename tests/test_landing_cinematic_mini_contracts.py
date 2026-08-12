@@ -62,6 +62,87 @@ def test_landing_has_only_an_explicit_light_dark_control() -> None:
     assert 'window.location.pathname === "/welcome"' in THEME_JS
 
 
+def test_landing_theme_switch_applies_the_selected_mode_before_an_event_is_dispatched() -> None:
+    """The visible light/dark choice must update the presentation immediately.
+
+    This exercises the real delegated click handler.  It protects the public
+    landing switch without creating a session, calling an API or relying on
+    browser storage succeeding.
+    """
+
+    node = shutil.which("node")
+    assert node is not None, "The project already uses Node for Portal syntax checks."
+    harness = r'''
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync(process.argv[1], "utf8");
+
+const rootAttributes = new Map();
+const bodyAttributes = new Map();
+const listeners = new Map();
+function control(mode) {
+  const attributes = new Map();
+  return {
+    dataset: { portalThemeSet: mode },
+    classList: { toggle() {} },
+    setAttribute(name, value) { attributes.set(name, String(value)); },
+    getAttribute(name) { return attributes.get(name) || null; },
+    closest(selector) { return selector === "[data-portal-theme-set]" ? this : null; }
+  };
+}
+const light = control("light");
+const dark = control("dark");
+const window = {
+  location: { pathname: "/welcome" },
+  document: {
+    readyState: "complete",
+    documentElement: { style: {}, setAttribute(name, value) { rootAttributes.set(name, String(value)); } },
+    body: { setAttribute(name, value) { bodyAttributes.set(name, String(value)); } },
+    querySelector() { return null; },
+    querySelectorAll(selector) {
+      return selector === "[data-portal-theme-set]" ? [light, dark] : [];
+    },
+    addEventListener(name, handler) { listeners.set(name, handler); }
+  },
+  localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
+  matchMedia() { return { matches: true, addEventListener() {} }; },
+  addEventListener() {},
+  dispatchEvent() {},
+  CustomEvent: class { constructor(name, options) { this.name = name; this.detail = options.detail; } }
+};
+vm.runInNewContext(source, { window, console });
+let prevented = false;
+listeners.get("click")({ target: light, preventDefault() { prevented = true; } });
+console.log(JSON.stringify({
+  prevented,
+  preference: window.TOANAASPortalTheme.getPreference(),
+  resolved: window.TOANAASPortalTheme.getResolvedTheme(),
+  root: rootAttributes.get("data-portal-theme"),
+  body: bodyAttributes.get("data-portal-theme"),
+  lightPressed: light.getAttribute("aria-pressed"),
+  darkPressed: dark.getAttribute("aria-pressed")
+}));
+'''
+    result = subprocess.run(
+        [node, "-e", harness, str(ROOT / "static" / "portal" / "portal-theme.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == {
+        "prevented": True,
+        "preference": "light",
+        "resolved": "light",
+        "root": "light",
+        "body": "light",
+        "lightPressed": "true",
+        "darkPressed": "false",
+    }
+
+
 def test_cinematic_css_is_scoped_tokenized_and_reduced_motion_safe() -> None:
     assert '[data-landing-motion="cinematic-mini"]' in THEME
     assert "--portal-landing-cinematic" in THEME
