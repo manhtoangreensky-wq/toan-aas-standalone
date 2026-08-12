@@ -15091,6 +15091,286 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* Reference-first Media Studio rail ----------------------------------------
+   The route-only Studio copies the useful application rhythm of the approved
+   reference: orient first, progress through a connected working rail, then
+   hand off to existing customer destinations. All colors are semantic Aura
+   tokens so light/dark/system remain one product language. */
+.portal-media-studio-shell {
+  display: grid;
+  gap: var(--portal-section-gap);
+}
+
+.portal-feature-studio-continuation {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: var(--portal-space-4);
+  align-items: center;
+  padding: var(--portal-space-4) var(--portal-space-5);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-feature-studio-continuation > .portal-module-icon {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-feature-studio-continuation h2,
+.portal-feature-studio-continuation p {
+  margin: 0;
+}
+
+.portal-feature-studio-continuation h2 {
+  color: var(--portal-ink);
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.portal-feature-studio-continuation p {
+  max-width: 72ch;
+  margin-top: var(--portal-space-1);
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.portal-feature-studio-continuation .portal-button {
+  justify-self: end;
+  min-height: 44px;
+}
+
+.portal-media-studio-shell .portal-media-studio-intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--portal-space-5);
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+}
+
+.portal-media-studio-intro-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface-light);
+  color: var(--portal-context);
+}
+
+.portal-media-studio-intro h2,
+.portal-media-studio-flow-heading h2,
+.portal-media-studio-step h3 {
+  margin: 0;
+  color: var(--portal-ink);
+}
+
+.portal-media-studio-intro p,
+.portal-media-studio-flow-heading > span,
+.portal-media-studio-step p {
+  color: var(--portal-muted);
+}
+
+.portal-media-studio-intro p {
+  max-width: 74ch;
+  margin: var(--portal-space-2) 0 0;
+  line-height: 1.65;
+}
+
+.portal-media-studio-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--portal-space-2);
+  margin-top: var(--portal-space-4);
+}
+
+.portal-media-studio-meta span,
+.portal-media-studio-eyebrow,
+.portal-media-studio-number {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.portal-media-studio-meta span {
+  padding: 6px 9px;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  background: var(--portal-surface-light);
+  color: var(--portal-muted-strong);
+}
+
+.portal-media-studio-flow {
+  display: grid;
+  gap: var(--portal-space-4);
+}
+
+.portal-media-studio-flow-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--portal-space-4);
+}
+
+.portal-media-studio-flow-heading h2 {
+  font-size: clamp(20px, 2vw, 28px);
+}
+
+.portal-media-studio-flow-heading > span {
+  max-width: 56ch;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.portal-media-studio-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--portal-space-3);
+}
+
+@media (min-width: 921px) {
+  .portal-media-studio-grid::before,
+  .portal-media-studio-grid::after {
+    position: absolute;
+    z-index: 0;
+    display: block;
+    height: 1px;
+    content: "";
+    background: var(--portal-border-strong);
+    pointer-events: none;
+  }
+
+  .portal-media-studio-grid::before {
+    top: calc(var(--portal-space-5) + 24px);
+    right: calc(16.666% + var(--portal-space-3));
+    left: calc(16.666% + var(--portal-space-3));
+  }
+
+  .portal-media-studio-grid::after {
+    top: calc(50% + var(--portal-space-5) + 24px);
+    right: calc(16.666% + var(--portal-space-3));
+    left: calc(16.666% + var(--portal-space-3));
+  }
+}
+
+.portal-media-studio-step {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 238px;
+  gap: var(--portal-space-3);
+  padding: var(--portal-space-5);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-media-studio-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--portal-space-3);
+}
+
+.portal-media-studio-number,
+.portal-media-studio-eyebrow {
+  color: var(--portal-context);
+}
+
+.portal-media-studio-step .portal-module-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-media-studio-step-copy {
+  display: grid;
+  align-content: start;
+  gap: var(--portal-space-2);
+}
+
+.portal-media-studio-step h3 {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.portal-media-studio-step p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.58;
+}
+
+.portal-media-studio-step .portal-button {
+  width: fit-content;
+  margin-top: auto;
+  gap: var(--portal-space-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-media-studio-step {
+      transition: transform var(--portal-motion-fast) var(--portal-motion-ease-standard), border-color var(--portal-motion-fast) var(--portal-motion-ease-standard), box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-media-studio-step:is(:hover, :focus-within) {
+      transform: translateY(-1px);
+      border-color: var(--portal-border-strong);
+      box-shadow: var(--portal-elevation-2);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-media-studio-step:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (max-width: 920px) {
+  .portal-media-studio-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-media-studio-grid::before,
+  .portal-media-studio-grid::after { content: none; }
+
+  .portal-feature-studio-continuation {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .portal-feature-studio-continuation .portal-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .portal-media-studio-shell .portal-media-studio-intro { grid-template-columns: 1fr; }
+  .portal-media-studio-flow-heading { align-items: start; flex-direction: column; }
+  .portal-media-studio-flow-heading > span { text-align: left; }
+  .portal-media-studio-grid { grid-template-columns: 1fr; }
+  .portal-media-studio-step { min-height: 0; }
+  .portal-feature-studio-continuation { grid-template-columns: 1fr; }
+  .portal-feature-studio-continuation .portal-button { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-media-studio-shell,
+    .portal-media-studio-step
+  ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Customer dashboard decision motion --------------------------------------
    The summary and canonical lane intentionally stay outside this selector.
    Motion only helps the customer scan completed, Web-owned decision layers

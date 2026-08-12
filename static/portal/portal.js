@@ -1001,7 +1001,7 @@
     notes: ["Danh mục không phải danh sách provider đang chạy và không hứa một engine/output chưa có contract canonical.", "Mỗi workflow vẫn dùng signed session, CSRF, ownership và flow draft → estimate → confirm riêng."]
   });
   customerPage("/studio", "Media Studio", "Lập luồng content, visual, video, voice, music và finalization bằng các workspace Web đã đăng ký.", ICONS.video, {
-    layout: "media-studio", type: "media-studio", fields: [], action: "none", status: "read_only",
+    section: "Media Studio", layout: "media-studio", type: "media-studio", fields: [], action: "none", status: "read_only",
     notes: ["Media Studio chỉ điều hướng giữa các workflow canonical; không tự tạo project, job, output hay delivery giả.", "Mỗi bước vẫn cần estimate, confirm và adapter Bot riêng trước khi engine được phép chạy."]
   });
   customerPage("/workspace", "Bản nháp của tôi", "Lưu và tiếp tục brief Web an toàn giữa các workflow mà không gửi Bot, tạo quote, job hoặc Xu.", ICONS.prompt, {
@@ -7636,6 +7636,12 @@
     return uiText(`featureCatalog.${key}`, fallback, params);
   }
 
+  // Media Studio owns only fixed navigation chrome. Destination routes each
+  // retain their own session, ownership, workflow and delivery boundary.
+  function mediaStudioText(key, fallback, params) {
+    return uiText(`mediaStudio.${key}`, fallback, params);
+  }
+
   function normalizeRouteEngineDescriptor(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
     if (!source) return { state: "loading" };
@@ -9220,6 +9226,7 @@
     "Asset Vault": "nav.assets",
     "Nội dung & kế hoạch": "nav.contentPlanning",
     "AI Labs & Media": "nav.aiLabs",
+    "Media Studio": "mediaStudio.section",
     "Tạo mới": "nav.create",
     "Công việc": "nav.work",
     "Job Center": "nav.jobs",
@@ -9339,6 +9346,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
     if (path === "/features") return featureCatalogText("page.title", fallback);
+    if (path === "/studio") return mediaStudioText("page.title", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
@@ -9399,6 +9407,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
     if (path === "/features") return featureCatalogText("page.description", fallback);
+    if (path === "/studio") return mediaStudioText("page.description", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
@@ -10822,7 +10831,8 @@
     const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ ràng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${studioContinuation}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -18746,15 +18756,15 @@
 
   function renderMediaStudio(page, context) {
     const steps = [
-      { number: "01", icon: ICONS.prompt, title: "Brief & storyboard", text: "Bắt đầu bằng content pack hoặc storyboard để làm rõ câu chuyện, cảnh và CTA trước khi tạo media.", href: "/content/storyboard", action: "Lập storyboard" },
-      { number: "02", icon: ICONS.image, title: "Visual & reference", text: "Tạo ảnh hoặc chuẩn bị image-to-image với asset được staging/ownership-check theo workflow riêng.", href: "/image/create", action: "Mở Image Studio" },
-      { number: "03", icon: ICONS.video, title: "Video project", text: "Chọn video sản phẩm, quick video hoặc multiscene; estimate và số cảnh do Bot canonical xác nhận.", href: "/video/product", action: "Mở Video Studio" },
-      { number: "04", icon: ICONS.voice, title: "Voice workspace", text: "Chuẩn bị TTS hoặc Voice Vault trong workflow có consent và policy riêng.", href: "/voice/tts", action: "Chuẩn bị voice" },
-      { number: "05", icon: ICONS.music, title: "Audio Production Hub", text: "Điều phối music/SFX brief và audio Asset Vault reference trong board app-first. Đây là authoring-only, không phải music generator hoặc player.", href: "/audio-hub", action: "Mở Audio Hub" },
-      { number: "06", icon: ICONS.subtitle, title: "Subtitle & finalization", text: "Dùng subtitle/dubbing rồi mở finalization. Mux, watermark, export và delivery vẫn cần adapter Bot riêng.", href: "/video/add-ons", action: "Mở finalization" }
+      { key: "discover", number: "01", icon: ICONS.prompt, href: "/features" },
+      { key: "brief", number: "02", icon: ICONS.prompt, href: "/content/storyboard" },
+      { key: "plan", number: "03", icon: ICONS.video, href: "/video/product" },
+      { key: "review", number: "04", icon: ICONS.check, href: "/approvals" },
+      { key: "jobs", number: "05", icon: ICONS.jobs, href: "/jobs" },
+      { key: "assets", number: "06", icon: ICONS.assets, href: "/assets" }
     ];
-    const cards = steps.map((step) => `<article class="portal-finalization-card"><div class="portal-finalization-card-head"><span class="portal-finalization-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><h3>${safeText(step.title)}</h3><p>${safeText(step.text)}</p><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(step.action)} <span aria-hidden="true">→</span></a></article>`).join("");
-    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-media-studio-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2>Điều phối workflow, không giả project</h2><p>Media Studio phản chiếu các bước media factory/creative flow của Bot bằng đường đi rõ ràng giữa các workspace Web đã đăng ký. Mỗi bước vẫn tự giữ input, quote, confirmation và quyền sở hữu riêng.</p><div class="portal-state-meta"><span>Không tạo job tại browser</span><span>Không suy đoán output</span><span>Không ghép file/URL tự do</span></div></div></div></section><section class="portal-finalization-grid" aria-label="Luồng Media Studio">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Sau khi xác nhận</h2><p class="portal-card-subtitle">Job Center và Assets là nơi duy nhất theo dõi status/delivery canonical sau khi một adapter Bot đã tạo job hợp lệ.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center</a><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản</a><a class="portal-button portal-button--primary" href="/features">Khám phá workflow</a></div></section></article>`;
+    const cards = steps.map((step) => `<article class="portal-media-studio-step"><div class="portal-media-studio-step-head"><span class="portal-media-studio-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><div class="portal-media-studio-step-copy"><span class="portal-media-studio-eyebrow">${safeText(mediaStudioText(`step.${step.key}.eyebrow`, step.number))}</span><h3>${safeText(mediaStudioText(`step.${step.key}.title`, step.key))}</h3><p>${safeText(mediaStudioText(`step.${step.key}.body`, ""))}</p></div><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(mediaStudioText(`step.${step.key}.action`, "Open"))}<span aria-hidden="true">→</span></a></article>`).join("");
+    return `<article class="portal-page portal-media-studio-shell">${renderHero(page, context)}<section class="portal-media-studio-intro portal-card portal-card-pad"><div class="portal-media-studio-intro-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div><h2>${safeText(mediaStudioText("intro.title", "Điều phối workflow, không giả project"))}</h2><p>${safeText(mediaStudioText("intro.body", ""))}</p><div class="portal-media-studio-meta"><span>${safeText(mediaStudioText("intro.meta.routes", ""))}</span><span>${safeText(mediaStudioText("intro.meta.boundary", ""))}</span><span>${safeText(mediaStudioText("intro.meta.truth", "Không tạo job tại browser"))}</span></div></div></section><section class="portal-media-studio-flow" aria-label="${safeText(mediaStudioText("flow.label", "Media Studio flow"))}"><div class="portal-media-studio-flow-heading"><h2>${safeText(mediaStudioText("flow.label", "Media Studio flow"))}</h2><span>${safeText(mediaStudioText("page.description", ""))}</span></div><div class="portal-media-studio-grid">${cards}</div></section><section class="portal-card portal-card-pad portal-media-studio-handoff"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(mediaStudioText("handoff.title", "Your continuation point"))}</h2><p class="portal-card-subtitle">${safeText(mediaStudioText("handoff.body", ""))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">${safeText(mediaStudioText("action.jobs", "Go to Job Center"))}</a><a class="portal-button portal-button--quiet" href="/assets">${safeText(mediaStudioText("action.assets", "Go to assets"))}</a><a class="portal-button portal-button--primary" href="/features">${safeText(mediaStudioText("action.explore", "Explore workflows"))}</a></div></section></article>`;
   }
 
   function canonicalShortText(value, maximum) {

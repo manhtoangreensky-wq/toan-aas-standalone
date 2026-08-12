@@ -144,6 +144,9 @@
       ".portal-catalog-search",
       ".portal-feature-jumps",
       ".portal-feature-group",
+      ".portal-media-studio-shell .portal-media-studio-intro",
+      ".portal-media-studio-shell .portal-media-studio-flow",
+      ".portal-media-studio-shell .portal-media-studio-handoff",
       ".portal-workspace-menu-intro",
       ".portal-workspace-menu-group",
       ".portal-workspace-menu-boundary"
@@ -153,6 +156,7 @@
       ".portal-capability-hub-card",
       ".portal-feature-jump",
       ".portal-catalog-item",
+      ".portal-media-studio-step",
       ".portal-workspace-menu-card"
     ].join(", ");
     const dashboardItemSelector = [
