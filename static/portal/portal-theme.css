@@ -14873,3 +14873,81 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transform: none !important;
   }
 }
+
+/* App-wide surface motion --------------------------------------------------
+   The signed customer workspace and internal ERP share a quiet route-entry
+   grammar, while retaining different information density.  These selectors
+   are deliberately presentation-only: they consume the route marker already
+   chosen by Portal and do not inspect roles, records or capability state. */
+@keyframes portal-app-surface-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A regular tool/detail page gets one spatially continuous entrance. The
+     two command centers instead sequence only their primary decision layers. */
+  .portal-shell[data-portal-app-kind="customer"] .portal-page:not(.portal-dashboard-app),
+  .portal-shell[data-portal-app-kind="admin"] .portal-page:not(.portal-admin-home),
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-overview,
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard,
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
+    animation: portal-app-surface-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+    animation-delay: calc(var(--portal-app-motion-index, 0) * 34ms);
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-overview,
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard {
+    --portal-app-motion-index: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
+    --portal-app-motion-index: 2;
+  }
+
+  /* Only navigation-like cards respond to fine-pointer hover. The selected
+     targets are already semantic links, so the motion is feedback rather
+     than a new click target or an implied data action. */
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:hover,
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:focus-visible,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:hover,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:focus-visible {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:active,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind] .portal-page,
+  .portal-shell[data-portal-app-kind] .portal-dashboard-app .portal-dashboard-overview,
+  .portal-shell[data-portal-app-kind] .portal-admin-home > :is(.portal-admin-guard, .portal-admin-grid),
+  .portal-shell[data-portal-app-kind] :is(.portal-dashboard-draft, .portal-admin-work-queue) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

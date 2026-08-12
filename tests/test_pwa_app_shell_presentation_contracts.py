@@ -74,3 +74,21 @@ def test_app_docks_have_distinct_aura_surfaces_safe_area_and_motion_fallback() -
     assert "@media (prefers-reduced-motion: reduce)" in THEME
     assert '.portal-mobile-nav[data-portal-mobile-nav-kind] {' in THEME
     assert "animation: none !important;" in THEME
+
+
+def test_customer_and_admin_surfaces_receive_motion_without_new_authority_or_data_paths() -> None:
+    """Keep app-wide motion presentational, bounded and accessibility-safe."""
+    assert '@keyframes portal-app-surface-enter' in THEME
+    assert '.portal-shell[data-portal-app-kind="customer"] .portal-page' in THEME
+    assert '.portal-shell[data-portal-app-kind="admin"] .portal-page' in THEME
+    assert 'animation: portal-app-surface-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;' in THEME
+    assert '.portal-dashboard-app .portal-dashboard-overview' in THEME
+    assert '.portal-admin-home .portal-admin-work-queue' in THEME
+    assert 'animation-delay: calc(var(--portal-app-motion-index, 0) * 34ms);' in THEME
+    assert 'transform: translateY(-1px);' in THEME
+    assert '.portal-shell[data-portal-app-kind] .portal-page' in THEME
+    assert 'animation: none !important;' in THEME
+
+    mount = _section(PORTAL, "function mountPortal(override) {", "\n\n  window.TOANAASPortal")
+    assert "data-portal-app-kind" not in mount
+    assert "context.isAdmin" not in mount
