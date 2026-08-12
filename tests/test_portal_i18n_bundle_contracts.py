@@ -842,7 +842,7 @@ def test_core_portal_renderers_consume_reviewed_locale_keys() -> None:
     starter = _between(PORTAL, "function starterKitRecordCounts(kit)", "function renderWorkspaceSetup(page, context)")
 
     for required in (
-        'uiText("mobile.workspace"',
+        'uiText("mobile.home"',
         'uiText("chrome.searchWorkspace"',
         'uiText("chrome.openNavigation"',
         'uiText("chrome.installApp"',

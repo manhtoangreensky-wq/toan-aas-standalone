@@ -9810,10 +9810,10 @@
 
   function renderMobileNav(page) {
     const items = [
-      ["dashboard", "/dashboard", uiText("mobile.workspace", "Workspace"), ICONS.dashboard],
-      ["studio", "/features", uiText("mobile.studio", "AI Studio"), ICONS.prompt],
-      ["jobs", "/jobs", uiText("mobile.jobs", "Jobs"), ICONS.jobs],
-      ["assets", "/assets", uiText("mobile.assets", "Tài sản"), ICONS.assets],
+      ["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard],
+      ["studio", "/features", uiText("mobile.create", "Tạo"), ICONS.prompt],
+      ["jobs", "/jobs", uiText("mobile.work", "Công việc"), ICONS.jobs],
+      ["assets", "/assets", uiText("mobile.library", "Thư viện"), ICONS.assets],
       ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
     ];
     return items.map(([key, href, label, icon]) => {
@@ -29887,8 +29887,15 @@
     const landingMotionEnabled = landingMotionRoute
       && new URLSearchParams(window.location.search || "").get("motion") !== "0";
     const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
+    // This presentation marker is intentionally derived from the same
+    // normalized route selection used below for the server-authorized Admin
+    // dock. It changes only the Aura shell styling; it neither checks nor
+    // grants a role, and a guessed browser URL still cannot render Admin data.
+    const appKind = isAdminPortalSurface(page) ? "admin" : "customer";
     shell.dataset.portalSurface = surface;
+    shell.dataset.portalAppKind = appKind;
     document.body.dataset.portalSurface = surface;
+    document.body.dataset.portalAppKind = appKind;
     // The public landing and unauthenticated access screens intentionally
     // avoid showing an authenticated workspace sidebar. This keeps the first
     // visit focused, prevents a misleading "already inside" impression, and
@@ -29911,6 +29918,8 @@
         : "";
       mobileNav.hidden = !mobileNavMarkup;
       mobileNav.innerHTML = mobileNavMarkup;
+      if (mobileNavMarkup) mobileNav.dataset.portalMobileNavKind = appKind;
+      else mobileNav.removeAttribute("data-portal-mobile-nav-kind");
     }
     if (commandPalette && !showMobileNav) {
       commandPalette.hidden = true;

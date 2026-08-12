@@ -46,7 +46,7 @@ def test_app_shell_keeps_touch_focus_motion_and_local_svg_contracts() -> None:
     # Labels are presentation-only and must follow the signed account's
     # reviewed interface locale.  The route and closed SVG icon remain fixed
     # so localization cannot change navigation authority or icon rendering.
-    assert '["dashboard", "/dashboard", uiText("mobile.workspace", "Workspace"), ICONS.dashboard]' in PORTAL
+    assert '["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard]' in PORTAL
     assert "const PORTAL_ICON_PATHS = Object.freeze({" in PORTAL
     icon_helper = _section(PORTAL, "function portalIcon(icon)", "const WEB_LOCAL_ACTIONS")
     assert "PORTAL_ICON_PATHS[key] || PORTAL_ICON_PATHS[ICONS.default]" in icon_helper
@@ -110,7 +110,7 @@ def test_customer_surfaces_use_progressive_disclosure_and_ephemeral_password_rev
 
     assert "function renderAccountSettingsNav(currentPath)" in PORTAL
     assert 'class="portal-settings-nav" aria-label="${safeText(uiText("interfaceLocale.settingsNav", "Thiết lập tài khoản"))}"' in PORTAL
-    assert 'class="portal-onboarding-steps" aria-label="Tiến trình liên kết Telegram"' in PORTAL
+    assert 'class="portal-onboarding-steps" aria-label="${safeText(onboardingText("stepsAria", "Tiến trình liên kết Telegram"))}"' in PORTAL
 
     # Password visibility is an in-page accessibility affordance only.  The
     # event handler changes the active input and does not create persistence

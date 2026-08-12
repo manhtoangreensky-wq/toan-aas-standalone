@@ -14774,3 +14774,102 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transition: none !important;
   }
 }
+
+/* Aura PWA and internal ERP shell distinction -----------------------------
+   Both responsive applications share the signed Portal foundation, route
+   manifest and accessibility rules. The marker is presentation-only: route
+   authorization remains entirely server-issued by the existing renderer. */
+.portal-shell[data-portal-app-kind="customer"] .portal-header {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header {
+  border-bottom-color: color-mix(in srgb, var(--portal-context) 38%, var(--portal-border));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--portal-context) 18%, transparent);
+}
+
+@keyframes portal-mobile-dock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--portal-motion-distance) + 2px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"],
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+  min-height: 44px;
+  padding-bottom: max(var(--portal-space-2), calc(var(--portal-space-2) + var(--portal-safe-bottom)));
+  border-top-width: 1px;
+  box-shadow: 0 -12px 30px color-mix(in srgb, var(--portal-ink) 14%, transparent);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+  border-top-color: color-mix(in srgb, var(--portal-brand) 36%, var(--portal-rail-border));
+  background: var(--portal-rail);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+  border-top: 2px solid var(--portal-context);
+  background: var(--portal-rail-surface);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
+  min-height: 44px;
+  color: var(--portal-rail-muted);
+  transition:
+    transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"] .portal-mobile-nav-link[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--portal-brand) 66%, transparent);
+  background: color-mix(in srgb, var(--portal-brand) 22%, transparent);
+  color: var(--portal-rail-text);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] .portal-mobile-nav-link[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--portal-context) 72%, transparent);
+  background: color-mix(in srgb, var(--portal-context) 22%, transparent);
+  color: var(--portal-rail-text);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link[aria-current="page"] .portal-mobile-nav-icon {
+  color: var(--portal-rail-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind] {
+    animation: portal-mobile-dock-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link:active {
+      transform: scale(.98);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind] {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
+    transition: none !important;
+    transform: none !important;
+  }
+}

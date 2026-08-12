@@ -1085,6 +1085,10 @@
       "mobile.studio": "Studio",
       "mobile.jobs": "Việc",
       "mobile.assets": "Tài sản",
+      "mobile.home": "Trang chủ",
+      "mobile.create": "Tạo",
+      "mobile.work": "Công việc",
+      "mobile.library": "Thư viện",
       "mobile.account": "Tài khoản",
 
       "states.ready": "Sẵn sàng",
@@ -1421,6 +1425,10 @@
       "mobile.studio": "Studio",
       "mobile.jobs": "Jobs",
       "mobile.assets": "Assets",
+      "mobile.home": "Home",
+      "mobile.create": "Create",
+      "mobile.work": "Work",
+      "mobile.library": "Library",
       "mobile.account": "Account",
 
       "states.ready": "Ready",
@@ -1757,6 +1765,10 @@
       "mobile.studio": "工作室",
       "mobile.jobs": "任务",
       "mobile.assets": "资源",
+      "mobile.home": "首页",
+      "mobile.create": "创建",
+      "mobile.work": "工作",
+      "mobile.library": "资源库",
       "mobile.account": "账户",
 
       "states.ready": "就绪",
