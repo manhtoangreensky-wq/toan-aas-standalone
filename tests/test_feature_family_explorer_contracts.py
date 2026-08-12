@@ -137,6 +137,15 @@ def test_feature_family_navigation_routes_do_not_reenter_the_detailed_catalogue(
     assert "!isFeatureFamilyExplorerRoute(route)" in customer_catalog
 
 
+def test_feature_family_page_shows_sibling_directory_before_operational_detail() -> None:
+    family = _function(PORTAL, "renderFeatureFamily")
+
+    assert family.index("${renderHero(page, context)}") < family.index("${familyNav}")
+    assert family.index("${familyNav}") < family.index('<div class="portal-status-grid">')
+    assert family.index("${familyNav}") < family.index("${renderRouteEngineBoundary(context)}")
+    assert family.count("${familyNav}") == 1
+
+
 def test_feature_family_explorer_registers_every_closed_family_and_localizes_its_navigation_label() -> None:
     navigation = _between(PORTAL, "const NAVIGATION_I18N_KEYS", "function localizedNavigationLabel")
     registration = _between(
