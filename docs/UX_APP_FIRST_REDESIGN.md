@@ -32,6 +32,25 @@ record, or an unavailable provider look ready.
   140/220/420ms token family with opacity/transform only; all non-essential
   motion respects `prefers-reduced-motion`.
 
+- **Customer PWA continuity:** the five-item dock groups an already-rendered
+  customer route into Home, Create, Work, Library or Account without changing
+  authorization. Feature discovery and the Workspace Menu receive a bounded
+  entrance/reveal and press feedback only after their semantic content is
+  rendered; the enhancement is removed for reduced-motion users. Supported
+  browsers use a CSS cross-document View Transition for regular server route
+  navigations; unsupported browsers keep the same normal navigation. If the
+  operating-system motion preference changes while a workspace is open, its
+  optional observer/listener enhancement is removed immediately and the
+  rendered content stays visible.
+
+- **Dashboard decision motion:** completed dashboard decision layers — the
+  first-session guide, Web-owned work lane, account lane, Studio launchpad and
+  assurance disclosure — may reveal after entering the readable viewport.
+  The overview summary and canonical read lane remain visible immediately;
+  motion never reads, delays or interprets integration state. Focus reveals a
+  layer immediately, the enhancement is bounded to six controls per layer,
+  and the same reduced-motion cleanup restores a fully static dashboard.
+
 ## Navigation model
 
 | Viewport | Primary navigation | Secondary navigation |

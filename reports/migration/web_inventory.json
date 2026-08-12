@@ -7489,7 +7489,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 696,
+      "occurrences": 699,
       "provider": "PayOS"
     },
     {
@@ -7578,7 +7578,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1618,
+      "occurrences": 1621,
       "provider": "Telegram"
     }
   ],
@@ -13707,7 +13707,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 145,
   "source_files_scanned": 145,
-  "source_fingerprint_sha256": "05c42ef83099c110fc669bdf6c9657b84b4c8c95f3e18c719adebafc1536ad7a",
+  "source_fingerprint_sha256": "bf217995f8eb319b0bc3a919d62ec065dd5466bea15b5bccf2c5ed87e2dbc371",
   "source_root": "webapp-root",
   "ui_path_references": [
     {

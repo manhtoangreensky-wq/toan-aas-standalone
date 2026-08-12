@@ -5430,7 +5430,52 @@ body {
   }
 }
 
+/* Portal uses server-rendered document navigations so signed guards remain
+   authoritative. Modern browsers can still carry the rendered surface from
+   one approved route to the next without a browser-side router, fetch, or
+   state hand-off. Browsers without Document View Transitions simply retain
+   their normal navigation behavior. */
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes portal-route-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes portal-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: portal-route-exit var(--portal-motion-fast) var(--portal-motion-ease-standard) both;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-new(root) {
+    animation: portal-route-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+    mix-blend-mode: normal;
+  }
+
+  /* Dashboard keeps its canonical account/job read state stationary. Its
+     own helper still reveals only the five non-canonical decision layers. */
+  html[data-portal-motion-route="dashboard"]::view-transition-old(root),
+  html[data-portal-motion-route="dashboard"]::view-transition-new(root) {
+    animation: none;
+  }
+
   [data-portal-motion="enter"] {
     animation: portal-motion-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
   }
@@ -5448,6 +5493,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
   [data-portal-motion] {
     animation: none !important;
     transform: none !important;
@@ -14772,5 +14821,373 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     transform: none !important;
     clip-path: none !important;
     transition: none !important;
+  }
+}
+
+/* Aura PWA and internal ERP shell distinction -----------------------------
+   Both responsive applications share the signed Portal foundation, route
+   manifest and accessibility rules. The marker is presentation-only: route
+   authorization remains entirely server-issued by the existing renderer. */
+.portal-shell[data-portal-app-kind="customer"] .portal-header {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header {
+  border-bottom-color: color-mix(in srgb, var(--portal-context) 38%, var(--portal-border));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--portal-context) 18%, transparent);
+}
+
+@keyframes portal-mobile-dock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--portal-motion-distance) + 2px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"],
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+  min-height: 44px;
+  padding-bottom: max(var(--portal-space-2), calc(var(--portal-space-2) + var(--portal-safe-bottom)));
+  border-top-width: 1px;
+  box-shadow: 0 -12px 30px color-mix(in srgb, var(--portal-ink) 14%, transparent);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+  border-top-color: color-mix(in srgb, var(--portal-brand) 36%, var(--portal-rail-border));
+  background: var(--portal-rail);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+  border-top: 2px solid var(--portal-context);
+  background: var(--portal-rail-surface);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
+  min-height: 44px;
+  color: var(--portal-rail-muted);
+  transition:
+    transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+    color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"] .portal-mobile-nav-link[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--portal-brand) 66%, transparent);
+  background: color-mix(in srgb, var(--portal-brand) 22%, transparent);
+  color: var(--portal-rail-text);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind="admin"] .portal-mobile-nav-link[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--portal-context) 72%, transparent);
+  background: color-mix(in srgb, var(--portal-context) 22%, transparent);
+  color: var(--portal-rail-text);
+}
+
+.portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link[aria-current="page"] .portal-mobile-nav-icon {
+  color: var(--portal-rail-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind] {
+    animation: portal-mobile-dock-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link:active {
+      transform: scale(.98);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind] {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* App-wide surface motion --------------------------------------------------
+   The signed customer workspace and internal ERP share a quiet route-entry
+   grammar, while retaining different information density.  These selectors
+   are deliberately presentation-only: they consume the route marker already
+   chosen by Portal and do not inspect roles, records or capability state. */
+@keyframes portal-app-surface-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A regular tool/detail page gets one spatially continuous entrance. The
+     two command centers instead sequence only their primary decision layers. */
+  .portal-shell[data-portal-app-kind="customer"] .portal-page:not(.portal-dashboard-app),
+  .portal-shell[data-portal-app-kind="admin"] .portal-page:not(.portal-admin-home),
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard,
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
+    animation: portal-app-surface-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+    animation-delay: calc(var(--portal-app-motion-index, 0) * 34ms);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard {
+    --portal-app-motion-index: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
+    --portal-app-motion-index: 2;
+  }
+
+  /* Only navigation-like cards respond to fine-pointer hover. The selected
+     targets are already semantic links, so the motion is feedback rather
+     than a new click target or an implied data action. */
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:hover,
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:focus-visible,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:hover,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:focus-visible {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app .portal-dashboard-draft:active,
+    .portal-shell[data-portal-app-kind="admin"] .portal-admin-home .portal-admin-work-queue:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind] .portal-page,
+  .portal-shell[data-portal-app-kind] .portal-dashboard-app .portal-dashboard-overview,
+  .portal-shell[data-portal-app-kind] .portal-admin-home > :is(.portal-admin-guard, .portal-admin-grid),
+  .portal-shell[data-portal-app-kind] :is(.portal-dashboard-draft, .portal-admin-work-queue) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* Customer workspace reveal ------------------------------------------------
+   Feature discovery and the Workspace Menu are long, signed application
+   surfaces. Their completed semantic content becomes readable immediately;
+   this small layer only gives each decision group a calmer arrival.  It
+   intentionally has no status-, job- or readiness-dependent selector. */
+@keyframes portal-workspace-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-pending {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-pending:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible {
+    animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible .portal-workspace-motion-item {
+    animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) backwards;
+    animation-delay: calc(var(--portal-workspace-motion-index, 0) * 34ms);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ) {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ):is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-start-guide-step,
+      .portal-capability-hub-card,
+      .portal-feature-jump,
+      .portal-catalog-item .portal-module-card,
+      .portal-workspace-menu-card
+    ):active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-workspace-motion-target,
+    .portal-workspace-motion-item,
+    .portal-start-guide-step,
+    .portal-capability-hub-card,
+    .portal-feature-jump,
+    .portal-catalog-item .portal-module-card,
+    .portal-workspace-menu-card
+  ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Customer dashboard decision motion --------------------------------------
+   The summary and canonical lane intentionally stay outside this selector.
+   Motion only helps the customer scan completed, Web-owned decision layers
+   after their semantic content exists in the document. */
+@keyframes portal-dashboard-decision-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-pending {
+    opacity: 0;
+    transform: translateY(var(--portal-motion-distance));
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-pending:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-visible {
+    animation: portal-dashboard-decision-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  /* A keyboard user's destination must be readable as soon as it receives
+     focus. The optional reveal describes scrolling, never delays focus. */
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-visible:focus-within {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-visible:focus-within .portal-dashboard-motion-item {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-visible .portal-dashboard-motion-item {
+    animation: portal-dashboard-decision-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) backwards;
+    animation-delay: calc(var(--portal-dashboard-motion-index, 0) * 34ms);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app :is(
+      .portal-start-guide-step,
+      .portal-dashboard-draft,
+      .portal-command-center-lane--account .portal-button,
+      .portal-studio-card,
+      .portal-dashboard-assurance > summary
+    ) {
+      transition: transform var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app :is(
+      .portal-start-guide-step,
+      .portal-dashboard-draft,
+      .portal-command-center-lane--account .portal-button,
+      .portal-studio-card,
+      .portal-dashboard-assurance > summary
+    ):is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-app :is(
+      .portal-start-guide-step,
+      .portal-dashboard-draft,
+      .portal-command-center-lane--account .portal-button,
+      .portal-studio-card,
+      .portal-dashboard-assurance > summary
+    ):active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-dashboard-motion-target,
+    .portal-dashboard-motion-item,
+    .portal-dashboard-app .portal-start-guide-step,
+    .portal-dashboard-app .portal-dashboard-draft,
+    .portal-dashboard-app .portal-command-center-lane--account .portal-button,
+    .portal-dashboard-app .portal-studio-card,
+    .portal-dashboard-app .portal-dashboard-assurance > summary
+  ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 }

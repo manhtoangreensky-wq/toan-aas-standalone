@@ -7629,6 +7629,13 @@
     return uiText(`routeEngine.${key}`, fallback, params);
   }
 
+  // Feature catalogue messages are fixed interface chrome only. Server-issued
+  // workflow records keep their title, description, route and readiness data;
+  // this helper cannot translate or alter those canonical/customer values.
+  function featureCatalogText(key, fallback, params) {
+    return uiText(`featureCatalog.${key}`, fallback, params);
+  }
+
   function normalizeRouteEngineDescriptor(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
     if (!source) return { state: "loading" };
@@ -9330,6 +9337,9 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    const featureFamily = featureFamilyForPath(path);
+    if (path === "/features") return featureCatalogText("page.title", fallback);
+    if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
@@ -9387,6 +9397,9 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
+    const featureFamily = featureFamilyForPath(path);
+    if (path === "/features") return featureCatalogText("page.description", fallback);
+    if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
@@ -9776,31 +9789,115 @@
   // routes. It does not show balance, job counts, provider readiness or any
   // other private state, so it remains a navigation aid rather than a second
   // dashboard with stale or browser-owned data.
+  // These are the five customer-facing wayfinding buckets, not a capability
+  // registry. They classify only a page path that the server has already
+  // selected and do not grant routes, inspect a role, infer readiness, or
+  // expose any record. Keep the list deliberately explicit so a newly added
+  // route cannot silently change the meaning of a top-level PWA destination.
+  const CUSTOMER_MOBILE_NAV_GROUPS = Object.freeze({
+    dashboard: Object.freeze({
+      exact: Object.freeze([
+        "/dashboard", "/onboarding", "/workspace/setup", "/starter-kits",
+        "/workspace-menu", "/guides", "/guides/source-rights", "/community", "/app"
+      ]),
+      prefixes: Object.freeze(["/starter-kits/"])
+    }),
+    studio: Object.freeze({
+      exact: Object.freeze([
+        "/features", "/tools", "/studio", "/chat", "/prompt-studio",
+        "/prompts", "/image", "/image/create", "/video", "/video/create",
+        "/pdf", "/mux", "/voice/tts", "/music", "/subtitle",
+        "/translate", "/dubbing", "/asr", "/documents", "/content-studio",
+        "/content/prompt-pack", "/content/publish-review", "/content/contextual-prompt",
+        "/trend-research", "/media-factory", "/creative-flow", "/image-studio",
+        "/voice-studio", "/media-workspace", "/audio-hub", "/document-workspace",
+        "/subtitle-studio"
+      ]),
+      prefixes: Object.freeze([
+        "/features/", "/chat/", "/prompt-studio/", "/content/", "/caption",
+        "/hashtag", "/hook", "/script", "/storyboard", "/content-pack",
+        "/image/", "/video/", "/video-studio", "/voice/", "/tts", "/music/",
+        "/subtitle", "/translate/", "/dubbing/", "/asr/", "/documents/",
+        "/content-studio/", "/image-studio/", "/voice-studio/", "/media-workspace/", "/audio-hub/",
+        "/document-workspace/", "/subtitle-studio/"
+      ])
+    }),
+    jobs: Object.freeze({
+      exact: Object.freeze([
+        "/jobs", "/projects", "/workboard", "/workspace", "/project-packages",
+        "/content/channel-strategy", "/content/handoffs", "/crm/leads",
+        "/campaigns", "/calendar", "/approvals", "/notes", "/reminders",
+        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
+        "/video/progress"
+      ]),
+      prefixes: Object.freeze([
+        "/jobs/", "/projects/", "/workboard/",
+        "/content/channel-strategy/", "/content/handoffs/", "/crm/leads/",
+        "/campaigns/", "/calendar/", "/approvals/", "/analytics/"
+      ])
+    }),
+    assets: Object.freeze({
+      exact: Object.freeze([
+        "/assets", "/asset-vault", "/prompt-library", "/free-prompt-gallery",
+        "/image-hub", "/image/history",
+        "/image/assets", "/video/preview", "/video/export", "/voice", "/voice-vault",
+        "/voice/preview", "/voice/outputs", "/music/library",
+        "/music-library", "/music/sfx-library", "/subtitle/formats"
+      ]),
+      prefixes: Object.freeze([
+        "/assets/", "/asset-vault/", "/prompt-library/", "/image-hub/", "/audio/"
+      ])
+    }),
+    account: Object.freeze({
+      exact: Object.freeze([
+        "/account", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
+        "/automation", "/tickets", "/support", "/operations", "/rewards",
+        "/status", "/legal", "/privacy", "/referrals", "/crm/consultations/new"
+      ]),
+      prefixes: Object.freeze([
+        "/account/", "/wallet/", "/membership/", "/packages/", "/pricing/",
+        "/inbox/", "/automation/", "/tickets/", "/support/", "/operations/",
+        "/rewards/", "/status/"
+      ])
+    })
+  });
+
+  // Some creator routes live below broad URL families such as `/video/` and
+  // `/voice/`, while their saved output/history routes live in the Library
+  // and job progress lives in Work.  Resolve the fixed, more specific groups
+  // first so a customer sees one truthful active dock destination at a time.
+  const CUSTOMER_MOBILE_NAV_GROUP_ORDER = Object.freeze([
+    "dashboard", "account", "assets", "jobs", "studio"
+  ]);
+
+  function customerMobileNavGroupMatches(group, path) {
+    const routes = CUSTOMER_MOBILE_NAV_GROUPS[group];
+    if (!routes || !path) return false;
+    return routes.exact.includes(path) || routes.prefixes.some((prefix) => (
+      prefix.endsWith("/") ? path.startsWith(prefix) : matchesRouteFamily(path, prefix)
+    ));
+  }
+
+  function customerMobileNavGroupForPath(path) {
+    const normalized = normalizePath(path);
+    if (normalized === "/admin" || normalized.startsWith("/admin/")) return null;
+    return CUSTOMER_MOBILE_NAV_GROUP_ORDER.find((group) => (
+      customerMobileNavGroupMatches(group, normalized)
+    )) || null;
+  }
+
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
-    if (key === "dashboard") {
-      return ["/dashboard", "/starter-kits", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/image-hub", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/assets", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/starter-kits/") || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/") || path.startsWith("/image-hub/");
-    }
-    if (key === "studio") {
-      return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
-        || isNavCurrent("/chat", page) || isNavCurrent("/prompt-studio", page) || isNavCurrent("/image/create", page)
-        || isNavCurrent("/video/create", page) || isNavCurrent("/voice/tts", page) || isNavCurrent("/music", page)
-        || isNavCurrent("/subtitle", page) || isNavCurrent("/documents", page) || matchesRouteFamily(path, "/video-studio");
-    }
-    if (key === "jobs") return matchesRouteFamily(path, "/jobs");
-    if (key === "assets") return matchesRouteFamily(path, "/assets") || matchesRouteFamily(path, "/asset-vault");
-    if (key === "account") {
-      return isNavCurrent("/account", page) || ["/account/interface-language", "/account/activity", "/account/data-controls", "/account/workspace-care", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
-    }
-    return false;
+    if (path === "/admin" || path.startsWith("/admin/")) return false;
+    return customerMobileNavGroupForPath(path) === key;
   }
 
   function renderMobileNav(page) {
     const items = [
-      ["dashboard", "/dashboard", uiText("mobile.workspace", "Workspace"), ICONS.dashboard],
-      ["studio", "/features", uiText("mobile.studio", "AI Studio"), ICONS.prompt],
-      ["jobs", "/jobs", uiText("mobile.jobs", "Jobs"), ICONS.jobs],
-      ["assets", "/assets", uiText("mobile.assets", "Tài sản"), ICONS.assets],
+      ["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard],
+      ["studio", "/features", uiText("mobile.create", "Tạo"), ICONS.prompt],
+      ["jobs", "/jobs", uiText("mobile.work", "Công việc"), ICONS.jobs],
+      ["assets", "/assets", uiText("mobile.library", "Thư viện"), ICONS.assets],
       ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
     ];
     return items.map(([key, href, label, icon]) => {
@@ -10437,6 +10534,13 @@
     { key: "support", title: "Hỗ trợ & thông tin", description: "Ticket, bảng giá và thông tin pháp lý." }
   ]);
 
+  function featureCatalogGroupCopy(group, field) {
+    const fallback = group && typeof group[field] === "string" ? group[field] : "";
+    return group && typeof group.key === "string"
+      ? featureCatalogText(`group.${group.key}.${field}`, fallback)
+      : fallback;
+  }
+
   // These are navigation-only family shells.  They deliberately do not turn a
   // bot command into a new execution endpoint: cards are sourced from the
   // existing registry/manifest and retain their canonical readiness state.
@@ -10495,12 +10599,14 @@
   function renderEngineLabel(module) {
     const engine = normalizeCatalogEngine(module && typeof module === "object" ? module.engine : null);
     const labels = {
-      web_native: "Web-native",
-      bot_companion: "Bot companion",
-      guarded: "Đang guarded"
+      web_native: featureCatalogText("engine.webNative", "Web-native"),
+      bot_companion: featureCatalogText("engine.botCompanion", "Bot companion"),
+      guarded: featureCatalogText("engine.guarded", "Đang guarded")
     };
-    const suffix = engine.mode === "web_native" && engine.executionState === "ready" ? "" : " · đang guarded";
-    const title = "Phân loại execution; không xác nhận job, payment hoặc output.";
+    const suffix = engine.mode === "web_native" && engine.executionState === "ready"
+      ? ""
+      : featureCatalogText("engine.guardedSuffix", " · đang guarded");
+    const title = featureCatalogText("engine.title", "Phân loại execution; không xác nhận job, payment hoặc output.");
     return `<span class="portal-engine-label" data-engine-mode="${safeText(engine.mode)}" title="${safeText(title)}">${safeText(labels[engine.mode] || labels.guarded)}${safeText(suffix)}</span>`;
   }
 
@@ -10516,14 +10622,14 @@
   function renderReadinessLabel(module) {
     const readiness = normalizeCatalogReadiness(module && typeof module === "object" ? module.readiness : null);
     const labels = {
-      available: uiText("catalog.readiness.available", "Sẵn sàng"),
-      planning_only: uiText("catalog.readiness.planning_only", "Lập kế hoạch"),
-      local_execution: uiText("catalog.readiness.local_execution", "Xử lý tại Web"),
-      canonical_read: uiText("catalog.readiness.canonical_read", "Đọc canonical"),
-      guarded: uiText("catalog.readiness.guarded", "Đang bảo vệ"),
-      disabled: uiText("catalog.readiness.disabled", "Tạm dừng")
+      available: featureCatalogText("readiness.available", "Sẵn sàng"),
+      planning_only: featureCatalogText("readiness.planningOnly", "Lập kế hoạch"),
+      local_execution: featureCatalogText("readiness.localExecution", "Xử lý tại Web"),
+      canonical_read: featureCatalogText("readiness.canonicalRead", "Đọc canonical"),
+      guarded: featureCatalogText("readiness.guarded", "Đang bảo vệ"),
+      disabled: featureCatalogText("readiness.disabled", "Tạm dừng")
     };
-    const title = uiText("catalog.readiness.title", "Phân loại readiness; không xác nhận job, payment hoặc output.");
+    const title = featureCatalogText("readiness.title", "Phân loại readiness; không xác nhận job, payment hoặc output.");
     return `<span class="portal-readiness-label" data-readiness="${safeText(readiness.status)}" title="${safeText(title)}">${safeText(labels[readiness.status] || labels.guarded)}</span>`;
   }
 
@@ -10550,10 +10656,14 @@
     if (!route) return "";
     const path = normalizePath(route);
     const page = manifest[path] || { path, status: "guarded", access: "member" };
-    const title = typeof module.title === "string" && module.title ? module.title : page.title || "Workflow";
+    const title = typeof module.title === "string" && module.title
+      ? module.title
+      : page.title || featureCatalogText("card.defaultTitle", "Workflow");
     const description = typeof module.description === "string" && module.description
       ? module.description
-      : (typeof module.input_hint === "string" && module.input_hint ? module.input_hint : "Route được Core Bridge quản lý trạng thái theo phiên.");
+      : (typeof module.input_hint === "string" && module.input_hint
+        ? module.input_hint
+        : featureCatalogText("card.defaultDescription", "Route được Core Bridge quản lý trạng thái theo phiên."));
     const declaredState = ALLOWED_STATES.has(String(module && (module.state || module.availability) || "").toLowerCase())
       ? String(module.state || module.availability).toLowerCase()
       : (String(module && module.availability || "").toLowerCase() === "available" ? "read_only" : "");
@@ -10565,7 +10675,7 @@
       ? `<span class="portal-module-card-signals">${renderEngineLabel(module)}${renderReadinessLabel(module)}</span>`
       : badge(displayState);
     return `<a class="portal-module-card" href="${safeText(route)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(module.icon || page.icon || ICONS.default)}</span>${signals}</div>
-      <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || "Mở workspace")}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
+      <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || featureCatalogText("action.openWorkflow", "Mở workflow"))}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
   }
 
   function fallbackCatalogGroup(path) {
@@ -10634,10 +10744,10 @@
   function renderCapabilityHubFamilyMetrics(family) {
     if (!family) return "";
     return `<dl class="portal-capability-family-metrics">
-      <div><dt>${safeText(hubNumber(family.customerCommandCount))}</dt><dd>lệnh người dùng</dd></div>
-      <div><dt>${safeText(hubNumber(family.mappedRouteCount))}</dt><dd>đã map route</dd></div>
-      <div><dt>${safeText(hubNumber(family.guardedRouteCount))}</dt><dd>đang guarded</dd></div>
-      <div><dt>${safeText(hubNumber(family.telegramOnlyCount))}</dt><dd>chỉ Bot</dd></div>
+      <div><dt>${safeText(hubNumber(family.customerCommandCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.commands", "lệnh người dùng"))}</dd></div>
+      <div><dt>${safeText(hubNumber(family.mappedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.mapped", "đã map route"))}</dd></div>
+      <div><dt>${safeText(hubNumber(family.guardedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.guarded", "đang guarded"))}</dd></div>
+      <div><dt>${safeText(hubNumber(family.telegramOnlyCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.telegramOnly", "chỉ Bot"))}</dd></div>
     </dl>`;
   }
 
@@ -10646,25 +10756,25 @@
     const audit = hub.audit && typeof hub.audit === "object" ? hub.audit : {};
     const families = Array.isArray(hub.families) ? hub.families.filter((item) => item && typeof item === "object" && safeHubRoute(item.route)) : [];
     if (hub.available !== true || !families.length) {
-      return `<section class="portal-capability-hub portal-capability-hub--pending"><div><span class="portal-section-kicker">Workspace directory</span><h2>Chọn một nhóm workflow</h2><p>Danh mục Web vẫn dùng được độc lập. Khi phạm vi chuyển đổi được đóng gói, ứng dụng chỉ công bố mô tả tổng hợp theo nhóm sản phẩm — không hiển thị lệnh quản trị, callback hay dữ liệu Bot.</p></div></section>`;
+      return `<section class="portal-capability-hub portal-capability-hub--pending"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.pendingKicker", "Workspace directory"))}</span><h2>${safeText(featureCatalogText("capabilityHub.pendingTitle", "Chọn một nhóm workflow"))}</h2><p>${safeText(featureCatalogText("capabilityHub.pendingBody", "Danh mục Web vẫn dùng được độc lập. Khi phạm vi chuyển đổi được đóng gói, ứng dụng chỉ công bố mô tả tổng hợp theo nhóm sản phẩm — không hiển thị lệnh quản trị, callback hay dữ liệu Bot."))}</p></div></section>`;
     }
     const totalCallbacks = safeHubCount(audit.callbackHandlers) + safeHubCount(audit.callbackData);
     const familyCards = families.map((family) => `<a class="portal-capability-family" href="${safeText(family.route)}">
-      <span class="portal-capability-family-top"><span>${safeText(family.title || "Workflow Web")}</span><b aria-hidden="true">→</b></span>
-      <p>${safeText(family.description || "Workflow được tổ chức lại cho Web App.")}</p>
-      <span class="portal-capability-family-state">Khám phá workflow</span>
+      <span class="portal-capability-family-top"><span>${safeText(family.title || featureCatalogText("capabilityHub.defaultTitle", "Workflow Web"))}</span><b aria-hidden="true">→</b></span>
+      <p>${safeText(family.description || featureCatalogText("capabilityHub.defaultDescription", "Workflow được tổ chức lại cho Web App."))}</p>
+      <span class="portal-capability-family-state">${safeText(featureCatalogText("capabilityHub.open", "Khám phá workflow"))}</span>
     </a>`).join("");
     return `<section class="portal-capability-hub" aria-labelledby="portal-capability-hub-title">
-      <header class="portal-capability-hub-head"><div><span class="portal-section-kicker">Workspace directory</span><h2 id="portal-capability-hub-title">Khám phá theo nhóm công cụ</h2><p>Bắt đầu theo mục tiêu của bạn. Mỗi nhóm mở các workspace có trạng thái, hướng dẫn và luồng xử lý riêng thay vì lệnh chat rời rạc.</p></div><span class="portal-capability-hub-badge">Không có lệnh thô</span></header>
+      <header class="portal-capability-hub-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.kicker", "Workspace directory"))}</span><h2 id="portal-capability-hub-title">${safeText(featureCatalogText("capabilityHub.title", "Khám phá theo nhóm công cụ"))}</h2><p>${safeText(featureCatalogText("capabilityHub.body", "Bắt đầu theo mục tiêu của bạn. Mỗi nhóm mở các workspace có trạng thái, hướng dẫn và luồng xử lý riêng thay vì lệnh chat rời rạc."))}</p></div><span class="portal-capability-hub-badge">${safeText(featureCatalogText("capabilityHub.noRawCommands", "Không có lệnh thô"))}</span></header>
       <div class="portal-capability-family-grid">${familyCards}</div>
-      <details class="portal-capability-hub-audit"><summary>Phạm vi chuyển đổi &amp; bảo vệ</summary><div class="portal-capability-hub-audit-body"><dl class="portal-capability-audit"><div><dt>${safeText(hubNumber(audit.commands))}</dt><dd>lệnh đã audit</dd></div><div><dt>${safeText(hubNumber(totalCallbacks))}</dt><dd>callback đã phân loại</dd></div><div><dt>${safeText(hubNumber(audit.mapped))}</dt><dd>đã map route</dd></div><div><dt>${safeText(hubNumber(audit.guarded))}</dt><dd>compatibility guarded</dd></div><div><dt>${safeText(hubNumber(audit.telegramOnly))}</dt><dd>giữ ở Telegram</dd></div></dl><p class="portal-capability-hub-note">Các entry quản trị, provider, ví/PayOS, worker, backup và callback payload không trở thành nút browser. Execution chỉ bật sau contract, ownership và output validation riêng.</p></div></details>
+      <details class="portal-capability-hub-audit"><summary>${safeText(featureCatalogText("capabilityHub.auditSummary", "Phạm vi chuyển đổi & bảo vệ"))}</summary><div class="portal-capability-hub-audit-body"><dl class="portal-capability-audit"><div><dt>${safeText(hubNumber(audit.commands))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.commands", "lệnh đã audit"))}</dd></div><div><dt>${safeText(hubNumber(totalCallbacks))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.callbacks", "callback đã phân loại"))}</dd></div><div><dt>${safeText(hubNumber(audit.mapped))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.mapped", "đã map route"))}</dd></div><div><dt>${safeText(hubNumber(audit.guarded))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.guarded", "compatibility guarded"))}</dd></div><div><dt>${safeText(hubNumber(audit.telegramOnly))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.telegramOnly", "giữ ở Telegram"))}</dd></div></dl><p class="portal-capability-hub-note">${safeText(featureCatalogText("capabilityHub.audit.note", "Các entry quản trị, provider, ví/PayOS, worker, backup và callback payload không trở thành nút browser. Execution chỉ bật sau contract, ownership và output validation riêng."))}</p></div></details>
     </section>`;
   }
 
   function renderCapabilityHubFamilySummary(context, familyKey) {
     const family = capabilityHubFamily(context, familyKey);
     if (!family) return "";
-    return `<details class="portal-capability-family-summary"><summary>Phạm vi chuyển đổi</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>Con số này chỉ phản ánh phạm vi Bot đã được phân loại vào nhóm. Route Web và engine vẫn được kiểm tra độc lập theo signed session và capability.</p></div></details>`;
+    return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Con số này chỉ phản ánh phạm vi Bot đã được phân loại vào nhóm. Route Web và engine vẫn được kiểm tra độc lập theo signed session và capability."))}</p></div></details>`;
   }
 
   function renderModuleCards(context) {
@@ -10683,7 +10793,7 @@
       const href = step.route === "/features" ? "#feature-catalog-list" : step.route;
       return `<a class="portal-start-guide-step" href="${safeText(href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`;
     }).join("");
-    return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">Guided Start</span><h2 id="feature-guided-start-title">Bạn muốn bắt đầu việc gì?</h2><p>Chọn một lối đi ngắn hoặc duyệt toàn bộ catalog. Khi mở workspace, ứng dụng sẽ kiểm tra quyền và trạng thái thực tế của phiên hiện tại.</p></div><span class="portal-start-guide-note">${safeText(String(steps.length))} lối đi ngắn</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
+    return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("guidedStart.kicker", "Guided Start"))}</span><h2 id="feature-guided-start-title">${safeText(featureCatalogText("guidedStart.title", "Bạn muốn bắt đầu việc gì?"))}</h2><p>${safeText(featureCatalogText("guidedStart.body", "Chọn một lối đi ngắn hoặc duyệt toàn bộ catalog. Khi mở workspace, ứng dụng sẽ kiểm tra quyền và trạng thái thực tế của phiên hiện tại."))}</p></div><span class="portal-start-guide-note">${safeText(featureCatalogText("guidedStart.shortcuts", "{count} lối đi ngắn", { count: String(steps.length) }))}</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
   }
 
   function renderRouteEngineBoundary(context) {
@@ -10701,18 +10811,18 @@
     const grouped = FEATURE_CATALOG_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry && typeof entry === "object" && entry.group === group.key) })).filter((group) => group.entries.length);
     const knownGroups = new Set(FEATURE_CATALOG_GROUPS.map((group) => group.key));
     const otherEntries = entries.filter((entry) => !entry || typeof entry !== "object" || !knownGroups.has(entry.group));
-    if (otherEntries.length) grouped.push({ key: "other", title: "Workflow khác", description: "Các route customer được registry công bố ngoài nhóm Studio chuẩn.", entries: otherEntries });
+    if (otherEntries.length) grouped.push({ key: "other", title: featureCatalogText("group.other.title", "Workflow khác"), description: featureCatalogText("group.other.description", "Các route customer được registry công bố ngoài nhóm Studio chuẩn."), entries: otherEntries });
     const jumps = grouped.length
-      ? `<nav class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ">${grouped.map((group) => `<a class="portal-feature-jump" href="#feature-group-${safeText(group.key)}">${safeText(group.title)}</a>`).join("")}</nav>`
+      ? `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${grouped.map((group) => `<a class="portal-feature-jump" href="#feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`
       : "";
-    const groups = grouped.map((group) => `<section class="portal-feature-group" data-catalog-group aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(group.title)}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(group.title)}</h2><p>${safeText(group.description)}</p></div><span class="portal-feature-count">${safeText(String(group.entries.length))} workflow</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
-      const searchText = [group.title, entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
-      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })}</div>`;
+    const groups = grouped.map((group) => `<section class="portal-feature-group" data-catalog-group aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
+      const searchText = [featureCatalogGroupCopy(group, "title"), entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
+      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })}</div>`;
     }).join("")}</div></section>`).join("");
-    const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
-    const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
-    const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>Chọn theo mục tiêu, không theo lệnh chat</strong><p>Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng.</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">Chuyển workspace</a><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
+    const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
+    const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -18202,7 +18312,7 @@
 
   function renderFeatureFamily(page, context) {
     const family = featureCatalogGroup(page.featureFamily);
-    if (!family) return renderNotFound({ ...page, layout: "not-found", title: "Nhóm tính năng chưa được công bố" }, context);
+    if (!family) return renderNotFound({ ...page, layout: "not-found", title: featureCatalogText("family.emptyTitle", "Nhóm tính năng chưa được công bố") }, context);
     const entries = registeredFeatureFamilyEntries(context, family.key);
     const states = entries.reduce((counts, entry) => {
       const route = catalogEntryRoute(entry);
@@ -18212,12 +18322,12 @@
       return counts;
     }, Object.create(null));
     const otherFamilies = FEATURE_FAMILY_KEYS.map(featureCatalogGroup).filter((group) => group && group.key !== family.key);
-    const familyNav = `<nav class="portal-feature-jumps" aria-label="Chuyển nhóm AI Studio"><a class="portal-feature-jump" href="/features">Tất cả công cụ</a>${otherFamilies.map((group) => `<a class="portal-feature-jump" href="/features/${safeText(group.key)}">${safeText(group.title)}</a>`).join("")}</nav>`;
-    const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trạng thái workflow</h2><p class="portal-card-subtitle">Số liệu chỉ mô tả route đã được registry công bố; không suy đoán engine, quota hoặc output.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Đã định tuyến</span><span class="portal-summary-value">${safeText(String(entries.length))} workflow</span></div><div class="portal-summary-item"><span class="portal-summary-key">Sẵn sàng canonical</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đang guarded</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
+    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${otherFamilies.map((group) => `<a class="portal-feature-jump" href="/features/${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`;
+    const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(featureCatalogText("family.summary.title", "Trạng thái workflow"))}</h2><p class="portal-card-subtitle">${safeText(featureCatalogText("family.summary.body", "Số liệu chỉ mô tả route đã được registry công bố; không suy đoán engine, quota hoặc output."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.mapped", "Đã định tuyến"))}</span><span class="portal-summary-value">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(entries.length) }))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.canonicalReady", "Sẵn sàng canonical"))}</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.guarded", "Đang guarded"))}</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
     const cards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })).join("")}</div>`
-      : renderEmpty("Nhóm đang chờ registry", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế.", "⌁");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(family.title)}</span><h2>Chọn workflow phù hợp</h2><p>${safeText(family.description)} Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem mọi công cụ →</a></div>${familyNav}${cards}</section></article>`;
+      ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })).join("")}</div>`
+      : renderEmpty(featureCatalogText("family.emptyTitle", "Nhóm đang chờ registry"), featureCatalogText("family.emptyBody", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế."), "⌁");
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${familyNav}${cards}</section></article>`;
   }
 
   function normalizeCatalogSearch(value) {
@@ -18243,7 +18353,9 @@
       group.hidden = !Array.from(group.querySelectorAll("[data-catalog-item]")).some((item) => !item.hidden);
     });
     const result = document.querySelector("[data-portal-catalog-result]");
-    if (result) result.textContent = needle ? `${matches} workflow phù hợp.` : `${items.length} workflow đang hiển thị.`;
+    if (result) result.textContent = needle
+      ? featureCatalogText("search.result.matches", "{count} workflow phù hợp.", { count: String(matches) })
+      : featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(items.length) });
     const empty = document.querySelector("[data-portal-catalog-empty]");
     if (empty) empty.hidden = matches > 0;
     const clear = document.querySelector("[data-portal-catalog-clear]");
@@ -29858,9 +29970,19 @@
       && window.location.pathname === "/welcome";
     const landingMotionEnabled = landingMotionRoute
       && new URLSearchParams(window.location.search || "").get("motion") !== "0";
+    // The dashboard has its own, narrower decision-layer motion. Its summary
+    // and canonical read lane must not inherit the generic shell entrance.
+    const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
     const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
+    // This presentation marker is intentionally derived from the same
+    // normalized route selection used below for the server-authorized Admin
+    // dock. It changes only the Aura shell styling; it neither checks nor
+    // grants a role, and a guessed browser URL still cannot render Admin data.
+    const appKind = isAdminPortalSurface(page) ? "admin" : "customer";
     shell.dataset.portalSurface = surface;
+    shell.dataset.portalAppKind = appKind;
     document.body.dataset.portalSurface = surface;
+    document.body.dataset.portalAppKind = appKind;
     // The public landing and unauthenticated access screens intentionally
     // avoid showing an authenticated workspace sidebar. This keeps the first
     // visit focused, prevents a misleading "already inside" impression, and
@@ -29883,6 +30005,8 @@
         : "";
       mobileNav.hidden = !mobileNavMarkup;
       mobileNav.innerHTML = mobileNavMarkup;
+      if (mobileNavMarkup) mobileNav.dataset.portalMobileNavKind = appKind;
+      else mobileNav.removeAttribute("data-portal-mobile-nav-kind");
     }
     if (commandPalette && !showMobileNav) {
       commandPalette.hidden = true;
@@ -29895,7 +30019,9 @@
       }
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute ? "true" : "false";
+    if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? "true" : "false";
+    document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute ? "dashboard" : "default");
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       header.innerHTML = renderHeader(page, context);
@@ -29932,6 +30058,7 @@
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
       mountLandingMotion();
+      mountWorkspaceMotion();
     }
     function mountLandingMotion() {
       const replayControl = main.querySelector("[data-landing-motion-replay]");
@@ -29945,6 +30072,10 @@
         return;
       }
       if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
+    }
+    function mountWorkspaceMotion() {
+      if (minimalShell || isAdminPortalSurface(page) || typeof motion.mountWorkspace !== "function") return;
+      motion.mountWorkspace(main);
     }
     const replaceResult = motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {

@@ -308,24 +308,23 @@ def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() ->
 
 
 def test_mobile_video_studio_highlights_ai_studio_instead_of_dashboard() -> None:
-    mobile = _section("function isMobileNavCurrent(key, page)", "function renderMobileNav(page)")
-    dashboard = mobile[mobile.index('if (key === "dashboard")'):mobile.index('if (key === "studio")')]
-    studio = mobile[mobile.index('if (key === "studio")'):]
+    groups = _section("const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent(key, page)")
+    dashboard = groups[groups.index("dashboard:"):groups.index("studio:")]
+    studio = groups[groups.index("studio:"):groups.index("jobs:")]
 
     assert '"/video-studio"' not in dashboard
-    assert 'path.startsWith("/video-studio/")' not in dashboard
-    assert 'matchesRouteFamily(path, "/video-studio")' in studio
+    assert '"/video-studio"' in studio
 
 
 def test_mobile_memory_center_and_reminders_stay_in_the_workspace_navigation() -> None:
-    mobile = _section("function isMobileNavCurrent(key, page)", "function renderMobileNav(page)")
-    dashboard = mobile[mobile.index('if (key === "dashboard")'):mobile.index('if (key === "studio")')]
-    account = mobile[mobile.index('if (key === "account")'):]
+    groups = _section("const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent(key, page)")
+    jobs = groups[groups.index("jobs:"):groups.index("assets:")]
+    account = groups[groups.index("account:"):]
 
     # Memory is an authoring/work-management surface in the desktop
     # Workspace grouping. Mobile must not misleadingly promote it as a
     # profile/account page merely because a customer owns the records.
-    assert '"/notes", "/reminders"' in dashboard
+    assert '"/notes", "/reminders"' in jobs
     assert '"/notes", "/reminders"' not in account
 
 
