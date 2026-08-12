@@ -275,11 +275,20 @@
     const preview = root.querySelector(".portal-landing-preview");
     const scrollLayers = Array.from(root.querySelectorAll("[data-landing-layer]"));
     const pointerTargets = Array.from(root.querySelectorAll(
-      "[data-landing-pointer], .portal-landing-workflow li, .portal-landing-trust-grid > article, .portal-landing-final .portal-button"
+      "[data-landing-pointer], .portal-landing-spotlight-preview, .portal-landing-workflow li, .portal-landing-trust-grid > article, .portal-landing-final .portal-button"
     ));
-    const revealTargets = Array.from(root.querySelectorAll(
-      ".portal-landing-section, .portal-landing-workflow, .portal-landing-trust, .portal-landing-final"
-    ));
+    // Preserve the established landing selector while adding the new
+    // reference-first sections as independent semantic scenes. This only
+    // enhances their presentation after render; it never gates a route or
+    // product action.
+    const revealTargets = Array.from(new Set([
+      ...Array.from(root.querySelectorAll(
+        ".portal-landing-section, .portal-landing-workflow, .portal-landing-trust, .portal-landing-final"
+      )),
+      ...Array.from(root.querySelectorAll(
+        ".portal-landing-feature-strip, .portal-landing-spotlights"
+      ))
+    ]));
     const previewSteps = preview
       ? Array.from(preview.querySelectorAll(".portal-landing-preview-steps > span"))
       : [];
@@ -291,10 +300,10 @@
     const revealDetails = revealTargets.map((target) => ({
       target,
       title: target.querySelector(
-        ".portal-landing-section-heading, .portal-landing-workflow > div, .portal-landing-trust-copy, .portal-landing-final > div"
+        ".portal-landing-section-heading, .portal-landing-workflow > div, .portal-landing-trust-copy, .portal-landing-final > div, .portal-landing-spotlight-copy"
       ),
       cards: Array.from(target.querySelectorAll(
-        ".portal-landing-studio, .portal-landing-workflow li, .portal-landing-trust-grid > article"
+        ".portal-landing-studio, .portal-landing-workflow li, .portal-landing-trust-grid > article, .portal-landing-feature-strip article, .portal-landing-spotlight"
       ))
     }));
     const landingCtas = Array.from(root.querySelectorAll(".portal-button"));
@@ -337,17 +346,33 @@
       revealDetails.forEach(({ target, title, cards }) => {
         target.classList.remove(
           "landing-motion-reveal",
+          "landing-motion-features",
+          "landing-motion-spotlights",
           "landing-motion-workflow",
           "landing-motion-final",
           "is-pending",
           "is-visible"
         );
         if (title) title.classList.remove("landing-motion-reveal-title");
-        cards.forEach((card) => card.classList.remove("landing-motion-card", "landing-motion-studio"));
+        cards.forEach((card) => card.classList.remove(
+          "landing-motion-card",
+          "landing-motion-studio",
+          "landing-motion-feature",
+          "landing-motion-spotlight"
+        ));
       });
       scrollLayers.forEach((layer) => {
         if (layer && layer.classList && typeof layer.classList.remove === "function") {
-          layer.classList.remove("landing-scroll-scene", "landing-motion-hero", "landing-motion-studios", "landing-motion-workflow", "landing-motion-trust", "landing-motion-final");
+          layer.classList.remove(
+            "landing-scroll-scene",
+            "landing-motion-hero",
+            "landing-motion-features",
+            "landing-motion-spotlights",
+            "landing-motion-studios",
+            "landing-motion-workflow",
+            "landing-motion-trust",
+            "landing-motion-final"
+          );
         }
         ["--landing-section-progress", "--landing-section-offset"].forEach((property) => removeStyleProperty(layer, property));
       });
@@ -591,12 +616,16 @@
 
     revealDetails.forEach(({ target, title, cards }) => {
       target.classList.add("landing-motion-reveal");
+      if (target.matches(".portal-landing-feature-strip")) target.classList.add("landing-motion-features");
+      if (target.matches(".portal-landing-spotlights")) target.classList.add("landing-motion-spotlights");
       if (target.matches(".portal-landing-workflow")) target.classList.add("landing-motion-workflow");
       if (target.matches(".portal-landing-final")) target.classList.add("landing-motion-final");
       if (title) title.classList.add("landing-motion-reveal-title");
       cards.forEach((card) => {
         card.classList.add("landing-motion-card");
         if (target.matches && target.matches(".portal-landing-section")) card.classList.add("landing-motion-studio");
+        if (target.matches && target.matches(".portal-landing-feature-strip")) card.classList.add("landing-motion-feature");
+        if (target.matches && target.matches(".portal-landing-spotlights")) card.classList.add("landing-motion-spotlight");
       });
     });
     landingCtas.forEach((cta) => cta.classList.add("landing-motion-cta"));

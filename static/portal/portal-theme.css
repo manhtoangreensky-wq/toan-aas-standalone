@@ -976,7 +976,8 @@ body {
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studios::before,
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust::before {
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-trust::before,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-spotlights::before {
   position: absolute;
   z-index: -1;
   top: 16%;
@@ -991,6 +992,60 @@ body {
   pointer-events: none;
   transform: translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 24px), 0);
   transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+/* Reference-first continuation: the feature strip and product spotlights
+   share the page's bounded scene grammar. They remain ordinary semantic
+   sections in normal flow; this only adds depth while they enter view. */
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features {
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--portal-brand) calc(var(--landing-section-progress, 0) * 7%), transparent),
+      transparent
+    );
+  transition: background-color var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-feature {
+  background: color-mix(
+    in srgb,
+    var(--portal-light-surface) calc(100% - (var(--landing-section-progress, 0) * 7%)),
+    var(--portal-light-accent-soft)
+  );
+  transition: background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-spotlights::before {
+  top: 24%;
+  right: auto;
+  left: -14%;
+  opacity: calc(.08 + (var(--landing-section-progress, 0) * .2));
+  transform: translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 30px), 0) scale(calc(.94 + (var(--landing-section-progress, 0) * .06)));
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-spotlight-preview.landing-motion-pointer {
+  transform:
+    perspective(1000px)
+    rotateX(calc(var(--landing-pointer-y, 0) * -1.2deg))
+    rotateY(calc(var(--landing-pointer-x, 0) * 1.2deg))
+    translate3d(calc(var(--landing-pointer-x, 0) * -5px), calc(var(--landing-pointer-y, 0) * -3px), 0);
+  transform-style: preserve-3d;
+  transition:
+    transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+    box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+    border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+}
+
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-spotlight-preview.landing-motion-pointer::before,
+.landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-spotlight-preview.landing-motion-pointer::after {
+  transform: translate3d(
+    calc(var(--landing-pointer-x, 0) * -8px),
+    calc(var(--landing-pointer-y, 0) * -6px),
+    0
+  );
+  transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio {
@@ -1111,7 +1166,11 @@ body {
     .landing-motion-final::before,
     .landing-motion-hero::after,
     .landing-motion-studios::before,
-    .landing-motion-trust::before
+    .landing-motion-trust::before,
+    .landing-motion-spotlights::before,
+    .portal-landing-spotlight-preview.landing-motion-pointer,
+    .portal-landing-spotlight-preview.landing-motion-pointer::before,
+    .portal-landing-spotlight-preview.landing-motion-pointer::after
   ) {
     transition: none !important;
     transform: none !important;
@@ -2491,6 +2550,223 @@ body {
   padding-bottom: clamp(72px, 9vw, 116px);
 }
 
+.portal-landing-feature-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: var(--portal-public-content-width);
+  margin: 0 auto clamp(72px, 9vw, 116px);
+  border-top: 1px solid var(--portal-light-border);
+  border-bottom: 1px solid var(--portal-light-border);
+}
+
+.portal-landing-feature-strip article {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
+  min-width: 0;
+  padding: 24px clamp(16px, 2.2vw, 30px);
+}
+
+.portal-landing-feature-strip article + article {
+  border-left: 1px solid var(--portal-light-border);
+}
+
+.portal-landing-feature-strip article > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--portal-light-accent-soft);
+  color: var(--portal-accent-deep);
+}
+
+.portal-landing-feature-strip svg {
+  width: 18px;
+  height: 18px;
+}
+
+.portal-landing-feature-strip strong {
+  display: block;
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.portal-landing-feature-strip p {
+  margin: 5px 0 0;
+  color: var(--portal-light-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.portal-landing-spotlights {
+  display: grid;
+  gap: clamp(64px, 10vw, 132px);
+  width: var(--portal-public-content-width);
+  margin: 0 auto clamp(76px, 11vw, 144px);
+}
+
+.portal-landing-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
+  gap: clamp(36px, 8vw, 110px);
+  align-items: center;
+  min-width: 0;
+}
+
+.portal-landing-spotlight--audio {
+  grid-template-columns: minmax(360px, 1.1fr) minmax(0, .9fr);
+}
+
+.portal-landing-spotlight--audio .portal-landing-spotlight-copy { order: 2; }
+.portal-landing-spotlight--audio .portal-landing-spotlight-preview { order: 1; }
+
+.portal-landing-spotlight-copy {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.portal-landing-spotlight h2 {
+  max-width: 16ch;
+  margin: 0;
+  color: var(--portal-ink);
+  font-size: clamp(32px, 3.6vw, 50px);
+  line-height: 1.06;
+  letter-spacing: -.05em;
+}
+
+.portal-landing-spotlight-copy > p {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--portal-light-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.portal-landing-spotlight-copy .portal-button {
+  width: fit-content;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.portal-landing-spotlight-copy .portal-button > span:first-child {
+  display: grid;
+  place-items: center;
+}
+
+.portal-landing-spotlight-copy .portal-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.portal-landing-spotlight-preview {
+  position: relative;
+  display: grid;
+  min-height: 330px;
+  overflow: hidden;
+  border: 1px solid var(--portal-light-border);
+  border-radius: 22px;
+  background: var(--portal-light-soft);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--portal-info) 12%, transparent);
+}
+
+.portal-landing-spotlight-preview::before,
+.portal-landing-spotlight-preview::after {
+  position: absolute;
+  border: 1px solid var(--portal-light-border);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.portal-landing-spotlight-preview::before {
+  width: 250px;
+  height: 250px;
+  right: -92px;
+  bottom: -108px;
+}
+
+.portal-landing-spotlight-preview::after {
+  width: 134px;
+  height: 134px;
+  top: -62px;
+  left: -54px;
+}
+
+.portal-landing-spotlight-content-preview,
+.portal-landing-spotlight-audio-preview {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-self: center;
+  width: min(80%, 400px);
+  margin: auto;
+  border: 1px solid var(--portal-light-border);
+  border-radius: 16px;
+  background: var(--portal-light-surface);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--portal-ink) 10%, transparent);
+}
+
+.portal-landing-spotlight-content-preview {
+  gap: 12px;
+  padding: 24px;
+}
+
+.portal-landing-spotlight-content-preview > span {
+  display: block;
+  width: 44%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--portal-light-accent-soft);
+}
+
+.portal-landing-spotlight-content-preview > span:nth-child(2) { width: 76%; }
+.portal-landing-spotlight-content-preview > span:nth-child(3) { width: 60%; }
+
+.portal-landing-spotlight-content-preview i {
+  display: block;
+  height: 34px;
+  border: 1px solid var(--portal-light-border);
+  border-radius: 9px;
+  background: var(--portal-light-soft);
+}
+
+.portal-landing-spotlight-content-preview i:nth-of-type(2) { width: 88%; }
+.portal-landing-spotlight-content-preview i:nth-of-type(3) { width: 70%; }
+
+.portal-landing-spotlight-audio-preview {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  align-items: end;
+  min-height: 185px;
+  padding: 28px;
+}
+
+.portal-landing-spotlight-audio-preview span {
+  display: block;
+  border-radius: 999px 999px 8px 8px;
+  background: var(--portal-brand);
+}
+
+.portal-landing-spotlight-audio-preview span:nth-child(1) { height: 30%; }
+.portal-landing-spotlight-audio-preview span:nth-child(2) { height: 62%; }
+.portal-landing-spotlight-audio-preview span:nth-child(3) { height: 44%; }
+.portal-landing-spotlight-audio-preview span:nth-child(4) { height: 82%; }
+.portal-landing-spotlight-audio-preview span:nth-child(5) { height: 56%; }
+.portal-landing-spotlight-audio-preview span:nth-child(6) { height: 38%; }
+
+.portal-landing-spotlight-audio-preview i {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  left: 28px;
+  height: 2px;
+  background: var(--portal-light-border);
+}
+
 .portal-landing-discovery-rail {
   display: grid;
   gap: 30px;
@@ -2818,7 +3094,9 @@ body {
 
   .portal-landing-hero,
   .portal-landing-workflow,
-  .portal-landing-trust {
+  .portal-landing-trust,
+  .portal-landing-spotlight,
+  .portal-landing-spotlight--audio {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2840,6 +3118,15 @@ body {
 
   .portal-landing-discovery-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-landing-spotlight--audio .portal-landing-spotlight-copy,
+  .portal-landing-spotlight--audio .portal-landing-spotlight-preview {
+    order: initial;
+  }
+
+  .portal-landing-spotlight-preview {
+    width: min(100%, 620px);
   }
 }
 
@@ -2922,6 +3209,47 @@ body {
   .portal-landing-discovery-rail {
     gap: 24px;
     padding: 24px 20px;
+  }
+
+  .portal-landing-feature-strip {
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 72px;
+  }
+
+  .portal-landing-feature-strip article {
+    padding: 18px 0;
+  }
+
+  .portal-landing-feature-strip article + article {
+    border-top: 1px solid var(--portal-light-border);
+    border-left: 0;
+  }
+
+  .portal-landing-spotlights {
+    gap: 72px;
+    margin-bottom: 88px;
+  }
+
+  .portal-landing-spotlight {
+    gap: 28px;
+  }
+
+  .portal-landing-spotlight h2 {
+    font-size: 34px;
+  }
+
+  .portal-landing-spotlight-copy > p {
+    font-size: 15px;
+  }
+
+  .portal-landing-spotlight-preview {
+    min-height: 260px;
+    border-radius: var(--portal-radius-lg);
+  }
+
+  .portal-landing-spotlight-content-preview,
+  .portal-landing-spotlight-audio-preview {
+    width: min(84%, 400px);
   }
 
   .portal-landing-discovery-intro {

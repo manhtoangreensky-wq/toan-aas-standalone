@@ -126,3 +126,79 @@ def test_reference_first_product_surface_copy_keeps_its_compact_preview_type_sca
 
     assert "font-size: 12px;" in preview_copy
     assert "line-height: 1.55;" in preview_copy
+
+
+def test_reference_first_welcome_has_route_only_product_spotlights_between_hero_and_tool_directory() -> None:
+    landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
+
+    assert 'portal-landing-feature-strip"' in landing
+    assert 'portal-landing-spotlights"' in landing
+    assert 'portal-landing-spotlight--${safeText(item.key)}' in landing
+    assert 'key: "content"' in landing
+    assert 'key: "audio"' in landing
+    assert 'data-landing-layer="spotlights"' in landing
+    assert landing.index("portal-landing-feature-strip") < landing.index("portal-landing-spotlights") < landing.index("portal-landing-discovery-rail")
+    for route in ("/content-studio", "/media-workspace"):
+        assert route in landing
+    for forbidden in (
+        "fetch(",
+        "data-portal-action",
+        "provider",
+        "payment",
+        "wallet",
+        "job",
+        "output",
+        "testimonial",
+        "rating",
+    ):
+        assert forbidden not in _between(landing, "const spotlight", "const studioCards").lower()
+
+
+def test_reference_first_welcome_has_trilingual_spotlight_copy_and_token_only_responsive_layout() -> None:
+    for key in (
+        "landing.featureStrip.content.title",
+        "landing.featureStrip.content.body",
+        "landing.featureStrip.security.title",
+        "landing.featureStrip.security.body",
+        "landing.featureStrip.delivery.title",
+        "landing.featureStrip.delivery.body",
+        "landing.spotlight.content.kicker",
+        "landing.spotlight.content.title",
+        "landing.spotlight.content.body",
+        "landing.spotlight.content.cta",
+        "landing.spotlight.audio.kicker",
+        "landing.spotlight.audio.title",
+        "landing.spotlight.audio.body",
+        "landing.spotlight.audio.cta",
+    ):
+        assert I18N.count(f'"{key}"') == 3
+
+    for selector in (
+        ".portal-landing-feature-strip",
+        ".portal-landing-spotlights",
+        ".portal-landing-spotlight",
+        ".portal-landing-spotlight--audio",
+        ".portal-landing-spotlight-preview",
+    ):
+        assert selector in THEME
+    assert "#" not in THEME[THEME.index(".portal-landing-feature-strip"):]
+
+
+def test_reference_first_welcome_reveals_its_feature_strip_and_spotlights_as_real_motion_scenes() -> None:
+    """New reference-first sections must join the mounted motion lifecycle.
+
+    The page must not only carry decorative motion CSS: the mounted landing
+    runtime has to observe the sections, release them for keyboard focus, and
+    clean their generated classes on a route replacement.
+    """
+    motion = (ROOT / "static" / "portal" / "portal-motion.js").read_text(encoding="utf-8")
+    landing_motion = _between(motion, "function mountLanding(root)", "window.TOANAASPortalMotion")
+
+    assert '".portal-landing-feature-strip, .portal-landing-spotlights"' in landing_motion
+    assert ".portal-landing-feature-strip article" in landing_motion
+    assert ".portal-landing-spotlight" in landing_motion
+    assert '"landing-motion-features"' in landing_motion
+    assert '"landing-motion-spotlights"' in landing_motion
+    assert ".portal-landing-spotlight-preview" in landing_motion
+    assert ".landing-motion-features" in THEME
+    assert ".landing-motion-spotlights" in THEME
