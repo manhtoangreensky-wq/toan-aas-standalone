@@ -12471,6 +12471,10 @@
     // Bot command/callback, admin action, source location, secret or runtime
     // provider state, and it never grants a feature capability on its own.
     const capabilityHub = catalogData.capability_hub && typeof catalogData.capability_hub === "object" ? catalogData.capability_hub : {};
+    // The route-engine descriptor is a fresh, display-only catalog boundary.
+    // Reset it on every bootstrap: it cannot persist across sessions or grant
+    // a capability, workflow action, provider call, payment or job.
+    const routeEngine = catalogData.route_engine && typeof catalogData.route_engine === "object" ? catalogData.route_engine : {};
     const webWorkspaceDraftFeatures = [...new Set(catalog
       .filter((item) => item && item.web_workspace_draft_supported === true && /^[a-z][a-z0-9_]{1,120}$/.test(String(item.key || "")))
       .map((item) => String(item.key)))].slice(0, 200);
@@ -13544,6 +13548,7 @@
       menuCapabilities,
       catalogReadState,
       capabilityHub,
+      routeEngine,
       oauthProviders,
       telegramConnection,
       isAdmin: Boolean(account && account.role === "admin"),

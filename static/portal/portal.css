@@ -4931,6 +4931,54 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-catalog-context strong { color: #e9f5f7; font-size: 14px; line-height: 1.35; }
 .portal-catalog-context p { max-width: 760px; margin: 3px 0 0; color: #a8bac8; font-size: 12px; line-height: 1.52; }
 
+/* A passive route-engine boundary: it explains the current catalogue state
+   without adding an execution, checkout, or permission control. */
+.portal-route-engine-notice {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-strong);
+  box-shadow: var(--portal-shadow);
+}
+.portal-route-engine-notice-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--portal-border);
+  border-radius: 13px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-accent);
+}
+.portal-route-engine-notice-icon .portal-icon { width: 20px; height: 20px; }
+.portal-route-engine-notice-copy { min-width: 0; }
+.portal-route-engine-notice-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--portal-info);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.portal-route-engine-notice h2 { margin: 0; color: var(--portal-text); font-size: 16px; letter-spacing: -.015em; }
+.portal-route-engine-notice p { max-width: 760px; margin: 5px 0 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.55; }
+.portal-route-engine-notice--loading { border-style: dashed; }
+.portal-route-engine-notice--guarded { border-color: var(--portal-warning); }
+.portal-route-engine-notice--guarded .portal-route-engine-notice-icon { color: var(--portal-warning); }
+@keyframes portal-route-engine-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .portal-route-engine-notice { animation: portal-route-engine-enter 220ms cubic-bezier(.16, 1, .3, 1) both; }
+}
+
 /* App-first navigation polish: keep structural controls in the closed SVG
  * family and make high-frequency auth controls comfortable on touch screens. */
 .portal-command-item-arrow,
@@ -4961,6 +5009,8 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-catalog-context { grid-template-columns: 40px minmax(0, 1fr); gap: 11px; padding: 14px; }
   .portal-catalog-context > .portal-module-icon { width: 40px; height: 40px; }
   .portal-catalog-context > .portal-badge { grid-column: 2; justify-self: start; }
+  .portal-route-engine-notice { grid-template-columns: 1fr; gap: 11px; padding: 14px; }
+  .portal-route-engine-notice-icon { width: 40px; height: 40px; }
 
   /* A compact visible affordance prevents a clipped table from looking like
    * missing data. The focused region remains the table wrapper itself. */
@@ -4987,6 +5037,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-data-table th:first-child { z-index: 2; }
   .portal-data-table tbody td:first-child:not(.portal-empty-cell) { z-index: 1; }
   .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) { background: #172638; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-route-engine-notice { animation: none; transform: none; }
 }
 
 /* System & Data Stewardship is navigation-only. These scoped cards make the

@@ -1013,6 +1013,34 @@
     }
   };
 
+  Object.assign(MESSAGES.vi, {
+    "routeEngine.notice.kicker": "Định tuyến xử lý",
+    "routeEngine.notice.deferred.title": "Định tuyến đang chờ danh mục chính thức",
+    "routeEngine.notice.deferred.body": "Chưa chọn nhà cung cấp hoặc phương án dự phòng; chưa hiển thị hay tính giá. Workflow vẫn giữ trạng thái do máy chủ cấp.",
+    "routeEngine.notice.loading.title": "Đang đọc trạng thái định tuyến",
+    "routeEngine.notice.loading.body": "Portal đang nhận danh mục đã được rà soát. Trạng thái workflow hiện có không thay đổi trong lúc chờ.",
+    "routeEngine.notice.guarded.title": "Chưa thể xác minh trạng thái định tuyến",
+    "routeEngine.notice.guarded.body": "Dữ liệu định tuyến không khớp tiêu chuẩn an toàn. Portal giữ nguyên workflow và không suy đoán engine."
+  });
+  Object.assign(MESSAGES.en, {
+    "routeEngine.notice.kicker": "Engine routing",
+    "routeEngine.notice.deferred.title": "Routing awaits the canonical catalogue",
+    "routeEngine.notice.deferred.body": "No provider or fallback has been selected; no price is displayed or calculated. Workflows retain their server-issued state.",
+    "routeEngine.notice.loading.title": "Reading routing status",
+    "routeEngine.notice.loading.body": "The Portal is receiving the reviewed catalogue. Existing workflow state does not change while it loads.",
+    "routeEngine.notice.guarded.title": "Routing status cannot be verified",
+    "routeEngine.notice.guarded.body": "The routing data does not meet its safe contract. The Portal keeps workflows unchanged and does not infer an engine."
+  });
+  Object.assign(MESSAGES.zh, {
+    "routeEngine.notice.kicker": "引擎路由",
+    "routeEngine.notice.deferred.title": "路由正在等待正式目录",
+    "routeEngine.notice.deferred.body": "尚未选择服务商或备用方案；不会显示或计算价格。工作流继续保持服务器签发的状态。",
+    "routeEngine.notice.loading.title": "正在读取路由状态",
+    "routeEngine.notice.loading.body": "Portal 正在接收已审核目录。加载期间，现有工作流状态不会改变。",
+    "routeEngine.notice.guarded.title": "暂时无法验证路由状态",
+    "routeEngine.notice.guarded.body": "路由数据不符合安全 contract。Portal 会保持工作流不变，并且不会推断引擎。"
+  });
+
   // These keys are the stable, compact vocabulary consumed by the Portal
   // integration.  They intentionally point at interface concepts only;
   // feature content remains data owned by the relevant workspace module.
