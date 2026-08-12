@@ -151,9 +151,10 @@ def test_mount_portal_synchronizes_document_motion_route_before_replacing_the_sh
     """An in-place mount cannot inherit a root-transition marker from its prior page."""
 
     mount = _section(PORTAL, "function mountPortal(override) {", "\n\n  window.TOANAASPortal")
-    marker = 'document.documentElement.dataset.portalMotionRoute = dashboardMotionRoute ? "dashboard" : "default";'
+    marker = 'document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute ? "dashboard" : "default");'
 
     assert marker in mount
+    assert "document.documentElement.dataset.portalMotionRoute" not in mount
     assert mount.index(marker) < mount.index("const replaceResult = motion.replace(shell, main, renderShell);")
 
     assert 'data-portal-motion-route="__PORTAL_MOTION_ROUTE__"' in SHELL
