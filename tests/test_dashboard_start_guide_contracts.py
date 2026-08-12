@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 
 
 def _section(start: str, end: str) -> str:
@@ -13,8 +14,14 @@ def _section(start: str, end: str) -> str:
     return PORTAL[offset:PORTAL.index(end, offset + len(start))]
 
 
+def _function_section(name: str) -> str:
+    start = PORTAL.index(f"function {name}(")
+    end = PORTAL.find("\n  function ", start + 1)
+    return PORTAL[start:end if end != -1 else len(PORTAL)]
+
+
 def test_dashboard_first_session_guide_is_explicit_and_web_native() -> None:
-    guide = _section("function renderDashboardStartGuide(context)", "function renderDashboard(page, context)")
+    guide = _function_section("renderDashboardStartGuide")
 
     assert 'data-dashboard-start-guide' in guide
     assert "if (hasProjects || hasDrafts) return" in guide
@@ -22,9 +29,19 @@ def test_dashboard_first_session_guide_is_explicit_and_web_native() -> None:
     assert 'href: "/features"' in guide
     assert 'href: "/onboarding"' in guide
     assert "telegramIdentityLinked(context)" in guide
-    assert "không bị khóa vào Telegram" in guide
-    assert "không nhập Telegram ID trên Web" in guide
-    assert "không tự tạo job, charge hoặc dữ liệu provider" in guide
+    assert 'dashboardText("guide.title")' in guide
+    assert 'dashboardText("guide.optional.body")' in guide
+    assert 'dashboardText("guide.setup.body")' in guide
+    assert 'data-portal-action' not in guide
+    for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "data-portal-action"):
+        assert forbidden.lower() not in guide.lower()
+
+    for key in (
+        "dashboard.guide.title",
+        "dashboard.guide.optional.body",
+        "dashboard.guide.setup.body",
+    ):
+        assert I18N.count(f'"{key}"') == 3
 
 
 def test_telegram_link_entrypoint_is_explicitly_optional() -> None:

@@ -161,6 +161,7 @@
     ].join(", ");
     const dashboardItemSelector = [
       ".portal-start-guide-step",
+      ".portal-dashboard-focus-card",
       ".portal-dashboard-draft",
       ".portal-command-center-lane-actions .portal-button",
       ".portal-studio-card",

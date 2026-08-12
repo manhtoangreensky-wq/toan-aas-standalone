@@ -18418,6 +18418,56 @@
     return safeText(uiText(`dashboard.${key}`, "", params));
   }
 
+  // This is a closed presentation map for the signed customer's saved
+  // Workspace Setup choices. A saved value never becomes a route, label or
+  // icon by itself: it must resolve through this local map and the current
+  // local navigation manifest before it can render. Each destination still
+  // enforces signed-session access on the server.
+  const DASHBOARD_FOCUS_WORKSPACE_SPECS = Object.freeze([
+    Object.freeze({ key: "projects", route: "/projects", icon: ICONS.dashboard }),
+    Object.freeze({ key: "content", route: "/content-studio", icon: ICONS.prompt }),
+    Object.freeze({ key: "image", route: "/image-studio", icon: ICONS.image }),
+    Object.freeze({ key: "voice", route: "/voice-studio", icon: ICONS.voice }),
+    Object.freeze({ key: "music", route: "/music/library", icon: ICONS.music }),
+    Object.freeze({ key: "subtitle", route: "/subtitle-studio", icon: ICONS.subtitle }),
+    Object.freeze({ key: "documents", route: "/document-workspace", icon: ICONS.document }),
+    Object.freeze({ key: "automation", route: "/workboard", icon: ICONS.workboard })
+  ]);
+
+  function dashboardFocusWorkspaces(context) {
+    const workspaceSetup = context && context.workspaceSetup && typeof context.workspaceSetup === "object"
+      ? context.workspaceSetup
+      : {};
+    const profile = workspaceSetup.profile && typeof workspaceSetup.profile === "object"
+      ? workspaceSetup.profile
+      : {};
+    if (workspaceSetup.readState !== "read_only" || profile.setup_state !== "completed") return [];
+    const focusAreas = Array.isArray(profile.focus_areas) ? profile.focus_areas : [];
+    if (!focusAreas.length) return [];
+
+    const specsByKey = new Map(DASHBOARD_FOCUS_WORKSPACE_SPECS.map((spec) => [spec.key, spec]));
+    const seen = new Set();
+    return focusAreas
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter((key) => specsByKey.has(key) && !seen.has(key) && seen.add(key))
+      .slice(0, 3)
+      .map((key) => {
+        const spec = specsByKey.get(key);
+        const route = spec.route;
+        const page = manifest[normalizePath(route)];
+        if (!page || page.access === "admin") return null;
+        if (page.access !== "member") return null;
+        return spec;
+      })
+      .filter(Boolean);
+  }
+
+  function renderDashboardFocusDock(context) {
+    const workspaces = dashboardFocusWorkspaces(context);
+    if (!workspaces.length) return "";
+    return `<section class="portal-dashboard-focus-dock" aria-labelledby="dashboard-focus-dock-title"><div class="portal-dashboard-focus-dock-heading"><div><span class="portal-section-kicker">${dashboardText("focus.kicker")}</span><h3 id="dashboard-focus-dock-title">${dashboardText("focus.title")}</h3><p>${dashboardText("focus.body")}</p></div><a class="portal-button portal-button--quiet portal-dashboard-focus-adjust" href="/workspace/setup">${dashboardText("focus.adjust")}</a></div><div class="portal-dashboard-focus-grid">${workspaces.map((workspace) => `<a class="portal-dashboard-focus-card" href="${safeText(workspace.route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(workspace.icon)}</span><span class="portal-dashboard-focus-copy"><strong>${dashboardText(`focus.${workspace.key}.title`)}</strong><span>${dashboardText(`focus.${workspace.key}.body`)}</span></span><span class="portal-dashboard-focus-open">${dashboardText("focus.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
+  }
+
   // The delivery helpers below intentionally stay local to Dashboard. The
   // shared delivery surfaces still own their own copy, while this signed
   // command center must render every fixed label through the reviewed display
@@ -18621,7 +18671,7 @@
     // when the separate canonical reader is loading, guarded or failed.
     // It never substitutes zeroes, stale records or an invented success for
     // wallet/job/asset/ticket data that the Core Bridge did not confirm.
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div><div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {

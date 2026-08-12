@@ -15371,6 +15371,174 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* Dashboard Focus Dock -----------------------------------------------------
+   Saved Workspace Setup choices are presented as navigation only. This stays
+   inside the work lane, uses the current manifest-filtered route list, and
+   adds no account, integration or execution state to the Dashboard. */
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock {
+  display: grid;
+  gap: var(--portal-space-4);
+  margin-top: var(--portal-space-5);
+  padding: var(--portal-space-5);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--portal-space-4);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock h3,
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock p {
+  margin: 0;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock h3 {
+  margin-top: var(--portal-space-1);
+  color: var(--portal-ink);
+  font-size: clamp(18px, 1.7vw, 22px);
+  line-height: 1.28;
+  letter-spacing: -.02em;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock p {
+  max-width: 66ch;
+  margin-top: var(--portal-space-2);
+  color: var(--portal-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-adjust {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card {
+  display: grid;
+  min-width: 0;
+  min-height: 144px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--portal-space-3);
+  align-items: start;
+  padding: var(--portal-space-4);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+  color: var(--portal-ink);
+  text-decoration: none;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card > .portal-module-icon {
+  width: 42px;
+  height: 42px;
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-strong);
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-copy {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--portal-space-1);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-copy strong {
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-copy > span {
+  color: var(--portal-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-open {
+  display: inline-flex;
+  grid-column: 1 / -1;
+  gap: var(--portal-space-2);
+  align-items: center;
+  color: var(--portal-accent-deep);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-open b {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card {
+      transition: transform var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card:is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-dock-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card {
+    min-height: 132px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-focus-card {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Customer dashboard decision motion --------------------------------------
    The summary and canonical lane intentionally stay outside this selector.
    Motion only helps the customer scan completed, Web-owned decision layers
