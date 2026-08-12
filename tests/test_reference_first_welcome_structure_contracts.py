@@ -202,3 +202,28 @@ def test_reference_first_welcome_reveals_its_feature_strip_and_spotlights_as_rea
     assert ".portal-landing-spotlight-preview" in landing_motion
     assert ".landing-motion-features" in THEME
     assert ".landing-motion-spotlights" in THEME
+
+
+def test_reference_first_landing_navigation_follows_five_real_toan_aas_sections() -> None:
+    """Match the reference navigation rhythm without inventing a route or claim."""
+    landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
+
+    navigation = _between(landing, '<div class="portal-landing-nav-links">', "</div><div class=\"portal-landing-nav-actions\">")
+    assert navigation.count("<a href=") == 5
+    for target, key in (
+        ("#features", "nav.features"),
+        ("#content-workspace", "nav.content"),
+        ("#audio-workspace", "nav.audio"),
+        ("#studios", "nav.tools"),
+        ("#workflow", "nav.workflow"),
+    ):
+        assert f'<a href="{target}">${{text("{key}")}}</a>' in navigation
+
+    spotlight = _between(landing, "const spotlight", "const studioCards")
+    assert 'id="features"' in landing
+    assert 'id="${safeText(item.sectionId)}"' in spotlight
+    for section_id in ("content-workspace", "audio-workspace"):
+        assert f'sectionId: "{section_id}"' in spotlight
+
+    for key in ("landing.nav.content", "landing.nav.audio", "landing.nav.tools"):
+        assert I18N.count(f'"{key}"') == 3

@@ -2772,6 +2772,9 @@
   const LANDING_MESSAGES = {
     vi: {
       "landing.nav.features": "Tính năng",
+      "landing.nav.content": "Nội dung",
+      "landing.nav.audio": "Âm thanh",
+      "landing.nav.tools": "Công cụ",
       "landing.nav.workflow": "Quy trình",
       "landing.nav.trust": "Bảo mật & riêng tư",
       "landing.nav.language": "Ngôn ngữ",
@@ -2862,6 +2865,9 @@
     },
     en: {
       "landing.nav.features": "Features",
+      "landing.nav.content": "Content",
+      "landing.nav.audio": "Audio",
+      "landing.nav.tools": "Tools",
       "landing.nav.workflow": "Workflow",
       "landing.nav.trust": "Security & privacy",
       "landing.nav.language": "Language",
@@ -2952,6 +2958,9 @@
     },
     zh: {
       "landing.nav.features": "功能",
+      "landing.nav.content": "内容",
+      "landing.nav.audio": "音频",
+      "landing.nav.tools": "工具",
       "landing.nav.workflow": "流程",
       "landing.nav.trust": "安全与隐私",
       "landing.nav.language": "语言",
