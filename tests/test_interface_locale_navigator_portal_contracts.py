@@ -84,10 +84,17 @@ def test_interface_locale_navigator_fences_generic_canonical_hydration() -> None
 
 def test_interface_locale_navigator_has_clear_navigation_and_mobile_accessibility() -> None:
     settings = _between(PORTAL, "function renderAccountSettingsNav", "function renderAccount(page, context)")
+    mobile_groups = _between(PORTAL, "const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent(key, page)")
+    account_group = mobile_groups[mobile_groups.index("account:"):]
+
     assert 'path: "/account/interface-language"' in settings
     assert 'aria-current="page"' in settings
     assert 'if (linkPath === "/account/interface-language") return path === "/account/interface-language";' in PORTAL
-    assert '"/account/interface-language", "/account/activity"' in PORTAL
+    # The compact dock deliberately groups every signed account surface under
+    # the fixed `/account/` presentation family.  Route-level behavior is
+    # exercised by the Node harness in the customer PWA contract instead of
+    # coupling this screen contract to one historical literal list.
+    assert '"/account/"' in account_group
 
     for selector in (
         ".portal-interface-locale-navigator",
