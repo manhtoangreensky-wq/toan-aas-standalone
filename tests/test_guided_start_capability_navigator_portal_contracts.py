@@ -93,3 +93,14 @@ def test_audit_maps_only_safe_main_guide_navigation_and_explicitly_defers_video(
         "raw Telegram-ID field",
     ):
         assert marker in generated_contract
+
+
+def test_audit_generator_keeps_the_explicit_video_deferral_marker() -> None:
+    """Regeneration must not erase the finite Video-menu handoff marker."""
+
+    generated_contract_source = AUDIT[
+        AUDIT.index('write(\n        "GUIDED_START_CALLBACK_CONTRACT.md"') :
+        AUDIT.index('write(\n        "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md"')
+    ]
+
+    assert "GUIDED_VIDEO_MENU_DEFERRED" in generated_contract_source

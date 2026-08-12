@@ -44,7 +44,7 @@ No code in this slice reads provider, adapter, model, fallback, internal cost, c
 
 The existing Swiss-modern Portal system remains authoritative: semantic teal/cyan tokens, 4/8px rhythm, compact readable type, 44px mobile controls, visible focus, and 150–220ms transform/opacity-only motion. No new visual component family, provider indicator, price card, or action is introduced.
 
-Family route titles and descriptions must resolve through the reviewed locale catalogue so browser title, hero, navigation and local search feedback agree. The static fallback Vietnamese copy remains only for resilience if the i18n bundle is unavailable.
+Family route titles and descriptions must resolve through the reviewed locale catalogue so browser title, hero, navigation and local search feedback agree. The static Vietnamese fallback applies only if the i18n bundle is unavailable; an otherwise unsupported requested locale still resolves through the Portal's normal English locale fallback.
 
 ## Out of scope
 
@@ -58,4 +58,3 @@ Family route titles and descriptions must resolve through the reviewed locale ca
 2. Server-issued feature cards and route decisions remain untouched.
 3. Route Engine stays deferred and informational; public sale pricing remains a marked future integration seam only.
 4. Static contracts, i18n equal-keyset runtime check, targeted route-engine comparator, Node syntax checks, and diff check have evidence.
-

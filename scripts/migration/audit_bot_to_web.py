@@ -13534,7 +13534,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             guided_start_contract_rows,
         )
         + "\n\n`menu|guide_quick_start` starts the signed Web catalog at `/features`; it is navigation only, not a wizard execution. `menu|guide_faq` starts the signed Support Desk, which uses the Web account and owner-scoped ticket contract rather than a raw Telegram-ID field, Bot chat transcript, screenshot, refund request or status. The pre-existing image, music and canonical wallet navigation entries also begin fresh Web pages and carry no Telegram context.\n\n"
-        "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They are terminal Telegram-only evidence while the final finite Video menu phase remains deferred; this does not claim a Web Video workflow or replay the Bot state machine.\n",
+        "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They remain explicit `GUIDED_VIDEO_MENU_DEFERRED` records and terminal Telegram-only evidence while the final finite Video menu phase remains deferred; this does not claim a Web Video workflow or replay the Bot state machine.\n",
     )
     write(
         "VIDEO_MENU_DEFERRED_CALLBACK_CONTRACT.md",
