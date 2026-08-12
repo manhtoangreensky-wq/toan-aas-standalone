@@ -51,12 +51,12 @@ def test_feature_family_explorer_uses_a_closed_member_manifest_directory() -> No
     assert 'aria-labelledby="portal-feature-family-explorer-title"' in explorer
 
 
-def test_feature_family_explorer_keeps_search_prominent_before_the_detailed_catalogue() -> None:
+def test_feature_family_explorer_places_category_navigation_before_detailed_search() -> None:
     catalog = _function(PORTAL, "renderFeatureCatalog")
     explorer_call = re.search(r"\$\{renderFeatureFamilyExplorer\([^}]*\)\}", catalog)
 
     assert explorer_call, "The /features renderer must include the always-on explorer."
-    assert catalog.index("${search}") < explorer_call.start() < catalog.index("${jumps}${body}")
+    assert explorer_call.start() < catalog.index("${search}") < catalog.index("${jumps}${body}")
     assert "renderRouteEngineBoundary(context)" in catalog
 
 
