@@ -377,6 +377,7 @@ def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_
     assert "function renderFeatureCatalog(page, context)" in PORTAL
     assert "function customerCatalog(context)" in PORTAL
     assert 'entry.kind !== "admin"' in PORTAL
+    assert 'page && page.access === "member"' in PORTAL
     assert "Object.values(manifest)" in PORTAL
     assert "function fallbackCatalogGroup(path)" in PORTAL
     assert "catalog: Array.isArray(source.catalog) ? source.catalog.slice() : []" in PORTAL

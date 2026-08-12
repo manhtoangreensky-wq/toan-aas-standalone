@@ -56,6 +56,8 @@ def test_features_renders_intent_led_guided_start_without_an_execution_claim() -
     assert "ứng dụng sẽ kiểm tra quyền và trạng thái thực tế" in guide
     assert "menu|" not in guide
     assert "${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}" in catalog
+    assert catalog.index("${renderFeatureFamilyExplorer()}") < catalog.index("${search}${jumps}${body}")
+    assert catalog.index("${search}${jumps}${body}") < catalog.index("${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}")
     assert 'id="feature-catalog-list"' in catalog
     assert ".portal-start-guide-step" in CSS
     assert "scroll-margin-top: 20px" in CSS

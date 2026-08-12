@@ -56,7 +56,11 @@ def test_feature_family_explorer_places_category_navigation_before_detailed_sear
     explorer_call = re.search(r"\$\{renderFeatureFamilyExplorer\([^}]*\)\}", catalog)
 
     assert explorer_call, "The /features renderer must include the always-on explorer."
+    assert catalog.index("${renderHero(page, context)}") < explorer_call.start()
     assert explorer_call.start() < catalog.index("${search}") < catalog.index("${jumps}${body}")
+    assert catalog.index("${jumps}${body}") < catalog.index("${renderRouteEngineBoundary(context)}")
+    assert catalog.index("${jumps}${body}") < catalog.index("${renderFeatureGuidedStart(context)}")
+    assert catalog.index("${renderFeatureGuidedStart(context)}") < catalog.index("${renderCapabilityHub(context)}")
     assert "renderRouteEngineBoundary(context)" in catalog
 
 
@@ -137,6 +141,16 @@ def test_feature_family_navigation_routes_do_not_reenter_the_detailed_catalogue(
     assert "!isFeatureFamilyExplorerRoute(route)" in customer_catalog
 
 
+def test_customer_catalog_keeps_only_registered_customer_routes_from_server_catalogue() -> None:
+    customer_catalog = _function(PORTAL, "customerCatalog")
+
+    assert "const page = route ? manifest[normalizePath(route)] : null;" in customer_catalog
+    assert 'page && page.access === "member"' in customer_catalog
+    assert "page.access !== \"admin\"" in customer_catalog
+    assert "!isFeatureFamilyExplorerRoute(route)" in customer_catalog
+    assert "return entries.length ? entries : fallbackFeatureCatalog();" in customer_catalog
+
+
 def test_feature_family_page_shows_sibling_directory_before_operational_detail() -> None:
     family = _function(PORTAL, "renderFeatureFamily")
 
@@ -177,8 +191,9 @@ def test_feature_family_switcher_uses_only_local_navigation_and_current_page_sem
 
 def test_feature_family_current_studio_chip_has_token_only_accessible_responsive_presentation() -> None:
     for requirement in (
+        ".portal-feature-jump {",
         ".portal-feature-jump--current {",
-        ".portal-feature-jump--current:focus-visible",
+        ".portal-feature-jump:focus-visible",
         "min-height: 44px",
         "var(--portal-",
     ):

@@ -15586,6 +15586,19 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   outline-offset: 3px;
 }
 
+.portal-feature-jump {
+  min-height: 44px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-muted-strong);
+  touch-action: manipulation;
+}
+
+.portal-feature-jump:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
 /* The family switcher is a local route navigator. The current studio remains
    visible as a non-interactive page marker so the taxonomy is never lost
    while a customer compares its sibling directories. */
