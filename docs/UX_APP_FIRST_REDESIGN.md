@@ -43,6 +43,14 @@ record, or an unavailable provider look ready.
   optional observer/listener enhancement is removed immediately and the
   rendered content stays visible.
 
+- **Dashboard decision motion:** completed dashboard decision layers — the
+  first-session guide, Web-owned work lane, account lane, Studio launchpad and
+  assurance disclosure — may reveal after entering the readable viewport.
+  The overview summary and canonical read lane remain visible immediately;
+  motion never reads, delays or interprets integration state. Focus reveals a
+  layer immediately, the enhancement is bounded to six controls per layer,
+  and the same reduced-motion cleanup restores a fully static dashboard.
+
 ## Navigation model
 
 | Viewport | Primary navigation | Secondary navigation |

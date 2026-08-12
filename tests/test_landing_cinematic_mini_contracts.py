@@ -33,7 +33,8 @@ def test_cinematic_motion_is_default_only_for_welcome_with_a_safe_opt_out() -> N
     assert 'new URLSearchParams(window.location.search || "").get("motion") !== "0"' in mount
     assert "const landingMotionRoute = isLanding" in mount
     assert "const landingMotionEnabled = landingMotionRoute" in mount
-    assert "main.dataset.portalMotionSkipEnter = landingMotionRoute ? \"true\" : \"false\";" in mount
+    assert 'const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";' in mount
+    assert "main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? \"true\" : \"false\";" in mount
     assert 'root.setAttribute("data-landing-motion", "cinematic-mini")' in MOTION
     assert "motion.unmountLanding" in mount
     assert mount.index("motion.unmountLanding") < mount.index("function renderShell()")

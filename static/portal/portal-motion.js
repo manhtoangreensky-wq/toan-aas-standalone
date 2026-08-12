@@ -125,6 +125,17 @@
     unmountWorkspace();
     if (!root || typeof window !== "object" || prefersReducedMotion()) return;
 
+    // Dashboard motion is deliberately limited to Web-owned decision layers.
+    // Its summary and canonical read lane remain immediately readable because
+    // this presentation helper never treats account or integration state as
+    // an animation prerequisite.
+    const dashboardDecisionSelector = [
+      "[data-dashboard-start-guide]",
+      ".portal-dashboard-app .portal-command-center-lane--work",
+      ".portal-dashboard-app .portal-command-center-lane--account",
+      ".portal-dashboard-app .portal-studio-section",
+      ".portal-dashboard-app .portal-dashboard-assurance"
+    ].join(", ");
     const targetSelector = [
       ".portal-catalog-context",
       ".portal-feature-catalog > .portal-section-heading",
@@ -144,8 +155,32 @@
       ".portal-catalog-item",
       ".portal-workspace-menu-card"
     ].join(", ");
-    const targets = Array.from(root.querySelectorAll(targetSelector));
+    const dashboardItemSelector = [
+      ".portal-start-guide-step",
+      ".portal-dashboard-draft",
+      ".portal-command-center-lane-actions .portal-button",
+      ".portal-studio-card",
+      ".portal-dashboard-assurance > summary"
+    ].join(", ");
+    const dashboardTargets = Array.from(root.querySelectorAll(dashboardDecisionSelector));
+    const dashboardTargetSet = new Set(dashboardTargets);
+    const targets = Array.from(new Set([
+      ...Array.from(root.querySelectorAll(targetSelector)),
+      ...dashboardTargets
+    ]));
     if (!targets.length) return;
+    const targetDetails = targets.map((target) => {
+      const dashboardDecision = dashboardTargetSet.has(target);
+      return {
+        target,
+        targetClass: dashboardDecision ? "portal-dashboard-motion-target" : "portal-workspace-motion-target",
+        itemClass: dashboardDecision ? "portal-dashboard-motion-item" : "portal-workspace-motion-item",
+        itemIndexProperty: dashboardDecision
+          ? "--portal-dashboard-motion-index"
+          : "--portal-workspace-motion-index",
+        itemSelector: dashboardDecision ? dashboardItemSelector : itemSelector
+      };
+    });
 
     const generation = workspaceGeneration;
     const isCurrentMount = () => workspaceGeneration === generation;
@@ -159,11 +194,11 @@
       if (observer) observer.unobserve(target);
     };
 
-    targets.forEach((target) => {
-      target.classList.add("portal-workspace-motion-target", "is-pending");
-      Array.from(target.querySelectorAll(itemSelector)).slice(0, 6).forEach((item, index) => {
-        item.classList.add("portal-workspace-motion-item");
-        setStyleProperty(item, "--portal-workspace-motion-index", index);
+    targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty, itemSelector: selector }) => {
+      target.classList.add(targetClass, "is-pending");
+      Array.from(target.querySelectorAll(selector)).slice(0, 6).forEach((item, index) => {
+        item.classList.add(itemClass);
+        setStyleProperty(item, itemIndexProperty, index);
       });
       const onFocus = (event) => revealTarget(event.currentTarget);
       target.addEventListener("focusin", onFocus);
@@ -209,11 +244,11 @@
       if (observer) observer.disconnect();
       removeReducedMotionListener();
       focusHandlers.forEach(({ target, onFocus }) => target.removeEventListener("focusin", onFocus));
-      targets.forEach((target) => {
-        target.classList.remove("portal-workspace-motion-target", "is-pending", "is-visible");
-        Array.from(target.querySelectorAll(".portal-workspace-motion-item")).forEach((item) => {
-          item.classList.remove("portal-workspace-motion-item");
-          removeStyleProperty(item, "--portal-workspace-motion-index");
+      targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty }) => {
+        target.classList.remove(targetClass, "is-pending", "is-visible");
+        Array.from(target.querySelectorAll(`.${itemClass}`)).forEach((item) => {
+          item.classList.remove(itemClass);
+          removeStyleProperty(item, itemIndexProperty);
         });
       });
     };

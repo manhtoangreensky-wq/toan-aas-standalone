@@ -29970,6 +29970,9 @@
       && window.location.pathname === "/welcome";
     const landingMotionEnabled = landingMotionRoute
       && new URLSearchParams(window.location.search || "").get("motion") !== "0";
+    // The dashboard has its own, narrower decision-layer motion. Its summary
+    // and canonical read lane must not inherit the generic shell entrance.
+    const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
     const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
     // This presentation marker is intentionally derived from the same
     // normalized route selection used below for the server-authorized Admin
@@ -30017,7 +30020,7 @@
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute ? "true" : "false";
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? "true" : "false";
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       header.innerHTML = renderHeader(page, context);
