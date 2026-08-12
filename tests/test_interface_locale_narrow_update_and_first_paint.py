@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import re
 import sys
 from pathlib import Path
 
@@ -164,7 +165,10 @@ def test_signed_first_paint_uses_only_server_profile_locale_and_public_login_sta
         dashboard = client.get("/dashboard")
         assert dashboard.status_code == 200
         assert dashboard.headers["cache-control"] == "no-store, private"
-        assert '<html lang="zh-CN" dir="ltr" data-portal-locale="zh">' in dashboard.text
+        assert re.search(
+            r'<html lang="zh-CN" dir="ltr" data-portal-locale="zh" data-portal-motion-route="dashboard">',
+            dashboard.text,
+        )
         assert "<title>概览 · TOAN AAS</title>" in dashboard.text
         assert "正在启动 TOAN AAS…" in dashboard.text
         assert '"interfaceLocale": "zh"' in dashboard.text
@@ -174,9 +178,29 @@ def test_signed_first_paint_uses_only_server_profile_locale_and_public_login_sta
         with TestClient(app) as anonymous:
             login = anonymous.get("/login?locale=zh")
             assert login.status_code == 200
-            assert '<html lang="vi" dir="ltr" data-portal-locale="vi">' in login.text
+            assert re.search(
+                r'<html lang="vi" dir="ltr" data-portal-locale="vi" data-portal-motion-route="default">',
+                login.text,
+            )
             assert '"interfaceLocale": "vi"' in login.text
             assert "Đang khởi tạo giao diện TOAN AAS…" in login.text
+
+
+def test_signed_public_welcome_keeps_its_exact_query_locale_over_profile_preference(tmp_path, monkeypatch) -> None:
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email="welcome-query-locale@example.com", name="Welcome locale")
+        updated = client.post(
+            "/api/v1/auth/profile/interface-locale",
+            headers={"X-CSRF-Token": csrf},
+            json={"locale": "en"},
+        )
+        assert updated.json()["ok"] is True
+
+        welcome = client.get("/welcome?lang=vi")
+        assert welcome.status_code == 200
+        assert '<html lang="vi" dir="ltr" data-portal-locale="vi"' in welcome.text
+        assert '"interfaceLocale": "vi"' in welcome.text
+        assert "welcome-query-locale@example.com" not in welcome.text
 
 
 def test_locale_navigator_uses_only_the_narrow_receipt_and_endpoint() -> None:
