@@ -18378,8 +18378,17 @@
       counts[state] = (counts[state] || 0) + 1;
       return counts;
     }, Object.create(null));
-    const otherFamilies = FEATURE_FAMILY_KEYS.map(featureCatalogGroup).filter((group) => group && group.key !== family.key);
-    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${otherFamilies.map((group) => `<a class="portal-feature-jump" href="/features/${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`;
+    const familyNavItems = FEATURE_FAMILY_KEYS.map((groupKey) => {
+      const group = featureCatalogGroup(groupKey);
+      const route = `/features/${groupKey}`;
+      const memberPage = manifest[normalizePath(route)];
+      if (!group || !(memberPage && memberPage.access === "member")) return "";
+      const label = safeText(featureCatalogGroupCopy(group, "title"));
+      return groupKey === family.key
+        ? `<span class="portal-feature-jump portal-feature-jump--current" aria-current="page">${label}</span>`
+        : `<a class="portal-feature-jump" href="${safeText(route)}">${label}</a>`;
+    }).join("");
+    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${familyNavItems}</nav>`;
     const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(featureCatalogText("family.summary.title", "Trạng thái workflow"))}</h2><p class="portal-card-subtitle">${safeText(featureCatalogText("family.summary.body", "Số liệu chỉ mô tả route đã được registry công bố; không suy đoán engine, quota hoặc output."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.mapped", "Đã định tuyến"))}</span><span class="portal-summary-value">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(entries.length) }))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.canonicalReady", "Sẵn sàng canonical"))}</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.guarded", "Đang guarded"))}</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
     const cards = entries.length
       ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })).join("")}</div>`

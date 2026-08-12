@@ -146,6 +146,51 @@ def test_feature_family_page_shows_sibling_directory_before_operational_detail()
     assert family.count("${familyNav}") == 1
 
 
+def test_feature_family_page_keeps_current_studio_visible_in_its_closed_switcher() -> None:
+    family = _function(PORTAL, "renderFeatureFamily")
+
+    assert "FEATURE_FAMILY_KEYS.map((groupKey) => {" in family
+    assert "const route = `/features/${groupKey}`;" in family
+    assert 'const memberPage = manifest[normalizePath(route)];' in family
+    assert 'memberPage && memberPage.access === "member"' in family
+    assert 'class="portal-feature-jump portal-feature-jump--current" aria-current="page"' in family
+    assert 'class="portal-feature-jump" href="${safeText(route)}"' in family
+    assert "groupKey === family.key" in family
+
+
+def test_feature_family_switcher_uses_only_local_navigation_and_current_page_semantics() -> None:
+    family = _function(PORTAL, "renderFeatureFamily").lower()
+
+    for forbidden in (
+        "fetch(",
+        "localstorage",
+        "sessionstorage",
+        "data-portal-action",
+        "provider",
+        "payment",
+        "wallet",
+        "job",
+        "telegram",
+    ):
+        assert forbidden not in family
+
+
+def test_feature_family_current_studio_chip_has_token_only_accessible_responsive_presentation() -> None:
+    for requirement in (
+        ".portal-feature-jump--current {",
+        ".portal-feature-jump--current:focus-visible",
+        "min-height: 44px",
+        "var(--portal-",
+    ):
+        assert requirement in THEME
+    current_rule = _between(THEME, ".portal-feature-jump--current {", ".portal-feature-jump--current:focus-visible")
+    assert "#" not in current_rule
+    assert re.search(
+        r"@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]{0,2500}\.portal-feature-jump",
+        THEME,
+    )
+
+
 def test_feature_family_explorer_registers_every_closed_family_and_localizes_its_navigation_label() -> None:
     navigation = _between(PORTAL, "const NAVIGATION_I18N_KEYS", "function localizedNavigationLabel")
     registration = _between(

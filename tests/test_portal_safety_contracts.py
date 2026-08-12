@@ -413,7 +413,9 @@ def test_feature_family_navigators_only_link_registered_workflows_and_keep_guard
     assert 'case "feature-family": return renderFeatureFamily(page, context);' in PORTAL
     assert 'const featureFamily = featureFamilyForPath(normalized);' in PORTAL
     assert 'layout: "feature-family"' in PORTAL
-    assert 'href="/features/${safeText(group.key)}"' in PORTAL
+    assert "const memberPage = manifest[normalizePath(route)];" in PORTAL
+    assert 'memberPage && memberPage.access === "member"' in PORTAL
+    assert 'href="${safeText(route)}"' in PORTAL
     assert "Card guarded giữ nguyên trạng thái" in PORTAL
     family_renderer = PORTAL[PORTAL.index("function renderFeatureFamily(page, context)"):PORTAL.index("function normalizeCatalogSearch(value)")]
     assert "/api/v1/" not in family_renderer
@@ -1453,7 +1455,8 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert "fetch(" not in landing
     assert "localStorage" not in landing
     assert 'text(`trust.${item.key}.body`)' in landing
-    assert 'href: "/video/create"' in landing
+    assert 'href: "/features/video"' in landing
+    assert 'href: "/video/create"' not in landing
     assert 'id="studios"' in landing
     assert 'id="workflow"' in landing
     assert 'id="trust"' in landing
