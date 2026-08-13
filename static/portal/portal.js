@@ -18508,6 +18508,7 @@
     const workspaceSetup = context && context.workspaceSetup && typeof context.workspaceSetup === "object"
       ? context.workspaceSetup
       : {};
+    const workspaceSetupReadState = workspaceSetup.readState === "read_only" ? "read_only" : "unavailable";
     const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object"
       ? workspaceSetup.profile
       : {};
@@ -18520,6 +18521,7 @@
     if (webWorkState !== "ready") return { kind: "unavailable" };
 
     if (!projects.length && !drafts.length) {
+      if (workspaceSetupReadState !== "read_only") return { kind: "unavailable" };
       return { kind: setupProfile.setup_state === "completed" ? "first_session_ready" : "first_session" };
     }
     if (drafts.length) {
@@ -18656,17 +18658,27 @@
 
   function renderDashboardRecentDrafts(context) {
     const drafts = dashboardActiveDrafts(context).slice(0, 3);
-    const body = drafts.length
-      ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
-      : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
+    const readState = workspaceDraftReadState(context);
+    const body = readState === "loading"
+      ? renderEmpty(dashboardText("drafts.loadingTitle"), dashboardText("drafts.loadingBody"), ICONS.refresh)
+      : readState !== "ready"
+        ? renderEmpty(dashboardText("drafts.unavailableTitle"), dashboardText("drafts.unavailableBody"), ICONS.security)
+        : drafts.length
+          ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+          : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
     return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/workspace"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 3);
-    const body = projects.length
-      ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
-      : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
+    const readState = projectCenterReadState(context);
+    const body = readState === "loading"
+      ? renderEmpty(dashboardText("projects.loadingTitle"), dashboardText("projects.loadingBody"), ICONS.refresh)
+      : readState !== "ready"
+        ? renderEmpty(dashboardText("projects.unavailableTitle"), dashboardText("projects.unavailableBody"), ICONS.security)
+        : projects.length
+          ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+          : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
     return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h2 class="portal-card-title">${dashboardText("projects.title")}</h2><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 

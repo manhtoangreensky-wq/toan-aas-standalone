@@ -15546,9 +15546,14 @@
     try {
       const result = await api(projectListPath(filter, offset));
       if (!projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) return [];
-      const items = result.data && Array.isArray(result.data.items)
-        ? result.data.items.filter((item) => item && validProjectId(item.id)).slice(0, 100)
-        : [];
+      if (result.status !== "read_only" || !result.data || !Array.isArray(result.data.items)) {
+        throw new Error("Danh sách Web riêng tư không đúng schema.");
+      }
+      const rawItems = result.data.items;
+      if (!rawItems.every((item) => item && validProjectId(item.id))) {
+        throw new Error("Danh sách Project riêng tư có bản ghi không hợp lệ.");
+      }
+      const items = rawItems.slice(0, 100);
       if (!projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) return [];
       merge({
         projects: items,
@@ -25068,9 +25073,14 @@
     try {
       const result = await api(workspaceDraftListPath(filter, offset, limit));
       if (!workspaceDraftRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return [];
-      const items = result.data && Array.isArray(result.data.items)
-        ? result.data.items.filter((item) => item && validWorkspaceDraftId(item.id)).slice(0, limit)
-        : [];
+      if (result.status !== "read_only" || !result.data || !Array.isArray(result.data.items)) {
+        throw new Error("Danh sách Web riêng tư không đúng schema.");
+      }
+      const rawItems = result.data.items;
+      if (!rawItems.every((item) => item && validWorkspaceDraftId(item.id))) {
+        throw new Error("Danh sách bản nháp riêng tư có bản ghi không hợp lệ.");
+      }
+      const items = rawItems.slice(0, limit);
       if (!workspaceDraftRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return [];
       merge({
         workspaceDrafts: items,
