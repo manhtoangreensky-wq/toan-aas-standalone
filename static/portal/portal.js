@@ -29530,6 +29530,45 @@
     button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng");
   }
 
+  function mobileSidebarDialogSupported() {
+    return Boolean(window.matchMedia && window.matchMedia("(max-width: 980px)").matches);
+  }
+
+  const SIDEBAR_TABINDEX_SNAPSHOT = "data-portal-sidebar-tabindex";
+
+  function setSidebarFallbackTabStops(sidebar, enabled) {
+    if (!sidebar || typeof sidebar.querySelectorAll !== "function") return;
+    const controls = Array.from(sidebar.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary"));
+    controls.forEach((control) => {
+      if (enabled) {
+        if (control.hasAttribute(SIDEBAR_TABINDEX_SNAPSHOT)) return;
+        control.setAttribute(SIDEBAR_TABINDEX_SNAPSHOT, control.hasAttribute("tabindex") ? (control.getAttribute("tabindex") || "") : "__absent__");
+        control.setAttribute("tabindex", "-1");
+        return;
+      }
+      const previous = control.getAttribute(SIDEBAR_TABINDEX_SNAPSHOT);
+      if (previous === null) return;
+      if (previous === "__absent__") control.removeAttribute("tabindex");
+      else control.setAttribute("tabindex", previous);
+      control.removeAttribute(SIDEBAR_TABINDEX_SNAPSHOT);
+    });
+  }
+
+  function setSidebarAccessibilityState(opened) {
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    if (!sidebar) return;
+    const hideClosedDrawer = !opened && mobileSidebarDialogSupported();
+    if (hideClosedDrawer) {
+      sidebar.setAttribute("aria-hidden", "true");
+      if ("inert" in sidebar) sidebar.inert = true;
+      setSidebarFallbackTabStops(sidebar, true);
+      return;
+    }
+    sidebar.removeAttribute("aria-hidden");
+    if ("inert" in sidebar) sidebar.inert = false;
+    setSidebarFallbackTabStops(sidebar, false);
+  }
+
   function desktopFocusNavigationSupported() {
     return Boolean(window.matchMedia && window.matchMedia("(min-width: 981px)").matches);
   }
@@ -29580,6 +29619,7 @@
     }
     setWorkspaceInert(false);
     setSidebarMenuState(button, false);
+    setSidebarAccessibilityState(false);
     if (wasOpen && settings.restoreFocus !== false && sidebarReturnFocus && typeof sidebarReturnFocus.focus === "function") {
       sidebarReturnFocus.focus({ preventScroll: true });
     }
@@ -29601,6 +29641,7 @@
     sidebarReturnFocus = button;
     sidebar.setAttribute("role", "dialog");
     sidebar.setAttribute("aria-modal", "true");
+    setSidebarAccessibilityState(true);
     setWorkspaceInert(true);
     window.requestAnimationFrame(() => {
       const first = sidebarFocusables(sidebar)[0];
@@ -29617,10 +29658,12 @@
         desktopNavigationFocusEnabled = false;
         syncDesktopFocusNavigation();
       }
+      setSidebarAccessibilityState(false);
       return;
     }
     const sidebar = document.querySelector("[data-portal-sidebar]");
     if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    else setSidebarAccessibilityState(false);
   }
 
   function commandPaletteFocusables(palette) {
@@ -30167,6 +30210,7 @@
     document.body.classList.toggle("portal-body--auth", isAuth);
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
+    setSidebarAccessibilityState(false);
     const skipLink = document.querySelector(".skip-link");
     if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
     if (mobileNav) {
@@ -30195,6 +30239,7 @@
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute ? "dashboard" : "default");
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
+      setSidebarAccessibilityState(false);
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
       placeSfxCueSheetReceipt(main);
