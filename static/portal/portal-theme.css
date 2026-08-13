@@ -15910,6 +15910,323 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* Customer Shell Harmony ----------------------------------------------
+   The customer app keeps its server-rendered navigation and route manifest;
+   this final visual layer only clarifies the already-mounted desktop rail,
+   command surface and five-item mobile dock.  It intentionally contains no
+   request, identity, capability, billing or execution concern. */
+@keyframes portal-customer-shell-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--portal-motion-distance) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes portal-customer-command-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--portal-motion-distance) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar {
+  border-right-color: var(--portal-rail-border);
+  background: var(--portal-rail);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-brand {
+  margin-bottom: var(--portal-space-4);
+  padding-bottom: var(--portal-space-3);
+  border-bottom: 1px solid var(--portal-rail-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-action-row {
+  margin-bottom: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search {
+  margin-bottom: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav {
+  gap: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group {
+  padding: 0 0 var(--portal-space-2);
+  border-bottom: 1px solid var(--portal-rail-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group--current {
+  border-bottom-color: var(--portal-border-strong);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary {
+  min-height: 44px;
+  padding-inline: var(--portal-space-3);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-focus-toggle:is(:hover, :focus-visible) {
+  border-color: var(--portal-rail-border);
+  background: var(--portal-nav-hover-surface);
+  color: var(--portal-rail-text);
+}
+
+.portal-shell[data-portal-app-kind="customer"] :is(
+  .portal-nav-summary,
+  .portal-nav-link,
+  .portal-sidebar-search,
+  .portal-sidebar-focus-toggle,
+  .portal-command-item,
+  .portal-mobile-nav-link,
+  .portal-command-close
+):focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-links {
+  gap: var(--portal-space-1);
+  padding: var(--portal-space-1) 0 var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link {
+  min-height: 44px;
+  padding: 10px var(--portal-space-3);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--portal-brand);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-header {
+  border-bottom-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-dialog {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-color: var(--portal-control-border);
+  background: var(--portal-control-surface);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header h2,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-kicker,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-arrow,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search-icon {
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
+  border-color: var(--portal-control-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search:focus-within {
+  border-color: var(--portal-context);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 20%, transparent);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input {
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input::placeholder,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy small,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-count {
+  color: var(--portal-muted);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-empty {
+  color: var(--portal-warning);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint kbd {
+  border-color: var(--portal-control-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
+  border-color: transparent;
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:focus-visible,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-mobile-nav-link:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette:not([hidden]) .portal-command-dialog {
+    animation: portal-customer-command-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ) {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ):is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ):active {
+      transform: scale(.985);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"]:not(.portal-shell--focus) .portal-sidebar {
+    animation: portal-customer-shell-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+}
+
+@media (max-width: 620px) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-header {
+    gap: var(--portal-space-2);
+    min-width: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-crumbs {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-session-chip {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-session-copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-sidebar,
+    .portal-nav-summary,
+    .portal-nav-link,
+    .portal-sidebar-search,
+    .portal-sidebar-focus-toggle
+  ),
+  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette :is(
+    .portal-command-dialog,
+    .portal-command-item,
+    .portal-command-close
+  ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Final responsive app dock harmony */
 /* Customer and ERP retain distinct surfaces while sharing the same compact,
    safe-area-aware five-action rhythm. */
