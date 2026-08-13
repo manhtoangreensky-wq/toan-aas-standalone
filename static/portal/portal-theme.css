@@ -15665,6 +15665,21 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
   }
 
+  /* Focus is an interaction, not a decorative reveal.  When a keyboard user
+     enters a late card, every part of that destination is immediately
+     readable instead of waiting for a backwards stagger animation. */
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible:focus-within {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible:focus-within .portal-workspace-motion-item {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
   .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible .portal-workspace-motion-item {
     animation: portal-workspace-reveal var(--portal-motion-base) var(--portal-motion-ease-emphasis) backwards;
     animation-delay: calc(var(--portal-workspace-motion-index, 0) * 34ms);

@@ -95,6 +95,17 @@ def test_feature_catalog_has_a_localized_continuation_into_media_studio() -> Non
         assert I18N.count(f'"mediaStudio.{key}"') == 3, key
 
 
+def test_feature_catalog_keeps_search_and_intent_selection_before_studio_continuation() -> None:
+    """The optional Studio handoff cannot displace the primary discovery task."""
+    catalog = _function(PORTAL, "renderFeatureCatalog")
+    rendered = catalog[catalog.index("return `<article class=\"portal-page\">"):]
+
+    assert rendered.index("${search}") < rendered.index("${renderFeatureFamilyExplorer()}")
+    assert rendered.index("${renderFeatureFamilyExplorer()}") < rendered.index("${studioContinuation}")
+    assert rendered.index("${jumps}") < rendered.index("${studioContinuation}")
+    assert rendered.index("${studioContinuation}") < rendered.index("${body}")
+
+
 def test_media_studio_desktop_grid_uses_a_semantic_connected_rail() -> None:
     marker = "/* Reference-first Media Studio rail"
     studio_theme = THEME[THEME.index(marker):]
@@ -131,6 +142,7 @@ def test_media_studio_uses_existing_workspace_motion_and_token_only_theme_rules(
     assert '".portal-media-studio-shell .portal-media-studio-intro"' in workspace
     assert '".portal-media-studio-shell .portal-media-studio-flow"' in workspace
     assert '".portal-media-studio-shell .portal-media-studio-handoff"' in workspace
+    assert '".portal-feature-studio-continuation"' in workspace
     assert '".portal-media-studio-step"' in workspace
 
     marker = "/* Reference-first Media Studio rail"
@@ -147,3 +159,36 @@ def test_media_studio_uses_existing_workspace_motion_and_token_only_theme_rules(
         assert selector in reduced
     for reset in ("animation: none !important;", "transition: none !important;", "transform: none !important;"):
         assert reset in reduced
+
+
+def test_workspace_motion_never_hides_a_keyboard_destination_or_waits_forever_for_observer() -> None:
+    """Optional scroll polish cannot delay a keyboard destination or blank a group.
+
+    ``mountWorkspace`` initially applies ``is-pending`` so a late observer
+    callback can reveal a group.  A focus event must override the stagger
+    immediately, and a bounded fallback must reveal every group if the
+    observer never delivers an entry (for example during a layout failure).
+    """
+    workspace = _section(MOTION, "function mountWorkspace(root)", "function mountLanding(root)")
+
+    assert "const WORKSPACE_REVEAL_FALLBACK_MS" in MOTION
+    assert "let revealFallbackTimer = 0;" in workspace
+    assert "const timerHost = typeof window.setTimeout" in workspace
+    assert "timerHost.setTimeout(() => {" in workspace
+    assert "targets.forEach(revealTarget);" in workspace
+    assert "timerHost.clearTimeout(revealFallbackTimer);" in workspace
+
+    motion_start = THEME.index("@media (prefers-reduced-motion: no-preference)", THEME.index("/* Reference-first Media Studio rail"))
+    motion_end = THEME.index("/* Reference-first Media Studio rail", motion_start + 1) if "/* Reference-first Media Studio rail" in THEME[motion_start + 1:] else len(THEME)
+    workspace_theme = THEME[THEME.index(".portal-shell[data-portal-app-kind=\"customer\"] .portal-workspace-motion-target.is-pending"):motion_end]
+    assert ".portal-workspace-motion-target.is-visible:focus-within" in workspace_theme
+    assert ".portal-workspace-motion-target.is-visible:focus-within .portal-workspace-motion-item" in workspace_theme
+    assert "opacity: 1;" in workspace_theme
+    assert "animation: none;" in workspace_theme
+
+
+def test_feature_catalog_studio_handoff_joins_the_existing_workspace_motion_lifecycle() -> None:
+    """The continuation is a visible decision point, not a static orphan."""
+    workspace = _section(MOTION, "function mountWorkspace(root)", "function mountLanding(root)")
+
+    assert '".portal-feature-studio-continuation"' in workspace

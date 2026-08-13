@@ -5,6 +5,9 @@
 
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const ENTER_CLEAR_DELAY_MS = 500;
+  // Scroll observers are an optional visual enhancement.  A missing observer
+  // delivery must never leave a complete, interactive workspace transparent.
+  const WORKSPACE_REVEAL_FALLBACK_MS = 900;
   // The public Landing needs a long enough one-shot sequence that visitors
   // can actually perceive it after Portal hydration. This is presentation
   // timing only; it never gates content, navigation, or an account action.
@@ -144,6 +147,7 @@
       ".portal-capability-hub",
       ".portal-catalog-search",
       ".portal-feature-jumps",
+      ".portal-feature-studio-continuation",
       ".portal-feature-group",
       ".portal-media-studio-shell .portal-media-studio-intro",
       ".portal-media-studio-shell .portal-media-studio-flow",
@@ -193,6 +197,7 @@
     const isCurrentMount = () => workspaceGeneration === generation;
     const focusHandlers = [];
     let observer = null;
+    let revealFallbackTimer = 0;
     let removeReducedMotionListener = () => {};
     const revealTarget = (target) => {
       if (!isCurrentMount() || !target) return;
@@ -227,6 +232,24 @@
       targets.forEach(revealTarget);
     }
 
+    // Browser layout/observer delivery can be interrupted by an extension,
+    // background tab transition or an implementation defect.  Preserve the
+    // semantic page by completing the optional reveal after a short bounded
+    // window rather than relying on scrolling or focus to recover it.  The
+    // narrow DOM harness used for static portal checks does not supply timer
+    // APIs, so it gets the same immediate no-observer safety outcome.
+    const timerHost = typeof window.setTimeout === "function" && typeof window.clearTimeout === "function"
+      ? window
+      : null;
+    if (timerHost) {
+      revealFallbackTimer = timerHost.setTimeout(() => {
+        if (!isCurrentMount()) return;
+        targets.forEach(revealTarget);
+      }, WORKSPACE_REVEAL_FALLBACK_MS);
+    } else {
+      targets.forEach(revealTarget);
+    }
+
     // An OS preference can change while this signed page remains open. Stop
     // this optional presentation layer immediately and restore its semantic
     // content instead of leaving a pending/staggered group in the DOM until a
@@ -249,6 +272,7 @@
 
     workspaceCleanup = () => {
       if (observer) observer.disconnect();
+      if (revealFallbackTimer && timerHost) timerHost.clearTimeout(revealFallbackTimer);
       removeReducedMotionListener();
       focusHandlers.forEach(({ target, onFocus }) => target.removeEventListener("focusin", onFocus));
       targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty }) => {

@@ -5,3 +5,7 @@ __pycache__/
 
 # Local signed-session store used only for development smoke checks
 toanaas_webapp_session.db
+
+# Ephemeral local visual-QA output. These files can contain a temporary
+# signed-session database or rendered HTML and are never source artifacts.
+.tmp-*
