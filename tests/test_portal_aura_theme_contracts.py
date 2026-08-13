@@ -250,6 +250,14 @@ def test_phone_header_keeps_the_current_page_title_visible() -> None:
     assert "display: none;" in declarations
 
 
+def test_compact_header_keeps_a_semantic_current_location_for_assistive_technology() -> None:
+    header = PORTAL[PORTAL.index("function renderHeader(page, context)"):PORTAL.index("function renderFields(")]
+
+    assert '<nav class="portal-crumbs"' in header
+    assert "aria-label=" in header
+    assert 'aria-current="page"' in header
+
+
 def test_final_mobile_dock_harmony_owns_light_dark_geometry_and_safe_area() -> None:
     """The late theme layer must be the single responsive dock authority."""
 

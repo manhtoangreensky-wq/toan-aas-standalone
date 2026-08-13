@@ -10134,11 +10134,16 @@
     const commandSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
-    const crumbs = ["TOAN AAS", page.section, localizedPageTitle(page, context)].filter(Boolean).map((piece) => `<span>${safeText(localizedNavigationLabel(piece))}</span>`).join("");
+    const crumbItems = ["TOAN AAS", page.section, localizedPageTitle(page, context)]
+      .filter(Boolean)
+      .map((piece) => safeText(localizedNavigationLabel(piece)));
+    const crumbs = crumbItems
+      .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
+      .join("");
     const accountHref = context.session.authenticated === true ? "/account" : "/login";
     const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;
     return `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
-      <div class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</div>
+      <nav class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</nav>
       <div class="portal-header-actions">
         ${renderThemeToggle()}
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
