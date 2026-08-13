@@ -3922,6 +3922,32 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # A Workspace Draft handoff is a one-way, Web-owned snapshot into a
+        # Project Studio Document.  The unique owner/project/draft tuple is
+        # the durable replay guard: changing a browser idempotency key cannot
+        # create a second document for the same source pair.  This table has
+        # no provider, job, wallet, payment or delivery fields by design.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workspace_draft_handoffs (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                draft_id TEXT NOT NULL,
+                document_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(account_id, project_id, draft_id),
+                UNIQUE(document_id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(draft_id) REFERENCES web_workspace_drafts(id),
+                FOREIGN KEY(document_id) REFERENCES web_studio_documents(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workspace_draft_handoffs_account_created ON web_workspace_draft_handoffs(account_id, created_at DESC)"
+        )
         # A Starter Kit is an explicit, one-time Web-owned launch receipt.
         # It deliberately records only the reviewed kit digest and the local
         # Project/Document/Workboard counts.  It must never become a shadow

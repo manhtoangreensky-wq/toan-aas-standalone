@@ -547,6 +547,11 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert 'api(`/workspace/drafts/${encodeURIComponent(draftId)}`)' in INTEGRATION
     assert "workspace-draft-resume" in INTEGRATION
     assert "workspace-draft-archive" in INTEGRATION
+    assert '"workspace-draft-attach": Boolean(account && me.csrf_token)' in INTEGRATION
+    assert 'action === "workspace-draft-attach"' in INTEGRATION
+    assert 'api(`/projects/${encodeURIComponent(projectId)}/workspace-drafts/${encodeURIComponent(draftId)}/attach`' in INTEGRATION
+    assert 'const projectRoute = `/projects/${encodeURIComponent(projectId)}`;' in INTEGRATION
+    assert 'window.history.pushState({}, "", projectRoute)' in INTEGRATION
     assert 'action === "workspace-draft-save" || action === "workspace-draft-update"' in INTEGRATION
     assert 'method: updating ? "PATCH" : "POST"' in INTEGRATION
     assert "restoreWorkspaceDraft(item.route, item.input, item.id)" in INTEGRATION
@@ -555,6 +560,11 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert "workspace-drafts-filter-clear" in workspace_render
     assert "renderWorkspaceDraftPagination(listing)" in workspace_render
     assert '"workspace-drafts-page"' in PORTAL
+    assert 'data-portal-action="workspace-draft-attach"' in workspace_render
+    assert 'name="project_id"' in workspace_render
+    assert 'name="confirmed"' in workspace_render
+    assert "data-portal-confirm" in workspace_render
+    assert "localStorage" not in workspace_render
     assert "item.input" not in workspace_render
     assert "input_json" not in workspace_render
     api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
@@ -582,6 +592,33 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
     assert "web_workspace_drafts" in db
     assert "idx_web_workspace_drafts_account_state_updated" in db
+
+
+def test_workspace_draft_attach_is_a_web_owned_snapshot_with_durable_pair_replay() -> None:
+    projects = (ROOT / "copyfast_projects.py").read_text(encoding="utf-8")
+    database = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    attach_start = projects.index('@router.post("/{project_id}/workspace-drafts/{draft_id}/attach")')
+    attach_end = projects.index('@router.get("")', attach_start)
+    attach = projects[attach_start:attach_end]
+    for required in (
+        "Depends(require_csrf)",
+        "web_workspace_draft_handoffs",
+        "web_studio_documents",
+        "web_studio_document_versions",
+        "WORKSPACE_DRAFT_ARCHIVED",
+        "WORKSPACE_DRAFT_INVALID",
+        "web.workspace_draft.attach",
+        "web_owned_snapshot_only",
+        "request_fingerprint",
+    ):
+        assert required in attach or required in projects
+    for forbidden in ("from copyfast_bridge", "import copyfast_bridge", "bridge_request(", "create_payment", "wallet_mutation"):
+        assert forbidden.lower() not in attach.lower()
+    assert "CREATE TABLE IF NOT EXISTS web_workspace_draft_handoffs" in database
+    assert "UNIQUE(account_id, project_id, draft_id)" in database
+    assert "UNIQUE(document_id)" in database
+    assert '"web.workspace_draft.attach": ("Đưa bản nháp vào Project Studio", "Project Center")' in api
 
 
 def test_portal_normalizer_preserves_owner_scoped_hydration_state() -> None:

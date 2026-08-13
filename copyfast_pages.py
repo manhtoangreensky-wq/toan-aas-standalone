@@ -495,6 +495,14 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
         # service-worker URL so each deployed public shell owns one cache.
         "buildId": build_id,
     }
+    # A Project detail begins with an owner-scoped API read.  Mark only this
+    # dynamic route as pending in the public shell so `portal.js`, which mounts
+    # before `integration.js`, never presents a valid deep link as missing.
+    # This is presentation state only: the authenticated integration replaces
+    # it with `processing` or `guarded` after `/auth/me`; it carries no account
+    # data and grants no access.
+    if PROJECT_PATH.fullmatch(normalized):
+        payload["pageStates"] = {normalized: "processing"}
     output = (
         template
         .replace("__PORTAL_TITLE__", html.escape(payload["title"]))

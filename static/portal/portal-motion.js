@@ -155,7 +155,8 @@
       ".portal-media-studio-shell .portal-media-studio-handoff",
       ".portal-workspace-menu-intro",
       ".portal-workspace-menu-group",
-      ".portal-workspace-menu-boundary"
+      ".portal-workspace-menu-boundary",
+      ".portal-workspace-drafts > .portal-card"
     ].join(", ");
     const itemSelector = [
       ".portal-start-guide-step",
@@ -164,7 +165,9 @@
       ".portal-feature-jump",
       ".portal-catalog-item",
       ".portal-media-studio-step",
-      ".portal-workspace-menu-card"
+      ".portal-workspace-menu-card",
+      ".portal-workspace-draft",
+      ".portal-workspace-draft-attach"
     ].join(", ");
     const dashboardItemSelector = [
       ".portal-start-guide-step",

@@ -653,6 +653,8 @@ def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> 
         "workspaceDrafts.page.title": ("Bản nháp Workspace", "Workspace drafts", "工作台草稿"),
         "workspaceDrafts.filter.searchLabel": ("Tìm bản nháp", "Search drafts", "搜索草稿"),
         "workspaceDrafts.card.resume": ("Tiếp tục brief", "Continue brief", "继续简报"),
+        "workspaceDrafts.card.attach": ("Đưa vào Project", "Add to Project", "加入项目"),
+        "workspaceDrafts.card.attachProjectLabel": ("Đưa vào Project", "Add to Project", "加入项目"),
         "projectCenter.page.title": ("Project Operations Board", "Project Operations Board", "项目运营看板"),
         "projectCenter.filter.searchLabel": ("Tìm Project", "Search projects", "搜索项目"),
         "projectCenter.authoring.createTitle": ("Tạo Project", "Create a project", "创建项目"),

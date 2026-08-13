@@ -5945,6 +5945,129 @@ body {
   }
 }
 
+/* Workspace Draft → Project Studio handoff remains a small, focused authoring
+   surface: clear form grouping, touch-safe controls and theme tokens that
+   work unchanged in light/dark modes. */
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-grid:has(> .portal-workspace-draft:only-child) {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 960px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-page.portal-workspace-drafts .portal-workspace-draft-attach {
+  display: grid;
+  gap: var(--portal-space-3);
+  margin-top: var(--portal-space-4);
+  padding: var(--portal-space-4);
+  border: 1px solid color-mix(in srgb, var(--portal-action) 30%, var(--portal-border));
+  border-radius: var(--portal-radius);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--portal-action) 7%, var(--portal-surface-light)), var(--portal-surface-soft));
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-field > span,
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-checkbox > span {
+  color: var(--portal-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach :is(.portal-select, .portal-checkbox, .portal-button--secondary) {
+  min-height: 44px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-checkbox {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--portal-space-2);
+  padding: var(--portal-space-3);
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink) !important;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-checkbox:has(input:checked) {
+  border-color: var(--portal-border-strong);
+  background: color-mix(in srgb, var(--portal-action) 9%, var(--portal-surface-light));
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-form-footer {
+  align-items: flex-end;
+  margin: 0;
+  padding-top: var(--portal-space-3);
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary {
+  border-color: color-mix(in srgb, var(--portal-context) 45%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-action) 10%, var(--portal-surface-light));
+  color: var(--portal-action);
+  font-weight: 760;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-page.portal-project-detail--loading .portal-project-detail-loading .portal-empty-icon .portal-icon {
+  animation: portal-workspace-loading-spin var(--portal-motion-slow) linear infinite;
+}
+
+@keyframes portal-workspace-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach {
+      transition: border-color var(--portal-motion-base) var(--portal-motion-ease-standard), background-color var(--portal-motion-base) var(--portal-motion-ease-standard), box-shadow var(--portal-motion-base) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach:focus-within {
+      border-color: var(--portal-border-strong);
+      box-shadow: var(--portal-elevation-2);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary {
+      transition: transform var(--portal-motion-fast) var(--portal-motion-ease-standard), border-color var(--portal-motion-fast) var(--portal-motion-ease-standard), background-color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary:is(:hover, :focus-visible):not(:disabled) {
+      transform: translateY(-1px);
+      border-color: var(--portal-action);
+      background: color-mix(in srgb, var(--portal-action) 16%, var(--portal-surface-light));
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary:active:not(:disabled) {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach {
+    padding: var(--portal-space-3);
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach > .portal-form-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach,
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-draft-attach .portal-button--secondary,
+  .portal-shell[data-portal-app-kind="customer"] .portal-page.portal-project-detail--loading .portal-project-detail-loading .portal-empty-icon .portal-icon {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(root) {
     animation: portal-route-exit var(--portal-motion-fast) var(--portal-motion-ease-standard) both;
