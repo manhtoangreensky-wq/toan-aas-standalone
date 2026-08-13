@@ -64,13 +64,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2758,
+      "line": 2743,
       "target": "_native_job_compatibility_record"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2876,
+      "line": 2861,
       "target": "_native_jobs_for_account"
     },
     {
@@ -136,7 +136,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 744,
+      "line": 729,
       "target": "_web_feature_job_adapter_keys"
     },
     {
@@ -148,19 +148,19 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4498,
+      "line": 4483,
       "target": "admin_jobs"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4575,
+      "line": 4560,
       "target": "admin_refund_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4549,
+      "line": 4534,
       "target": "admin_retry_job"
     },
     {
@@ -190,13 +190,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4244,
+      "line": 4229,
       "target": "job_detail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4225,
+      "line": 4210,
       "target": "list_jobs"
     },
     {
@@ -254,10 +254,10 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 223,
+    "database_tables": 224,
     "env_references": 250,
     "providers": 7,
-    "routes": 680,
+    "routes": 681,
     "ui_path_references": 47
   },
   "database_references": [
@@ -989,7 +989,7 @@
     },
     {
       "file": "copyfast_projects.py",
-      "line": 513,
+      "line": 858,
       "operation": "UPDATE",
       "table": "web"
     },
@@ -1145,7 +1145,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5607,
+      "line": 5633,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_admin_archive_documents"
     },
@@ -1157,7 +1157,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5655,
+      "line": 5681,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_admin_archive_events"
     },
@@ -1181,7 +1181,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5632,
+      "line": 5658,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_admin_archive_versions"
     },
@@ -1391,7 +1391,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 3955,
+      "line": 3981,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_asset_files"
     },
@@ -1439,7 +1439,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4421,
+      "line": 4447,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_audio_asset_operation_events"
     },
@@ -1499,7 +1499,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4378,
+      "line": 4404,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_audio_asset_operations"
     },
@@ -1529,7 +1529,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4499,
+      "line": 4525,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_audio_change_requests"
     },
@@ -1541,7 +1541,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4474,
+      "line": 4500,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_audio_operation_asset_export_requests"
     },
@@ -1571,7 +1571,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4442,
+      "line": 4468,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_audio_operation_asset_exports"
     },
@@ -1631,19 +1631,19 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 3615,
+      "line": 3600,
       "operation": "INSERT INTO",
       "table": "web_campaign_plans"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3685,
+      "line": 3670,
       "operation": "UPDATE",
       "table": "web_campaign_plans"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3769,
+      "line": 3754,
       "operation": "UPDATE",
       "table": "web_campaign_plans"
     },
@@ -1661,25 +1661,25 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 2091,
+      "line": 2076,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3328,
+      "line": 3313,
       "operation": "INSERT INTO",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3424,
+      "line": 3409,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3521,
+      "line": 3506,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
@@ -2057,7 +2057,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5488,
+      "line": 5514,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_data_control_request_events"
     },
@@ -2075,7 +2075,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5469,
+      "line": 5495,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_data_control_requests"
     },
@@ -2087,7 +2087,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4164,
+      "line": 4190,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_document_operation_asset_export_requests"
     },
@@ -2117,13 +2117,13 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4120,
+      "line": 4146,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_document_operation_asset_exports"
     },
     {
       "file": "copyfast_db.py",
-      "line": 4075,
+      "line": 4101,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_document_operation_events"
     },
@@ -2135,7 +2135,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4098,
+      "line": 4124,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_document_operation_sources"
     },
@@ -2153,7 +2153,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4038,
+      "line": 4064,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_document_operations"
     },
@@ -2537,37 +2537,37 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 957,
+      "line": 942,
       "operation": "DELETE FROM",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 959,
+      "line": 944,
       "operation": "INSERT INTO",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 989,
+      "line": 974,
       "operation": "DELETE FROM",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1008,
+      "line": 993,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1026,
+      "line": 1011,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1032,
+      "line": 1017,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
@@ -2627,7 +2627,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4741,
+      "line": 4767,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_frame_video_operation_attempts"
     },
@@ -2657,7 +2657,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4760,
+      "line": 4786,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_frame_video_operation_events"
     },
@@ -2669,7 +2669,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4722,
+      "line": 4748,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_frame_video_operation_sources"
     },
@@ -2681,7 +2681,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4688,
+      "line": 4714,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_frame_video_operations"
     },
@@ -2723,7 +2723,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5582,
+      "line": 5608,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_governance_document_events"
     },
@@ -2735,7 +2735,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5550,
+      "line": 5576,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_governance_document_versions"
     },
@@ -2747,7 +2747,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5509,
+      "line": 5535,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_governance_documents"
     },
@@ -2819,55 +2819,55 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 2193,
+      "line": 2178,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2222,
+      "line": 2207,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2568,
+      "line": 2553,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2579,
+      "line": 2564,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2584,
+      "line": 2569,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2593,
+      "line": 2578,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2601,
+      "line": 2586,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2686,
+      "line": 2671,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2688,
+      "line": 2673,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -3101,7 +3101,13 @@
     },
     {
       "file": "copyfast_projects.py",
-      "line": 88,
+      "line": 166,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 428,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -3299,7 +3305,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4283,
+      "line": 4309,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_operation_asset_export_requests"
     },
@@ -3329,13 +3335,13 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4231,
+      "line": 4257,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_operation_asset_exports"
     },
     {
       "file": "copyfast_db.py",
-      "line": 4298,
+      "line": 4324,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_operation_events"
     },
@@ -3347,7 +3353,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4182,
+      "line": 4208,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_operations"
     },
@@ -3689,7 +3695,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5100,
+      "line": 5126,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_dedupes"
     },
@@ -3701,7 +3707,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5120,
+      "line": 5146,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_events"
     },
@@ -3743,7 +3749,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5072,
+      "line": 5098,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_items"
     },
@@ -3773,7 +3779,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5021,
+      "line": 5047,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_leases"
     },
@@ -3797,7 +3803,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5010,
+      "line": 5036,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_nonces"
     },
@@ -3827,7 +3833,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5054,
+      "line": 5080,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_run_steps"
     },
@@ -3845,7 +3851,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5033,
+      "line": 5059,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_notification_runs"
     },
@@ -3941,7 +3947,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5312,
+      "line": 5338,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_approval_events"
     },
@@ -3971,13 +3977,13 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5284,
+      "line": 5310,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_approvals"
     },
     {
       "file": "copyfast_db.py",
-      "line": 5449,
+      "line": 5475,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_followup_events"
     },
@@ -3989,7 +3995,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5425,
+      "line": 5451,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_followups"
     },
@@ -4025,7 +4031,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5192,
+      "line": 5218,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_heartbeat_baselines"
     },
@@ -4049,7 +4055,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5251,
+      "line": 5277,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_incident_observations"
     },
@@ -4103,7 +4109,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5226,
+      "line": 5252,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_incidents"
     },
@@ -4133,7 +4139,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5153,
+      "line": 5179,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_leases"
     },
@@ -4163,7 +4169,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5142,
+      "line": 5168,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_nonces"
     },
@@ -4199,7 +4205,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5265,
+      "line": 5291,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_playbook_runs"
     },
@@ -4211,7 +4217,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5207,
+      "line": 5233,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_run_steps"
     },
@@ -4253,13 +4259,13 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5165,
+      "line": 5191,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_runs"
     },
     {
       "file": "copyfast_db.py",
-      "line": 5373,
+      "line": 5399,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_runtime_signal_buckets"
     },
@@ -4277,13 +4283,13 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5393,
+      "line": 5419,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_ops_runtime_signal_totals"
     },
     {
       "file": "copyfast_db.py",
-      "line": 5410,
+      "line": 5436,
       "operation": "INSERT INTO",
       "table": "web_ops_runtime_signal_totals"
     },
@@ -4337,7 +4343,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6112,
+      "line": 6138,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_partner_readiness_events"
     },
@@ -4349,7 +4355,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6117,
+      "line": 6143,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_partner_readiness_interest_submissions"
     },
@@ -4361,7 +4367,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6099,
+      "line": 6125,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_partner_readiness_profiles"
     },
@@ -4385,7 +4391,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6107,
+      "line": 6133,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_partner_readiness_versions"
     },
@@ -4439,7 +4445,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4020,
+      "line": 4046,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_project_package_events"
     },
@@ -4451,7 +4457,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 3988,
+      "line": 4014,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_project_packages"
     },
@@ -4493,19 +4499,25 @@
     },
     {
       "file": "copyfast_projects.py",
-      "line": 295,
-      "operation": "INSERT INTO",
-      "table": "web_projects"
-    },
-    {
-      "file": "copyfast_projects.py",
-      "line": 527,
+      "line": 536,
       "operation": "UPDATE",
       "table": "web_projects"
     },
     {
       "file": "copyfast_projects.py",
-      "line": 598,
+      "line": 640,
+      "operation": "INSERT INTO",
+      "table": "web_projects"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 872,
+      "operation": "UPDATE",
+      "table": "web_projects"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 943,
       "operation": "UPDATE",
       "table": "web_projects"
     },
@@ -4685,7 +4697,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4574,
+      "line": 4600,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_storyboard_grid_cells"
     },
@@ -4697,7 +4709,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4595,
+      "line": 4621,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_storyboard_grid_events"
     },
@@ -4709,7 +4721,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4536,
+      "line": 4562,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_storyboard_grid_operations"
     },
@@ -4757,19 +4769,25 @@
     },
     {
       "file": "copyfast_projects.py",
-      "line": 388,
+      "line": 524,
       "operation": "INSERT INTO",
       "table": "web_studio_document_versions"
     },
     {
       "file": "copyfast_projects.py",
-      "line": 455,
+      "line": 733,
       "operation": "INSERT INTO",
       "table": "web_studio_document_versions"
     },
     {
       "file": "copyfast_projects.py",
-      "line": 593,
+      "line": 800,
+      "operation": "INSERT INTO",
+      "table": "web_studio_document_versions"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 938,
       "operation": "INSERT INTO",
       "table": "web_studio_document_versions"
     },
@@ -4787,19 +4805,25 @@
     },
     {
       "file": "copyfast_projects.py",
-      "line": 383,
+      "line": 518,
+      "operation": "INSERT INTO",
+      "table": "web_studio_documents"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 728,
       "operation": "UPDATE",
       "table": "web_studio_documents"
     },
     {
       "file": "copyfast_projects.py",
-      "line": 450,
+      "line": 795,
       "operation": "UPDATE",
       "table": "web_studio_documents"
     },
     {
       "file": "copyfast_projects.py",
-      "line": 587,
+      "line": 932,
       "operation": "INSERT INTO",
       "table": "web_studio_documents"
     },
@@ -4811,7 +4835,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4355,
+      "line": 4381,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_subtitle_asset_operation_events"
     },
@@ -4823,7 +4847,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4318,
+      "line": 4344,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_subtitle_asset_operations"
     },
@@ -5165,7 +5189,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5327,
+      "line": 5353,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_support_triage"
     },
@@ -5177,7 +5201,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 5352,
+      "line": 5378,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_support_triage_events"
     },
@@ -5279,7 +5303,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4652,
+      "line": 4678,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_operation_attempts"
     },
@@ -5309,7 +5333,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4671,
+      "line": 4697,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_operation_events"
     },
@@ -5321,7 +5345,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4613,
+      "line": 4639,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_operations"
     },
@@ -5477,7 +5501,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4820,
+      "line": 4846,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_transform_operation_attempts"
     },
@@ -5501,7 +5525,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4839,
+      "line": 4865,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_transform_operation_events"
     },
@@ -5513,7 +5537,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4776,
+      "line": 4802,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_transform_operations"
     },
@@ -5621,7 +5645,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4892,
+      "line": 4918,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_checklist_items"
     },
@@ -5669,7 +5693,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4935,
+      "line": 4961,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_checklist_versions"
     },
@@ -5681,7 +5705,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4955,
+      "line": 4981,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_events"
     },
@@ -5699,7 +5723,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4875,
+      "line": 4901,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_item_references"
     },
@@ -5717,7 +5741,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4917,
+      "line": 4943,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_item_versions"
     },
@@ -5735,7 +5759,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4857,
+      "line": 4883,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_items"
     },
@@ -5783,7 +5807,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 4978,
+      "line": 5004,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workboard_schedule_intents"
     },
@@ -5830,20 +5854,32 @@
       "table": "web_workboard_schedule_intents"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 3932,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_workspace_draft_handoffs"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 530,
+      "operation": "INSERT INTO",
+      "table": "web_workspace_draft_handoffs"
+    },
+    {
       "file": "copyfast_api.py",
-      "line": 3936,
+      "line": 3921,
       "operation": "INSERT INTO",
       "table": "web_workspace_drafts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3992,
+      "line": 3977,
       "operation": "UPDATE",
       "table": "web_workspace_drafts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 4041,
+      "line": 4026,
       "operation": "UPDATE",
       "table": "web_workspace_drafts"
     },
@@ -5873,7 +5909,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 3932,
+      "line": 3958,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_workspace_starter_kit_installs"
     },
@@ -6105,6 +6141,7 @@
     "web_workboard_item_versions",
     "web_workboard_items",
     "web_workboard_schedule_intents",
+    "web_workspace_draft_handoffs",
     "web_workspace_drafts",
     "web_workspace_setup_profiles",
     "web_workspace_starter_kit_installs"
@@ -6177,7 +6214,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 800,
+      "line": 785,
       "name": "BOT_USERNAME"
     },
     {
@@ -6442,7 +6479,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 1198,
+      "line": 1183,
       "name": "WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS"
     },
     {
@@ -6682,7 +6719,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 451,
+      "line": 436,
       "name": "WEBAPP_DOCUMENT_OPERATION_EXPORT_ENABLED"
     },
     {
@@ -6747,7 +6784,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 753,
+      "line": 738,
       "name": "WEBAPP_FEATURE_JOB_ADAPTERS"
     },
     {
@@ -7192,12 +7229,12 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 1780,
+      "line": 1765,
       "name": "WEBAPP_UPLOAD_MAX_BYTES"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1781,
+      "line": 1766,
       "name": "WEBAPP_UPLOAD_MAX_MB"
     },
     {
@@ -7317,7 +7354,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 876,
+      "line": 861,
       "name": "WEB_FEATURE_QUOTE_HMAC_SECRET"
     },
     {
@@ -7332,7 +7369,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 876,
+      "line": 861,
       "name": "WEB_SESSION_SECRET"
     },
     {
@@ -7489,7 +7526,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 699,
+      "occurrences": 704,
       "provider": "PayOS"
     },
     {
@@ -7586,7 +7623,7 @@
     {
       "endpoint": "account_activity",
       "file": "copyfast_api.py",
-      "line": 4078,
+      "line": 4063,
       "methods": [
         "GET"
       ],
@@ -7721,7 +7758,7 @@
     {
       "endpoint": "admin_freeze_feature",
       "file": "copyfast_api.py",
-      "line": 4598,
+      "line": 4583,
       "methods": [
         "POST"
       ],
@@ -7730,7 +7767,7 @@
     {
       "endpoint": "admin_jobs",
       "file": "copyfast_api.py",
-      "line": 4498,
+      "line": 4483,
       "methods": [
         "GET"
       ],
@@ -7739,7 +7776,7 @@
     {
       "endpoint": "admin_refund_job",
       "file": "copyfast_api.py",
-      "line": 4575,
+      "line": 4560,
       "methods": [
         "POST"
       ],
@@ -7748,7 +7785,7 @@
     {
       "endpoint": "admin_retry_job",
       "file": "copyfast_api.py",
-      "line": 4549,
+      "line": 4534,
       "methods": [
         "POST"
       ],
@@ -7766,7 +7803,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 4519,
+      "line": 4504,
       "methods": [
         "GET"
       ],
@@ -7775,7 +7812,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 4519,
+      "line": 4504,
       "methods": [
         "GET"
       ],
@@ -7784,7 +7821,7 @@
     {
       "endpoint": "admin_module",
       "file": "copyfast_api.py",
-      "line": 4532,
+      "line": 4517,
       "methods": [
         "GET"
       ],
@@ -7793,7 +7830,7 @@
     {
       "endpoint": "admin_payments",
       "file": "copyfast_api.py",
-      "line": 4503,
+      "line": 4488,
       "methods": [
         "GET"
       ],
@@ -7802,7 +7839,7 @@
     {
       "endpoint": "admin_providers",
       "file": "copyfast_api.py",
-      "line": 4508,
+      "line": 4493,
       "methods": [
         "GET"
       ],
@@ -7829,7 +7866,7 @@
     {
       "endpoint": "admin_summary",
       "file": "copyfast_api.py",
-      "line": 4488,
+      "line": 4473,
       "methods": [
         "GET"
       ],
@@ -7847,7 +7884,7 @@
     {
       "endpoint": "admin_tickets",
       "file": "copyfast_api.py",
-      "line": 4513,
+      "line": 4498,
       "methods": [
         "GET"
       ],
@@ -7856,7 +7893,7 @@
     {
       "endpoint": "admin_users",
       "file": "copyfast_api.py",
-      "line": 4493,
+      "line": 4478,
       "methods": [
         "GET"
       ],
@@ -8279,7 +8316,7 @@
     {
       "endpoint": "assets",
       "file": "copyfast_api.py",
-      "line": 4284,
+      "line": 4269,
       "methods": [
         "GET"
       ],
@@ -8324,7 +8361,7 @@
     {
       "endpoint": "asset_download",
       "file": "copyfast_api.py",
-      "line": 4300,
+      "line": 4285,
       "methods": [
         "GET"
       ],
@@ -8621,7 +8658,7 @@
     {
       "endpoint": "campaign_calendar_window",
       "file": "copyfast_api.py",
-      "line": 3147,
+      "line": 3132,
       "methods": [
         "GET"
       ],
@@ -8630,7 +8667,7 @@
     {
       "endpoint": "list_campaign_plans",
       "file": "copyfast_api.py",
-      "line": 3119,
+      "line": 3104,
       "methods": [
         "GET"
       ],
@@ -8639,7 +8676,7 @@
     {
       "endpoint": "create_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3591,
+      "line": 3576,
       "methods": [
         "POST"
       ],
@@ -8648,7 +8685,7 @@
     {
       "endpoint": "get_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3555,
+      "line": 3540,
       "methods": [
         "GET"
       ],
@@ -8657,7 +8694,7 @@
     {
       "endpoint": "update_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3657,
+      "line": 3642,
       "methods": [
         "PATCH"
       ],
@@ -8666,7 +8703,7 @@
     {
       "endpoint": "list_campaign_schedule_intents",
       "file": "copyfast_api.py",
-      "line": 3224,
+      "line": 3209,
       "methods": [
         "GET"
       ],
@@ -8675,7 +8712,7 @@
     {
       "endpoint": "create_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3258,
+      "line": 3243,
       "methods": [
         "POST"
       ],
@@ -8684,7 +8721,7 @@
     {
       "endpoint": "cancel_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3381,
+      "line": 3366,
       "methods": [
         "POST"
       ],
@@ -8693,7 +8730,7 @@
     {
       "endpoint": "reconfirm_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3455,
+      "line": 3440,
       "methods": [
         "POST"
       ],
@@ -8702,7 +8739,7 @@
     {
       "endpoint": "update_campaign_plan_status",
       "file": "copyfast_api.py",
-      "line": 3731,
+      "line": 3716,
       "methods": [
         "POST"
       ],
@@ -8792,7 +8829,7 @@
     {
       "endpoint": "feature_catalog",
       "file": "copyfast_api.py",
-      "line": 3053,
+      "line": 3038,
       "methods": [
         "GET"
       ],
@@ -9062,7 +9099,7 @@
     {
       "endpoint": "core_me",
       "file": "copyfast_api.py",
-      "line": 4066,
+      "line": 4051,
       "methods": [
         "GET"
       ],
@@ -9071,7 +9108,7 @@
     {
       "endpoint": "core_status",
       "file": "copyfast_api.py",
-      "line": 3101,
+      "line": 3086,
       "methods": [
         "GET"
       ],
@@ -9260,7 +9297,7 @@
     {
       "endpoint": "get_studio_document",
       "file": "copyfast_projects.py",
-      "line": 321,
+      "line": 666,
       "methods": [
         "GET"
       ],
@@ -9269,7 +9306,7 @@
     {
       "endpoint": "update_studio_document",
       "file": "copyfast_projects.py",
-      "line": 350,
+      "line": 695,
       "methods": [
         "PATCH"
       ],
@@ -9359,7 +9396,7 @@
     {
       "endpoint": "restore_studio_document_version",
       "file": "copyfast_projects.py",
-      "line": 409,
+      "line": 754,
       "methods": [
         "POST"
       ],
@@ -9665,7 +9702,7 @@
     {
       "endpoint": "feature_status",
       "file": "copyfast_api.py",
-      "line": 4388,
+      "line": 4373,
       "methods": [
         "GET"
       ],
@@ -9674,7 +9711,7 @@
     {
       "endpoint": "feature_confirm",
       "file": "copyfast_api.py",
-      "line": 4483,
+      "line": 4468,
       "methods": [
         "POST"
       ],
@@ -9683,7 +9720,7 @@
     {
       "endpoint": "feature_draft",
       "file": "copyfast_api.py",
-      "line": 4473,
+      "line": 4458,
       "methods": [
         "POST"
       ],
@@ -9692,7 +9729,7 @@
     {
       "endpoint": "feature_estimate",
       "file": "copyfast_api.py",
-      "line": 4478,
+      "line": 4463,
       "methods": [
         "POST"
       ],
@@ -10034,7 +10071,7 @@
     {
       "endpoint": "list_jobs",
       "file": "copyfast_api.py",
-      "line": 4225,
+      "line": 4210,
       "methods": [
         "GET"
       ],
@@ -10043,7 +10080,7 @@
     {
       "endpoint": "job_detail",
       "file": "copyfast_api.py",
-      "line": 4244,
+      "line": 4229,
       "methods": [
         "GET"
       ],
@@ -10430,7 +10467,7 @@
     {
       "endpoint": "packages",
       "file": "copyfast_api.py",
-      "line": 4126,
+      "line": 4111,
       "methods": [
         "GET"
       ],
@@ -10466,7 +10503,7 @@
     {
       "endpoint": "create_payment",
       "file": "copyfast_api.py",
-      "line": 4192,
+      "line": 4177,
       "methods": [
         "POST"
       ],
@@ -10475,7 +10512,7 @@
     {
       "endpoint": "payment_options",
       "file": "copyfast_api.py",
-      "line": 4131,
+      "line": 4116,
       "methods": [
         "GET"
       ],
@@ -10484,7 +10521,7 @@
     {
       "endpoint": "payment_status",
       "file": "copyfast_api.py",
-      "line": 4219,
+      "line": 4204,
       "methods": [
         "GET"
       ],
@@ -10889,7 +10926,7 @@
     {
       "endpoint": "pricing",
       "file": "copyfast_api.py",
-      "line": 4116,
+      "line": 4101,
       "methods": [
         "GET"
       ],
@@ -12140,7 +12177,7 @@
     {
       "endpoint": "support_tickets",
       "file": "copyfast_api.py",
-      "line": 4365,
+      "line": 4350,
       "methods": [
         "GET"
       ],
@@ -12149,7 +12186,7 @@
     {
       "endpoint": "create_support_ticket",
       "file": "copyfast_api.py",
-      "line": 4370,
+      "line": 4355,
       "methods": [
         "POST"
       ],
@@ -12797,7 +12834,7 @@
     {
       "endpoint": "upload_to_canonical_staging",
       "file": "copyfast_api.py",
-      "line": 4327,
+      "line": 4312,
       "methods": [
         "POST"
       ],
@@ -13004,7 +13041,7 @@
     {
       "endpoint": "voice_profiles",
       "file": "copyfast_api.py",
-      "line": 4322,
+      "line": 4307,
       "methods": [
         "GET"
       ],
@@ -13013,7 +13050,7 @@
     {
       "endpoint": "wallet",
       "file": "copyfast_api.py",
-      "line": 4105,
+      "line": 4090,
       "methods": [
         "GET"
       ],
@@ -13031,7 +13068,7 @@
     {
       "endpoint": "wallet_history",
       "file": "copyfast_api.py",
-      "line": 4110,
+      "line": 4095,
       "methods": [
         "GET"
       ],
@@ -13076,7 +13113,7 @@
     {
       "endpoint": "list_workspace_drafts",
       "file": "copyfast_api.py",
-      "line": 3805,
+      "line": 3790,
       "methods": [
         "GET"
       ],
@@ -13085,7 +13122,7 @@
     {
       "endpoint": "create_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 3905,
+      "line": 3890,
       "methods": [
         "POST"
       ],
@@ -13094,7 +13131,7 @@
     {
       "endpoint": "get_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 3878,
+      "line": 3863,
       "methods": [
         "GET"
       ],
@@ -13103,7 +13140,7 @@
     {
       "endpoint": "update_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 3963,
+      "line": 3948,
       "methods": [
         "PATCH"
       ],
@@ -13112,7 +13149,7 @@
     {
       "endpoint": "archive_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 4017,
+      "line": 4002,
       "methods": [
         "POST"
       ],
@@ -13490,7 +13527,7 @@
     {
       "endpoint": "get_project",
       "file": "copyfast_projects.py",
-      "line": 476,
+      "line": 821,
       "methods": [
         "GET"
       ],
@@ -13499,7 +13536,7 @@
     {
       "endpoint": "update_project",
       "file": "copyfast_projects.py",
-      "line": 507,
+      "line": 852,
       "methods": [
         "PATCH"
       ],
@@ -13508,7 +13545,7 @@
     {
       "endpoint": "list_project_documents",
       "file": "copyfast_projects.py",
-      "line": 548,
+      "line": 893,
       "methods": [
         "GET"
       ],
@@ -13517,11 +13554,20 @@
     {
       "endpoint": "create_studio_document",
       "file": "copyfast_projects.py",
-      "line": 566,
+      "line": 911,
       "methods": [
         "POST"
       ],
       "path": "/{project_id}/documents"
+    },
+    {
+      "endpoint": "attach_workspace_draft",
+      "file": "copyfast_projects.py",
+      "line": 435,
+      "methods": [
+        "POST"
+      ],
+      "path": "/{project_id}/workspace-drafts/{draft_id}/attach"
     },
     {
       "endpoint": "get_campaigns",
@@ -13607,7 +13653,7 @@
     {
       "endpoint": "list_projects",
       "file": "copyfast_projects.py",
-      "line": 225,
+      "line": 570,
       "methods": [
         "GET"
       ],
@@ -13616,7 +13662,7 @@
     {
       "endpoint": "create_project",
       "file": "copyfast_projects.py",
-      "line": 286,
+      "line": 631,
       "methods": [
         "POST"
       ],
@@ -13705,9 +13751,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 145,
-  "source_files_scanned": 145,
-  "source_fingerprint_sha256": "02a401726d5b9f9d7bddca0c246de077f5ad605e9e1dfd0a348253c95336360e",
+  "source_files_discovered": 146,
+  "source_files_scanned": 146,
+  "source_fingerprint_sha256": "3cfac1e37ce7e15967c3b786367e0ca666f419e228025d753e4e077968d9db32",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13927,7 +13973,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 26879,
+      "line": 26903,
       "path": "/features"
     },
     {
