@@ -15829,6 +15829,10 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     color: var(--portal-action);
   }
 
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] .portal-mobile-nav-link[aria-current="page"] .portal-mobile-nav-icon {
+    color: var(--portal-action);
+  }
+
   .portal-mobile-nav[data-portal-mobile-nav-kind="admin"] .portal-mobile-nav-link {
     color: var(--portal-rail-muted);
   }

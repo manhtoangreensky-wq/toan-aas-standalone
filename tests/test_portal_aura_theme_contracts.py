@@ -270,6 +270,22 @@ def test_final_mobile_dock_harmony_owns_light_dark_geometry_and_safe_area() -> N
     assert "@media (prefers-reduced-motion: reduce)" in harmony
 
 
+def test_final_customer_dock_active_icon_keeps_light_mode_contrast() -> None:
+    """The final customer rule must outrank the legacy rail-icon selector."""
+
+    marker = "/* Final responsive app dock harmony */"
+    harmony = THEME[THEME.index(marker) :]
+    active_icon = re.search(
+        r'\.portal-mobile-nav\[data-portal-mobile-nav-kind="customer"\]'
+        r' \.portal-mobile-nav-link\[aria-current="page"\]'
+        r' \.portal-mobile-nav-icon\s*\{(?P<declarations>.*?)\n\}',
+        harmony,
+        flags=re.DOTALL,
+    )
+    assert active_icon is not None
+    assert "color: var(--portal-action);" in active_icon.group("declarations")
+
+
 def test_theme_cycle_visits_every_explicit_preference_for_both_system_modes() -> None:
     node = shutil.which("node")
     assert node is not None, "The CI workflow already requires Node for portal syntax checks."
