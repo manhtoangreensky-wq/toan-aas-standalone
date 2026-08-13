@@ -298,6 +298,19 @@ def test_desktop_admin_shell_uses_the_same_issued_projection_without_customer_sh
     assert "const commandEmpty = adminSurface" in dialog
 
 
+def test_customer_command_palette_filter_reuses_locale_catalogue_without_changing_admin_projection() -> None:
+    sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
+    command_dialog = _section("function renderCommandPalette(page, context)", "function renderSidebar(page, context)")
+    command_filter = _section("function filterCommandPalette(value)", "function closeCommandPalette(options)")
+
+    assert 'uiText("app.workspace", "TOAN AAS Workspace")' in sidebar
+    assert 'data-portal-command-surface="${adminSurface ? "admin" : "customer"}"' in command_dialog
+    assert 'uiText("chrome.commandCount", countFallback, { count: String(visible) })' in command_filter
+    assert 'uiText("chrome.adminCommandCount", countFallback, { count: String(visible) })' in command_filter
+    assert '`${visible} workspace phù hợp.`' not in command_filter
+    assert 'Không có workspace phù hợp.' not in command_filter
+
+
 def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() -> None:
     nav = _section("function isNavCurrent(linkPath, page)", "function isMobileNavCurrent(key, page)")
 

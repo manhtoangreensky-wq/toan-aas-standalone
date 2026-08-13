@@ -10051,7 +10051,7 @@
       </a>`;
     }).join("");
     return `<div class="portal-command-palette-backdrop" data-portal-command-close></div>
-      <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title">
+      <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title" data-portal-command-surface="${adminSurface ? "admin" : "customer"}">
         <header class="portal-command-header"><div><span class="portal-command-kicker">${safeText(commandKicker)}</span><h2 id="portal-command-title">${safeText(commandTitle)}</h2></div><button class="portal-command-close" type="button" aria-label="${safeText(uiText("chrome.closeQuickSwitch", "Đóng chuyển nhanh"))}" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
         <label class="portal-command-search"><span class="portal-sr-only">${safeText(uiText(searchKey, searchFallback))}</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="${safeText(uiText(searchKey, searchFallback))}" autocomplete="off" data-portal-command-search></label>
         <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> ${safeText(uiText("chrome.commandHintOpen", "để mở"))}</span><span><kbd>Esc</kbd> ${safeText(uiText("chrome.commandHintClose", "để đóng"))}</span></p>
@@ -10066,7 +10066,9 @@
     const adminSurface = isAdminPortalSurface(page);
     const adminRoutes = adminSurface ? adminErpNavigation(context).routes : new Set();
     const adminOverview = adminSurface ? adminNavigationModules(context).find((module) => module.route === "/admin") : null;
-    const sidebarCaption = adminSurface ? uiText("chrome.adminAppCaption", "Admin ERP") : "AI Workspace";
+    const sidebarCaption = adminSurface
+      ? uiText("chrome.adminAppCaption", "Admin ERP")
+      : uiText("app.workspace", "TOAN AAS Workspace");
     const sidebarSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
       : uiText("chrome.searchWorkspace", "Tìm mọi workspace");
@@ -29798,8 +29800,18 @@
     });
     const empty = palette.querySelector("[data-portal-command-empty]");
     const count = palette.querySelector("[data-portal-command-count]");
+    const commandSurface = palette.querySelector("[data-portal-command-surface]");
+    const adminSurface = commandSurface && commandSurface.getAttribute("data-portal-command-surface") === "admin";
+    const countKey = adminSurface ? "chrome.adminCommandCount" : "chrome.commandCount";
+    const countFallback = adminSurface
+      ? "{count} mục ERP có thể mở trong phiên này."
+      : "{count} workspace có thể mở trong phiên này.";
     if (empty) empty.hidden = visible > 0;
-    if (count) count.textContent = visible ? `${visible} workspace phù hợp.` : "Không có workspace phù hợp.";
+    if (count) {
+      count.textContent = adminSurface
+        ? uiText("chrome.adminCommandCount", countFallback, { count: String(visible) })
+        : uiText("chrome.commandCount", countFallback, { count: String(visible) });
+    }
   }
 
   function closeCommandPalette(options) {

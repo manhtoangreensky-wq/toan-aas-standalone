@@ -579,16 +579,120 @@ context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile
 const hydratedProfile = documentElement.attributes["data-portal-locale"];
 const englishSidebar = sidebar.innerHTML;
 
+context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "zh" } });
+const chineseSidebar = sidebar.innerHTML;
+
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "vi", profile: { locale: "vi" } });
 const vietnameseSidebar = sidebar.innerHTML;
 
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "zh-TW" } });
 const invalidProfile = documentElement.attributes["data-portal-locale"];
-process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang, firstSidebar, englishSidebar, vietnameseSidebar }));
+process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang, firstSidebar, englishSidebar, chineseSidebar, vietnameseSidebar }));
 '''
     try:
         result = subprocess.run(
             [node, "-e", script, str(BUNDLE), str(PORTAL_BUNDLE)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except OSError as exc:
+        pytest.skip(f"Node subprocess is unavailable in this test runner: {exc}")
+    assert result.returncode == 0, result.stderr or result.stdout
+    return json.loads(result.stdout)
+
+
+def _node_command_palette_filter_snapshot() -> dict:
+    """Exercise the real filter helper with a minimal rendered palette.
+
+    The shell's i18n catalogue stays browser-only, so this keeps the check in
+    the same JavaScript runtime without importing the FastAPI application or
+    creating a signed session.  It verifies the text a user sees after an
+    actual query rather than merely checking source strings.
+    """
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for the command-palette filter contract")
+
+    script = r'''
+const fs = require("fs");
+const sourcePath = process.argv[1];
+const source = fs.readFileSync(sourcePath, "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+const messages = {
+  vi: {
+    "chrome.commandCount": "{count} workspace có thể mở trong phiên này.",
+    "chrome.commandEmpty": "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
+    "chrome.adminCommandCount": "{count} mục ERP có thể mở trong phiên này.",
+    "chrome.no_results": "Không tìm thấy kết quả."
+  },
+  en: {
+    "chrome.commandCount": "{count} workspaces are available in this session.",
+    "chrome.commandEmpty": "No matching workspace found. Try a feature name or another path.",
+    "chrome.adminCommandCount": "{count} ERP destinations available in this session.",
+    "chrome.no_results": "No results found."
+  },
+  zh: {
+    "chrome.commandCount": "本次会话可打开 {count} 个工作台。",
+    "chrome.commandEmpty": "未找到匹配的工作台。请尝试功能名称或其他路径。",
+    "chrome.adminCommandCount": "此会话可打开 {count} 个 ERP 入口。",
+    "chrome.no_results": "未找到结果。"
+  }
+};
+let locale = "en";
+let palette = null;
+function uiText(key, fallback, params) {
+  const raw = (messages[locale] && messages[locale][key]) || fallback;
+  return String(raw).replace(/\{count\}/g, String(params && params.count !== undefined ? params.count : ""));
+}
+const document = { querySelector(selector) { return selector === "[data-portal-command-palette]" ? palette : null; } };
+const runtime = [
+  extract("function normalizeCommandSearch(value)", "function commandPaletteItems(context, page)"),
+  extract("function filterCommandPalette(value)", "function closeCommandPalette(options)")
+].join("\n");
+eval(runtime);
+function item(search) {
+  return { hidden: false, getAttribute(name) { return name === "data-command-search" ? search : ""; } };
+}
+function run(activeLocale, surface, query) {
+  locale = activeLocale;
+  const empty = { hidden: true, textContent: "" };
+  const count = { textContent: "" };
+  const commandSurface = { getAttribute(name) { return name === "data-portal-command-surface" ? surface : ""; } };
+  const items = [item("dashboard overview"), item("asset vault")];
+  palette = {
+    hidden: false,
+    querySelector(selector) {
+      if (selector === "[data-portal-command-empty]") return empty;
+      if (selector === "[data-portal-command-count]") return count;
+      if (selector === "[data-portal-command-surface]") return commandSurface;
+      return null;
+    },
+    querySelectorAll(selector) { return selector === "[data-portal-command-item]" ? items : []; }
+  };
+  filterCommandPalette(query);
+  return { count: count.textContent, emptyHidden: empty.hidden, visible: items.filter((entry) => !entry.hidden).length };
+}
+process.stdout.write(JSON.stringify({
+  customerEnMatch: run("en", "customer", "dashboard"),
+  customerEnEmpty: run("en", "customer", "missing"),
+  customerViEmpty: run("vi", "customer", "missing"),
+  customerZhEmpty: run("zh", "customer", "missing"),
+  adminEnEmpty: run("en", "admin", "missing"),
+  adminZhEmpty: run("zh", "admin", "missing")
+}));
+'''
+    try:
+        result = subprocess.run(
+            [node, "-e", script, str(PORTAL_BUNDLE)],
             check=False,
             capture_output=True,
             text=True,
@@ -643,6 +747,53 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
     for key, translations in expected.items():
         for translation in translations:
             assert f'"{key}": "{translation}"' in source
+
+
+def test_customer_sidebar_and_command_palette_follow_the_reviewed_interface_locale() -> None:
+    """Signed customer chrome must not fall back to Vietnamese after locale change."""
+
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "app.workspace": ("TOAN AAS Workspace", "TOAN AAS Workspace", "TOAN AAS 工作台"),
+        "chrome.commandEmpty": (
+            "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
+            "No matching workspace found. Try a feature name or another path.",
+            "未找到匹配的工作台。请尝试功能名称或其他路径。",
+        ),
+        "chrome.commandCount": (
+            "{count} workspace có thể mở trong phiên này.",
+            "{count} workspaces are available in this session.",
+            "本次会话可打开 {count} 个工作台。",
+        ),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+    sidebar = _between(PORTAL, "function renderSidebar(page, context)", "function renderHeader(page, context)")
+    command_filter = _between(PORTAL, "function filterCommandPalette(value)", "function closeCommandPalette(options)")
+
+    assert 'uiText("app.workspace", "TOAN AAS Workspace")' in sidebar
+    assert 'uiText("chrome.commandCount"' in command_filter
+
+
+def test_command_palette_filter_localizes_match_and_empty_counts_for_customer_and_admin() -> None:
+    snapshot = _node_command_palette_filter_snapshot()
+
+    assert snapshot["customerEnMatch"] == {
+        "count": "1 workspaces are available in this session.",
+        "emptyHidden": True,
+        "visible": 1,
+    }
+    assert snapshot["customerEnEmpty"] == {
+        "count": "0 workspaces are available in this session.",
+        "emptyHidden": False,
+        "visible": 0,
+    }
+    assert snapshot["customerViEmpty"]["count"] == "0 workspace có thể mở trong phiên này."
+    assert snapshot["customerZhEmpty"]["count"] == "本次会话可打开 0 个工作台。"
+    assert snapshot["adminEnEmpty"]["count"] == "0 ERP destinations available in this session."
+    assert snapshot["adminZhEmpty"]["count"] == "此会话可打开 0 个 ERP 入口。"
 
 
 def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> None:
@@ -751,6 +902,9 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert "Workspace" in snapshot["vietnameseSidebar"]
     assert "Tạo mới" in snapshot["vietnameseSidebar"]
     assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
+    assert "TOAN AAS 工作台" in snapshot["firstSidebar"]
+    assert "TOAN AAS Workspace" in snapshot["englishSidebar"]
+    assert "TOAN AAS 工作台" in snapshot["chineseSidebar"]
 
 
 def test_i18n_bundle_is_presentation_only_without_browser_persistence_or_network() -> None:
