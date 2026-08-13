@@ -27086,8 +27086,12 @@
     return index >= 0 && index < WORKBOARD_BOARD_STATES.length - 1 ? WORKBOARD_BOARD_STATES[index + 1] : "";
   }
 
-  function workboardTabs(active) {
-    return '<nav class="portal-workboard-tabs" aria-label="Điều hướng Workboard"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>Kanban</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>Danh sách</a><a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ Công việc mới</a></nav>';
+  function workboardTabs(active, context, allowCreate) {
+    const canCreate = allowCreate === true;
+    const create = canCreate
+      ? '<a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ Công việc mới</a>'
+      : '<span class="portal-workboard-tabs-new portal-workboard-tabs-new--disabled" aria-disabled="true">Chỉ xem</span>';
+    return '<nav class="portal-workboard-tabs" aria-label="Điều hướng Workboard"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>Kanban</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>Danh sách</a>' + create + '</nav>';
   }
 
   function workboardView() {
@@ -27166,11 +27170,33 @@
     return '<nav class="portal-workboard-pagination" aria-label="Phân trang Workboard"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
+  function workboardRecovery(readState, title, description, backHref) {
+    const state = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    const copy = {
+      loading: "Đang chờ server xác minh dữ liệu Workboard của tài khoản hiện tại. Không dùng số 0 thay cho dữ liệu chưa xác minh.",
+      failed: "Chưa thể nạp Workboard an toàn. Hãy thử lại để yêu cầu lại projection owner-scoped; dữ liệu cũ không được giữ trong browser.",
+      guarded: "Workboard đang được bảo vệ. Đăng nhập bằng signed session và chờ máy chủ cấp quyền cho account hiện tại."
+    }[state];
+    const body = description || copy;
+    const retry = state === "failed" || state === "loading"
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Thử lại</button>'
+      : '';
+    const destination = String(backHref || "/dashboard").startsWith("/") ? String(backHref || "/dashboard") : "/dashboard";
+    const destinationLabel = destination === "/workboard" ? "Về Workboard" : "Về Dashboard";
+    const destinationHref = destination === "/workboard" ? 'href="/workboard"' : 'href="/dashboard"';
+    return '<section class="portal-card portal-card-pad portal-workboard-recovery" data-workboard-read-state="' + safeText(state) + '"><div class="portal-state" data-state="' + safeText(state) + '"><span class="portal-state-icon" aria-hidden="true">' + safeText(ICONS.workboard) + '</span><div><h2>' + safeText(title || "Workboard chưa sẵn sàng") + '</h2><p>' + safeText(body) + '</p><p class="portal-form-note">Trạng thái này không phải là danh sách rỗng và không tạo task thay thế.</p></div></div><div class="portal-form-footer">' + retry + '<a class="portal-button portal-button--primary" ' + destinationHref + '>' + destinationLabel + '</a></div></section>';
+  }
+
   function renderWorkboardOverview(page, context, view) {
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
     if (!canView) {
-      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view) + '<section class="portal-card portal-card-pad">' + renderEmpty("Workboard đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại. Portal không hiển thị dữ liệu cũ từ cache hoặc browser storage.", ICONS.workboard) + "</section></article>";
+      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery("guarded", "Workboard đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại. Portal không hiển thị dữ liệu cũ từ cache hoặc browser storage.") + "</article>";
+    }
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.workboardReadState || "")) ? String(context.workboardReadState) : "guarded";
+    if (readState !== "ready") {
+      const title = readState === "loading" ? "Đang nạp Workboard" : (readState === "failed" ? "Không thể nạp Workboard" : "Workboard đang được bảo vệ");
+      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery(readState, title) + "</article>";
     }
     const items = workboardItems(context);
     const listing = workboardListing(context);
@@ -27186,13 +27212,24 @@
       + '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ yêu cầu lại API owner-scoped trong phiên trang hiện tại; không lưu vào URL, Telegram hay browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-filter-clear" data-portal-route="/workboard">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm công việc</button></div></div></form>';
     const content = view === "list"
       ? '<section class="portal-card portal-card-pad portal-workboard-library"><div class="portal-card-header"><div><span class="portal-section-kicker">Work item library</span><h2 class="portal-card-title">' + (workboardFilterIsActive(filter) ? "Kết quả Workboard" : "Danh sách công việc") + '</h2><p class="portal-card-subtitle">Mỗi hàng là metadata server-owned; mở item để chỉnh revision, trạng thái, checklist và history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + listFilter + renderWorkboardListRows(items, filter) + renderWorkboardPagination(listing) + "</section>"
-      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Kanban board</span><h2 class="portal-card-title">Luồng công việc</h2><p class="portal-card-subtitle">Di chuyển trạng thái luôn dùng revision hiện tại do server xác minh; browser không suy đoán kết quả hoặc lưu board riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty(context.workboardReadState === "loading" ? "Đang nạp Workboard" : "Chưa có công việc", context.workboardReadState === "failed" ? "Chưa thể nạp Workboard an toàn. Hãy làm mới để yêu cầu lại dữ liệu signed." : "Tạo work item đầu tiên để bắt đầu theo dõi Kanban riêng tư.", ICONS.workboard)) + "</section>";
-    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">Private planning workspace</span><h2>Giữ mọi việc quan trọng trong một luồng rõ ràng</h2><p>Workboard chỉ tổ chức công việc, deadline, reference Web-native và checklist. Nó không khởi chạy provider, Bot, payment, job hay publish action.</p><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/workboard/new"' + (canCreate ? "" : ' aria-disabled="true"') + '>+ Tạo công việc</a><a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + (view === "list" ? "Xem Kanban" : "Xem danh sách") + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>Tổng công việc</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>Đang mở</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>Hoàn tất</dd></div></dl></section>" + content + "</article>";
+      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Kanban board</span><h2 class="portal-card-title">Luồng công việc</h2><p class="portal-card-subtitle">Di chuyển trạng thái luôn dùng revision hiện tại do server xác minh; browser không suy đoán kết quả hoặc lưu board riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty("Chưa có công việc", "Tạo work item đầu tiên để bắt đầu theo dõi Kanban riêng tư.", ICONS.workboard)) + "</section>";
+    const createAction = canCreate
+      ? '<a class="portal-button portal-button--primary" href="/workboard/new">+ Tạo công việc</a>'
+      : '<span class="portal-button portal-button--quiet portal-workboard-create-disabled" aria-disabled="true">Chỉ xem</span>';
+    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, canCreate) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">Private planning workspace</span><h2>Giữ mọi việc quan trọng trong một luồng rõ ràng</h2><p>Workboard chỉ tổ chức công việc, deadline, reference Web-native và checklist. Nó không khởi chạy provider, Bot, payment, job hay publish action.</p><div class="portal-inline-actions">' + createAction + '<a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + (view === "list" ? "Xem Kanban" : "Xem danh sách") + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>Tổng công việc</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>Đang mở</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>Hoàn tất</dd></div></dl></section>" + content + "</article>";
   }
 
   function renderWorkboardNew(page, context) {
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
-    return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new")
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.workboardReadState || "")) ? String(context.workboardReadState) : "guarded";
+    const readyForCreate = canCreate && readState === "ready";
+    if (!readyForCreate) {
+      const description = readState === "loading"
+        ? "Server đang xác minh projection Workboard. Hãy chờ hoàn tất rồi thử lại; form chưa được mở để tránh gửi thiếu context."
+        : (readState === "failed" ? "Workboard chưa nạp thành công. Hãy quay lại và thử lại projection owner-scoped trước khi tạo task." : "Tài khoản hiện tại chưa có quyền tạo work item hoặc Workboard đang được bảo vệ.");
+      return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, false) + workboardRecovery(readState, "Không thể tạo công việc lúc này", description, "/workboard") + "</article>";
+    }
+    return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, true)
       + '<div class="portal-workboard-editor-layout"><section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">New work item</span><h2 class="portal-card-title">Bắt đầu với một việc rõ ràng</h2><p class="portal-card-subtitle">Title, ưu tiên, deadline, reference và checklist sẽ được server lưu theo signed session.</p></div>' + badge(canCreate ? "ready" : "guarded")
       + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-create" data-portal-route="/workboard/new" novalidate>'
       + renderFields(workboardFields(true), canCreate, context, workboardFormValues({}, true), "workboard-create")
@@ -27317,7 +27354,7 @@
     const item = detail.item && typeof detail.item === "object" && validWorkboardId(detail.item.id) && String(detail.item.id) === String(page.recordId || "") ? detail.item : null;
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     if (!canView || !item) {
-      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("") + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? "Không tìm thấy work item" : "Workboard đang được bảo vệ", canView ? "Server cần xác minh owner trước khi hiển thị item, checklist và history. Portal không dùng cache hoặc browser fallback." : "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại.", ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">Về Workboard</a></div></section></article>';
+      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, false) + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? "Không tìm thấy work item" : "Workboard đang được bảo vệ", canView ? "Server cần xác minh owner trước khi hiển thị item, checklist và history. Portal không dùng cache hoặc browser fallback." : "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại.", ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">Về Workboard</a></div></section></article>';
     }
     const route = String(page.routePath || page.path || "/workboard");
     const state = workboardState(item.state);
@@ -27333,7 +27370,8 @@
     const editor = '<section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Item editor</span><h2 class="portal-card-title">Nội dung & reference</h2><p class="portal-card-subtitle">Lưu thay đổi tạo revision mới. Nếu item đã thay đổi ở nơi khác, server sẽ yêu cầu bạn nạp lại trước khi ghi đè.</p></div>' + badge(state) + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + " novalidate>" + renderFields(workboardFields(false), canUpdate, context, workboardFormValues(item, false), "workboard-update") + renderWorkboardReferencePicker(context, item, canUpdate) + '<div class="portal-form-footer"><span class="portal-form-note">Checklist dùng endpoint riêng để giữ tiến độ rõ ràng. Không có URL input hoặc external reference.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision</button></div></form></section>";
     const lifecycle = '<section class="portal-card portal-card-pad portal-workboard-lifecycle"><div class="portal-card-header"><div><span class="portal-section-kicker">Workflow state</span><h2 class="portal-card-title">Di chuyển công việc</h2><p class="portal-card-subtitle">Server xác minh transition và revision trước khi thay đổi board.</p></div>' + badge(state) + '</div><form class="portal-workboard-state-form" data-portal-form data-portal-no-transient data-portal-action="workboard-state" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>Trạng thái mới</span><select name="state"' + (canState ? "" : " disabled") + ">" + WORKBOARD_STATES.map((value) => '<option value="' + safeText(value) + '"' + (value === state ? " selected" : "") + ">" + safeText(WORKBOARD_STATE_LABELS[value]) + "</option>").join("") + '</select></label><button class="portal-button portal-button--quiet" type="submit"' + (canState ? "" : " disabled") + ">Cập nhật trạng thái</button></form></section>";
     const history = '<div class="portal-workboard-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử revision</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; history cũ không bị xóa.</p></div></div>' + renderWorkboardVersions(item, versions, context, route) + renderWorkboardHistoryPagination(versionListing, "workboard-history-version-page", route, "versions") + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Activity</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ trình bày action, revision và thời điểm do server trả về.</p></div></div>' + renderWorkboardEvents(events) + renderWorkboardHistoryPagination(eventListing, "workboard-history-event-page", route, "events") + "</section></div>";
-    return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("") + overview + '<div class="portal-workboard-detail-grid">' + editor + lifecycle + "</div>" + renderWorkboardSchedule(item, context, route, writable) + renderWorkboardChecklist(item, context, route, writable) + history + "</article>";
+    const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
+    return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, canCreate) + overview + '<div class="portal-workboard-detail-grid">' + editor + lifecycle + "</div>" + renderWorkboardSchedule(item, context, route, writable) + renderWorkboardChecklist(item, context, route, writable) + history + "</article>";
   }
 
   const CONTENT_HANDOFF_STATUS_LABELS = Object.freeze({

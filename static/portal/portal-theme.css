@@ -9180,6 +9180,18 @@ body {
   color: var(--portal-on-action);
 }
 
+.portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-tabs .portal-workboard-tabs-new--disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+  cursor: not-allowed;
+}
+
 .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) :is(.portal-workboard-intro, .portal-workboard-detail-summary) {
   gap: 24px;
   border-color: var(--portal-border);
@@ -9574,8 +9586,26 @@ body {
     min-width: 0;
   }
 
-  .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-board-card {
+  .portal-page.portal-workboard .portal-workboard-board-card {
     overflow-x: visible;
+    max-width: 100%;
+  }
+
+  .portal-page.portal-workboard .portal-workboard-board {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .portal-page.portal-workboard .portal-workboard-column {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .portal-page.portal-workboard :is(.portal-workboard-card, .portal-workboard-card h3, .portal-workboard-card h3 a, .portal-workboard-card p, .portal-workboard-card footer) {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .portal-page:is(.portal-workboard, .portal-workboard-new, .portal-workboard-detail) .portal-workboard-list-row {
