@@ -15910,6 +15910,28 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* Admin ERP mobile data surface harmony ---------------------------------
+   The server-issued ERP tables keep their semantic markup and scroll-region
+   contract. This final presentation layer only restores a readable light/dark
+   token surface for the mobile scroll cue and frozen first cell. */
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table-scroll-hint {
+    border-bottom-color: var(--portal-border);
+    background: var(--portal-surface-soft);
+    color: var(--portal-muted);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table th:first-child,
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-surface-light);
+    box-shadow: 8px 0 12px -12px color-mix(in srgb, var(--portal-ink) 60%, transparent);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-light-hover-surface);
+  }
+}
+
 /* Customer Shell Harmony ----------------------------------------------
    The customer app keeps its server-rendered navigation and route manifest;
    this final visual layer only clarifies the already-mounted desktop rail,
