@@ -70,3 +70,45 @@ Workspace Drafts never call the private bridge, create a Bot draft, invoke a
 provider, calculate/charge Xu, create a PayOS order, publish content, or
 claim an output is ready. It is usable by a signed account before Telegram
 linking precisely because it owns no canonical Bot state.
+
+## Project Studio handoff
+
+An active Workspace Draft can become one explicit, Web-owned Studio snapshot
+inside an active Project:
+
+```text
+POST /api/v1/projects/{project_id}/workspace-drafts/{draft_id}/attach
+{
+  "confirmed": true,
+  "idempotency_key": "…"
+}
+```
+
+The signed account must own both IDs; the request requires CSRF and a strict
+JSON boolean `confirmed: true`. Missing confirmation, `false`, strings and
+numbers are rejected before the route can write anything. The browser
+checkbox and confirmation dialog are convenience/clarity controls only; the
+server is the enforcement point.
+
+Before writing, the Project boundary validates the stored row again. Its
+feature key must still be an exact registered member of the same server-side
+Workspace Draft allowlist used by intake and `/catalog`; a legacy, upgraded or
+manually repaired row cannot introduce a new workflow. Forbidden authority
+fields, files, credentials, Bearer/API-key material, OTP/CVV, plausible card
+numbers and manual-payment proof are also rejected. This prevents the Studio
+document and its immutable version history from becoming an alternate store
+for sensitive or canonical data.
+
+On success, one transaction creates exactly one active `brief` Studio
+Document at revision 1, its immutable revision-1 row, a durable
+`web_workspace_draft_handoffs` owner/project/draft receipt and one opaque
+audit event. The draft itself stays active and unchanged. The unique
+`(account_id, project_id, draft_id)` tuple is the durable duplicate guard:
+even a retry with a new idempotency key returns the original receipt rather
+than making a second document. Receipt links contain opaque IDs only; brief
+content is never placed in a URL, audit detail or browser storage.
+
+The handoff is not a Bot handoff. It does not submit a workflow, estimate a
+price, make a provider request, create a job, mutate Xu/PayOS, attach a file
+or claim media delivery. A later feature workflow must still satisfy its own
+current form, upload, estimate, confirmation and canonical authority checks.

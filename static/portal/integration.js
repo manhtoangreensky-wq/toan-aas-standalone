@@ -12485,6 +12485,8 @@
     const telegramConnection = telegramConnectionResponse && telegramConnectionResponse.data && typeof telegramConnectionResponse.data === "object" ? telegramConnectionResponse.data : {};
     const telegramReady = telegramConnectionReady(telegramConnection);
     const account = me.account || null;
+    const initialPortalPath = String(context.path || window.location.pathname || "/").split("?")[0] || "/";
+    const initialProjectRoute = projectIdFromPath(initialPortalPath) ? initialPortalPath : "";
     const accountDisplayName = account
       ? (account.display_name || account.email || (account.account_type === "telegram" ? "Người dùng Telegram" : "Khách"))
       : "";
@@ -12958,6 +12960,7 @@
       "workspace-draft-save": Boolean(account && me.csrf_token),
       "workspace-draft-archive": Boolean(account && me.csrf_token),
       "workspace-draft-resume": Boolean(account),
+      "workspace-draft-attach": Boolean(account && me.csrf_token),
       "workspace-drafts-refresh": Boolean(account),
       // Project Center is independently owned by the signed Web account.
       // Telegram/Bot availability must never gate authoring, version history
@@ -14343,6 +14346,11 @@
         ...featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token)),
         ...nativeDocumentPageStates,
         ...nativeImagePageStates,
+        // Replace the public shell's deliberately neutral pending marker only
+        // after the signed account read settles.  An unsigned route must not
+        // remain in a false loading state, while a signed route remains
+        // pending until its own owner-scoped Project GET completes.
+        ...(initialProjectRoute ? { [initialProjectRoute]: account ? "processing" : "guarded" } : {}),
         "/notes": account && memoryCenterEnabled ? "processing" : "guarded",
         "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
         "/account/data-controls": account && dataControlsEnabled ? "processing" : "guarded",
@@ -14455,7 +14463,7 @@
       const serviceWorkerUrl = `/service-worker.js?build=${encodeURIComponent(pwaBuildId(context))}`;
       navigator.serviceWorker.register(serviceWorkerUrl, { scope: "/" }).catch(() => {});
     }
-    const currentPath = (context.path || window.location.pathname).split("?")[0];
+    const currentPath = initialPortalPath;
     // Fetch a metadata-only ERP manifest in parallel with route hydration.
     // The route performs its own live canonical-admin or Web-support check;
     // the account.role cached in this bootstrap never decides navigation.
@@ -14468,7 +14476,7 @@
     else if (account && ["/campaigns", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     else if (account && isNativeContentHandoffPath(currentPath)) await hydrateCampaignPlans();
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath) && !isNativeMusicDirectionPresetPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeCreativeMotionGuidePath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/workspace", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeContentHandoffPath(currentPath) || (isNativeMediaWorkspacePath(currentPath) && !isNativeMusicPromptComposerPath(currentPath) && !isNativeMusicDirectionPresetPath(currentPath)) || isNativeContentStudioPath(currentPath) || (isNativeVoiceStudioPath(currentPath) && !isNativeVoiceDirectionComposerPath(currentPath)) || (isNativeVideoStudioPath(currentPath) && !isNativeVideoPromptPlannerPath(currentPath) && !isNativeCinematicConceptPath(currentPath) && !isNativeCreativeMotionGuidePath(currentPath) && !isNativeImageMotionPlannerPath(currentPath) && !isNativeReferenceFormatPlannerPath(currentPath) && !isNativeStoryboardComposerPath(currentPath)) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -22806,6 +22814,16 @@
     // that was still being read for the prior detail selection.
     ++studioDocumentDetailHydrationEpoch;
     const sessionEpoch = projectCenterSessionEpoch;
+    // A route change mounts synchronously, while the owner-scoped Project
+    // read is asynchronous.  Clear any prior detail and expose an explicit
+    // route-local loading state before the request so the renderer never
+    // mistakes an in-flight read for a missing Project.
+    merge({
+      projectDetail: {},
+      projectDocuments: [],
+      studioDocumentDetail: {},
+      pageStates: { ...(base().pageStates || {}), [path]: "processing" }
+    });
     try {
       const result = await api(`/projects/${encodeURIComponent(projectId)}`);
       if (!projectCenterRequestIsCurrent(requestEpoch, projectCenterDetailHydrationEpoch, sessionEpoch, path)) return null;
@@ -35191,6 +35209,68 @@
         toast("Đã đưa brief Web trở lại form. Tệp, upload, quote và lựa chọn canonical cần được chọn/kiểm tra lại.");
         return;
       }
+      if (action === "workspace-draft-attach") {
+        if (!(base().capabilities && base().capabilities["workspace-draft-attach"] === true)) {
+          throw new Error("Cần signed Web session và CSRF để đưa bản nháp vào Project.");
+        }
+        const draftId = String(detail.workspaceDraftId || "").trim();
+        const projectId = String(fields.project_id || detail.projectId || "").trim();
+        if (!validWorkspaceDraftId(draftId) || !validProjectId(projectId)) {
+          throw new Error("Bản nháp hoặc Project đã chọn không hợp lệ.");
+        }
+        if (fields.confirmed !== true) {
+          throw new Error("Hãy xác nhận snapshot Studio trước khi tiếp tục.");
+        }
+        const scope = `workspace-draft:${draftId}:attach:${projectId}`;
+        const submission = acquireSubmission(scope, JSON.stringify({ project_id: projectId, draft_id: draftId }));
+        if (!submission) {
+          toast("Bản nháp đang được đưa vào Project. Vui lòng chờ receipt từ Web Workspace.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/${encodeURIComponent(projectId)}/workspace-drafts/${encodeURIComponent(draftId)}/attach`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ confirmed: true, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const receipt = result.data && typeof result.data === "object" ? result.data : {};
+          const returnedProjectId = String(receipt.project && receipt.project.id || "").trim();
+          const documentId = String(receipt.document && receipt.document.id || "").trim();
+          if (returnedProjectId !== projectId || !validProjectId(documentId)) {
+            throw new Error("Web Workspace chưa trả receipt Studio hợp lệ.");
+          }
+          await refreshWorkspaceDraftLibraryAfterMutation();
+          await hydrateProjects();
+          const projectRoute = `/projects/${encodeURIComponent(projectId)}`;
+          window.history.pushState({}, "", projectRoute);
+          merge({
+            path: projectRoute,
+            title: "TOAN AAS",
+            projectDetail: {},
+            projectDocuments: [],
+            studioDocumentDetail: {},
+            pageStates: { ...(base().pageStates || {}), [projectRoute]: "processing" }
+          });
+          await hydrateProjectDetail(projectRoute);
+          await hydrateStudioDocument(documentId);
+          toast(result.message || "Đã tạo Studio Document từ bản nháp Web.");
+        } catch (error) {
+          // A valid receipt already proves the server accepted this handoff.
+          // Later local validation/hydration can fail, but must not turn that
+          // acknowledgement back into an ambiguous retry that replays stale
+          // browser state instead of starting a fresh deliberate action.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "workspace-draft-archive") {
         const draftId = String(detail.workspaceDraftId || "").trim();
         if (!validWorkspaceDraftId(draftId)) throw new Error("Mã bản nháp không hợp lệ.");
@@ -36762,6 +36842,34 @@
     }
   });
   window.addEventListener("toanaas:portal-action", handleAction);
+  function synchronizePortalHistoryNavigation() {
+    // `pushState` is used by a small number of native Web handoffs.  Browser
+    // Back/Forward changes the URL without remounting the document, so adopt
+    // the exact route synchronously and let normal signed hydration own all
+    // route data.  Never seed a receipt or reuse Project data from the prior
+    // destination while the next owner-scoped read is pending.
+    const route = String(window.location.pathname || "/").split("?")[0] || "/";
+    if (route === currentPortalPath()) return;
+    const projectRoute = projectIdFromPath(route) ? route : "";
+    // `merge()` remounts synchronously.  Clear only the Project projection
+    // for a Project destination; unrelated Back/Forward routes keep their
+    // own guarded/read state until their normal hydrator replaces it.
+    const projectState = projectRoute
+      ? {
+          projectDetail: {},
+          projectDocuments: [],
+          studioDocumentDetail: {},
+          pageStates: { ...(base().pageStates || {}), [projectRoute]: "processing" }
+        }
+      : {};
+    merge({
+      path: route,
+      title: "TOAN AAS",
+      ...projectState
+    });
+    void hydrate();
+  }
+  window.addEventListener("popstate", synchronizePortalHistoryNavigation);
   let initialHydration = null;
   function startInitialHydration() {
     clearSessionScopedTransientDrafts();

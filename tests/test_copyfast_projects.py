@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 MODULES = [
     "app", "copyfast_db", "copyfast_auth", "copyfast_bridge", "copyfast_registry",
-    "copyfast_api", "copyfast_pages", "copyfast_projects", "copyfast_document_operations", "copyfast_image_runtime", "copyfast_image_operations",
+    "copyfast_workspace_draft_contract", "copyfast_api", "copyfast_pages", "copyfast_projects", "copyfast_document_operations", "copyfast_image_runtime", "copyfast_image_operations",
 ]
 
 
@@ -157,6 +157,12 @@ def test_project_center_rejects_sensitive_content_invalid_kind_and_archived_writ
             json={"kind": "prompt", "title": "Không lưu secret", "content": "api_key=sk_1234567890abcdefghi", "idempotency_key": "project-secret-content-0001"},
         )
         assert sensitive.status_code == 422
+        secret_key = client.post(
+            f"/api/v1/projects/{project['id']}/documents",
+            headers={"X-CSRF-Token": csrf},
+            json={"kind": "prompt", "title": "Không lưu secret key", "content": "secret_key: abcdefghijkl", "idempotency_key": "project-secret-key-content-0001"},
+        )
+        assert secret_key.status_code == 422
         invalid_kind = client.post(
             f"/api/v1/projects/{project['id']}/documents",
             headers={"X-CSRF-Token": csrf},
@@ -175,6 +181,298 @@ def test_project_center_rejects_sensitive_content_invalid_kind_and_archived_writ
             json={"kind": "brief", "title": "Không thêm vào archived", "content": "Nội dung hợp lệ", "idempotency_key": "project-archived-doc-0001"},
         )
         assert blocked.json()["error_code"] == "WEB_PROJECT_ARCHIVED"
+
+
+def test_workspace_draft_attach_creates_one_owner_scoped_snapshot(tmp_path, monkeypatch):
+    """A Web draft can be handed to Project Studio exactly once per pair."""
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "handoff-owner@example.com")
+        project = first.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "title": "Project handoff",
+                "summary": "Workspace summary",
+                "objective": "Studio snapshot",
+                "idempotency_key": "handoff-project-create-0001",
+            },
+        ).json()["data"]["project"]
+        draft = first.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "feature_key": "video_product",
+                "title": "Video ra mắt handoff",
+                "input": {"brief": "Brief giữ nguyên", "platform": "TikTok", "format": "9:16"},
+                "idempotency_key": "handoff-draft-create-0001",
+            },
+        ).json()["data"]["item"]
+        attach_payload = {"confirmed": True, "idempotency_key": "handoff-attach-request-0001"}
+        denied = first.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+            json=attach_payload,
+        )
+        assert denied.status_code == 403
+
+        attached = first.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload,
+        )
+        assert attached.status_code == 200
+        body = attached.json()
+        assert body["ok"] is True
+        assert body["status"] == "completed"
+        receipt = body["data"]
+        assert receipt["project"]["id"] == project["id"]
+        assert receipt["draft"]["id"] == draft["id"]
+        assert receipt["document"]["revision"] == 1
+        assert receipt["document"]["kind"] == "brief"
+        assert "content" not in receipt["document"]
+        document_detail = first.get(f"/api/v1/projects/documents/{receipt['document']['id']}")
+        assert "Brief giữ nguyên" in document_detail.json()["data"]["document"]["content"]
+        assert "platform: TikTok" in document_detail.json()["data"]["document"]["content"]
+
+        # A different client retry key must still resolve the same durable handoff.
+        replay = first.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+            headers={"X-CSRF-Token": csrf},
+            json={"confirmed": True, "idempotency_key": "handoff-attach-request-0002"},
+        )
+        assert replay.status_code == 200
+        assert replay.json()["data"]["document"]["id"] == receipt["document"]["id"]
+        project_detail = first.get(f"/api/v1/projects/{project['id']}").json()["data"]
+        assert project_detail["project"]["document_count"] == 1
+        assert [item["id"] for item in project_detail["documents"]] == [receipt["document"]["id"]]
+        # The source draft remains active and unchanged after the one-way snapshot.
+        source = first.get(f"/api/v1/workspace/drafts/{draft['id']}").json()["data"]["item"]
+        assert source["state"] == "active"
+        assert source["input"] == {"brief": "Brief giữ nguyên", "platform": "TikTok", "format": "9:16"}
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            handoffs = conn.execute(
+                "SELECT account_id, project_id, draft_id, document_id FROM web_workspace_draft_handoffs"
+            ).fetchall()
+            audits = conn.execute(
+                "SELECT target, detail FROM web_audit_events WHERE action='web.workspace_draft.attach'"
+            ).fetchall()
+        assert len(handoffs) == 1
+        assert len(audits) == 1
+        assert audits[0][0] == receipt["document"]["id"]
+        assert "Brief giữ nguyên" not in audits[0][1]
+
+
+def test_workspace_draft_attach_guards_ownership_archived_and_corrupt_rows(tmp_path, monkeypatch):
+    """Attach fails closed for foreign, archived or malformed Web-owned rows."""
+    with make_client(tmp_path, monkeypatch) as owner:
+        csrf = register_and_login(owner, "handoff-guards-owner@example.com")
+        project = owner.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={"title": "Guard project", "idempotency_key": "handoff-guard-project-0001"},
+        ).json()["data"]["project"]
+        draft = owner.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "feature_key": "voice_tts",
+                "title": "Voice draft",
+                "input": {"brief": "Xin chào"},
+                "idempotency_key": "handoff-guard-draft-0001",
+            },
+        ).json()["data"]["item"]
+
+        with make_client(tmp_path, monkeypatch) as other:
+            other_csrf = register_and_login(other, "handoff-guards-other@example.com")
+            foreign = other.post(
+                f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+                headers={"X-CSRF-Token": other_csrf},
+                json={"confirmed": True, "idempotency_key": "handoff-foreign-attach-0001"},
+            )
+            assert foreign.status_code == 200
+            assert foreign.json()["error_code"] == "WEB_PROJECT_NOT_FOUND"
+
+        archived = owner.post(
+            f"/api/v1/workspace/drafts/{draft['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "handoff-guard-archive-0001"},
+        )
+        assert archived.json()["status"] == "archived"
+        blocked = owner.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+            headers={"X-CSRF-Token": csrf},
+            json={"confirmed": True, "idempotency_key": "handoff-archived-attach-0001"},
+        )
+        assert blocked.json()["error_code"] == "WORKSPACE_DRAFT_ARCHIVED"
+
+        malformed = owner.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "feature_key": "video_product",
+                "title": "Malformed draft",
+                "input": {"brief": "valid before corruption"},
+                "idempotency_key": "handoff-corrupt-draft-0001",
+            },
+        ).json()["data"]["item"]
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            conn.execute(
+                "UPDATE web_workspace_drafts SET input_json=? WHERE id=?",
+                ('{"forbidden_field":"should fail closed"}', malformed["id"]),
+            )
+            conn.commit()
+        corrupt = owner.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{malformed['id']}/attach",
+            headers={"X-CSRF-Token": csrf},
+            json={"confirmed": True, "idempotency_key": "handoff-corrupt-attach-0001"},
+        )
+        assert corrupt.json()["error_code"] == "WORKSPACE_DRAFT_INVALID"
+
+
+def test_workspace_draft_attach_rejects_unregistered_corrupt_feature_without_side_effects(tmp_path, monkeypatch):
+    """A repaired DB row cannot turn an arbitrary workflow into a Studio snapshot."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "handoff-feature-boundary@example.com")
+        project = client.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={"title": "Feature boundary project", "idempotency_key": "handoff-feature-project-0001"},
+        ).json()["data"]["project"]
+        draft = client.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "feature_key": "video_product",
+                "title": "Registered draft before corruption",
+                "input": {"brief": "A safe brief that remains valid"},
+                "idempotency_key": "handoff-feature-draft-0001",
+            },
+        ).json()["data"]["item"]
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            conn.execute(
+                "UPDATE web_workspace_drafts SET feature_key=? WHERE id=?",
+                ("arbitrary_feature", draft["id"]),
+            )
+            conn.commit()
+
+        rejected = client.post(
+            f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+            headers={"X-CSRF-Token": csrf},
+            json={"confirmed": True, "idempotency_key": "handoff-feature-attach-0001"},
+        )
+        assert rejected.status_code == 200
+        assert rejected.json()["ok"] is False
+        assert rejected.json()["status"] == "guarded"
+        assert rejected.json()["error_code"] == "WORKSPACE_DRAFT_INVALID"
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_studio_documents").fetchone()[0] == 0
+            assert conn.execute("SELECT COUNT(*) FROM web_studio_document_versions").fetchone()[0] == 0
+            assert conn.execute("SELECT COUNT(*) FROM web_workspace_draft_handoffs").fetchone()[0] == 0
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action='web.workspace_draft.attach'"
+            ).fetchone()[0] == 0
+
+
+def test_workspace_draft_attach_requires_strict_confirmation_without_side_effects(tmp_path, monkeypatch):
+    """Only a JSON boolean true can create an otherwise-valid Studio snapshot."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "handoff-confirm-owner@example.com")
+        project = client.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={"title": "Confirmation project", "idempotency_key": "handoff-confirm-project-0001"},
+        ).json()["data"]["project"]
+        draft = client.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "feature_key": "video_product",
+                "title": "Confirmation draft",
+                "input": {"brief": "A valid handoff brief"},
+                "idempotency_key": "handoff-confirm-draft-0001",
+            },
+        ).json()["data"]["item"]
+        endpoint = f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach"
+
+        rejected_payloads = (
+            {"idempotency_key": "handoff-confirm-missing-0001"},
+            {"confirmed": False, "idempotency_key": "handoff-confirm-false-0001"},
+            {"confirmed": "true", "idempotency_key": "handoff-confirm-string-0001"},
+            {"confirmed": 1, "idempotency_key": "handoff-confirm-number-0001"},
+        )
+        for payload in rejected_payloads:
+            rejected = client.post(endpoint, headers={"X-CSRF-Token": csrf}, json=payload)
+            assert rejected.status_code == 422
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_studio_documents").fetchone()[0] == 0
+            assert conn.execute("SELECT COUNT(*) FROM web_workspace_draft_handoffs").fetchone()[0] == 0
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action='web.workspace_draft.attach'"
+            ).fetchone()[0] == 0
+
+        accepted = client.post(
+            endpoint,
+            headers={"X-CSRF-Token": csrf},
+            json={"confirmed": True, "idempotency_key": "handoff-confirm-accepted-0001"},
+        )
+        assert accepted.status_code == 200
+        assert accepted.json()["ok"] is True
+
+
+def test_workspace_draft_attach_rejects_sensitive_corrupt_snapshot_rows(tmp_path, monkeypatch):
+    """A damaged persisted draft cannot smuggle credentials or payment proof into Studio."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "handoff-sensitive-owner@example.com")
+        project = client.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={"title": "Sensitive guard project", "idempotency_key": "handoff-sensitive-project-0001"},
+        ).json()["data"]["project"]
+        corrupt_rows = []
+        for index, corrupted_input in enumerate((
+            '{"brief":"Bearer abcdefghijkl"}',
+            '{"notes":"Mã giao dịch: 123456"}',
+            '{"notes":"secret_key: abcdefghijkl"}',
+        ), start=1):
+            draft = client.post(
+                "/api/v1/workspace/drafts",
+                headers={"X-CSRF-Token": csrf},
+                json={
+                    "feature_key": "video_product",
+                    "title": f"Sensitive draft {index}",
+                    "input": {"brief": "Valid before database corruption"},
+                    "idempotency_key": f"handoff-sensitive-draft-{index:04d}",
+                },
+            ).json()["data"]["item"]
+            corrupt_rows.append((draft, corrupted_input))
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            for draft, corrupted_input in corrupt_rows:
+                conn.execute(
+                    "UPDATE web_workspace_drafts SET input_json=? WHERE id=?",
+                    (corrupted_input, draft["id"]),
+                )
+            conn.commit()
+
+        for index, (draft, _corrupted_input) in enumerate(corrupt_rows, start=1):
+            rejected = client.post(
+                f"/api/v1/projects/{project['id']}/workspace-drafts/{draft['id']}/attach",
+                headers={"X-CSRF-Token": csrf},
+                json={"confirmed": True, "idempotency_key": f"handoff-sensitive-attach-{index:04d}"},
+            )
+            assert rejected.status_code == 200
+            assert rejected.json()["ok"] is False
+            assert rejected.json()["error_code"] == "WORKSPACE_DRAFT_INVALID"
+
+        with sqlite3.connect(tmp_path / "copyfast-projects-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_studio_documents").fetchone()[0] == 0
+            assert conn.execute("SELECT COUNT(*) FROM web_workspace_draft_handoffs").fetchone()[0] == 0
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action='web.workspace_draft.attach'"
+            ).fetchone()[0] == 0
 
 
 def test_project_list_filter_pagination_and_owner_scope(tmp_path, monkeypatch):

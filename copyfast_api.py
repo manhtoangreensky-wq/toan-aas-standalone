@@ -57,6 +57,13 @@ from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
 from copyfast_route_engine import unconfigured_catalog
 from copyfast_web_engine import engine_descriptor
+from copyfast_workspace_draft_contract import (
+    FEATURE_EXECUTION_CANDIDATE_KEYS,
+    FEATURE_TARGET_LANGUAGE_REQUIRED,
+    FEATURE_TEXT_REQUIRED,
+    FEATURE_UPLOAD_REQUIRED,
+    is_workspace_draft_feature,
+)
 
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
@@ -184,6 +191,7 @@ ACCOUNT_ACTIVITY_LABELS = {
     "workspace.draft.create": ("Lưu bản nháp Web", "AI Studio"),
     "workspace.draft.update": ("Cập nhật bản nháp Web", "AI Studio"),
     "workspace.draft.archive": ("Lưu trữ bản nháp Web", "AI Studio"),
+    "web.workspace_draft.attach": ("Đưa bản nháp vào Project Studio", "Project Center"),
     "web.project.create": ("Tạo Project Web", "Project Center"),
     "web.project.update": ("Cập nhật Project Web", "Project Center"),
     "web.studio_document.create": ("Tạo Studio Document", "Project Center"),
@@ -262,8 +270,6 @@ ACCOUNT_ACTIVITY_LABELS = {
 # field remain outside this local store and must be selected again through the
 # canonical flow after a draft is resumed.
 WORKSPACE_DRAFT_STATES = frozenset({"active", "archived"})
-# Assigned once the feature execution candidate set has been declared below.
-WORKSPACE_DRAFT_ALLOWED_FEATURES: frozenset[str]
 WORKSPACE_DRAFT_ALLOWED_FIELDS = frozenset({
     "request", "prompt", "brief", "script", "instructions", "notes",
     "template", "platform", "format", "duration", "style", "goal",
@@ -333,27 +339,6 @@ FEATURE_AUTHORITY_FIELDS_NORMALIZED = frozenset(
     for field in FEATURE_AUTHORITY_FIELDS
 )
 FEATURE_TEXT_KEYS = ("request", "prompt", "brief", "script", "text", "topic", "description", "instructions", "notes")
-FEATURE_TEXT_REQUIRED = frozenset({
-    "chat", "prompt_studio", "caption", "hashtag", "hook", "script", "storyboard", "content_pack",
-    "image_create", "image_transform", "video_single", "video_product", "video_trend",
-    "video_text_to_video", "video_quick", "video_image_to_video", "video_multiscene", "video_long",
-    "voice_tts", "voice_saved_tts", "music_background", "music_song", "music_sfx",
-})
-FEATURE_UPLOAD_REQUIRED = frozenset({
-    "image_edit", "image_upscale", "image_transform", "image_remove_background", "video_image_to_video",
-    "voice_clone", "music_upload", "subtitle_asr", "subtitle_create", "asr", "subtitle_translate",
-    "video_dub", "documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split",
-    "documents_compress", "documents_translate",
-})
-FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub", "documents_translate"})
-# A Web confirm is never enabled merely because a key exists in the broad
-# parity registry.  This exact set covers the customer workflows that have a
-# draft/estimate/confirm input contract; account, wallet, admin and read-only
-# parity routes can never be made executable by an environment typo.
-FEATURE_EXECUTION_CANDIDATE_KEYS = frozenset(
-    FEATURE_TEXT_REQUIRED | FEATURE_UPLOAD_REQUIRED | FEATURE_TARGET_LANGUAGE_REQUIRED
-)
-WORKSPACE_DRAFT_ALLOWED_FEATURES = FEATURE_EXECUTION_CANDIDATE_KEYS
 FEATURE_TIER_REQUIRED_ON_CONFIRM = frozenset({
     "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background",
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
@@ -2283,7 +2268,7 @@ def _workspace_draft_id(value: str) -> str:
 
 def _workspace_draft_feature(value: Any) -> str:
     feature = str(value or "").strip()
-    if feature not in WORKSPACE_DRAFT_ALLOWED_FEATURES or feature not in FEATURE_BY_KEY:
+    if not is_workspace_draft_feature(feature):
         raise HTTPException(status_code=422, detail="Workflow này không hỗ trợ lưu bản nháp Web")
     return feature
 
@@ -3060,7 +3045,7 @@ async def feature_catalog():
     features = []
     for entry in catalog():
         item = dict(entry)
-        item["web_workspace_draft_supported"] = str(item.get("key") or "") in WORKSPACE_DRAFT_ALLOWED_FEATURES
+        item["web_workspace_draft_supported"] = is_workspace_draft_feature(item.get("key"))
         # Display-only execution taxonomy.  It cannot grant a provider call,
         # canonical job, payment, output or delivery; every actionable route
         # still owns its signed-session, CSRF, ownership and engine checks.
