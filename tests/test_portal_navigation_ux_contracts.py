@@ -476,3 +476,199 @@ def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_men
     assert ".portal-shell--focus" in css
     assert ".portal-shell--focus .portal-sidebar.is-open" in css
     assert ".portal-shell--focus .portal-menu-button" in css
+
+
+def test_closed_mobile_sidebar_is_removed_from_keyboard_and_accessibility_navigation() -> None:
+    """A translated drawer is not an acceptable closed navigation state.
+
+    The customer may still use the desktop focus drawer, but below the mobile
+    breakpoint the closed rail must be unavailable to Tab and assistive
+    technology until its explicit menu button opens the dialog.
+    """
+
+    close_sidebar = _section("function closeSidebar(options)", "function toggleSidebar()")
+    toggle_sidebar = _section("function toggleSidebar()", "function closeSidebarAboveMobileBreakpoint()")
+    mount = PORTAL[PORTAL.index("function mountPortal(override)"):]
+
+    for token in (
+        "function mobileSidebarDialogSupported()",
+        "function setSidebarAccessibilityState(opened)",
+        'sidebar.setAttribute("aria-hidden", "true")',
+        'sidebar.removeAttribute("aria-hidden")',
+        "sidebar.inert = true",
+        "sidebar.inert = false",
+        "mobileSidebarDialogSupported()",
+    ):
+        assert token in PORTAL
+
+    assert "setSidebarAccessibilityState(false);" in close_sidebar
+    assert "setSidebarAccessibilityState(true);" in toggle_sidebar
+    assert "setSidebarAccessibilityState(false);" in mount
+    assert "sidebar.setAttribute(\"role\", \"dialog\")" in toggle_sidebar
+    assert "sidebar.removeAttribute(\"role\")" in close_sidebar
+
+
+def test_mobile_sidebar_accessibility_state_tracks_breakpoint_and_drawer_state() -> None:
+    """The real helper preserves desktop rail semantics and gates mobile only."""
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required to exercise the Portal mobile sidebar accessibility helper")
+    script = r'''
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+const attributes = new Map();
+const sidebar = {
+  inert: false,
+  setAttribute(name, value) { attributes.set(name, String(value)); },
+  getAttribute(name) { return attributes.has(name) ? attributes.get(name) : null; },
+  removeAttribute(name) { attributes.delete(name); }
+};
+let mobile = true;
+const document = { querySelector(selector) { return selector === "[data-portal-sidebar]" ? sidebar : null; } };
+const window = { matchMedia() { return { matches: mobile }; } };
+eval([extract("function mobileSidebarDialogSupported()", "function desktopFocusNavigationSupported()")].join("\n"));
+setSidebarAccessibilityState(false);
+const mobileClosed = { ariaHidden: sidebar.getAttribute("aria-hidden"), inert: sidebar.inert };
+setSidebarAccessibilityState(true);
+const mobileOpen = { ariaHidden: sidebar.getAttribute("aria-hidden"), inert: sidebar.inert };
+mobile = false;
+setSidebarAccessibilityState(false);
+const desktopClosed = { ariaHidden: sidebar.getAttribute("aria-hidden"), inert: sidebar.inert };
+process.stdout.write(JSON.stringify({ mobileClosed, mobileOpen, desktopClosed }));
+'''
+    result = subprocess.run(
+        [node, "-e", script, str(ROOT / "static" / "portal" / "portal.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert json.loads(result.stdout) == {
+        "mobileClosed": {"ariaHidden": "true", "inert": True},
+        "mobileOpen": {"ariaHidden": None, "inert": False},
+        "desktopClosed": {"ariaHidden": None, "inert": False},
+    }
+
+
+def test_mobile_sidebar_falls_back_to_saved_tabindex_when_inert_is_unavailable() -> None:
+    """A closed off-canvas drawer must not leave focusable descendants behind."""
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required to exercise the Portal mobile sidebar tabindex fallback")
+    script = r'''
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(start, end) {
+  const offset = source.indexOf(start);
+  if (offset < 0) throw new Error(`missing ${start}`);
+  const finish = source.indexOf(end, offset + start.length);
+  if (finish < 0) throw new Error(`missing end ${end}`);
+  return source.slice(offset, finish);
+}
+function element(initialTabIndex) {
+  const attributes = new Map(initialTabIndex === null ? [] : [["tabindex", initialTabIndex]]);
+  return {
+    hidden: false,
+    hasAttribute(name) { return attributes.has(name); },
+    getAttribute(name) { return attributes.has(name) ? attributes.get(name) : null; },
+    setAttribute(name, value) { attributes.set(name, String(value)); },
+    removeAttribute(name) { attributes.delete(name); }
+  };
+}
+const primaryLink = element(null);
+const customControl = element("2");
+const groupSummary = element(null);
+const attributes = new Map();
+    const sidebar = {
+      inert: false,
+      querySelectorAll() { return [primaryLink, customControl, groupSummary]; },
+  hasAttribute(name) { return attributes.has(name); },
+  getAttribute(name) { return attributes.has(name) ? attributes.get(name) : null; },
+  setAttribute(name, value) { attributes.set(name, String(value)); },
+  removeAttribute(name) { attributes.delete(name); }
+};
+const document = { querySelector(selector) { return selector === "[data-portal-sidebar]" ? sidebar : null; } };
+const window = { matchMedia() { return { matches: true }; } };
+eval([extract("function mobileSidebarDialogSupported()", "function desktopFocusNavigationSupported()")].join("\n"));
+setSidebarAccessibilityState(false);
+const closed = {
+  ariaHidden: sidebar.getAttribute("aria-hidden"),
+  primaryTabIndex: primaryLink.getAttribute("tabindex"),
+  primarySaved: primaryLink.getAttribute("data-portal-sidebar-tabindex"),
+  customTabIndex: customControl.getAttribute("tabindex"),
+  customSaved: customControl.getAttribute("data-portal-sidebar-tabindex"),
+  summaryTabIndex: groupSummary.getAttribute("tabindex"),
+  summarySaved: groupSummary.getAttribute("data-portal-sidebar-tabindex")
+};
+setSidebarAccessibilityState(true);
+const opened = {
+  ariaHidden: sidebar.getAttribute("aria-hidden"),
+  primaryTabIndex: primaryLink.getAttribute("tabindex"),
+  primarySaved: primaryLink.getAttribute("data-portal-sidebar-tabindex"),
+  customTabIndex: customControl.getAttribute("tabindex"),
+  customSaved: customControl.getAttribute("data-portal-sidebar-tabindex"),
+  summaryTabIndex: groupSummary.getAttribute("tabindex"),
+  summarySaved: groupSummary.getAttribute("data-portal-sidebar-tabindex")
+};
+process.stdout.write(JSON.stringify({ closed, opened }));
+'''
+    result = subprocess.run(
+        [node, "-e", script, str(ROOT / "static" / "portal" / "portal.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    fallback = _section("function setSidebarFallbackTabStops", "function setSidebarAccessibilityState")
+    assert "summary" in fallback
+    assert json.loads(result.stdout) == {
+        "closed": {
+            "ariaHidden": "true",
+            "primaryTabIndex": "-1",
+            "primarySaved": "__absent__",
+            "customTabIndex": "-1",
+            "customSaved": "2",
+            "summaryTabIndex": "-1",
+            "summarySaved": "__absent__",
+        },
+        "opened": {
+            "ariaHidden": None,
+            "primaryTabIndex": None,
+            "primarySaved": None,
+            "customTabIndex": "2",
+            "customSaved": None,
+            "summaryTabIndex": None,
+            "summarySaved": None,
+        },
+    }
+
+
+def test_closed_mobile_sidebar_applies_fallback_after_fresh_shell_markup_renders() -> None:
+    """Fresh mobile markup is made unfocusable after, not before, it exists.
+
+    A Portal mount replaces the sidebar contents on every route render.  The
+    closed-drawer helper therefore has to run after ``renderSidebar`` writes
+    those controls; calling it only before the replacement leaves a one-render
+    keyboard-accessible off-canvas drawer on a fresh mobile visit.
+    """
+
+    render_shell = _section("function renderShell()", "const replaceResult =")
+    markup = "sidebar.innerHTML = renderSidebar(page, context);"
+    state_sync = "setSidebarAccessibilityState(false);"
+
+    assert markup in render_shell
+    assert state_sync in render_shell
+    assert render_shell.index(markup) < render_shell.index(state_sync)

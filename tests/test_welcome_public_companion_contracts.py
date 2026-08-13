@@ -68,13 +68,19 @@ def test_welcome_allows_only_exact_reviewed_public_display_locales(tmp_path, mon
     with make_client(tmp_path, monkeypatch) as client:
         default = client.get("/welcome")
         assert default.status_code == 200
-        assert '<html lang="vi" dir="ltr" data-portal-locale="vi">' in default.text
+        assert re.search(
+            r'<html lang="vi" dir="ltr" data-portal-locale="vi"(?:\s+data-portal-motion-route="default")?>',
+            default.text,
+        )
         assert '"interfaceLocale": "vi"' in default.text
 
         for locale, html_lang in (("vi", "vi"), ("en", "en"), ("zh", "zh-CN")):
             response = client.get(f"/welcome?lang={locale}")
             assert response.status_code == 200
-            assert f'<html lang="{html_lang}" dir="ltr" data-portal-locale="{locale}">' in response.text
+            assert re.search(
+                rf'<html lang="{re.escape(html_lang)}" dir="ltr" data-portal-locale="{locale}"(?:\s+data-portal-motion-route="default")?>',
+                response.text,
+            )
             assert f'"interfaceLocale": "{locale}"' in response.text
 
         invalid = client.get("/welcome?lang=zh-TW")

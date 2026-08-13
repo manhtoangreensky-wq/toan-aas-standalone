@@ -258,7 +258,7 @@
     "env_references": 250,
     "providers": 7,
     "routes": 680,
-    "ui_path_references": 46
+    "ui_path_references": 47
   },
   "database_references": [
     {
@@ -13707,7 +13707,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 145,
   "source_files_scanned": 145,
-  "source_fingerprint_sha256": "bf217995f8eb319b0bc3a919d62ec065dd5466bea15b5bccf2c5ed87e2dbc371",
+  "source_fingerprint_sha256": "aeed0df92cf54a59dd662127e2a3c2859cc21926ecca05b321e976bfb64f58b6",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13924,6 +13924,11 @@
       "file": "video.html",
       "line": 77,
       "path": "/api/v1/video/generate-script"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "line": 26853,
+      "path": "/features"
     },
     {
       "file": "templates/index.html",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import re
 import sys
 from pathlib import Path
 
@@ -164,7 +165,10 @@ def test_signed_first_paint_uses_only_server_profile_locale_and_public_login_sta
         dashboard = client.get("/dashboard")
         assert dashboard.status_code == 200
         assert dashboard.headers["cache-control"] == "no-store, private"
-        assert '<html lang="zh-CN" dir="ltr" data-portal-locale="zh">' in dashboard.text
+        assert re.search(
+            r'<html lang="zh-CN" dir="ltr" data-portal-locale="zh" data-portal-motion-route="dashboard">',
+            dashboard.text,
+        )
         assert "<title>概览 · TOAN AAS</title>" in dashboard.text
         assert "正在启动 TOAN AAS…" in dashboard.text
         assert '"interfaceLocale": "zh"' in dashboard.text
@@ -174,9 +178,88 @@ def test_signed_first_paint_uses_only_server_profile_locale_and_public_login_sta
         with TestClient(app) as anonymous:
             login = anonymous.get("/login?locale=zh")
             assert login.status_code == 200
-            assert '<html lang="vi" dir="ltr" data-portal-locale="vi">' in login.text
+            assert re.search(
+                r'<html lang="vi" dir="ltr" data-portal-locale="vi" data-portal-motion-route="default">',
+                login.text,
+            )
             assert '"interfaceLocale": "vi"' in login.text
             assert "Đang khởi tạo giao diện TOAN AAS…" in login.text
+
+
+def test_signed_public_welcome_keeps_its_exact_query_locale_over_profile_preference(tmp_path, monkeypatch) -> None:
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, email="welcome-query-locale@example.com", name="Welcome locale")
+        updated = client.post(
+            "/api/v1/auth/profile/interface-locale",
+            headers={"X-CSRF-Token": csrf},
+            json={"locale": "en"},
+        )
+        assert updated.json()["ok"] is True
+
+        welcome = client.get("/welcome?lang=vi")
+        assert welcome.status_code == 200
+        assert '<html lang="vi" dir="ltr" data-portal-locale="vi"' in welcome.text
+        assert '"interfaceLocale": "vi"' in welcome.text
+        assert "welcome-query-locale@example.com" not in welcome.text
+
+
+def test_public_welcome_locale_selector_wins_against_signed_profile_during_hydration() -> None:
+    portal = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+    node = __import__("shutil").which("node")
+    assert node, "Node.js is required for the public-locale hydration harness"
+
+    script = r"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync(process.argv[1], "utf8");
+const start = source.indexOf("function portalI18n()");
+const end = source.indexOf("const ALLOWED_STATES", start);
+if (start < 0 || end < 0) throw new Error("Locale helpers not found");
+const events = [];
+const context = {
+  normalizePath: (value) => String(value || "/").split("?")[0].replace(/\/+$/, "") || "/",
+  window: {
+    location: { pathname: "/welcome" },
+    TOANAASI18n: {
+      t: () => "",
+      normalizeLocale: (value, fallback) => ["vi", "en", "zh"].includes(value) ? value : fallback,
+      setLocale: (value) => events.push(value)
+    }
+  }
+};
+vm.createContext(context);
+vm.runInContext(source.slice(start, end), context);
+const first = context.applyInterfaceLocale({
+  path: "/welcome",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+const hydrated = context.applyInterfaceLocale({
+  path: "/welcome",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+const signed = context.applyInterfaceLocale({
+  path: "/dashboard",
+  interfaceLocale: "vi",
+  profile: { locale: "en" }
+});
+process.stdout.write(JSON.stringify({ first, hydrated, signed, events }));
+"""
+    result = __import__("subprocess").run(
+        [node, "-e", script, str(ROOT / "static" / "portal" / "portal.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert __import__("json").loads(result.stdout) == {
+        "first": "vi",
+        "hydrated": "vi",
+        "signed": "en",
+        "events": ["vi", "vi", "en"],
+    }
 
 
 def test_locale_navigator_uses_only_the_narrow_receipt_and_endpoint() -> None:

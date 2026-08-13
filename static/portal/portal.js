@@ -260,15 +260,19 @@
   }
 
   function interfaceLocaleFor(context) {
-    // `/auth/me` owns the later profile projection, but the first server
-    // shell intentionally exposes only the small signed `interfaceLocale`
-    // field. Preserve that locale through the first mount instead of flashing
-    // Vietnamese until asynchronous account hydration arrives.
+    // The public `/welcome` shell has already accepted an exact, small locale
+    // allowlist server-side. Preserve that explicit public choice through
+    // signed hydration so `/welcome?lang=vi` cannot become English merely
+    // because the signed profile preference is English. Inside the signed
+    // product, `/auth/me` remains authoritative for the profile preference.
     const profileLocale = reviewedInterfaceLocale(
       context && context.profile && context.profile.locale
     );
     const bootstrapLocale = reviewedInterfaceLocale(context && context.interfaceLocale);
-    const candidate = profileLocale || bootstrapLocale || "vi";
+    const isPublicWelcome = normalizePath(context && context.path || window.location.pathname || "/") === "/welcome";
+    const candidate = isPublicWelcome
+      ? (bootstrapLocale || profileLocale || "vi")
+      : (profileLocale || bootstrapLocale || "vi");
     const i18n = portalI18n();
     return i18n && typeof i18n.normalizeLocale === "function"
       ? i18n.normalizeLocale(candidate, "vi")
@@ -1001,7 +1005,7 @@
     notes: ["Danh mục không phải danh sách provider đang chạy và không hứa một engine/output chưa có contract canonical.", "Mỗi workflow vẫn dùng signed session, CSRF, ownership và flow draft → estimate → confirm riêng."]
   });
   customerPage("/studio", "Media Studio", "Lập luồng content, visual, video, voice, music và finalization bằng các workspace Web đã đăng ký.", ICONS.video, {
-    layout: "media-studio", type: "media-studio", fields: [], action: "none", status: "read_only",
+    section: "Media Studio", layout: "media-studio", type: "media-studio", fields: [], action: "none", status: "read_only",
     notes: ["Media Studio chỉ điều hướng giữa các workflow canonical; không tự tạo project, job, output hay delivery giả.", "Mỗi bước vẫn cần estimate, confirm và adapter Bot riêng trước khi engine được phép chạy."]
   });
   customerPage("/workspace", "Bản nháp của tôi", "Lưu và tiếp tục brief Web an toàn giữa các workflow mà không gửi Bot, tạo quote, job hoặc Xu.", ICONS.prompt, {
@@ -7636,6 +7640,12 @@
     return uiText(`featureCatalog.${key}`, fallback, params);
   }
 
+  // Media Studio owns only fixed navigation chrome. Destination routes each
+  // retain their own session, ownership, workflow and delivery boundary.
+  function mediaStudioText(key, fallback, params) {
+    return uiText(`mediaStudio.${key}`, fallback, params);
+  }
+
   function normalizeRouteEngineDescriptor(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
     if (!source) return { state: "loading" };
@@ -7862,6 +7872,9 @@
       // is silently rendered as an empty library.
       workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : [],
       workspaceDraftListing: normalizeWorkspaceDraftListing(source.workspaceDraftListing),
+      workspaceDraftReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.workspaceDraftReadState || ""))
+        ? String(source.workspaceDraftReadState)
+        : "guarded",
       // Campaign Planner data is Web-owned and already account-scoped by the
       // API. Keep only a bounded presentation copy; the browser never keeps
       // a second campaign store in localStorage.
@@ -9220,6 +9233,7 @@
     "Asset Vault": "nav.assets",
     "Nội dung & kế hoạch": "nav.contentPlanning",
     "AI Labs & Media": "nav.aiLabs",
+    "Media Studio": "mediaStudio.section",
     "Tạo mới": "nav.create",
     "Công việc": "nav.work",
     "Job Center": "nav.jobs",
@@ -9286,6 +9300,9 @@
     "Video": "shellNav.video",
     "Voice & Music": "shellNav.voiceMusic",
     "Ngôn ngữ & Docs": "shellNav.languageDocs",
+    "Music & SFX": "featureCatalog.group.music.title",
+    "Phụ đề & ngôn ngữ": "featureCatalog.group.subtitle.title",
+    "Documents & PDF": "featureCatalog.group.documents.title",
     "Nạp Xu": "shellNav.topupCredit",
     "Membership": "shellNav.membership",
     "Gói dịch vụ": "shellNav.servicePackages",
@@ -9339,6 +9356,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
     if (path === "/features") return featureCatalogText("page.title", fallback);
+    if (path === "/studio") return mediaStudioText("page.title", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
@@ -9399,6 +9417,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
     if (path === "/features") return featureCatalogText("page.description", fallback);
+    if (path === "/studio") return mediaStudioText("page.description", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
@@ -10545,6 +10564,12 @@
   // bot command into a new execution endpoint: cards are sourced from the
   // existing registry/manifest and retain their canonical readiness state.
   const FEATURE_FAMILY_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"]);
+  // This is a deliberately closed navigation directory.  It is not built
+  // from remote catalogue, bridge or capability data, so the customer can
+  // orient within the product before detailed workflow metadata arrives.
+  // Every rendered destination must still resolve through the local member
+  // manifest below; a family key alone never becomes a route or permission.
+  const FEATURE_FAMILY_EXPLORER_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"]);
   const CATALOG_ENGINE_MODES = new Set(["web_native", "bot_companion", "guarded"]);
   const CATALOG_ENGINE_STATES = new Set(["ready", "guarded"]);
   const CATALOG_READINESS_STATES = new Set(["available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"]);
@@ -10571,6 +10596,23 @@
     };
     return icons[key] || ICONS.prompt;
   }
+
+  // Register the seven stable directory destinations explicitly so visual
+  // discovery never relies on a dynamic fallback route.  They remain
+  // navigation-only, and the destination independently verifies its signed
+  // session, route scope and actual workflow records.
+  FEATURE_FAMILY_EXPLORER_KEYS.forEach((familyKey) => {
+    const family = featureCatalogGroup(familyKey);
+    if (!family) return;
+    customerPage(`/features/${familyKey}`, family.title, family.description, featureFamilyIcon(familyKey), {
+      section: "AI Studio", type: "feature-family", featureFamily: familyKey,
+      layout: "feature-family", action: "none", status: "read_only",
+      notes: [
+        "Đây là điều hướng cho các workflow đã đăng ký, không phải endpoint chạy provider.",
+        "Card guarded giữ nguyên trạng thái cho đến khi Web Engine hoặc integration tùy chọn công bố adapter đã kiểm thử."
+      ]
+    });
+  });
 
   function safeCatalogRoute(value) {
     if (typeof value !== "string") return "";
@@ -10692,10 +10734,15 @@
     return "support";
   }
 
+  function isFeatureFamilyExplorerRoute(path) {
+    const normalized = normalizePath(path);
+    return FEATURE_FAMILY_EXPLORER_KEYS.some((familyKey) => normalized === `/features/${familyKey}`);
+  }
+
   function fallbackFeatureCatalog() {
     const seen = new Set();
     return Object.values(manifest).filter((page) => {
-      if (!page || page.access === "admin" || ["/features", "/login", "/register", "/password-recovery", "/onboarding", "/not-found"].includes(page.path) || seen.has(page.path)) return false;
+      if (!page || page.access === "admin" || isFeatureFamilyExplorerRoute(page.path) || ["/features", "/login", "/register", "/password-recovery", "/onboarding", "/not-found"].includes(page.path) || seen.has(page.path)) return false;
       seen.add(page.path);
       return true;
     }).map((page) => ({
@@ -10711,7 +10758,13 @@
   function customerCatalog(context) {
     const entries = (context.catalog || []).filter((entry) => {
       const route = catalogEntryRoute(entry);
-      return route && route !== "/features" && (!entry || typeof entry !== "object" || entry.kind !== "admin");
+      const page = route ? manifest[normalizePath(route)] : null;
+      return route
+        && (page && page.access === "member")
+        && page.access !== "admin"
+        && route !== "/features"
+        && !isFeatureFamilyExplorerRoute(route)
+        && (!entry || typeof entry !== "object" || entry.kind !== "admin");
     });
     return entries.length ? entries : fallbackFeatureCatalog();
   }
@@ -10777,6 +10830,18 @@
     return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Con số này chỉ phản ánh phạm vi Bot đã được phân loại vào nhóm. Route Web và engine vẫn được kiểm tra độc lập theo signed session và capability."))}</p></div></details>`;
   }
 
+  function renderFeatureFamilyExplorer() {
+    const cards = FEATURE_FAMILY_EXPLORER_KEYS.map((familyKey) => {
+      const route = `/features/${familyKey}`;
+      const page = manifest[normalizePath(route)];
+      const family = featureCatalogGroup(familyKey);
+      if (!family || !(page && page.access === "member")) return "";
+      return `<a class="portal-feature-family-explorer-card" href="${safeText(route)}"><span class="portal-feature-family-explorer-icon" aria-hidden="true">${portalIcon(featureFamilyIcon(familyKey))}</span><span class="portal-feature-family-explorer-copy"><strong>${safeText(featureCatalogGroupCopy(family, "title"))}</strong><span>${safeText(featureCatalogGroupCopy(family, "description"))}</span></span><span class="portal-feature-family-explorer-open">${safeText(featureCatalogText("familyExplorer.open", "Mở studio"))}<b aria-hidden="true">→</b></span></a>`;
+    }).filter(Boolean).join("");
+    if (!cards) return "";
+    return `<section class="portal-feature-family-explorer" aria-labelledby="portal-feature-family-explorer-title"><div class="portal-feature-family-explorer-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("familyExplorer.kicker", "AI Studio"))}</span><h2 id="portal-feature-family-explorer-title">${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}</h2><p>${safeText(featureCatalogText("familyExplorer.body", "Chọn một studio để xem các workflow đã được định tuyến cho công việc của bạn."))}</p></div></div><nav class="portal-feature-family-explorer-grid" aria-label="${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}">${cards}</nav></section>`;
+  }
+
   function renderModuleCards(context) {
     const quickRoutes = ["/chat", "/content/pack", "/image/create", "/image/edit", "/video/product", "/video/multiscene", "/voice/tts", "/voice/clone", "/music/create", "/subtitle", "/dubbing", "/documents"];
     const cards = quickRoutes.map((path) => manifest[path]).filter(Boolean).map((module) => moduleCard(module, context, "Mở workspace")).join("");
@@ -10822,7 +10887,11 @@
     const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${renderRouteEngineBoundary(context)}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ ràng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
+    // Discovery is the primary job of this page.  Keep the optional Studio
+    // handoff after search and intent selection so it helps a decided visitor
+    // continue, instead of interrupting someone who is trying to find a tool.
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${search}${renderFeatureFamilyExplorer()}${jumps}${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -18321,13 +18390,22 @@
       counts[state] = (counts[state] || 0) + 1;
       return counts;
     }, Object.create(null));
-    const otherFamilies = FEATURE_FAMILY_KEYS.map(featureCatalogGroup).filter((group) => group && group.key !== family.key);
-    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${otherFamilies.map((group) => `<a class="portal-feature-jump" href="/features/${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`;
+    const familyNavItems = FEATURE_FAMILY_KEYS.map((groupKey) => {
+      const group = featureCatalogGroup(groupKey);
+      const route = `/features/${groupKey}`;
+      const memberPage = manifest[normalizePath(route)];
+      if (!group || !(memberPage && memberPage.access === "member")) return "";
+      const label = safeText(featureCatalogGroupCopy(group, "title"));
+      return groupKey === family.key
+        ? `<span class="portal-feature-jump portal-feature-jump--current" aria-current="page">${label}</span>`
+        : `<a class="portal-feature-jump" href="${safeText(route)}">${label}</a>`;
+    }).join("");
+    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${familyNavItems}</nav>`;
     const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(featureCatalogText("family.summary.title", "Trạng thái workflow"))}</h2><p class="portal-card-subtitle">${safeText(featureCatalogText("family.summary.body", "Số liệu chỉ mô tả route đã được registry công bố; không suy đoán engine, quota hoặc output."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.mapped", "Đã định tuyến"))}</span><span class="portal-summary-value">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(entries.length) }))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.canonicalReady", "Sẵn sàng canonical"))}</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.guarded", "Đang guarded"))}</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
     const cards = entries.length
       ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })).join("")}</div>`
       : renderEmpty(featureCatalogText("family.emptyTitle", "Nhóm đang chờ registry"), featureCatalogText("family.emptyBody", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế."), "⌁");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${familyNav}${cards}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${familyNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${cards}</section></article>`;
   }
 
   function normalizeCatalogSearch(value) {
@@ -18404,8 +18482,105 @@
     return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
   }
 
+  // Dashboard decision state comes only from Web-owned libraries. Keep it
+  // separate from the canonical dashboard lane so a Core Bridge delay can
+  // never affect whether the customer sees their Project/Draft journey.
+  function workspaceDraftReadState(context) {
+    const candidate = String(context && context.workspaceDraftReadState || "guarded");
+    return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
+  }
+
+  function dashboardWebWorkReadState(context) {
+    const projectState = projectCenterReadState(context);
+    const draftState = workspaceDraftReadState(context);
+    if (projectState === "loading" || draftState === "loading") return "loading";
+    if (projectState !== "ready" || draftState !== "ready") return "unavailable";
+    return "ready";
+  }
+
   function dashboardText(key, params) {
     return safeText(uiText(`dashboard.${key}`, "", params));
+  }
+
+  // A Dashboard decision is a presentation-only choice between routes that
+  // already exist in the signed workspace. It deliberately considers only
+  // Web-owned project/draft metadata and the saved setup state. Canonical
+  // wallet, job, asset, ticket, provider and capability information remains
+  // in its dedicated read lane below.
+  function dashboardDecision(context) {
+    const workspaceSetup = context && context.workspaceSetup && typeof context.workspaceSetup === "object"
+      ? context.workspaceSetup
+      : {};
+    const workspaceSetupReadState = workspaceSetup.readState === "read_only" ? "read_only" : "unavailable";
+    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object"
+      ? workspaceSetup.profile
+      : {};
+    const projects = (Array.isArray(context && context.projects) ? context.projects : [])
+      .filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
+    const drafts = dashboardActiveDrafts(context);
+    const webWorkState = dashboardWebWorkReadState(context);
+
+    if (webWorkState === "loading") return { kind: "loading" };
+    if (webWorkState !== "ready") return { kind: "unavailable" };
+
+    if (!projects.length && !drafts.length) {
+      if (workspaceSetupReadState !== "read_only") return { kind: "unavailable" };
+      return { kind: setupProfile.setup_state === "completed" ? "first_session_ready" : "first_session" };
+    }
+    if (drafts.length) {
+      return { kind: "continue_draft", href: "/workspace", secondaryHref: "/features" };
+    }
+    return { kind: "continue_project", href: "/projects", secondaryHref: "/features" };
+  }
+
+  // This is a closed presentation map for the signed customer's saved
+  // Workspace Setup choices. A saved value never becomes a route, label or
+  // icon by itself: it must resolve through this local map and the current
+  // local navigation manifest before it can render. Each destination still
+  // enforces signed-session access on the server.
+  const DASHBOARD_FOCUS_WORKSPACE_SPECS = Object.freeze([
+    Object.freeze({ key: "projects", route: "/projects", icon: ICONS.dashboard }),
+    Object.freeze({ key: "content", route: "/content-studio", icon: ICONS.prompt }),
+    Object.freeze({ key: "image", route: "/image-studio", icon: ICONS.image }),
+    Object.freeze({ key: "voice", route: "/voice-studio", icon: ICONS.voice }),
+    Object.freeze({ key: "music", route: "/music/library", icon: ICONS.music }),
+    Object.freeze({ key: "subtitle", route: "/subtitle-studio", icon: ICONS.subtitle }),
+    Object.freeze({ key: "documents", route: "/document-workspace", icon: ICONS.document }),
+    Object.freeze({ key: "automation", route: "/workboard", icon: ICONS.workboard })
+  ]);
+
+  function dashboardFocusWorkspaces(context) {
+    const workspaceSetup = context && context.workspaceSetup && typeof context.workspaceSetup === "object"
+      ? context.workspaceSetup
+      : {};
+    const profile = workspaceSetup.profile && typeof workspaceSetup.profile === "object"
+      ? workspaceSetup.profile
+      : {};
+    if (workspaceSetup.readState !== "read_only" || profile.setup_state !== "completed") return [];
+    const focusAreas = Array.isArray(profile.focus_areas) ? profile.focus_areas : [];
+    if (!focusAreas.length) return [];
+
+    const specsByKey = new Map(DASHBOARD_FOCUS_WORKSPACE_SPECS.map((spec) => [spec.key, spec]));
+    const seen = new Set();
+    return focusAreas
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter((key) => specsByKey.has(key) && !seen.has(key) && seen.add(key))
+      .slice(0, 3)
+      .map((key) => {
+        const spec = specsByKey.get(key);
+        const route = spec.route;
+        const page = manifest[normalizePath(route)];
+        if (!page || page.access === "admin") return null;
+        if (page.access !== "member") return null;
+        return spec;
+      })
+      .filter(Boolean);
+  }
+
+  function renderDashboardFocusDock(context) {
+    const workspaces = dashboardFocusWorkspaces(context);
+    if (!workspaces.length) return "";
+    return `<section class="portal-dashboard-focus-dock" aria-labelledby="dashboard-focus-dock-title"><div class="portal-dashboard-focus-dock-heading"><div><span class="portal-section-kicker">${dashboardText("focus.kicker")}</span><h3 id="dashboard-focus-dock-title">${dashboardText("focus.title")}</h3><p>${dashboardText("focus.body")}</p></div><a class="portal-button portal-button--quiet portal-dashboard-focus-adjust" href="/workspace/setup">${dashboardText("focus.adjust")}</a></div><div class="portal-dashboard-focus-grid">${workspaces.map((workspace) => `<a class="portal-dashboard-focus-card" href="${safeText(workspace.route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(workspace.icon)}</span><span class="portal-dashboard-focus-copy"><strong>${dashboardText(`focus.${workspace.key}.title`)}</strong><span>${dashboardText(`focus.${workspace.key}.body`)}</span></span><span class="portal-dashboard-focus-open">${dashboardText("focus.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
   }
 
   // The delivery helpers below intentionally stay local to Dashboard. The
@@ -18456,11 +18631,6 @@
   function renderDashboardWorkspaceSummary(context) {
     const readState = dashboardReadState(context);
     const name = displayName(context);
-    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
-    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
-    const setupActionLabel = setupProfile.setup_state === "completed"
-      ? dashboardText("summary.setupAdjust")
-      : dashboardText("summary.setup");
     const drafts = dashboardActiveDrafts(context);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
@@ -18475,25 +18645,43 @@
         : readState === "failed"
           ? dashboardText("summary.canonicalFailed")
           : dashboardText("summary.canonicalGuarded");
+    const webWorkState = dashboardWebWorkReadState(context);
+    const webWorkReady = webWorkState === "ready";
+    const projectCount = webWorkReady ? String(projects.length) : "—";
+    const draftCount = webWorkReady ? String(drafts.length) : "—";
+    const decision = dashboardDecision(context);
+    const summaryActions = ["continue_draft", "continue_project"].includes(decision.kind)
+      ? `<div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="${safeText(decision.href)}"><span>${dashboardText(`summary.decision.${decision.kind}.action`)}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="${safeText(decision.secondaryHref)}">${dashboardText(`summary.decision.${decision.kind}.secondary`)}</a></div>`
+      : "";
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
-      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects"><span>${dashboardText("summary.openProjects")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="/features">${dashboardText("summary.createWorkflow")}</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${setupActionLabel}</a></div></div>
-      <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(String(projects.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(String(drafts.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p>${summaryActions}</div>
+      <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(projectCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(draftCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
     </section>`;
   }
 
   function renderDashboardRecentDrafts(context) {
     const drafts = dashboardActiveDrafts(context).slice(0, 3);
-    const body = drafts.length
-      ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
-      : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
+    const readState = workspaceDraftReadState(context);
+    const body = readState === "loading"
+      ? renderEmpty(dashboardText("drafts.loadingTitle"), dashboardText("drafts.loadingBody"), ICONS.refresh)
+      : readState !== "ready"
+        ? renderEmpty(dashboardText("drafts.unavailableTitle"), dashboardText("drafts.unavailableBody"), ICONS.security)
+        : drafts.length
+          ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+          : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
     return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/workspace"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 3);
-    const body = projects.length
-      ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
-      : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
+    const readState = projectCenterReadState(context);
+    const body = readState === "loading"
+      ? renderEmpty(dashboardText("projects.loadingTitle"), dashboardText("projects.loadingBody"), ICONS.refresh)
+      : readState !== "ready"
+        ? renderEmpty(dashboardText("projects.unavailableTitle"), dashboardText("projects.unavailableBody"), ICONS.security)
+        : projects.length
+          ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+          : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
     return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h2 class="portal-card-title">${dashboardText("projects.title")}</h2><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
@@ -18502,16 +18690,30 @@
     // wizard. A first Web session can author independently; Telegram remains
     // a companion connection only when the customer chooses canonical Bot
     // data such as wallet, jobs and delivered assets.
-    const hasProjects = (Array.isArray(context.projects) ? context.projects : []).some((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
-    const hasDrafts = dashboardActiveDrafts(context).length > 0;
-    if (hasProjects || hasDrafts) return "";
-    const linked = telegramIdentityLinked(context);
-    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
-    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
-    const setupPending = workspaceSetup.readState === "read_only" && setupProfile.setup_state === "not_started";
-    const defaultSteps = [
-      {
+    const decision = dashboardDecision(context);
+    if (!["first_session", "first_session_ready"].includes(decision.kind)) return "";
+    const setupComplete = decision.kind === "first_session_ready";
+    const setupStep = setupComplete
+      ? {
         number: "01",
+        eyebrow: dashboardText("guide.setupReview.eyebrow"),
+        title: dashboardText("guide.setupReview.title"),
+        description: dashboardText("guide.setupReview.body"),
+        href: "/workspace/setup",
+        action: dashboardText("guide.setupReview.action")
+      }
+      : {
+        number: "01",
+        eyebrow: dashboardText("guide.setup.eyebrow"),
+        title: dashboardText("guide.setup.title"),
+        description: dashboardText("guide.setup.body"),
+        href: "/workspace/setup",
+        action: dashboardText("guide.setup.action")
+      };
+    const steps = [
+      setupStep,
+      {
+        number: "02",
         eyebrow: dashboardText("guide.project.eyebrow"),
         title: dashboardText("guide.project.title"),
         description: dashboardText("guide.project.body"),
@@ -18519,59 +18721,14 @@
         action: dashboardText("guide.project.action")
       },
       {
-        number: "02",
+        number: "03",
         eyebrow: dashboardText("guide.studio.eyebrow"),
         title: dashboardText("guide.studio.title"),
         description: dashboardText("guide.studio.body"),
         href: "/features",
         action: dashboardText("guide.studio.action")
-      },
-      linked
-        ? {
-          number: "03",
-          eyebrow: dashboardText("guide.security.eyebrow"),
-          title: dashboardText("guide.security.title"),
-          description: dashboardText("guide.security.body"),
-          href: "/account/security",
-          action: dashboardText("guide.security.action")
-        }
-        : {
-          number: "03",
-          eyebrow: dashboardText("guide.optional.eyebrow"),
-          title: dashboardText("guide.optional.title"),
-          description: dashboardText("guide.optional.body"),
-          href: "/onboarding",
-          action: dashboardText("guide.optional.action")
-        }
+      }
     ];
-    const steps = setupPending
-      ? [
-          {
-            number: "01",
-            eyebrow: dashboardText("guide.setup.eyebrow"),
-            title: dashboardText("guide.setup.title"),
-            description: dashboardText("guide.setup.body"),
-            href: "/workspace/setup",
-            action: dashboardText("guide.setup.action")
-          },
-          {
-            number: "02",
-            eyebrow: dashboardText("guide.project.eyebrow"),
-            title: dashboardText("guide.project.title"),
-            description: dashboardText("guide.project.body"),
-            href: "/projects",
-            action: dashboardText("guide.project.action")
-          },
-          {
-            number: "03",
-            eyebrow: dashboardText("guide.studio.eyebrow"),
-            title: dashboardText("guide.studio.title"),
-            description: dashboardText("guide.studio.body"),
-            href: "/features",
-            action: dashboardText("guide.studio.action")
-          }
-        ]
-      : defaultSteps;
     return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${dashboardText("guide.kicker")}</span><h2 id="dashboard-start-guide-title">${dashboardText("guide.title")}</h2><p>${dashboardText("guide.body")}</p></div><span class="portal-start-guide-note">${dashboardText("guide.note")}</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em><span>${safeText(step.action)}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
@@ -18611,7 +18768,7 @@
     // when the separate canonical reader is loading, guarded or failed.
     // It never substitutes zeroes, stale records or an invented success for
     // wallet/job/asset/ticket data that the Core Bridge did not confirm.
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div><div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -18625,8 +18782,6 @@
     const deliveryReady = assets.filter((item) => item && item.download_ready === true && item.delivery_ready === true).length;
     const needsReview = jobs.filter((item) => ["failed", "failed_no_charge"].includes(jobStatus(item))).length;
     const waitingUser = tickets.filter((item) => canonicalTicketStatus(item) === "waiting_user").length;
-    const actionableCount = processing + deliveryReady + needsReview + waitingUser;
-    if (!actionableCount) return "";
     const cards = [
       {
         icon: ICONS.jobs,
@@ -18665,7 +18820,15 @@
         action: dashboardText("actionCenter.tickets.action")
       }
     ];
-    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("actionCenter.kicker")}</span><h2 id="workspace-action-center-title">${dashboardText("actionCenter.title")}</h2><p>${dashboardText("actionCenter.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("actionCenter.openAll")}</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3><p>${card.detail}</p><span class="portal-action-card-link">${card.action} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
+    const activeCards = cards.filter((card) => card.count > 0);
+    if (!activeCards.length) return "";
+    const actionCenterTarget = activeCards.length && activeCards.every((card) => card.href === activeCards[0].href)
+      ? activeCards[0].href
+      : "";
+    const headerAction = actionCenterTarget
+      ? `<a class="portal-button portal-button--quiet" href="${safeText(actionCenterTarget)}">${dashboardText("actionCenter.openAll")}</a>`
+      : "";
+    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("actionCenter.kicker")}</span><h2 id="workspace-action-center-title">${dashboardText("actionCenter.title")}</h2><p>${dashboardText("actionCenter.body")}</p></div>${headerAction}</div><div class="portal-action-center-grid">${activeCards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3><p>${card.detail}</p><span class="portal-action-card-link">${card.action} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
   }
 
   function renderStudioLaunchpad(context) {
@@ -18746,15 +18909,15 @@
 
   function renderMediaStudio(page, context) {
     const steps = [
-      { number: "01", icon: ICONS.prompt, title: "Brief & storyboard", text: "Bắt đầu bằng content pack hoặc storyboard để làm rõ câu chuyện, cảnh và CTA trước khi tạo media.", href: "/content/storyboard", action: "Lập storyboard" },
-      { number: "02", icon: ICONS.image, title: "Visual & reference", text: "Tạo ảnh hoặc chuẩn bị image-to-image với asset được staging/ownership-check theo workflow riêng.", href: "/image/create", action: "Mở Image Studio" },
-      { number: "03", icon: ICONS.video, title: "Video project", text: "Chọn video sản phẩm, quick video hoặc multiscene; estimate và số cảnh do Bot canonical xác nhận.", href: "/video/product", action: "Mở Video Studio" },
-      { number: "04", icon: ICONS.voice, title: "Voice workspace", text: "Chuẩn bị TTS hoặc Voice Vault trong workflow có consent và policy riêng.", href: "/voice/tts", action: "Chuẩn bị voice" },
-      { number: "05", icon: ICONS.music, title: "Audio Production Hub", text: "Điều phối music/SFX brief và audio Asset Vault reference trong board app-first. Đây là authoring-only, không phải music generator hoặc player.", href: "/audio-hub", action: "Mở Audio Hub" },
-      { number: "06", icon: ICONS.subtitle, title: "Subtitle & finalization", text: "Dùng subtitle/dubbing rồi mở finalization. Mux, watermark, export và delivery vẫn cần adapter Bot riêng.", href: "/video/add-ons", action: "Mở finalization" }
+      { key: "discover", number: "01", icon: ICONS.prompt, href: "/features" },
+      { key: "brief", number: "02", icon: ICONS.prompt, href: "/content/storyboard" },
+      { key: "plan", number: "03", icon: ICONS.video, href: "/video/product" },
+      { key: "review", number: "04", icon: ICONS.check, href: "/approvals" },
+      { key: "jobs", number: "05", icon: ICONS.jobs, href: "/jobs" },
+      { key: "assets", number: "06", icon: ICONS.assets, href: "/assets" }
     ];
-    const cards = steps.map((step) => `<article class="portal-finalization-card"><div class="portal-finalization-card-head"><span class="portal-finalization-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><h3>${safeText(step.title)}</h3><p>${safeText(step.text)}</p><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(step.action)} <span aria-hidden="true">→</span></a></article>`).join("");
-    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-media-studio-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2>Điều phối workflow, không giả project</h2><p>Media Studio phản chiếu các bước media factory/creative flow của Bot bằng đường đi rõ ràng giữa các workspace Web đã đăng ký. Mỗi bước vẫn tự giữ input, quote, confirmation và quyền sở hữu riêng.</p><div class="portal-state-meta"><span>Không tạo job tại browser</span><span>Không suy đoán output</span><span>Không ghép file/URL tự do</span></div></div></div></section><section class="portal-finalization-grid" aria-label="Luồng Media Studio">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Sau khi xác nhận</h2><p class="portal-card-subtitle">Job Center và Assets là nơi duy nhất theo dõi status/delivery canonical sau khi một adapter Bot đã tạo job hợp lệ.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center</a><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản</a><a class="portal-button portal-button--primary" href="/features">Khám phá workflow</a></div></section></article>`;
+    const cards = steps.map((step) => `<article class="portal-media-studio-step"><div class="portal-media-studio-step-head"><span class="portal-media-studio-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${portalIcon(step.icon)}</span></div><div class="portal-media-studio-step-copy"><span class="portal-media-studio-eyebrow">${safeText(mediaStudioText(`step.${step.key}.eyebrow`, step.number))}</span><h3>${safeText(mediaStudioText(`step.${step.key}.title`, step.key))}</h3><p>${safeText(mediaStudioText(`step.${step.key}.body`, ""))}</p></div><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(mediaStudioText(`step.${step.key}.action`, "Open"))}<span aria-hidden="true">→</span></a></article>`).join("");
+    return `<article class="portal-page portal-media-studio-shell">${renderHero(page, context)}<section class="portal-media-studio-intro portal-card portal-card-pad"><div class="portal-media-studio-intro-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div><h2>${safeText(mediaStudioText("intro.title", "Điều phối workflow, không giả project"))}</h2><p>${safeText(mediaStudioText("intro.body", ""))}</p><div class="portal-media-studio-meta"><span>${safeText(mediaStudioText("intro.meta.routes", ""))}</span><span>${safeText(mediaStudioText("intro.meta.boundary", ""))}</span><span>${safeText(mediaStudioText("intro.meta.truth", "Không tạo job tại browser"))}</span></div></div></section><section class="portal-media-studio-flow" aria-label="${safeText(mediaStudioText("flow.label", "Media Studio flow"))}"><div class="portal-media-studio-flow-heading"><h2>${safeText(mediaStudioText("flow.label", "Media Studio flow"))}</h2><span>${safeText(mediaStudioText("page.description", ""))}</span></div><div class="portal-media-studio-grid">${cards}</div></section><section class="portal-card portal-card-pad portal-media-studio-handoff"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(mediaStudioText("handoff.title", "Your continuation point"))}</h2><p class="portal-card-subtitle">${safeText(mediaStudioText("handoff.body", ""))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">${safeText(mediaStudioText("action.jobs", "Go to Job Center"))}</a><a class="portal-button portal-button--quiet" href="/assets">${safeText(mediaStudioText("action.assets", "Go to assets"))}</a><a class="portal-button portal-button--primary" href="/features">${safeText(mediaStudioText("action.explore", "Explore workflows"))}</a></div></section></article>`;
   }
 
   function canonicalShortText(value, maximum) {
@@ -26642,14 +26805,35 @@
       : `<a class="portal-button portal-button--quiet" href="/login">${text("cta.signIn")}</a>`;
     const studioHref = (route) => signedIn ? route : `/login?next=${encodeURIComponent(route)}`;
     const studios = [
-      { icon: ICONS.chat, key: "content", tone: "cyan", href: "/chat" },
-      { icon: ICONS.image, key: "image", tone: "blue", href: "/image/create" },
-      { icon: ICONS.video, key: "video", tone: "violet", href: "/video/create" },
-      { icon: ICONS.voice, key: "audio", tone: "amber", href: "/voice/tts" },
-      { icon: ICONS.subtitle, key: "subtitle", tone: "rose", href: "/subtitle" },
-      { icon: ICONS.document, key: "document", tone: "mint", href: "/documents" }
+      { icon: ICONS.chat, key: "content", tone: "cyan", href: "/features/content" },
+      { icon: ICONS.image, key: "image", tone: "blue", href: "/features/image" },
+      { icon: ICONS.video, key: "video", tone: "violet", href: "/features/video" },
+      { icon: ICONS.voice, key: "audio", tone: "amber", href: "/features/voice" },
+      { icon: ICONS.subtitle, key: "subtitle", tone: "rose", href: "/features/subtitle" },
+      { icon: ICONS.document, key: "document", tone: "mint", href: "/features/documents" }
     ];
-    const studioCards = studios.map((studio, index) => `<a class="portal-landing-studio portal-landing-studio--${safeText(studio.tone)}" data-landing-pointer="studio" data-landing-index="${safeText(String(index))}" href="${safeText(studioHref(studio.href))}"><span class="portal-landing-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span><strong>${text(`studio.${studio.key}.title`)}</strong><span>${text(`studio.${studio.key}.body`)}</span><em><span>${text("studios.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></em></a>`).join("");
+    const featureStrip = [
+      { icon: ICONS.prompt, key: "content" },
+      { icon: ICONS.shield, key: "security" },
+      { icon: ICONS.check, key: "delivery" }
+    ].map((item) => `<article><span aria-hidden="true">${portalIcon(item.icon)}</span><div><strong>${text(`featureStrip.${item.key}.title`)}</strong><p>${text(`featureStrip.${item.key}.body`)}</p></div></article>`).join("");
+    const spotlight = [
+      {
+        key: "content",
+        sectionId: "content-workspace",
+        icon: ICONS.prompt,
+        href: "/content-studio",
+        preview: `<div class="portal-landing-spotlight-content-preview" aria-hidden="true"><span></span><span></span><span></span><i></i><i></i><i></i></div>`
+      },
+      {
+        key: "audio",
+        sectionId: "audio-workspace",
+        icon: ICONS.music,
+        href: "/media-workspace",
+        preview: `<div class="portal-landing-spotlight-audio-preview" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><i></i></div>`
+      }
+    ].map((item) => `<article class="portal-landing-spotlight portal-landing-spotlight--${safeText(item.key)}" id="${safeText(item.sectionId)}"><div class="portal-landing-spotlight-copy"><span class="portal-landing-kicker">${text(`spotlight.${item.key}.kicker`)}</span><h2>${text(`spotlight.${item.key}.title`)}</h2><p>${text(`spotlight.${item.key}.body`)}</p><a class="portal-button portal-button--quiet" href="${safeText(studioHref(item.href))}"><span aria-hidden="true">${portalIcon(item.icon)}</span><span>${text(`spotlight.${item.key}.cta`)}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div><div class="portal-landing-spotlight-preview" data-landing-pointer="spotlight">${item.preview}</div></article>`).join("");
+    const studioCards = studios.map((studio, index) => `<a class="portal-landing-studio portal-landing-studio--${safeText(studio.tone)}" data-landing-pointer="studio" data-landing-index="${safeText(String(index))}" href="${safeText(studioHref(studio.href))}"><span class="portal-landing-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span><span class="portal-landing-studio-index" aria-hidden="true">${safeText(String(index + 1).padStart(2, "0"))}</span><strong>${text(`studio.${studio.key}.title`)}</strong><span>${text(`studio.${studio.key}.body`)}</span><em><span>${text("studios.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></em></a>`).join("");
     const workflowSteps = ["brief", "plan", "confirm", "delivery"];
     const workflowMarkup = workflowSteps.map((step, index) => `<li><span aria-hidden="true">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${text(`workflow.${step}.title`)}</strong><p>${text(`workflow.${step}.body`)}</p></div></li>`).join("");
     const trustCards = [
@@ -26661,10 +26845,12 @@
     const localeMarkup = languageLinks.map((item) => `<a class="portal-landing-locale-link" href="${item.href}"${locale === item.code ? ' aria-current="true"' : ""}>${item.label}</a>`).join("");
     return `<article class="portal-landing portal-landing-public-container" aria-label="TOAN AAS">
       <header class="portal-landing-header">
-        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#studios">${text("nav.features")}</a><a href="#workflow">${text("nav.workflow")}</a><a href="#trust">${text("nav.trust")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>
+        <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#features">${text("nav.features")}</a><a href="#content-workspace">${text("nav.content")}</a><a href="#audio-workspace">${text("nav.audio")}</a><a href="#studios">${text("nav.tools")}</a><a href="#workflow">${text("nav.workflow")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>
       </header>
-      <section class="portal-landing-hero" data-landing-layer="hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${text("hero.title")}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}<button class="portal-button portal-button--quiet portal-landing-motion-replay" type="button" data-landing-motion-replay aria-label="${text("motion.replay")}"><span aria-hidden="true">${portalIcon(ICONS.refresh)}</span><span>${text("motion.replay")}</span></button></div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><aside class="portal-landing-preview" data-landing-pointer="preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside></section>
-      <section class="portal-landing-section" id="studios" data-landing-layer="studios"><div class="portal-landing-section-heading"><span>${text("studios.kicker")}</span><h2>${text("studios.title")}</h2><p>${text("studios.body")}</p></div><div class="portal-landing-studios">${studioCards}</div></section>
+      <section class="portal-landing-hero" data-landing-layer="hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${text("hero.title")}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}<button class="portal-button portal-button--quiet portal-landing-motion-replay" type="button" data-landing-motion-replay aria-label="${text("motion.replay")}"><span aria-hidden="true">${portalIcon(ICONS.refresh)}</span><span>${text("motion.replay")}</span></button></div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><div class="portal-landing-hero-stage"><aside class="portal-landing-preview portal-landing-product-surface" data-landing-pointer="preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar portal-landing-product-surface-head"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><p class="portal-landing-product-surface-copy">${text("hero.productBody")}</p><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps portal-landing-product-surface-flow"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside><p class="portal-landing-hero-stage-label"><span aria-hidden="true">${portalIcon(ICONS.check)}</span>${text("hero.productLabel")}</p></div></section>
+      <section class="portal-landing-feature-strip" id="features" data-landing-layer="features" aria-label="${text("studios.title")}">${featureStrip}</section>
+      <section class="portal-landing-spotlights" data-landing-layer="spotlights" aria-label="${text("studios.title")}">${spotlight}</section>
+      <section class="portal-landing-section portal-landing-discovery-rail" id="studios" data-landing-layer="studios"><div class="portal-landing-discovery-intro"><div class="portal-landing-section-heading"><span>${text("discovery.label")}</span><h2>${text("studios.title")}</h2><p>${text("studios.body")}</p></div><a class="portal-button portal-button--quiet portal-landing-discovery-cta" href="${safeText(studioHref("/features"))}"><span>${text("discovery.cta")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div><div class="portal-landing-studios portal-landing-discovery-list">${studioCards}</div></section>
       <section class="portal-landing-workflow" id="workflow" data-landing-layer="workflow"><div><span class="portal-landing-kicker">${text("workflow.kicker")}</span><h2>${text("workflow.title")}</h2><p>${text("workflow.body")}</p></div><ol>${workflowMarkup}</ol></section>
       <section class="portal-landing-trust" id="trust" data-landing-layer="trust"><div class="portal-landing-trust-copy"><span>${text("trust.kicker")}</span><h2>${text("trust.title")}</h2><p>${text("trust.body")}</p></div><div class="portal-landing-trust-grid">${trustMarkup}</div></section>
       <section class="portal-landing-final" data-landing-layer="final"><div><h2>${text("final.title")}</h2><p>${text("final.body")}</p></div>${primaryAction}</section>
@@ -26900,8 +27086,12 @@
     return index >= 0 && index < WORKBOARD_BOARD_STATES.length - 1 ? WORKBOARD_BOARD_STATES[index + 1] : "";
   }
 
-  function workboardTabs(active) {
-    return '<nav class="portal-workboard-tabs" aria-label="Điều hướng Workboard"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>Kanban</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>Danh sách</a><a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ Công việc mới</a></nav>';
+  function workboardTabs(active, context, allowCreate) {
+    const canCreate = allowCreate === true;
+    const create = canCreate
+      ? '<a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ Công việc mới</a>'
+      : '<span class="portal-workboard-tabs-new portal-workboard-tabs-new--disabled" aria-disabled="true">Chỉ xem</span>';
+    return '<nav class="portal-workboard-tabs" aria-label="Điều hướng Workboard"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>Kanban</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>Danh sách</a>' + create + '</nav>';
   }
 
   function workboardView() {
@@ -26980,11 +27170,33 @@
     return '<nav class="portal-workboard-pagination" aria-label="Phân trang Workboard"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
+  function workboardRecovery(readState, title, description, backHref) {
+    const state = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    const copy = {
+      loading: "Đang chờ server xác minh dữ liệu Workboard của tài khoản hiện tại. Không dùng số 0 thay cho dữ liệu chưa xác minh.",
+      failed: "Chưa thể nạp Workboard an toàn. Hãy thử lại để yêu cầu lại projection owner-scoped; dữ liệu cũ không được giữ trong browser.",
+      guarded: "Workboard đang được bảo vệ. Đăng nhập bằng signed session và chờ máy chủ cấp quyền cho account hiện tại."
+    }[state];
+    const body = description || copy;
+    const retry = state === "failed" || state === "loading"
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Thử lại</button>'
+      : '';
+    const destination = String(backHref || "/dashboard").startsWith("/") ? String(backHref || "/dashboard") : "/dashboard";
+    const destinationLabel = destination === "/workboard" ? "Về Workboard" : "Về Dashboard";
+    const destinationHref = destination === "/workboard" ? 'href="/workboard"' : 'href="/dashboard"';
+    return '<section class="portal-card portal-card-pad portal-workboard-recovery" data-workboard-read-state="' + safeText(state) + '"><div class="portal-state" data-state="' + safeText(state) + '"><span class="portal-state-icon" aria-hidden="true">' + safeText(ICONS.workboard) + '</span><div><h2>' + safeText(title || "Workboard chưa sẵn sàng") + '</h2><p>' + safeText(body) + '</p><p class="portal-form-note">Trạng thái này không phải là danh sách rỗng và không tạo task thay thế.</p></div></div><div class="portal-form-footer">' + retry + '<a class="portal-button portal-button--primary" ' + destinationHref + '>' + destinationLabel + '</a></div></section>';
+  }
+
   function renderWorkboardOverview(page, context, view) {
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
     if (!canView) {
-      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view) + '<section class="portal-card portal-card-pad">' + renderEmpty("Workboard đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại. Portal không hiển thị dữ liệu cũ từ cache hoặc browser storage.", ICONS.workboard) + "</section></article>";
+      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery("guarded", "Workboard đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại. Portal không hiển thị dữ liệu cũ từ cache hoặc browser storage.") + "</article>";
+    }
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.workboardReadState || "")) ? String(context.workboardReadState) : "guarded";
+    if (readState !== "ready") {
+      const title = readState === "loading" ? "Đang nạp Workboard" : (readState === "failed" ? "Không thể nạp Workboard" : "Workboard đang được bảo vệ");
+      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery(readState, title) + "</article>";
     }
     const items = workboardItems(context);
     const listing = workboardListing(context);
@@ -27000,13 +27212,24 @@
       + '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ yêu cầu lại API owner-scoped trong phiên trang hiện tại; không lưu vào URL, Telegram hay browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-filter-clear" data-portal-route="/workboard">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm công việc</button></div></div></form>';
     const content = view === "list"
       ? '<section class="portal-card portal-card-pad portal-workboard-library"><div class="portal-card-header"><div><span class="portal-section-kicker">Work item library</span><h2 class="portal-card-title">' + (workboardFilterIsActive(filter) ? "Kết quả Workboard" : "Danh sách công việc") + '</h2><p class="portal-card-subtitle">Mỗi hàng là metadata server-owned; mở item để chỉnh revision, trạng thái, checklist và history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + listFilter + renderWorkboardListRows(items, filter) + renderWorkboardPagination(listing) + "</section>"
-      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Kanban board</span><h2 class="portal-card-title">Luồng công việc</h2><p class="portal-card-subtitle">Di chuyển trạng thái luôn dùng revision hiện tại do server xác minh; browser không suy đoán kết quả hoặc lưu board riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty(context.workboardReadState === "loading" ? "Đang nạp Workboard" : "Chưa có công việc", context.workboardReadState === "failed" ? "Chưa thể nạp Workboard an toàn. Hãy làm mới để yêu cầu lại dữ liệu signed." : "Tạo work item đầu tiên để bắt đầu theo dõi Kanban riêng tư.", ICONS.workboard)) + "</section>";
-    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">Private planning workspace</span><h2>Giữ mọi việc quan trọng trong một luồng rõ ràng</h2><p>Workboard chỉ tổ chức công việc, deadline, reference Web-native và checklist. Nó không khởi chạy provider, Bot, payment, job hay publish action.</p><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/workboard/new"' + (canCreate ? "" : ' aria-disabled="true"') + '>+ Tạo công việc</a><a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + (view === "list" ? "Xem Kanban" : "Xem danh sách") + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>Tổng công việc</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>Đang mở</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>Hoàn tất</dd></div></dl></section>" + content + "</article>";
+      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Kanban board</span><h2 class="portal-card-title">Luồng công việc</h2><p class="portal-card-subtitle">Di chuyển trạng thái luôn dùng revision hiện tại do server xác minh; browser không suy đoán kết quả hoặc lưu board riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty("Chưa có công việc", "Tạo work item đầu tiên để bắt đầu theo dõi Kanban riêng tư.", ICONS.workboard)) + "</section>";
+    const createAction = canCreate
+      ? '<a class="portal-button portal-button--primary" href="/workboard/new">+ Tạo công việc</a>'
+      : '<span class="portal-button portal-button--quiet portal-workboard-create-disabled" aria-disabled="true">Chỉ xem</span>';
+    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, canCreate) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">Private planning workspace</span><h2>Giữ mọi việc quan trọng trong một luồng rõ ràng</h2><p>Workboard chỉ tổ chức công việc, deadline, reference Web-native và checklist. Nó không khởi chạy provider, Bot, payment, job hay publish action.</p><div class="portal-inline-actions">' + createAction + '<a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + (view === "list" ? "Xem Kanban" : "Xem danh sách") + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>Tổng công việc</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>Đang mở</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>Hoàn tất</dd></div></dl></section>" + content + "</article>";
   }
 
   function renderWorkboardNew(page, context) {
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
-    return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new")
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.workboardReadState || "")) ? String(context.workboardReadState) : "guarded";
+    const readyForCreate = canCreate && readState === "ready";
+    if (!readyForCreate) {
+      const description = readState === "loading"
+        ? "Server đang xác minh projection Workboard. Hãy chờ hoàn tất rồi thử lại; form chưa được mở để tránh gửi thiếu context."
+        : (readState === "failed" ? "Workboard chưa nạp thành công. Hãy quay lại và thử lại projection owner-scoped trước khi tạo task." : "Tài khoản hiện tại chưa có quyền tạo work item hoặc Workboard đang được bảo vệ.");
+      return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, false) + workboardRecovery(readState, "Không thể tạo công việc lúc này", description, "/workboard") + "</article>";
+    }
+    return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, true)
       + '<div class="portal-workboard-editor-layout"><section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">New work item</span><h2 class="portal-card-title">Bắt đầu với một việc rõ ràng</h2><p class="portal-card-subtitle">Title, ưu tiên, deadline, reference và checklist sẽ được server lưu theo signed session.</p></div>' + badge(canCreate ? "ready" : "guarded")
       + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-create" data-portal-route="/workboard/new" novalidate>'
       + renderFields(workboardFields(true), canCreate, context, workboardFormValues({}, true), "workboard-create")
@@ -27131,7 +27354,7 @@
     const item = detail.item && typeof detail.item === "object" && validWorkboardId(detail.item.id) && String(detail.item.id) === String(page.recordId || "") ? detail.item : null;
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     if (!canView || !item) {
-      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("") + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? "Không tìm thấy work item" : "Workboard đang được bảo vệ", canView ? "Server cần xác minh owner trước khi hiển thị item, checklist và history. Portal không dùng cache hoặc browser fallback." : "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại.", ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">Về Workboard</a></div></section></article>';
+      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, false) + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? "Không tìm thấy work item" : "Workboard đang được bảo vệ", canView ? "Server cần xác minh owner trước khi hiển thị item, checklist và history. Portal không dùng cache hoặc browser fallback." : "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại.", ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">Về Workboard</a></div></section></article>';
     }
     const route = String(page.routePath || page.path || "/workboard");
     const state = workboardState(item.state);
@@ -27147,7 +27370,8 @@
     const editor = '<section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Item editor</span><h2 class="portal-card-title">Nội dung & reference</h2><p class="portal-card-subtitle">Lưu thay đổi tạo revision mới. Nếu item đã thay đổi ở nơi khác, server sẽ yêu cầu bạn nạp lại trước khi ghi đè.</p></div>' + badge(state) + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + " novalidate>" + renderFields(workboardFields(false), canUpdate, context, workboardFormValues(item, false), "workboard-update") + renderWorkboardReferencePicker(context, item, canUpdate) + '<div class="portal-form-footer"><span class="portal-form-note">Checklist dùng endpoint riêng để giữ tiến độ rõ ràng. Không có URL input hoặc external reference.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision</button></div></form></section>";
     const lifecycle = '<section class="portal-card portal-card-pad portal-workboard-lifecycle"><div class="portal-card-header"><div><span class="portal-section-kicker">Workflow state</span><h2 class="portal-card-title">Di chuyển công việc</h2><p class="portal-card-subtitle">Server xác minh transition và revision trước khi thay đổi board.</p></div>' + badge(state) + '</div><form class="portal-workboard-state-form" data-portal-form data-portal-no-transient data-portal-action="workboard-state" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>Trạng thái mới</span><select name="state"' + (canState ? "" : " disabled") + ">" + WORKBOARD_STATES.map((value) => '<option value="' + safeText(value) + '"' + (value === state ? " selected" : "") + ">" + safeText(WORKBOARD_STATE_LABELS[value]) + "</option>").join("") + '</select></label><button class="portal-button portal-button--quiet" type="submit"' + (canState ? "" : " disabled") + ">Cập nhật trạng thái</button></form></section>";
     const history = '<div class="portal-workboard-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử revision</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; history cũ không bị xóa.</p></div></div>' + renderWorkboardVersions(item, versions, context, route) + renderWorkboardHistoryPagination(versionListing, "workboard-history-version-page", route, "versions") + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Activity</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ trình bày action, revision và thời điểm do server trả về.</p></div></div>' + renderWorkboardEvents(events) + renderWorkboardHistoryPagination(eventListing, "workboard-history-event-page", route, "events") + "</section></div>";
-    return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("") + overview + '<div class="portal-workboard-detail-grid">' + editor + lifecycle + "</div>" + renderWorkboardSchedule(item, context, route, writable) + renderWorkboardChecklist(item, context, route, writable) + history + "</article>";
+    const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
+    return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, canCreate) + overview + '<div class="portal-workboard-detail-grid">' + editor + lifecycle + "</div>" + renderWorkboardSchedule(item, context, route, writable) + renderWorkboardChecklist(item, context, route, writable) + history + "</article>";
   }
 
   const CONTENT_HANDOFF_STATUS_LABELS = Object.freeze({
@@ -29359,6 +29583,45 @@
     button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng");
   }
 
+  function mobileSidebarDialogSupported() {
+    return Boolean(window.matchMedia && window.matchMedia("(max-width: 980px)").matches);
+  }
+
+  const SIDEBAR_TABINDEX_SNAPSHOT = "data-portal-sidebar-tabindex";
+
+  function setSidebarFallbackTabStops(sidebar, enabled) {
+    if (!sidebar || typeof sidebar.querySelectorAll !== "function") return;
+    const controls = Array.from(sidebar.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary"));
+    controls.forEach((control) => {
+      if (enabled) {
+        if (control.hasAttribute(SIDEBAR_TABINDEX_SNAPSHOT)) return;
+        control.setAttribute(SIDEBAR_TABINDEX_SNAPSHOT, control.hasAttribute("tabindex") ? (control.getAttribute("tabindex") || "") : "__absent__");
+        control.setAttribute("tabindex", "-1");
+        return;
+      }
+      const previous = control.getAttribute(SIDEBAR_TABINDEX_SNAPSHOT);
+      if (previous === null) return;
+      if (previous === "__absent__") control.removeAttribute("tabindex");
+      else control.setAttribute("tabindex", previous);
+      control.removeAttribute(SIDEBAR_TABINDEX_SNAPSHOT);
+    });
+  }
+
+  function setSidebarAccessibilityState(opened) {
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    if (!sidebar) return;
+    const hideClosedDrawer = !opened && mobileSidebarDialogSupported();
+    if (hideClosedDrawer) {
+      sidebar.setAttribute("aria-hidden", "true");
+      if ("inert" in sidebar) sidebar.inert = true;
+      setSidebarFallbackTabStops(sidebar, true);
+      return;
+    }
+    sidebar.removeAttribute("aria-hidden");
+    if ("inert" in sidebar) sidebar.inert = false;
+    setSidebarFallbackTabStops(sidebar, false);
+  }
+
   function desktopFocusNavigationSupported() {
     return Boolean(window.matchMedia && window.matchMedia("(min-width: 981px)").matches);
   }
@@ -29409,6 +29672,7 @@
     }
     setWorkspaceInert(false);
     setSidebarMenuState(button, false);
+    setSidebarAccessibilityState(false);
     if (wasOpen && settings.restoreFocus !== false && sidebarReturnFocus && typeof sidebarReturnFocus.focus === "function") {
       sidebarReturnFocus.focus({ preventScroll: true });
     }
@@ -29430,6 +29694,7 @@
     sidebarReturnFocus = button;
     sidebar.setAttribute("role", "dialog");
     sidebar.setAttribute("aria-modal", "true");
+    setSidebarAccessibilityState(true);
     setWorkspaceInert(true);
     window.requestAnimationFrame(() => {
       const first = sidebarFocusables(sidebar)[0];
@@ -29446,10 +29711,12 @@
         desktopNavigationFocusEnabled = false;
         syncDesktopFocusNavigation();
       }
+      setSidebarAccessibilityState(false);
       return;
     }
     const sidebar = document.querySelector("[data-portal-sidebar]");
     if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    else setSidebarAccessibilityState(false);
   }
 
   function commandPaletteFocusables(palette) {
@@ -29996,6 +30263,7 @@
     document.body.classList.toggle("portal-body--auth", isAuth);
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
+    setSidebarAccessibilityState(false);
     const skipLink = document.querySelector(".skip-link");
     if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
     if (mobileNav) {
@@ -30024,6 +30292,7 @@
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute ? "dashboard" : "default");
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
+      setSidebarAccessibilityState(false);
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
       placeSfxCueSheetReceipt(main);
