@@ -10878,9 +10878,9 @@
     const otherEntries = entries.filter((entry) => !entry || typeof entry !== "object" || !knownGroups.has(entry.group));
     if (otherEntries.length) grouped.push({ key: "other", title: featureCatalogText("group.other.title", "Workflow khác"), description: featureCatalogText("group.other.description", "Các route customer được registry công bố ngoài nhóm Studio chuẩn."), entries: otherEntries });
     const jumps = grouped.length
-      ? `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${grouped.map((group) => `<a class="portal-feature-jump" href="#feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`
+      ? `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${grouped.map((group) => `<a class="portal-feature-jump" data-catalog-family-jump="${safeText(group.key)}" aria-controls="feature-group-${safeText(group.key)}" href="#feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`
       : "";
-    const groups = grouped.map((group) => `<section class="portal-feature-group" data-catalog-group aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
+    const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
       const searchText = [featureCatalogGroupCopy(group, "title"), entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
       return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })}</div>`;
     }).join("")}</div></section>`).join("");
@@ -10891,7 +10891,7 @@
     // Discovery is the primary job of this page.  Keep the optional Studio
     // handoff after search and intent selection so it helps a decided visitor
     // continue, instead of interrupting someone who is trying to find a tool.
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div>${search}${renderFeatureFamilyExplorer()}${jumps}${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${search}${renderFeatureFamilyExplorer()}${jumps}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -18428,8 +18428,29 @@
       if (visible) matches += 1;
     });
     groups.forEach((group) => {
-      group.hidden = !Array.from(group.querySelectorAll("[data-catalog-item]")).some((item) => !item.hidden);
+      const visibleItems = Array.from(group.querySelectorAll("[data-catalog-item]")).filter((item) => !item.hidden);
+      group.hidden = visibleItems.length === 0;
+      const count = group.querySelector(".portal-feature-count");
+      if (count) {
+        const total = count.getAttribute("data-catalog-total") || String(visibleItems.length);
+        count.textContent = featureCatalogText("catalog.count", "{count} workflow", {
+          count: needle ? String(visibleItems.length) : total
+        });
+      }
     });
+    const jumps = Array.from(document.querySelectorAll("[data-catalog-family-jump]"));
+    jumps.forEach((jump) => {
+      const key = jump.getAttribute("data-catalog-family-jump") || "";
+      const group = groups.find((candidate) => candidate.getAttribute("data-catalog-group-key") === key);
+      jump.hidden = !group || group.hidden;
+    });
+    const jumpNavigation = jumps.length ? jumps[0].closest("nav") : null;
+    if (jumpNavigation) jumpNavigation.hidden = !jumps.some((jump) => !jump.hidden);
+    // Family cards help first-time discovery, but once a visitor is searching
+    // they duplicate the task and push matching workflows below the fold on
+    // compact screens. Keep the query local and move results into view.
+    const familyExplorer = document.querySelector(".portal-feature-family-explorer");
+    if (familyExplorer) familyExplorer.hidden = Boolean(needle);
     const result = document.querySelector("[data-portal-catalog-result]");
     if (result) result.textContent = needle
       ? featureCatalogText("search.result.matches", "{count} workflow phù hợp.", { count: String(matches) })

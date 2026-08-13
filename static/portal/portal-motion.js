@@ -140,6 +140,7 @@
       ".portal-dashboard-app .portal-dashboard-assurance"
     ].join(", ");
     const targetSelector = [
+      ".portal-feature-directory-controls",
       ".portal-catalog-context",
       ".portal-feature-catalog > .portal-section-heading",
       ".portal-feature-guided-start",
@@ -175,10 +176,19 @@
     ].join(", ");
     const dashboardTargets = Array.from(root.querySelectorAll(dashboardDecisionSelector));
     const dashboardTargetSet = new Set(dashboardTargets);
-    const targets = Array.from(new Set([
+    const rawTargets = Array.from(new Set([
       ...Array.from(root.querySelectorAll(targetSelector)),
       ...dashboardTargets
     ]));
+    // The AI Studio directory is one bounded reveal surface. Its search,
+    // family explorer and jump navigation remain interactive children, but
+    // must not become independent observers or receive a second fade/stagger.
+    // Keep the same selectors for standalone family pages where no directory
+    // boundary exists.
+    const targets = rawTargets.filter((target) => {
+      const boundary = target.closest && target.closest(".portal-feature-directory-controls");
+      return !boundary || target === boundary;
+    });
     if (!targets.length) return;
     const targetDetails = targets.map((target) => {
       const dashboardDecision = dashboardTargetSet.has(target);

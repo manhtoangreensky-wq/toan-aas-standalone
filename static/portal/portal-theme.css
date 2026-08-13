@@ -15774,6 +15774,119 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* AI Studio directory controls ---------------------------------------------
+   Search, family discovery and group jumps share one calm control region.
+   This is presentation-only: all cards and routes still come from the
+   server-published member catalogue. */
+.portal-feature-directory-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, .72fr);
+  grid-template-rows: auto auto;
+  gap: var(--portal-space-4);
+  align-items: start;
+  padding: var(--portal-space-4);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-soft);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-feature-directory-controls .portal-catalog-search {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  padding: var(--portal-space-3);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface-light);
+}
+
+.portal-feature-directory-controls .portal-feature-jumps {
+  display: flex;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--portal-space-2);
+  align-content: start;
+  overflow: visible;
+  padding: var(--portal-space-3);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface-light);
+}
+
+.portal-feature-directory-controls .portal-feature-family-explorer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  box-shadow: none;
+}
+
+.portal-feature-directory-controls .portal-feature-jump[aria-controls] {
+  min-height: 44px;
+  flex: 0 1 auto;
+}
+
+.portal-feature-directory-results {
+  display: grid;
+  min-width: 0;
+  gap: var(--portal-section-gap);
+}
+
+@media (max-width: 920px) {
+  .portal-feature-directory-controls {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .portal-feature-directory-controls .portal-catalog-search,
+  .portal-feature-directory-controls .portal-feature-jumps,
+  .portal-feature-directory-controls .portal-feature-family-explorer {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-feature-directory-controls {
+    gap: var(--portal-space-3);
+    padding: var(--portal-space-3);
+  }
+
+  .portal-feature-directory-controls .portal-feature-jumps {
+    gap: var(--portal-space-2);
+  }
+
+  .portal-feature-directory-controls .portal-feature-jump[aria-controls] {
+    flex: 1 1 calc(50% - var(--portal-space-2));
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+html[data-portal-theme="dark"] .portal-feature-directory-controls {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  box-shadow: var(--portal-elevation-1);
+}
+
+html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-catalog-search,
+html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-feature-jumps {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-feature-directory-controls,
+  .portal-feature-directory-controls * {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Dashboard decision hierarchy -------------------------------------------
    The overview introduces the signed workspace. A first session gets one
    clear guided path directly below it; a returning session gets one primary
