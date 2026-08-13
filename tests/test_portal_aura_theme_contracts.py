@@ -230,6 +230,46 @@ def test_compact_headers_keep_the_brand_visible_while_secondary_controls_compact
     assert "clip-path: inset(50%);" not in THEME
 
 
+def test_phone_header_keeps_the_current_page_title_visible() -> None:
+    """A compact app header still needs location context on narrow screens."""
+
+    compact = re.search(
+        r"@media \(max-width: 460px\)\s*\{(?P<declarations>.*?)(?=\n\})",
+        THEME,
+        flags=re.DOTALL,
+    )
+
+    assert compact is not None
+    declarations = compact.group("declarations")
+    assert ".portal-crumbs" in declarations
+    assert "display: block;" in declarations
+    assert "flex: 1 1 0;" in declarations
+    assert "min-width: 0;" in declarations
+    assert ".portal-crumbs span:not(:last-child)" in declarations
+    assert ".portal-crumbs span:last-child::before" in declarations
+    assert "display: none;" in declarations
+
+
+def test_final_mobile_dock_harmony_owns_light_dark_geometry_and_safe_area() -> None:
+    """The late theme layer must be the single responsive dock authority."""
+
+    marker = "/* Final responsive app dock harmony */"
+    assert marker in THEME
+    harmony = THEME[THEME.index(marker) :]
+
+    assert "@media (max-width: 700px)" in harmony
+    assert 'data-portal-mobile-nav-kind="customer"' in harmony
+    assert 'data-portal-mobile-nav-kind="admin"' in harmony
+    assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in harmony
+    assert "min-height: 54px;" in harmony
+    assert "calc(8px + var(--portal-safe-bottom))" in harmony
+    assert ".portal-mobile-nav[data-portal-mobile-nav-kind=\"customer\"]" in harmony
+    assert "background: var(--portal-surface-light);" in harmony
+    assert "background: var(--portal-rail-surface);" in harmony
+    assert "min-height: 44px;" in harmony
+    assert "@media (prefers-reduced-motion: reduce)" in harmony
+
+
 def test_theme_cycle_visits_every_explicit_preference_for_both_system_modes() -> None:
     node = shutil.which("node")
     assert node is not None, "The CI workflow already requires Node for portal syntax checks."

@@ -2031,6 +2031,19 @@ body {
 
 @media (max-width: 460px) {
   .portal-crumbs {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .portal-crumbs span:not(:last-child) {
+    display: none;
+  }
+
+  .portal-crumbs span:last-child::before {
     display: none;
   }
 
@@ -15768,6 +15781,67 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     .portal-catalog-item .portal-module-card,
     .portal-workspace-menu-card
   ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Final responsive app dock harmony */
+/* Customer and ERP retain distinct surfaces while sharing the same compact,
+   safe-area-aware five-action rhythm. */
+@media (max-width: 700px) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"],
+  .portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--portal-space-2);
+    min-height: 54px;
+    padding: var(--portal-space-2)
+      max(var(--portal-space-2), calc(var(--portal-space-2) + var(--portal-safe-right)))
+      calc(8px + var(--portal-safe-bottom))
+      max(var(--portal-space-2), calc(var(--portal-space-2) + var(--portal-safe-left)));
+    border-top-width: 1px;
+    box-shadow: 0 -10px 28px color-mix(in srgb, var(--portal-ink) 14%, transparent);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+    border-top-color: var(--portal-border);
+    background: var(--portal-surface-light);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind="admin"] {
+    border-top: 2px solid var(--portal-context);
+    background: var(--portal-rail-surface);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
+    min-height: 44px;
+    gap: var(--portal-space-1);
+    padding: 6px 2px;
+    border-color: transparent;
+    color: var(--portal-muted);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] .portal-mobile-nav-link[aria-current="page"] {
+    border-color: color-mix(in srgb, var(--portal-context) 58%, var(--portal-border));
+    background: color-mix(in srgb, var(--portal-context) 12%, var(--portal-surface-light));
+    color: var(--portal-action);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind="admin"] .portal-mobile-nav-link {
+    color: var(--portal-rail-muted);
+  }
+
+  .portal-mobile-nav[data-portal-mobile-nav-kind="admin"] .portal-mobile-nav-link[aria-current="page"] {
+    border-color: color-mix(in srgb, var(--portal-context) 72%, transparent);
+    background: color-mix(in srgb, var(--portal-context) 22%, transparent);
+    color: var(--portal-rail-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-mobile-nav[data-portal-mobile-nav-kind] .portal-mobile-nav-link {
     animation: none !important;
     transition: none !important;
     transform: none !important;
