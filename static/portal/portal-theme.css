@@ -169,6 +169,8 @@
   --portal-landing-scroll-scrub: 220ms;
   --portal-landing-scroll-parallax: 26px;
   --portal-landing-pointer-tilt: 2.4deg;
+  --portal-landing-anchor-offset: 80px;
+  --portal-landing-anchor-gap: 16px;
   --portal-elevation-float: 0 12px 30px rgba(2, 20, 29, .16);
   --portal-rail-width: 272px;
   --portal-content-max-width: 1600px;
@@ -2190,6 +2192,20 @@ body {
 
 .portal-landing {
   overflow: clip;
+}
+
+/* Landing anchor continuity keeps native deep links, browser history and
+   keyboard navigation intact. Motion-capable visitors receive a gentle scroll
+   while every named section reserves room for the compact sticky header. */
+.portal-landing [data-landing-anchor-target] {
+  scroll-margin-block-start: var(--portal-landing-anchor-gap);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.portal-landing-anchor-motion {
+    scroll-behavior: smooth;
+    scroll-padding-block-start: calc(var(--portal-landing-anchor-offset) + var(--portal-safe-top));
+  }
 }
 
 .portal-landing-public-container {

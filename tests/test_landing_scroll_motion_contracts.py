@@ -105,3 +105,48 @@ def test_each_scroll_section_has_a_distinct_pointer_response() -> None:
     ):
         assert marker in motion
     assert ".landing-motion-trust-grid" not in motion
+
+
+def test_landing_anchor_navigation_is_smooth_only_when_motion_is_safe() -> None:
+    """Public landing anchors need a header-safe, reduced-motion-safe path."""
+    landing = PORTAL[
+        PORTAL.index("function renderLanding(page, context)") : PORTAL.index(
+            "function renderVideoFinalization", PORTAL.index("function renderLanding(page, context)")
+        )
+    ]
+    for target in (
+        "features",
+        "content-workspace",
+        "audio-workspace",
+        "studios",
+        "workflow",
+    ):
+        assert f'href="#{target}"' in landing
+
+    for marker in (
+        'root.setAttribute("data-landing-anchor-motion", "active")',
+        'root.setAttribute("data-landing-anchor-motion", "static")',
+        'root.removeAttribute("data-landing-anchor-motion")',
+        '"portal-landing-anchor-motion"',
+    ):
+        assert marker in MOTION
+
+    anchor_start = THEME.index("/* Landing anchor continuity")
+    anchor_end = THEME.index("/*", anchor_start + len("/* Landing anchor continuity"))
+    anchor_css = THEME[anchor_start:anchor_end]
+    for marker in (
+        "@media (prefers-reduced-motion: no-preference)",
+        "html.portal-landing-anchor-motion",
+        "scroll-behavior: smooth;",
+        "scroll-padding-block-start: calc(var(--portal-landing-anchor-offset) + var(--portal-safe-top));",
+        "[data-landing-anchor-target]",
+        "scroll-margin-block-start: var(--portal-landing-anchor-gap);",
+    ):
+        assert marker in anchor_css
+    for token in (
+        "--portal-landing-anchor-offset: 80px;",
+        "--portal-landing-anchor-gap: 16px;",
+    ):
+        assert token in THEME
+    for forbidden in ("scrollIntoView", "scrollTo", "history.pushState"):
+        assert forbidden not in MOTION

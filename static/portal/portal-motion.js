@@ -302,8 +302,10 @@
     unmountLanding();
     if (!root || typeof window !== "object") return;
 
+    const documentElement = typeof document === "object" && document ? document.documentElement : null;
     root.setAttribute("data-landing-motion", "cinematic-mini");
     root.setAttribute("data-landing-scroll-motion", "active");
+    root.setAttribute("data-landing-anchor-motion", "active");
     root.setAttribute("data-landing-scroll-progress", "0");
     root.setAttribute("data-landing-motion-phase", "intro");
     if (root.classList && typeof root.classList.add === "function") root.classList.add("landing-motion-scroll");
@@ -366,9 +368,13 @@
       root.removeAttribute("data-landing-motion-phase");
       root.removeAttribute("data-landing-motion");
       root.removeAttribute("data-landing-scroll-motion");
+      root.removeAttribute("data-landing-anchor-motion");
       root.removeAttribute("data-landing-scroll-progress");
       root.removeAttribute("data-landing-motion-section");
       if (root.classList && typeof root.classList.remove === "function") root.classList.remove("landing-motion-scroll");
+      if (documentElement && documentElement.classList && typeof documentElement.classList.remove === "function") {
+        documentElement.classList.remove("portal-landing-anchor-motion");
+      }
       ["--landing-scroll-progress", "--landing-hero-progress", "--landing-pointer-x", "--landing-pointer-y"].forEach((property) => removeStyleProperty(root, property));
       if (header) {
         header.classList.remove("landing-motion-header");
@@ -431,8 +437,12 @@
     landingCleanup = clearLandingDecorations;
     if (prefersReducedMotion()) {
       root.setAttribute("data-landing-scroll-motion", "static");
+      root.setAttribute("data-landing-anchor-motion", "static");
       root.setAttribute("data-landing-motion-phase", "settled");
       return;
+    }
+    if (documentElement && documentElement.classList && typeof documentElement.classList.add === "function") {
+      documentElement.classList.add("portal-landing-anchor-motion");
     }
 
     let scrollFrame = 0;
