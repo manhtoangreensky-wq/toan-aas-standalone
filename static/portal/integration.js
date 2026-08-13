@@ -12006,7 +12006,8 @@
       workspaceDrafts: [],
       workspaceDraftListing: workspaceDraftListingProjection(
         { q: "", state: "all", feature_key: "" }, 0, {}, 0, WORKSPACE_DRAFT_LIST_LIMIT
-      )
+      ),
+      workspaceDraftReadState: "guarded"
     });
     return [];
   }
@@ -13685,6 +13686,7 @@
       workspaceDraftListing: workspaceDraftListingProjection(
         { q: "", state: "all", feature_key: "" }, 0, {}, 0, WORKSPACE_DRAFT_LIST_LIMIT
       ),
+      workspaceDraftReadState: account ? "loading" : "guarded",
       // Project Package artifacts are separate private lists for the global
       // library and each Project.  Clear both scopes on a signed bootstrap so
       // one account or Project cannot leave an old ZIP receipt on screen.
@@ -15527,11 +15529,13 @@
     const retainListView = projectRouteUsesListView();
     const filter = projectFilterPayload(filterValue === undefined ? (retainListView ? previousFilters : {}) : filterValue);
     const offset = projectListOffset(offsetValue === undefined ? (retainListView ? previousPagination.offset : 0) : offsetValue);
-    // The canonical `/projects` Board must fail closed while a fresh signed
+    // The Project Board and Dashboard must fail closed while a fresh signed
     // read is in flight. Do not leave a prior filter/page actionable during a
     // refresh, because it may belong to an older account/session projection.
-    // Other project-reference consumers retain their own rendering contracts.
-    if (expectedPath === "/projects" && projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) {
+    // The Dashboard makes a next-action decision from this Web-owned library,
+    // so it must wait for the current owner-scoped result just like `/projects`.
+    const projectReadPath = expectedPath === "/projects" || expectedPath === "/dashboard";
+    if (projectReadPath && projectCenterRequestIsCurrent(requestEpoch, projectCenterListHydrationEpoch, sessionEpoch, expectedPath)) {
       merge({
         projects: [],
         projectListing: projectListingProjection(filter, offset, {}, 0),
@@ -25049,6 +25053,18 @@
     const emptyListing = workspaceDraftListingProjection(
       { q: "", state: "all", feature_key: "" }, 0, {}, 0, WORKSPACE_DRAFT_LIST_LIMIT
     );
+    if (workspaceDraftRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) {
+      // Clear a prior owner-scoped projection while its fresh read is still
+      // pending. The Dashboard uses this explicit state to avoid describing a
+      // returning customer as a first-session user before the Web library has
+      // actually responded.
+      merge({
+        workspaceDrafts: [],
+        workspaceDraftListing: emptyListing,
+        workspaceDraftReadState: "loading",
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+      });
+    }
     try {
       const result = await api(workspaceDraftListPath(filter, offset, limit));
       if (!workspaceDraftRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return [];
@@ -25061,6 +25077,7 @@
         workspaceDraftListing: isLibraryView
           ? workspaceDraftListingProjection(filter, offset, result.data, items.length, limit)
           : emptyListing,
+        workspaceDraftReadState: "ready",
         pageStates: { ...(base().pageStates || {}), [expectedPath]: result.status || "read_only" }
       });
       return items;
@@ -25071,6 +25088,7 @@
       merge({
         workspaceDrafts: [],
         workspaceDraftListing: emptyListing,
+        workspaceDraftReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
       });
       return [];

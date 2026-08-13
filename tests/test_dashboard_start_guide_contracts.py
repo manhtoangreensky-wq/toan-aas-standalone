@@ -24,21 +24,18 @@ def test_dashboard_first_session_guide_is_explicit_and_web_native() -> None:
     guide = _function_section("renderDashboardStartGuide")
 
     assert 'data-dashboard-start-guide' in guide
-    assert "if (hasProjects || hasDrafts) return" in guide
+    assert 'if (!["first_session", "first_session_ready"].includes(decision.kind)) return "";' in guide
     assert 'href: "/projects"' in guide
     assert 'href: "/features"' in guide
-    assert 'href: "/onboarding"' in guide
-    assert "telegramIdentityLinked(context)" in guide
     assert 'dashboardText("guide.title")' in guide
-    assert 'dashboardText("guide.optional.body")' in guide
     assert 'dashboardText("guide.setup.body")' in guide
+    assert 'dashboardText("guide.setupReview.body")' in guide
     assert 'data-portal-action' not in guide
     for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "data-portal-action"):
         assert forbidden.lower() not in guide.lower()
 
     for key in (
         "dashboard.guide.title",
-        "dashboard.guide.optional.body",
         "dashboard.guide.setup.body",
     ):
         assert I18N.count(f'"{key}"') == 3
@@ -66,8 +63,8 @@ def test_dashboard_hides_an_empty_work_queue_and_keeps_the_first_action_first() 
     assert dashboard.index('<div class="portal-command-center-lanes">') < dashboard.index("${renderDashboardCanonicalLane(context, readState)}")
     assert 'if (readState !== "ready")' in canonical
     assert "${renderWorkspaceActionCenter(context)}" in canonical
-    assert "const actionableCount = processing + deliveryReady + needsReview + waitingUser;" in action_center
-    assert 'if (!actionableCount) return "";' in action_center
+    assert "const activeCards = cards.filter((card) => card.count > 0);" in action_center
+    assert 'if (!activeCards.length) return "";' in action_center
 
 
 def test_dashboard_first_session_guide_has_responsive_keyboard_visible_presentation() -> None:

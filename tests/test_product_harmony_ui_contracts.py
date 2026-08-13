@@ -114,7 +114,11 @@ def test_product_harmony_keeps_dashboard_summary_even_on_a_phone() -> None:
     harmony = product_harmony_css()
     assert ".portal-workspace-command-center .portal-dashboard-overview-stats {" in harmony
     assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in harmony
-    assert "@media (max-width: 460px)" not in harmony
+    decision_marker = "/* Dashboard decision hierarchy -------------------------------------------"
+    assert decision_marker in harmony
+    decision_layer = harmony[harmony.index(decision_marker):]
+    assert "@media (max-width: 460px)" in decision_layer
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in decision_layer
 
 
 def test_admin_home_visible_hero_uses_the_reviewed_localized_title() -> None:

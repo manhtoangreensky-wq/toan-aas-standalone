@@ -15729,6 +15729,21 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+/* Dashboard decision hierarchy -------------------------------------------
+   The overview introduces the signed workspace. A first session gets one
+   clear guided path directly below it; a returning session gets one primary
+   continuation. This is presentation-only and preserves the independent
+   canonical lane, its loading state and its truth boundary. */
+.portal-shell[data-portal-app-kind="customer"] .portal-dashboard-overview-actions {
+  align-items: center;
+}
+
+@media (max-width: 460px) {
+  .portal-workspace-command-center .portal-dashboard-overview-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Reference-first Media Studio rail ----------------------------------------
    The route-only Studio copies the useful application rhythm of the approved
    reference: orient first, progress through a connected working rail, then

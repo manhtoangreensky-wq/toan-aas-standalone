@@ -7872,6 +7872,9 @@
       // is silently rendered as an empty library.
       workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : [],
       workspaceDraftListing: normalizeWorkspaceDraftListing(source.workspaceDraftListing),
+      workspaceDraftReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.workspaceDraftReadState || ""))
+        ? String(source.workspaceDraftReadState)
+        : "guarded",
       // Campaign Planner data is Web-owned and already account-scoped by the
       // API. Keep only a bounded presentation copy; the browser never keeps
       // a second campaign store in localStorage.
@@ -18476,8 +18479,53 @@
     return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
   }
 
+  // Dashboard decision state comes only from Web-owned libraries. Keep it
+  // separate from the canonical dashboard lane so a Core Bridge delay can
+  // never affect whether the customer sees their Project/Draft journey.
+  function workspaceDraftReadState(context) {
+    const candidate = String(context && context.workspaceDraftReadState || "guarded");
+    return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
+  }
+
+  function dashboardWebWorkReadState(context) {
+    const projectState = projectCenterReadState(context);
+    const draftState = workspaceDraftReadState(context);
+    if (projectState === "loading" || draftState === "loading") return "loading";
+    if (projectState !== "ready" || draftState !== "ready") return "unavailable";
+    return "ready";
+  }
+
   function dashboardText(key, params) {
     return safeText(uiText(`dashboard.${key}`, "", params));
+  }
+
+  // A Dashboard decision is a presentation-only choice between routes that
+  // already exist in the signed workspace. It deliberately considers only
+  // Web-owned project/draft metadata and the saved setup state. Canonical
+  // wallet, job, asset, ticket, provider and capability information remains
+  // in its dedicated read lane below.
+  function dashboardDecision(context) {
+    const workspaceSetup = context && context.workspaceSetup && typeof context.workspaceSetup === "object"
+      ? context.workspaceSetup
+      : {};
+    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object"
+      ? workspaceSetup.profile
+      : {};
+    const projects = (Array.isArray(context && context.projects) ? context.projects : [])
+      .filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
+    const drafts = dashboardActiveDrafts(context);
+    const webWorkState = dashboardWebWorkReadState(context);
+
+    if (webWorkState === "loading") return { kind: "loading" };
+    if (webWorkState !== "ready") return { kind: "unavailable" };
+
+    if (!projects.length && !drafts.length) {
+      return { kind: setupProfile.setup_state === "completed" ? "first_session_ready" : "first_session" };
+    }
+    if (drafts.length) {
+      return { kind: "continue_draft", href: "/workspace", secondaryHref: "/features" };
+    }
+    return { kind: "continue_project", href: "/projects", secondaryHref: "/features" };
   }
 
   // This is a closed presentation map for the signed customer's saved
@@ -18578,11 +18626,6 @@
   function renderDashboardWorkspaceSummary(context) {
     const readState = dashboardReadState(context);
     const name = displayName(context);
-    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
-    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
-    const setupActionLabel = setupProfile.setup_state === "completed"
-      ? dashboardText("summary.setupAdjust")
-      : dashboardText("summary.setup");
     const drafts = dashboardActiveDrafts(context);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
@@ -18597,9 +18640,17 @@
         : readState === "failed"
           ? dashboardText("summary.canonicalFailed")
           : dashboardText("summary.canonicalGuarded");
+    const webWorkState = dashboardWebWorkReadState(context);
+    const webWorkReady = webWorkState === "ready";
+    const projectCount = webWorkReady ? String(projects.length) : "—";
+    const draftCount = webWorkReady ? String(drafts.length) : "—";
+    const decision = dashboardDecision(context);
+    const summaryActions = ["continue_draft", "continue_project"].includes(decision.kind)
+      ? `<div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="${safeText(decision.href)}"><span>${dashboardText(`summary.decision.${decision.kind}.action`)}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="${safeText(decision.secondaryHref)}">${dashboardText(`summary.decision.${decision.kind}.secondary`)}</a></div>`
+      : "";
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
-      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects"><span>${dashboardText("summary.openProjects")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="/features">${dashboardText("summary.createWorkflow")}</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${setupActionLabel}</a></div></div>
-      <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(String(projects.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(String(drafts.length))}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p>${summaryActions}</div>
+      <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(projectCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(draftCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
     </section>`;
   }
 
@@ -18624,16 +18675,30 @@
     // wizard. A first Web session can author independently; Telegram remains
     // a companion connection only when the customer chooses canonical Bot
     // data such as wallet, jobs and delivered assets.
-    const hasProjects = (Array.isArray(context.projects) ? context.projects : []).some((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
-    const hasDrafts = dashboardActiveDrafts(context).length > 0;
-    if (hasProjects || hasDrafts) return "";
-    const linked = telegramIdentityLinked(context);
-    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
-    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
-    const setupPending = workspaceSetup.readState === "read_only" && setupProfile.setup_state === "not_started";
-    const defaultSteps = [
-      {
+    const decision = dashboardDecision(context);
+    if (!["first_session", "first_session_ready"].includes(decision.kind)) return "";
+    const setupComplete = decision.kind === "first_session_ready";
+    const setupStep = setupComplete
+      ? {
         number: "01",
+        eyebrow: dashboardText("guide.setupReview.eyebrow"),
+        title: dashboardText("guide.setupReview.title"),
+        description: dashboardText("guide.setupReview.body"),
+        href: "/workspace/setup",
+        action: dashboardText("guide.setupReview.action")
+      }
+      : {
+        number: "01",
+        eyebrow: dashboardText("guide.setup.eyebrow"),
+        title: dashboardText("guide.setup.title"),
+        description: dashboardText("guide.setup.body"),
+        href: "/workspace/setup",
+        action: dashboardText("guide.setup.action")
+      };
+    const steps = [
+      setupStep,
+      {
+        number: "02",
         eyebrow: dashboardText("guide.project.eyebrow"),
         title: dashboardText("guide.project.title"),
         description: dashboardText("guide.project.body"),
@@ -18641,59 +18706,14 @@
         action: dashboardText("guide.project.action")
       },
       {
-        number: "02",
+        number: "03",
         eyebrow: dashboardText("guide.studio.eyebrow"),
         title: dashboardText("guide.studio.title"),
         description: dashboardText("guide.studio.body"),
         href: "/features",
         action: dashboardText("guide.studio.action")
-      },
-      linked
-        ? {
-          number: "03",
-          eyebrow: dashboardText("guide.security.eyebrow"),
-          title: dashboardText("guide.security.title"),
-          description: dashboardText("guide.security.body"),
-          href: "/account/security",
-          action: dashboardText("guide.security.action")
-        }
-        : {
-          number: "03",
-          eyebrow: dashboardText("guide.optional.eyebrow"),
-          title: dashboardText("guide.optional.title"),
-          description: dashboardText("guide.optional.body"),
-          href: "/onboarding",
-          action: dashboardText("guide.optional.action")
-        }
+      }
     ];
-    const steps = setupPending
-      ? [
-          {
-            number: "01",
-            eyebrow: dashboardText("guide.setup.eyebrow"),
-            title: dashboardText("guide.setup.title"),
-            description: dashboardText("guide.setup.body"),
-            href: "/workspace/setup",
-            action: dashboardText("guide.setup.action")
-          },
-          {
-            number: "02",
-            eyebrow: dashboardText("guide.project.eyebrow"),
-            title: dashboardText("guide.project.title"),
-            description: dashboardText("guide.project.body"),
-            href: "/projects",
-            action: dashboardText("guide.project.action")
-          },
-          {
-            number: "03",
-            eyebrow: dashboardText("guide.studio.eyebrow"),
-            title: dashboardText("guide.studio.title"),
-            description: dashboardText("guide.studio.body"),
-            href: "/features",
-            action: dashboardText("guide.studio.action")
-          }
-        ]
-      : defaultSteps;
     return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${dashboardText("guide.kicker")}</span><h2 id="dashboard-start-guide-title">${dashboardText("guide.title")}</h2><p>${dashboardText("guide.body")}</p></div><span class="portal-start-guide-note">${dashboardText("guide.note")}</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em><span>${safeText(step.action)}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
@@ -18747,8 +18767,6 @@
     const deliveryReady = assets.filter((item) => item && item.download_ready === true && item.delivery_ready === true).length;
     const needsReview = jobs.filter((item) => ["failed", "failed_no_charge"].includes(jobStatus(item))).length;
     const waitingUser = tickets.filter((item) => canonicalTicketStatus(item) === "waiting_user").length;
-    const actionableCount = processing + deliveryReady + needsReview + waitingUser;
-    if (!actionableCount) return "";
     const cards = [
       {
         icon: ICONS.jobs,
@@ -18787,7 +18805,15 @@
         action: dashboardText("actionCenter.tickets.action")
       }
     ];
-    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("actionCenter.kicker")}</span><h2 id="workspace-action-center-title">${dashboardText("actionCenter.title")}</h2><p>${dashboardText("actionCenter.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("actionCenter.openAll")}</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3><p>${card.detail}</p><span class="portal-action-card-link">${card.action} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
+    const activeCards = cards.filter((card) => card.count > 0);
+    if (!activeCards.length) return "";
+    const actionCenterTarget = activeCards.length && activeCards.every((card) => card.href === activeCards[0].href)
+      ? activeCards[0].href
+      : "";
+    const headerAction = actionCenterTarget
+      ? `<a class="portal-button portal-button--quiet" href="${safeText(actionCenterTarget)}">${dashboardText("actionCenter.openAll")}</a>`
+      : "";
+    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("actionCenter.kicker")}</span><h2 id="workspace-action-center-title">${dashboardText("actionCenter.title")}</h2><p>${dashboardText("actionCenter.body")}</p></div>${headerAction}</div><div class="portal-action-center-grid">${activeCards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${card.label}</h3><p>${card.detail}</p><span class="portal-action-card-link">${card.action} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
   }
 
   function renderStudioLaunchpad(context) {
