@@ -317,7 +317,15 @@ def test_customer_waiting_clock_changes_only_for_public_service_turns(tmp_path, 
                 "confirm": True,
             },
         )
-        assert reply.status_code == 200 and reply.json()["data"]["case"]["revision"] == 2
+        assert reply.status_code == 200
+        receipt = reply.json()["data"]["receipt"]
+        assert set(reply.json()["data"]) == {"receipt"}
+        assert receipt["case_id"] == case["id"]
+        assert receipt["revision"] == 2
+        assert receipt["state"] == "waiting_user"
+        assert receipt["visibility"] == "public"
+        assert receipt["action"] == "operator_reply"
+        assert receipt["delivery"] == "web_view_only"
     with sqlite3.connect(database) as conn:
         assert conn.execute(
             "SELECT customer_waiting_since FROM web_support_cases WHERE id=?", (case["id"],)
@@ -337,7 +345,15 @@ def test_customer_waiting_clock_changes_only_for_public_service_turns(tmp_path, 
                 "idempotency_key": "care-sla-clock-customer-reply-0001",
             },
         )
-        assert response.status_code == 200 and response.json()["data"]["case"]["revision"] == 3
+        assert response.status_code == 200
+        receipt = response.json()["data"]["receipt"]
+        assert set(response.json()["data"]) == {"receipt"}
+        assert receipt["case_id"] == case["id"]
+        assert receipt["revision"] == 3
+        assert receipt["state"] == "reviewing"
+        assert receipt["visibility"] == "public"
+        assert receipt["action"] == "customer_reply"
+        assert receipt["delivery"] == "web_view_only"
     with sqlite3.connect(database) as conn:
         restarted_clock = conn.execute(
             "SELECT customer_waiting_since FROM web_support_cases WHERE id=?", (case["id"],)
