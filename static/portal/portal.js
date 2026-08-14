@@ -30383,6 +30383,16 @@
     layout.insertBefore(receipt, boundary);
   }
 
+  // Surface is a presentation classification of the server-resolved page.
+  // It deliberately does not read browser role state: Admin route access is
+  // still owned by the signed server projection and each route guard.
+  function portalSurface(page) {
+    if (page && page.layout === "landing") return "landing";
+    if (page && page.layout === "auth") return "auth";
+    if (isAdminPortalSurface(page)) return "admin";
+    return "customer";
+  }
+
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
@@ -30400,8 +30410,9 @@
     // inert/modal state with a replaced header button behind it.
     if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
     if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
-    const isLanding = page.layout === "landing";
-    const isAuth = page.layout === "auth";
+    const surface = portalSurface(page);
+    const isLanding = surface === "landing";
+    const isAuth = surface === "auth";
     const landingMotionRoute = isLanding
       && window.location.pathname === "/welcome";
     const landingMotionEnabled = landingMotionRoute
@@ -30409,7 +30420,6 @@
     // The dashboard has its own, narrower decision-layer motion. Its summary
     // and canonical read lane must not inherit the generic shell entrance.
     const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
-    const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");
     // This presentation marker is intentionally derived from the same
     // normalized route selection used below for the server-authorized Admin
     // dock. It changes only the Aura shell styling; it neither checks nor
@@ -30428,8 +30438,12 @@
     const showMobileNav = !minimalShell && context.session && context.session.authenticated === true;
     shell.classList.toggle("portal-shell--landing", isLanding);
     shell.classList.toggle("portal-shell--auth", isAuth);
+    shell.classList.toggle("portal-shell--customer", surface === "customer");
+    shell.classList.toggle("portal-shell--admin", surface === "admin");
     document.body.classList.toggle("portal-body--landing", isLanding);
     document.body.classList.toggle("portal-body--auth", isAuth);
+    document.body.classList.toggle("portal-body--customer", surface === "customer");
+    document.body.classList.toggle("portal-body--admin", surface === "admin");
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
     setSidebarAccessibilityState(false);

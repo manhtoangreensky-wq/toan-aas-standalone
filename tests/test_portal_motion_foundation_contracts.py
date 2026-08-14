@@ -136,7 +136,7 @@ def test_theme_declares_shared_portal_motion_tokens_and_lifecycle_selectors() ->
 def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion() -> None:
     mount = _section(PORTAL, "function mountPortal(override) {", "\n\n  window.TOANAASPortal")
 
-    assert 'const surface = isLanding ? "landing" : (isAuth ? "auth" : "workspace");' in mount
+    assert "const surface = portalSurface(page);" in mount
     assert "shell.dataset.portalSurface = surface;" in mount
     assert "document.body.dataset.portalSurface = surface;" in mount
     assert "const motion = window.TOANAASPortalMotion || Object.freeze({" in mount
