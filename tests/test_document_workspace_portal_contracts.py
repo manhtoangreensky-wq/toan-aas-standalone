@@ -92,6 +92,41 @@ def test_document_workspace_keeps_authoring_boundary_and_owner_scoped_refs() -> 
         assert forbidden not in surface
 
 
+def test_document_workspace_library_reuses_only_audit_safe_recent_activity_metadata() -> None:
+    """The library may show the already-hydrated safe feed, never new private data."""
+    surface = _document_surface()
+    start = surface.index("function renderDocumentWorkspaceLibrary(")
+    library = surface[start:surface.index("function renderDocumentWorkspace(page, context)", start)]
+
+    # The library must derive a bounded display projection from the existing
+    # signed-account hydration, then reuse the escaped event renderer rather
+    # than adding a second fetch or exposing workspace identifiers/fields.
+    assert "function validDocumentWorkspaceRevision(value)" in surface
+    for marker in (
+        "const activityEvents = Array.isArray(context.documentWorkspaceEvents)",
+        "validDocumentWorkspaceRevision(item.revision)",
+        ".slice(0, 12)",
+        "renderDocumentWorkspaceActivity(activityEvents)",
+    ):
+        assert marker in library
+    assert "function renderDocumentWorkspaceActivity(events)" in surface
+
+    for forbidden in (
+        "fetch(",
+        "api(",
+        "localStorage",
+        "source_text",
+        "asset_path",
+        "provider_url",
+        "provider_job_id",
+        "payment_id",
+    ):
+        assert forbidden not in library
+    assert "item.workspace_id" not in library
+    assert "item.plan_id" not in library
+    assert "item.entity_type" not in library
+
+
 def test_document_workspace_forms_have_real_signed_mutation_handlers() -> None:
     # Every rendered authoring control must reach the dedicated guarded API
     # with server-owned revisions; no button may silently fall through to the
