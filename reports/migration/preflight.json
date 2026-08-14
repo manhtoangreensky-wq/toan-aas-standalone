@@ -22,7 +22,7 @@
     },
     "root": "repository-root"
   },
-  "generated_at_utc": "2026-08-14T17:31:30+00:00",
+  "generated_at_utc": "2026-08-14T18:10:30+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "27101afc89cec71bdca7867d6c87760e98b63a3d",
+      "checkout_sha": "b77204a5a70b2186491a37769975b15e75c4da17",
       "requested_relation": "exact",
-      "requested_sha": "27101afc89cec71bdca7867d6c87760e98b63a3d",
-      "source_fingerprint_sha256": "bcbf56f2865d0eb15b4bb4b10fcb3976db4d540cf02db2f8734ab62f4b88684f",
+      "requested_sha": "b77204a5a70b2186491a37769975b15e75c4da17",
+      "source_fingerprint_sha256": "bc8c926839c81cd2810fcc6047a307394500406beb2916426f68469cbf21e7ae",
       "working_tree_state": "clean"
     },
     "root": "repository-root"
