@@ -563,7 +563,24 @@ def test_support_case_lifecycle_rejects_sensitive_manual_payment_content_and_san
             },
         )
         assert reply.status_code == 200
-        assert reply.json()["data"]["case"]["revision"] == 4
+        receipt = reply.json()["data"]["receipt"]
+        assert set(reply.json()["data"]) == {"receipt"}
+        assert set(receipt) == {
+            "case_id",
+            "revision",
+            "state",
+            "visibility",
+            "action",
+            "created_at",
+            "delivery",
+        }
+        assert receipt["case_id"] == case["id"]
+        assert receipt["revision"] == 4
+        assert receipt["state"] == "reviewing"
+        assert receipt["visibility"] == "public"
+        assert receipt["action"] == "customer_reply"
+        assert isinstance(receipt["created_at"], str)
+        assert receipt["delivery"] == "web_view_only"
         stale = client.post(
             f"/api/v1/support/cases/{case['id']}/reply",
             headers={"X-CSRF-Token": csrf},
@@ -854,7 +871,14 @@ def test_support_staff_uses_server_side_role_csrf_confirm_and_private_notes(tmp_
                 },
             )
             assert internal.status_code == 200
-            assert internal.json()["data"]["case"]["revision"] == 2
+            internal_receipt = internal.json()["data"]["receipt"]
+            assert set(internal.json()["data"]) == {"receipt"}
+            assert internal_receipt["case_id"] == case["id"]
+            assert internal_receipt["revision"] == 2
+            assert internal_receipt["state"] == "new"
+            assert internal_receipt["visibility"] == "internal"
+            assert internal_receipt["action"] == "operator_reply"
+            assert internal_receipt["delivery"] == "web_view_only"
             admin_detail = manager.get(f"/api/v1/support/admin/cases/{case['id']}").json()["data"]
             assert any(item["body"] == internal_text and item["visibility"] == "internal" for item in admin_detail["messages"])
             assert all("author_display_name" in item for item in admin_detail["messages"])
@@ -868,8 +892,14 @@ def test_support_staff_uses_server_side_role_csrf_confirm_and_private_notes(tmp_
                 },
             )
             assert public.status_code == 200
-            assert public.json()["data"]["case"]["state"] == "waiting_user"
-            assert public.json()["data"]["case"]["revision"] == 3
+            public_receipt = public.json()["data"]["receipt"]
+            assert set(public.json()["data"]) == {"receipt"}
+            assert public_receipt["case_id"] == case["id"]
+            assert public_receipt["revision"] == 3
+            assert public_receipt["state"] == "waiting_user"
+            assert public_receipt["visibility"] == "public"
+            assert public_receipt["action"] == "operator_reply"
+            assert public_receipt["delivery"] == "web_view_only"
 
             note = "Đã xác minh và chuyển sang trạng thái giải quyết."
             updated = manager.post(

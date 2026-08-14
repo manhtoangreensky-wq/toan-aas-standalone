@@ -67,6 +67,23 @@ an existing case carries optimistic `expected_revision`; customer replies do
 not need a confirmation click, while close/reopen and every operator write
 require `confirm: true`.  All responses use the common envelope.
 
+Successful customer and operator reply writes return only
+`data.receipt` with exactly `case_id`, `revision`, `state`, `visibility`,
+`action`, `created_at` and `delivery: "web_view_only"`.  The existing
+idempotency record replays that same safe envelope.  The client must validate
+the receipt, rehydrate the authorized case detail, then discard its retry key;
+it must not render a case/message projection from the reply response.  The
+receipt contains no body, customer/staff identity, reply/message ID, request
+or idempotency data, asset/provider/payment/Bot data, link or delivery claim;
+it does not change authorization, CSRF, confirmation, revision, mutation,
+event or audit behavior.
+
+For a customer reply, the expected receipt state follows the current
+owner-scoped case: `waiting_user` and `resolved` transition to `reviewing`;
+all other valid open states are preserved.  The Portal compares the receipt
+against that transition and the post-write owner-scoped detail before it
+clears the idempotency key.
+
 ```text
 GET  /api/v1/support/summary
 GET  /api/v1/support/advisor?category=
