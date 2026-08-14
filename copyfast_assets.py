@@ -33,7 +33,7 @@ from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageFile, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pypdf import PdfReader
 from starlette.background import BackgroundTask
@@ -53,6 +53,7 @@ from copyfast_db import (
     transaction,
     utc_now,
 )
+from copyfast_image_runtime import ImageDecoderCapacityBusy, reserve_image_decoder_capacity
 
 
 router = APIRouter(prefix="/api/v1/asset-vault", tags=["Web Asset Vault"])
@@ -90,6 +91,7 @@ DOCUMENT_OPERATION_ASSET_EXPORT_SPECS = MappingProxyType({
     "pdf_merge": (".pdf", "application/pdf", "toan-aas-pdf-merged.pdf"),
     "pdf_optimize": (".pdf", "application/pdf", "toan-aas-pdf-optimized.pdf"),
     "image_to_pdf": (".pdf", "application/pdf", "toan-aas-images.pdf"),
+    "pdf_to_images": (".png", "image/png", "toan-aas-pdf-page-001.png"),
     "pdf_to_word_text": (
         ".docx",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -107,6 +109,7 @@ DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES = MappingProxyType({
     "pdf_merge": "toan-aas-merged-pdf.pdf",
     "pdf_optimize": "toan-aas-optimized-pdf.pdf",
     "image_to_pdf": "toan-aas-images.pdf",
+    "pdf_to_images": "toan-aas-pdf-page-001.png",
     "pdf_to_word_text": "toan-aas-pdf-text.docx",
     "pdf_ocr_word": "toan-aas-pdf-ocr.docx",
     "image_ocr": "toan-aas-image-ocr.txt",
@@ -115,6 +118,9 @@ DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES = MappingProxyType({
 PDF_EOF_SCAN_BYTES = 64 * 1024
 PDF_TRAILING_WHITESPACE = b"\x00\x09\x0a\x0c\x0d\x20"
 DOCUMENT_OPERATION_ASSET_EXPORT_TEXT_MAX_BYTES = 2 * 1024 * 1024
+DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_BYTES = 8 * 1024 * 1024
+DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_DIMENSION = 8_192
+DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_PIXELS = 8 * 1024 * 1024
 DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_MEMBERS = 200
 DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_UNCOMPRESSED_BYTES = 8 * 1024 * 1024
 DOCUMENT_OPERATION_ASSET_EXPORT_DOCX_MAX_CENTRAL_DIRECTORY_BYTES = 1024 * 1024
@@ -1861,6 +1867,33 @@ def _insert_document_operation_asset_export_request_mapping(
     )
 
 
+def _document_operation_asset_export_spec(
+    kind: object,
+    *,
+    source_page_count: object,
+    output_page_count: object,
+) -> tuple[str, str, str] | None:
+    """Return the sealed Asset Vault spec without admitting multi-page ZIPs."""
+
+    if not isinstance(kind, str):
+        return None
+    spec = DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(kind)
+    if spec is None:
+        return None
+    if kind != "pdf_to_images":
+        return spec
+    if (
+        isinstance(source_page_count, bool)
+        or not isinstance(source_page_count, int)
+        or source_page_count != 1
+        or isinstance(output_page_count, bool)
+        or not isinstance(output_page_count, int)
+        or output_page_count != 1
+    ):
+        return None
+    return spec
+
+
 def _completed_document_operation_asset_export_snapshot_is_valid(
     conn,
     *,
@@ -1874,7 +1907,10 @@ def _completed_document_operation_asset_export_snapshot_is_valid(
     row = conn.execute(
         """SELECT operation.kind, operation.sha256, operation.byte_size,
                   asset.extension, asset.content_type, asset.original_filename,
-                  asset.storage_key, asset.byte_size, asset.sha256, asset.state
+                  asset.storage_key, asset.byte_size, asset.sha256, asset.state,
+                  operation.selected_start_page, operation.selected_end_page,
+                  operation.source_page_count, operation.output_page_count,
+                  operation.original_filename, operation.content_type
            FROM web_document_operations AS operation
            JOIN web_asset_files AS asset
              ON asset.id=? AND asset.account_id=operation.account_id
@@ -1883,7 +1919,11 @@ def _completed_document_operation_asset_export_snapshot_is_valid(
     ).fetchone()
     if not row:
         return False
-    expected_spec = DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(str(row[0] or ""))
+    expected_spec = _document_operation_asset_export_spec(
+        row[0],
+        source_page_count=row[12],
+        output_page_count=row[13],
+    )
     if expected_spec is None or str(row[9] or "") != ACTIVE_STATE:
         return False
     expected_extension, expected_content_type, expected_original_filename = expected_spec
@@ -1891,6 +1931,15 @@ def _completed_document_operation_asset_export_snapshot_is_valid(
         str(row[3] or "") != expected_extension
         or str(row[4] or "") != expected_content_type
         or str(row[5] or "") != expected_original_filename
+        or str(row[15] or "") != expected_content_type
+        or not _document_operation_output_filename_has_provenance(
+            kind=str(row[0] or ""),
+            original_filename=row[14],
+            selected_start_page=row[10],
+            selected_end_page=row[11],
+            source_page_count=row[12],
+            output_page_count=row[13],
+        )
         or not STORAGE_KEY_PATTERN.fullmatch(str(row[6] or ""))
     ):
         return False
@@ -2573,6 +2622,109 @@ def _verify_document_operation_asset_export_destination_text(
             pass
 
 
+def _document_operation_export_png_stream_is_safe(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+) -> bool:
+    """Parse one sealed PDF-rendered PNG without trusting its descriptor.
+
+    This small validator is intentionally shared with Document Operations at
+    source-open time.  The destination path invokes it again after a private
+    copy, so a correct source hash alone can never turn a malformed, animated
+    or oversized image into a Vault asset.
+    """
+
+    if (
+        isinstance(expected_bytes, bool)
+        or not isinstance(expected_bytes, int)
+        or expected_bytes < 1
+        or expected_bytes > DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_BYTES
+    ):
+        return False
+    # ``LOAD_TRUNCATED_IMAGES`` is a process-global Pillow switch.  A true
+    # value makes strict source validation impossible, but does not prove that
+    # this immutable PNG is corrupt.  Surface a retryable runtime boundary so
+    # Document Operations cannot demote a completed source to unavailable.
+    if ImageFile.LOAD_TRUNCATED_IMAGES:
+        raise ImageDecoderCapacityBusy("Pillow strict PNG validation is temporarily unavailable")
+    try:
+        with reserve_image_decoder_capacity():
+            stream.seek(0, os.SEEK_END)
+            if stream.tell() != expected_bytes:
+                return False
+            if not _png_stream_has_no_exif_chunk(stream):
+                return False
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                stream.seek(0)
+                with Image.open(stream) as verifier:
+                    verifier.verify()
+                stream.seek(0)
+                with Image.open(stream) as decoded:
+                    if str(decoded.format or "").upper() != "PNG":
+                        return False
+                    if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                        return False
+                    width, height = decoded.size
+                    if (
+                        width < 1
+                        or height < 1
+                        or width > DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_DIMENSION
+                        or height > DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_DIMENSION
+                        or width * height > DOCUMENT_OPERATION_ASSET_EXPORT_PNG_MAX_PIXELS
+                        or str(decoded.mode or "") != "RGB"
+                        or decoded.getexif()
+                    ):
+                        return False
+                    decoded.load()
+        stream.seek(0)
+        return True
+    except (
+        Image.DecompressionBombWarning,
+        Image.DecompressionBombError,
+        UnidentifiedImageError,
+        OSError,
+        ValueError,
+    ):
+        return False
+    finally:
+        try:
+            stream.seek(0)
+        except (OSError, ValueError):
+            pass
+
+
+def _verify_document_operation_asset_export_destination_png(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> bool:
+    """Reopen, decode and rehash the copied one-page PNG before committing."""
+
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        if not _document_operation_export_png_stream_is_safe(stream, expected_bytes=expected_bytes):
+            return False
+        return _verify_pinned_private_file(
+            stream,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+
+
 def _verify_document_operation_asset_export_destination(
     path: Path,
     *,
@@ -2596,6 +2748,12 @@ def _verify_document_operation_asset_export_destination(
         )
     if extension == ".txt":
         return _verify_document_operation_asset_export_destination_text(
+            path,
+            expected_bytes=expected_bytes,
+            expected_digest=expected_digest,
+        )
+    if extension == ".png":
+        return _verify_document_operation_asset_export_destination_png(
             path,
             expected_bytes=expected_bytes,
             expected_digest=expected_digest,
@@ -2634,6 +2792,17 @@ def _document_operation_output_filename_has_provenance(
 
     if not isinstance(original_filename, str):
         return False
+    if kind == "pdf_to_images":
+        if (
+            isinstance(source_page_count, bool)
+            or not isinstance(source_page_count, int)
+            or isinstance(output_page_count, bool)
+            or not isinstance(output_page_count, int)
+            or source_page_count != 1
+            or output_page_count != 1
+        ):
+            return False
+        return original_filename == DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES.get(kind)
     if kind != "pdf_split":
         return original_filename == DOCUMENT_OPERATION_ASSET_EXPORT_OUTPUT_FILENAMES.get(kind)
     page_values = (
@@ -2743,7 +2912,11 @@ def finalize_document_operation_asset_export(
             ).fetchone()
             operation_project_id = str(operation[4]) if operation and operation[4] else None
             operation_kind = str(operation[1] or "") if operation else ""
-            current_spec = DOCUMENT_OPERATION_ASSET_EXPORT_SPECS.get(operation_kind)
+            current_spec = _document_operation_asset_export_spec(
+                operation_kind,
+                source_page_count=operation[10] if operation else None,
+                output_page_count=operation[11] if operation else None,
+            )
             if (
                 not operation
                 or str(operation[0] or "") != "completed"

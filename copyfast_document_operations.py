@@ -39,7 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_image_runtime import image_decoder_capacity
+from copyfast_image_runtime import ImageDecoderCapacityBusy, image_decoder_capacity
 from copyfast_db import (
     asset_vault_directory,
     asset_vault_enabled,
@@ -186,6 +186,8 @@ MIN_OPTIMIZATION_SAVED_BYTES = 1024
 MIN_OPTIMIZATION_SAVED_RATIO = 0.01
 ORPHAN_RETENTION_SECONDS = 60 * 60
 PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
+DOCUMENT_OPERATION_EXPORT_BUSY_CODE = "WEB_DOCUMENT_OPERATION_EXPORT_BUSY"
+DOCUMENT_OPERATION_EXPORT_BUSY_MESSAGE = "Đang có tác vụ ảnh khác xử lý. Hãy thử lại sau."
 
 OUTPUT_SPEC_BY_KIND = {
     PDF_MERGE_KIND: (".pdf", "application/pdf", "toan-aas-merged-pdf.pdf"),
@@ -207,6 +209,7 @@ COMPLETED_OPERATION_OUTPUT_FILENAMES = MappingProxyType({
     PDF_MERGE_KIND: "toan-aas-merged-pdf.pdf",
     PDF_OPTIMIZE_KIND: "toan-aas-optimized-pdf.pdf",
     IMAGE_TO_PDF_KIND: "toan-aas-images.pdf",
+    PDF_TO_IMAGES_KIND: "toan-aas-pdf-page-001.png",
     PDF_TO_WORD_KIND: "toan-aas-pdf-text.docx",
     IMAGE_OCR_KIND: "toan-aas-image-ocr.txt",
     PDF_OCR_KIND: "toan-aas-pdf-ocr.txt",
@@ -214,14 +217,15 @@ COMPLETED_OPERATION_OUTPUT_FILENAMES = MappingProxyType({
 })
 
 # A Document Operation can enter the Asset Vault only through its sealed output
-# descriptor.  PDF → images is deliberately absent even for its one-page PNG
-# form: it needs a dedicated per-file/ZIP export contract rather than this
-# document-attachment boundary.
+# descriptor.  PDF → images is restricted further at source-open time: only a
+# verified one-page PNG is eligible; a multi-page ZIP never reaches this copy
+# boundary.
 DOCUMENT_OPERATION_EXPORT_KINDS = frozenset({
     PDF_SPLIT_KIND,
     PDF_MERGE_KIND,
     PDF_OPTIMIZE_KIND,
     IMAGE_TO_PDF_KIND,
+    PDF_TO_IMAGES_KIND,
     PDF_TO_WORD_KIND,
     IMAGE_OCR_KIND,
     PDF_OCR_KIND,
@@ -232,6 +236,7 @@ DOCUMENT_OPERATION_EXPORT_MEDIA = MappingProxyType({
     PDF_MERGE_KIND: (".pdf", "application/pdf"),
     PDF_OPTIMIZE_KIND: (".pdf", "application/pdf"),
     IMAGE_TO_PDF_KIND: (".pdf", "application/pdf"),
+    PDF_TO_IMAGES_KIND: (".png", "image/png"),
     PDF_TO_WORD_KIND: (".docx", DOCX_MEDIA_TYPE),
     PDF_OCR_WORD_KIND: (".docx", DOCX_MEDIA_TYPE),
     IMAGE_OCR_KIND: (".txt", "text/plain; charset=utf-8"),
@@ -1774,6 +1779,23 @@ def _output_spec(
         raise RuntimeError("Loại artifact Document Operation không hợp lệ") from exc
 
 
+def _is_single_page_pdf_to_images_export(
+    *,
+    source_page_count: object,
+    output_page_count: object,
+) -> bool:
+    """Keep ZIP outputs outside the one-file Asset Vault export boundary."""
+
+    return (
+        not isinstance(source_page_count, bool)
+        and isinstance(source_page_count, int)
+        and source_page_count == 1
+        and not isinstance(output_page_count, bool)
+        and isinstance(output_page_count, int)
+        and output_page_count == 1
+    )
+
+
 def _completed_operation_output_filename(
     kind: str,
     *,
@@ -1862,6 +1884,22 @@ def _document_operation_export_destination_failure(
         domain=DocumentOperationExportFailureDomain.DESTINATION,
         code="WEB_DOCUMENT_OPERATION_EXPORT_STORAGE_UNAVAILABLE",
         public_message="Chưa thể chuẩn bị lưu tài liệu riêng tư. Hãy thử lại sau.",
+    )
+
+
+def _document_operation_export_capacity_failure(
+    *,
+    operation_id: str,
+    account_id: str,
+) -> DocumentOperationExportSourceResult:
+    """Keep shared decoder contention retryable, never source corruption."""
+
+    return _document_operation_export_failure(
+        operation_id=operation_id,
+        account_id=account_id,
+        domain=DocumentOperationExportFailureDomain.DESTINATION,
+        code=DOCUMENT_OPERATION_EXPORT_BUSY_CODE,
+        public_message=DOCUMENT_OPERATION_EXPORT_BUSY_MESSAGE,
     )
 
 
@@ -1978,6 +2016,30 @@ def _validate_document_operation_export_text(stream: BinaryIO, *, expected_bytes
         raise _document_operation_export_invalid_source()
 
 
+def _validate_document_operation_export_png(stream: BinaryIO, *, expected_bytes: int) -> None:
+    """Require the sealed one-page PDF render to remain a bounded RGB PNG."""
+
+    if expected_bytes < 1 or expected_bytes > MAX_PDF_TO_IMAGES_PAGE_PNG_BYTES:
+        raise _document_operation_export_invalid_source()
+    try:
+        # Asset Vault owns the generic final-file parser.  Reusing its strict
+        # stream check keeps source and destination validation identical while
+        # avoiding a module-level import cycle.
+        from copyfast_assets import _document_operation_export_png_stream_is_safe
+    except (ImportError, AttributeError) as exc:
+        raise _DocumentOperationExportDestinationError("PNG export validator is unavailable") from exc
+    try:
+        if not _document_operation_export_png_stream_is_safe(
+            stream,
+            expected_bytes=expected_bytes,
+        ):
+            raise _document_operation_export_invalid_source()
+    except DocumentOperationError:
+        raise
+    except (OSError, ValueError) as exc:
+        raise _DocumentOperationExportDestinationError("PNG export source could not be read") from exc
+
+
 def _validate_document_operation_export_artifact(
     *,
     kind: str,
@@ -1993,6 +2055,9 @@ def _validate_document_operation_export_artifact(
         return
     if kind in {IMAGE_OCR_KIND, PDF_OCR_KIND} and extension == ".txt":
         _validate_document_operation_export_text(stream, expected_bytes=expected_bytes)
+        return
+    if kind == PDF_TO_IMAGES_KIND and extension == ".png":
+        _validate_document_operation_export_png(stream, expected_bytes=expected_bytes)
         return
     raise _document_operation_export_invalid_source()
 
@@ -2077,6 +2142,16 @@ def open_document_operation_export_source(
             account_id=safe_account_id,
             code="WEB_DOCUMENT_OPERATION_EXPORT_NOT_ELIGIBLE",
             public_message="Thao tác tài liệu này chưa hỗ trợ lưu vào Asset Vault.",
+        )
+    if kind == PDF_TO_IMAGES_KIND and not _is_single_page_pdf_to_images_export(
+        source_page_count=row[9],
+        output_page_count=row[10],
+    ):
+        return _document_operation_export_precondition_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
+            code="WEB_DOCUMENT_OPERATION_EXPORT_NOT_ELIGIBLE",
+            public_message="PDF nhiều trang đang ở dạng ZIP chưa thể lưu trực tiếp vào Asset Vault.",
         )
 
     stream: BinaryIO | None = None
@@ -2189,6 +2264,11 @@ def open_document_operation_export_source(
             failure=None,
             _operation_id=safe_operation_id,
             _account_id=safe_account_id,
+        )
+    except ImageDecoderCapacityBusy:
+        return _document_operation_export_capacity_failure(
+            operation_id=safe_operation_id,
+            account_id=safe_account_id,
         )
     except _DocumentOperationExportSourceIntegrityError:
         return _document_operation_export_source_integrity_failure(
@@ -6046,6 +6126,14 @@ async def _export_document_operation_to_asset_vault(
         receipt = get_document_operation_asset_export_receipt(
             account_id=account_id,
             operation_id=operation_id,
+        )
+    except ImageDecoderCapacityBusy:
+        release_document_operation_asset_export_lease(reservation.lease)
+        return envelope(
+            False,
+            DOCUMENT_OPERATION_EXPORT_BUSY_MESSAGE,
+            status_name="guarded",
+            error_code=DOCUMENT_OPERATION_EXPORT_BUSY_CODE,
         )
     except HTTPException:
         release_document_operation_asset_export_lease(reservation.lease)

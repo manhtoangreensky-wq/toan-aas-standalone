@@ -341,7 +341,7 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2778,
+      "line": 2951,
       "operation": "UPDATE",
       "table": "clears"
     },
@@ -1343,49 +1343,49 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1664,
+      "line": 1670,
       "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2787,
+      "line": 2960,
       "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3338,
+      "line": 3511,
       "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3832,
+      "line": 4005,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 4239,
+      "line": 4412,
       "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 4428,
+      "line": 4601,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 4473,
+      "line": 4646,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 4569,
+      "line": 4742,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -1397,7 +1397,7 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2383,
+      "line": 2463,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -1535,7 +1535,7 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2990,
+      "line": 3163,
       "operation": "INSERT INTO",
       "table": "web_audio_operation_asset_export_requests"
     },
@@ -1547,25 +1547,25 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3208,
+      "line": 3381,
       "operation": "UPDATE",
       "table": "web_audio_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3222,
+      "line": 3395,
       "operation": "INSERT INTO",
       "table": "web_audio_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3237,
+      "line": 3410,
       "operation": "UPDATE",
       "table": "web_audio_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 3343,
+      "line": 3516,
       "operation": "UPDATE",
       "table": "web_audio_operation_asset_exports"
     },
@@ -2081,7 +2081,7 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1857,
+      "line": 1863,
       "operation": "INSERT INTO",
       "table": "web_document_operation_asset_export_requests"
     },
@@ -2093,25 +2093,25 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2019,
+      "line": 2068,
       "operation": "UPDATE",
       "table": "web_document_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2058,
+      "line": 2107,
       "operation": "INSERT INTO",
       "table": "web_document_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2105,
+      "line": 2154,
       "operation": "UPDATE",
       "table": "web_document_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 2807,
+      "line": 2980,
       "operation": "UPDATE",
       "table": "web_document_operation_asset_exports"
     },
@@ -2129,7 +2129,7 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 1567,
+      "line": 1572,
       "operation": "INSERT INTO",
       "table": "web_document_operation_events"
     },
@@ -2141,13 +2141,13 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4324,
+      "line": 4404,
       "operation": "INSERT INTO",
       "table": "web_document_operation_sources"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4484,
+      "line": 4564,
       "operation": "INSERT INTO",
       "table": "web_document_operation_sources"
     },
@@ -2159,205 +2159,205 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2316,
+      "line": 2396,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2347,
+      "line": 2427,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2368,
+      "line": 2448,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 3972,
+      "line": 4052,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4091,
+      "line": 4171,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4104,
+      "line": 4184,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4132,
+      "line": 4212,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4311,
+      "line": 4391,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4334,
+      "line": 4414,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4367,
+      "line": 4447,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4471,
+      "line": 4551,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4494,
+      "line": 4574,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4536,
+      "line": 4616,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4679,
+      "line": 4759,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4693,
+      "line": 4773,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4717,
+      "line": 4797,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4765,
+      "line": 4845,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4965,
+      "line": 5045,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4983,
+      "line": 5063,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5007,
+      "line": 5087,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5052,
+      "line": 5132,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5208,
+      "line": 5288,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5226,
+      "line": 5306,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5250,
+      "line": 5330,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5296,
+      "line": 5376,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5434,
+      "line": 5514,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5457,
+      "line": 5537,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5497,
+      "line": 5577,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5629,
+      "line": 5709,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5652,
+      "line": 5732,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5691,
+      "line": 5771,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5811,
+      "line": 5891,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5824,
+      "line": 5904,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5851,
+      "line": 5931,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
@@ -2873,25 +2873,25 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 968,
+      "line": 974,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 982,
+      "line": 988,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 992,
+      "line": 998,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 999,
+      "line": 1005,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
@@ -3293,13 +3293,13 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1222,
+      "line": 1228,
       "operation": "INSERT INTO",
       "table": "web_image_operation_asset_export_requests"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1403,
+      "line": 1409,
       "operation": "DELETE FROM",
       "table": "web_image_operation_asset_export_requests"
     },
@@ -3311,25 +3311,25 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1298,
+      "line": 1304,
       "operation": "UPDATE",
       "table": "web_image_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1337,
+      "line": 1343,
       "operation": "INSERT INTO",
       "table": "web_image_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1407,
+      "line": 1413,
       "operation": "DELETE FROM",
       "table": "web_image_operation_asset_exports"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 1682,
+      "line": 1688,
       "operation": "UPDATE",
       "table": "web_image_operation_asset_exports"
     },
@@ -6495,12 +6495,12 @@
     },
     {
       "file": "copyfast_assets.py",
-      "line": 201,
+      "line": 207,
       "name": "WEBAPP_ASSET_VAULT_MAX_FILE_MB"
     },
     {
       "file": "copyfast_assets.py",
-      "line": 211,
+      "line": 217,
       "name": "WEBAPP_ASSET_VAULT_QUOTA_MB"
     },
     {
@@ -6710,12 +6710,12 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 901,
+      "line": 906,
       "name": "WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 910,
+      "line": 915,
       "name": "WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB"
     },
     {
@@ -9852,7 +9852,7 @@
     {
       "endpoint": "image_to_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4421,
+      "line": 4501,
       "methods": [
         "POST"
       ],
@@ -10437,7 +10437,7 @@
     {
       "endpoint": "ocr_image",
       "file": "copyfast_document_operations.py",
-      "line": 4602,
+      "line": 4682,
       "methods": [
         "POST"
       ],
@@ -10446,7 +10446,7 @@
     {
       "endpoint": "ocr_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4844,
+      "line": 4924,
       "methods": [
         "POST"
       ],
@@ -10545,7 +10545,7 @@
     {
       "endpoint": "merge_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4272,
+      "line": 4352,
       "methods": [
         "POST"
       ],
@@ -10554,7 +10554,7 @@
     {
       "endpoint": "pdf_ocr_to_word",
       "file": "copyfast_document_operations.py",
-      "line": 5134,
+      "line": 5214,
       "methods": [
         "POST"
       ],
@@ -10563,7 +10563,7 @@
     {
       "endpoint": "optimize_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 5765,
+      "line": 5845,
       "methods": [
         "POST"
       ],
@@ -10572,7 +10572,7 @@
     {
       "endpoint": "split_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4047,
+      "line": 4127,
       "methods": [
         "POST"
       ],
@@ -10581,7 +10581,7 @@
     {
       "endpoint": "pdf_to_images",
       "file": "copyfast_document_operations.py",
-      "line": 5379,
+      "line": 5459,
       "methods": [
         "POST"
       ],
@@ -10590,7 +10590,7 @@
     {
       "endpoint": "pdf_to_word",
       "file": "copyfast_document_operations.py",
-      "line": 5573,
+      "line": 5653,
       "methods": [
         "POST"
       ],
@@ -12840,7 +12840,7 @@
     {
       "endpoint": "upload_asset",
       "file": "copyfast_assets.py",
-      "line": 4193,
+      "line": 4366,
       "methods": [
         "POST"
       ],
@@ -13290,7 +13290,7 @@
     {
       "endpoint": "get_asset",
       "file": "copyfast_assets.py",
-      "line": 4181,
+      "line": 4354,
       "methods": [
         "GET"
       ],
@@ -13299,7 +13299,7 @@
     {
       "endpoint": "archive_asset",
       "file": "copyfast_assets.py",
-      "line": 4531,
+      "line": 4704,
       "methods": [
         "POST"
       ],
@@ -13308,7 +13308,7 @@
     {
       "endpoint": "download_asset",
       "file": "copyfast_assets.py",
-      "line": 4296,
+      "line": 4469,
       "methods": [
         "GET"
       ],
@@ -13317,7 +13317,7 @@
     {
       "endpoint": "get_asset_lifecycle",
       "file": "copyfast_assets.py",
-      "line": 4080,
+      "line": 4253,
       "methods": [
         "GET"
       ],
@@ -13326,7 +13326,7 @@
     {
       "endpoint": "preview_asset_video",
       "file": "copyfast_assets.py",
-      "line": 4106,
+      "line": 4279,
       "methods": [
         "GET"
       ],
@@ -13335,7 +13335,7 @@
     {
       "endpoint": "restore_asset",
       "file": "copyfast_assets.py",
-      "line": 4335,
+      "line": 4508,
       "methods": [
         "POST"
       ],
@@ -13362,7 +13362,7 @@
     {
       "endpoint": "get_document_operation",
       "file": "copyfast_document_operations.py",
-      "line": 6158,
+      "line": 6246,
       "methods": [
         "GET"
       ],
@@ -13443,7 +13443,7 @@
     {
       "endpoint": "download_document_operation",
       "file": "copyfast_document_operations.py",
-      "line": 6207,
+      "line": 6295,
       "methods": [
         "GET"
       ],
@@ -13515,7 +13515,7 @@
     {
       "endpoint": "export_document_operation_to_asset_vault",
       "file": "copyfast_document_operations.py",
-      "line": 6190,
+      "line": 6278,
       "methods": [
         "POST"
       ],
@@ -13614,7 +13614,7 @@
     {
       "endpoint": "list_assets",
       "file": "copyfast_assets.py",
-      "line": 3910,
+      "line": 4083,
       "methods": [
         "GET"
       ],
@@ -13632,7 +13632,7 @@
     {
       "endpoint": "list_document_operations",
       "file": "copyfast_document_operations.py",
-      "line": 3997,
+      "line": 4077,
       "methods": [
         "GET"
       ],
@@ -13768,7 +13768,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 146,
   "source_files_scanned": 146,
-  "source_fingerprint_sha256": "b309f083d679c9954148c505ba2141285c95e608315c18826f20c5fd05981d80",
+  "source_fingerprint_sha256": "45d97e9b3d7941dadbdfed60c18e8fcdec00b93948a50e3ba588522585184b21",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13988,7 +13988,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 27008,
+      "line": 27012,
       "path": "/features"
     },
     {

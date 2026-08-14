@@ -1,4 +1,4 @@
-"""Real-file contracts for DOCX/TXT Document Operation export sources."""
+"""Real-file contracts for Document Operation export sources."""
 
 from __future__ import annotations
 
@@ -9,10 +9,12 @@ from pathlib import Path
 import sqlite3
 import struct
 import sys
+import zlib
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 from docx import Document
+from PIL import Image, ImageFile
 from pypdf import PdfWriter
 
 
@@ -120,6 +122,88 @@ def real_zip_bytes() -> bytes:
     return stream.getvalue()
 
 
+def real_png_bytes() -> bytes:
+    image = Image.new("RGB", (8, 6), color=(22, 163, 183))
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
+def png_with_exif_chunk() -> bytes:
+    payload = real_png_bytes()
+    offset = len(b"\x89PNG\r\n\x1a\n")
+    while offset < len(payload):
+        chunk_size = int.from_bytes(payload[offset:offset + 4], byteorder="big")
+        chunk_type = payload[offset + 4:offset + 8]
+        if chunk_type == b"IEND":
+            exif = b"Exif\x00\x00"
+            chunk = (
+                len(exif).to_bytes(4, byteorder="big")
+                + b"eXIf"
+                + exif
+                + zlib.crc32(b"eXIf" + exif).to_bytes(4, byteorder="big")
+            )
+            return payload[:offset] + chunk + payload[offset:]
+        offset += 12 + chunk_size
+    raise AssertionError("PNG fixture has no IEND chunk")
+
+
+def animated_png_bytes() -> bytes:
+    first = Image.new("RGB", (8, 6), color=(22, 163, 183))
+    second = Image.new("RGB", (8, 6), color=(12, 74, 110))
+    stream = BytesIO()
+    try:
+        first.save(stream, format="PNG", save_all=True, append_images=[second], duration=100, loop=0)
+        return stream.getvalue()
+    finally:
+        first.close()
+        second.close()
+
+
+def oversized_dimension_png_bytes() -> bytes:
+    image = Image.new("RGB", (8_193, 1), color=(22, 163, 183))
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
+def structurally_truncated_rgb_png_bytes() -> bytes:
+    """A CRC-valid PNG whose decompressed scanline lacks one RGB pixel."""
+
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        return (
+            len(payload).to_bytes(4, byteorder="big")
+            + kind
+            + payload
+            + zlib.crc32(kind + payload).to_bytes(4, byteorder="big")
+        )
+
+    header = struct.pack(
+        ">IIBBBBB",
+        2,
+        1,
+        8,
+        2,
+        0,
+        0,
+        0,
+    )
+    # RGB 2×1 needs one filter byte plus six pixel bytes. This has only three
+    # pixel bytes but carries a valid compressed stream and CRCs.
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(b"\x00\x16\xa3\xb7"))
+        + chunk(b"IEND", b"")
+    )
+
+
 def seed_completed_operation(
     db,
     *,
@@ -128,6 +212,7 @@ def seed_completed_operation(
     extension: str,
     content_type: str,
     payload: bytes,
+    source_page_count: int = 1,
     output_page_count: int | None = None,
     original_filename: str | None = None,
     selected_start_page: int | None = None,
@@ -162,7 +247,7 @@ def seed_completed_operation(
                 selected_start_page, selected_end_page, source_page_count, output_page_count,
                 storage_key, original_filename, content_type, byte_size, sha256, failure_code,
                 created_at, queued_at, started_at, completed_at, updated_at)
-               VALUES (?, ?, ?, NULL, ?, 'completed', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, NULL,
+               VALUES (?, ?, ?, NULL, ?, 'completed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL,
                        ?, ?, ?, ?, ?)""",
             (
                 operation_id,
@@ -176,6 +261,7 @@ def seed_completed_operation(
                 "",
                 selected_start_page,
                 selected_end_page,
+                source_page_count,
                 output_page_count,
                 storage_key,
                 original_filename or REAL_OUTPUT_FILENAMES[kind],
@@ -424,7 +510,7 @@ def test_text_without_visible_nul_free_content_is_rejected_as_source_integrity(
     assert operation_state(tmp_path, operation_id) == "completed"
 
 
-def test_pdf_to_images_remains_ineligible_even_with_a_real_output_file(tmp_path, monkeypatch) -> None:
+def test_multi_page_pdf_to_images_zip_remains_ineligible_even_with_a_real_output_file(tmp_path, monkeypatch) -> None:
     db, operations = load_modules(tmp_path, monkeypatch)
     operation_id = "30000000-0000-4000-8000-000000000012"
     seed_completed_operation(
@@ -445,3 +531,149 @@ def test_pdf_to_images_remains_ineligible_even_with_a_real_output_file(tmp_path,
     assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_NOT_ELIGIBLE"
     assert operations.mark_document_operation_export_source_unavailable(result) is False
     assert operation_state(tmp_path, operation_id) == "completed"
+
+
+def test_pdf_to_images_requires_matching_single_source_and_output_page_counts(tmp_path, monkeypatch) -> None:
+    db, operations = load_modules(tmp_path, monkeypatch)
+    operation_id = "30000000-0000-4000-8000-000000000016"
+    seed_completed_operation(
+        db,
+        operation_id=operation_id,
+        kind="pdf_to_images",
+        extension=".png",
+        content_type="image/png",
+        payload=real_png_bytes(),
+        source_page_count=2,
+        output_page_count=1,
+        original_filename="toan-aas-pdf-page-001.png",
+    )
+
+    result = operations.open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=ACCOUNT_ID,
+    )
+
+    assert result.source is None
+    assert result.failure is not None
+    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.PRECONDITION
+    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_NOT_ELIGIBLE"
+    assert operations.mark_document_operation_export_source_unavailable(result) is False
+    assert operation_state(tmp_path, operation_id) == "completed"
+
+
+@pytest.mark.parametrize(
+    ("content_type", "original_filename"),
+    (
+        ("image/jpeg", "toan-aas-pdf-page-001.png"),
+        ("image/png", "renamed-page.png"),
+    ),
+)
+def test_pdf_to_images_requires_the_canonical_png_descriptor(
+    tmp_path,
+    monkeypatch,
+    content_type: str,
+    original_filename: str,
+) -> None:
+    db, operations = load_modules(tmp_path, monkeypatch)
+    operation_id = "30000000-0000-4000-8000-000000000017"
+    seed_completed_operation(
+        db,
+        operation_id=operation_id,
+        kind="pdf_to_images",
+        extension=".png",
+        content_type=content_type,
+        payload=real_png_bytes(),
+        output_page_count=1,
+        original_filename=original_filename,
+    )
+
+    result = operations.open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=ACCOUNT_ID,
+    )
+
+    assert result.source is None
+    assert result.failure is not None
+    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
+    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE"
+    assert operations.mark_document_operation_export_source_unavailable(result) is True
+    assert operation_state(tmp_path, operation_id) == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("suffix", "payload"),
+    (
+        ("magic", b"not-a-png"),
+        ("exif", png_with_exif_chunk()),
+        ("apng", animated_png_bytes()),
+        ("dimension", oversized_dimension_png_bytes()),
+    ),
+)
+def test_single_page_pdf_to_images_rejects_unsafe_png_source(tmp_path, monkeypatch, suffix: str, payload: bytes) -> None:
+    db, operations = load_modules(tmp_path, monkeypatch)
+    operation_id = f"30000000-0000-4000-8000-0000000000{20 + len(suffix):02d}"
+    seed_completed_operation(
+        db,
+        operation_id=operation_id,
+        kind="pdf_to_images",
+        extension=".png",
+        content_type="image/png",
+        payload=payload,
+        output_page_count=1,
+        original_filename="toan-aas-pdf-page-001.png",
+    )
+
+    result = operations.open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=ACCOUNT_ID,
+    )
+
+    assert result.source is None
+    assert result.failure is not None
+    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
+    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE"
+    assert operations.mark_document_operation_export_source_unavailable(result) is True
+    assert operation_state(tmp_path, operation_id) == "unavailable"
+
+
+def test_pdf_to_images_retries_when_pillow_global_allows_truncation(tmp_path, monkeypatch) -> None:
+    db, operations = load_modules(tmp_path, monkeypatch)
+    operation_id = "30000000-0000-4000-8000-000000000030"
+    seed_completed_operation(
+        db,
+        operation_id=operation_id,
+        kind="pdf_to_images",
+        extension=".png",
+        content_type="image/png",
+        payload=structurally_truncated_rgb_png_bytes(),
+        output_page_count=1,
+        original_filename="toan-aas-pdf-page-001.png",
+    )
+    original = ImageFile.LOAD_TRUNCATED_IMAGES
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
+    try:
+        result = operations.open_document_operation_export_source(
+            operation_id=operation_id,
+            account_id=ACCOUNT_ID,
+        )
+    finally:
+        ImageFile.LOAD_TRUNCATED_IMAGES = original
+
+    assert result.source is None
+    assert result.failure is not None
+    assert result.failure.domain is operations.DocumentOperationExportFailureDomain.DESTINATION
+    assert result.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_BUSY"
+    assert operations.mark_document_operation_export_source_unavailable(result) is False
+    assert operation_state(tmp_path, operation_id) == "completed"
+
+    retry = operations.open_document_operation_export_source(
+        operation_id=operation_id,
+        account_id=ACCOUNT_ID,
+    )
+
+    assert retry.source is None
+    assert retry.failure is not None
+    assert retry.failure.domain is operations.DocumentOperationExportFailureDomain.SOURCE_INTEGRITY
+    assert retry.failure.code == "WEB_DOCUMENT_OPERATION_EXPORT_SOURCE_UNAVAILABLE"
+    assert operations.mark_document_operation_export_source_unavailable(retry) is True
+    assert operation_state(tmp_path, operation_id) == "unavailable"

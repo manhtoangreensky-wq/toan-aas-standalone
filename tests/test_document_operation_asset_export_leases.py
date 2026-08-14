@@ -84,7 +84,7 @@ def seed_completed_document_operation(
                 output_page_count, storage_key, original_filename, content_type, byte_size,
                 sha256, failure_code, created_at, queued_at, started_at, completed_at, updated_at)
                VALUES (?, ?, ?, NULL, 'pdf_split', 'completed', ?, ?, ?, 512, 1,
-                       '1-2', 1, 2, 2, 2, ?, 'split.pdf', 'application/pdf', ?,
+                       '1-2', 1, 2, 2, 2, ?, 'toan-aas-pdf-pages-1-2.pdf', 'application/pdf', ?,
                        ?, NULL, ?, ?, ?, ?, ?)""",
             (
                 operation_id,
