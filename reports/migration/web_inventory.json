@@ -142,7 +142,7 @@
     {
       "file": "copyfast_support.py",
       "kind": "function",
-      "line": 2400,
+      "line": 2433,
       "target": "admin_care_queues"
     },
     {
@@ -232,7 +232,7 @@
     {
       "file": "copyfast_support.py",
       "kind": "function",
-      "line": 1268,
+      "line": 1290,
       "target": "validate_team_queue"
     },
     {
@@ -275,7 +275,7 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 1942,
+      "line": 1964,
       "operation": "UPDATE",
       "table": "above"
     },
@@ -1421,7 +1421,7 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 1636,
+      "line": 1658,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -5039,7 +5039,7 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 1931,
+      "line": 1953,
       "operation": "INSERT INTO",
       "table": "web_support_case_attachments"
     },
@@ -5051,7 +5051,7 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 841,
+      "line": 863,
       "operation": "INSERT INTO",
       "table": "web_support_case_control_events"
     },
@@ -5063,13 +5063,13 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 2493,
+      "line": 2526,
       "operation": "UPDATE",
       "table": "web_support_case_controls"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2594,
+      "line": 2627,
       "operation": "UPDATE",
       "table": "web_support_case_controls"
     },
@@ -5081,7 +5081,7 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 2190,
+      "line": 2223,
       "operation": "INSERT INTO",
       "table": "web_support_case_resolution_feedback"
     },
@@ -5093,49 +5093,49 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 1535,
+      "line": 1557,
       "operation": "INSERT INTO",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 1919,
+      "line": 1941,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2063,
+      "line": 2085,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2104,
+      "line": 2137,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2485,
+      "line": 2518,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2583,
+      "line": 2616,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2814,
+      "line": 2847,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2851,
+      "line": 2895,
       "operation": "UPDATE",
       "table": "web_support_cases"
     },
@@ -5159,25 +5159,25 @@
     },
     {
       "file": "copyfast_support.py",
-      "line": 1542,
+      "line": 1564,
       "operation": "INSERT INTO",
       "table": "web_support_messages"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2057,
+      "line": 2079,
       "operation": "INSERT INTO",
       "table": "web_support_messages"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2808,
+      "line": 2841,
       "operation": "INSERT INTO",
       "table": "web_support_messages"
     },
     {
       "file": "copyfast_support.py",
-      "line": 2857,
+      "line": 2901,
       "operation": "INSERT INTO",
       "table": "web_support_messages"
     },
@@ -7621,7 +7621,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1621,
+      "occurrences": 1622,
       "provider": "Telegram"
     }
   ],
@@ -7674,7 +7674,7 @@
     {
       "endpoint": "admin_care_queues",
       "file": "copyfast_support.py",
-      "line": 2400,
+      "line": 2433,
       "methods": [
         "GET"
       ],
@@ -7683,7 +7683,7 @@
     {
       "endpoint": "admin_resolution_feedback_summary",
       "file": "copyfast_support.py",
-      "line": 2289,
+      "line": 2322,
       "methods": [
         "GET"
       ],
@@ -7692,7 +7692,7 @@
     {
       "endpoint": "admin_care_staff",
       "file": "copyfast_support.py",
-      "line": 2366,
+      "line": 2399,
       "methods": [
         "GET"
       ],
@@ -7701,7 +7701,7 @@
     {
       "endpoint": "admin_list_cases",
       "file": "copyfast_support.py",
-      "line": 2637,
+      "line": 2670,
       "methods": [
         "GET"
       ],
@@ -7710,7 +7710,7 @@
     {
       "endpoint": "admin_get_case",
       "file": "copyfast_support.py",
-      "line": 2764,
+      "line": 2797,
       "methods": [
         "GET"
       ],
@@ -7719,7 +7719,7 @@
     {
       "endpoint": "admin_download_case_evidence",
       "file": "copyfast_support.py",
-      "line": 2009,
+      "line": 2031,
       "methods": [
         "GET"
       ],
@@ -7728,7 +7728,7 @@
     {
       "endpoint": "admin_care_escalation",
       "file": "copyfast_support.py",
-      "line": 2540,
+      "line": 2573,
       "methods": [
         "POST"
       ],
@@ -7737,7 +7737,7 @@
     {
       "endpoint": "admin_care_triage",
       "file": "copyfast_support.py",
-      "line": 2444,
+      "line": 2477,
       "methods": [
         "POST"
       ],
@@ -7746,7 +7746,7 @@
     {
       "endpoint": "admin_reply_case",
       "file": "copyfast_support.py",
-      "line": 2783,
+      "line": 2816,
       "methods": [
         "POST"
       ],
@@ -7755,7 +7755,7 @@
     {
       "endpoint": "admin_update_case",
       "file": "copyfast_support.py",
-      "line": 2829,
+      "line": 2873,
       "methods": [
         "POST"
       ],
@@ -7881,7 +7881,7 @@
     {
       "endpoint": "admin_summary",
       "file": "copyfast_support.py",
-      "line": 2266,
+      "line": 2299,
       "methods": [
         "GET"
       ],
@@ -7908,7 +7908,7 @@
     {
       "endpoint": "support_advisor",
       "file": "copyfast_support.py",
-      "line": 1332,
+      "line": 1354,
       "methods": [
         "GET"
       ],
@@ -8754,7 +8754,7 @@
     {
       "endpoint": "list_cases",
       "file": "copyfast_support.py",
-      "line": 1455,
+      "line": 1477,
       "methods": [
         "GET"
       ],
@@ -8763,7 +8763,7 @@
     {
       "endpoint": "create_case",
       "file": "copyfast_support.py",
-      "line": 1514,
+      "line": 1536,
       "methods": [
         "POST"
       ],
@@ -8772,7 +8772,7 @@
     {
       "endpoint": "get_case",
       "file": "copyfast_support.py",
-      "line": 1771,
+      "line": 1793,
       "methods": [
         "GET"
       ],
@@ -8781,7 +8781,7 @@
     {
       "endpoint": "attach_case_evidence",
       "file": "copyfast_support.py",
-      "line": 1783,
+      "line": 1805,
       "methods": [
         "POST"
       ],
@@ -8790,7 +8790,7 @@
     {
       "endpoint": "download_case_evidence",
       "file": "copyfast_support.py",
-      "line": 1986,
+      "line": 2008,
       "methods": [
         "GET"
       ],
@@ -8799,7 +8799,7 @@
     {
       "endpoint": "close_case",
       "file": "copyfast_support.py",
-      "line": 2118,
+      "line": 2151,
       "methods": [
         "POST"
       ],
@@ -8808,7 +8808,7 @@
     {
       "endpoint": "reopen_case",
       "file": "copyfast_support.py",
-      "line": 2124,
+      "line": 2157,
       "methods": [
         "POST"
       ],
@@ -8817,7 +8817,7 @@
     {
       "endpoint": "reply_case",
       "file": "copyfast_support.py",
-      "line": 2033,
+      "line": 2055,
       "methods": [
         "POST"
       ],
@@ -8826,7 +8826,7 @@
     {
       "endpoint": "create_resolution_feedback",
       "file": "copyfast_support.py",
-      "line": 2130,
+      "line": 2163,
       "methods": [
         "POST"
       ],
@@ -9033,7 +9033,7 @@
     {
       "endpoint": "consultation_brief_catalog",
       "file": "copyfast_support.py",
-      "line": 1371,
+      "line": 1393,
       "methods": [
         "GET"
       ],
@@ -9042,7 +9042,7 @@
     {
       "endpoint": "compose_consultation_brief",
       "file": "copyfast_support.py",
-      "line": 1397,
+      "line": 1419,
       "methods": [
         "POST"
       ],
@@ -9654,7 +9654,7 @@
     {
       "endpoint": "support_events",
       "file": "copyfast_support.py",
-      "line": 2250,
+      "line": 2283,
       "methods": [
         "GET"
       ],
@@ -12156,7 +12156,7 @@
     {
       "endpoint": "support_summary",
       "file": "copyfast_support.py",
-      "line": 1308,
+      "line": 1330,
       "methods": [
         "GET"
       ],
@@ -13768,7 +13768,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 146,
   "source_files_scanned": 146,
-  "source_fingerprint_sha256": "bc8c926839c81cd2810fcc6047a307394500406beb2916426f68469cbf21e7ae",
+  "source_fingerprint_sha256": "664d26df8093ab8f227cd4104a46f0478a9dc74d8a344e306979ad105fa206a9",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13988,7 +13988,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 27058,
+      "line": 27078,
       "path": "/features"
     },
     {
