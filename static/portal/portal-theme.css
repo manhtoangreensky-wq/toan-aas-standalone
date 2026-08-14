@@ -13433,6 +13433,10 @@ body {
     transform: none;
   }
 
+  .portal-page.portal-delivery-page [data-delivery-receipt] {
+    animation: none !important;
+  }
+
   .portal-page:is(.portal-delivery-page, .portal-asset-vault) .portal-delivery-nav a {
     transition: none;
     transform: none;
@@ -16029,6 +16033,36 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+}
+
+/* Delivery receipt keyframes live after every route-scoped final-surface
+   layer. The rule is only consumed by the Delivery Center selector above. */
+@keyframes portal-delivery-receipt-confirmed {
+  0% {
+    outline-color: transparent;
+    outline-offset: 0;
+    box-shadow: none;
+  }
+
+  45% {
+    outline-color: var(--portal-context);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px var(--portal-light-accent-soft);
+  }
+
+  100% {
+    outline-color: transparent;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-page.portal-delivery-page [data-delivery-receipt] {
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+    animation: portal-delivery-receipt-confirmed 200ms var(--portal-motion-ease-emphasis) both;
   }
 }
 

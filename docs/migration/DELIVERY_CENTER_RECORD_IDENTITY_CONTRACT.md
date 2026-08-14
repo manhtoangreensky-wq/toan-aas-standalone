@@ -60,6 +60,28 @@ owner-checked job ID, it says so rather than guessing from feature or time.
   into a deceptive empty/zero state. Before merging a refresh, each row must
   be an object with a bounded opaque ID and bounded status token, and the list
   stays within the existing 100-record window.
+- After that validation, a refresh may give the affected summary and record
+  surface one short receipt animation only when a record is new in the current
+  bounded window or an existing opaque `id` has a different `status`. A record
+  merely leaving the bounded window does not animate. The marker contains no
+  ID, URL or delivery state, is removed after the render, is never persisted,
+  and does not imply a completed job, a valid output or an available download.
+- A manual refresh shares the canonical request/session/route fence. If a
+  newer refresh, route transition or signed-session bootstrap supersedes it,
+  the older response must not merge rows, change read status, show a toast,
+  clear the newer control's busy state or emit a receipt.
+- The pending refresh control is a bounded tab-memory marker keyed by the
+  current request epoch. It persists only through a local filter remount so
+  duplicate reads are not invited; it is cleared by its owning request and is
+  never stored, sent to a provider or treated as job/delivery truth. A new
+  signed hydration clears any unresolved marker before it can affect a new
+  route or session generation.
+- Job polling uses the same signed-session/route discipline and a poll epoch.
+  A manual Job Center refresh invalidates an outstanding timer or response, so
+  a delayed background read cannot overwrite newer canonical rows or consume
+  its receipt marker. If the current manual refresh fails, polling resumes
+  only from the last retained canonical list when it still contains an active
+  job; the browser does not invent rows or delivery state.
 - Controls are at least 40px on desktop and 44px on mobile. Focus remains
   visible and all added motion respects `prefers-reduced-motion`.
 
