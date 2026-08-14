@@ -226,7 +226,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2450,
+      "line": 2461,
       "target": "root_service_worker"
     },
     {
@@ -257,7 +257,7 @@
     "database_tables": 224,
     "env_references": 250,
     "providers": 7,
-    "routes": 681,
+    "routes": 682,
     "ui_path_references": 47
   },
   "database_references": [
@@ -593,7 +593,7 @@
     },
     {
       "file": "app.py",
-      "line": 1687,
+      "line": 1695,
       "operation": "UPDATE",
       "table": "family"
     },
@@ -3113,13 +3113,13 @@
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 266,
+      "line": 272,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 299,
+      "line": 305,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -4535,13 +4535,13 @@
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 798,
+      "line": 970,
       "operation": "DELETE FROM",
       "table": "web_prompt_gallery_saves"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1050,
+      "line": 1222,
       "operation": "INSERT INTO",
       "table": "web_prompt_gallery_saves"
     },
@@ -4553,13 +4553,13 @@
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 529,
+      "line": 535,
       "operation": "INSERT INTO",
       "table": "web_prompt_template_events"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1356,
+      "line": 1528,
       "operation": "DELETE FROM",
       "table": "web_prompt_template_events"
     },
@@ -4571,13 +4571,13 @@
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 513,
+      "line": 519,
       "operation": "INSERT INTO",
       "table": "web_prompt_template_versions"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1357,
+      "line": 1529,
       "operation": "DELETE FROM",
       "table": "web_prompt_template_versions"
     },
@@ -4589,49 +4589,55 @@
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 938,
+      "line": 852,
       "operation": "INSERT INTO",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1036,
+      "line": 1110,
       "operation": "INSERT INTO",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1178,
+      "line": 1208,
+      "operation": "INSERT INTO",
+      "table": "web_prompt_templates"
+    },
+    {
+      "file": "copyfast_prompt_library.py",
+      "line": 1350,
       "operation": "UPDATE",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1255,
+      "line": 1427,
       "operation": "UPDATE",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1323,
+      "line": 1495,
       "operation": "INSERT INTO",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1359,
+      "line": 1531,
       "operation": "DELETE FROM",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1413,
+      "line": 1585,
       "operation": "UPDATE",
       "table": "web_prompt_templates"
     },
     {
       "file": "copyfast_prompt_library.py",
-      "line": 1540,
+      "line": 1712,
       "operation": "INSERT INTO",
       "table": "web_prompt_templates"
     },
@@ -7650,7 +7656,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2615,
+      "line": 2626,
       "methods": [
         "GET"
       ],
@@ -7911,7 +7917,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2635,
+      "line": 2646,
       "methods": [
         "GET"
       ],
@@ -7947,7 +7953,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2517,
+      "line": 2528,
       "methods": [
         "POST"
       ],
@@ -7956,7 +7962,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2503,
+      "line": 2514,
       "methods": [
         "POST"
       ],
@@ -7965,7 +7971,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2531,
+      "line": 2542,
       "methods": [
         "POST"
       ],
@@ -7974,7 +7980,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2610,
+      "line": 2621,
       "methods": [
         "GET"
       ],
@@ -8370,7 +8376,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2646,
+      "line": 2657,
       "methods": [
         "GET"
       ],
@@ -8415,7 +8421,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2651,
+      "line": 2662,
       "methods": [
         "GET"
       ],
@@ -8649,7 +8655,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2630,
+      "line": 2641,
       "methods": [
         "GET"
       ],
@@ -8883,7 +8889,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2646,
+      "line": 2657,
       "methods": [
         "GET"
       ],
@@ -9018,7 +9024,7 @@
     {
       "endpoint": "compose_prompt_blueprint",
       "file": "copyfast_prompt_studio.py",
-      "line": 383,
+      "line": 407,
       "methods": [
         "POST"
       ],
@@ -9630,7 +9636,7 @@
     {
       "endpoint": "prompt_library_events",
       "file": "copyfast_prompt_library.py",
-      "line": 1651,
+      "line": 1823,
       "methods": [
         "GET"
       ],
@@ -9684,7 +9690,7 @@
     {
       "endpoint": "export_templates",
       "file": "copyfast_prompt_library.py",
-      "line": 1558,
+      "line": 1730,
       "methods": [
         "POST"
       ],
@@ -9783,7 +9789,7 @@
     {
       "endpoint": "save_gallery_prompt",
       "file": "copyfast_prompt_library.py",
-      "line": 960,
+      "line": 1132,
       "methods": [
         "POST"
       ],
@@ -9819,7 +9825,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2610,
+      "line": 2621,
       "methods": [
         "GET"
       ],
@@ -9855,7 +9861,7 @@
     {
       "endpoint": "import_templates",
       "file": "copyfast_prompt_library.py",
-      "line": 1492,
+      "line": 1664,
       "methods": [
         "POST"
       ],
@@ -10269,7 +10275,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2640,
+      "line": 2651,
       "methods": [
         "GET"
       ],
@@ -10845,7 +10851,7 @@
     {
       "endpoint": "prompt_studio_policy",
       "file": "copyfast_prompt_studio.py",
-      "line": 362,
+      "line": 386,
       "methods": [
         "GET"
       ],
@@ -11815,6 +11821,15 @@
       "path": "/sales"
     },
     {
+      "endpoint": "save_prompt_blueprint_to_library",
+      "file": "copyfast_prompt_studio.py",
+      "line": 431,
+      "methods": [
+        "POST"
+      ],
+      "path": "/save-to-library"
+    },
+    {
       "endpoint": "start_email_verification",
       "file": "copyfast_auth.py",
       "line": 3106,
@@ -11880,7 +11895,7 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2450,
+      "line": 2461,
       "methods": [
         "GET"
       ],
@@ -12123,7 +12138,7 @@
     {
       "endpoint": "prompt_library_summary",
       "file": "copyfast_prompt_library.py",
-      "line": 805,
+      "line": 977,
       "methods": [
         "GET"
       ],
@@ -12276,7 +12291,7 @@
     {
       "endpoint": "list_templates",
       "file": "copyfast_prompt_library.py",
-      "line": 814,
+      "line": 986,
       "methods": [
         "GET"
       ],
@@ -12285,7 +12300,7 @@
     {
       "endpoint": "create_template",
       "file": "copyfast_prompt_library.py",
-      "line": 907,
+      "line": 1079,
       "methods": [
         "POST"
       ],
@@ -12294,7 +12309,7 @@
     {
       "endpoint": "get_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1110,
+      "line": 1282,
       "methods": [
         "GET"
       ],
@@ -12303,7 +12318,7 @@
     {
       "endpoint": "update_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1140,
+      "line": 1312,
       "methods": [
         "PATCH"
       ],
@@ -12312,7 +12327,7 @@
     {
       "endpoint": "archive_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1284,
+      "line": 1456,
       "methods": [
         "POST"
       ],
@@ -12321,7 +12336,7 @@
     {
       "endpoint": "duplicate_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1296,
+      "line": 1468,
       "methods": [
         "POST"
       ],
@@ -12330,7 +12345,7 @@
     {
       "endpoint": "preview_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1429,
+      "line": 1601,
       "methods": [
         "POST"
       ],
@@ -12339,7 +12354,7 @@
     {
       "endpoint": "purge_archived_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1340,
+      "line": 1512,
       "methods": [
         "POST"
       ],
@@ -12348,7 +12363,7 @@
     {
       "endpoint": "restore_template",
       "file": "copyfast_prompt_library.py",
-      "line": 1290,
+      "line": 1462,
       "methods": [
         "POST"
       ],
@@ -12357,7 +12372,7 @@
     {
       "endpoint": "restore_template_version",
       "file": "copyfast_prompt_library.py",
-      "line": 1373,
+      "line": 1545,
       "methods": [
         "POST"
       ],
@@ -12366,7 +12381,7 @@
     {
       "endpoint": "template_versions",
       "file": "copyfast_prompt_library.py",
-      "line": 1121,
+      "line": 1293,
       "methods": [
         "GET"
       ],
@@ -13032,7 +13047,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2625,
+      "line": 2636,
       "methods": [
         "GET"
       ],
@@ -13059,7 +13074,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2620,
+      "line": 2631,
       "methods": [
         "GET"
       ],
@@ -13518,7 +13533,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2656,
+      "line": 2667,
       "methods": [
         "GET"
       ],
@@ -13753,7 +13768,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 146,
   "source_files_scanned": 146,
-  "source_fingerprint_sha256": "ad934983c025e0cecf12c3817b30ce5b19fe34c635f1b7d985d16da968fb88b9",
+  "source_fingerprint_sha256": "5a5e7ed8490fe81b230e82e952fd5e802f2a919e27e7d9fa0b84abea2bf0a392",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13973,7 +13988,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 26905,
+      "line": 26997,
       "path": "/features"
     },
     {
