@@ -2189,6 +2189,7 @@
     // template, model result or execution outcome in the portal.
     const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     const blueprint = source.blueprint && typeof source.blueprint === "object" && !Array.isArray(source.blueprint) ? source.blueprint : {};
+    const brief = normalizePromptStudioLibrarySaveSource(source.brief);
     const title = promptStudioBoundedText(blueprint.title, 1, 320, false);
     const goal = promptStudioBoundedText(blueprint.goal, 2, 300, false);
     const audience = promptStudioBoundedText(blueprint.audience, 0, 300, false);
@@ -2209,18 +2210,91 @@
       ? blueprint.review_checklist.map((item) => promptStudioBoundedText(item, 2, 800, true)).filter(Boolean).slice(0, 8)
       : [];
     if (
-      !title || !goal || !PROMPT_STUDIO_PLATFORMS.has(platform) || !PROMPT_STUDIO_TONES.has(tone)
+      !brief || !title || !goal || !PROMPT_STUDIO_PLATFORMS.has(platform) || !PROMPT_STUDIO_TONES.has(tone)
       || !PROMPT_STUDIO_LANGUAGES.has(language) || !PROMPT_STUDIO_OUTPUT_FORMATS.has(outputFormat)
       || !promptText || !negativePrompt || variables.length < 2 || reviewChecklist.length < 4
       || source.execution !== "web_native_deterministic_prompt_blueprint_only"
       || PROMPT_STUDIO_FALSE_BOUNDARY_FIELDS.some((key) => source[key] !== false)
+      || brief.goal !== goal || brief.audience !== audience || brief.platform !== platform || brief.tone !== tone
+      || brief.language !== language || brief.output_format !== outputFormat
     ) return {};
     return {
+      brief,
       blueprint: {
         title, goal, audience, platform, tone, language, output_format: outputFormat,
         prompt_text: promptText, negative_prompt: negativePrompt, variables, review_checklist: reviewChecklist
       }
     };
+  }
+
+  function normalizePromptStudioLibrarySaveSource(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["goal", "audience", "platform", "tone", "language", "output_format", "constraints"];
+    if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return {};
+    const goal = promptStudioBoundedText(source.goal, 2, 300, false);
+    const audience = promptStudioBoundedText(source.audience, 0, 300, false);
+    const platform = String(source.platform || "");
+    const tone = String(source.tone || "");
+    const language = String(source.language || "");
+    const outputFormat = String(source.output_format || "");
+    const constraints = promptStudioBoundedText(source.constraints, 0, 1200, false);
+    if (!goal || !PROMPT_STUDIO_PLATFORMS.has(platform) || !PROMPT_STUDIO_TONES.has(tone)
+      || !PROMPT_STUDIO_LANGUAGES.has(language) || !PROMPT_STUDIO_OUTPUT_FORMATS.has(outputFormat)) return {};
+    return { goal, audience, platform, tone, language, output_format: outputFormat, constraints };
+  }
+
+  function normalizePromptStudioComposeGeneration(raw) {
+    return typeof raw === "number" && Number.isSafeInteger(raw) && raw >= 1 ? raw : 0;
+  }
+
+  function promptStudioLibrarySaveSourceMatchesResult(source, result) {
+    const brief = normalizePromptStudioLibrarySaveSource(source);
+    const normalized = normalizePromptStudioResult(result);
+    const returnedBrief = normalizePromptStudioLibrarySaveSource(normalized.brief);
+    const blueprint = normalized.blueprint && typeof normalized.blueprint === "object" ? normalized.blueprint : {};
+    return Boolean(
+      brief.goal && returnedBrief.goal && blueprint.goal
+      && brief.goal === returnedBrief.goal && brief.audience === returnedBrief.audience
+      && brief.platform === returnedBrief.platform && brief.tone === returnedBrief.tone
+      && brief.language === returnedBrief.language && brief.output_format === returnedBrief.output_format
+      && brief.constraints === returnedBrief.constraints
+      && brief.goal === blueprint.goal && brief.audience === blueprint.audience
+      && brief.platform === blueprint.platform && brief.tone === blueprint.tone
+      && brief.language === blueprint.language && brief.output_format === blueprint.output_format
+    );
+  }
+
+  const PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze([
+    "browser_blueprint_persisted", "bot_called", "bridge_called", "provider_called", "job_created",
+    "wallet_mutated", "payment_started", "asset_saved", "media_output_created", "publish_action_created",
+    "delivery_created", "fact_checked", "rights_verified"
+  ]);
+  const PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS = Object.freeze([
+    "template", "destination", "execution", "blueprint_recomputed_on_server", "template_persisted",
+    ...PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS
+  ]);
+  const PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS = Object.freeze([
+    "id", "category", "state", "revision"
+  ]);
+
+  function normalizePromptStudioLibrarySaveReceipt(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const template = source.template && typeof source.template === "object" && !Array.isArray(source.template) ? source.template : {};
+    const id = validPromptTemplateId(template.id) ? String(template.id) : "";
+    const category = String(template.category || "");
+    const revision = Number(template.revision);
+    if (
+      Object.keys(source).length !== PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS.length
+      || !PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(source, key))
+      || Object.keys(template).length !== PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS.length
+      || !PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(template, key))
+      || source.destination !== "prompt_library" || source.execution !== "web_native_prompt_studio_library_save"
+      || source.blueprint_recomputed_on_server !== true || source.template_persisted !== true
+      || !PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS.every((field) => source[field] === false)
+      || !id || category !== "Prompt Studio" || template.state !== "active"
+      || !Number.isInteger(revision) || revision < 1 || revision > 1000000
+    ) return {};
+    return { template: { id, category: "Prompt Studio", state: "active", revision }, destination: "prompt_library" };
   }
 
   const CONTENT_PROMPT_PACK_KINDS = new Set(["meta_ai_prompt", "caption_hashtag", "content_ideas", "hook_script", "image_video_prompt"]);
@@ -8013,6 +8087,9 @@
       // restored from a Bot result, bridge record or browser storage.
       promptStudioEnabled: source.promptStudioEnabled === true,
       promptStudioResult: normalizePromptStudioResult(source.promptStudioResult),
+      promptStudioSaveSource: normalizePromptStudioLibrarySaveSource(source.promptStudioSaveSource),
+      promptStudioSaveReceipt: normalizePromptStudioLibrarySaveReceipt(source.promptStudioSaveReceipt),
+      promptStudioComposeGeneration: normalizePromptStudioComposeGeneration(source.promptStudioComposeGeneration),
       promptLibrarySummary: source.promptLibrarySummary && typeof source.promptLibrarySummary === "object" ? source.promptLibrarySummary : {},
       promptTemplates: Array.isArray(source.promptTemplates) ? source.promptTemplates.slice(0, 100) : [],
       promptLibraryListing: source.promptLibraryListing && typeof source.promptLibraryListing === "object" ? source.promptLibraryListing : {},
@@ -13204,7 +13281,7 @@
     ];
   }
 
-  function renderPromptStudioResult(raw) {
+  function renderPromptStudioResult(raw, context) {
     const result = normalizePromptStudioResult(raw);
     const blueprint = result.blueprint && typeof result.blueprint === "object" ? result.blueprint : null;
     if (!blueprint) return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Transient blueprint</span><h2 class="portal-card-title">Chưa có Prompt Blueprint</h2><p class="portal-card-subtitle">Điền mục tiêu để nhận một khung prompt có cấu trúc. Kết quả chỉ ở state phiên hiện tại và không phải template, AI output hay tác vụ đã thực thi.</p></div>${badge("empty")}</div></section>`;
@@ -13213,14 +13290,29 @@
     const platform = promptStudioLabel(PROMPT_STUDIO_PLATFORM_OPTIONS, blueprint.platform, "Ngữ cảnh");
     const tone = promptStudioLabel(PROMPT_STUDIO_TONE_OPTIONS, blueprint.tone, "Giọng điệu");
     const output = promptStudioLabel(PROMPT_STUDIO_OUTPUT_FORMAT_OPTIONS, blueprint.output_format, "Bản nháp");
-    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Deterministic Prompt Blueprint</span><h2 class="portal-card-title">${safeText(blueprint.title)}</h2><p class="portal-card-subtitle">${safeText(platform)} · ${safeText(tone)} · ${safeText(output)}. Đây là khung text để bạn tự copy và review, không phải AI output, template đã lưu, asset hoặc nội dung đã publish.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mục tiêu</span><span class="portal-summary-value">${safeText(blueprint.goal)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đối tượng</span><span class="portal-summary-value">${safeText(blueprint.audience || "Chưa cung cấp")}</span></div></div><div class="portal-content-prompt-pack-sections"><section><h3>Prompt blueprint</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Prompt Blueprint">${safeText(blueprint.prompt_text)}</textarea></section><section><h3>Negative direction</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Negative direction">${safeText(blueprint.negative_prompt)}</textarea></section><section><h3>Biến cần chủ động điền</h3><ul>${variables}</ul></section></div><div class="portal-content-prompt-pack-checks"><strong>Kiểm tra trước khi dùng bên ngoài</strong><ul>${checklist}</ul></div><div class="portal-form-footer"><span class="portal-form-note">Prompt Studio không lưu blueprint này. Nếu muốn tạo template versioned, hãy chủ động chuyển sang Prompt Library và rà soát lại nội dung trước khi lưu.</span><a class="portal-button portal-button--quiet" href="/prompt-library/new">Mở Prompt Library</a></div></section>`;
+    const saveSource = normalizePromptStudioLibrarySaveSource(context && context.promptStudioSaveSource);
+    const composeGeneration = normalizePromptStudioComposeGeneration(context && context.promptStudioComposeGeneration);
+    const sourceMatchesResult = composeGeneration > 0 && promptStudioLibrarySaveSourceMatchesResult(saveSource, result);
+    const receipt = sourceMatchesResult ? normalizePromptStudioLibrarySaveReceipt(context && context.promptStudioSaveReceipt) : {};
+    const template = receipt.template && typeof receipt.template === "object" ? receipt.template : null;
+    const canSave = Boolean(
+      context && context.capabilities && context.capabilities["prompt-studio-save-library"] === true
+      && !template && sourceMatchesResult
+    );
+    const saveControl = template
+      ? `<span class="portal-button portal-button--primary" aria-disabled="true">Đã lưu thành template</span>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-studio-save-library" data-portal-route="/prompt-studio" data-portal-confirm="Lưu Prompt Blueprint Web hiện tại thành template versioned trong Prompt Library riêng tư? Máy chủ sẽ tự tạo lại template từ brief đã xác nhận."${canSave ? "" : " disabled"}>Lưu thành template</button>`;
+    const receiptMarkup = template
+      ? `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Prompt Library riêng tư</span><h3 class="portal-card-title">Đã lưu template</h3><p class="portal-card-subtitle">${safeText(template.category)} · revision ${safeText(String(template.revision))}. Receipt chỉ giữ metadata template; không giữ nội dung Blueprint hoặc brief trong browser.</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">Template thuộc Web account hiện tại.</span><a class="portal-button portal-button--primary" href="/prompt-library/${encodeURIComponent(template.id)}">Mở template</a></div></section>`
+      : "";
+    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Deterministic Prompt Blueprint</span><h2 class="portal-card-title">${safeText(blueprint.title)}</h2><p class="portal-card-subtitle">${safeText(platform)} · ${safeText(tone)} · ${safeText(output)}. Đây là khung text để bạn tự copy và review, không phải AI output, template đã lưu, asset hoặc nội dung đã publish.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mục tiêu</span><span class="portal-summary-value">${safeText(blueprint.goal)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đối tượng</span><span class="portal-summary-value">${safeText(blueprint.audience || "Chưa cung cấp")}</span></div></div><div class="portal-content-prompt-pack-sections"><section><h3>Prompt blueprint</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Prompt Blueprint">${safeText(blueprint.prompt_text)}</textarea></section><section><h3>Negative direction</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Negative direction">${safeText(blueprint.negative_prompt)}</textarea></section><section><h3>Biến cần chủ động điền</h3><ul>${variables}</ul></section></div><div class="portal-content-prompt-pack-checks"><strong>Kiểm tra trước khi dùng bên ngoài</strong><ul>${checklist}</ul></div><div class="portal-form-footer"><span class="portal-form-note">Blueprint chỉ là kết quả review trong tab. Bạn có thể xác nhận lưu một template versioned riêng tư; server sẽ tạo lại từ brief gốc, không tin hoặc lưu Blueprint do browser truyền.</span><div class="portal-inline-actions">${saveControl}<a class="portal-button portal-button--quiet" href="/prompt-library/new">Mở Prompt Library</a></div></div></section>${receiptMarkup}`;
   }
 
   function renderPromptStudio(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["prompt-studio-compose"] === true);
     const route = String(page.routePath || page.path || "/prompt-studio");
     const values = { goal: "", audience: "", platform: "general", tone: "clear", language: "vi", output_format: "general", constraints: "" };
-    return `<article class="portal-page portal-content-prompt-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Web-native Prompt Blueprint Composer</span><h2>Biến mục tiêu thành khung prompt rõ ràng để tự kiểm soát.</h2><p>Prompt Studio chuyển grammar lập kế hoạch hữu ích sang một blueprint Web độc lập: có mục tiêu, đối tượng, tone, biến cần điền và checklist review. Nó không nhận là engine AI hoặc kết quả đã sẵn sàng dùng.</p></div><dl><div><dt>0</dt><dd>Bot / bridge call</dd></div><div><dt>0</dt><dd>Provider / job / payment</dd></div><div><dt>1</dt><dd>Text blueprint để review</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Blueprint composer</span><h2 class="portal-card-title">Tạo Prompt Blueprint</h2><p class="portal-card-subtitle">Máy chủ kiểm tra signed session, CSRF và dữ liệu đã giới hạn trước khi dựng template xác định trong request. Không có brief, template hoặc audit detail chứa input được lưu từ thao tác này.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="prompt-studio-compose" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptStudioFields(), canCompose, context, values, "prompt-studio")}<div class="portal-form-footer"><span class="portal-form-note">Blueprint cần được bạn kiểm tra claim, nguồn, quyền và chính sách kênh trước khi dùng ở nơi khác.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo Prompt Blueprint</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ dựng cấu trúc text</h2><p class="portal-card-subtitle">Không có model, provider, Bot, Core Bridge, job, Xu, PayOS, asset, render, publish hoặc delivery trong Prompt Studio.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Model / provider</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span></div></aside></div>${renderPromptStudioResult(context.promptStudioResult)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Dựng khung trước, lưu khi bạn chủ động</h2><p class="portal-card-subtitle">Kết quả chỉ là blueprint tạm thời. Prompt Library có workflow versioned riêng nếu bạn quyết định tự lưu một template Web-owned sau khi rà soát.</p></div></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-content-prompt-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Web-native Prompt Blueprint Composer</span><h2>Biến mục tiêu thành khung prompt rõ ràng để tự kiểm soát.</h2><p>Prompt Studio chuyển grammar lập kế hoạch hữu ích sang một blueprint Web độc lập: có mục tiêu, đối tượng, tone, biến cần điền và checklist review. Nó không nhận là engine AI hoặc kết quả đã sẵn sàng dùng.</p></div><dl><div><dt>0</dt><dd>Bot / bridge call</dd></div><div><dt>0</dt><dd>Provider / job / payment</dd></div><div><dt>1</dt><dd>Text blueprint để review</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Blueprint composer</span><h2 class="portal-card-title">Tạo Prompt Blueprint</h2><p class="portal-card-subtitle">Máy chủ kiểm tra signed session, CSRF và dữ liệu đã giới hạn trước khi dựng template xác định trong request. Không có brief, template hoặc audit detail chứa input được lưu từ thao tác này.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="prompt-studio-compose" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptStudioFields(), canCompose, context, values, "prompt-studio")}<div class="portal-form-footer"><span class="portal-form-note">Blueprint cần được bạn kiểm tra claim, nguồn, quyền và chính sách kênh trước khi dùng ở nơi khác.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo Prompt Blueprint</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ dựng cấu trúc text</h2><p class="portal-card-subtitle">Không có model, provider, Bot, Core Bridge, job, Xu, PayOS, asset, render, publish hoặc delivery trong Prompt Studio.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Model / provider</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span></div></aside></div>${renderPromptStudioResult(context.promptStudioResult, context)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Dựng khung trước, lưu khi bạn chủ động</h2><p class="portal-card-subtitle">Kết quả chỉ là blueprint tạm thời. Prompt Library có workflow versioned riêng nếu bạn quyết định tự lưu một template Web-owned sau khi rà soát.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   const CONTENT_PROMPT_PACK_KIND_OPTIONS = Object.freeze([

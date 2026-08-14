@@ -119,6 +119,12 @@ def _require_prompt_library_enabled() -> None:
         )
 
 
+def require_prompt_library_enabled() -> None:
+    """Public maintenance gate for narrow Web handoffs owned by this library."""
+
+    _require_prompt_library_enabled()
+
+
 def _uuid(value: Any, *, label: str) -> str:
     try:
         return str(uuid.UUID(str(value)))
@@ -723,6 +729,172 @@ class GalleryPromptSaveRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+PROMPT_STUDIO_BRIEF_FIELDS = (
+    "goal", "audience", "platform", "tone", "language", "output_format", "constraints",
+)
+PROMPT_STUDIO_BLUEPRINT_FIELDS = frozenset(
+    {
+        "title", "goal", "audience", "platform", "tone", "language", "output_format",
+        "prompt_text", "negative_prompt", "variables", "review_checklist",
+    }
+)
+PROMPT_STUDIO_SAVE_FALSE_BOUNDARY_FIELDS = (
+    "browser_blueprint_persisted", "bot_called", "bridge_called", "provider_called", "job_created",
+    "wallet_mutated", "payment_started", "asset_saved", "media_output_created", "publish_action_created",
+    "delivery_created", "fact_checked", "rights_verified",
+)
+
+
+def _prompt_studio_save_boundaries() -> dict[str, bool | str]:
+    """Return the closed, truthful receipt boundary for this one Web handoff."""
+
+    return {
+        "execution": "web_native_prompt_studio_library_save",
+        "blueprint_recomputed_on_server": True,
+        "template_persisted": True,
+        **{field: False for field in PROMPT_STUDIO_SAVE_FALSE_BOUNDARY_FIELDS},
+    }
+
+
+def _prompt_studio_template_payload(blueprint: dict[str, Any]) -> PromptTemplatePayload:
+    """Materialize only a server-recomputed Studio Blueprint as a library payload.
+
+    The public handoff writer never accepts this structure from a browser. Its
+    caller supplies a fresh deterministic blueprint only after validating the
+    original Studio brief. Validate its exact server shape here too, so a
+    future internal caller cannot accidentally turn this into a generic
+    arbitrary-template backdoor.
+    """
+
+    if not isinstance(blueprint, dict) or set(blueprint) != PROMPT_STUDIO_BLUEPRINT_FIELDS:
+        raise HTTPException(status_code=422, detail="Blueprint Prompt Studio nội bộ không hợp lệ")
+    variables_source = blueprint.get("variables")
+    if not isinstance(variables_source, list) or not all(isinstance(item, dict) for item in variables_source):
+        raise HTTPException(status_code=422, detail="Variables Blueprint Prompt Studio nội bộ không hợp lệ")
+    variables = [str(item.get("name") or "") for item in variables_source]
+    goal = str(blueprint.get("goal") or "").strip()
+    title = f"Prompt Studio: {goal}"[:MAX_TITLE].rstrip()
+    try:
+        return PromptTemplatePayload.model_validate(
+            {
+                "title": title,
+                "category": "Prompt Studio",
+                "product_context": "prompt_studio",
+                "platform": blueprint.get("platform"),
+                "style": blueprint.get("tone"),
+                "language": blueprint.get("language"),
+                "prompt_text": blueprint.get("prompt_text"),
+                "negative_prompt": blueprint.get("negative_prompt"),
+                "variables": variables,
+                "tags": ["prompt-studio", str(blueprint.get("platform") or ""), str(blueprint.get("output_format") or "")],
+                "source": "Prompt Studio server recomputed",
+                "license_note": "Người dùng xác nhận tự rà soát quyền sử dụng nội dung.",
+                "quality_score": 50,
+            }
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Blueprint Prompt Studio nội bộ không hợp lệ") from exc
+
+
+def _prompt_studio_receipt_template(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Expose only owner-safe template metadata, never the blueprint body."""
+
+    return {
+        "id": str(row[0]),
+        "category": "Prompt Studio",
+        "state": str(row[14]),
+        "revision": int(row[15]),
+    }
+
+
+def save_prompt_studio_blueprint_template(
+    *,
+    brief: dict[str, Any],
+    recompute_blueprint: Callable[[], dict[str, Any]],
+    idempotency_key: str,
+    request: Request,
+    account: dict,
+) -> dict[str, Any]:
+    """Persist one explicit Prompt Studio handoff through the Library writer.
+
+    ``brief`` is used only as normalized idempotency material. The durable
+    template is created from ``recompute_blueprint`` inside the Library write
+    transaction, never from a browser-supplied Blueprint/result/template ID.
+    """
+
+    require_prompt_library_enabled()
+    account_id = str(account["id"])
+    key = _idempotency_key(idempotency_key)
+    normalized_brief = {field: brief.get(field) for field in PROMPT_STUDIO_BRIEF_FIELDS}
+    fingerprint = _fingerprint({"action": "prompt_studio_save", "brief": normalized_brief})
+
+    def operation(conn: Any) -> dict[str, Any]:
+        snapshot = _payload_snapshot(_prompt_studio_template_payload(recompute_blueprint()))
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_prompt_templates WHERE account_id=? AND state='active'", (account_id,)
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_TEMPLATES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Đã đạt giới hạn template active của Web account. Hãy archive template cũ trước.",
+                status_name="guarded",
+                error_code="WEB_PROMPT_TEMPLATE_LIMIT",
+            )
+        if not _has_template_storage_capacity(
+            conn, account_id=account_id, additional_bytes=_snapshot_storage_bytes(snapshot) * 2
+        ):
+            return _storage_limit_response()
+        template_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_prompt_templates
+               (id, account_id, title, category, product_context, platform, style, language, prompt_text,
+                negative_prompt, variables_json, tags_json, source_note, license_note, quality_score, state,
+                revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (
+                template_id, account_id, snapshot["title"], snapshot["category"], snapshot["product_context"],
+                snapshot["platform"], snapshot["style"], snapshot["language"], snapshot["prompt_text"],
+                snapshot["negative_prompt"], snapshot["variables_json"], snapshot["tags_json"], snapshot["source_note"],
+                snapshot["license_note"], snapshot["quality_score"], now, now,
+            ),
+        )
+        _insert_version(conn, template_id=template_id, account_id=account_id, revision=1, snapshot=snapshot, created_at=now)
+        _event(conn, account_id=account_id, template_id=template_id, action="prompt_studio_blueprint_saved", revision=1)
+        _record_template_audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.prompt_library.prompt_studio_save",
+            target=template_id,
+            detail="server-recomputed prompt studio blueprint saved as web-owned template",
+        )
+        row = (
+            template_id, snapshot["title"], snapshot["category"], snapshot["product_context"], snapshot["platform"],
+            snapshot["style"], snapshot["language"], snapshot["prompt_text"], snapshot["negative_prompt"],
+            snapshot["variables_json"], snapshot["tags_json"], snapshot["source_note"], snapshot["license_note"],
+            snapshot["quality_score"], "active", 1, now, now,
+        )
+        return envelope(
+            True,
+            "Đã lưu template Prompt Studio vào Prompt Library riêng tư.",
+            data={
+                "template": _prompt_studio_receipt_template(row),
+                "destination": "prompt_library",
+                **_prompt_studio_save_boundaries(),
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-prompt-library:{account_id}:prompt-studio-save",
+        account_id,
+        key,
+        fingerprint,
+        operation,
+    )
 
 
 def _gallery_source_note(*, prompt_id: str, snapshot_version: str) -> str:
