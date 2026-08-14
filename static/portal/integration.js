@@ -544,6 +544,13 @@
   let paymentOptionsSessionEpoch = 0;
   let paymentOptionsHydrationEpoch = 0;
   const submissions = new Map();
+  // `merge()` remounts the Portal. Keep this DOM-only route marker so a
+  // concurrent save/error remount cannot recreate an editable compose form
+  // while its bounded compose request is still pending.
+  let promptStudioComposeLockRoute = "";
+  // This numeric identity is tab-memory only. It distinguishes consecutive
+  // valid Compose results even when their normalized briefs are identical.
+  let promptStudioComposeGeneration = 0;
   // Fast content shortcuts are a request-only Web-native composer family.
   // Keep both canonical and legacy-friendly paths out of the generic Bot/Core
   // Bridge reader even if an old bookmark is opened directly.
@@ -1098,6 +1105,26 @@
         submit.disabled = Boolean(busy);
         submit.setAttribute("aria-busy", String(Boolean(busy)));
       }
+    });
+  }
+
+  function setPromptStudioComposeFormLocked(route, busy) {
+    document.querySelectorAll('[data-portal-form][data-portal-action="prompt-studio-compose"]').forEach((form) => {
+      const matches = (form.getAttribute("data-portal-route") || window.location.pathname) === route;
+      if (!matches) return;
+      if (busy) form.setAttribute("aria-busy", "true");
+      else form.removeAttribute("aria-busy");
+      form.querySelectorAll("input, select, textarea").forEach((control) => {
+        if (busy) {
+          if (!Object.prototype.hasOwnProperty.call(control.dataset, "promptStudioComposeWasDisabled")) {
+            control.dataset.promptStudioComposeWasDisabled = control.disabled ? "true" : "false";
+          }
+          control.disabled = true;
+          return;
+        }
+        if (control.dataset.promptStudioComposeWasDisabled === "false") control.disabled = false;
+        delete control.dataset.promptStudioComposeWasDisabled;
+      });
     });
   }
 
@@ -1735,6 +1762,7 @@
   function merge(next) {
     window.__TOAN_AAS_PORTAL__ = { ...base(), ...next };
     if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__);
+    if (promptStudioComposeLockRoute) setPromptStudioComposeFormLocked(promptStudioComposeLockRoute, true);
   }
 
   // Keep the Web-native Support Desk helpers outside the job-polling region.
@@ -5638,6 +5666,20 @@
     return { goal, audience, platform, tone, language, output_format: outputFormat, constraints };
   }
 
+  // A durable handoff may retain only this normalized original brief. It
+  // deliberately has no Blueprint/body, template identifier, URL, asset,
+  // provider, job, wallet, payment or browser-state field.
+  function promptStudioLibrarySaveSource(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const expected = ["goal", "audience", "platform", "tone", "language", "output_format", "constraints"];
+    if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return null;
+    try {
+      return promptStudioPayload(source);
+    } catch (_) {
+      return null;
+    }
+  }
+
   function promptStudioOutputText(value, minimum, maximum, multiline) {
     if (typeof value !== "string") return "";
     const text = value.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
@@ -5654,6 +5696,7 @@
 
   function promptStudioBlueprintResultIsSafe(value) {
     const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const brief = promptStudioLibrarySaveSource(data.brief);
     const blueprint = data.blueprint && typeof data.blueprint === "object" && !Array.isArray(data.blueprint) ? data.blueprint : {};
     const title = promptStudioOutputText(blueprint.title, 1, 320, false);
     const goal = promptStudioOutputText(blueprint.goal, 2, 300, false);
@@ -5671,13 +5714,90 @@
     const validChecklist = checklist.length >= 4 && checklist.length <= 8
       && checklist.every((item) => Boolean(promptStudioOutputText(item, 2, 800, true)));
     return Boolean(
-      title && goal && promptText && negativePrompt && validVariables && validChecklist
+      brief && title && goal && promptText && negativePrompt && validVariables && validChecklist
       && PROMPT_STUDIO_PLATFORMS.has(String(blueprint.platform || ""))
       && PROMPT_STUDIO_TONES.has(String(blueprint.tone || ""))
       && PROMPT_STUDIO_LANGUAGES.has(String(blueprint.language || ""))
       && PROMPT_STUDIO_OUTPUT_FORMATS.has(String(blueprint.output_format || ""))
+      && brief.goal === blueprint.goal
+      && brief.audience === blueprint.audience
+      && brief.platform === blueprint.platform
+      && brief.tone === blueprint.tone
+      && brief.language === blueprint.language
+      && brief.output_format === blueprint.output_format
       && promptStudioBoundaryIsSafe(data)
     );
+  }
+
+  function promptStudioLibrarySaveSourceMatchesResult(source, result) {
+    const brief = promptStudioLibrarySaveSource(source);
+    const data = result && typeof result === "object" && !Array.isArray(result) ? result : {};
+    const returnedBrief = promptStudioLibrarySaveSource(data.brief);
+    const blueprint = data.blueprint && typeof data.blueprint === "object" && !Array.isArray(data.blueprint) ? data.blueprint : {};
+    return Boolean(
+      brief && returnedBrief && promptStudioBlueprintResultIsSafe(data)
+      && brief.goal === returnedBrief.goal && brief.audience === returnedBrief.audience
+      && brief.platform === returnedBrief.platform && brief.tone === returnedBrief.tone
+      && brief.language === returnedBrief.language && brief.output_format === returnedBrief.output_format
+      && brief.constraints === returnedBrief.constraints
+      && brief.goal === blueprint.goal && brief.audience === blueprint.audience
+      && brief.platform === blueprint.platform && brief.tone === blueprint.tone
+      && brief.language === blueprint.language && brief.output_format === blueprint.output_format
+    );
+  }
+
+  function promptStudioLibrarySaveSourceEquals(left, right) {
+    const source = promptStudioLibrarySaveSource(left);
+    const candidate = promptStudioLibrarySaveSource(right);
+    return Boolean(
+      source && candidate
+      && source.goal === candidate.goal && source.audience === candidate.audience
+      && source.platform === candidate.platform && source.tone === candidate.tone
+      && source.language === candidate.language && source.output_format === candidate.output_format
+      && source.constraints === candidate.constraints
+    );
+  }
+
+  function promptStudioComposeGenerationValue(value) {
+    return typeof value === "number" && Number.isSafeInteger(value) && value >= 1 ? value : 0;
+  }
+
+  const PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze([
+    "browser_blueprint_persisted", "bot_called", "bridge_called", "provider_called", "job_created",
+    "wallet_mutated", "payment_started", "asset_saved", "media_output_created", "publish_action_created",
+    "delivery_created", "fact_checked", "rights_verified"
+  ]);
+  const PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS = Object.freeze([
+    "template", "destination", "execution", "blueprint_recomputed_on_server", "template_persisted",
+    ...PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS
+  ]);
+  const PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS = Object.freeze([
+    "id", "category", "state", "revision"
+  ]);
+
+  function promptStudioLibrarySaveReceipt(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const template = data.template && typeof data.template === "object" && !Array.isArray(data.template) ? data.template : {};
+    const revision = Number(template.revision);
+    const category = String(template.category || "");
+    if (
+      Object.keys(data).length !== PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS.length
+      || !PROMPT_STUDIO_LIBRARY_SAVE_RESPONSE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(data, key))
+      || Object.keys(template).length !== PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS.length
+      || !PROMPT_STUDIO_LIBRARY_SAVE_TEMPLATE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(template, key))
+      || data.destination !== "prompt_library"
+      || data.execution !== "web_native_prompt_studio_library_save"
+      || data.blueprint_recomputed_on_server !== true || data.template_persisted !== true
+      || !PROMPT_STUDIO_LIBRARY_SAVE_FALSE_BOUNDARY_FIELDS.every((field) => data[field] === false)
+      || !validPromptTemplateId(template.id) || category !== "Prompt Studio"
+      || template.state !== "active" || !Number.isInteger(revision) || revision < 1 || revision > 1000000
+    ) return null;
+    return {
+      template: {
+        id: String(template.id), category: "Prompt Studio", state: "active", revision
+      },
+      destination: "prompt_library"
+    };
   }
 
   // Saving is a separate, explicit Web-owned handoff.  Retain only the
@@ -13048,6 +13168,7 @@
       "prompt-library-import": Boolean(account && me.csrf_token && promptLibraryEnabled),
       "prompt-library-export": Boolean(account && me.csrf_token && promptLibraryEnabled),
       "prompt-studio-compose": Boolean(account && me.csrf_token && promptStudioEnabled),
+      "prompt-studio-save-library": Boolean(account && me.csrf_token && promptStudioEnabled && promptLibraryEnabled),
       "free-prompt-gallery-view": Boolean(account && freePromptGalleryEnabled),
       "free-prompt-gallery-save": Boolean(account && me.csrf_token && freePromptGalleryEnabled && memoryCenterEnabled),
       "guide-center-view": Boolean(account && guideCenterEnabled),
@@ -13803,6 +13924,9 @@
       // recovered Bot/bridge result. Clear it before every bootstrap so a
       // login transition cannot retain another account's editorial brief.
       promptStudioResult: {},
+      promptStudioSaveSource: {},
+      promptStudioSaveReceipt: {},
+      promptStudioComposeGeneration: 0,
       // The gallery is a server snapshot, not a local prompt database. Clear
       // all catalog/list/detail/filter state before each signed bootstrap so
       // no prior account's query or selected seed survives a session change.
@@ -27326,7 +27450,13 @@
         // Bot pending state, Prompt Library template, project, asset, job or
         // browser storage entry is created. A new request clears the prior
         // in-tab receipt before the bounded server response is accepted.
-        merge({ promptStudioResult: {} });
+        const composeGeneration = ++promptStudioComposeGeneration;
+        promptStudioComposeLockRoute = promptStudioRoute;
+        merge({ promptStudioResult: {}, promptStudioSaveSource: {}, promptStudioSaveReceipt: {}, promptStudioComposeGeneration: 0 });
+        // `merge()` remounts the native form synchronously. Lock the newly
+        // mounted form before the async request begins so its brief cannot be
+        // edited into a different save source while this result is pending.
+        setPromptStudioComposeFormLocked(promptStudioRoute, true);
         setActionBusy(action, promptStudioRoute, true);
         try {
           const result = await api("/prompt-studio/compose", {
@@ -27339,6 +27469,8 @@
             if (!promptStudioBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới Prompt Studio an toàn.");
             merge({
               promptStudioResult: {},
+              promptStudioSaveSource: {},
+              promptStudioSaveReceipt: {},
               pageStates: { ...(base().pageStates || {}), [promptStudioRoute]: "guarded", "/prompt-studio": "guarded" }
             });
             toast(result.message || "Brief cần được điều chỉnh trước khi tạo Prompt Blueprint.", "error");
@@ -27347,13 +27479,76 @@
           if (!promptStudioBlueprintResultIsSafe(data)) {
             throw new Error("Máy chủ chưa trả Prompt Blueprint Web-native an toàn.");
           }
+          const saveSource = promptStudioLibrarySaveSource(data.brief);
+          if (!saveSource || !promptStudioLibrarySaveSourceMatchesResult(saveSource, data)) {
+            throw new Error("Bản nháp trả về không còn khớp brief Web hiện tại để lưu an toàn.");
+          }
           merge({
             promptStudioResult: data,
+            promptStudioSaveSource: saveSource,
+            promptStudioSaveReceipt: {},
+            promptStudioComposeGeneration: composeGeneration,
             pageStates: { ...(base().pageStates || {}), [promptStudioRoute]: "ready", "/prompt-studio": "ready" }
           });
           toast(result.message || "Đã tạo Prompt Blueprint để tự review. Không có template, engine, job, thanh toán hoặc publish action.");
         } finally {
+          setPromptStudioComposeFormLocked(promptStudioRoute, false);
+          if (promptStudioComposeLockRoute === promptStudioRoute) promptStudioComposeLockRoute = "";
           setActionBusy(action, promptStudioRoute, false);
+        }
+        return;
+      }
+      if (action === "prompt-studio-save-library") {
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (!(capabilities["prompt-studio-compose"] === true && capabilities["prompt-studio-save-library"] === true)) {
+          throw new Error("Chỉ signed Web session có CSRF, Prompt Studio và Prompt Library đang sẵn sàng mới có thể lưu template.");
+        }
+        const source = promptStudioLibrarySaveSource(base().promptStudioSaveSource);
+        const currentResult = base().promptStudioResult;
+        const composeGeneration = promptStudioComposeGenerationValue(base().promptStudioComposeGeneration);
+        if (!source || !composeGeneration || !promptStudioLibrarySaveSourceMatchesResult(source, currentResult)) {
+          throw new Error("Bản nháp hiện tại không còn khớp brief Web trong phiên này. Hãy tạo lại Prompt Studio trước khi lưu.");
+        }
+        const payload = { ...source, confirmed: true };
+        const scope = "prompt-studio:save-to-library";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Template đang được Prompt Library xác nhận. Vui lòng chờ.", "error");
+          return;
+        }
+        let completedReceiptAccepted = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/prompt-studio/save-to-library", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          if (result.status !== "completed") throw new Error("Máy chủ chưa xác nhận lưu template vào Prompt Library.");
+          const receipt = promptStudioLibrarySaveReceipt(result.data);
+          if (!receipt) throw new Error("Máy chủ chưa trả receipt Prompt Library content-free và đúng ranh giới an toàn.");
+          completedReceiptAccepted = true;
+          const activeSource = promptStudioLibrarySaveSource(base().promptStudioSaveSource);
+          const activeResult = base().promptStudioResult;
+          const activeComposeGeneration = promptStudioComposeGenerationValue(base().promptStudioComposeGeneration);
+          if (
+            composeGeneration === activeComposeGeneration
+            && promptStudioLibrarySaveSourceEquals(source, activeSource)
+            && promptStudioLibrarySaveSourceMatchesResult(source, activeResult)
+          ) {
+            merge({ promptStudioSaveReceipt: receipt });
+            toast(result.message || "Đã lưu template Prompt Studio vào Prompt Library riêng tư.");
+          } else {
+            toast("Máy chủ đã xác nhận một template cho bản nháp trước đó; bản nháp hiện tại không bị thay đổi. Mở Prompt Library để kiểm tra template đã lưu.", "warning");
+          }
+        } catch (error) {
+          // A newer compose may already have its own receipt; an unknown save
+          // outcome must not clear it or claim that the newer draft was saved.
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (completedReceiptAccepted) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
         }
         return;
       }

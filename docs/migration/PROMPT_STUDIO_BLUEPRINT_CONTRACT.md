@@ -20,7 +20,8 @@ dùng đưa mục tiêu, đối tượng, ngữ cảnh, tone, ngôn ngữ, đị
 | `/prompt-studio`, `/prompts` | Signed Web session | Chỉ tạo receipt text tạm thời; không generic `draft → estimate → confirm`. |
 | `GET /api/v1/prompt-studio/policy` | Web App | Metadata allowlist read-only, signed/no-store. |
 | `POST /api/v1/prompt-studio/compose` | Web App | CSRF + strict request; không ghi database/idempotency/audit detail/template. |
-| `/prompt-library/new` | Prompt Library riêng | Người dùng tự chuyển sang workflow versioned; Blueprint không được gửi qua URL hoặc browser storage. |
+| `POST /api/v1/prompt-studio/save-to-library` | Prompt Studio + Prompt Library | CSRF + `confirmed=true` + idempotency; server recompute blueprint từ brief gốc rồi Prompt Library ghi template owner-scoped/version/audit. |
+| `/prompt-library/new` | Prompt Library riêng | Workflow versioned đầy đủ để soạn/chỉnh template; Blueprint không được gửi qua URL hoặc browser storage. |
 
 ## Request và response
 
@@ -40,7 +41,7 @@ dùng đưa mục tiêu, đối tượng, ngữ cảnh, tone, ngôn ngữ, đị
 
 Server chặn control characters, markup, URL/path/file/social handle, secret,
 token, OTP/CVV, dữ liệu thẻ và yêu cầu không nguyên bản/mạo danh. Thành công
-trả `status="draft"` với `blueprint` gồm prompt text, negative direction,
+trả `status="draft"` với `brief` đã chuẩn hóa cùng `blueprint` gồm prompt text, negative direction,
 variable schema và checklist review. Kết quả chỉ nằm trong memory của tab và
 bị xóa khi bootstrap session/account thay đổi.
 
@@ -70,6 +71,32 @@ Policy guard trả `status="guarded"` với cùng boundary và không trả blue
 `WEBAPP_PROMPT_STUDIO_ENABLED` là maintenance flag riêng (mặc định `true` cho
 authoring text), không bật bất kỳ execution/runtime bên ngoài nào.
 
+## Handoff có xác nhận vào Prompt Library
+
+`POST /api/v1/prompt-studio/save-to-library` nhận lại đúng bảy trường `brief`
+đã chuẩn hóa ở trên, cộng `confirmed: true` và `idempotency_key`. Không nhận
+`blueprint`, prompt body, template/account ID, URL, asset, provider, job,
+wallet, payment hay browser result/state. Server chạy policy guard trước rồi
+server recompute blueprint bằng grammar Prompt Studio; Prompt Library là writer
+canonical duy nhất cho quota, version, idempotency và audit owner-scoped.
+
+Receipt thành công là metadata-only: `destination="prompt_library"`,
+`execution="web_native_prompt_studio_library_save"`,
+`blueprint_recomputed_on_server=true`, `template_persisted=true`, template chỉ
+gồm `id`, fixed `category="Prompt Studio"`, `state` và `revision`; các boolean
+side-effect ngoài Web đều `false`. Receipt không chứa title dẫn xuất từ goal,
+platform, language, prompt text, negative prompt, brief, email, actor, audit
+detail hay claim delivery. Owner vẫn xem title và metadata đầy đủ của template
+đã lưu qua Prompt Library detail owner-scoped. Policy guard không tạo record
+database hay idempotency receipt. Browser chỉ giữ `promptStudioSaveSource`,
+`promptStudioSaveReceipt` và một compose-generation số, không-content trong
+memory tab; generation được reset khi Compose mới bắt đầu và không được gửi
+tới server, URL, localStorage hoặc sessionStorage. Khi một save cũ hoàn tất
+sau Compose mới, browser chỉ bind receipt nếu compose-generation hiện hành
+đúng bằng generation đã capture lúc Save bắt đầu, đồng thời source và result
+hiện hành vẫn khớp save cũ; nếu không, state của Compose mới (kể cả receipt
+của nó) không bị thay đổi và UI không khẳng định Compose mới đã được lưu.
+
 ## Kiểm thử trọng yếu
 
 - anonymous/CSRF/flag/strict-schema/input safety fail closed và `no-store`;
@@ -78,5 +105,8 @@ authoring text), không bật bất kỳ execution/runtime bên ngoài nào.
   Bridge action;
 - compose lặp lại là deterministic nhưng không tạo idempotency receipt,
   Prompt Library template, audit text, asset, job, payment hay provider call;
-- Prompt Library handoff là link tường minh không truyền blueprint qua query,
-  localStorage hoặc sessionStorage.
+- handoff có xác nhận chỉ gửi brief gốc và retry key, server recompute rồi trả
+  receipt metadata-only; replay cùng key trả cùng template, brief đổi khác
+  conflict và account khác không đọc được template;
+- Prompt Library handoff không truyền blueprint qua query, localStorage hoặc
+  sessionStorage.

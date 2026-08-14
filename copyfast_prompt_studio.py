@@ -6,22 +6,25 @@ Bot.  This module intentionally owns none of those concerns.  It turns a
 small, sanitized editorial brief into a copyable *blueprint* only: a human can
 review or manually move it to the separate Prompt Library afterwards.
 
-No request is persisted here.  In particular, this router never imports Bot or
-Core Bridge code, writes a Prompt Library template, starts a model/provider,
-creates a job, changes wallet/PayOS state, stores an asset, or publishes
-anything.
+The compose endpoint is transient. An explicit, separately-confirmed Library
+handoff may delegate one server-recomputed blueprint to the Prompt Library's
+canonical writer; this module never directly owns template storage. In
+particular, this router never imports Bot or Core Bridge code, starts a
+model/provider, creates a job, changes wallet/PayOS state, stores an asset, or
+publishes anything.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 
 from copyfast_auth import envelope, require_account, require_csrf
 from copyfast_db import prompt_studio_enabled
+from copyfast_prompt_library import require_prompt_library_enabled, save_prompt_studio_blueprint_template
 
 
 router = APIRouter(prefix="/api/v1/prompt-studio", tags=["Web Prompt Blueprint Composer"])
@@ -174,6 +177,13 @@ class PromptBlueprintRequest(BaseModel):
         if normalized not in OUTPUT_FORMATS:
             raise ValueError("Định dạng đầu ra Prompt Studio không hợp lệ")
         return normalized
+
+
+class PromptStudioSaveToLibraryRequest(PromptBlueprintRequest):
+    """Explicit handoff accepting only the original normalized Studio brief."""
+
+    confirmed: Literal[True]
+    idempotency_key: StrictStr = Field(min_length=12, max_length=160)
 
 
 class PromptBlueprintVariable(BaseModel):
@@ -358,6 +368,20 @@ def _compose_blueprint(payload: PromptBlueprintRequest) -> dict[str, Any]:
     return PromptBlueprint.model_validate(result).model_dump()
 
 
+def _brief(payload: PromptBlueprintRequest) -> dict[str, str]:
+    """Return the exact normalized original brief, never a browser blueprint."""
+
+    return {
+        "goal": payload.goal,
+        "audience": payload.audience,
+        "platform": payload.platform,
+        "tone": payload.tone,
+        "language": payload.language,
+        "output_format": payload.output_format,
+        "constraints": payload.constraints,
+    }
+
+
 @router.get("/policy")
 async def prompt_studio_policy(account: dict = Depends(require_account)):
     """Expose only a small static policy for the signed Web shell."""
@@ -398,6 +422,34 @@ async def compose_prompt_blueprint(payload: PromptBlueprintRequest, account: dic
     return envelope(
         True,
         "Đã tạo Prompt Blueprint để bạn copy và tự review. Không có template được lưu, AI/provider/Bot, job, Xu, PayOS, asset, publish hay delivery nào được tạo.",
-        data={"blueprint": _compose_blueprint(payload), **_boundary()},
+        data={"brief": _brief(payload), "blueprint": _compose_blueprint(payload), **_boundary()},
         status_name="draft",
+    )
+
+
+@router.post("/save-to-library")
+async def save_prompt_blueprint_to_library(
+    payload: PromptStudioSaveToLibraryRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist an explicitly confirmed, server-recomputed Blueprint privately.
+
+    The browser submits only the bounded original brief, confirmation and a
+    retry key. A policy guard runs before the Prompt Library writer so guarded
+    text creates neither a template, version, audit event nor idempotency row.
+    """
+
+    _require_enabled()
+    require_prompt_library_enabled()
+    guarded = _policy_guard(payload)
+    if guarded:
+        return guarded
+    brief = _brief(payload)
+    return save_prompt_studio_blueprint_template(
+        brief=brief,
+        recompute_blueprint=lambda: _compose_blueprint(payload),
+        idempotency_key=payload.idempotency_key,
+        request=request,
+        account=account,
     )

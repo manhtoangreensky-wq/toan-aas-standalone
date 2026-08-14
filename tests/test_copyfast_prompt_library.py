@@ -16,7 +16,7 @@ MODULES = [
     "copyfast_api", "copyfast_pages", "copyfast_projects", "copyfast_assets",
     "copyfast_project_packages", "copyfast_document_operations", "copyfast_image_runtime",
     "copyfast_image_operations", "copyfast_memory", "copyfast_support", "copyfast_free_prompt_gallery",
-    "copyfast_prompt_library",
+    "copyfast_prompt_library", "copyfast_prompt_studio",
 ]
 
 
@@ -87,6 +87,22 @@ def save_gallery_prompt(client: TestClient, csrf: str, prompt_id: str, key: str)
     assert response.status_code == 200
     assert response.json()["ok"] is True
     return response.json()["data"]
+
+
+def prompt_studio_save_payload(key: str, **overrides) -> dict:
+    payload = {
+        "goal": "Giải thích cách chọn bình nước giữ nhiệt cho người mới đi làm",
+        "audience": "Người mới đi làm cần chọn bình phù hợp",
+        "platform": "social",
+        "tone": "professional",
+        "language": "vi",
+        "output_format": "caption",
+        "constraints": "Không nêu giá hoặc claim chưa kiểm tra",
+        "confirmed": True,
+        "idempotency_key": key,
+    }
+    payload.update(overrides)
+    return payload
 
 
 def test_gallery_seed_save_is_csrf_owned_server_resolved_deduplicated_and_audited(tmp_path, monkeypatch):
@@ -313,6 +329,81 @@ def test_prompt_library_is_csrf_owned_versioned_and_private(tmp_path, monkeypatc
                 json={"expected_revision": 5, "idempotency_key": "prompt-template-other-archive-0001"},
             )
             assert denied_mutation.json()["error_code"] == "WEB_PROMPT_TEMPLATE_NOT_FOUND"
+
+
+def test_prompt_studio_handoff_uses_the_library_writer_scope_and_keeps_the_template_private(tmp_path, monkeypatch):
+    path = "/api/v1/prompt-studio/save-to-library"
+    db_path = tmp_path / "copyfast-prompt-library-test.db"
+    with make_client(tmp_path, monkeypatch) as owner:
+        csrf = register_and_login(owner, "prompt-library-handoff-owner@example.com")
+        request = prompt_studio_save_payload("prompt-library-handoff-owner-0001")
+        saved = owner.post(path, headers={"X-CSRF-Token": csrf}, json=request)
+        assert saved.status_code == 200
+        receipt = saved.json()["data"]
+        receipt_template = receipt["template"]
+        assert set(receipt_template) == {"id", "category", "state", "revision"}
+        receipt_json = json.dumps(receipt, ensure_ascii=False)
+        for raw_brief_field in (
+            "title", "goal", "audience", "platform", "tone", "language", "output_format", "constraints",
+        ):
+            assert raw_brief_field not in receipt_template
+            assert f'"{raw_brief_field}"' not in receipt_json
+        for raw_brief_content in (
+            request["goal"], request["audience"], request["constraints"], f"Prompt Studio: {request['goal']}",
+        ):
+            assert raw_brief_content not in receipt_json
+        template_id = receipt_template["id"]
+
+        replay = owner.post(path, headers={"X-CSRF-Token": csrf}, json=request)
+        assert replay.status_code == 200
+        assert replay.json()["data"] == receipt
+        conflict = owner.post(
+            path,
+            headers={"X-CSRF-Token": csrf},
+            json=prompt_studio_save_payload(
+                "prompt-library-handoff-owner-0001",
+                audience="Một đối tượng đã thay đổi nên không được dùng receipt cũ",
+            ),
+        )
+        assert conflict.status_code == 409
+
+        with sqlite3.connect(db_path) as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_prompt_templates").fetchone()[0] == 1
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_prompt_template_versions WHERE template_id=?", (template_id,)
+            ).fetchone()[0] == 1
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_prompt_template_events WHERE template_id=? AND action='prompt_studio_blueprint_saved'",
+                (template_id,),
+            ).fetchone()[0] == 1
+            scope, stored_response = conn.execute(
+                "SELECT scope, response_json FROM web_idempotency WHERE key=?", (request["idempotency_key"],)
+            ).fetchone()
+            assert scope.endswith(":prompt-studio-save")
+            stored_body = json.loads(stored_response)
+            stored_receipt = stored_body["data"]
+            assert stored_receipt == receipt
+            assert set(stored_receipt["template"]) == {"id", "category", "state", "revision"}
+            for raw_brief_field in (
+                "title", "goal", "audience", "platform", "tone", "language", "output_format", "constraints",
+            ):
+                assert raw_brief_field not in stored_receipt["template"]
+                assert f'"{raw_brief_field}"' not in stored_response
+            for raw_brief_content in (
+                request["goal"], request["audience"], request["constraints"], f"Prompt Studio: {request['goal']}",
+            ):
+                assert raw_brief_content not in stored_response
+
+    with make_client(tmp_path, monkeypatch) as other:
+        other_csrf = register_and_login(other, "prompt-library-handoff-other@example.com")
+        hidden = other.get(f"/api/v1/prompt-library/templates/{template_id}")
+        assert hidden.status_code == 200
+        assert hidden.json()["error_code"] == "WEB_PROMPT_TEMPLATE_NOT_FOUND"
+        assert other.post(
+            path,
+            headers={"X-CSRF-Token": other_csrf},
+            json=prompt_studio_save_payload("prompt-library-handoff-other-0001"),
+        ).json()["data"]["template"]["id"] != template_id
 
 
 def test_prompt_library_listing_is_paginated_filtered_and_owner_scoped(tmp_path, monkeypatch):

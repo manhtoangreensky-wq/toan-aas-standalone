@@ -1526,6 +1526,14 @@ async def security_headers(request: Request, call_next):
         and request.url.path.startswith("/api/v1/prompt-library/")
         and not prompt_library_export
     )
+    # The only durable Prompt Studio route is a separately confirmed handoff
+    # into the Prompt Library. Keep its pre-DB rate gate exact and fixed so
+    # transient composition remains unaffected and arbitrary suffixes cannot
+    # allocate distinct rate buckets.
+    prompt_studio_save = (
+        request.method == "POST"
+        and request.url.path == "/api/v1/prompt-studio/save-to-library"
+    )
     # Prompt Library reads include text search over a private SQLite vault.
     # Bound them by a fixed route family too, so arbitrary template UUIDs or
     # query strings cannot bypass the pre-DB gate or grow its in-memory map.
@@ -1821,6 +1829,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if prompt_library_write:
         rate_limit = 40
+    if prompt_studio_save:
+        rate_limit = 40
     if prompt_library_export:
         rate_limit = 10
     if prompt_library_read:
@@ -1956,6 +1966,7 @@ async def security_headers(request: Request, call_next):
             else "audio-asset-operation-asset-export" if audio_asset_operation_asset_export
             else "prompt-library-export" if prompt_library_export
             else "prompt-library-write" if prompt_library_write
+            else "prompt-studio-save" if prompt_studio_save
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
             else "subtitle-asset-operation-download" if subtitle_asset_operation_download
             else "subtitle-asset-operation-read" if subtitle_asset_operation_read
