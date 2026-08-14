@@ -727,6 +727,28 @@ def _case_not_found() -> dict[str, Any]:
     return envelope(False, "Không tìm thấy yêu cầu thuộc Web account hiện tại.", status_name="guarded", error_code="WEB_SUPPORT_CASE_NOT_FOUND")
 
 
+def _reply_receipt(
+    *,
+    case_id: str,
+    revision: int,
+    state: str,
+    visibility: str,
+    action: str,
+    created_at: str,
+) -> dict[str, Any]:
+    """Return the safe, replayable projection for a successful case reply."""
+
+    return {
+        "case_id": case_id,
+        "revision": revision,
+        "state": state,
+        "visibility": visibility,
+        "action": action,
+        "created_at": created_at,
+        "delivery": "web_view_only",
+    }
+
+
 def _resolution_feedback_receipt(row: tuple[Any, ...]) -> dict[str, Any]:
     """Project one safe receipt without retaining the customer's comment."""
 
@@ -2067,8 +2089,19 @@ async def reply_case(case_id: str, payload: CaseReplyRequest, request: Request, 
         )
         _event(conn, case_id=case_id, account_id=account_id, actor_account_id=account_id, action="customer_replied", state=next_state)
         _record_audit(conn, account_id=account_id, canonical_user_id=str(account.get("canonical_user_id") or "") or None, action="web.support.case.reply", request_id=_request_id(request), target=case_id, detail="web support customer reply appended")
-        row = _case_row(conn, case_id=case_id, account_id=account_id)
-        return envelope(True, "Đã thêm phản hồi trong Web Support Desk; không có thông báo ngoài Web.", data={"case": _case_public(row or ())}, status_name="completed")
+        return envelope(
+            True,
+            "Đã thêm phản hồi trong Web Support Desk; không có thông báo ngoài Web.",
+            data={"receipt": _reply_receipt(
+                case_id=case_id,
+                revision=revision,
+                state=next_state,
+                visibility="public",
+                action="customer_reply",
+                created_at=now,
+            )},
+            status_name="completed",
+        )
 
     return _idempotent(f"web-support:{account_id}:case:{case_id}:reply", key, fingerprint, operation)
 
@@ -2819,8 +2852,19 @@ async def admin_reply_case(case_id: str, payload: AdminReplyRequest, request: Re
         )
         _event(conn, case_id=case_id, account_id=str(current[1]), actor_account_id=str(account["id"]), action="operator_replied_public" if payload.visibility == "public" else "operator_noted_internal", state=next_state)
         _record_audit(conn, account_id=str(account["id"]), canonical_user_id=str(account.get("canonical_user_id") or "") or None, action="web.support.admin.reply", request_id=_request_id(request), target=case_id, detail=f"web support operator reply visibility:{payload.visibility} role:{staff_role}")
-        row = _case_row(conn, case_id=case_id)
-        return envelope(True, "Đã lưu phản hồi trong Web Support Desk. Chưa gửi Telegram, email hoặc thông báo bên ngoài.", data={"case": _case_public(row or (), admin=True)}, status_name="completed")
+        return envelope(
+            True,
+            "Đã lưu phản hồi trong Web Support Desk. Chưa gửi Telegram, email hoặc thông báo bên ngoài.",
+            data={"receipt": _reply_receipt(
+                case_id=case_id,
+                revision=revision,
+                state=next_state,
+                visibility=payload.visibility,
+                action="operator_reply",
+                created_at=now,
+            )},
+            status_name="completed",
+        )
 
     return _idempotent(f"web-support:admin:{account['id']}:case:{case_id}:reply", key, fingerprint, operation)
 

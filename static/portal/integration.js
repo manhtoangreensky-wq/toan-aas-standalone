@@ -2796,6 +2796,83 @@
     return { ...reply, visibility, next_state: nextState };
   }
 
+  function supportReplyReceiptProjection(result, expected) {
+    const keys = ["case_id", "revision", "state", "visibility", "action", "created_at", "delivery"];
+    if (!result || typeof result !== "object" || Array.isArray(result)
+      || Object.keys(result).length !== 5
+      || !["ok", "status", "message", "data", "error_code"].every((key) => Object.prototype.hasOwnProperty.call(result, key))
+      || result.ok !== true || result.status !== "completed" || result.error_code !== null
+      || typeof result.message !== "string" || !result.message.trim()) return null;
+    const data = result.data;
+    if (!data || typeof data !== "object" || Array.isArray(data)
+      || Object.keys(data).length !== 1 || !Object.prototype.hasOwnProperty.call(data, "receipt")) return null;
+    const receipt = data.receipt;
+    if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)
+      || Object.keys(receipt).length !== keys.length
+      || !keys.every((key) => Object.prototype.hasOwnProperty.call(receipt, key))) return null;
+    const expectedState = typeof expected === "object" && typeof expected.state === "string"
+      ? expected.state
+      : (expected && expected.action === "customer_reply" ? "new" : (expected && expected.visibility === "internal" ? "new" : "waiting_user"));
+    const expectedMessages = expected && expected.action === "customer_reply"
+      ? ["accepted", "Đã thêm phản hồi trong Web Support Desk; không có thông báo ngoài Web."]
+      : (expected && expected.action === "operator_reply"
+        ? ["accepted", "Đã lưu phản hồi trong Web Support Desk. Chưa gửi Telegram, email hoặc thông báo bên ngoài."]
+        : []);
+    if (!expected || !validSupportCaseId(expected.caseId) || !Number.isSafeInteger(expected.revision)
+      || expected.revision < 1 || !["customer_reply", "operator_reply"].includes(expected.action)
+      || !["public", "internal"].includes(expected.visibility)
+      || !expectedMessages.includes(result.message) || !SUPPORT_CASE_STATES.has(expectedState)
+      || !validSupportCaseId(receipt.case_id)
+      || !Number.isSafeInteger(receipt.revision)
+      || !SUPPORT_CASE_STATES.has(receipt.state)
+      || receipt.delivery !== "web_view_only"
+      || receipt.case_id !== expected.caseId
+      || receipt.revision !== expected.revision + 1
+      || receipt.state !== expectedState
+      || receipt.action !== expected.action
+      || receipt.visibility !== expected.visibility
+      || typeof receipt.created_at !== "string"
+      || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(receipt.created_at)
+      || Number.isNaN(Date.parse(String(receipt.created_at || "")))) return null;
+    return { ...receipt };
+  }
+
+  function supportReplyRouteIsCurrent(expected, admin) {
+    const route = admin ? `/admin/support/${expected.caseId}` : `/tickets/${expected.caseId}`;
+    const capability = admin ? "support-admin-case-write" : "support-case-reply";
+    const testCapability = admin ? "support-admin-case-reply" : capability;
+    return validSupportCaseId(expected.caseId)
+      && Number.isSafeInteger(expected.revision) && expected.revision >= 1
+      && currentPortalPath() === route
+      && base().supportDeskEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && Boolean(base().capabilities && (base().capabilities[capability] === true || base().capabilities[testCapability] === true));
+  }
+
+  function supportReplyDetailMatches(receipt, admin) {
+    const detail = admin ? base().supportAdminCaseDetail : base().supportCaseDetail;
+    const caseItem = detail && typeof detail === "object" && detail.case && typeof detail.case === "object" ? detail.case : null;
+    return Boolean(caseItem
+      && validSupportCaseId(caseItem.id)
+      && caseItem.id === receipt.case_id
+      && Number.isSafeInteger(caseItem.revision)
+      && caseItem.revision === receipt.revision
+      && SUPPORT_CASE_STATES.has(caseItem.state)
+      && caseItem.state === receipt.state);
+  }
+
+  function supportCustomerReplyExpectedState(caseId, revision) {
+    const detail = base().supportCaseDetail;
+    const caseItem = detail && typeof detail === "object" && detail.case && typeof detail.case === "object" ? detail.case : null;
+    const currentState = caseItem
+      && validSupportCaseId(caseItem.id) && caseItem.id === caseId
+      && Number.isSafeInteger(caseItem.revision) && caseItem.revision === revision
+      && SUPPORT_CASE_STATES.has(caseItem.state)
+      ? caseItem.state
+      : "new";
+    return ["waiting_user", "resolved"].includes(currentState) ? "reviewing" : currentState;
+  }
+
   function supportAdminUpdatePayload(fields) {
     const state = String(fields.state || "").trim().toLowerCase();
     const priority = String(fields.priority || "").trim().toLowerCase();
@@ -14454,6 +14531,7 @@
       supportEvents: [],
       supportEventsReadState: account && supportDeskEnabled ? "loading" : "guarded",
       supportCaseDetail: {},
+      supportCustomerReplyReceipt: {},
       supportAttachmentAssets: [],
       supportCaseFilter: { q: "", state: "all", category: "" },
       supportCaseListing: supportCaseListingProjection({ q: "", state: "all", category: "" }, 0, {}, 0),
@@ -14461,6 +14539,7 @@
       supportAdminSummary: {},
       supportAdminCases: [],
       supportAdminCaseDetail: {},
+      supportAdminReplyReceipt: {},
       supportAdminCaseFilter: { q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" },
       supportAdminCaseListing: supportAdminCaseListingProjection({ q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" }, 0, {}, 0),
       // Customer Care routing/SLA/escalation metadata is staff-private. Clear
@@ -15144,11 +15223,11 @@
       // Support pages never fall back to Bot tickets, generic admin data or a
       // stale browser cache when the local feature gate/session is unavailable.
       merge({
-        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportConsultationCatalog: {}, supportConsultationReadState: "guarded", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {}, supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportAttachmentAssets: [],
+        supportSummary: {}, supportCases: [], supportAdvisor: {}, supportAdvisorReadState: "guarded", supportAdvisorSelection: "general_support", supportConsultationCatalog: {}, supportConsultationReadState: "guarded", supportConsultationPreview: {}, supportConsultationSelection: "", supportConsultationDraftInput: {}, supportEvents: [], supportEventsReadState: "guarded", supportCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAttachmentAssets: [],
         supportCaseFilter: { q: "", state: "all", category: "" },
         supportCaseListing: supportCaseListingProjection({ q: "", state: "all", category: "" }, 0, {}, 0),
         supportReadState: "guarded",
-        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminResolutionFeedbackSummary: {},
+        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminReplyReceipt: {}, supportAdminResolutionFeedbackSummary: {},
         supportAdminCaseFilter: { q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" },
         supportAdminCaseListing: supportAdminCaseListingProjection({ q: "", state: "all", category: "", team_queue: "all", assignment: "all", sla_class: "all", care_sla_status: "all", escalation_state: "all" }, 0, {}, 0),
         supportAdminReadState: "guarded",
@@ -18942,7 +19021,7 @@
     // Clear the prior detail before a fresh owner-scoped read. A case ID in
     // the URL is not proof of ownership and cannot authorize stale content.
     merge({
-      supportCaseDetail: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "loading",
+      supportCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "loading",
       pageStates: { ...(base().pageStates || {}), [route]: "loading" }
     });
     try {
@@ -18985,7 +19064,7 @@
     } catch (_) {
       if (!supportRequestIsCurrent(requestEpoch, supportCustomerDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        supportCaseDetail: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "failed",
+        supportCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [`/tickets/${caseId}`]: "guarded" }
       });
       return null;
@@ -19071,6 +19150,10 @@
     const requestEpoch = ++supportAdminDetailHydrationEpoch;
     const sessionEpoch = supportSessionEpoch;
     if (currentPortalPath() !== route) return null;
+    merge({
+      supportAdminCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportAdminReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [route]: "loading" }
+    });
     try {
       // Keep the summary read as a server-side proof of the operator role;
       // client-side role/localStorage can never unlock the case detail.
@@ -19113,7 +19196,7 @@
     } catch (_) {
       if (!supportRequestIsCurrent(requestEpoch, supportAdminDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
-        supportAdminCaseDetail: {}, supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminResolutionFeedbackSummary: {}, supportAdminReadState: "failed",
+        supportAdminCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [], supportAdminResolutionFeedbackSummary: {}, supportAdminReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [`/admin/support/${caseId}`]: "guarded" }
       });
       return null;
@@ -33166,22 +33249,33 @@
         const scope = `support:case:${caseId}:reply`;
         const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
         if (!submission) return;
-        let acknowledged = false;
+        merge({ supportCustomerReplyReceipt: {} });
+        const expected = {
+          caseId,
+          revision,
+          action: "customer_reply",
+          visibility: "public",
+          state: supportCustomerReplyExpectedState(caseId, revision)
+        };
         setActionBusy(action, route, true);
         try {
           const result = await api(`/support/cases/${encodeURIComponent(caseId)}/reply`, {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...payload, expected_revision: revision, idempotency_key: submission.key })
           });
-          acknowledged = true;
+          const receipt = supportReplyReceiptProjection(result, expected);
+          if (!receipt) throw new Error("Máy chủ chưa xác nhận receipt phản hồi Support Desk hợp lệ.");
+          if (!supportReplyRouteIsCurrent(expected, false)) throw new Error("Phiên hoặc route Support Desk đã thay đổi.");
           await hydrateSupportCase(caseId);
-          toast(result.message || "Đã thêm phản hồi trong Web Support Desk.");
-        } catch (error) {
-          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
-          throw error;
+          if (!supportReplyRouteIsCurrent(expected, false) || !supportReplyDetailMatches(receipt, false)) {
+            merge({ supportCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAttachmentAssets: [], supportCaseTriage: {} });
+            throw new Error("Case Support Desk hiện tại chưa khớp với receipt đã xác minh.");
+          }
+          merge({ supportCustomerReplyReceipt: receipt });
+          discardSubmission(scope, submission);
+          toast(`Phản hồi đã được ghi nhận cho revision ${receipt.revision}.`);
         } finally {
           releaseSubmission(submission);
-          if (acknowledged) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
         }
         return;
@@ -33313,22 +33407,30 @@
         const scope = `support:admin:case:${caseId}:reply`;
         const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
         if (!submission) return;
-        let acknowledged = false;
+        merge({ supportAdminReplyReceipt: {} });
+        const expected = {
+          caseId, revision, action: "operator_reply", visibility: payload.visibility,
+          state: payload.next_state || (payload.visibility === "internal" ? "new" : "waiting_user")
+        };
         setActionBusy(action, route, true);
         try {
           const result = await api(`/support/admin/cases/${encodeURIComponent(caseId)}/reply`, {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...payload, expected_revision: revision, confirm: true, idempotency_key: submission.key })
           });
-          acknowledged = true;
+          const receipt = supportReplyReceiptProjection(result, expected);
+          if (!receipt) throw new Error("Máy chủ chưa xác nhận receipt phản hồi Support Desk hợp lệ.");
+          if (!supportReplyRouteIsCurrent(expected, true)) throw new Error("Phiên hoặc route Support Desk đã thay đổi.");
           await hydrateSupportAdminCase(caseId);
-          toast(result.message || "Đã lưu phản hồi Support Desk.");
-        } catch (error) {
-          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
-          throw error;
+          if (!supportReplyRouteIsCurrent(expected, true) || !supportReplyDetailMatches(receipt, true)) {
+            merge({ supportAdminCaseDetail: {}, supportAdminReplyReceipt: {}, supportAdminCareQueues: [], supportAdminCareStaff: [], supportAdminCareHistory: [] });
+            throw new Error("Case Support Desk hiện tại chưa khớp với receipt đã xác minh.");
+          }
+          merge({ supportAdminReplyReceipt: receipt });
+          discardSubmission(scope, submission);
+          toast(`Phản hồi đã được ghi nhận cho revision ${receipt.revision}.`);
         } finally {
           releaseSubmission(submission);
-          if (acknowledged) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
         }
         return;
