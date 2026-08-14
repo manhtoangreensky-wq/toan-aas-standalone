@@ -910,6 +910,112 @@ body {
   }
 }
 
+/* -------------------------------------------------------------------------
+   Aura app surfaces
+
+   Customer App and Internal ERP intentionally share the same signed shell,
+   route projection and safe mobile dock. These rules only give each
+   already-resolved surface its own visual rhythm; they never manufacture an
+   Admin URL, permission, record, statistic or workflow state in the browser.
+   ------------------------------------------------------------------------- */
+
+[data-portal-surface="customer"] {
+  background:
+    radial-gradient(circle at 96% -8%, color-mix(in srgb, var(--portal-brand) 11%, transparent), transparent 27rem),
+    radial-gradient(circle at 4% 100%, color-mix(in srgb, var(--portal-context) 8%, transparent), transparent 30rem),
+    var(--portal-app-canvas);
+}
+
+[data-portal-surface="customer"] .portal-header {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--portal-border) 90%, transparent);
+}
+
+[data-portal-surface="customer"] .portal-main {
+  background: transparent;
+}
+
+[data-portal-surface="customer"] .portal-mobile-nav {
+  border-top-color: var(--portal-border);
+  box-shadow: 0 -10px 26px color-mix(in srgb, var(--portal-ink) 7%, transparent);
+}
+
+[data-portal-surface="customer"] .portal-mobile-nav-link[aria-current="page"] {
+  border-radius: var(--portal-radius-md);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--portal-context) 20%, transparent);
+}
+
+[data-portal-surface="admin"] {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--portal-rail) 4%, transparent), transparent 23%),
+    var(--portal-app-canvas);
+}
+
+[data-portal-surface="admin"] .portal-sidebar {
+  border-right-color: color-mix(in srgb, var(--portal-context) 24%, var(--portal-rail-border));
+}
+
+[data-portal-surface="admin"] .portal-header {
+  border-bottom-color: color-mix(in srgb, var(--portal-context) 22%, var(--portal-border));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--portal-context) 9%, transparent);
+}
+
+[data-portal-surface="admin"] .portal-sidebar-create {
+  border-color: color-mix(in srgb, var(--portal-context) 46%, var(--portal-action));
+  background: color-mix(in srgb, var(--portal-context) 18%, var(--portal-action));
+}
+
+[data-portal-surface="admin"] .portal-sidebar-create:hover,
+[data-portal-surface="admin"] .portal-sidebar-create:focus-visible {
+  border-color: var(--portal-context);
+  background: color-mix(in srgb, var(--portal-context) 28%, var(--portal-action));
+}
+
+[data-portal-surface="admin"] .portal-main {
+  max-width: none;
+}
+
+[data-portal-surface="admin"] .portal-admin-data-toolbar {
+  border-color: color-mix(in srgb, var(--portal-context) 28%, var(--portal-border));
+  box-shadow: var(--portal-elevation-1);
+}
+
+[data-portal-surface="admin"] .portal-data-table {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-portal-surface="admin"] .portal-data-table thead th {
+  background: color-mix(in srgb, var(--portal-context) 7%, var(--portal-surface-light));
+}
+
+[data-portal-surface="admin"] .portal-mobile-nav {
+  border-top-color: color-mix(in srgb, var(--portal-context) 22%, var(--portal-border));
+  box-shadow: 0 -10px 26px color-mix(in srgb, var(--portal-ink) 9%, transparent);
+}
+
+[data-portal-surface="admin"] .portal-mobile-nav-link[aria-current="page"] {
+  border-radius: var(--portal-radius-md);
+  background: color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--portal-context) 28%, transparent);
+}
+
+@media (max-width: 980px) {
+  [data-portal-surface="customer"] .portal-header,
+  [data-portal-surface="admin"] .portal-header {
+    backdrop-filter: blur(14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-portal-surface="customer"],
+  [data-portal-surface="admin"],
+  [data-portal-surface="customer"] .portal-header,
+  [data-portal-surface="admin"] .portal-header,
+  [data-portal-surface="customer"] .portal-mobile-nav,
+  [data-portal-surface="admin"] .portal-mobile-nav {
+    transition: none !important;
+  }
+}
+
 /* Scroll Continuity layer.  This extends Cinematic Mini across the public
    page without hijacking scroll: the browser only updates compositor-friendly
    CSS variables, while every section remains readable and in normal flow. */
