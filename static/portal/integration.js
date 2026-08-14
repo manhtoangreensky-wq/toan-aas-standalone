@@ -10255,9 +10255,43 @@
   const DOCUMENT_WORKSPACE_FILTER_STATES = new Set(["active", "draft", "review", "approved", "archived"]);
   const DOCUMENT_WORKSPACE_LIST_LIMIT = 50;
   const DOCUMENT_WORKSPACE_MAX_LIST_OFFSET = 10000;
+  const DOCUMENT_WORKSPACE_EVENT_ACTIONS = new Set([
+    "workspace_created", "workspace_updated", "workspace_draft", "workspace_review", "workspace_approved", "workspace_archived", "workspace_version_restored",
+    "plan_created", "plan_updated", "plan_archived", "plan_restored", "plan_version_restored", "plans_reordered"
+  ]);
+  const DOCUMENT_WORKSPACE_EVENT_ENTITY_TYPES = new Set(["workspace", "plan"]);
+  const DOCUMENT_WORKSPACE_EVENT_FIELDS = new Set(["action", "entity_type", "workspace_id", "plan_id", "revision", "created_at"]);
   function validDocumentWorkspaceId(value) { return validProjectId(value); }
   function validDocumentPlanId(value) { return validProjectId(value); }
   function validDocumentWorkspaceRevision(value) { return validMemoryRevision(value); }
+  function documentWorkspaceTimestampIsSafe(value) {
+    const text = String(value || "").trim();
+    return text.length >= 20 && text.length <= 80 && /^\d{4}-\d{2}-\d{2}T/.test(text)
+      && Number.isFinite(Date.parse(text)) && !/[\u0000-\u001f\u007f]/.test(text);
+  }
+  function documentWorkspaceEventIsSafe(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!item) return false;
+    const keys = Object.keys(item);
+    const entityType = String(item.entity_type || "").trim();
+    const planId = item.plan_id;
+    return keys.length === DOCUMENT_WORKSPACE_EVENT_FIELDS.size
+      && keys.every((key) => DOCUMENT_WORKSPACE_EVENT_FIELDS.has(key))
+      && DOCUMENT_WORKSPACE_EVENT_ACTIONS.has(String(item.action || "").trim())
+      && DOCUMENT_WORKSPACE_EVENT_ENTITY_TYPES.has(entityType)
+      && validDocumentWorkspaceId(item.workspace_id)
+      && validDocumentWorkspaceRevision(item.revision)
+      && documentWorkspaceTimestampIsSafe(item.created_at)
+      && (entityType === "workspace" ? planId === null : validDocumentPlanId(planId));
+  }
+  function documentWorkspaceEventsProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const items = source && Array.isArray(source.items) ? source.items : null;
+    if (!source || !documentWorkspaceBoundaryIsSafe(source) || !items || items.length > DOCUMENT_WORKSPACE_LIST_LIMIT || !items.every(documentWorkspaceEventIsSafe)) return null;
+    return items.map((item) => ({
+      action: String(item.action), revision: validDocumentWorkspaceRevision(item.revision), created_at: String(item.created_at)
+    }));
+  }
   function documentWorkspaceIdFromPath(path) {
     const match = /^\/document-workspace\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
@@ -18332,16 +18366,16 @@
       ]);
       const summary = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
       const workspaceData = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const eventData = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
       const references = results[3].data && typeof results[3].data === "object" ? results[3].data : {};
       const rawPolicy = results[4].data && typeof results[4].data === "object" ? results[4].data : {};
       const policy = documentWorkspacePolicyProjection(rawPolicy);
-      if (![summary, workspaceData, references].every(documentWorkspaceBoundaryIsSafe) || !policy) {
+      const events = documentWorkspaceEventsProjection(eventData);
+      if (![summary, workspaceData, references].every(documentWorkspaceBoundaryIsSafe) || !policy || !events) {
         throw new Error("Boundary Document & PDF Workspace chưa được máy chủ xác nhận.");
       }
       const workspaces = Array.isArray(workspaceData.items)
         ? workspaceData.items.filter((item) => item && validDocumentWorkspaceId(item.id) && validDocumentWorkspaceRevision(item.revision)).slice(0, DOCUMENT_WORKSPACE_LIST_LIMIT) : [];
-      const events = results[2].data && Array.isArray(results[2].data.items)
-        ? results[2].data.items.filter((item) => item && validDocumentWorkspaceId(item.workspace_id) && validDocumentWorkspaceRevision(item.revision)).slice(0, 50) : [];
       if (!documentWorkspaceRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
       merge({
         documentWorkspaceSummary: summary, documentWorkspaces: workspaces, documentWorkspaceEvents: events,
