@@ -7734,6 +7734,23 @@
     return { state: "deferred", catalogVersion: "unconfigured" };
   }
 
+  function normalizeDeliveryReadReceipt(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const kind = value.kind === "jobs" || value.kind === "assets" ? value.kind : "";
+    const count = Number(value.count);
+    if (!kind || !Number.isInteger(count) || count < 1 || count > 100) return null;
+    return Object.freeze({ kind, count });
+  }
+
+  function normalizeDeliveryReadRefresh(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const kind = value.kind === "jobs" || value.kind === "assets" ? value.kind : "";
+    const route = kind === "jobs" ? "/jobs" : (kind === "assets" ? "/assets" : "");
+    const requestEpoch = Number(value.requestEpoch);
+    if (!kind || value.route !== route || !Number.isSafeInteger(requestEpoch) || requestEpoch < 1) return null;
+    return Object.freeze({ kind, route, requestEpoch });
+  }
+
   function normalizeBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const session = source.session && typeof source.session === "object" ? source.session : {};
@@ -7914,6 +7931,14 @@
       jobs: Array.isArray(source.jobs) ? source.jobs : [],
       jobDetail: source.jobDetail && typeof source.jobDetail === "object" ? source.jobDetail : {},
       assets: Array.isArray(source.assets) ? source.assets : [],
+      // This is a bounded, presentation-only receipt emitted by a validated
+      // Delivery Center refresh. It carries neither record IDs nor delivery
+      // truth and is consumed immediately after the mounted acknowledgement.
+      deliveryReadReceipt: normalizeDeliveryReadReceipt(source.deliveryReadReceipt),
+      // This marker lives only in the tab's render state. It makes a current
+      // manual refresh remain disabled through a filter remount; it is not a
+      // job, output, delivery or persisted operation state.
+      deliveryReadRefresh: normalizeDeliveryReadRefresh(source.deliveryReadRefresh),
       // Asset Vault has a distinct owner-scoped projection. Never mix it
       // with Bot delivery metadata in `assets`, whose download contract is
       // intentionally different.
@@ -19711,6 +19736,23 @@
     return filters.map(([value, fallback]) => [value, labels[value] || fallback]);
   }
 
+  function deliveryReadReceiptAttribute(context, kind) {
+    const receipt = context && context.deliveryReadReceipt;
+    if (!receipt || receipt.kind !== kind) return "";
+    return ` data-delivery-receipt="${safeText(kind)}"`;
+  }
+
+  function deliveryReadRefreshBusy(context, kind) {
+    const refresh = context && context.deliveryReadRefresh;
+    const route = kind === "jobs" ? "/jobs" : (kind === "assets" ? "/assets" : "");
+    return Boolean(refresh && refresh.kind === kind && refresh.route === route && Number.isSafeInteger(refresh.requestEpoch));
+  }
+
+  function renderDeliveryReceiptSurface(content, receiptAttribute) {
+    if (!receiptAttribute) return content;
+    return `<div class="portal-delivery-receipt-surface"${receiptAttribute}>${content}</div>`;
+  }
+
   function renderDeliverySummaryCards(label, cards) {
     return `<section class="portal-delivery-summary" aria-label="${safeText(label)}"><div class="portal-delivery-summary-grid">${cards.map((card) => `<div class="portal-delivery-summary-card" data-delivery-summary="${safeText(card.key)}"><span>${safeText(card.label)}</span><strong>${safeText(String(card.count))}</strong><small>${safeText(card.detail)}</small></div>`).join("")}</div></section>`;
   }
@@ -19747,8 +19789,8 @@
     return `<div class="portal-delivery-mobile-records" data-delivery-mobile-records="${safeText(kind)}">${body}</div>`;
   }
 
-  function renderDeliveryRecords(kind, columns, rows, renderRow, renderCard, emptyTitle, emptyText) {
-    return `<div class="portal-delivery-records" id="delivery-${safeText(kind)}-records"><div class="portal-delivery-desktop-records">${renderRowsTable(columns, rows, renderRow, emptyTitle, emptyText)}</div>${renderDeliveryMobileRecords(kind, rows, renderCard, emptyTitle, emptyText)}</div>`;
+  function renderDeliveryRecords(kind, columns, rows, renderRow, renderCard, emptyTitle, emptyText, receiptAttribute) {
+    return `<div class="portal-delivery-records" id="delivery-${safeText(kind)}-records"${receiptAttribute || ""}><div class="portal-delivery-desktop-records">${renderRowsTable(columns, rows, renderRow, emptyTitle, emptyText)}</div>${renderDeliveryMobileRecords(kind, rows, renderCard, emptyTitle, emptyText)}</div>`;
   }
 
   function renderJobMobileCard(item) {
@@ -19860,15 +19902,17 @@
     const selected = JOB_FILTERS.some(([value]) => value === context.jobFilter) ? context.jobFilter : "all";
     const jobs = selected === "all" ? allJobs : allJobs.filter((item) => jobStatus(item) === selected);
     const refreshEnabled = context.capabilities && context.capabilities["refresh-jobs"] === true;
+    const refreshBusy = deliveryReadRefreshBusy(context, "jobs");
+    const receiptAttribute = deliveryReadReceiptAttribute(context, "jobs");
     const counts = Object.fromEntries(JOB_FILTERS.map(([status]) => [status, status === "all" ? allJobs.length : allJobs.filter((item) => jobStatus(item) === status).length]));
     const firstJobActions = !allJobs.length && selected === "all"
       ? `<div class="portal-form-footer portal-empty-route-actions"><span class="portal-form-note">${deliveryCenterText("jobs.first.note", "Chưa có job canonical. Hãy bắt đầu bằng một workflow hoặc lưu brief Web; job chỉ xuất hiện sau khi một luồng được server xác nhận, không do browser tự tạo.")}</span><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/features">${deliveryCenterText("jobs.first.workflow", "Chọn workflow")}</a><a class="portal-button portal-button--quiet" href="/workspace">${deliveryCenterText("jobs.first.drafts", "Mở bản nháp Web")}</a></div></div>`
       : "";
     const filters = filterBar(localizedDeliveryFilters("jobs", JOB_FILTERS), selected, "filter-jobs", "data-job-filter", deliveryCenterText("filter.jobs", "Lọc job"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstJobActions;
-    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."));
+    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
     return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      ${renderJobDeliverySummary(allJobs)}
-      <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("jobs.section.title", "Job gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobs.section.subtitle", "Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.")}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled ? "" : " disabled"}>${deliveryCenterText("jobs.refresh", "Làm mới")}</button><a class="portal-button portal-button--quiet" href="/assets">${deliveryCenterText("jobs.openAssets", "Mở tài sản →")}</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">${deliveryCenterText("jobs.readStatus", "Danh sách chỉ có metadata canonical thuộc signed session.")}</p>${filters}${records}</section>
+      ${renderDeliveryReceiptSurface(renderJobDeliverySummary(allJobs), receiptAttribute)}
+      <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("jobs.section.title", "Job gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobs.section.subtitle", "Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.")}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("jobs.refresh", "Làm mới")}</button><a class="portal-button portal-button--quiet" href="/assets">${deliveryCenterText("jobs.openAssets", "Mở tài sản →")}</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">${deliveryCenterText("jobs.readStatus", "Danh sách chỉ có metadata canonical thuộc signed session.")}</p>${filters}${records}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${deliveryCenterText("jobs.notice.title", "Delivery được tách riêng khỏi engine")}</strong><p>${deliveryCenterText("jobs.notice.body", "Job completed hoặc metadata output không tạo preview/download. Cần một signed delivery contract, ownership check và validation artifact trước khi Web mở file.")}</p></div></div></section></article>`;
   }
 
@@ -19907,14 +19951,16 @@
       : "";
     const filters = filterBar(localizedDeliveryFilters("assets", ASSET_FILTERS), selected, "filter-assets", "data-asset-filter", deliveryCenterText("filter.assets", "Lọc tài sản"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstAssetActions;
     const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
+    const refreshBusy = deliveryReadRefreshBusy(context, "assets");
+    const receiptAttribute = deliveryReadReceiptAttribute(context, "assets");
     const emptyTitle = selected === "all" ? deliveryCenterText("assets.empty.allTitle", "Chưa có tài sản có thể mở") : (selected === "web_vault" ? deliveryCenterText("assets.empty.vaultTitle", "Chưa có tệp riêng Web") : deliveryCenterText("assets.empty.filterTitle", "Không có tài sản ở bộ lọc này"));
     const emptyText = selected === "all"
       ? deliveryCenterText("assets.empty.allBody", "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge.")
       : (selected === "web_vault" ? deliveryCenterText("assets.empty.vaultBody", "Tệp Web riêng chỉ xuất hiện sau khi bạn lưu vào Asset Vault; chúng không phải output hay delivery.") : deliveryCenterText("assets.empty.filterBody", "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery."));
-    const records = renderDeliveryRecords("assets", [deliveryCenterText("assets.table.asset", "Tài sản"), deliveryCenterText("assets.table.feature", "Tính năng"), deliveryCenterText("assets.table.status", "Trạng thái"), deliveryCenterText("assets.table.created", "Tạo lúc"), deliveryCenterText("assets.table.delivery", "Delivery")], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(assetRecordStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, renderAssetMobileCard, emptyTitle, emptyText);
+    const records = renderDeliveryRecords("assets", [deliveryCenterText("assets.table.asset", "Tài sản"), deliveryCenterText("assets.table.feature", "Tính năng"), deliveryCenterText("assets.table.status", "Trạng thái"), deliveryCenterText("assets.table.created", "Tạo lúc"), deliveryCenterText("assets.table.delivery", "Delivery")], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(assetRecordStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, renderAssetMobileCard, emptyTitle, emptyText, receiptAttribute);
     return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      ${renderAssetDeliverySummary(allAssets)}
-      <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("assets.section.title", "Tài sản gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("assets.section.subtitle", "Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.")}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets" data-delivery-refresh-control="assets" aria-controls="delivery-assets-records"${refreshEnabled ? "" : " disabled"}>${deliveryCenterText("assets.refresh", "Làm mới")}</button></div><p class="portal-delivery-read-status" data-delivery-read-status="/assets" role="status" aria-live="polite">${deliveryCenterText("assets.readStatus", "Nguồn và delivery được kiểm tra riêng cho từng record.")}</p>${filters}${records}</section></article>`;
+      ${renderDeliveryReceiptSurface(renderAssetDeliverySummary(allAssets), receiptAttribute)}
+      <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("assets.section.title", "Tài sản gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("assets.section.subtitle", "Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.")}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets" data-delivery-refresh-control="assets" aria-controls="delivery-assets-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("assets.refresh", "Làm mới")}</button></div><p class="portal-delivery-read-status" data-delivery-read-status="/assets" role="status" aria-live="polite">${deliveryCenterText("assets.readStatus", "Nguồn và delivery được kiểm tra riêng cho từng record.")}</p>${filters}${records}</section></article>`;
   }
 
   function validVaultAssetId(value) {
@@ -30393,6 +30439,26 @@
     return "customer";
   }
 
+  function consumeDeliveryReadReceipt(main) {
+    const targets = main && typeof main.querySelectorAll === "function"
+      ? Array.from(main.querySelectorAll("[data-delivery-receipt]"))
+      : [];
+    if (!targets.length) return;
+    const reducedMotion = typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    targets.forEach((target) => {
+      const clear = () => target.removeAttribute("data-delivery-receipt");
+      if (reducedMotion) {
+        clear();
+        return;
+      }
+      target.addEventListener("animationend", clear, { once: true });
+      // A style override, a browser that skips an animation, or a view
+      // transition interruption must not leave a stale presentation marker.
+      window.setTimeout(clear, 320);
+    });
+  }
+
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
@@ -30478,6 +30544,7 @@
       setSidebarAccessibilityState(false);
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
+      consumeDeliveryReadReceipt(main);
       placeSfxCueSheetReceipt(main);
       bindVideoPreviewPlayer(main);
       synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));

@@ -156,6 +156,10 @@
   const SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN = /\b(?:tx(?:id|n)?|transaction\s+(?:hash|id|reference|no\.?|number)|mã\s*(?:(?:giao\s*)?(?:dịch|gd)|tham\s*chiếu|thanh\s*toán)|ma\s*(?:(?:giao\s*)?(?:dich|gd)|tham\s*chieu|thanh\s*toan)|biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|số\s*tài\s*khoản|so\s*tai\s*khoan|stk|tài\s*khoản\s*(?:ngân\s*hàng|bank)|tai\s*khoan\s*(?:ngan\s*hang|bank)|bank\s+account|account\s+(?:number|no|id)|qr\s*(?:code|thanh\s*toán|thanh\s*toan)?)\b/i;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
+  // A poll is a signed read, not an independent delivery authority. Keep a
+  // request sequence so an old in-flight poll cannot replace a newer manual
+  // read or erase its transient presentation-only receipt.
+  let jobPollEpoch = 0;
   let paymentPollTimer = 0;
   let paymentPollFailures = 0;
   let telegramLoginPollTimer = 0;
@@ -1149,6 +1153,63 @@
       throw new Error(`Phản hồi ${String(label || "Delivery Center")} không hợp lệ.`);
     }
     return items;
+  }
+
+  function deliveryReadSnapshot(items) {
+    const snapshot = new Map();
+    if (!Array.isArray(items)) return snapshot;
+    items.forEach((item) => {
+      if (!isSafeDeliveryReadRecord(item)) return;
+      snapshot.set(String(item.id).trim(), String(item.status).trim());
+    });
+    return snapshot;
+  }
+
+  function deliveryReadReceiptPresentation(kind, items) {
+    // A receipt is a short-lived visual acknowledgement, never a new delivery
+    // state. Compare the existing in-memory read model only by opaque ID and
+    // status after the new response has passed `deliveryReadItemsOrThrow`.
+    const collection = kind === "jobs" ? "jobs" : (kind === "assets" ? "assets" : "");
+    if (!collection) return null;
+    const before = deliveryReadSnapshot(base()[collection]);
+    const after = deliveryReadSnapshot(items);
+    let changed = 0;
+    after.forEach((status, id) => {
+      if (!before.has(id) || before.get(id) !== status) changed += 1;
+    });
+    if (!changed) return null;
+    return Object.freeze({ kind: collection, count: Math.min(changed, 100) });
+  }
+
+  function clearDeliveryReadReceiptPresentation(receipt) {
+    // `merge` synchronously mounts the receipt marker. Clear only the
+    // in-memory bootstrap afterward, without a second render that could
+    // replay it while the current 200ms CSS acknowledgement is finishing.
+    if (!receipt || !window.__TOAN_AAS_PORTAL__) return;
+    const current = base().deliveryReadReceipt;
+    if (!current || current.kind !== receipt.kind || current.count !== receipt.count) return;
+    window.__TOAN_AAS_PORTAL__ = { ...base(), deliveryReadReceipt: null };
+  }
+
+  function setDeliveryReadRefreshState(kind, route, requestEpoch) {
+    const collection = kind === "jobs" ? "jobs" : (kind === "assets" ? "assets" : "");
+    const expectedRoute = collection === "jobs" ? "/jobs" : (collection === "assets" ? "/assets" : "");
+    if (!collection || route !== expectedRoute || !Number.isSafeInteger(requestEpoch) || requestEpoch < 1) return;
+    merge({ deliveryReadRefresh: Object.freeze({ kind: collection, route: expectedRoute, requestEpoch }) });
+  }
+
+  function clearDeliveryReadRefreshState(kind, route, requestEpoch) {
+    const current = base().deliveryReadRefresh;
+    if (!current || current.kind !== kind || current.route !== route || current.requestEpoch !== requestEpoch) return;
+    merge({ deliveryReadRefresh: null });
+  }
+
+  function invalidateDeliveryReadRefreshState() {
+    // A fresh signed hydration owns a new route/session generation. Any
+    // unresolved manual read from the prior generation must stop disabling a
+    // control even if its network promise never settles.
+    if (!base().deliveryReadRefresh) return;
+    merge({ deliveryReadRefresh: null });
   }
 
   function setMusicDirectionPresetSubmissionStatus(message) {
@@ -2755,13 +2816,32 @@
     return path === "/jobs" || path.startsWith("/jobs/") || path === "/video/progress";
   }
 
+  function invalidateJobPolling() {
+    jobPollEpoch += 1;
+    if (!jobPollTimer) return;
+    window.clearTimeout(jobPollTimer);
+    jobPollTimer = 0;
+  }
+
+  function jobPollRequestIsCurrent(requestEpoch, sessionEpoch, path) {
+    return requestEpoch === jobPollEpoch
+      && sessionEpoch === canonicalSessionEpoch
+      && currentPortalPath() === path
+      && Boolean(base().bridge && base().bridge.available === true)
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
   function scheduleJobPolling(path, records, delayMs) {
     if (jobPollTimer || !isJobPollingRoute(path) || !base().bridge || base().bridge.available !== true) return;
     const active = Array.isArray(records) ? records.some(activeJob) : activeJob(records);
     if (!active) return;
     const delay = Number.isFinite(Number(delayMs)) ? Math.max(0, Number(delayMs)) : JOB_POLL_INTERVAL_MS;
+    const requestEpoch = ++jobPollEpoch;
+    const sessionEpoch = canonicalSessionEpoch;
+    const isCurrent = () => jobPollRequestIsCurrent(requestEpoch, sessionEpoch, path);
     jobPollTimer = window.setTimeout(async () => {
       jobPollTimer = 0;
+      if (!isCurrent()) return;
       try {
         if (path.startsWith("/jobs/") && path !== "/jobs/") {
           const jobId = jobIdFromPath(path);
@@ -2770,6 +2850,7 @@
             api(`/jobs/${encodeURIComponent(jobId)}`),
             api("/assets").catch(() => ({ data: { items: [] } }))
           ]);
+          if (!isCurrent()) return;
           const record = exactJobRecord(result.data, jobId);
           merge({
             jobDetail: record,
@@ -2780,6 +2861,7 @@
           scheduleJobPolling(path, record);
         } else {
           const result = await api("/jobs");
+          if (!isCurrent()) return;
           const items = result.data && result.data.items ? result.data.items : [];
           merge({ jobs: items });
           jobPollFailures = 0;
@@ -2788,10 +2870,11 @@
       } catch (_) {
         // Background refresh remains quiet: a guarded/temporary bridge state
         // must never turn into client-side failure data or a fake completion.
+        if (!isCurrent()) return;
         jobPollFailures += 1;
         const currentPath = (base().path || window.location.pathname).split("?")[0];
         const retryDelay = Math.min(JOB_POLL_MAX_BACKOFF_MS, JOB_POLL_INTERVAL_MS * (2 ** Math.min(jobPollFailures, 2)));
-        if (currentPath === path) scheduleJobPolling(path, records, retryDelay);
+        if (currentPath === path && isCurrent()) scheduleJobPolling(path, records, retryDelay);
       }
     }, delay);
   }
@@ -12480,6 +12563,7 @@
     // account response is discarded even while `/auth/me` is still loading.
     ++canonicalSessionEpoch;
     ++canonicalHydrationEpoch;
+    invalidateDeliveryReadRefreshState();
     ++canonicalAdminDataHydrationEpoch;
     ++adminErpNavigationEpoch;
     ++adminAuditSessionEpoch;
@@ -36554,37 +36638,69 @@
         return;
       }
       if (action === "refresh-jobs") {
+        // Share the canonical sequence fence with initial hydration. A
+        // second manual read, a route change or a signed-session refresh must
+        // make an older response inert before it can replace the read model
+        // or acknowledge a stale record as newly delivered.
+        const requestEpoch = ++canonicalHydrationEpoch;
+        const sessionEpoch = canonicalSessionEpoch;
+        const isCurrent = () => canonicalRequestIsCurrent(requestEpoch, sessionEpoch, route);
+        if (!isCurrent()) return;
+        invalidateJobPolling();
+        setDeliveryReadRefreshState("jobs", route, requestEpoch);
         setActionBusy(action, route, true);
         setDeliveryReadStatus("/jobs", "Đang kiểm tra job canonical thuộc signed session…");
         try {
           const result = await api("/jobs");
+          if (!isCurrent()) return;
           const items = deliveryReadItemsOrThrow(result, "Job Center");
-          merge({ jobs: items });
+          const receipt = deliveryReadReceiptPresentation("jobs", items);
+          merge({ jobs: items, deliveryReadReceipt: receipt });
+          clearDeliveryReadReceiptPresentation(receipt);
           scheduleJobPolling("/jobs", items);
           setDeliveryReadStatus("/jobs", `Đã nhận ${items.length} job canonical trong cửa sổ hiện tại.`);
           toast(result.message || "Đã làm mới danh sách job canonical.");
         } catch (error) {
+          if (!isCurrent()) return;
+          // The last verified list remains intact on a failed manual read.
+          // Restart bounded polling from that list so an active job does not
+          // lose its quiet status updates just because this button failed.
+          scheduleJobPolling(route, base().jobs);
           setDeliveryReadStatus("/jobs", "Không thể làm mới Job Center. Danh sách hiện tại không được thay bằng dữ liệu suy đoán.");
           throw error;
         } finally {
-          setActionBusy(action, route, false);
+          clearDeliveryReadRefreshState("jobs", route, requestEpoch);
+          if (isCurrent()) setActionBusy(action, route, false);
         }
         return;
       }
       if (action === "refresh-assets") {
+        // See `/jobs` above: this route must share the canonical epoch so a
+        // late response cannot overwrite a newer signed read or surface a
+        // receipt for stale asset metadata.
+        const requestEpoch = ++canonicalHydrationEpoch;
+        const sessionEpoch = canonicalSessionEpoch;
+        const isCurrent = () => canonicalRequestIsCurrent(requestEpoch, sessionEpoch, route);
+        if (!isCurrent()) return;
+        setDeliveryReadRefreshState("assets", route, requestEpoch);
         setActionBusy(action, route, true);
         setDeliveryReadStatus("/assets", "Đang kiểm tra metadata và delivery thuộc signed session…");
         try {
           const result = await api("/assets");
+          if (!isCurrent()) return;
           const items = deliveryReadItemsOrThrow(result, "Assets");
-          merge({ assets: items });
+          const receipt = deliveryReadReceiptPresentation("assets", items);
+          merge({ assets: items, deliveryReadReceipt: receipt });
+          clearDeliveryReadReceiptPresentation(receipt);
           setDeliveryReadStatus("/assets", `Đã nhận ${items.length} record tài sản trong cửa sổ hiện tại.`);
           toast(result.message || "Đã làm mới metadata tài sản.");
         } catch (error) {
+          if (!isCurrent()) return;
           setDeliveryReadStatus("/assets", "Không thể làm mới Assets. Không có delivery hoặc file nào được suy đoán.");
           throw error;
         } finally {
-          setActionBusy(action, route, false);
+          clearDeliveryReadRefreshState("assets", route, requestEpoch);
+          if (isCurrent()) setActionBusy(action, route, false);
         }
         return;
       }
