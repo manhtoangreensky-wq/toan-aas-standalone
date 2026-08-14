@@ -2873,6 +2873,20 @@
     return ["waiting_user", "resolved"].includes(currentState) ? "reviewing" : currentState;
   }
 
+  function supportAdminReplyExpectedState(caseId, revision, payload) {
+    const nextState = payload && typeof payload.next_state === "string" ? payload.next_state : "";
+    if (nextState) return SUPPORT_CASE_STATES.has(nextState) ? nextState : "";
+    if (!payload || payload.visibility !== "internal") return "waiting_user";
+    const detail = base().supportAdminCaseDetail;
+    const caseItem = detail && typeof detail === "object" && detail.case && typeof detail.case === "object" ? detail.case : null;
+    return caseItem
+      && validSupportCaseId(caseItem.id) && caseItem.id === caseId
+      && Number.isSafeInteger(caseItem.revision) && caseItem.revision === revision
+      && SUPPORT_CASE_STATES.has(caseItem.state)
+      ? caseItem.state
+      : "";
+  }
+
   function supportAdminUpdatePayload(fields) {
     const state = String(fields.state || "").trim().toLowerCase();
     const priority = String(fields.priority || "").trim().toLowerCase();
@@ -33404,13 +33418,15 @@
         const revision = validSupportRevision(detail.supportCaseRevision);
         if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc phiên bản case Support Desk không hợp lệ.");
         const payload = supportAdminReplyPayload(fields);
+        const expectedState = supportAdminReplyExpectedState(caseId, revision, payload);
+        if (!SUPPORT_CASE_STATES.has(expectedState)) throw new Error("Case Support Desk hiện tại chưa có trạng thái hợp lệ để xác minh receipt.");
         const scope = `support:admin:case:${caseId}:reply`;
         const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
         if (!submission) return;
         merge({ supportAdminReplyReceipt: {} });
         const expected = {
           caseId, revision, action: "operator_reply", visibility: payload.visibility,
-          state: payload.next_state || (payload.visibility === "internal" ? "new" : "waiting_user")
+          state: expectedState
         };
         setActionBusy(action, route, true);
         try {

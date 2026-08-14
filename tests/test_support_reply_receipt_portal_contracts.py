@@ -235,14 +235,28 @@ function customerReplyInitialState() {
   return "new";
 }
 
+function preservedInternalState(kind) {
+  if (kind === "valid_internal_reviewing") return "reviewing";
+  if (kind === "valid_internal_waiting_user") return "waiting_user";
+  return "";
+}
+
+function internalReplyWithoutNextState(kind) {
+  return Boolean(preservedInternalState(kind) || [
+    "missing_internal_detail", "stale_internal_detail_case",
+    "stale_internal_detail_revision", "invalid_internal_detail_state"
+  ].includes(kind));
+}
+
 function replyReceipt(admin) {
-  const internal = Boolean(admin && active && active.kind === "valid_internal");
+  const preservedState = preservedInternalState(active && active.kind);
+  const internal = Boolean(admin && active && (active.kind === "valid_internal" || internalReplyWithoutNextState(active.kind)));
   const unexpectedState = Boolean(active && active.kind === "malformed_unexpected_state");
   const customerState = ["customer_waiting_user_reply", "customer_resolved_reply"].includes(active && active.kind) ? "reviewing" : "new";
   return {
     case_id: CASE_ID,
     revision: 2,
-    state: unexpectedState ? (admin ? "new" : "waiting_user") : (admin ? (internal ? "new" : "waiting_user") : customerState),
+    state: unexpectedState ? (admin ? "new" : "waiting_user") : (admin ? (internal ? (preservedState || "new") : "waiting_user") : customerState),
     visibility: internal ? "internal" : "public",
     action: admin ? "operator_reply" : "customer_reply",
     created_at: WHEN,
@@ -377,7 +391,9 @@ async function run(kind, admin, reuseState) {
   const route = admin ? "/admin/support/" + CASE_ID : "/tickets/" + CASE_ID;
   const capability = admin ? "support-admin-case-reply" : "support-case-reply";
   const receiptField = admin ? "supportAdminReplyReceipt" : "supportCustomerReplyReceipt";
-  const internal = Boolean(admin && kind === "valid_internal");
+  const preservedState = admin ? preservedInternalState(kind) : "";
+  const internalWithoutNextState = Boolean(admin && internalReplyWithoutNextState(kind));
+  const internal = Boolean(admin && (kind === "valid_internal" || internalWithoutNextState));
   const customerTransition = !admin && ["customer_waiting_user_reply", "customer_resolved_reply"].includes(kind);
   if (!reuseState) {
     window.location.pathname = route;
@@ -388,7 +404,15 @@ async function run(kind, admin, reuseState) {
       capabilities: { [capability]: true },
       assetVaultEnabled: false,
       supportCaseDetail: customerTransition ? customerDetail(CASE_ID, 1, customerReplyInitialState()).data : {},
-      supportAdminCaseDetail: {}, pageStates: {}
+      supportAdminCaseDetail: preservedState
+        ? adminDetail(CASE_ID, 1, preservedState).data
+        : (kind === "stale_internal_detail_case"
+          ? adminDetail(OTHER_CASE_ID, 1, "reviewing").data
+          : (kind === "stale_internal_detail_revision"
+            ? adminDetail(CASE_ID, 2, "reviewing").data
+            : (kind === "invalid_internal_detail_state"
+              ? adminDetail(CASE_ID, 1, "provider_delivery").data
+              : {}))), pageStates: {}
     };
   }
   const scope = admin ? `support:admin:case:${CASE_ID}:reply` : `support:case:${CASE_ID}:reply`;
@@ -398,12 +422,12 @@ async function run(kind, admin, reuseState) {
     supportCaseId: CASE_ID,
     supportCaseRevision: 1,
     fields: admin
-      ? { body: "A safe operator reply.", visibility: internal ? "internal" : "public", next_state: internal ? "new" : "waiting_user" }
+      ? { body: "A safe operator reply.", visibility: internal ? "internal" : "public", next_state: internalWithoutNextState ? "" : (internal ? "new" : "waiting_user") }
       : { body: "A safe customer reply." }
   } });
   const entry = harness.submission(scope);
   const state = harness.state();
-  const expected = { caseId: CASE_ID, revision: 1, action: admin ? "operator_reply" : "customer_reply", visibility: internal ? "internal" : "public", state: admin ? (internal ? "new" : "waiting_user") : "new" };
+  const expected = { caseId: CASE_ID, revision: 1, action: admin ? "operator_reply" : "customer_reply", visibility: internal ? "internal" : "public", state: admin ? (internal ? (preservedState || "new") : "waiting_user") : "new" };
   const defaultCustomerNewExpected = { caseId: CASE_ID, revision: 1, action: "customer_reply", visibility: "public" };
   const validEnvelope = { ok: true, status: "completed", message: "accepted", error_code: null, data: { receipt: replyReceipt(admin) } };
   const malformedEnvelope = { ok: true, status: "completed", message: "accepted", error_code: null, data: { receipt: { ...replyReceipt(admin), body: "not allowed" } } };
@@ -465,6 +489,11 @@ async function runResetProof(admin, lifecycle) {
   results.push(await run("customer_waiting_user_reply", false));
   results.push(await run("customer_resolved_reply", false));
   results.push(await run("valid_internal", true));
+  results.push(await run("valid_internal_reviewing", true));
+  results.push(await run("valid_internal_waiting_user", true));
+  for (const kind of ["missing_internal_detail", "stale_internal_detail_case", "stale_internal_detail_revision", "invalid_internal_detail_state"]) {
+    results.push(await run(kind, true));
+  }
   const resets = [];
   for (const admin of [false, true]) {
     for (const lifecycle of ["route_lifecycle", "session_lifecycle"]) resets.push(await runResetProof(admin, lifecycle));
@@ -599,6 +628,58 @@ def test_customer_reply_receipt_matches_waiting_user_and_resolved_transitions() 
                 "expected": "valid reviewing receipt rehydrates and clears the retry key",
                 "actual": item,
             })
+    assert not diagnostics, json.dumps(diagnostics, ensure_ascii=False, indent=2)
+
+
+def test_internal_admin_reply_without_next_state_preserves_authoritative_state() -> None:
+    matrix = _run_reply_action_matrix()
+    diagnostics = []
+    for kind, state in (("valid_internal_reviewing", "reviewing"), ("valid_internal_waiting_user", "waiting_user")):
+        item = next(candidate for candidate in matrix if candidate.get("admin") is True and candidate.get("kind") == kind)
+        expected_receipt = {
+            "case_id": "8a0d55e2-2287-4387-8bd1-3774a56f023f",
+            "revision": 2,
+            "state": state,
+            "visibility": "internal",
+            "action": "operator_reply",
+            "created_at": "2026-08-14T12:00:00+00:00",
+            "delivery": "web_view_only",
+        }
+        current_case = item.get("current_detail", {}).get("case", {})
+        if (
+            not item.get("sent_key")
+            or item.get("retained_key")
+            or item.get("in_flight") is not False
+            or item.get("receipt") != expected_receipt
+            or current_case.get("revision") != 2
+            or current_case.get("state") != state
+            or len(item.get("discard_events", [])) != 1
+            or item["discard_events"][0].get("admin_detail") != item.get("current_detail")
+        ):
+            diagnostics.append({"kind": kind, "expected_state": state, "actual": item})
+    assert not diagnostics, json.dumps(diagnostics, ensure_ascii=False, indent=2)
+
+
+def test_internal_admin_reply_without_next_state_fails_closed_on_invalid_current_detail() -> None:
+    matrix = _run_reply_action_matrix()
+    diagnostics = []
+    for kind in (
+        "missing_internal_detail",
+        "stale_internal_detail_case",
+        "stale_internal_detail_revision",
+        "invalid_internal_detail_state",
+    ):
+        item = next(candidate for candidate in matrix if candidate.get("admin") is True and candidate.get("kind") == kind)
+        reply_calls = [call for call in item.get("fetch_calls", []) if call.get("path", "").endswith("/reply")]
+        if (
+            item.get("sent_key")
+            or item.get("retained_key")
+            or item.get("in_flight")
+            or item.get("receipt")
+            or item.get("discard_events")
+            or reply_calls
+        ):
+            diagnostics.append({"kind": kind, "expected": "reject before reply POST or retry-key acquisition", "actual": item})
     assert not diagnostics, json.dumps(diagnostics, ensure_ascii=False, indent=2)
 
 
