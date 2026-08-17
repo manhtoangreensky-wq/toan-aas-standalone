@@ -7855,6 +7855,108 @@ button, a, input, select, textarea { touch-action: manipulation; }
 }
 
 
+
+/* Google, Apple & Telegram Brand Buttons - Standard OAuth UX */
+.portal-oauth-btn-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  will-change: transform;
+}
+.portal-oauth-btn-brand:hover {
+  transform: translateY(-1px);
+}
+.portal-oauth-btn-brand:active {
+  transform: translateY(0);
+}
+.portal-oauth-btn-google {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.portal-oauth-btn-google:hover {
+  background: #f9fafb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.portal-oauth-btn-apple {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #374151;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.portal-oauth-btn-apple:hover {
+  background: #111827;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.portal-oauth-btn-telegram {
+  background: #24a1de;
+  color: #ffffff;
+  border: 1px solid #2093cb;
+  box-shadow: 0 2px 8px rgba(36, 161, 222, 0.35);
+}
+.portal-oauth-btn-telegram:hover {
+  background: #1e96d1;
+  box-shadow: 0 4px 14px rgba(36, 161, 222, 0.5);
+}
+.portal-auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0;
+  color: var(--portal-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.portal-auth-divider::before,
+.portal-auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--portal-border);
+}
+.portal-auth-divider span {
+  padding: 0 12px;
+}
+/* AISuite Mounikai Card Shine & Glow Orbs progressive styling */
+.landing-glow-orb {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  opacity: 0.18;
+  z-index: 0;
+}
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
+  transform: rotate(25deg) translateY(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+.card-shine:hover::after {
+  transform: rotate(25deg) translateY(100%);
+}
+
 /* Account & Security workspace UX. The security center retains every signed
    server action; this late scope only clarifies navigation, posture, density,
    and destructive-action hierarchy inside the existing app shell. */
