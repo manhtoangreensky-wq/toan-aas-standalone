@@ -22,6 +22,20 @@ class RouteStatus(str, Enum):
     GUARDED = "guarded"
 
 
+class ProviderAcceptanceStatus(str, Enum):
+    NOT_SUBMITTED = "not_submitted"
+    ACCEPTED = "accepted"
+    ACCEPTANCE_UNKNOWN = "acceptance_unknown"
+    TERMINAL = "terminal"
+
+
+class ProviderRecoveryAction(str, Enum):
+    NO_EXTERNAL_TASK_KNOWN = "no_external_task_known"
+    POLL_SAVED_TASK_ONLY = "poll_saved_task_only"
+    TERMINAL_NOOP = "terminal_noop"
+    GUARDED = "guarded"
+
+
 @dataclass(frozen=True)
 class RouteRequest:
     capability_key: str
@@ -91,6 +105,38 @@ class RouteDecision:
         return cls(RouteStatus.READY, catalog_version, primary, fallbacks, retail_price_minor, primary.currency, None)
 
 
+@dataclass(frozen=True)
+class ProviderExecutionCheckpoint:
+    acceptance_status: ProviderAcceptanceStatus
+    idempotency_key: str
+    external_task_id: str | None = None
+
+    def __post_init__(self) -> None:
+        acceptance_status = self.acceptance_status
+        if type(acceptance_status) is str:
+            try:
+                acceptance_status = ProviderAcceptanceStatus(acceptance_status)
+            except ValueError:
+                acceptance_status = ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN
+        elif not isinstance(acceptance_status, ProviderAcceptanceStatus):
+            acceptance_status = ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN
+
+        object.__setattr__(self, "acceptance_status", acceptance_status)
+
+
+@dataclass(frozen=True)
+class ProviderRecoveryDecision:
+    action: ProviderRecoveryAction
+    idempotency_key: str | None
+    external_task_id: str | None
+    new_submission_blocked: bool
+    guard_reason: str | None
+
+    @classmethod
+    def guarded(cls, reason: str) -> ProviderRecoveryDecision:
+        return cls(ProviderRecoveryAction.GUARDED, None, None, True, reason)
+
+
 def unconfigured_catalog() -> RouteCatalog:
     """Return the intentionally empty default catalog until costs are approved."""
     return RouteCatalog("unconfigured", CatalogApproval.UNCONFIGURED, ())
@@ -129,6 +175,60 @@ def resolve_route(request: RouteRequest, catalog: RouteCatalog) -> RouteDecision
     selectable = (primary, *fallbacks)
     retail_price_minor = math.ceil(max(candidate.cost_minor for candidate in selectable) * 3)
     return RouteDecision.ready(catalog.version, primary, fallbacks, retail_price_minor)
+
+
+def resolve_provider_recovery(checkpoint: ProviderExecutionCheckpoint) -> ProviderRecoveryDecision:
+    """Classify provider retry/recovery without performing any external action.
+
+    This result is not execution authorization. Feature enablement, explicit
+    confirmation, ownership, cost guards and an exclusive durable lease remain
+    separate gates. Accepted or ambiguous acceptance can only point recovery at
+    the saved external task; missing evidence fails closed.
+    """
+    if type(checkpoint) is not ProviderExecutionCheckpoint:
+        return ProviderRecoveryDecision.guarded("EXECUTION_INVALID_CHECKPOINT")
+    if not _has_nonempty_strings(checkpoint.idempotency_key):
+        return ProviderRecoveryDecision.guarded("EXECUTION_IDEMPOTENCY_KEY_REQUIRED")
+
+    acceptance_status = checkpoint.acceptance_status
+    external_task_id = checkpoint.external_task_id
+    has_external_task = _has_nonempty_strings(external_task_id) if external_task_id is not None else False
+
+    if acceptance_status is ProviderAcceptanceStatus.NOT_SUBMITTED:
+        if external_task_id is not None:
+            return ProviderRecoveryDecision.guarded("EXECUTION_UNEXPECTED_EXTERNAL_TASK")
+        return ProviderRecoveryDecision(
+            ProviderRecoveryAction.NO_EXTERNAL_TASK_KNOWN,
+            checkpoint.idempotency_key,
+            None,
+            False,
+            None,
+        )
+
+    if acceptance_status in (
+        ProviderAcceptanceStatus.ACCEPTED,
+        ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN,
+    ):
+        if not has_external_task:
+            return ProviderRecoveryDecision.guarded("EXECUTION_SAVED_EXTERNAL_TASK_REQUIRED")
+        return ProviderRecoveryDecision(
+            ProviderRecoveryAction.POLL_SAVED_TASK_ONLY,
+            checkpoint.idempotency_key,
+            external_task_id,
+            True,
+            None,
+        )
+
+    if acceptance_status is ProviderAcceptanceStatus.TERMINAL:
+        return ProviderRecoveryDecision(
+            ProviderRecoveryAction.TERMINAL_NOOP,
+            checkpoint.idempotency_key,
+            external_task_id if has_external_task else None,
+            True,
+            None,
+        )
+
+    return ProviderRecoveryDecision.guarded("EXECUTION_ACCEPTANCE_STATE_UNSUPPORTED")
 
 
 def _is_eligible(candidate: RouteCandidate, request: RouteRequest, catalog_version: str) -> bool:

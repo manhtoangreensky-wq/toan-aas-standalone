@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from copyfast_route_engine import (
     CatalogApproval,
+    ProviderAcceptanceStatus,
+    ProviderExecutionCheckpoint,
+    ProviderRecoveryAction,
     RouteCandidate,
     RouteCatalog,
     RouteRequest,
     RouteStatus,
+    resolve_provider_recovery,
     resolve_route,
     unconfigured_catalog,
 )
@@ -284,3 +288,139 @@ def test_unconfigured_catalog_is_empty_and_fails_closed() -> None:
     assert catalog.approval_status is CatalogApproval.UNCONFIGURED
     assert catalog.candidates == ()
     assert decision.status is RouteStatus.GUARDED
+
+
+def test_provider_recovery_marks_no_external_task_known_without_authorizing_execution() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.NOT_SUBMITTED,
+        idempotency_key="job-123:render",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.NO_EXTERNAL_TASK_KNOWN
+    assert decision.idempotency_key == "job-123:render"
+    assert decision.external_task_id is None
+    assert decision.new_submission_blocked is False
+    assert decision.guard_reason is None
+
+
+def test_provider_recovery_polls_saved_task_after_acceptance_and_never_resubmits() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.ACCEPTED,
+        idempotency_key="job-123:render",
+        external_task_id="provider-task-456",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.POLL_SAVED_TASK_ONLY
+    assert decision.external_task_id == "provider-task-456"
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason is None
+
+
+def test_provider_recovery_polls_saved_task_when_acceptance_is_ambiguous() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN,
+        idempotency_key="job-123:render",
+        external_task_id="provider-task-456",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.POLL_SAVED_TASK_ONLY
+    assert decision.external_task_id == "provider-task-456"
+    assert decision.new_submission_blocked is True
+
+
+def test_provider_recovery_fails_closed_when_accepted_task_id_is_missing() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.ACCEPTED,
+        idempotency_key="job-123:render",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_SAVED_EXTERNAL_TASK_REQUIRED"
+
+
+def test_provider_recovery_fails_closed_when_ambiguous_task_id_is_missing() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN,
+        idempotency_key="job-123:render",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_SAVED_EXTERNAL_TASK_REQUIRED"
+
+
+def test_provider_recovery_rejects_inconsistent_not_submitted_checkpoint() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.NOT_SUBMITTED,
+        idempotency_key="job-123:render",
+        external_task_id="provider-task-456",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_UNEXPECTED_EXTERNAL_TASK"
+
+
+def test_provider_recovery_requires_idempotency_key_before_any_action() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.NOT_SUBMITTED,
+        idempotency_key="   ",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_IDEMPOTENCY_KEY_REQUIRED"
+
+
+def test_provider_recovery_invalid_acceptance_value_is_fail_closed_as_unknown() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status="provider_maybe_charged",  # type: ignore[arg-type]
+        idempotency_key="job-123:render",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert checkpoint.acceptance_status is ProviderAcceptanceStatus.ACCEPTANCE_UNKNOWN
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_SAVED_EXTERNAL_TASK_REQUIRED"
+
+
+def test_provider_recovery_terminal_checkpoint_never_submits_or_polls() -> None:
+    checkpoint = ProviderExecutionCheckpoint(
+        acceptance_status=ProviderAcceptanceStatus.TERMINAL,
+        idempotency_key="job-123:render",
+        external_task_id="provider-task-456",
+    )
+
+    decision = resolve_provider_recovery(checkpoint)
+
+    assert decision.action is ProviderRecoveryAction.TERMINAL_NOOP
+    assert decision.external_task_id == "provider-task-456"
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason is None
+
+
+def test_provider_recovery_rejects_invalid_checkpoint_before_field_access() -> None:
+    decision = resolve_provider_recovery(None)  # type: ignore[arg-type]
+
+    assert decision.action is ProviderRecoveryAction.GUARDED
+    assert decision.idempotency_key is None
+    assert decision.external_task_id is None
+    assert decision.new_submission_blocked is True
+    assert decision.guard_reason == "EXECUTION_INVALID_CHECKPOINT"
