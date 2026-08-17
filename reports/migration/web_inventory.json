@@ -256,7 +256,7 @@
     "conversations": 0,
     "database_tables": 224,
     "env_references": 250,
-    "providers": 7,
+    "providers": 8,
     "routes": 682,
     "ui_path_references": 47
   },
@@ -7481,6 +7481,7 @@
   "project_kind": "webapp",
   "provider_names": [
     "PayOS",
+    "Key4U",
     "Deepgram",
     "Gemini",
     "ElevenLabs",
@@ -7532,8 +7533,16 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 704,
+      "occurrences": 716,
       "provider": "PayOS"
+    },
+    {
+      "files": [
+        "reports/bundle_analyzer.html",
+        "static/portal/bundle_analyzer.html"
+      ],
+      "occurrences": 4,
+      "provider": "Key4U"
     },
     {
       "files": [
@@ -7621,7 +7630,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1622,
+      "occurrences": 1634,
       "provider": "Telegram"
     }
   ],
@@ -13766,9 +13775,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 146,
-  "source_files_scanned": 146,
-  "source_fingerprint_sha256": "cffab4cfe748efac0b9f6a54eb547b547718bdd59d88d2d558ca9be835dd27b5",
+  "source_files_discovered": 149,
+  "source_files_scanned": 149,
+  "source_fingerprint_sha256": "024d9c73a48e7db4df2b0514e6a1af56350b7d0bc414b8a7ce2a814eff431fc1",
   "source_root": "webapp-root",
   "ui_path_references": [
     {

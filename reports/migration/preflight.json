@@ -15,14 +15,14 @@
     "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
     "entrypoint_present": true,
     "revision": {
-      "ahead_commits": 1493,
+      "ahead_commits": 1494,
       "baseline_relation": "ahead_of_requested_baseline",
       "behind_commits": 0,
-      "checkout_sha": "bfb6174670461b7671125a745ee843cb83caf4c5"
+      "checkout_sha": "ba2ee39220fd223e014834748929a21da4b79fb4"
     },
     "root": "repository-root"
   },
-  "generated_at_utc": "2026-08-17T15:32:48+00:00",
+  "generated_at_utc": "2026-08-17T16:20:56+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "4486699f136fe82cce97086dc0c0f70f84e74561",
+      "checkout_sha": "a83eb12c8dd1459ebbb887feb36af9139ab46c1e",
       "requested_relation": "exact",
-      "requested_sha": "4486699f136fe82cce97086dc0c0f70f84e74561",
-      "source_fingerprint_sha256": "cffab4cfe748efac0b9f6a54eb547b547718bdd59d88d2d558ca9be835dd27b5",
+      "requested_sha": "a83eb12c8dd1459ebbb887feb36af9139ab46c1e",
+      "source_fingerprint_sha256": "024d9c73a48e7db4df2b0514e6a1af56350b7d0bc414b8a7ce2a814eff431fc1",
       "working_tree_state": "clean"
     },
     "root": "repository-root"
