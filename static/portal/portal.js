@@ -30002,11 +30002,25 @@
     commandPaletteReturnFocus = null;
   }
 
+  function isStandaloneApp() {
+    return Boolean(
+      (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+      || (typeof navigator !== "undefined" && navigator.standalone === true)
+    );
+  }
+
+  function isIosDevice() {
+    return Boolean(
+      typeof navigator !== "undefined"
+      && /iphone|ipad|ipod/i.test(navigator.userAgent || "")
+      && !(typeof window !== "undefined" && window.MSStream)
+    );
+  }
+
   function pwaInstallCanBeOffered() {
     const context = getBootstrap();
     return Boolean(
       context.pwaEnabled === true
-      && context.session && context.session.authenticated === true
       && pwaInstallPrompt
       && typeof pwaInstallPrompt.prompt === "function"
     );
@@ -30014,16 +30028,132 @@
 
   function syncPwaInstallControl() {
     const control = document.querySelector("[data-portal-install-app]");
-    if (!control) return;
-    const available = pwaInstallCanBeOffered();
-    control.hidden = !available;
-    control.disabled = !available || pwaInstallInFlight;
-    if (available) control.removeAttribute("aria-hidden");
-    else control.setAttribute("aria-hidden", "true");
+    if (control) {
+      const available = pwaInstallCanBeOffered();
+      control.hidden = !available;
+      control.disabled = !available || pwaInstallInFlight;
+      if (available) control.removeAttribute("aria-hidden");
+      else control.setAttribute("aria-hidden", "true");
+    }
+    syncSmartInstallBanner();
+  }
+
+  function syncSmartInstallBanner() {
+    if (isStandaloneApp()) {
+      const existing = document.querySelector("[data-portal-smart-install-banner]");
+      if (existing) existing.remove();
+      return;
+    }
+    let dismissed = false;
+    try {
+      if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_dismissed") === "true") {
+        dismissed = true;
+      }
+    } catch (_) {}
+    if (dismissed) {
+      const existing = document.querySelector("[data-portal-smart-install-banner]");
+      if (existing) existing.remove();
+      return;
+    }
+
+    const isIos = isIosDevice();
+    const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
+    const installLabel = isIos ? "📲 Cài app cho iPhone" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⚡ Tải & Cài App");
+    const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
+
+    let banner = document.querySelector("[data-portal-smart-install-banner]");
+    if (!banner) {
+      banner = document.createElement("aside");
+      banner.className = "portal-smart-install-banner";
+      banner.setAttribute("data-portal-smart-install-banner", "true");
+      banner.setAttribute("role", "complementary");
+      banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
+      if (document.body && typeof document.body.appendChild === "function") {
+        document.body.appendChild(banner);
+      }
+      const motion = window.TOANAASPortalMotion;
+      if (motion && typeof motion.enter === "function") motion.enter(banner, "pop");
+    }
+
+    banner.innerHTML = `
+      <div class="portal-smart-install-inner">
+        <div class="portal-smart-install-badge">
+          <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
+          <div class="portal-smart-install-meta">
+            <strong class="portal-smart-install-title">TOAN AAS App</strong>
+            <span class="portal-smart-install-desc">Trải nghiệm mượt 60 FPS, mở toàn màn hình</span>
+          </div>
+        </div>
+        <div class="portal-smart-install-actions">
+          <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
+          <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" aria-label="Để sau">✕</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function dismissSmartInstallBanner() {
+    try {
+      if (window.sessionStorage) window.sessionStorage.setItem("toanaas_install_dismissed", "true");
+    } catch (_) {}
+    const banner = document.querySelector("[data-portal-smart-install-banner]");
+    if (banner) {
+      banner.style.opacity = "0";
+      banner.style.transform = "translateY(16px)";
+      banner.style.transition = "opacity .2s ease, transform .2s ease";
+      window.setTimeout(() => banner.remove(), 220);
+    }
+  }
+
+  function openIosInstallGuideModal() {
+    const existing = document.querySelector("[data-portal-ios-modal]");
+    if (existing) existing.remove();
+    const modal = document.createElement("div");
+    modal.className = "portal-modal-backdrop";
+    modal.setAttribute("data-portal-ios-modal", "true");
+    modal.innerHTML = `
+      <div class="portal-modal-card portal-ios-guide-modal" role="dialog" aria-modal="true" aria-labelledby="ios-guide-title">
+        <div class="portal-modal-head">
+          <h3 id="ios-guide-title">📲 Cài App TOAN AAS trên iPhone / iPad</h3>
+          <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="Đóng">✕</button>
+        </div>
+        <div class="portal-modal-body">
+          <p class="portal-ios-guide-intro">Chỉ mất 5 giây để thêm App vào màn hình chính Safari:</p>
+          <ol class="portal-ios-steps">
+            <li>
+              <div class="portal-ios-step-num">1</div>
+              <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share <span class="portal-ios-share-icon">⎋</span>)</strong> ở thanh menu dưới cùng Safari.</div>
+            </li>
+            <li>
+              <div class="portal-ios-step-num">2</div>
+              <div class="portal-ios-step-text">Cuộn xuống danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
+            </li>
+            <li>
+              <div class="portal-ios-step-num">3</div>
+              <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải. Biểu tượng App sẽ xuất hiện ngay ngoài màn hình chính!</div>
+            </li>
+          </ol>
+        </div>
+        <div class="portal-modal-foot">
+          <button type="button" class="portal-btn-primary" data-portal-action="modal-close">Đã hiểu</button>
+        </div>
+      </div>
+    `;
+    if (document.body && typeof document.body.appendChild === "function") {
+      document.body.appendChild(modal);
+    }
+    const motion = window.TOANAASPortalMotion;
+    if (motion && typeof motion.enter === "function") {
+      const card = modal.querySelector(".portal-modal-card");
+      if (card) motion.enter(card, "pop");
+    }
   }
 
   async function requestPwaInstall() {
     if (!pwaInstallCanBeOffered() || pwaInstallInFlight) {
+      if (!pwaInstallPrompt) {
+        showToast("Mẹo: Bấm menu trình duyệt (⋮) và chọn 'Cài đặt ứng dụng' để thêm TOAN AAS vào máy.");
+      }
       syncPwaInstallControl();
       return;
     }
@@ -30035,13 +30165,15 @@
       const choice = prompt.userChoice && typeof prompt.userChoice.then === "function"
         ? await prompt.userChoice
         : null;
-      if (choice && choice.outcome === "accepted") showToast("Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất phần còn lại.");
-      else if (choice && choice.outcome === "dismissed") showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi trình duyệt cho phép.", "warning");
+      if (choice && choice.outcome === "accepted") {
+        showToast("Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất phần còn lại.");
+        dismissSmartInstallBanner();
+      } else if (choice && choice.outcome === "dismissed") {
+        showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi trình duyệt cho phép.", "warning");
+      }
     } catch (_) {
       showToast("Trình duyệt chưa thể mở lời mời cài ứng dụng. Hãy thử lại khi lời mời xuất hiện.", "warning");
     } finally {
-      // A beforeinstallprompt event is one-use. Never replay it or report an
-      // install result that the browser did not confirm.
       pwaInstallPrompt = null;
       pwaInstallInFlight = false;
       syncPwaInstallControl();
@@ -30052,9 +30184,6 @@
     if (pwaInstallEventsBound) return;
     pwaInstallEventsBound = true;
     window.addEventListener("beforeinstallprompt", (event) => {
-      // Suppress browser heuristics only to surface the same native prompt
-      // from the visible, explicit "Cài app" button. No install is triggered
-      // until the signed user intentionally clicks that button.
       event.preventDefault();
       pwaInstallPrompt = event;
       pwaInstallInFlight = false;
@@ -30064,6 +30193,7 @@
       pwaInstallPrompt = null;
       pwaInstallInFlight = false;
       syncPwaInstallControl();
+      dismissSmartInstallBanner();
       showToast("TOAN AAS đã được thêm vào thiết bị này. Dữ liệu riêng tư vẫn luôn cần signed session.");
     });
   }
@@ -30191,6 +30321,14 @@
     document.addEventListener("click", (event) => {
       const installApp = event.target.closest("[data-portal-install-app]");
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openIosInstallGuideModal(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
+      if (event.target.closest('[data-portal-action="modal-close"]') || event.target.matches("[data-portal-modal-backdrop]")) {
+        const modal = document.querySelector("[data-portal-ios-modal]");
+        if (modal) modal.remove();
+        return;
+      }
       const paletteTrigger = event.target.closest("[data-portal-open-command-palette]");
       if (paletteTrigger) { openCommandPalette(paletteTrigger); return; }
       if (event.target.closest("[data-portal-command-close]")) { closeCommandPalette(); return; }

@@ -509,16 +509,24 @@
       pointerTargets.forEach((target) => {
         if (!target || typeof target.addEventListener !== "function") return;
         if (target.classList && typeof target.classList.add === "function") target.classList.add("landing-motion-pointer");
+        let pointerFrame = 0;
         const move = (event) => {
           if (!isCurrentMount() || !event || typeof target.getBoundingClientRect !== "function") return;
-          const rect = target.getBoundingClientRect();
-          const width = Math.max(1, Number(rect.width) || 1);
-          const height = Math.max(1, Number(rect.height) || 1);
-          const x = clamp(((Number(event.clientX) - Number(rect.left || 0)) / width) * 2 - 1, -1, 1);
-          const y = clamp(((Number(event.clientY) - Number(rect.top || 0)) / height) * 2 - 1, -1, 1);
-          setStyleProperty(target, "--landing-pointer-x", x.toFixed(3));
-          setStyleProperty(target, "--landing-pointer-y", y.toFixed(3));
-          if (target.classList && typeof target.classList.add === "function") target.classList.add("is-pointer-active");
+          if (pointerFrame) return;
+          const clientX = Number(event.clientX) || 0;
+          const clientY = Number(event.clientY) || 0;
+          pointerFrame = window.requestAnimationFrame(() => {
+            pointerFrame = 0;
+            if (!isCurrentMount()) return;
+            const rect = target.getBoundingClientRect();
+            const width = Math.max(1, Number(rect.width) || 1);
+            const height = Math.max(1, Number(rect.height) || 1);
+            const x = clamp(((clientX - Number(rect.left || 0)) / width) * 2 - 1, -1, 1);
+            const y = clamp(((clientY - Number(rect.top || 0)) / height) * 2 - 1, -1, 1);
+            setStyleProperty(target, "--landing-pointer-x", x.toFixed(3));
+            setStyleProperty(target, "--landing-pointer-y", y.toFixed(3));
+            if (target.classList && typeof target.classList.add === "function") target.classList.add("is-pointer-active");
+          });
         };
         const leave = () => resetPointer(target);
         target.addEventListener("pointermove", move, { passive: true });

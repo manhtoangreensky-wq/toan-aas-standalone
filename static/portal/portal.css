@@ -7619,6 +7619,242 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-onboarding-route { padding: 13px; }
 }
 
+/* ==========================================================================
+   SMART APP INSTALL BANNER & IOS GUIDE MODAL (PWA / ANDROID / IOS / DESKTOP)
+   ========================================================================== */
+.portal-smart-install-banner {
+  position: fixed;
+  bottom: calc(var(--portal-safe-bottom, 0px) + 16px);
+  right: 16px;
+  z-index: 999;
+  max-width: 420px;
+  width: calc(100vw - 32px);
+  padding: 12px 14px;
+  border: 1px solid rgba(81, 213, 188, .36);
+  border-radius: 16px;
+  background: rgba(11, 22, 33, .92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .45), 0 0 24px rgba(81, 213, 188, .12);
+  contain: layout paint;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), opacity .22s ease;
+}
+
+.portal-smart-install-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portal-smart-install-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.portal-smart-install-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(81, 213, 188, .3), rgba(25, 157, 136, .2));
+  border: 1px solid rgba(81, 213, 188, .4);
+  color: var(--portal-accent);
+}
+
+.portal-smart-install-meta {
+  min-width: 0;
+}
+
+.portal-smart-install-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--portal-text);
+  line-height: 1.2;
+}
+
+.portal-smart-install-desc {
+  display: block;
+  font-size: 11px;
+  color: var(--portal-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-smart-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.portal-btn-install {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
+  border: 1px solid rgba(81, 213, 188, .6);
+  background: linear-gradient(135deg, var(--portal-accent), var(--portal-accent-deep));
+  color: var(--portal-accent-ink);
+  white-space: nowrap;
+  transition: transform .14s ease, filter .14s ease;
+}
+
+.portal-btn-install:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.portal-btn-dismiss {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--portal-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--portal-muted);
+  transition: background .14s ease, color .14s ease;
+}
+
+.portal-btn-dismiss:hover {
+  background: rgba(255, 255, 255, .12);
+  color: var(--portal-text);
+}
+
+/* Modal iOS Guide */
+.portal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.portal-ios-guide-modal {
+  max-width: 440px;
+  width: 100%;
+  padding: 22px;
+  border: 1px solid rgba(81, 213, 188, .35);
+  border-radius: 20px;
+  background: #0d1924;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+  contain: layout paint;
+  will-change: transform, opacity;
+}
+
+.portal-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.portal-modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--portal-text);
+}
+
+.portal-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--portal-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .06);
+  color: var(--portal-muted);
+  font-size: 14px;
+}
+
+.portal-ios-guide-intro {
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: var(--portal-muted-strong);
+}
+
+.portal-ios-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  display: grid;
+  gap: 12px;
+}
+
+.portal-ios-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(18, 33, 48, .6);
+  border: 1px solid var(--portal-border);
+}
+
+.portal-ios-step-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: var(--portal-accent);
+  color: var(--portal-accent-ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.portal-ios-step-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--portal-text);
+}
+
+.portal-ios-step-text strong {
+  color: var(--portal-accent);
+}
+
+.portal-ios-share-icon {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(81, 213, 188, .2);
+  color: var(--portal-accent);
+  font-weight: bold;
+}
+
+.portal-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .portal-smart-install-banner {
+    left: 12px;
+    right: 12px;
+    bottom: calc(var(--portal-safe-bottom, 0px) + 70px);
+    width: auto;
+  }
+}
+
+
 /* Account & Security workspace UX. The security center retains every signed
    server action; this late scope only clarifies navigation, posture, density,
    and destructive-action hierarchy inside the existing app shell. */
