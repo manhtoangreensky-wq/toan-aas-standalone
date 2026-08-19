@@ -25823,7 +25823,7 @@
     const enabled = canAct(page, context);
     const unavailableMessage = accessText("primary.unavailable", "Đang kiểm tra phiên bảo mật trước khi cho phép thao tác.");
     const recoveryLink = page.path === "/login"
-      ? `<a class="portal-button portal-button--quiet" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
+      ? `<a class="portal-auth-forgot-link" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
       : "";
     const noTransient = page.path === "/password-recovery" ? " data-portal-no-transient" : "";
     const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
@@ -25840,11 +25840,11 @@
       linked: accessText("oauth.linked", "Đã liên kết OAuth với signed session hiện tại."),
       "already-linked": accessText("oauth.alreadyLinked", "OAuth này đã liên kết với tài khoản hiện tại.")
     };
-    const oauthHandoff = oauthMessages[oauthReason]
+    const oauthHandoff = (oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
     const registerSetup = page.path === "/register"
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>${safeText(accessText("notice.defaultProfileTitle", "Hồ sơ mặc định sau khi tạo"))}</strong><p>${safeText(accessText("notice.defaultProfileBody", "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</p></div></div>`
+      ? `<div class="portal-auth-banner-subtle"><span class="portal-auth-banner-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><span>${safeText(accessText("notice.defaultProfileBody", "Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</span></div>`
       : "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
@@ -25858,7 +25858,7 @@
       && mfaChallengeMinutes <= 10;
     const primaryForm = mfaLoginPending
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="/login" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="/login"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
-      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}?lang=${safeText(requestedLocale)}"><span>${safeText(alternative[1])}</span><span class="portal-auth-button-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
+      : `<form class="portal-form portal-auth-compact-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-auth-form-actions">${recoveryLink}<button class="portal-button portal-button--primary portal-auth-submit-btn" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
     const providerMethods = mfaLoginPending
       ? ""
       : (isLogin ? renderTelegramLoginMethod(context) : (isRegister ? renderOAuthRegistrationMethods(context) : ""));
@@ -25867,27 +25867,30 @@
     const alternativeMethodsOpen = isLogin && Boolean(
       telegramFlow.errorCode || telegramData.code || telegramData.recovered === true || telegramData.ready === true
     );
-    const primaryTitle = mfaLoginPending
-      ? "Xác thực hai lớp"
-      : (isLogin ? accessText("primary.login", "Đăng nhập bằng email") : (isRegister ? accessText("primary.register", "Tạo tài khoản bằng email") : (isRecovery ? accessText("primary.recovery", "Khôi phục mật khẩu") : page.title)));
-    const primaryDescription = mfaLoginPending
-      ? "Nhập mã xác thực trong ứng dụng hoặc mã khôi phục của chính bạn."
-      : (isLogin
-        ? accessText("primary.loginDescription", "Email + mật khẩu là đường chính để vào Workspace.")
-        : (isRegister ? accessText("primary.registerDescription", "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau.") : (isRecovery ? accessText("primary.recoveryDescription", "Nhập email để nhận hướng dẫn an toàn.") : safeText(page.description))));
     const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context))));
     const authIntroDescription = isLogin
-      ? accessText("intro.login", "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần.")
+      ? accessText("intro.login", "Đăng nhập để vào TOAN AAS Workspace. Trải nghiệm hệ sinh thái AI toàn diện.")
       : (isRegister
-        ? accessText("intro.register", "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot.")
-        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description)));
-    const authContextTitle = isLogin
-      ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.")
-      : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."));
-    const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}"><span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><p class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</p><p class="portal-auth-context-title">${safeText(authContextTitle)}</p><ul class="portal-auth-context-list"><li>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</li><li>${safeText(accessText("context.pointTwo", "Mỗi thao tác quan trọng đều có trạng thái dễ hiểu."))}</li><li>${safeText(accessText("context.pointThree", "Bạn luôn có đường quay lại hỗ trợ khi cần."))}</li></ul></aside>`;
+        ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
+        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu an toàn.") : safeText(page.description)));
+    
+    // Sleek glass highlight box on left
+    const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
+      <div class="portal-auth-context-head">
+        <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
+        <strong class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</strong>
+      </div>
+      <p class="portal-auth-context-title">${safeText(isLogin ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."))}</p>
+      <ul class="portal-auth-context-list">
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointThree", "Bảo mật signed session, không lưu mật khẩu thô."))}</span></li>
+      </ul>
+    </aside>`;
+
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
     
-    // Direct, Prominent 1-Click Social & Bot Login (Following Google / Apple / Telegram Standard)
+    // Direct, Prominent 1-Click Social & Bot Login
     const directSocialLogin = mfaLoginPending ? "" : `
       <div class="portal-direct-social-auth">
         <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="Đăng nhập bằng Google">
@@ -25911,8 +25914,10 @@
       : "";
     const authAssurance = `<details class="portal-auth-assurance"><summary><span>🛡️ ${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</span></summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary><span>ℹ️ ${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</span></summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
-    
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}<div class="portal-card-header" style="margin-top:6px;"><div><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(unavailableMessage)}</p></div></div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div><div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
+
+    const securityFootnote = `<div class="portal-auth-security-foot"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div>`;
+
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${securityFootnote}<div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -30747,12 +30752,10 @@
   }
 
   function pwaInstallCanBeOffered() {
+    if (isStandaloneApp()) return false;
     const context = getBootstrap();
-    return Boolean(
-      context.pwaEnabled === true
-      && pwaInstallPrompt
-      && typeof pwaInstallPrompt.prompt === "function"
-    );
+    if (context.pwaEnabled === false) return false;
+    return true;
   }
 
   function syncPwaInstallControl() {
@@ -30834,37 +30837,85 @@
     }
   }
 
-  function openIosInstallGuideModal() {
-    const existing = document.querySelector("[data-portal-ios-modal]");
+  function openUniversalInstallGuideModal(activeTab) {
+    const existing = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
     if (existing) existing.remove();
+    const isIos = isIosDevice();
+    const initialTab = activeTab || (isIos ? "ios" : (/Android/i.test(navigator.userAgent || "") ? "android" : "desktop"));
     const modal = document.createElement("div");
     modal.className = "portal-modal-backdrop";
     modal.setAttribute("data-portal-ios-modal", "true");
+    modal.setAttribute("data-portal-install-modal", "true");
     modal.innerHTML = `
-      <div class="portal-modal-card portal-ios-guide-modal" role="dialog" aria-modal="true" aria-labelledby="ios-guide-title">
+      <div class="portal-modal-card portal-install-guide-modal" role="dialog" aria-modal="true" aria-labelledby="install-guide-title">
         <div class="portal-modal-head">
-          <h3 id="ios-guide-title">📲 Cài App TOAN AAS trên iPhone / iPad</h3>
+          <h3 id="install-guide-title">⚡ Tải & Cài Đặt App TOAN AAS</h3>
           <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="Đóng">✕</button>
         </div>
         <div class="portal-modal-body">
-          <p class="portal-ios-guide-intro">Chỉ mất 5 giây để thêm App vào màn hình chính Safari:</p>
-          <ol class="portal-ios-steps">
-            <li>
-              <div class="portal-ios-step-num">1</div>
-              <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share <span class="portal-ios-share-icon">⎋</span>)</strong> ở thanh menu dưới cùng Safari.</div>
-            </li>
-            <li>
-              <div class="portal-ios-step-num">2</div>
-              <div class="portal-ios-step-text">Cuộn xuống danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
-            </li>
-            <li>
-              <div class="portal-ios-step-num">3</div>
-              <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải. Biểu tượng App sẽ xuất hiện ngay ngoài màn hình chính!</div>
-            </li>
-          </ol>
+          <div class="portal-install-tabs" role="tablist">
+            <button type="button" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">💻 Máy tính (PC/Mac)</button>
+            <button type="button" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">🤖 Android</button>
+            <button type="button" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">🍏 iPhone / iPad</button>
+          </div>
+          
+          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Bấm vào biểu tượng <strong>Cài đặt (⊕ hoặc 📲)</strong> trên thanh địa chỉ của trình duyệt Chrome / Edge / Brave.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Hoặc bấm menu <strong>3 chấm (⋮) ➔ Chọn "Cài đặt TOAN AAS" (Install App)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để tạo biểu tượng ứng dụng ngoài Desktop và thanh Taskbar.</div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-panel="android">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt TOAN AAS trên điện thoại Android:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Mở bằng <strong>Chrome</strong> hoặc <strong>Samsung Internet</strong>, bấm menu <strong>3 chấm (⋮)</strong> ở góc trên bên phải.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào màn hình chính" (Add to Home screen)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để mở ứng dụng toàn màn hình không có thanh URL.</div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-panel="ios">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Thêm TOAN AAS vào màn hình chính iPhone / iPad bằng Safari:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share ⬆️)</strong> ở thanh menu dưới cùng của trình duyệt Safari.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Cuộn danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải.</div>
+              </li>
+            </ol>
+          </div>
         </div>
-        <div class="portal-modal-foot">
-          <button type="button" class="portal-btn-primary" data-portal-action="modal-close">Đã hiểu</button>
+        <div class="portal-modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt cài đặt ngay</button>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">Đã hiểu</button>
         </div>
       </div>
     `;
@@ -30878,15 +30929,22 @@
     }
   }
 
+  function openIosInstallGuideModal() {
+    openUniversalInstallGuideModal("ios");
+  }
+
   async function requestPwaInstall() {
     if (!pwaInstallCanBeOffered() || pwaInstallInFlight) {
-      if (!pwaInstallPrompt) {
-        showToast("Mẹo: Bấm menu trình duyệt (⋮) và chọn 'Cài đặt ứng dụng' để thêm TOAN AAS vào máy.");
-      }
+      openUniversalInstallGuideModal();
       syncPwaInstallControl();
       return;
     }
     const prompt = pwaInstallPrompt;
+    if (!prompt) {
+      openUniversalInstallGuideModal();
+      syncPwaInstallControl();
+      return;
+    }
     pwaInstallInFlight = true;
     syncPwaInstallControl();
     try {
@@ -30901,7 +30959,7 @@
         showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi trình duyệt cho phép.", "warning");
       }
     } catch (_) {
-      showToast("Trình duyệt chưa thể mở lời mời cài ứng dụng. Hãy thử lại khi lời mời xuất hiện.", "warning");
+      openUniversalInstallGuideModal();
     } finally {
       pwaInstallPrompt = null;
       pwaInstallInFlight = false;
@@ -31051,10 +31109,28 @@
       const installApp = event.target.closest("[data-portal-install-app]");
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
-      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openIosInstallGuideModal(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
+      const installTabBtn = event.target.closest("[data-portal-install-tab]");
+      if (installTabBtn) {
+        const tab = installTabBtn.getAttribute("data-portal-install-tab");
+        const modal = event.target.closest(".portal-install-guide-modal");
+        if (modal && tab) {
+          modal.querySelectorAll("[data-portal-install-tab]").forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-portal-install-tab") === tab));
+          modal.querySelectorAll("[data-portal-install-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.getAttribute("data-portal-install-panel") === tab));
+        }
+        return;
+      }
+      if (event.target.closest('[data-portal-action="pwa-try-prompt"]')) {
+        if (pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function") {
+          requestPwaInstall();
+        } else {
+          showToast("Trình duyệt chưa sẵn sàng mở popup tự động. Hãy làm theo hướng dẫn các bước ở trên để cài đặt!");
+        }
+        return;
+      }
       if (event.target.closest('[data-portal-action="modal-close"]') || event.target.matches("[data-portal-modal-backdrop]")) {
-        const modal = document.querySelector("[data-portal-ios-modal]");
+        const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
         if (modal) modal.remove();
         return;
       }

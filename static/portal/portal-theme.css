@@ -17142,3 +17142,386 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     transform: none !important;
   }
 }
+
+/* ==========================================================================
+   TOAN AAS Modern Compact Auth Layout & Install Dialog
+   ========================================================================== */
+
+.portal-auth-page--access {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: clamp(16px, 3vh, 36px) clamp(16px, 3vw, 32px) !important;
+  box-sizing: border-box !important;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(15, 118, 110, 0.08), transparent 32rem),
+    radial-gradient(circle at 20% 80%, rgba(2, 132, 199, 0.06), transparent 32rem),
+    var(--portal-bg, #0b1017);
+}
+
+.portal-auth-page--access .portal-auth-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px clamp(16px, 4vw, 40px);
+  z-index: 10;
+}
+
+.portal-auth-page--access .portal-auth-shell {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1.05fr) minmax(320px, 410px) !important;
+  gap: clamp(28px, 5vw, 64px) !important;
+  max-width: 960px !important;
+  width: 100% !important;
+  align-items: center !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+}
+
+.portal-auth-page--access .portal-auth-intro {
+  padding: 0 !important;
+}
+
+.portal-auth-page--access .portal-auth-intro .portal-title {
+  font-size: clamp(28px, 3.4vw, 38px) !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.18 !important;
+  margin: 0 0 10px !important;
+  color: var(--portal-ink, #f1f6f8) !important;
+}
+
+.portal-auth-page--access .portal-auth-intro .portal-description {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  color: var(--portal-muted, #98a9b5) !important;
+  margin: 0 0 22px !important;
+}
+
+/* Glass Feature Context Card on the left */
+.portal-auth-context {
+  padding: 18px 20px !important;
+  border: 1px solid var(--portal-border, rgba(192, 215, 229, .13)) !important;
+  border-radius: 16px !important;
+  background: var(--portal-surface-light, rgba(17, 25, 34, .65)) !important;
+  backdrop-filter: blur(14px) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12) !important;
+}
+
+.portal-auth-context-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.portal-auth-context-icon {
+  display: inline-flex;
+  color: var(--portal-brand, #0d9488);
+  font-size: 16px;
+}
+
+.portal-auth-context-kicker {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--portal-brand, #0d9488) !important;
+}
+
+.portal-auth-context-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--portal-ink, #f1f6f8) !important;
+  margin: 0 0 14px !important;
+  line-height: 1.4 !important;
+}
+
+.portal-auth-context-list {
+  display: grid !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.portal-auth-context-list li {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  color: var(--portal-muted-strong, #c3d0d7) !important;
+}
+
+.portal-auth-feat-check {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: rgba(13, 148, 136, 0.18);
+  color: #14b8a6;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* Right Auth Card */
+.portal-auth-card {
+  width: 100% !important;
+  max-width: 410px !important;
+  padding: 22px 24px !important;
+  border-radius: 20px !important;
+  border: 1px solid var(--portal-border, rgba(192, 215, 229, .15)) !important;
+  background: var(--portal-surface, rgba(17, 25, 34, .92)) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .25) !important;
+  box-sizing: border-box !important;
+}
+
+/* Segmented Tabs */
+.portal-auth-switch {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  padding: 3px !important;
+  background: rgba(0, 0, 0, .2) !important;
+  border: 1px solid var(--portal-border, rgba(192, 215, 229, .12)) !important;
+  border-radius: 12px !important;
+  margin-bottom: 14px !important;
+}
+
+.portal-auth-switch a {
+  text-align: center !important;
+  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  border-radius: 9px !important;
+  color: var(--portal-muted, #98a9b5) !important;
+  text-decoration: none !important;
+  transition: all .16s ease !important;
+}
+
+.portal-auth-switch a[aria-current="page"] {
+  background: var(--portal-brand, #0f766e) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, .3) !important;
+}
+
+/* 1-Click Social Sign-in Buttons */
+.portal-direct-social-auth {
+  display: grid !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.portal-btn-direct-social {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  text-decoration: none !important;
+  transition: all .15s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.portal-btn-direct-social.google {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #e5e7eb !important;
+}
+.portal-btn-direct-social.google:hover {
+  background: #f9fafb !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
+}
+
+.portal-btn-direct-social.apple {
+  background: #111827 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.portal-btn-direct-social.apple:hover {
+  background: #030712 !important;
+  transform: translateY(-1px);
+}
+
+.portal-btn-direct-social.telegram {
+  background: #229ED9 !important;
+  color: #ffffff !important;
+}
+.portal-btn-direct-social.telegram:hover {
+  background: #1c8ac0 !important;
+  transform: translateY(-1px);
+}
+
+/* Divider */
+.portal-auth-divider {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 10px 0 12px !important;
+  color: var(--portal-muted, #768a97) !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+.portal-auth-divider::before, .portal-auth-divider::after {
+  content: "" !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: var(--portal-border, rgba(192, 215, 229, .12)) !important;
+}
+
+/* Compact Form & Actions */
+.portal-auth-compact-form .portal-fields {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.portal-auth-compact-form .portal-field label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  margin-bottom: 4px !important;
+  color: var(--portal-muted-strong, #c3d0d7) !important;
+}
+
+.portal-auth-compact-form .portal-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 8px 12px !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+}
+
+.portal-auth-form-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+.portal-auth-forgot-link {
+  font-size: 11.5px !important;
+  color: var(--portal-action, #0ea5e9) !important;
+  text-decoration: none !important;
+  text-align: right !important;
+  font-weight: 600 !important;
+  transition: opacity .15s ease !important;
+}
+.portal-auth-forgot-link:hover {
+  text-decoration: underline !important;
+}
+
+.portal-auth-submit-btn {
+  width: 100% !important;
+  height: 42px !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 750 !important;
+  background: var(--portal-brand, #0f766e) !important;
+  border-color: var(--portal-brand, #0f766e) !important;
+  color: #ffffff !important;
+  transition: all .16s ease !important;
+}
+.portal-auth-submit-btn:hover:not(:disabled) {
+  background: var(--portal-action, #0d9488) !important;
+  border-color: var(--portal-action, #0d9488) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, .25) !important;
+}
+
+.portal-auth-security-foot {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
+  font-size: 10.5px !important;
+  color: var(--portal-muted, #768a97) !important;
+  font-weight: 600 !important;
+}
+
+.portal-auth-compact-footer {
+  margin-top: 8px !important;
+}
+
+.portal-auth-compact-footer details summary {
+  font-size: 10.5px !important;
+  color: var(--portal-muted, #768a97) !important;
+  padding: 4px 0 !important;
+  cursor: pointer !important;
+}
+
+/* Multi-Platform App Install Modal */
+.portal-install-guide-modal {
+  max-width: 520px !important;
+  width: 100% !important;
+}
+
+.portal-install-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, .2);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.portal-install-tab-btn {
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--portal-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.portal-install-tab-btn.is-active {
+  background: var(--portal-brand, #0f766e);
+  color: #ffffff;
+}
+
+.portal-install-panel {
+  display: none;
+}
+.portal-install-panel.is-active {
+  display: block;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .portal-auth-page--access {
+    padding-top: 70px !important;
+    justify-content: flex-start !important;
+  }
+  .portal-auth-page--access .portal-auth-shell {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    max-width: 420px !important;
+  }
+  .portal-auth-intro {
+    text-align: center !important;
+  }
+  .portal-auth-context {
+    display: none !important;
+  }
+}
+
