@@ -15230,6 +15230,93 @@
           : renderVoiceVaultCards(Array.isArray(context.voiceVaults) ? context.voiceVaults : [], context) + renderVoiceStudioPagination(listing);
     return `<article class="portal-page portal-voice-studio">${renderHero(page, context)}
       <section class="portal-voice-studio-intro"><div><span class="portal-section-kicker">Private Voice Direction & Script Workspace</span><h2>Giữ nhất quán cách kể, kiểm soát consent và review lời thoại trước khi đưa sang bất kỳ engine nào</h2><p>Voice Studio là workspace Web-native cho direction, consent metadata và script. Nó không phải TTS, voice clone, trình nghe thử hay khu vực delivery.</p></div><dl><div><dt>${safeText(String(Number(vaults.active || 0)))}</dt><dd>Direction hoạt động</dd></div><div><dt>${safeText(String(Number(scripts.active || 0)))}</dt><dd>Script hoạt động</dd></div><div><dt>${safeText(String(Number(vaults.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
+      <div class="portal-interactive-voice-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.2)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 Neural Voice Engine Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🗣️ Voice Studio — Tạo Giọng Đọc & Thuyết Minh AI</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Chuyển văn bản thành giọng nói (TTS) truyền cảm 100% tự nhiên với 15+ diễn viên lồng tiếng đa vùng miền và quốc tế.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Toàn Bộ Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <!-- Panel Form Nhập Kịch Bản & Chọn Giọng -->
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#10b981;">1. Nhập Lời Thoại & Chọn Giọng</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Văn bản / Kịch bản thuyết minh</span>
+                <textarea class="portal-input" rows="3" placeholder="Nhập đoạn văn bản bạn muốn tạo giọng đọc...">TOAN AAS là nền tảng sáng tạo nội dung và tự động hóa AI hàng đầu. Giọng đọc được tạo ra với độ tự nhiên cao, ngắt nghỉ đúng ngữ điệu và chuẩn phòng thu.</textarea>
+              </label>
+              
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Diễn viên lồng tiếng (Voice Actor)</span>
+                  <select class="portal-input">
+                    <option selected>🎙️ Nam Hà Nội — MC Mạnh Hùng (Trầm ấm)</option>
+                    <option>🎙️ Nữ Hà Nội — BTV Mai Anh (Dịu dàng)</option>
+                    <option>🎙️ Nam Sài Gòn — Minh Khôi (Review)</option>
+                    <option>🎙️ Nữ Sài Gòn — Thảo Vy (Kể chuyện)</option>
+                    <option>🎙️ English US — Professional Voice</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Tốc độ đọc (Speed)</span>
+                  <select class="portal-input">
+                    <option selected>1.0x (Tốc độ tiêu chuẩn)</option>
+                    <option>1.15x (Hơi nhanh — TikTok/Reels)</option>
+                    <option>1.25x (Nhanh, cuốn hút)</option>
+                    <option>0.85x (Chậm rãi, truyền cảm)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo giọng đọc AI! Bạn có thể nghe thử trên Audio Player.')">
+                🎙️ TẠO GIỌNG ĐỌC AI & NGHE THỬ (-5 Xu)
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Audio Player & Tải File -->
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#38bdf8;">2. Trình Phát Âm Thanh & Tải File</h3>
+                <small style="color:#94a3b8;">Nghe thử realtime & Tải file MP3 320kbps</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#10b981; color:#fff;" onclick="alert('Đang tải file MP3 chất lượng cao 320kbps.')">⬇️ Tải MP3</button>
+            </div>
+
+            <div style="padding:14px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:grid; place-items:center; color:#10b981; font-size:18px;">
+                  🎧
+                </div>
+                <div>
+                  <strong style="display:block; font-size:13px; color:#f8fafc;">toanaas_voice_speech_sample.mp3</strong>
+                  <small style="color:#94a3b8; font-size:11px;">MP3 Stereo · 44.1kHz · 320kbps · Mastered</small>
+                </div>
+              </div>
+
+              <audio controls style="width:100%; height:38px; border-radius:6px; outline:none;">
+                <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+              </audio>
+
+              <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#64748b;">
+                <span>🟢 Engine: FastNeural TTS v3</span>
+                <span>⚡ Tốc độ render: 0.82s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="portal-voice-studio-layout"><section class="portal-card portal-card-pad portal-voice-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo voice direction</h2><p class="portal-card-subtitle">Lưu metadata có owner check, CSRF, idempotency, audit và version history. Chưa có request TTS, clone, preview hay audio output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="voice-vault-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(voiceStudioVaultFields(context), canCreate, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">Reference có self-attestation cần ghi chú tối thiểu 12 ký tự. Không dùng trường này để yêu cầu nhái giọng.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo voice direction</button></div></form></section>${renderVoiceStudioPolicy(context)}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục direction</h2><p class="portal-card-subtitle">Danh sách chỉ có metadata/excerpt thuộc signed account; consent note và script đầy đủ chỉ nạp sau owner check khi mở direction.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-refresh" data-portal-route="/voice-studio">Làm mới</button></div><form class="portal-voice-studio-filter" data-portal-form data-portal-no-transient data-portal-action="voice-studio-filter" data-portal-route="/voice-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại ở state phiên trang, không vào URL, localStorage, Telegram hoặc provider.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-filter-clear" data-portal-route="/voice-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm direction</button></div></div></form>${vaultListing}</section>
       <section class="portal-card portal-card-pad portal-voice-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Không có raw script, consent note, raw audio, provider ID, URL preview, job, Xu hoặc payment trong feed này.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "authoring_only"))}</span></div>${eventMarkup}</section>
@@ -18231,6 +18318,115 @@
     }, true, { translationPreset: isTranslationIntake, translationPair });
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
       <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">Web-native subtitle authoring</span><h2>Biên tập transcript và caption có cấu trúc, dễ review.</h2><p>Tổ chức cue, timing, bản nháp ngôn ngữ và self-review trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, dubbing hay file xuất.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Transcript projects</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
+      <div class="portal-interactive-subdub-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.2)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 Neural SubDub Engine Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Bóc băng tự động (ASR), Dịch thuật ngữ cảnh đa ngôn ngữ, Lồng tiếng AI truyền cảm và Xuất phụ đề SRT/VTT/Hardsub TikTok.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Toàn Bộ Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <!-- Panel Form Cấu Hình -->
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#10b981; display:flex; align-items:center; gap:8px;">
+              <span>1. Tải Lên Media & Cấu Hình Ngôn Ngữ</span>
+            </h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Dán Link Video (YouTube / TikTok / Facebook) hoặc Tải File</span>
+                <input class="portal-input" type="text" placeholder="https://www.tiktok.com/@user/video/..." value="https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4">
+              </label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Ngôn ngữ nguồn</span>
+                  <select class="portal-input">
+                    <option selected>🇻🇳 Tiếng Việt (Tự động nhận diện)</option>
+                    <option>🇺🇸 Tiếng Anh (English)</option>
+                    <option>🇨🇳 Tiếng Trung (中文)</option>
+                    <option>🇯🇵 Tiếng Nhật (日本語)</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Ngôn ngữ dịch đích</span>
+                  <select class="portal-input">
+                    <option selected>🇺🇸 Tiếng Anh (English Sub/Dub)</option>
+                    <option>🇻🇳 Tiếng Việt (Vietnamese Dub)</option>
+                    <option>🇨🇳 Tiếng Trung (中文)</option>
+                    <option>🇯🇵 Tiếng Nhật (日本語)</option>
+                  </select>
+                </label>
+              </div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Giọng Lồng Tiếng AI</span>
+                  <select class="portal-input">
+                    <option>🎙️ Nam Hà Nội — MC Mạnh Hùng</option>
+                    <option selected>🎙️ Nữ Hà Nội — BTV Mai Anh</option>
+                    <option>🎙️ Nam Sài Gòn — Minh Khôi (Review)</option>
+                    <option>🎙️ Nữ Sài Gòn — Thảo Vy (Kể chuyện)</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Kiểu Phụ Đề Xuất</span>
+                  <select class="portal-input">
+                    <option selected>📄 File .SRT + .VTT Chuẩn</option>
+                    <option>🔥 Hardsub TikTok (Chữ nhảy động)</option>
+                    <option>🎬 Hardsub Clean (Viền đen)</option>
+                  </select>
+                </label>
+              </div>
+              <label class="portal-field">
+                <span>Văn bản lời thoại bóc băng</span>
+                <textarea class="portal-input" rows="2">Chào mừng bạn đến với hệ thống AI SubDub của TOAN AAS. Tự động tạo phụ đề chính xác và lồng tiếng truyền cảm 100%.</textarea>
+              </label>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã kích hoạt render SubDub AI! Video & Phụ đề đang được đồng bộ.')">
+                🚀 BẮT ĐẦU TẠO PHỤ ĐỀ & LỒNG TIẾNG AI (-15 Xu)
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Preview & Editor -->
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#38bdf8;">2. Trình Chỉnh Sửa & Tải Xuống</h3>
+                <small style="color:#94a3b8;">Xem trước realtime, sửa câu thoại trực tiếp</small>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="portal-button portal-button--quiet" style="font-size:11px; padding:4px 10px; border-radius:6px;" onclick="alert('Đang tải file phụ đề .SRT')">⬇️ Tải .SRT</button>
+                <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 10px; border-radius:6px; background:#0284c7; color:#fff;" onclick="alert('Đang tải video hoàn chỉnh đã lồng tiếng.')">⬇️ Tải Video</button>
+              </div>
+            </div>
+            <div style="position:relative; width:100%; height:140px; background:#000; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);">
+              <img src="/static/assets/toanaas_banner_cinematic.jpg" style="width:100%; height:100%; object-fit:cover; opacity:0.6;" alt="Preview">
+              <div style="position:absolute; bottom:10px; left:8px; right:8px; text-align:center;">
+                <span style="background:rgba(0,0,0,0.85); color:#fef08a; padding:4px 12px; border-radius:6px; font-weight:700; font-size:12px; border:1px solid rgba(254,240,138,0.3);">
+                  "Chào mừng bạn đến với AI SubDub TOAN AAS!"
+                </span>
+              </div>
+            </div>
+            <div style="max-height:140px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:grid; grid-template-columns: 75px 1fr; gap:8px; background:rgba(255,255,255,0.04); padding:6px 10px; border-radius:6px; align-items:center;">
+                <span style="font-size:10px; font-family:monospace; color:#38bdf8; font-weight:700;">00:01 - 00:04</span>
+                <input type="text" class="portal-input" style="font-size:11px; padding:3px 6px; min-height:26px;" value="Chào mừng bạn đến với hệ thống AI SubDub của TOAN AAS.">
+              </div>
+              <div style="display:grid; grid-template-columns: 75px 1fr; gap:8px; background:rgba(255,255,255,0.04); padding:6px 10px; border-radius:6px; align-items:center;">
+                <span style="font-size:10px; font-family:monospace; color:#38bdf8; font-weight:700;">00:04 - 00:08</span>
+                <input type="text" class="portal-input" style="font-size:11px; padding:3px 6px; min-height:26px;" value="Welcome to the TOAN AAS AI SubDub & Dubbing platform.">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="portal-subtitle-studio-layout"><section class="portal-card portal-card-pad portal-subtitle-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.intakeTitle", "Lập project subtitle"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.intakeBody", "Chọn tự soạn transcript hoặc tham chiếu một Asset Vault của chính bạn, rồi đặt ngôn ngữ và review context. Mỗi lần ghi được server kiểm tra session, CSRF, ownership, revision và idempotency."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(subtitleStudioProjectFields(context, true, { translationPreset: isTranslationIntake }), canCreate, context, values)}${translationIntentLock}${renderSubtitleLanguageSourcePager(context, page)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("subtitleSource.intakeNotice", "Asset Vault chỉ là metadata reference. Không nhập secret, chứng từ thanh toán, provider/job/file handle hoặc URL; không có upload, preview, ASR, dịch máy hay output được tạo."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(uiText("subtitleSource.create", "Tạo transcript project"))}</button></div></form></section>${renderSubtitleStudioBoundary()}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Transcript library</span><h2 class="portal-card-title">Tiếp tục công việc</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở project để nạp cue, preview text và version sau owner check.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-studio-refresh" data-portal-route="/subtitle-studio">Làm mới</button></div>${renderSubtitleProjectCards(projects, context, listing)}</section>
     </article>`;

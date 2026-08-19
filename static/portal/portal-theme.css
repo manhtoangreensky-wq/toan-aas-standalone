@@ -1826,13 +1826,65 @@ body {
   background: color-mix(in srgb, var(--portal-brand) 10%, var(--portal-surface-light));
 }
 
-.portal-badge {
-  min-height: 26px;
-  border-color: var(--portal-border);
-  background: var(--portal-surface-strong);
-  color: var(--portal-muted-strong);
+.portal-sidebar-create {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 42px !important;
+  padding: 10px 14px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
 }
 
+.portal-sidebar-action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 42px !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin: 0 8px 14px !important;
+}
+
+.portal-nav-link,
+.portal-nav-summary {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.portal-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 24px !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  border: 1px solid var(--portal-border) !important;
+  background: var(--portal-surface-strong) !important;
+  color: var(--portal-muted-strong) !important;
+}
+
+.portal-badge::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+/* 🟢 GREEN: Sẵn sàng / Hoàn thành / Active */
 .portal-badge[data-status="ready"],
 .portal-badge[data-status="completed"],
 .portal-badge[data-status="approved"],
@@ -1841,11 +1893,19 @@ body {
 .portal-badge[data-status="closed"],
 .portal-badge[data-status="done"],
 .portal-badge[data-status="refunded"] {
-  border-color: color-mix(in srgb, var(--portal-success) 54%, var(--portal-border));
-  background: color-mix(in srgb, var(--portal-success) 12%, var(--portal-surface));
-  color: var(--portal-success);
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #10b981 !important;
+}
+.portal-badge[data-status="ready"]::before,
+.portal-badge[data-status="completed"]::before,
+.portal-badge[data-status="approved"]::before,
+.portal-badge[data-status="done"]::before {
+  background: #10b981 !important;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8) !important;
 }
 
+/* 🟡 YELLOW: Đang bận / Đang xử lý / Review / Chờ */
 .portal-badge[data-status="draft"],
 .portal-badge[data-status="awaiting_confirm"],
 .portal-badge[data-status="queued"],
@@ -1854,38 +1914,48 @@ body {
 .portal-badge[data-status="new"],
 .portal-badge[data-status="reviewing"],
 .portal-badge[data-status="planned"],
-.portal-badge[data-status="in_progress"] {
-  border-color: color-mix(in srgb, var(--portal-info) 54%, var(--portal-border));
-  background: color-mix(in srgb, var(--portal-info) 12%, var(--portal-surface));
-  color: var(--portal-info);
-}
-
-.portal-badge[data-status="guarded"],
-.portal-badge[data-status="disabled"],
+.portal-badge[data-status="in_progress"],
 .portal-badge[data-status="review"],
 .portal-badge[data-status="waiting_user"],
-.portal-badge[data-status="waiting_provider"],
-.portal-badge[data-status="refund_pending"] {
-  border-color: color-mix(in srgb, var(--portal-warning) 54%, var(--portal-border));
-  background: color-mix(in srgb, var(--portal-warning) 12%, var(--portal-surface));
-  color: var(--portal-warning);
+.portal-badge[data-status="waiting_provider"] {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #f59e0b !important;
+}
+.portal-badge[data-status="processing"]::before,
+.portal-badge[data-status="queued"]::before,
+.portal-badge[data-status="review"]::before,
+.portal-badge[data-status="in_progress"]::before {
+  background: #f59e0b !important;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8) !important;
 }
 
+/* 🔴 RED: Lỗi / Không hoạt động / Khóa */
+.portal-badge[data-status="guarded"],
+.portal-badge[data-status="disabled"],
 .portal-badge[data-status="failed"],
 .portal-badge[data-status="error"],
-.portal-badge[data-status="cancelled"] {
-  border-color: color-mix(in srgb, var(--portal-danger) 54%, var(--portal-border));
-  background: color-mix(in srgb, var(--portal-danger) 12%, var(--portal-surface));
-  color: var(--portal-danger);
+.portal-badge[data-status="cancelled"],
+.portal-badge[data-status="failed_no_charge"] {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+}
+.portal-badge[data-status="failed"]::before,
+.portal-badge[data-status="error"]::before,
+.portal-badge[data-status="guarded"]::before,
+.portal-badge[data-status="disabled"]::before {
+  background: #ef4444 !important;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8) !important;
 }
 
 .portal-badge[data-status="archived"],
 .portal-badge[data-status="read"],
 .portal-badge[data-status="dismissed"],
 .portal-badge[data-status="backlog"] {
-  border-color: var(--portal-border);
-  background: var(--portal-surface-strong);
-  color: var(--portal-muted);
+  border-color: var(--portal-border) !important;
+  background: var(--portal-surface-strong) !important;
+  color: var(--portal-muted) !important;
 }
 
 .portal-workspace-command-center .portal-dashboard-overview {
