@@ -1826,65 +1826,13 @@ body {
   background: color-mix(in srgb, var(--portal-brand) 10%, var(--portal-surface-light));
 }
 
-.portal-sidebar-create {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  min-height: 42px !important;
-  padding: 10px 14px !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
-}
-
-.portal-sidebar-action-row {
-  display: grid !important;
-  grid-template-columns: 1fr 42px !important;
-  gap: 8px !important;
-  align-items: center !important;
-  margin: 0 8px 14px !important;
-}
-
-.portal-nav-link,
-.portal-nav-summary {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-}
-
 .portal-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  min-height: 24px !important;
-  padding: 3px 10px !important;
-  border-radius: 999px !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
-  white-space: nowrap !important;
-  border: 1px solid var(--portal-border) !important;
-  background: var(--portal-surface-strong) !important;
-  color: var(--portal-muted-strong) !important;
+  min-height: 26px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+  color: var(--portal-muted-strong);
 }
 
-.portal-badge::before {
-  content: '' !important;
-  display: inline-block !important;
-  width: 7px !important;
-  height: 7px !important;
-  border-radius: 50% !important;
-  background: currentColor !important;
-  flex-shrink: 0 !important;
-}
-
-/* 🟢 GREEN: Sẵn sàng / Hoàn thành / Active */
 .portal-badge[data-status="ready"],
 .portal-badge[data-status="completed"],
 .portal-badge[data-status="approved"],
@@ -1893,19 +1841,11 @@ body {
 .portal-badge[data-status="closed"],
 .portal-badge[data-status="done"],
 .portal-badge[data-status="refunded"] {
-  border-color: rgba(16, 185, 129, 0.35) !important;
-  background: rgba(16, 185, 129, 0.12) !important;
-  color: #10b981 !important;
-}
-.portal-badge[data-status="ready"]::before,
-.portal-badge[data-status="completed"]::before,
-.portal-badge[data-status="approved"]::before,
-.portal-badge[data-status="done"]::before {
-  background: #10b981 !important;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8) !important;
+  border-color: color-mix(in srgb, var(--portal-success) 54%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-success) 12%, var(--portal-surface));
+  color: var(--portal-success);
 }
 
-/* 🟡 YELLOW: Đang bận / Đang xử lý / Review / Chờ */
 .portal-badge[data-status="draft"],
 .portal-badge[data-status="awaiting_confirm"],
 .portal-badge[data-status="queued"],
@@ -1914,48 +1854,38 @@ body {
 .portal-badge[data-status="new"],
 .portal-badge[data-status="reviewing"],
 .portal-badge[data-status="planned"],
-.portal-badge[data-status="in_progress"],
-.portal-badge[data-status="review"],
-.portal-badge[data-status="waiting_user"],
-.portal-badge[data-status="waiting_provider"] {
-  border-color: rgba(245, 158, 11, 0.35) !important;
-  background: rgba(245, 158, 11, 0.12) !important;
-  color: #f59e0b !important;
-}
-.portal-badge[data-status="processing"]::before,
-.portal-badge[data-status="queued"]::before,
-.portal-badge[data-status="review"]::before,
-.portal-badge[data-status="in_progress"]::before {
-  background: #f59e0b !important;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8) !important;
+.portal-badge[data-status="in_progress"] {
+  border-color: color-mix(in srgb, var(--portal-info) 54%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-info) 12%, var(--portal-surface));
+  color: var(--portal-info);
 }
 
-/* 🔴 RED: Lỗi / Không hoạt động / Khóa */
 .portal-badge[data-status="guarded"],
 .portal-badge[data-status="disabled"],
+.portal-badge[data-status="review"],
+.portal-badge[data-status="waiting_user"],
+.portal-badge[data-status="waiting_provider"],
+.portal-badge[data-status="refund_pending"] {
+  border-color: color-mix(in srgb, var(--portal-warning) 54%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-warning) 12%, var(--portal-surface));
+  color: var(--portal-warning);
+}
+
 .portal-badge[data-status="failed"],
 .portal-badge[data-status="error"],
-.portal-badge[data-status="cancelled"],
-.portal-badge[data-status="failed_no_charge"] {
-  border-color: rgba(239, 68, 68, 0.35) !important;
-  background: rgba(239, 68, 68, 0.12) !important;
-  color: #ef4444 !important;
-}
-.portal-badge[data-status="failed"]::before,
-.portal-badge[data-status="error"]::before,
-.portal-badge[data-status="guarded"]::before,
-.portal-badge[data-status="disabled"]::before {
-  background: #ef4444 !important;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8) !important;
+.portal-badge[data-status="cancelled"] {
+  border-color: color-mix(in srgb, var(--portal-danger) 54%, var(--portal-border));
+  background: color-mix(in srgb, var(--portal-danger) 12%, var(--portal-surface));
+  color: var(--portal-danger);
 }
 
 .portal-badge[data-status="archived"],
 .portal-badge[data-status="read"],
 .portal-badge[data-status="dismissed"],
 .portal-badge[data-status="backlog"] {
-  border-color: var(--portal-border) !important;
-  background: var(--portal-surface-strong) !important;
-  color: var(--portal-muted) !important;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-strong);
+  color: var(--portal-muted);
 }
 
 .portal-workspace-command-center .portal-dashboard-overview {
@@ -3764,6 +3694,327 @@ body {
   }
 }
 
+/* Customer Shell Harmony ----------------------------------------------
+   The customer app keeps its server-rendered navigation and route manifest;
+   this final visual layer only clarifies the already-mounted desktop rail,
+   command surface and five-item mobile dock.  It intentionally contains no
+   request, identity, capability, billing or execution concern. */
+@keyframes portal-customer-shell-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--portal-motion-distance) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes portal-customer-command-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--portal-motion-distance) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar {
+  border-right-color: var(--portal-rail-border);
+  background: var(--portal-rail);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-brand {
+  margin-bottom: var(--portal-space-4);
+  padding-bottom: var(--portal-space-3);
+  border-bottom: 1px solid var(--portal-rail-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-action-row {
+  margin-bottom: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search {
+  margin-bottom: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav {
+  gap: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group {
+  padding: 0 0 var(--portal-space-2);
+  border-bottom: 1px solid var(--portal-rail-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-group--current {
+  border-bottom-color: var(--portal-border-strong);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary {
+  min-height: 44px;
+  padding-inline: var(--portal-space-3);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search:is(:hover, :focus-visible),
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-focus-toggle:is(:hover, :focus-visible) {
+  border-color: var(--portal-rail-border);
+  background: var(--portal-nav-hover-surface);
+  color: var(--portal-rail-text);
+}
+
+.portal-shell[data-portal-app-kind="customer"] :is(
+  .portal-nav-summary,
+  .portal-nav-link,
+  .portal-sidebar-search,
+  .portal-sidebar-focus-toggle,
+  .portal-command-item,
+  .portal-mobile-nav-link,
+  .portal-command-close
+):focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-links {
+  gap: var(--portal-space-1);
+  padding: var(--portal-space-1) 0 var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link {
+  min-height: 44px;
+  padding: 10px var(--portal-space-3);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-nav-link[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--portal-brand);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-header {
+  border-bottom-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-dialog {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-3);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-color: var(--portal-control-border);
+  background: var(--portal-control-surface);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header {
+  border-bottom-color: var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header h2,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy strong {
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-kicker,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-arrow,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search-icon {
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
+  border-color: var(--portal-control-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search:focus-within {
+  border-color: var(--portal-context);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 20%, transparent);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input {
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input::placeholder,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy small,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-count {
+  color: var(--portal-muted);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-empty {
+  color: var(--portal-warning);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint kbd {
+  border-color: var(--portal-control-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
+  border-color: transparent;
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-icon {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-context);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item[aria-current="page"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:focus-visible,
+.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-mobile-nav-link:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette:not([hidden]) .portal-command-dialog {
+    animation: portal-customer-command-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ) {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ):is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
+      transition:
+        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
+        color var(--portal-motion-fast) var(--portal-motion-ease-standard);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .portal-shell[data-portal-app-kind="customer"] :is(
+      .portal-nav-summary,
+      .portal-nav-link,
+      .portal-sidebar-search,
+      .portal-sidebar-focus-toggle
+    ):active {
+      transform: scale(.985);
+    }
+
+    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:active {
+      transform: scale(.985);
+    }
+  }
+}
+
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  .portal-shell[data-portal-app-kind="customer"]:not(.portal-shell--focus) .portal-sidebar {
+    animation: portal-customer-shell-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
+  }
+}
+
+@media (max-width: 620px) {
+  .portal-shell[data-portal-app-kind="customer"] .portal-header {
+    gap: var(--portal-space-2);
+    min-width: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-crumbs {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-session-chip {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-session-copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-sidebar,
+    .portal-nav-summary,
+    .portal-nav-link,
+    .portal-sidebar-search,
+    .portal-sidebar-focus-toggle
+  ),
+  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette :is(
+    .portal-command-dialog,
+    .portal-command-item,
+    .portal-command-close
+  ) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+
+/* Final responsive app dock harmony */
+
 /* Teal–Sky Product Redesign -- final semantic layer. */
 .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) :is(
   .portal-card-title,
@@ -3946,31 +4197,22 @@ body {
 }
 
 @media (max-width: 390px) {
-  .portal-auth-page--access .portal-auth-header {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 8px;
-    row-gap: 8px;
-  }
+  .portal-auth-page--access .portal-auth-header { gap: 8px; }
+}
 
-  .portal-auth-page--access .portal-auth-brand {
-    grid-column: 1;
-  }
+@media (max-width: 380px) {
+  .portal-auth-page--access .portal-auth-header { gap: 6px; }
 
-  .portal-auth-page--access .portal-auth-header-actions {
-    grid-column: 2;
-  }
-
-  .portal-auth-page--access .portal-auth-locale-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
-
-  .portal-auth-page--access .portal-auth-locale-link {
-    flex: 1 1 0;
+  .portal-auth-page--access .portal-auth-brand > span:last-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }
 
@@ -6152,7 +6394,7 @@ body {
   padding: var(--portal-space-4);
   border: 1px solid color-mix(in srgb, var(--portal-action) 30%, var(--portal-border));
   border-radius: var(--portal-radius);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--portal-action) 7%, var(--portal-surface-light)), var(--portal-surface-soft));
+  background: color-mix(in srgb, var(--portal-action) 7%, var(--portal-surface-soft));
   box-shadow: var(--portal-elevation-1);
 }
 
@@ -16158,324 +16400,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
-/* Customer Shell Harmony ----------------------------------------------
-   The customer app keeps its server-rendered navigation and route manifest;
-   this final visual layer only clarifies the already-mounted desktop rail,
-   command surface and five-item mobile dock.  It intentionally contains no
-   request, identity, capability, billing or execution concern. */
-@keyframes portal-customer-shell-enter {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--portal-motion-distance) * -1));
-  }
 
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes portal-customer-command-enter {
-  from {
-    opacity: 0;
-    transform: translateY(calc(var(--portal-motion-distance) * -1));
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-sidebar {
-  border-right-color: var(--portal-rail-border);
-  background: var(--portal-rail);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-brand {
-  margin-bottom: var(--portal-space-4);
-  padding-bottom: var(--portal-space-3);
-  border-bottom: 1px solid var(--portal-rail-border);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-action-row {
-  margin-bottom: var(--portal-space-3);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search {
-  margin-bottom: var(--portal-space-3);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav {
-  gap: var(--portal-space-2);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-group {
-  padding: 0 0 var(--portal-space-2);
-  border-bottom: 1px solid var(--portal-rail-border);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-group:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-group--current {
-  border-bottom-color: var(--portal-border-strong);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary {
-  min-height: 44px;
-  padding-inline: var(--portal-space-3);
-  border-radius: var(--portal-radius-sm);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-summary:is(:hover, :focus-visible),
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-link:is(:hover, :focus-visible),
-.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-search:is(:hover, :focus-visible),
-.portal-shell[data-portal-app-kind="customer"] .portal-sidebar-focus-toggle:is(:hover, :focus-visible) {
-  border-color: var(--portal-rail-border);
-  background: var(--portal-nav-hover-surface);
-  color: var(--portal-rail-text);
-}
-
-.portal-shell[data-portal-app-kind="customer"] :is(
-  .portal-nav-summary,
-  .portal-nav-link,
-  .portal-sidebar-search,
-  .portal-sidebar-focus-toggle,
-  .portal-command-item,
-  .portal-mobile-nav-link,
-  .portal-command-close
-):focus-visible {
-  outline: 3px solid var(--portal-focus);
-  outline-offset: 2px;
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-links {
-  gap: var(--portal-space-1);
-  padding: var(--portal-space-1) 0 var(--portal-space-2);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-link {
-  min-height: 44px;
-  padding: 10px var(--portal-space-3);
-  border-radius: var(--portal-radius-sm);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-nav-link[aria-current="page"] {
-  box-shadow: inset 3px 0 0 var(--portal-brand);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-header {
-  border-bottom-color: var(--portal-border);
-  background: var(--portal-surface-light);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-dialog {
-  border-color: var(--portal-border);
-  background: var(--portal-surface-light);
-  box-shadow: var(--portal-elevation-3);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close {
-  min-width: 44px;
-  min-height: 44px;
-  border-color: var(--portal-control-border);
-  background: var(--portal-control-surface);
-  color: var(--portal-ink);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header {
-  border-bottom-color: var(--portal-border);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-header h2,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy strong {
-  color: var(--portal-ink);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-kicker,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-arrow,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
-  color: var(--portal-context);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search-icon {
-  color: var(--portal-context);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search {
-  border-color: var(--portal-control-border);
-  background: var(--portal-surface-soft);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search:focus-within {
-  border-color: var(--portal-context);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-context) 20%, transparent);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input {
-  color: var(--portal-ink);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-search input::placeholder,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-copy small,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-count {
-  color: var(--portal-muted);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-empty {
-  color: var(--portal-warning);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-hint kbd {
-  border-color: var(--portal-control-border);
-  background: var(--portal-surface-soft);
-  color: var(--portal-muted);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
-  border-color: transparent;
-  color: var(--portal-ink);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item-icon {
-  border-color: var(--portal-border);
-  background: var(--portal-surface-soft);
-  color: var(--portal-context);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item[aria-current="page"] {
-  border-color: var(--portal-border-strong);
-  background: var(--portal-surface-soft);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
-  border-color: var(--portal-border-strong);
-  background: var(--portal-surface-soft);
-  color: var(--portal-ink);
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:focus-visible,
-.portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-close:focus-visible {
-  outline: 3px solid var(--portal-focus);
-  outline-offset: 2px;
-}
-
-.portal-shell[data-portal-app-kind="customer"] .portal-mobile-nav-link:focus-visible {
-  outline: 3px solid var(--portal-focus);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette:not([hidden]) .portal-command-dialog {
-    animation: portal-customer-command-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .portal-shell[data-portal-app-kind="customer"] :is(
-      .portal-nav-summary,
-      .portal-nav-link,
-      .portal-sidebar-search,
-      .portal-sidebar-focus-toggle
-    ) {
-      transition:
-        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        color var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        box-shadow var(--portal-motion-fast) var(--portal-motion-ease-standard);
-    }
-
-    .portal-shell[data-portal-app-kind="customer"] :is(
-      .portal-nav-summary,
-      .portal-nav-link,
-      .portal-sidebar-search,
-      .portal-sidebar-focus-toggle
-    ):is(:hover, :focus-visible) {
-      transform: translateY(-1px);
-    }
-
-    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item {
-      transition:
-        transform var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        border-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        background-color var(--portal-motion-fast) var(--portal-motion-ease-standard),
-        color var(--portal-motion-fast) var(--portal-motion-ease-standard);
-    }
-
-    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:is(:hover, :focus-visible) {
-      transform: translateY(-1px);
-    }
-  }
-
-  @media (hover: none), (pointer: coarse) {
-    .portal-shell[data-portal-app-kind="customer"] :is(
-      .portal-nav-summary,
-      .portal-nav-link,
-      .portal-sidebar-search,
-      .portal-sidebar-focus-toggle
-    ):active {
-      transform: scale(.985);
-    }
-
-    .portal-shell[data-portal-app-kind="customer"] .portal-command-palette .portal-command-item:active {
-      transform: scale(.985);
-    }
-  }
-}
-
-@media (min-width: 1081px) and (prefers-reduced-motion: no-preference) {
-  .portal-shell[data-portal-app-kind="customer"]:not(.portal-shell--focus) .portal-sidebar {
-    animation: portal-customer-shell-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
-  }
-}
-
-@media (max-width: 620px) {
-  .portal-shell[data-portal-app-kind="customer"] .portal-header {
-    gap: var(--portal-space-2);
-    min-width: 0;
-  }
-
-  .portal-shell[data-portal-app-kind="customer"] .portal-crumbs {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-
-  .portal-shell[data-portal-app-kind="customer"] .portal-session-chip {
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .portal-shell[data-portal-app-kind="customer"] .portal-session-copy {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .portal-shell[data-portal-app-kind="customer"] :is(
-    .portal-sidebar,
-    .portal-nav-summary,
-    .portal-nav-link,
-    .portal-sidebar-search,
-    .portal-sidebar-focus-toggle
-  ),
-  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette :is(
-    .portal-command-dialog,
-    .portal-command-item,
-    .portal-command-close
-  ) {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
-
-/* Final responsive app dock harmony */
 /* Customer and ERP retain distinct surfaces while sharing the same compact,
    safe-area-aware five-action rhythm. */
 @media (max-width: 700px) {
@@ -17216,176 +17141,3 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     transform: none !important;
   }
 }
-
-/* ==========================================================================
-   DIRECT PROMINENT SOCIAL & TELEGRAM BOT LOGIN (GOOGLE / APPLE STYLE)
-   ========================================================================== */
-.portal-direct-social-auth {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 16px 0 12px;
-  width: 100%;
-}
-
-.portal-btn-direct-social {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
-
-.portal-btn-direct-social:hover {
-  transform: translateY(-1.5px) translate3d(0, 0, 0);
-  text-decoration: none;
-}
-
-/* 1. Google Button (Clean Standard White) */
-.portal-btn-direct-social.google {
-  background: #ffffff !important;
-  color: #1f1f1f !important;
-  border: 1px solid #dadce0 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.portal-btn-direct-social.google:hover {
-  background: #f8f9fa !important;
-  border-color: #c0c4cc !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* 2. Apple Button (High-End Midnight Black) */
-.portal-btn-direct-social.apple {
-  background: #000000 !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.portal-btn-direct-social.apple:hover {
-  background: #111111 !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
-/* 3. Telegram Bot Button (Vibrant Telegram Blue) */
-.portal-btn-direct-social.telegram {
-  background: linear-gradient(135deg, #2AABEE, #229ED9) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 3px 10px rgba(34, 158, 217, 0.3);
-}
-
-.portal-btn-direct-social.telegram:hover {
-  background: linear-gradient(135deg, #3bb6f7, #24a2dc) !important;
-  box-shadow: 0 6px 18px rgba(34, 158, 217, 0.5);
-}
-
-/* Divider Line */
-.portal-auth-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 14px 0 8px;
-  width: 100%;
-}
-
-.portal-auth-divider::before,
-.portal-auth-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--portal-border, rgba(255, 255, 255, 0.1));
-}
-
-.portal-auth-divider span {
-  padding: 0 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--portal-muted, #7e9bb0);
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-}
-
-/* Clean, Compact Footer for bottom details */
-.portal-auth-compact-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--portal-border, rgba(255, 255, 255, 0.08));
-}
-
-.portal-auth-compact-footer details summary {
-  padding: 8px 12px;
-  font-size: 12px;
-  border-radius: 8px;
-  background: var(--portal-control-surface, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--portal-border, rgba(255, 255, 255, 0.08));
-  cursor: pointer;
-}
-
-.portal-auth-compact-footer details summary:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-/* ==========================================================================
-   AI SUITE MOUNIKAI LUXURY OBSIDIAN & GLASSMORPHISM DESIGN SYSTEM
-   ========================================================================== */
-.portal-ai-suite-card {
-  position: relative;
-  background: rgba(15, 23, 42, 0.72) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 18px !important;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6) !important;
-}
-
-.portal-ai-suite-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  pointer-events: none;
-}
-
-.portal-ai-suite-card:hover {
-  transform: translateY(-4px) scale(1.01) !important;
-  border-color: rgba(56, 189, 248, 0.4) !important;
-  box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.3), 0 0 20px 0 rgba(56, 189, 248, 0.15) !important;
-}
-
-.portal-ai-suite-card:hover .portal-ai-suite-card-icon {
-  transform: scale(1.1) rotate(2deg);
-}
-
-.portal-waveform-bar {
-  width: 3px;
-  background: linear-gradient(to top, #a855f7, #ec4899);
-  border-radius: 9999px;
-  animation: portalWaveform 1.2s ease-in-out infinite alternate;
-}
-
-@keyframes portalWaveform {
-  0% { height: 4px; }
-  100% { height: 28px; }
-}
-
-

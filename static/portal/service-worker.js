@@ -55,6 +55,7 @@ const SHELL = Object.freeze([
   "/static/portal/integration.js",
   "/static/portal/manifest.webmanifest",
   "/static/portal/app-icon.svg",
+  "/static/logo_chính_thức.png",
   OFFLINE_FALLBACK
 ]);
 const SHELL_PATHS = new Set(SHELL);

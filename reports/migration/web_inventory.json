@@ -226,7 +226,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2461,
+      "line": 2465,
       "target": "root_service_worker"
     },
     {
@@ -256,7 +256,7 @@
     "conversations": 0,
     "database_tables": 224,
     "env_references": 250,
-    "providers": 8,
+    "providers": 11,
     "routes": 682,
     "ui_path_references": 47
   },
@@ -7482,11 +7482,14 @@
   "provider_names": [
     "PayOS",
     "Key4U",
+    "ShopAIKey",
     "Deepgram",
     "Gemini",
+    "OpenAI",
     "ElevenLabs",
     "Fish Audio",
     "Suno",
+    "Kling",
     "Telegram"
   ],
   "providers": [
@@ -7533,7 +7536,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 716,
+      "occurrences": 738,
       "provider": "PayOS"
     },
     {
@@ -7546,9 +7549,18 @@
     },
     {
       "files": [
-        "ai_media.py"
+        "studio/script.js"
       ],
-      "occurrences": 3,
+      "occurrences": 1,
+      "provider": "ShopAIKey"
+    },
+    {
+      "files": [
+        "ai_media.py",
+        "studio/index.html",
+        "studio/script.js"
+      ],
+      "occurrences": 5,
       "provider": "Deepgram"
     },
     {
@@ -7558,17 +7570,26 @@
         "coach.py",
         "copyfast_api.py",
         "copyfast_db.py",
+        "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 11,
+      "occurrences": 12,
       "provider": "Gemini"
     },
     {
       "files": [
-        "ai_media.py"
+        "studio/script.js"
       ],
       "occurrences": 1,
+      "provider": "OpenAI"
+    },
+    {
+      "files": [
+        "ai_media.py",
+        "studio/script.js"
+      ],
+      "occurrences": 2,
       "provider": "ElevenLabs"
     },
     {
@@ -7582,10 +7603,22 @@
       "files": [
         "copyfast_registry.py",
         "customer_app.html",
-        "static/portal/portal.js"
+        "static/manifest.json",
+        "static/portal/portal.js",
+        "studio/index.html",
+        "studio/manifest.json",
+        "studio/script.js"
       ],
-      "occurrences": 9,
+      "occurrences": 32,
       "provider": "Suno"
+    },
+    {
+      "files": [
+        "studio/index.html",
+        "studio/script.js"
+      ],
+      "occurrences": 6,
+      "provider": "Kling"
     },
     {
       "files": [
@@ -7630,7 +7663,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1634,
+      "occurrences": 1661,
       "provider": "Telegram"
     }
   ],
@@ -7665,7 +7698,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2626,
+      "line": 2630,
       "methods": [
         "GET"
       ],
@@ -7926,7 +7959,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2646,
+      "line": 2650,
       "methods": [
         "GET"
       ],
@@ -7962,7 +7995,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2528,
+      "line": 2532,
       "methods": [
         "POST"
       ],
@@ -7971,7 +8004,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2514,
+      "line": 2518,
       "methods": [
         "POST"
       ],
@@ -7980,7 +8013,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2542,
+      "line": 2546,
       "methods": [
         "POST"
       ],
@@ -7989,7 +8022,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2621,
+      "line": 2625,
       "methods": [
         "GET"
       ],
@@ -8385,7 +8418,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2657,
+      "line": 2661,
       "methods": [
         "GET"
       ],
@@ -8430,7 +8463,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2662,
+      "line": 2666,
       "methods": [
         "GET"
       ],
@@ -8664,7 +8697,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2641,
+      "line": 2645,
       "methods": [
         "GET"
       ],
@@ -8898,7 +8931,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2657,
+      "line": 2661,
       "methods": [
         "GET"
       ],
@@ -9834,7 +9867,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2621,
+      "line": 2625,
       "methods": [
         "GET"
       ],
@@ -10284,7 +10317,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2651,
+      "line": 2655,
       "methods": [
         "GET"
       ],
@@ -11904,7 +11937,7 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2461,
+      "line": 2465,
       "methods": [
         "GET"
       ],
@@ -13056,7 +13089,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2636,
+      "line": 2640,
       "methods": [
         "GET"
       ],
@@ -13083,7 +13116,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2631,
+      "line": 2635,
       "methods": [
         "GET"
       ],
@@ -13542,7 +13575,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2667,
+      "line": 2671,
       "methods": [
         "GET"
       ],
@@ -13775,9 +13808,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 149,
-  "source_files_scanned": 149,
-  "source_fingerprint_sha256": "024d9c73a48e7db4df2b0514e6a1af56350b7d0bc414b8a7ce2a814eff431fc1",
+  "source_files_discovered": 157,
+  "source_files_scanned": 157,
+  "source_fingerprint_sha256": "41afdf43bc0d7ba1e4f8edd349df204fd1c104da45367eae399e14d655ab3929",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -13997,7 +14030,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 27078,
+      "line": 27812,
       "path": "/features"
     },
     {

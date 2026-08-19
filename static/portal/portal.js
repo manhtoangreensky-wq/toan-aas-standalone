@@ -10991,14 +10991,13 @@
       : "";
     const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
       const searchText = [featureCatalogGroupCopy(group, "title"), entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
-      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })}</div>`;
+      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })}</div>`;
     }).join("")}</div></section>`).join("");
     const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
     const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ lượng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
-    const aiSuiteHub = renderAISuiteProductivityHub(context);
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${aiSuiteHub}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${search}${renderFeatureFamilyExplorer()}${jumps}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${renderFeatureFamilyExplorer()}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${search}${jumps}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -15251,7 +15250,7 @@
                 <span>Văn bản / Kịch bản thuyết minh</span>
                 <textarea class="portal-input" rows="3" placeholder="Nhập đoạn văn bản bạn muốn tạo giọng đọc...">TOAN AAS là nền tảng sáng tạo nội dung và tự động hóa AI hàng đầu. Giọng đọc được tạo ra với độ tự nhiên cao, ngắt nghỉ đúng ngữ điệu và chuẩn phòng thu.</textarea>
               </label>
-              
+
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <label class="portal-field">
                   <span>Diễn viên lồng tiếng (Voice Actor)</span>
@@ -19139,152 +19138,152 @@
 
   function renderAISuiteProductivityHub(context) {
     return `<section class="portal-ai-suite-productivity-hub" style="margin: 28px 0;">
-      <div style="text-align:center; max-width:800px; margin:0 auto 28px;">
-        <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:9999px; background:linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.2)); border:1px solid rgba(14,165,233,0.3); font-size:12px; font-weight:700; color:#38bdf8; margin-bottom:12px;">
-          ✨ HỆ SINH THÁI 120+ CÔNG CỤ AI TOÀN NĂNG
+      <div style="text-align:center; max-width:820px; margin:0 auto 28px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:9999px; background:color-mix(in srgb, var(--portal-context) 12%, transparent); border:1px solid color-mix(in srgb, var(--portal-context) 32%, transparent); font-size:12px; font-weight:700; color:var(--portal-context); margin-bottom:12px;">
+          ✨ HỆ SINH THÁI WORKSPACE & CÔNG CỤ AI TOÀN NĂNG
         </div>
-        <h2 style="font-size:32px; font-weight:800; letter-spacing:-0.03em; margin:0 0 10px; background:linear-gradient(135deg, #ffffff 30%, #94a3b8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+        <h2 style="font-size:28px; font-weight:800; letter-spacing:-0.03em; margin:0 0 10px; color:var(--portal-ink);">
           Không Gian Làm Việc Sáng Tạo AI Đa Nền Tảng
         </h2>
-        <p style="font-size:15px; color:#94a3b8; margin:0; line-height:1.6;">
+        <p style="font-size:15px; color:var(--portal-muted); margin:0; line-height:1.6;">
           Tất cả trong một: Bóc băng phụ đề, lồng tiếng, tạo nhạc, sản xuất video ngắn, tạo ảnh 4K và marketing tự động hóa.
         </p>
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px;">
-        <a href="/subtitle" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/subtitle" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #0ea5e9, #0284c7); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(14,165,233,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-context) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-context);">
               🎙️
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">🟢 Hot</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Đang phát triển 16 giọng</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Phụ Đề & Lồng Tiếng (SubDub)</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Bóc băng ASR tiếng Việt, dịch phụ đề song ngữ, lồng tiếng 6 giọng AI & xuất SRT/VTT/Video.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Phụ Đề & Lồng Tiếng (SubDub)</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Bóc băng ASR tự động (miễn phí), dịch phụ đề song ngữ, lồng tiếng đa giọng AI. Đang nâng cấp: Nhận diện & phân tách 16 giọng nói/giới tính cùng lúc.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#38bdf8; font-weight:600;">Mở Trình Làm Việc →</span>
-            <span style="font-size:11px; color:#64748b;">-5 Xu / phút</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Trình Làm Việc →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">0.10 Xu / ký tự · ASR Free</span>
           </div>
         </a>
 
-        <a href="/voice/tts" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/voice/tts" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #10b981, #059669); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(16,185,129,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-brand) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-brand);">
               🗣️
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">🟢 Sẵn sàng</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">🟢 Sẵn sàng</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Voice Studio & TTS AI</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Chuyển văn bản thành giọng đọc truyền cảm 15+ diễn viên, nghe thử sóng âm & tải MP3 320kbps.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Voice Studio & TTS AI</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Chuyển văn bản thành giọng đọc truyền cảm 15+ diễn viên, hỗ trợ tạo voice clone riêng và xuất MP3 320kbps.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#34d399; font-weight:600;">Tạo Giọng Đọc →</span>
-            <span style="font-size:11px; color:#64748b;">-2 Xu / 1k ký tự</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Giọng Đọc →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Từ 0.10 Xu / từ</span>
           </div>
         </a>
 
-        <a href="/music/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/music/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #a855f7, #7e22ce); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(168,85,247,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-context) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-context);">
               🎵
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3);">⚡ Suno V5</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Nhạc AI</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Music & Sound Effects</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tạo nhạc nền độc quyền không bản quyền theo prompt, Lofi, EDM, Cinematic, 48kHz Stereo.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Music & Sound Effects</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo nhạc nền độc quyền không dính bản quyền theo prompt, Lofi, EDM, Cinematic, 48kHz Stereo.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#c084fc; font-weight:600;">Sáng Tác Nhạc →</span>
-            <span style="font-size:11px; color:#64748b;">-8 Xu / bài</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sáng Tác Nhạc →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">100 - 300 Xu / bài</span>
           </div>
         </a>
 
-        <a href="/video/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/video/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(2,132,199,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-brand) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-brand);">
               🎬
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3);">👑 Pro</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">👑 Video AI</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Video Factory & 10 Hooks</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tự động hóa sản xuất video ngắn TikTok/Reels, sinh 10 Hook giữ chân & phân cảnh storyboard.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Video Factory & Storyboard</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tự động hóa sản xuất video ngắn TikTok/Reels, sinh hook giữ chân & phân cảnh chuyên nghiệp.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#38bdf8; font-weight:600;">Sản Xuất Video →</span>
-            <span style="font-size:11px; color:#64748b;">-10 Xu / pack</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sản Xuất Video →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo gói phân cảnh</span>
           </div>
         </a>
 
-        <a href="/image/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/image/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #ec4899, #be185d); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(236,72,153,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-context) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-context);">
               🎨
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(236,72,153,0.15); color:#f472b6; border:1px solid rgba(236,72,153,0.3);">⚡ Flux / Midjourney</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Ảnh AI</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Image Studio 4K</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 8K, chân dung AI người mẫu, thumbnail YouTube & banner bán hàng.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Image Studio 4K</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực, chân dung AI người mẫu, thumbnail YouTube & banner quảng cáo.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#f472b6; font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
-            <span style="font-size:11px; color:#64748b;">-5 Xu / ảnh</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Từ 50 Xu / ảnh</span>
           </div>
         </a>
 
-        <a href="/documents" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/documents" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #eab308, #ca8a04); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(234,179,8,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-brand) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-brand);">
               📑
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3);">🟢 DeepOCR 99.8%</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">🟢 DeepOCR</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Document & PDF / OCR Hub</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Bóc chữ tiếng Việt từ ảnh chụp tài liệu quét, chuyển PDF sang Word .docx, tách/gộp PDF siêu tốc.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Document & PDF / OCR Hub</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Bóc chữ tiếng Việt từ ảnh chụp tài liệu quét, chuyển PDF sang Word .docx, tách/gộp PDF siêu tốc.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#facc15; font-weight:600;">Xử Lý Tài Liệu →</span>
-            <span style="font-size:11px; color:#64748b;">-3 Xu / tệp</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Xử Lý Tài Liệu →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Miễn phí / theo tệp</span>
           </div>
         </a>
 
-        <a href="/chat" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/chat" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #3b82f6, #1d4ed8); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(59,130,246,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-context) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-context);">
               🤖
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3);">⚡ Multi-LLM</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Trợ lý AI</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Marketing & Chat Copilot</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch ads TikTok/FB, CSKH tự động.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Marketing & Chat Copilot</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch ads TikTok/FB, CSKH tự động.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#60a5fa; font-weight:600;">Chat Với Trợ Lý →</span>
-            <span style="font-size:11px; color:#64748b;">-2 Xu / lượt</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Chat Với Trợ Lý →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Hỗ trợ đa tác vụ</span>
           </div>
         </a>
 
-        <a href="/pricing" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+        <a href="/pricing" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #f97316, #c2410c); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(249,115,22,0.4);">
+            <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-brand) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-brand);">
               💳
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid rgba(249,115,22,0.3);">⚡ Quét Mã 5s</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">⚡ VietQR 5s</span>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Ví Xu & Nạp Tiền VietQR PayOS</h3>
-            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Nạp Xu tức thì qua VietQR PayOS (VCB, MB, Techcombank), tự động cộng Xu trong 5 giây.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Ví Xu & Nạp Tiền VietQR PayOS</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Nạp Xu tức thì qua VietQR PayOS (VCB, MB, Techcombank), tự động cộng Xu trong 5 giây.</p>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <span style="font-size:12px; color:#fb923c; font-weight:600;">Nạp Xu Ngay →</span>
-            <span style="font-size:11px; color:#10b981;">Tặng +10% Xu</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Nạp Xu Ngay →</span>
+            <span style="font-size:11px; color:var(--portal-brand);">Tặng +10% Xu</span>
           </div>
         </a>
       </div>
@@ -25773,15 +25772,15 @@
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(accessPresentationText("telegram.recoveredTitle", "Phiên xác minh Telegram đang chờ"))}</strong><p>${safeText(accessPresentationText("telegram.recoveredBody", "Tab vừa được làm mới nên Portal không hiển thị lại mã một lần. Browser vẫn chỉ kiểm tra challenge HttpOnly của chính tab này; nếu bạn đã xác nhận trong Bot, Portal sẽ tự hoàn tất."))}</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${safeText(ready ? accessPresentationText("telegram.completeSignIn", "Hoàn tất đăng nhập") : accessPresentationText("telegram.checkNow", "Kiểm tra ngay"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login" data-portal-confirm="${safeText(accessPresentationText("telegram.replaceCodeConfirm", "Tạo mã mới sẽ thay thế challenge đang chờ. Bạn có chắc muốn tiếp tục?"))}"${connectionDisabled}>${safeText(accessPresentationText("telegram.newCode", "Tạo mã mới"))}</button></div></div></div>`
       : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.link)}</span><div><strong>${safeText(accessPresentationText("telegram.title", "Telegram"))}</strong><p>${safeText(accessPresentationText("telegram.body", "Đăng nhập bằng chính tài khoản Telegram đang mở Bot. Bot chứng minh ownership; Web không nhận Telegram ID thô. Lần đầu có thể tự tạo hồ sơ Web mặc định sau xác minh."))}</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login"${connectionDisabled}>${safeText(accessPresentationText("telegram.signIn", "Đăng nhập với Telegram"))}</button></div></div></div>`;
     const providers = [
-      { enabled: true, markup: renderPublicOAuthCard("telegram", "Telegram Login", true, "✈", "signin", context) },
-      { enabled: true, markup: renderPublicOAuthCard("google", "Google (OAuth)", true, "G", "signin", context) },
-      { enabled: true, markup: renderPublicOAuthCard("apple", "Sign in with Apple", true, "", "signin", context) },
+      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin", context) },
+      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "signin", context) },
+      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "signin", context) },
       { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "signin", context) }
     ];
     const enabledProviders = providers.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providers.filter((item) => !item.enabled).map((item) => item.markup).join("");
     const activeTelegramFlow = Boolean(accountRequired || expired || code || recovered || ready);
-    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("telegram.sectionTitle", "Phương thức đăng nhập 1-Chạm"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("telegram.sectionBody", "Đăng nhập nhanh với Google, Apple ID hoặc Telegram Bot kết nối trực tiếp với @toanaasbot."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("telegram.noProviderConfigured", "Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này."))}</p>`}<details class="portal-auth-telegram-panel" open><summary><span>${safeText(accessPresentationText("telegram.linkPanelTitle", "Liên kết Telegram Bot 6 Số"))}</span><small>${safeText(accessPresentationText("telegram.linkPanelHint", "Mở Bot @toanaasbot gõ /linkweb để nhận mã xác thực"))}</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details>${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("telegram.pendingProviders", "Phương thức đang chờ cấu hình ({count})", { count: String(providers.filter((item) => !item.enabled).length) }))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}</section>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("provider.sectionTitle", "Tiếp tục với tài khoản có sẵn"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("telegram.sectionBody", "Email + mật khẩu là đường chính. Telegram Login xác thực Web bằng OIDC; OAuth chỉ xuất hiện khi máy chủ đã cấu hình thật. Liên kết Bot là bước tùy chọn, tách riêng khỏi đăng nhập Web."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("provider.noProviderConfigured", "Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này."))}</p>`}${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("provider.pendingProviders", "Phương thức đang chờ cấu hình ({count})", { count: String(providers.filter((item) => !item.enabled).length) }))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}<details class="portal-auth-telegram-panel"${activeTelegramFlow ? " open" : ""}><summary><span>${safeText(accessPresentationText("telegram.title", "Telegram"))}</span><small>${safeText(accessPresentationText("telegram.panelSummary", "Tạo mã xác thực 6 số trên Web, mở Bot và xác nhận để đăng nhập."))}</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details></section>`;
   }
 
   function renderOAuthRegistrationMethods(context) {
@@ -25791,9 +25790,9 @@
     const githubEnabled = oauthProviders.github && oauthProviders.github.enabled === true;
     const appleEnabled = oauthProviders.apple && oauthProviders.apple.enabled === true;
     const providerCards = [
-      { enabled: true, markup: renderPublicOAuthCard("telegram", "Telegram Login", true, "✈", "register", context) },
-      { enabled: true, markup: renderPublicOAuthCard("google", "Google (OAuth)", true, "G", "register", context) },
-      { enabled: true, markup: renderPublicOAuthCard("apple", "Sign in with Apple", true, "", "register", context) },
+      { enabled: telegramOidcEnabled, markup: renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register", context) },
+      { enabled: googleEnabled, markup: renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register", context) },
+      { enabled: appleEnabled, markup: renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register", context) },
       { enabled: githubEnabled, markup: renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register", context) }
     ];
     const enabledProviders = providerCards.filter((item) => item.enabled).map((item) => item.markup).join("");
@@ -25824,7 +25823,7 @@
     const enabled = canAct(page, context);
     const unavailableMessage = accessText("primary.unavailable", "Đang kiểm tra phiên bảo mật trước khi cho phép thao tác.");
     const recoveryLink = page.path === "/login"
-      ? `<a class="portal-button portal-button--quiet" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
+      ? `<a class="portal-auth-forgot-link" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
       : "";
     const noTransient = page.path === "/password-recovery" ? " data-portal-no-transient" : "";
     const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
@@ -25841,11 +25840,11 @@
       linked: accessText("oauth.linked", "Đã liên kết OAuth với signed session hiện tại."),
       "already-linked": accessText("oauth.alreadyLinked", "OAuth này đã liên kết với tài khoản hiện tại.")
     };
-    const oauthHandoff = oauthMessages[oauthReason]
+    const oauthHandoff = (oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
     const registerSetup = page.path === "/register"
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>${safeText(accessText("notice.defaultProfileTitle", "Hồ sơ mặc định sau khi tạo"))}</strong><p>${safeText(accessText("notice.defaultProfileBody", "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</p></div></div>`
+      ? `<div class="portal-auth-banner-subtle"><span class="portal-auth-banner-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><span>${safeText(accessText("notice.defaultProfileBody", "Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</span></div>`
       : "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
@@ -25859,7 +25858,7 @@
       && mfaChallengeMinutes <= 10;
     const primaryForm = mfaLoginPending
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="/login" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="/login"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
-      : `<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}?lang=${safeText(requestedLocale)}"><span>${safeText(alternative[1])}</span><span class="portal-auth-button-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>${recoveryLink}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
+      : `<form class="portal-form portal-auth-compact-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-auth-form-actions">${recoveryLink}<button class="portal-button portal-button--primary portal-auth-submit-btn" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
     const providerMethods = mfaLoginPending
       ? ""
       : (isLogin ? renderTelegramLoginMethod(context) : (isRegister ? renderOAuthRegistrationMethods(context) : ""));
@@ -25868,27 +25867,30 @@
     const alternativeMethodsOpen = isLogin && Boolean(
       telegramFlow.errorCode || telegramData.code || telegramData.recovered === true || telegramData.ready === true
     );
-    const primaryTitle = mfaLoginPending
-      ? "Xác thực hai lớp"
-      : (isLogin ? accessText("primary.login", "Đăng nhập bằng email") : (isRegister ? accessText("primary.register", "Tạo tài khoản bằng email") : (isRecovery ? accessText("primary.recovery", "Khôi phục mật khẩu") : page.title)));
-    const primaryDescription = mfaLoginPending
-      ? "Nhập mã xác thực trong ứng dụng hoặc mã khôi phục của chính bạn."
-      : (isLogin
-        ? accessText("primary.loginDescription", "Email + mật khẩu là đường chính để vào Workspace.")
-        : (isRegister ? accessText("primary.registerDescription", "Tạo signed Web account; bạn có thể hoàn thiện hồ sơ và chọn cách làm việc sau.") : (isRecovery ? accessText("primary.recoveryDescription", "Nhập email để nhận hướng dẫn an toàn.") : safeText(page.description))));
     const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context))));
     const authIntroDescription = isLogin
-      ? accessText("intro.login", "Đăng nhập để tiếp tục vào Workspace. Telegram và OAuth là các lựa chọn riêng, chỉ mở khi bạn cần.")
+      ? accessText("intro.login", "Đăng nhập để vào TOAN AAS Workspace. Trải nghiệm hệ sinh thái AI toàn diện.")
       : (isRegister
-        ? accessText("intro.register", "Tạo tài khoản Web độc lập trước. Bạn chỉ cần liên kết Telegram khi dùng dữ liệu canonical từ Bot.")
-        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description)));
-    const authContextTitle = isLogin
-      ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.")
-      : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."));
-    const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}"><span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><p class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</p><p class="portal-auth-context-title">${safeText(authContextTitle)}</p><ul class="portal-auth-context-list"><li>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</li><li>${safeText(accessText("context.pointTwo", "Mỗi thao tác quan trọng đều có trạng thái dễ hiểu."))}</li><li>${safeText(accessText("context.pointThree", "Bạn luôn có đường quay lại hỗ trợ khi cần."))}</li></ul></aside>`;
+        ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
+        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu an toàn.") : safeText(page.description)));
+
+    // Sleek glass highlight box on left
+    const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
+      <div class="portal-auth-context-head">
+        <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
+        <strong class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</strong>
+      </div>
+      <p class="portal-auth-context-title">${safeText(isLogin ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."))}</p>
+      <ul class="portal-auth-context-list">
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointThree", "Bảo mật signed session, không lưu mật khẩu thô."))}</span></li>
+      </ul>
+    </aside>`;
+
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
-    
-    // Direct, Prominent 1-Click Social & Bot Login (Following Google / Apple / Telegram Standard)
+
+    // Direct, Prominent 1-Click Social & Bot Login
     const directSocialLogin = mfaLoginPending ? "" : `
       <div class="portal-direct-social-auth">
         <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="Đăng nhập bằng Google">
@@ -25912,8 +25914,10 @@
       : "";
     const authAssurance = `<details class="portal-auth-assurance"><summary><span>🛡️ ${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</span></summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary><span>ℹ️ ${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</span></summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
-    
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}<div class="portal-card-header" style="margin-top:6px;"><div><h2 class="portal-card-title">${safeText(primaryTitle)}</h2><p class="portal-card-subtitle">${enabled ? safeText(primaryDescription) : safeText(unavailableMessage)}</p></div></div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div><div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
+
+    const securityFootnote = `<div class="portal-auth-security-foot"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div>`;
+
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${securityFootnote}<div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -30748,12 +30752,10 @@
   }
 
   function pwaInstallCanBeOffered() {
+    if (isStandaloneApp()) return false;
     const context = getBootstrap();
-    return Boolean(
-      context.pwaEnabled === true
-      && pwaInstallPrompt
-      && typeof pwaInstallPrompt.prompt === "function"
-    );
+    if (context.pwaEnabled === false) return false;
+    return true;
   }
 
   function syncPwaInstallControl() {
@@ -30835,37 +30837,85 @@
     }
   }
 
-  function openIosInstallGuideModal() {
-    const existing = document.querySelector("[data-portal-ios-modal]");
+  function openUniversalInstallGuideModal(activeTab) {
+    const existing = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
     if (existing) existing.remove();
+    const isIos = isIosDevice();
+    const initialTab = activeTab || (isIos ? "ios" : (/Android/i.test(navigator.userAgent || "") ? "android" : "desktop"));
     const modal = document.createElement("div");
     modal.className = "portal-modal-backdrop";
     modal.setAttribute("data-portal-ios-modal", "true");
+    modal.setAttribute("data-portal-install-modal", "true");
     modal.innerHTML = `
-      <div class="portal-modal-card portal-ios-guide-modal" role="dialog" aria-modal="true" aria-labelledby="ios-guide-title">
+      <div class="portal-modal-card portal-install-guide-modal" role="dialog" aria-modal="true" aria-labelledby="install-guide-title">
         <div class="portal-modal-head">
-          <h3 id="ios-guide-title">📲 Cài App TOAN AAS trên iPhone / iPad</h3>
+          <h3 id="install-guide-title">⚡ Tải & Cài Đặt App TOAN AAS</h3>
           <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="Đóng">✕</button>
         </div>
         <div class="portal-modal-body">
-          <p class="portal-ios-guide-intro">Chỉ mất 5 giây để thêm App vào màn hình chính Safari:</p>
-          <ol class="portal-ios-steps">
-            <li>
-              <div class="portal-ios-step-num">1</div>
-              <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share <span class="portal-ios-share-icon">⎋</span>)</strong> ở thanh menu dưới cùng Safari.</div>
-            </li>
-            <li>
-              <div class="portal-ios-step-num">2</div>
-              <div class="portal-ios-step-text">Cuộn xuống danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
-            </li>
-            <li>
-              <div class="portal-ios-step-num">3</div>
-              <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải. Biểu tượng App sẽ xuất hiện ngay ngoài màn hình chính!</div>
-            </li>
-          </ol>
+          <div class="portal-install-tabs" role="tablist">
+            <button type="button" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">💻 Máy tính (PC/Mac)</button>
+            <button type="button" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">🤖 Android</button>
+            <button type="button" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">🍏 iPhone / iPad</button>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Bấm vào biểu tượng <strong>Cài đặt (⊕ hoặc 📲)</strong> trên thanh địa chỉ của trình duyệt Chrome / Edge / Brave.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Hoặc bấm menu <strong>3 chấm (⋮) ➔ Chọn "Cài đặt TOAN AAS" (Install App)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để tạo biểu tượng ứng dụng ngoài Desktop và thanh Taskbar.</div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-panel="android">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt TOAN AAS trên điện thoại Android:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Mở bằng <strong>Chrome</strong> hoặc <strong>Samsung Internet</strong>, bấm menu <strong>3 chấm (⋮)</strong> ở góc trên bên phải.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào màn hình chính" (Add to Home screen)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để mở ứng dụng toàn màn hình không có thanh URL.</div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-panel="ios">
+            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Thêm TOAN AAS vào màn hình chính iPhone / iPad bằng Safari:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share ⬆️)</strong> ở thanh menu dưới cùng của trình duyệt Safari.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Cuộn danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải.</div>
+              </li>
+            </ol>
+          </div>
         </div>
-        <div class="portal-modal-foot">
-          <button type="button" class="portal-btn-primary" data-portal-action="modal-close">Đã hiểu</button>
+        <div class="portal-modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt cài đặt ngay</button>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">Đã hiểu</button>
         </div>
       </div>
     `;
@@ -30879,15 +30929,22 @@
     }
   }
 
+  function openIosInstallGuideModal() {
+    openUniversalInstallGuideModal("ios");
+  }
+
   async function requestPwaInstall() {
     if (!pwaInstallCanBeOffered() || pwaInstallInFlight) {
-      if (!pwaInstallPrompt) {
-        showToast("Mẹo: Bấm menu trình duyệt (⋮) và chọn 'Cài đặt ứng dụng' để thêm TOAN AAS vào máy.");
-      }
+      openUniversalInstallGuideModal();
       syncPwaInstallControl();
       return;
     }
     const prompt = pwaInstallPrompt;
+    if (!prompt) {
+      openUniversalInstallGuideModal();
+      syncPwaInstallControl();
+      return;
+    }
     pwaInstallInFlight = true;
     syncPwaInstallControl();
     try {
@@ -30902,7 +30959,7 @@
         showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi trình duyệt cho phép.", "warning");
       }
     } catch (_) {
-      showToast("Trình duyệt chưa thể mở lời mời cài ứng dụng. Hãy thử lại khi lời mời xuất hiện.", "warning");
+      openUniversalInstallGuideModal();
     } finally {
       pwaInstallPrompt = null;
       pwaInstallInFlight = false;
@@ -31052,10 +31109,28 @@
       const installApp = event.target.closest("[data-portal-install-app]");
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
-      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openIosInstallGuideModal(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
+      const installTabBtn = event.target.closest("[data-portal-install-tab]");
+      if (installTabBtn) {
+        const tab = installTabBtn.getAttribute("data-portal-install-tab");
+        const modal = event.target.closest(".portal-install-guide-modal");
+        if (modal && tab) {
+          modal.querySelectorAll("[data-portal-install-tab]").forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-portal-install-tab") === tab));
+          modal.querySelectorAll("[data-portal-install-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.getAttribute("data-portal-install-panel") === tab));
+        }
+        return;
+      }
+      if (event.target.closest('[data-portal-action="pwa-try-prompt"]')) {
+        if (pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function") {
+          requestPwaInstall();
+        } else {
+          showToast("Trình duyệt chưa sẵn sàng mở popup tự động. Hãy làm theo hướng dẫn các bước ở trên để cài đặt!");
+        }
+        return;
+      }
       if (event.target.closest('[data-portal-action="modal-close"]') || event.target.matches("[data-portal-modal-backdrop]")) {
-        const modal = document.querySelector("[data-portal-ios-modal]");
+        const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
         if (modal) modal.remove();
         return;
       }

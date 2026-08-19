@@ -7663,7 +7663,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   height: 36px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(81, 213, 188, .3), rgba(25, 157, 136, .2));
+  background: rgba(81, 213, 188, .25);
   border: 1px solid rgba(81, 213, 188, .4);
   color: var(--portal-accent);
 }
@@ -7703,7 +7703,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-weight: 700;
   border-radius: 9px;
   border: 1px solid rgba(81, 213, 188, .6);
-  background: linear-gradient(135deg, var(--portal-accent), var(--portal-accent-deep));
+  background: var(--portal-accent);
   color: var(--portal-accent-ink);
   white-space: nowrap;
   transition: transform .14s ease, filter .14s ease;
@@ -7746,8 +7746,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
   -webkit-backdrop-filter: blur(12px);
 }
 
-.portal-ios-guide-modal {
-  max-width: 440px;
+.portal-ios-guide-modal,
+.portal-install-guide-modal {
+  max-width: 480px;
   width: 100%;
   padding: 22px;
   border: 1px solid rgba(81, 213, 188, .35);
@@ -7756,6 +7757,65 @@ button, a, input, select, textarea { touch-action: manipulation; }
   box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
   contain: layout paint;
   will-change: transform, opacity;
+}
+
+.portal-install-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(14, 26, 38, .85);
+  border: 1px solid var(--portal-border);
+}
+
+.portal-install-tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--portal-muted-strong);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+
+.portal-install-tab-btn:hover {
+  color: var(--portal-text);
+  background: rgba(255, 255, 255, .05);
+}
+
+.portal-install-tab-btn.is-active {
+  background: var(--portal-accent);
+  color: var(--portal-accent-ink, #07131b);
+}
+
+.portal-install-panel {
+  display: none;
+}
+
+.portal-install-panel.is-active {
+  display: block;
+}
+
+.portal-install-direct-action {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(45, 212, 191, .08);
+  border: 1px dashed rgba(45, 212, 191, .3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.portal-install-direct-action span {
+  font-size: 12px;
+  color: var(--portal-muted-strong);
 }
 
 .portal-modal-head {
@@ -7948,7 +8008,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
+  background: rgba(255, 255, 255, 0.05);
   transform: rotate(25deg) translateY(-100%);
   transition: transform 0.6s ease;
   pointer-events: none;
