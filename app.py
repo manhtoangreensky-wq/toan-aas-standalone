@@ -2456,6 +2456,10 @@ static_dir = ROOT / "static"
 if static_dir.is_dir():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+studio_dir = ROOT / "studio"
+if studio_dir.is_dir():
+    app.mount("/studio", StaticFiles(directory=str(studio_dir), html=True), name="studio")
+
 
 @app.get("/service-worker.js", include_in_schema=False)
 async def root_service_worker():

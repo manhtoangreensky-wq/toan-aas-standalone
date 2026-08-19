@@ -1,0 +1,33 @@
+{
+  "name": "TOAN AAS — AI Automation Studio",
+  "short_name": "TOAN AAS",
+  "description": "Hệ sinh thái tự động hóa AI toàn diện: Tải video 0 logo, Video Factory, SubDub, Voice Studio, Suno Music, Image Studio & CSKH AI 24/7.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030706",
+  "theme_color": "#00e599",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/toanaas_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/toanaas_logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "entertainment", "business"],
+  "screenshots": [
+    {
+      "src": "assets/toanaas_banner_wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

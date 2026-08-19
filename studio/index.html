@@ -1,0 +1,1542 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TOAN AAS — All-in-One AI Studio App</title>
+  <meta name="description" content="Hệ sinh thái ứng dụng TOAN AAS: Chatbot AI (Free/Pro), Video Factory, Tải Video Không Logo, Chỉnh Sửa Video (Thủ Công & AI), SubDub, Voice Studio, Nhạc AI, Lập Kế Hoạch Video, Đồ Họa Watermark và Quản Lý Tài Liệu.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00e599">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <!-- Ambient background glow & grid mesh -->
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation — Sắp xếp khoa học theo tần suất & độ quan trọng -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-box">
+          <img src="assets/toanaas_logo.jpg" alt="TOAN AAS Official Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text">
+          <span class="brand-tag">TOAN AAS</span>
+          <strong class="brand-title">AI Studio App</strong>
+        </div>
+      </div>
+
+      <!-- Quick Wallet Balance Pill -->
+      <div class="wallet-status-widget">
+        <div class="wallet-row">
+          <span class="wallet-label">Số dư khả dụng</span>
+          <span class="wallet-badge">GOLD TIER</span>
+        </div>
+        <div class="wallet-amount">
+          <strong id="sidebarBalance">1,250</strong> <span class="xu-symbol">Xu</span>
+        </div>
+        <div class="wallet-actions">
+          <button type="button" class="btn-topup-quick" data-tab="tab-topup">+ Nạp Thêm Xu</button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: Sắp xếp theo thứ tự Quan trọng & Hay dùng nhất ➔ Ít dùng hơn -->
+      <nav class="nav-menu">
+        <!-- TỔNG QUAN -->
+        <button type="button" class="nav-item active" data-tab="tab-overview">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          Tổng Quan Dashboard
+        </button>
+
+        <!-- NHÓM 1: CÔNG CỤ CỐT LÕI & SỬ DỤNG HÀNG NGÀY -->
+        <div class="nav-section-title">CÔNG CỤ CỐT LÕI HÀNG NGÀY</div>
+        <button type="button" class="nav-item" data-tab="tab-chat">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chatbot AI (Free & Pro)
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-video-download">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Tải Video Không Logo
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-video">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+          Video Factory (Kịch Bản)
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-video-edit">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
+          Chỉnh Sửa Video (Thủ Công & AI)
+        </button>
+
+        <!-- NHÓM 2: SẢN XUẤT ÂM THANH & MEDIA -->
+        <div class="nav-section-title">ÂM THANH, LỒNG TIẾNG & ĐỒ HỌA</div>
+        <button type="button" class="nav-item" data-tab="tab-subdub">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+          SubDub & Phụ Đề AI
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-voice">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          Voice Studio (Lồng Giọng)
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-music">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>
+          Nhạc AI Studio (Suno)
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-image">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          Image & Watermark Studio
+        </button>
+
+        <!-- NHÓM 3: QUẢN TRỊ CHIẾN DỊCH, DỮ LIỆU & THANH TOÁN -->
+        <div class="nav-section-title">QUẢN TRỊ & TIỆN ÍCH</div>
+        <button type="button" class="nav-item" data-tab="tab-video-plan">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+          Lập Kế Hoạch Làm Video
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-docs">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Tài Liệu & Ghi Chú Vault
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-engine">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          AI Video Route Engine
+        </button>
+
+        <button type="button" class="nav-item" data-tab="tab-topup">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+          Bảng Giá & Nạp Xu
+        </button>
+      </nav>
+
+      <!-- Bot Bridge Link -->
+      <div class="sidebar-bot-link">
+        <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="bot-direct-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          Đồng bộ với Telegram Bot
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Viewport -->
+    <main class="main-content">
+      <!-- Top Navigation Bar -->
+      <header class="topbar">
+        <div class="topbar-breadcrumb">
+          <span class="active-section-label" id="currentSectionTitle">Tổng Quan Dashboard</span>
+        </div>
+        <div class="topbar-right">
+          <!-- Auth User Status Button -->
+          <button type="button" class="btn-auth-user" id="btnOpenAuthModal">
+            <div class="auth-avatar-mini" id="topbarUserAvatar">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <span id="topbarUserName">Đăng Nhập</span>
+          </button>
+
+          <button type="button" class="btn-install-app" id="btnInstallAppPrompt" onclick="showToast('📱 Đang mở giao diện cài đặt PWA & Tải App về máy!');">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Tải / Cài App</span>
+          </button>
+          <div class="live-tag">
+            <span class="pulse-dot"><span class="ping"></span><span class="dot"></span></span>
+            <span>ALL SUITES LIVE</span>
+          </div>
+          <a href="https://t.me/toanaasbot" class="btn-open-bot" target="_blank" rel="noopener">Mở Bot Telegram</a>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW (Sắp xếp nút nhanh theo mức độ hay dùng nhất + BANNER CHÍNH THỨC) -->
+      <section id="tab-overview" class="tab-pane active motion-fade-up">
+        <!-- OFFICIAL PANORAMIC AUTO-SLIDING BANNER CAROUSEL -->
+        <div class="carousel-container motion-fade-up" id="appOverviewCarousel" style="margin-bottom: 24px;">
+          <div class="carousel-track-wrapper">
+            <div class="carousel-track" id="appCarouselTrack">
+              <!-- Slide 1: Panoramic Wide Banner -->
+              <div class="carousel-slide active">
+                <div class="slide-media-wrapper">
+                  <img src="assets/toanaas_banner_wide.png" alt="TOAN AAS Hệ Thống Tự Động Hóa AI" class="carousel-img">
+                  <div class="slide-overlay-info">
+                    <span class="slide-tag">HỆ SINH THÁI TỰ ĐỘNG HÓA</span>
+                    <h3>TOAN AAS AI Automation System</h3>
+                    <p>7 Phân hệ: Vận Hành · Bot AI · Đồ Họa · Nội Dung · Xưởng Video · Âm Nhạc · Lồng Tiếng</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 2: Cinematic 3D Studio Banner -->
+              <div class="carousel-slide">
+                <div class="slide-media-wrapper">
+                  <img src="assets/toanaas_banner_cinematic.jpg" alt="TOAN AAS Cinematic AI Studio" class="carousel-img">
+                  <div class="slide-overlay-info">
+                    <span class="slide-tag">LOCAL WORKER GPU RTX 4090</span>
+                    <h3>Sức Mạnh Xử Lý Video & Âm Nhạc 4K</h3>
+                    <p>Định tuyến thông minh Cloud AI & GPU cục bộ, tối ưu hóa chi phí đến 60%</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 3: Video Downloader & Editor Promo -->
+              <div class="carousel-slide">
+                <div class="slide-media-wrapper banner-custom-promo bg-gradient-video">
+                  <div class="promo-content">
+                    <span class="slide-tag hot">CÔNG CỤ HOT MỚI</span>
+                    <h3>📥 Tải Video Đa Nền Tảng Không Logo</h3>
+                    <p>Bóc tách 100% Watermark từ TikTok, Reels, Shorts, Douyin. Miễn phí trọn đời (0 Xu)!</p>
+                    <div class="promo-pills">
+                      <span>🎬 MP4 Full HD 60fps</span>
+                      <span>🎙 Tách Audio MP3</span>
+                      <span>✂️ Chỉnh Sửa & Dập Logo</span>
+                    </div>
+                  </div>
+                  <div class="promo-badge-circle">
+                    <strong>0 Xu</strong>
+                    <span>MIỄN PHÍ</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 4: PayOS Topup Promo -->
+              <div class="carousel-slide">
+                <div class="slide-media-wrapper banner-custom-promo bg-gradient-payos">
+                  <div class="promo-content">
+                    <span class="slide-tag promo">SIÊU ƯU ĐÃI NẠP XU</span>
+                    <h3>💳 Nạp Xu Tự Động Qua QR PayOS</h3>
+                    <p>Cộng số dư tài khoản chỉ trong 3 giây. Nhận thưởng lên đến +25% Xu cùng đặc quyền VIP Gold.</p>
+                    <div class="promo-pills">
+                      <span>⚡ QR Động Tự Động</span>
+                      <span>🎁 Thưởng 10% - 25% Xu</span>
+                      <span>🧾 Hóa Đơn VAT</span>
+                    </div>
+                  </div>
+                  <div class="promo-badge-circle">
+                    <strong>+25%</strong>
+                    <span>THƯỞNG XU</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carousel Controls -->
+          <button type="button" class="carousel-nav-btn prev" id="appCarouselBtnPrev" aria-label="Banner Trước">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button type="button" class="carousel-nav-btn next" id="appCarouselBtnNext" aria-label="Banner Tiếp Theo">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <!-- Carousel Dots Navigation -->
+          <div class="carousel-dots" id="appCarouselDots">
+            <button type="button" class="dot-btn active" data-index="0" aria-label="Slide 1"></button>
+            <button type="button" class="dot-btn" data-index="1" aria-label="Slide 2"></button>
+            <button type="button" class="dot-btn" data-index="2" aria-label="Slide 3"></button>
+            <button type="button" class="dot-btn" data-index="3" aria-label="Slide 4"></button>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <div class="hero-card-content">
+            <span class="hero-badge">TOAN AAS ALL-IN-ONE AI SUITE</span>
+            <h1>Trung Tâm Điều Khiển Sáng Tạo Toàn Diện</h1>
+            <p>Hệ sinh thái tự động hóa: Chatbot AI (Free/Pro), Tải Video Không Logo, Video Factory, Chỉnh Sửa Video, SubDub, Voice Studio, Nhạc AI Suno, Lập Kế Hoạch Video, Image Watermark và Document Vault.</p>
+            <div class="hero-quick-actions">
+              <button type="button" class="btn-hero-action primary" data-tab="tab-chat">💬 Chatbot AI</button>
+              <button type="button" class="btn-hero-action primary" data-tab="tab-video-download">📥 Tải Video Không Logo</button>
+              <button type="button" class="btn-hero-action secondary" data-tab="tab-video">🎬 Video Factory</button>
+              <button type="button" class="btn-hero-action secondary" data-tab="tab-video-edit">✂️ Chỉnh Sửa Video</button>
+              <button type="button" class="btn-hero-action secondary" data-tab="tab-voice">🗣 Voice Studio</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Cards — Cân đối 4 cột thông số -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon emerald">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            </div>
+            <span class="metric-title">Số Dư Khả Dụng</span>
+            <strong class="metric-number">1,250 <small>Xu</small></strong>
+            <span class="metric-sub">Tương đương ~125.000đ</span>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon amber">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <span class="metric-title">Hạng Thành Viên</span>
+            <strong class="metric-number">Gold Member</strong>
+            <span class="metric-sub">Giảm 4% phí khi dùng bot</span>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon cyan">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            </div>
+            <span class="metric-title">Dự Án Đã Xuất</span>
+            <strong class="metric-number">8 <small>Dự án</small></strong>
+            <span class="metric-sub">Kho dữ liệu sẵn sàng</span>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon violet">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            </div>
+            <span class="metric-title">Dung Lượng Miễn Phí</span>
+            <strong class="metric-number">14.2 / 50 <small>MB</small></strong>
+            <span class="metric-sub">10MB Text + 40MB File</span>
+          </div>
+        </div>
+
+        <!-- Recent Feeds — Cân đối 2 cột 50/50 -->
+        <div class="workspace-split-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>🎬 Gói Nội Dung Đã Tạo Gần Đây</h3>
+              <span class="badge">SẴN SÀNG ĐĂNG</span>
+            </div>
+            <div class="project-feed" id="recentPacksFeed"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>💳 Lịch Sử Giao Dịch Xu</h3>
+              <span class="badge">PAYOS SYNC</span>
+            </div>
+            <div class="ledger-feed" id="recentLedgerFeed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CHATBOT AI (FREE & PRO) — CÔNG CỤ SỐ 1 -->
+      <section id="tab-chat" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chọn Gói (Free/Pro)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Nhập Câu Hỏi / Prompt</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Nhận Lời Giải & Xuất Nội Dung</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>💬 Chatbot AI Studio (Chat Free & Chat Pro)</h2>
+            <p>Trợ lý AI thông minh: Chế độ Free (0 Xu hàng ngày) & Chế độ Pro (Claude 3.7 Sonnet / DeepSeek R1 / GPT-4o).</p>
+          </div>
+          <span class="cost-estimate-badge free" id="chatCostBadge">0 Xu / Chat Free</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Chọn Mô Hình & Gói Trí Tuệ Nhân Tạo</label>
+              <div class="mode-cards-grid">
+                <label class="mode-card active" id="chatModeFree">
+                  <input type="radio" name="chatModelTier" value="free" checked>
+                  <strong>⚡ Chat Free (0 Xu)</strong>
+                  <small>GPT-4o mini · Hỏi đáp nhanh, viết lách, dịch thuật cơ bản</small>
+                </label>
+                <label class="mode-card" id="chatModePro">
+                  <input type="radio" name="chatModelTier" value="pro">
+                  <strong>🚀 Chat Pro (2 Xu / lượt)</strong>
+                  <small>Claude 3.7 Sonnet · DeepSeek R1 · Lập chiến lược, phân tích sâu</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Bước 2: Chọn Mẫu Gợi Ý 1-Chạm Hoặc Nhập Chi Tiết</label>
+              <div class="pill-selector" style="margin-bottom:10px;">
+                <button type="button" class="pill-opt active" data-prompt="Viết cho tôi 5 ý tưởng kịch bản TikTok bán hàng ngành mỹ phẩm thiên nhiên có kèm hook 3s đầu.">💄 Kịch bản mỹ phẩm</button>
+                <button type="button" class="pill-opt" data-prompt="Phân tích chiến lược marketing 0 đồng cho quán cafe mới mở tại khu dân cư đông đúc.">☕ Marketing quán cafe</button>
+                <button type="button" class="pill-opt" data-prompt="Tạo dàn ý khóa học lập trình AI ngắn hạn cho người mới bắt đầu.">💻 Dàn ý khóa học AI</button>
+              </div>
+              <textarea id="chatInputText" class="form-control" rows="4" placeholder="Nhập câu hỏi, yêu cầu viết bài, phân tích tài liệu hoặc ý tưởng kinh doanh..."></textarea>
+            </div>
+
+            <button type="button" id="btnSendChatMessage" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+              Gửi Yêu Cầu Cho Chatbot AI
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>HỘI THOẠI & PHẢN HỒI AI</span>
+              <button type="button" class="btn-copy-output" id="btnCopyChatOutput">Sao Chép Phản Hồi</button>
+            </div>
+            <div class="output-content" id="chatOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <p>Chọn mô hình Free hoặc Pro và gửi câu hỏi để trò chuyện với trợ lý AI đa tài năng.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: VIDEO DOWNLOADER — CÔNG CỤ SỐ 2 -->
+      <section id="tab-video-download" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Dán Link Video</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Chọn Định Dạng (MP4 / MP3)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Tải Xuống Không Logo</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>📥 Tải Video Đa Nền Tảng Không Logo (Watermark-Free)</h2>
+            <p>Hỗ trợ TikTok, Facebook Reels, YouTube Shorts, Douyin, Instagram Reels. Tự động bóc tách Video Full HD & Audio MP3.</p>
+          </div>
+          <span class="cost-estimate-badge free">0 Xu — Miễn phí</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Dán đường dẫn liên kết (URL Video)</label>
+              <input type="url" id="downloadUrlInput" class="form-control" placeholder="https://www.tiktok.com/@user/video/... hoặc Reels, Shorts">
+            </div>
+
+            <div class="form-group">
+              <label>Bước 2: Chọn Định Dạng Xuất File</label>
+              <div class="mode-cards-grid">
+                <label class="mode-card active">
+                  <input type="radio" name="downloadFormat" value="mp4_hd" checked>
+                  <strong>🎬 Video MP4 Full HD</strong>
+                  <small>Đã xóa sạch watermark & logo nền tảng</small>
+                </label>
+                <label class="mode-card">
+                  <input type="radio" name="downloadFormat" value="mp3_audio">
+                  <strong>🎙 Chỉ Tải Âm Thanh MP3</strong>
+                  <small>Tách riêng nhạc nền & lời thoại 320kbps</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Mẹo chọn nhanh nền tảng</label>
+              <div class="pill-selector">
+                <button type="button" class="pill-opt active" data-platform="tiktok">TikTok No-Logo</button>
+                <button type="button" class="pill-opt" data-platform="facebook">FB Reels</button>
+                <button type="button" class="pill-opt" data-platform="youtube">YT Shorts</button>
+                <button type="button" class="pill-opt" data-platform="douyin">Douyin Tàu</button>
+                <button type="button" class="pill-opt" data-platform="instagram">Instagram</button>
+              </div>
+            </div>
+
+            <button type="button" id="btnDownloadVideoAction" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Phân Tích & Tải Xuống Ngay
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>KẾT QUẢ PHÂN TÍCH & FILE SẴN SÀNG</span>
+              <button type="button" class="btn-copy-output" id="btnCopyDownloadLink">Copy Link Trực Tiếp</button>
+            </div>
+            <div class="output-content" id="videoDownloadOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <p>Dán link video và bấm <strong>Phân Tích & Tải Xuống</strong> để nhận video Full HD không logo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: VIDEO FACTORY — CÔNG CỤ SỐ 3 -->
+      <section id="tab-video" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chủ Đề & Nền Tảng</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Thời Lượng & Phong Cách</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Xuất Trọn Gói Video Pack</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>🎬 Video & Content Factory Studio</h2>
+            <p>Quy trình chuẩn hóa kịch bản, 10 Hook giữ chân, prompt hình ảnh và phân cảnh theo thuật toán video ngắn.</p>
+          </div>
+          <span class="cost-estimate-badge" id="videoCostBadge">Ước tính: 10 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Chủ đề / Tên sản phẩm hoặc ý tưởng video</label>
+              <input type="text" id="videoTopicInput" class="form-control" placeholder="VD: Nồi chiên không dầu mini, review điện thoại, chia sẻ bài học đầu tư...">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Phong cách & Nền tảng</label>
+                <select id="videoPlatformSelect" class="form-control">
+                  <option value="tiktok_viral">TikTok Viral Trend (Nhanh, giật gân, cuốn hút)</option>
+                  <option value="reels_product">Facebook Reels Bán Hàng (Kêu gọi hành động cao)</option>
+                  <option value="shorts_story">YouTube Shorts Kể Chuyện (Sâu sắc, kịch tính)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Thời lượng kịch bản</label>
+                <select id="videoDurationSelect" class="form-control">
+                  <option value="15">15 Giây (Chuẩn ngắn gọn — 3 phân cảnh)</option>
+                  <option value="30">30 Giây (Mở rộng chi tiết — 5 phân cảnh)</option>
+                  <option value="60">60 Giây (Toàn diện chuyên sâu — 8 phân cảnh)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Tone giọng & Phong cách truyền tải</label>
+              <div class="pill-selector">
+                <button type="button" class="pill-opt active" data-val="natural">Hài hước / Hóm hỉnh</button>
+                <button type="button" class="pill-opt" data-val="expert">Chuyên gia / Đáng tin cậy</button>
+                <button type="button" class="pill-opt" data-val="story">Kịch tính / Gay cấn</button>
+                <button type="button" class="pill-opt" data-val="sales">Kích thích mua hàng</button>
+              </div>
+            </div>
+
+            <button type="button" id="btnGenerateVideoPack" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              Khởi Tạo Trọn Gói Video Pack (-10 Xu)
+            </button>
+          </div>
+
+          <!-- Live Output Canvas -->
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>KẾT QUẢ ĐẦU RA</span>
+              <button type="button" class="btn-copy-output" id="btnCopyVideoOutput">Copy Trọn Gói</button>
+            </div>
+            <div class="output-content" id="videoOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+                <p>Nhập thông tin và nhấn <strong>Khởi Tạo Trọn Gói</strong> để nhận 10 Hook, Kịch bản, Storyboard và Prompt hình ảnh.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: VIDEO EDITOR (THỦ CÔNG & AI) — CÔNG CỤ SỐ 4 -->
+      <section id="tab-video-edit" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chọn Chế Độ (Thủ Công / AI)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Cấu Hình Cắt Ghép & Tỉ Lệ</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Render Video Bằng RTX 4090</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>✂️ Chỉnh Sửa Video (Thủ Công & AI Smart Edit)</h2>
+            <p>Cắt ghép phân đoạn, đổi tỉ lệ 9:16/16:9, lật hình, dập logo thương hiệu hoặc dùng AI Auto-Reframe, Upscale 4K.</p>
+          </div>
+          <span class="cost-estimate-badge" id="videoEditCostBadge">Ước tính: 5 - 12 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Chọn Chế Độ Chỉnh Sửa</label>
+              <div class="mode-cards-grid">
+                <label class="mode-card active" id="editModeManual">
+                  <input type="radio" name="videoEditMode" value="manual" checked>
+                  <strong>🛠 Chỉnh Sửa Thủ Công (5 Xu)</strong>
+                  <small>Cắt đoạn, ghép video, xoay/lật, dập logo, chỉnh tốc độ</small>
+                </label>
+                <label class="mode-card" id="editModeAI">
+                  <input type="radio" name="videoEditMode" value="ai">
+                  <strong>🤖 AI Smart Enhancement (12 Xu)</strong>
+                  <small>Auto-reframe chủ thể, Upscale 4K, Khử rung, Auto Color</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Tỉ lệ khung hình đích</label>
+                <select id="editRatioSelect" class="form-control">
+                  <option value="9:16">9:16 (Dọc TikTok / Reels / Shorts)</option>
+                  <option value="16:9">16:9 (Ngang YouTube / Website)</option>
+                  <option value="1:1">1:1 (Vuông Social Feed)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Tốc độ phát (Speed)</label>
+                <select id="editSpeedSelect" class="form-control">
+                  <option value="1.0">1.0x (Tốc độ gốc chuẩn)</option>
+                  <option value="1.15">1.15x (Hơi nhanh TikTok)</option>
+                  <option value="1.25">1.25x (Cuốn hút)</option>
+                  <option value="0.8">0.8x (Chuyển động chậm Slow-mo)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Cắt từ giây (Start)</label>
+                <input type="number" id="editCutStart" class="form-control" value="0" min="0">
+              </div>
+              <div class="form-group">
+                <label>Đến giây (End)</label>
+                <input type="number" id="editCutEnd" class="form-control" value="15" min="1">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Đóng dấu thương hiệu (Logo Watermark)</label>
+              <select id="editLogoSelect" class="form-control">
+                <option value="bottom_right">Dập Logo góc dưới bên phải</option>
+                <option value="top_right">Dập Logo góc trên bên phải</option>
+                <option value="none">Không đóng dấu logo</option>
+              </select>
+            </div>
+
+            <button type="button" id="btnExecuteVideoEdit" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/></svg>
+              Bắt Đầu Render Chỉnh Sửa Video
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>TIẾN TRÌNH & VIDEO THÀNH PHẨM</span>
+              <button type="button" class="btn-copy-output" id="btnDownloadEditedVideo">Tải Video Đã Dựng</button>
+            </div>
+            <div class="output-content" id="videoEditOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/></svg>
+                <p>Chọn thông số cắt ghép hoặc tính năng AI và bấm <strong>Bắt Đầu Render</strong> để xử lý video qua Local Worker GPU.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SUBDUB STUDIO -->
+      <section id="tab-subdub" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chọn Chế Độ (4 Làn)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Cấu Hình Ngôn Ngữ & Giọng Đọc</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Render Audio & SRT Song Ngữ</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>🎙 SubDub Studio — Phụ Đề & Lồng Tiếng AI</h2>
+            <p>Hệ thống xử lý video đa ngữ: Bóc băng ASR, Dịch thuật ngữ cảnh, Lồng tiếng AI truyền cảm và dập phụ đề tự động.</p>
+          </div>
+          <span class="cost-estimate-badge" id="subdubCostBadge">Ước tính: 15 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Chọn Chế Độ Xử Lý (Chuẩn 4 Chế Độ Bot)</label>
+              <div class="mode-cards-grid">
+                <label class="mode-card active">
+                  <input type="radio" name="subdubMode" value="subtitle_plus_dub" checked>
+                  <strong>Phụ Đề + Lồng Tiếng</strong>
+                  <small>Dịch phụ đề & lồng giọng AI mới</small>
+                </label>
+                <label class="mode-card">
+                  <input type="radio" name="subdubMode" value="dub">
+                  <strong>Chỉ Lồng Tiếng AI</strong>
+                  <small>Giữ video gốc, thay giọng lồng</small>
+                </label>
+                <label class="mode-card">
+                  <input type="radio" name="subdubMode" value="subtitle_translate">
+                  <strong>Dịch Phụ Đề</strong>
+                  <small>Tạo phụ đề song ngữ SRT/Hardsub</small>
+                </label>
+                <label class="mode-card">
+                  <input type="radio" name="subdubMode" value="subtitle_create">
+                  <strong>Tạo Phụ Đề Gốc</strong>
+                  <small>Bóc băng tự động từ âm thanh</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Ngôn ngữ nguồn</label>
+                <select class="form-control" id="sourceLangSelect">
+                  <option value="auto">Tự động phát hiện (Auto)</option>
+                  <option value="vi">Tiếng Việt</option>
+                  <option value="en">Tiếng Anh (English)</option>
+                  <option value="zh">Tiếng Trung (Chinese)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Ngôn ngữ đích</label>
+                <select class="form-control" id="targetLangSelect">
+                  <option value="vi">Tiếng Việt (Vietnamese)</option>
+                  <option value="en">Tiếng Anh (English)</option>
+                  <option value="zh">Tiếng Trung (Chinese)</option>
+                  <option value="ja">Tiếng Nhật (Japanese)</option>
+                  <option value="ko">Tiếng Hàn (Korean)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Giọng đọc AI</label>
+                <select class="form-control" id="voiceSelect">
+                  <option value="female_natural">Nữ Dịu Dàng (MC Tin Tức / Kể Chuyện)</option>
+                  <option value="male_warm">Nam Truyền Cảm (Thuyết Minh Phim / Review)</option>
+                  <option value="female_energetic">Nữ Năng Động (Quảng Cáo / TikTok)</option>
+                  <option value="male_confident">Nam Quyết Đoán (Chuyên Gia / Kinh Doanh)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Tốc độ đọc</label>
+                <select class="form-control" id="voiceSpeedSelect">
+                  <option value="1.0">1.0x (Tự nhiên chuẩn)</option>
+                  <option value="1.1">1.1x (Hơi nhanh TikTok)</option>
+                  <option value="1.2">1.2x (Nhanh cuốn hút)</option>
+                  <option value="0.9">0.9x (Chậm rãi thuyết minh)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Bước 3: Nội dung kịch bản hoặc tải file video mẫu</label>
+              <textarea id="subdubTextInput" class="form-control" rows="3" placeholder="Nhập văn bản cần đọc/lồng tiếng hoặc gửi link video..."></textarea>
+            </div>
+
+            <button type="button" id="btnRunSubDub" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              Xử Lý SubDub AI (-15 Xu)
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>TIẾN TRÌNH & FILE THÀNH PHẨM</span>
+              <span class="status-indicator-tag" id="subdubStatusTag">SẴN SÀNG</span>
+            </div>
+            <div class="output-content" id="subdubOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                <p>Chọn cấu hình giọng đọc và nhấn <strong>Xử Lý SubDub AI</strong> để mô phỏng quy trình render audio/phụ đề chuẩn 100%.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: VOICE STUDIO (LỒNG GIỌNG ĐỌC AI) -->
+      <section id="tab-voice" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Nhập Văn Bản</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Chọn Diễn Viên MC & Tốc Độ</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Nghe Preview & Tải MP3 320kbps</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>🗣 Voice Studio — Tạo Giọng Đọc & Thuyết Minh AI</h2>
+            <p>Hệ thống chuyển văn bản thành giọng nói (Text-to-Speech) truyền cảm xúc, tự nhiên như phát thanh viên.</p>
+          </div>
+          <span class="cost-estimate-badge">Ước tính: 5 - 10 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Nhập văn bản cần đọc thuyết minh</label>
+              <textarea id="voiceStudioTextInput" class="form-control" rows="4" placeholder="Nhập bài viết, lời thoại quảng cáo, truyện ngắn hoặc bài phát biểu cần lồng tiếng..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Dàn giọng đọc MC & Diễn viên</label>
+                <select id="voiceStudioActorSelect" class="form-control">
+                  <option value="hn_nu_diudang">Hà Nội — Nữ Dịu Dàng (Kể chuyện / Tin tức)</option>
+                  <option value="hn_nam_tramam">Hà Nội — Nam Trầm Ấm (Thuyết minh / Phim)</option>
+                  <option value="sg_nu_nangdong">Sài Gòn — Nữ Năng Động (Quảng cáo / TikTok)</option>
+                  <option value="sg_nam_cuonhut">Sài Gòn — Nam Cuốn Hút (Podcast / Review)</option>
+                  <option value="en_us_female">English US — Professional Voice</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Tốc độ & Độ vang</label>
+                <select id="voiceStudioSpeedSelect" class="form-control">
+                  <option value="1.0">1.0x — Tự nhiên chuẩn mực</option>
+                  <option value="1.15">1.15x — Nhanh cuốn hút (TikTok/Shorts)</option>
+                  <option value="0.85">0.85x — Chậm rãi sâu lắng</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" id="btnGenerateVoice" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              Tạo Giọng Đọc AI (-8 Xu)
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>AUDIO TRACK THÀNH PHẨM</span>
+              <button type="button" class="btn-copy-output" id="btnDownloadVoice">Tải File MP3</button>
+            </div>
+            <div class="output-content" id="voiceStudioOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <p>Nhập văn bản và chọn diễn viên giọng đọc để tạo audio MP3 320kbps trong vài giây.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 8: NHẠC AI STUDIO (SUNO MUSIC) -->
+      <section id="tab-music" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chủ Đề & Ý Tưởng</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Thể Loại (Lo-Fi / EDM / Pop)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Sáng Tác Giai Điệu & Lời Ca</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>🎵 Nhạc AI Studio — Sáng Tác Âm Nhạc Suno AI</h2>
+            <p>Tạo bài hát trọn gói có lời (Lyrics), nhạc nền video ngắn (No-Copyright Background Music) theo phong cách riêng.</p>
+          </div>
+          <span class="cost-estimate-badge">Ước tính: 10 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Mô tả chủ đề bài hát / Nhạc nền</label>
+              <input type="text" id="musicTopicInput" class="form-control" placeholder="VD: Khát vọng khởi nghiệp tuổi trẻ, nhạc nền chill thư giãn làm việc...">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Thể loại âm nhạc (Genre)</label>
+                <select id="musicGenreSelect" class="form-control">
+                  <option value="lofi_chill">Lo-Fi Chill Hop (Nhạc nền học tập / Làm việc)</option>
+                  <option value="edm_upbeat">EDM / Phonk Sôi Động (TikTok Dance / High Energy)</option>
+                  <option value="pop_ballad">Pop Ballad Truyền Cảm (Kể chuyện / Tâm sự)</option>
+                  <option value="cinematic_epic">Cinematic Epic Trailer (Hùng tráng / Kịch tính)</option>
+                  <option value="acoustic_warm">Acoustic Guitar Mộc Mạc (Gần gũi / Ấm áp)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Loại bài hát</label>
+                <select id="musicTypeSelect" class="form-control">
+                  <option value="instrumental">Nhạc Không Lời (BGM Instrumental)</option>
+                  <option value="with_lyrics">Có Lời Hát AI (Full Vocal Lyrics)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" id="btnGenerateMusic" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>
+              Sáng Tác Bản Nhạc AI (-10 Xu)
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>BẢN NHẠC AI SUNO PREVIEW</span>
+              <button type="button" class="btn-copy-output" id="btnDownloadMusic">Tải Nhạc Chuẩn</button>
+            </div>
+            <div class="output-content" id="musicStudioOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>
+                <p>Chọn thể loại âm nhạc và bấm <strong>Sáng Tác Bản Nhạc AI</strong> để nhận audio bài hát hoàn chỉnh.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 9: IMAGE & WATERMARK STUDIO -->
+      <section id="tab-image" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Mô Tả Ý Tưởng</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Tỉ Lệ & Vị Trí Watermark</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Xuất Prompt 8K & Đóng Dấu</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>🖼 Image & Watermark Studio</h2>
+            <p>Tạo prompt ảnh AI, đóng dấu logo thương hiệu 4 góc và chuyển đổi ảnh sang tài liệu PDF.</p>
+          </div>
+          <span class="cost-estimate-badge">Ước tính: 5 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Mô tả ý tưởng hình ảnh cần tạo</label>
+              <textarea id="imagePromptInput" class="form-control" rows="3" placeholder="VD: Doanh nhân thành đạt tại văn phòng hiện đại Landmark 81, ánh sáng cinematic..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Tỉ lệ khung hình</label>
+                <select id="imageRatioSelect" class="form-control">
+                  <option value="9:16">9:16 (Dọc — TikTok / Reels / Shorts)</option>
+                  <option value="16:9">16:9 (Ngang — YouTube / Website)</option>
+                  <option value="1:1">1:1 (Vuông — Facebook / Instagram)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Vị trí đóng dấu Logo/Watermark</label>
+                <select id="logoPositionSelect" class="form-control">
+                  <option value="bottom_right">Góc dưới bên phải (Mặc định)</option>
+                  <option value="bottom_left">Góc dưới bên trái</option>
+                  <option value="top_right">Góc trên bên phải</option>
+                  <option value="top_left">Góc trên bên trái</option>
+                  <option value="none">Không đóng dấu logo</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" id="btnGenerateImage" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/></svg>
+              Tạo Prompt Ảnh & Mock Render (-5 Xu)
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>PREVIEW ẢNH AI & LOGO</span>
+              <button type="button" class="btn-copy-output" id="btnCopyImgPrompt">Copy Prompt Midjourney</button>
+            </div>
+            <div class="output-content" id="imageOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/></svg>
+                <p>Nhập mô tả ảnh để tạo prompt chuẩn Midjourney/DALL-E kèm hiệu ứng đóng dấu thương hiệu.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 10: VIDEO PLANNER (LẬP KẾ HOẠCH LÀM VIDEO) -->
+      <section id="tab-video-plan" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Mục Tiêu & Ngành Hàng</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Chọn Chu Kỳ (7 / 30 Ngày)</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Xuất Ma Trận Lịch Video</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>📋 Lập Kế Hoạch & Phễu Sản Xuất Video (Content Calendar)</h2>
+            <p>Hệ thống tự động phân bổ kịch bản theo phễu marketing (Nhận biết ➔ Tương tác ➔ Bán hàng) kèm checklist hậu kỳ.</p>
+          </div>
+          <span class="cost-estimate-badge">Ước tính: 5 Xu</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Ngành hàng / Sản phẩm kinh doanh</label>
+              <input type="text" id="planNicheInput" class="form-control" placeholder="VD: Khóa học tiếng Anh, Mỹ phẩm thiên nhiên, Đồ gia dụng thông minh...">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Mục tiêu chiến dịch</label>
+                <select id="planGoalSelect" class="form-control">
+                  <option value="brand_growth">Tăng Trưởng Follow & Xây Dựng Thương Hiệu (Viral Focus)</option>
+                  <option value="sales_conversion">Tối Ưu Chuyển Đổi Bán Hàng (E-commerce / Sales Focus)</option>
+                  <option value="product_launch">Ra Mắt Sản Phẩm Mới (Product Launch 7 Days)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Chu kỳ kế hoạch</label>
+                <select id="planDurationSelect" class="form-control">
+                  <option value="7_days">Kế hoạch 7 Ngày (7 Video đa dạng)</option>
+                  <option value="14_days">Kế hoạch 14 Ngày (14 Video mở rộng)</option>
+                  <option value="30_days">Kế hoạch 30 Ngày (Chiến lược trọn tháng)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Mẹo chọn nhanh chủ đề phễu</label>
+              <div class="pill-selector">
+                <button type="button" class="pill-opt active" data-theme="fomo">Tâm lý FOMO / Bắt trend</button>
+                <button type="button" class="pill-opt" data-theme="expert">Chia sẻ kiến thức chuyên sâu</button>
+                <button type="button" class="pill-opt" data-theme="review">Review chân thực / Trải nghiệm</button>
+                <button type="button" class="pill-opt" data-theme="offer">Flash sale / Ưu đãi giới hạn</button>
+              </div>
+            </div>
+
+            <button type="button" id="btnGenerateVideoPlan" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><path d="m9 16 2 2 4-4"/></svg>
+              Khởi Tạo Kế Hoạch Video Chi Tiết (-5 Xu)
+            </button>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>LỊCH TRÌNH & CHECKLIST QUAY DỰNG</span>
+              <button type="button" class="btn-copy-output" id="btnCopyVideoPlan">Sao Chép Kế Hoạch</button>
+            </div>
+            <div class="output-content" id="videoPlanOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><path d="m9 16 2 2 4-4"/></svg>
+                <p>Nhập thông tin ngành hàng và bấm <strong>Khởi Tạo Kế Hoạch</strong> để nhận lịch đăng và checklist hậu kỳ từng ngày.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 11: DOCUMENT & MEMORY VAULT -->
+      <section id="tab-docs" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Kho Lưu Trữ 50MB</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Chọn Công Cụ Chuyển Đổi</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Lưu Ghi Chú & Tải Tài Liệu</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>📄 Tài Liệu & Kho Lưu Trữ Đám Mây (Memory Vault)</h2>
+            <p>Hạn mức 50MB miễn phí trọn đời (10MB ghi chú + 40MB tài liệu). Quản lý file và ghi chú thông minh.</p>
+          </div>
+          <span class="cost-estimate-badge free">0 Xu — Miễn phí</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="quota-progress-box">
+              <div class="quota-labels">
+                <span>Dung lượng đã sử dụng: <strong>14.2 MB / 50 MB</strong></span>
+                <span class="quota-percent">28.4%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 28.4%"></div>
+              </div>
+            </div>
+
+            <div class="doc-tools-grid">
+              <button type="button" class="doc-tool-btn" data-tool="pdf_to_word">
+                <div class="doc-icon">📄</div>
+                <strong>PDF sang Word</strong>
+                <small>Giữ nguyên định dạng font</small>
+              </button>
+
+              <button type="button" class="doc-tool-btn" data-tool="image_to_pdf">
+                <div class="doc-icon">🖼</div>
+                <strong>Ảnh sang PDF</strong>
+                <small>Ghép nhiều ảnh thành 1 tài liệu</small>
+              </button>
+
+              <button type="button" class="doc-tool-btn" data-tool="merge_pdf">
+                <div class="doc-icon">🧩</div>
+                <strong>Gộp PDF</strong>
+                <small>Nối nhiều tệp PDF lại với nhau</small>
+              </button>
+
+              <button type="button" class="doc-tool-btn" data-tool="smart_note">
+                <div class="doc-icon">📝</div>
+                <strong>Ghi Chú Thông Minh</strong>
+                <small>Lưu trữ prompt và ý tưởng</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>DANH SÁCH FILE & GHI CHÚ ĐÃ LƯU</span>
+              <span class="tag">SECURE STORAGE</span>
+            </div>
+            <div class="file-vault-list">
+              <div class="vault-item">
+                <div class="vault-icon">📑</div>
+                <div class="vault-info">
+                  <strong>kich_ban_review_may_xay_tiktok.docx</strong>
+                  <span>24.5 KB · Cập nhật 2 giờ trước</span>
+                </div>
+                <button type="button" class="btn-file-action">Tải Xuống</button>
+              </div>
+
+              <div class="vault-item">
+                <div class="vault-icon">🎙</div>
+                <div class="vault-info">
+                  <strong>voice_long_tieng_ai_nu_diu_dang.mp3</strong>
+                  <span>1.8 MB · Cập nhật hôm qua</span>
+                </div>
+                <button type="button" class="btn-file-action">Nghe Thử</button>
+              </div>
+
+              <div class="vault-item">
+                <div class="vault-icon">🎵</div>
+                <div class="vault-info">
+                  <strong>suno_lofi_background_music_relax.mp3</strong>
+                  <span>4.1 MB · Cập nhật hôm qua</span>
+                </div>
+                <button type="button" class="btn-file-action">Nghe Thử</button>
+              </div>
+
+              <div class="vault-item">
+                <div class="vault-icon">🖼</div>
+                <div class="vault-info">
+                  <strong>banner_facebook_cover_watermarked.png</strong>
+                  <span>3.2 MB · Cập nhật 3 ngày trước</span>
+                </div>
+                <button type="button" class="btn-file-action">Xem Ảnh</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 12: ENGINE ROUTE & PROVIDER MATRIX -->
+      <section id="tab-engine" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chọn Loại Video & Tier</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Tính Toán Chi Phí & Route</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Kích Hoạt Job & GPU Node</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>⚡ AI Video Route Engine & Provider Router</h2>
+            <p>Hệ thống định tuyến thông minh điều phối giữa Cloud AI (Veo/Kling/Wan) và Local Worker (RTX 4090) kèm tính toán chi phí Xu theo thời gian thực.</p>
+          </div>
+          <span class="cost-estimate-badge" id="engineCostBadge">Route: Cloud Hybrid</span>
+        </div>
+
+        <div class="studio-grid">
+          <div class="studio-form-panel">
+            <div class="form-group">
+              <label>Bước 1: Chọn Loại Sản Phẩm AI (Product Type)</label>
+              <select id="engineProductTypeSelect" class="form-control">
+                <option value="video_ai_real">🎬 Video AI Chân Thật (Real AI Video — Veo / Kling / Wan)</option>
+                <option value="video_trend">🔥 Video Bắt Trend Viral (TikTok / Reels 15s-30s)</option>
+                <option value="video_selfshot">🎥 Video Tự Quay Nâng Cao (Local Worker RTX 4090)</option>
+                <option value="multi_scene_film">🎞 Phim Ngắn Đa Phân Cảnh (Multi-Scene Film 60s+)</option>
+                <option value="subdub">🎙 SubDub Phụ Đề & Lồng Tiếng AI (Deepgram + TTS)</option>
+                <option value="storyboard_prompt">📝 Kịch Bản Phân Cảnh & Prompt AI (LLM Compiler)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bước 2: Chất lượng đầu ra (Quality Tier)</label>
+                <select id="engineTierSelect" class="form-control">
+                  <option value="standard">Standard (1080p · 30fps · 1.0x)</option>
+                  <option value="ultra_hd">Ultra HD (2K/1440p · 60fps · 1.5x)</option>
+                  <option value="cinema_4k">Cinema 4K (4K · 60fps HDR · 2.0x)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Thời lượng video (Giây)</label>
+                <input type="number" id="engineDurationInput" class="form-control" value="15" min="5" max="180">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tỉ lệ khung hình (Aspect Ratio)</label>
+                <select id="engineRatioSelect" class="form-control">
+                  <option value="9:16">9:16 (Dọc — TikTok/Reels)</option>
+                  <option value="16:9">16:9 (Ngang — YouTube/Website)</option>
+                  <option value="1:1">1:1 (Vuông — Social Post)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Chế độ điều phối</label>
+                <select id="engineModeSelect" class="form-control">
+                  <option value="auto">Tự Động (Cloud + Fallback Local)</option>
+                  <option value="force_local">Ép Render Local Worker (RTX 4090)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" id="btnResolveEngineRoute" class="btn-action-generate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Kiểm Tra Route & Preflight Check
+            </button>
+          </div>
+
+          <!-- Engine Output Dashboard -->
+          <div class="studio-output-panel">
+            <div class="output-header">
+              <span>MA TRẬN ĐỊNH TUYẾN THỜI GIAN THỰC</span>
+              <span class="badge">API CONNECTED</span>
+            </div>
+            <div class="output-content" id="engineRouteOutputBox">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
+                <p>Chọn thông số và bấm <strong>Kiểm Tra Route & Preflight Check</strong> để tính toán chuỗi nhà cung cấp tối ưu nhất.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 13: TOPUP & PRICING -->
+      <section id="tab-topup" class="tab-pane motion-fade-up">
+        <!-- Flow Stepper -->
+        <div class="flow-stepper">
+          <div class="step-pill active"><span class="step-num">1</span> Chọn Gói Nạp</div>
+          <div class="step-divider"></div>
+          <div class="step-pill active"><span class="step-num">2</span> Quét Mã QR PayOS</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span class="step-num">3</span> Số Dư Cộng Tự Động (3s)</div>
+        </div>
+
+        <div class="studio-header">
+          <div>
+            <h2>💳 Bảng Giá & Nạp Xu Dịch Vụ PayOS</h2>
+            <p>Nạp Xu tự động bằng QR chuyển khoản ngân hàng qua cổng PayOS. Số dư cộng ngay sau 3 giây.</p>
+          </div>
+          <span class="cost-estimate-badge">TỶ LỆ: 1.000đ = 10 Xu</span>
+        </div>
+
+        <div class="topup-packages-grid">
+          <div class="topup-card">
+            <span class="topup-tag">Cơ bản</span>
+            <strong class="topup-amount">10.000đ</strong>
+            <div class="topup-xu">100 Xu</div>
+            <p>Phù hợp thử nghiệm tính năng kịch bản & prompt</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card">Nạp Qua Bot</a>
+          </div>
+
+          <div class="topup-card">
+            <span class="topup-tag">Phổ thông</span>
+            <strong class="topup-amount">20.000đ</strong>
+            <div class="topup-xu">200 Xu</div>
+            <p>Đủ dùng cho 10-15 gói nội dung video ngắn</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card">Nạp Qua Bot</a>
+          </div>
+
+          <div class="topup-card featured">
+            <div class="popular-ribbon">TIẾT KIỆM NHẤT</div>
+            <span class="topup-tag">Ưu đãi</span>
+            <strong class="topup-amount">50.000đ</strong>
+            <div class="topup-xu">550 Xu <small>(+10% Thưởng)</small></div>
+            <p>Lựa chọn tốt nhất cho nhà sáng tạo nội dung</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card primary">Nạp Qua Bot</a>
+          </div>
+
+          <div class="topup-card">
+            <span class="topup-tag">Nâng cao</span>
+            <strong class="topup-amount">100.000đ</strong>
+            <div class="topup-xu">1.150 Xu <small>(+15% Thưởng)</small></div>
+            <p>Dành cho các kênh video sản xuất hàng ngày</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card">Nạp Qua Bot</a>
+          </div>
+
+          <div class="topup-card">
+            <span class="topup-tag">Chuyên nghiệp</span>
+            <strong class="topup-amount">200.000đ</strong>
+            <div class="topup-xu">2.400 Xu <small>(+20% Thưởng)</small></div>
+            <p>Hỗ trợ xuất hóa đơn VAT & ưu tiên hàng đợi</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card">Nạp Qua Bot</a>
+          </div>
+
+          <div class="topup-card">
+            <span class="topup-tag">Doanh nghiệp</span>
+            <strong class="topup-amount">500.000đ</strong>
+            <div class="topup-xu">6.250 Xu <small>(+25% Thưởng)</small></div>
+            <p>Kênh hỗ trợ VIP 1-1 riêng biệt 24/7</p>
+            <a href="https://t.me/toanaasbot" target="_blank" rel="noopener" class="btn-topup-card">Nạp Qua Bot</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- FLOATING 24/7 AI CHATBOT & CSKH TỰ ĐỘNG WIDGET -->
+  <div class="floating-cskh-container" id="floatingCskhContainer">
+    <!-- Chatbot Window Panel -->
+    <div class="cskh-chat-window" id="cskhChatWindow">
+      <div class="cskh-window-header">
+        <div class="cskh-header-info">
+          <div class="logo-box mini" style="background: transparent; border: none; box-shadow: none;">
+            <img src="assets/toanaas_bot_avatar.svg" alt="TOAN AAS Smart Bot Avatar" class="brand-logo-img" style="filter: drop-shadow(0 0 8px #00e599);">
+          </div>
+          <div>
+            <div class="cskh-header-title">TOAN AAS CSKH AI 24/7</div>
+            <div class="cskh-header-status">
+              <span class="pulse-dot"><span class="ping"></span><span class="dot"></span></span>
+              <span>Trực Tuyến · Phản Hồi Tức Thì (0.2s)</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close-cskh" id="btnCloseCskhWindow" aria-label="Đóng Chat CSKH">✕</button>
+      </div>
+
+      <!-- Quick Action Pills for Support -->
+      <div class="cskh-quick-pills">
+        <button type="button" class="cskh-pill" data-ask="Hướng dẫn nạp Xu tự động qua PayOS">⚡ Nạp Xu PayOS</button>
+        <button type="button" class="cskh-pill" data-ask="Cách tải video TikTok không dính watermark">📥 Tải Video 0 Logo</button>
+        <button type="button" class="cskh-pill" data-ask="Tính năng Video Factory và 10 Hook">🎬 Video Factory</button>
+        <button type="button" class="cskh-pill" data-ask="Chính sách bảo hành và hoàn Xu">🛡 Hoàn Xu Tự Động</button>
+        <button type="button" class="cskh-pill" data-ask="Gặp kỹ thuật viên trực tiếp trên Telegram">👨‍💻 Gặp Admin</button>
+      </div>
+
+      <!-- Chat Messages Body -->
+      <div class="cskh-messages-body" id="cskhMessagesBody">
+        <div class="cskh-msg bot motion-fade-up">
+          <div class="msg-avatar" style="background: transparent; border: none;">
+            <img src="assets/toanaas_bot_avatar.svg" alt="Bot" style="width: 28px; height: 28px; filter: drop-shadow(0 0 6px #00e599);">
+          </div>
+          <div class="msg-bubble">
+            Xin chào! Tôi là <strong>Trợ lý CSKH & Điều Hành AI 24/7</strong> của TOAN AAS. Tôi có thể giải đáp chi tiết tất cả tính năng trên Web App: <em>Tải video không logo, Video Factory, SubDub, Voice Studio, Suno Music, Nạp Xu PayOS hoặc Hướng dẫn cài App lên điện thoại</em>. Bạn cần hỗ trợ gì?
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Field -->
+      <form class="cskh-input-bar" id="cskhInputForm">
+        <input type="text" id="cskhInputField" placeholder="Nhập câu hỏi cần hỗ trợ 24/7..." autocomplete="off">
+        <button type="submit" id="btnSendCskhMsg" aria-label="Gửi Tin Nhắn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Floating Trigger Button -->
+    <button type="button" class="floating-cskh-trigger" id="btnToggleCskhWindow" aria-label="Mở Trợ Lý CSKH AI 24/7">
+      <div class="trigger-icon-box" style="background: transparent; box-shadow: none;">
+        <img src="assets/toanaas_bot_avatar.svg" alt="Bot Avatar" style="width: 38px; height: 38px; filter: drop-shadow(0 0 8px #00e599);">
+      </div>
+      <div class="trigger-text-badge">
+        <span class="pulse-dot"><span class="ping"></span><span class="dot"></span></span>
+        <strong>CSKH AI 24/7</strong>
+      </div>
+    </button>
+  </div>
+
+  <!-- MODAL HƯỚNG DẪN TẢI / CÀI ĐẶT APP (CH PLAY / APP STORE / PWA) -->
+  <div class="app-install-modal" id="appInstallModal" style="display:none;">
+    <div class="app-install-card motion-fade-up">
+      <button type="button" class="btn-close-modal" id="btnCloseInstallModal">✕</button>
+      <div class="install-header">
+        <img src="assets/toanaas_bot_avatar.svg" alt="Bot Mascot" class="install-bot-mascot">
+        <h3>Cài Đặt Ứng Dụng TOAN AAS</h3>
+        <p>Trải nghiệm mượt mà 120fps trên Android (CH Play), iOS (App Store) và Máy tính</p>
+      </div>
+
+      <div class="install-platforms-grid">
+        <!-- Android CH Play -->
+        <div class="install-platform-item">
+          <div class="platform-icon android">🤖</div>
+          <div class="platform-info">
+            <strong>Android / CH Play (TWA APK)</strong>
+            <span>Cài trực tiếp hoặc qua gói đóng gói TWA APK</span>
+          </div>
+          <button type="button" class="btn-download-app-action" id="btnDownloadAndroidPwa">
+            📲 Tải & Cài Android
+          </button>
+        </div>
+
+        <!-- iOS App Store -->
+        <div class="install-platform-item">
+          <div class="platform-icon ios">🍎</div>
+          <div class="platform-info">
+            <strong>iOS / App Store (PWA & WebKit)</strong>
+            <span>Bấm nút Chia Sẻ (Share) ➔ Thêm vào MH chính</span>
+          </div>
+          <button type="button" class="btn-download-app-action" id="btnDownloadIosPwa">
+            📲 Hướng Dẫn iOS
+          </button>
+        </div>
+
+        <!-- Desktop Standalone -->
+        <div class="install-platform-item">
+          <div class="platform-icon desktop">💻</div>
+          <div class="platform-info">
+            <strong>Windows & Mac Desktop</strong>
+            <span>Cài đặt ứng dụng trực tiếp trên Chrome/Edge</span>
+          </div>
+          <button type="button" class="btn-download-app-action primary" id="btnInstallDesktopPwa">
+            ⚡ Cài App Ngay
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH / LOGIN / OAUTH / TELEGRAM BOT MODAL (VIP OBSIDIAN & EMERALD) -->
+  <div class="auth-modal" id="authModal" style="display:none;">
+    <div class="auth-card motion-fade-up">
+      <button type="button" class="btn-close-modal" id="btnCloseAuthModal" aria-label="Đóng Đăng Nhập">✕</button>
+      
+      <div class="auth-header">
+        <img src="assets/toanaas_bot_avatar.svg" alt="TOAN AAS Mascot" class="auth-bot-mascot">
+        <h3 id="authModalTitle">Chào Mừng Trở Lại!</h3>
+        <p id="authModalSubtitle">Đăng nhập để vào TOAN AAS AI Workspace và đồng bộ số dư Xu.</p>
+      </div>
+
+      <!-- 3 Social / 1-Click Login Providers (Google, Apple, Telegram) -->
+      <div class="auth-social-buttons">
+        <!-- 1. Google 1-Click Login -->
+        <button type="button" class="btn-social-auth google" id="btnAuthGoogle">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Tiếp tục với Google</span>
+        </button>
+
+        <!-- 2. Apple 1-Click Login -->
+        <button type="button" class="btn-social-auth apple" id="btnAuthApple">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.88-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.76 1 .08 2.03-.49 2.65-1.23"/>
+          </svg>
+          <span>Đăng nhập với Apple</span>
+        </button>
+
+        <!-- 3. Telegram Bot 1-Click Login -->
+        <button type="button" class="btn-social-auth telegram" id="btnAuthTelegram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.674c.458 0 .66-.21.916-.458l2.199-2.138 4.573 3.378c.843.464 1.448.225 1.658-.783l3-14.137c.308-1.234-.471-1.794-1.289-1.423z"/>
+          </svg>
+          <span>Đăng nhập với Telegram Bot</span>
+        </button>
+      </div>
+
+      <div class="auth-divider">
+        <span>HOẶC TIẾP TỤC BẰNG EMAIL</span>
+      </div>
+
+      <!-- Auth Form Tabs Switcher -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="tabBtnSignIn">Đăng Nhập</button>
+        <button type="button" class="auth-tab-btn" id="tabBtnSignUp">Tạo Tài Khoản</button>
+        <button type="button" class="auth-tab-btn" id="tabBtnTelegramCode">Mã Bot 6 Số</button>
+      </div>
+
+      <!-- Form 1: Email Login -->
+      <form class="auth-form active" id="formSignIn">
+        <div class="form-group">
+          <label for="loginEmail">Email (Gmail, iCloud hoặc công ty)</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label for="loginPassword">Mật khẩu</label>
+            <a href="javascript:void(0);" onclick="showToast('🔑 Vui lòng liên hệ Bot Telegram @toanaasbot để đặt lại mật khẩu tức thì!');" style="font-size: 11px; color: var(--cyan-brand);">Quên mật khẩu?</a>
+          </div>
+          <input type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-action-generate" style="margin-top: 6px;">
+          ✓ Đăng Nhập Vào Workspace
+        </button>
+      </form>
+
+      <!-- Form 2: Register -->
+      <form class="auth-form" id="formSignUp" style="display:none;">
+        <div class="form-group">
+          <label for="regFullName">Họ và Tên</label>
+          <input type="text" id="regFullName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" required>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Mật khẩu mới (Tối thiểu 8 ký tự)</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="Tạo mật khẩu an toàn..." required minlength="8">
+        </div>
+        <button type="submit" class="btn-action-generate" style="margin-top: 6px;">
+          🚀 Tạo Tài Khoản Mới (+100 Xu Thưởng)
+        </button>
+      </form>
+
+      <!-- Form 3: Telegram Bot 6-digit Code Link -->
+      <form class="auth-form" id="formTelegramCode" style="display:none;">
+        <div class="telegram-code-box">
+          <div class="tg-icon-badge">✈️</div>
+          <h4>Xác Thực Bằng Mã OTP Bot Telegram</h4>
+          <p>Mở Bot <a href="https://t.me/toanaasbot" target="_blank" style="color:var(--green-bright); font-weight:800;">@toanaasbot</a> ➔ Gõ <code>/linkweb</code> để nhận mã 6 số.</p>
+          <div class="code-inputs-wrapper">
+            <input type="text" id="telegramOtpCode" class="form-control tg-otp-field" placeholder="123456" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: 900; color: var(--green-bright);">
+          </div>
+          <button type="submit" class="btn-action-generate" style="margin-top: 12px; width: 100%;">
+            ⚡ Xác Thực & Đăng Nhập Ngay
+          </button>
+        </div>
+      </form>
+
+      <!-- Guest Demo 1-Click Access Footer -->
+      <div class="auth-guest-footer">
+        <button type="button" class="btn-guest-access" id="btnGuestAccess">
+          ✨ Dùng Thử Trực Tiếp (Khách Khởi Tạo · 1,250 Xu) ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

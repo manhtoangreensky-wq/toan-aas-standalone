@@ -16357,7 +16357,7 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
-@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 1081px) and (prefers-reduced-motion: no-preference) {
   .portal-shell[data-portal-app-kind="customer"]:not(.portal-shell--focus) .portal-sidebar {
     animation: portal-customer-shell-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
   }
