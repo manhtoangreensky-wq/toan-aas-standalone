@@ -72,9 +72,9 @@ def test_finance_compliance_variants_and_update_never_inherit_the_guidance_route
         assert mapped["resolution"] != "reviewed_finance_compliance_readiness_fresh_web_navigation"
 
     update = audit._map_callback("menu|finance_compliance_update", "callback_data", {"file": "bot.py", "line": 1}, routes)
-    assert update["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert update["status"] == "TELEGRAM_ONLY"
     assert update["classification"] == "admin"
-    assert "FINANCE_COMPLIANCE" in update["target"]
+    assert update["target"] == "TELEGRAM_ONLY"
 
 
 def test_finance_compliance_contract_is_private_to_the_auditor_and_documents_no_transfer() -> None:
@@ -106,7 +106,7 @@ def test_finance_compliance_contract_is_private_to_the_auditor_and_documents_no_
 
     assert "does not read the Bot compliance status" in contract
     assert "does not create, update, or mutate a compliance note" in contract
-    assert "Case variants, suffixes, and `menu|finance_compliance_update`" in contract
+    assert "`menu|finance_compliance_update` is terminal Telegram-only" in contract
     assert "`menu|finance_compliance`" in catalog
     assert "| `menu|finance_compliance_update` |" not in catalog
 
@@ -170,9 +170,9 @@ async def readiness():
     mappings = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
     assert mappings["menu|finance_compliance"]["status"] == "NAVIGATION_ONLY"
     assert mappings["menu|finance_compliance"]["target"] == "/admin/finance/tax-readiness"
-    assert mappings["menu|finance_compliance_update"]["target"] == "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED"
-    assert mappings["menu|finance_compliance_update"]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert mappings["menu|finance_compliance_update"]["target"] == "TELEGRAM_ONLY"
+    assert mappings["menu|finance_compliance_update"]["status"] == "TELEGRAM_ONLY"
 
     generated_contract = (docs_dir / "FINANCE_COMPLIANCE_READINESS_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "menu|finance_compliance" in generated_contract
-    assert "CANONICAL_FINANCE_COMPLIANCE_SOURCE_REVIEW_REQUIRED" in generated_contract
+    assert "TELEGRAM_ONLY" in generated_contract

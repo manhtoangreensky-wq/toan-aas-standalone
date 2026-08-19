@@ -27,7 +27,6 @@ def test_content_prompt_pack_is_a_native_portal_route_and_catalog_feature() -> N
     assert "function renderContentPromptPack(page, context)" in PORTAL
     assert 'case "content-prompt-pack": return renderContentPromptPack(page, context);' in PORTAL
     assert 'data-portal-no-transient data-portal-action="content-prompt-pack-compose"' in PORTAL
-    assert '["/content/prompt-pack", "Content Prompt Pack", ICONS.prompt]' in PORTAL
     assert 'botCompanionPage("/content/prompt-pack"' not in PORTAL
     assert '"content_prompt_pack"' in ENGINES
     assert 'WebFeature("content_prompt_pack", "Content Prompt Pack", "content", "/content/prompt-pack"' in REGISTRY

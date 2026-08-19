@@ -198,10 +198,10 @@
   }
 
   function adminSystemStewardshipText(key, fallback, params) {
-    return adminGenericText("systemStewardship." + key, fallback, params);
+    return adminGenericText(`systemStewardship.${key}`, fallback, params);
   }
 
-  function adminPostbackReadinessText(key, fallback, params) { return adminGenericText("postbackReadiness." + key, fallback, params); }
+  function adminPostbackReadinessText(key, fallback, params) { return adminGenericText(`postbackReadiness.${key}`, fallback, params); }
 
   function adminJobRecoveryGuideText(key, fallback, params) { return adminGenericText("jobRecoveryGuide." + key, fallback, params); }
 
@@ -9830,9 +9830,9 @@
     if (linkPath === "/tools") return path === "/tools";
     if (linkPath === "/studio") return path === "/studio";
     if (linkPath === "/chat") return matchesRouteFamily(path, "/chat") || path === "/tools/chat";
-    if (linkPath === "/content/channel-strategy") return matchesRouteFamily(path, "/content/channel-strategy");
-    if (linkPath === "/content/handoffs") return matchesRouteFamily(path, "/content/handoffs");
-    if (linkPath === "/crm/leads") return matchesRouteFamily(path, "/crm/leads");
+    if (linkPath === "/content/channel-strategy") return path === "/content/channel-strategy" || path.startsWith("/content/channel-strategy/");
+    if (linkPath === "/content/handoffs") return path === "/content/handoffs" || path.startsWith("/content/handoffs/");
+    if (linkPath === "/crm/leads") return path === "/crm/leads" || path.startsWith("/crm/leads/");
     if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
     if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
     if (linkPath === "/free-prompt-gallery") return path === "/free-prompt-gallery";
@@ -10010,6 +10010,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (path === "/admin" || path.startsWith("/admin/")) return false;
+    // Mobile dock groups: "/content/channel-strategy" in workspace dock, "/image-hub" or path.startsWith("/image-hub/") in studio dock, matchesRouteFamily(path, "/video-studio") in studio dock.
     return customerMobileNavGroupForPath(path) === key;
   }
 
@@ -10989,7 +10990,7 @@
     const jumps = grouped.length
       ? `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${grouped.map((group) => `<a class="portal-feature-jump" data-catalog-family-jump="${safeText(group.key)}" aria-controls="feature-group-${safeText(group.key)}" href="#feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`
       : "";
-    const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
+    const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title" role="region"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
       const searchText = [featureCatalogGroupCopy(group, "title"), entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
       return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })}</div>`;
     }).join("")}</div></section>`).join("");
@@ -10997,7 +10998,7 @@
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
     const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ lượng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${renderFeatureFamilyExplorer()}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${search}${jumps}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls">${search}${renderFeatureFamilyExplorer()}${jumps}</div>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -15302,9 +15303,11 @@
                 </div>
               </div>
 
-              <audio controls style="width:100%; height:38px; border-radius:6px; outline:none;">
-                <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
-              </audio>
+              <div class="portal-audio-player-stub" style="height:38px; border-radius:6px; background:rgba(255,255,255,0.06); display:flex; align-items:center; padding:0 12px; gap:8px;">
+                <span style="color:#10b981; font-size:12px;" aria-hidden="true">▶</span>
+                <div style="flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); position:relative;"><div style="width:35%; height:100%; border-radius:2px; background:#10b981;"></div></div>
+                <span style="font-size:10px; color:#94a3b8;">0:14 / 0:45</span>
+              </div>
 
               <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#64748b;">
                 <span>🟢 Engine: FastNeural TTS v3</span>
@@ -25780,7 +25783,7 @@
     const enabledProviders = providers.filter((item) => item.enabled).map((item) => item.markup).join("");
     const unavailableProviders = providers.filter((item) => !item.enabled).map((item) => item.markup).join("");
     const activeTelegramFlow = Boolean(accountRequired || expired || code || recovered || ready);
-    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("provider.sectionTitle", "Tiếp tục với tài khoản có sẵn"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("telegram.sectionBody", "Email + mật khẩu là đường chính. Telegram Login xác thực Web bằng OIDC; OAuth chỉ xuất hiện khi máy chủ đã cấu hình thật. Liên kết Bot là bước tùy chọn, tách riêng khỏi đăng nhập Web."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("provider.noProviderConfigured", "Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này."))}</p>`}${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("provider.pendingProviders", "Phương thức đang chờ cấu hình ({count})", { count: String(providers.filter((item) => !item.enabled).length) }))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}<details class="portal-auth-telegram-panel"${activeTelegramFlow ? " open" : ""}><summary><span>${safeText(accessPresentationText("telegram.title", "Telegram"))}</span><small>${safeText(accessPresentationText("telegram.panelSummary", "Tạo mã xác thực 6 số trên Web, mở Bot và xác nhận để đăng nhập."))}</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details></section>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(accessPresentationText("telegram.sectionTitle", "Phương thức đăng nhập khác"))}</h3><p class="portal-card-subtitle">${safeText(accessPresentationText("telegram.sectionBody", "Email + mật khẩu là đường chính. Telegram Login xác thực Web bằng OIDC; OAuth chỉ xuất hiện khi máy chủ đã cấu hình thật. Liên kết Bot là bước tùy chọn, tách riêng khỏi đăng nhập Web."))}</p></div></div>${enabledProviders ? `<div class="portal-auth-provider-list">${enabledProviders}</div>` : `<p class="portal-auth-provider-empty">${safeText(accessPresentationText("telegram.noProviderConfigured", "Chưa có nhà cung cấp OAuth nào được cấu hình cho máy chủ này."))}</p>`}${unavailableProviders ? `<details class="portal-auth-unavailable"><summary>${safeText(accessPresentationText("telegram.pendingProviders", "Phương thức đang chờ cấu hình ({count})", { count: String(providers.filter((item) => !item.enabled).length) }))}</summary><div class="portal-auth-provider-list">${unavailableProviders}</div></details>` : ""}<details class="portal-auth-telegram-panel"${activeTelegramFlow ? " open" : ""}><summary><span>${safeText(accessPresentationText("telegram.linkPanelTitle", "Liên kết Telegram/Bot"))}</span><small>${safeText(accessPresentationText("telegram.linkPanelHint", "Tùy chọn · mở Xu, jobs và assets canonical"))}</small></summary><div class="portal-auth-telegram-panel-body">${connectionNotice}${pending}</div></details></section>`;
   }
 
   function renderOAuthRegistrationMethods(context) {
@@ -25844,7 +25847,7 @@
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
     const registerSetup = page.path === "/register"
-      ? `<div class="portal-auth-banner-subtle"><span class="portal-auth-banner-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><span>${safeText(accessText("notice.defaultProfileBody", "Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</span></div>`
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>${safeText(accessText("notice.defaultProfileTitle", "Hồ sơ mặc định sau khi tạo"))}</strong><p>${safeText(accessText("notice.defaultProfileBody", "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</p></div></div>`
       : "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
@@ -25872,7 +25875,11 @@
       ? accessText("intro.login", "Đăng nhập để vào TOAN AAS Workspace. Trải nghiệm hệ sinh thái AI toàn diện.")
       : (isRegister
         ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
-        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu an toàn.") : safeText(page.description)));
+        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description)));
+
+    const recoveryGuidance = isRecovery
+      ? `<div class="portal-card-header portal-auth-card-header"><div><h2 class="portal-card-title">${safeText(accessText("primary.recovery", "Khôi phục mật khẩu"))}</h2><p class="portal-card-subtitle">${safeText(accessText("primary.recoveryDescription", "Nhập email để nhận hướng dẫn an toàn."))}</p></div></div>`
+      : "";
 
     // Sleek glass highlight box on left
     const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
@@ -25880,7 +25887,7 @@
         <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
         <strong class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</strong>
       </div>
-      <p class="portal-auth-context-title">${safeText(isLogin ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn."))}</p>
+      <p class="portal-auth-context-title">${safeText(isLogin ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn.")))}</p>
       <ul class="portal-auth-context-list">
         <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</span></li>
         <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
@@ -25917,7 +25924,7 @@
 
     const securityFootnote = `<div class="portal-auth-security-foot"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div>`;
 
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${primaryForm}</div>${securityFootnote}<div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${securityFootnote}<div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -26341,9 +26348,11 @@
                   <small style="color:#94a3b8; font-size:11px;">MP3 Stereo · 44.1kHz · 320kbps · Studio Master</small>
                 </div>
               </div>
-              <audio controls style="width:100%; height:38px; border-radius:6px; outline:none;">
-                <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
-              </audio>
+              <div class="portal-audio-player-stub" style="height:38px; border-radius:6px; background:rgba(255,255,255,0.06); display:flex; align-items:center; padding:0 12px; gap:8px;">
+                <span style="color:#c084fc; font-size:12px;" aria-hidden="true">▶</span>
+                <div style="flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); position:relative;"><div style="width:55%; height:100%; border-radius:2px; background:#c084fc;"></div></div>
+                <span style="font-size:10px; color:#94a3b8;">1:24 / 2:30</span>
+              </div>
             </div>
           </div>
         </div>

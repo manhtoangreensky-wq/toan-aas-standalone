@@ -19035,7 +19035,7 @@
     // Clear the prior detail before a fresh owner-scoped read. A case ID in
     // the URL is not proof of ownership and cannot authorize stale content.
     merge({
-      supportCaseDetail: {}, supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "loading",
+      supportCustomerReplyReceipt: {}, supportAdminReplyReceipt: {}, supportCaseDetail: {}, supportAttachmentAssets: [], supportCaseTriage: {}, supportReadState: "loading",
       pageStates: { ...(base().pageStates || {}), [route]: "loading" }
     });
     try {
@@ -25803,6 +25803,22 @@
     } catch (error) {
       // A guarded bridge is an expected state; do not manufacture data.
       if (!isCurrent()) return null;
+      if (error) {
+        if (path === "/packages" || path === "/membership") {
+          // Never keep a previously approved SKU price while this signed route
+          // is refreshing or when its canonical reads fail. A missing current
+          // public-sale catalogue is guarded, not permission to reuse a prior
+          // account or earlier revision's price.
+          merge({
+            pricingCatalog: {},
+            packageCatalog: {},
+            pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
+          });
+          toast("Không thể xác minh catalog giá bán canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
+          return null;
+        }
+        if (error && error.payload && error.payload.message) toast(error.payload.message, "error");
+      }
       if (path === "/dashboard") {
         // Keep independent Web authoring lanes intact, but remove every
         // canonical fact. A failed signed read is not an empty queue, zero
@@ -25831,20 +25847,6 @@
         toast("Không thể xác minh số dư Xu canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
         return null;
       }
-      if (path === "/packages" || path === "/membership") {
-        // Never keep a previously approved SKU price while this signed route
-        // is refreshing or when its canonical reads fail. A missing current
-        // public-sale catalogue is guarded, not permission to reuse a prior
-        // account or earlier revision's price.
-        merge({
-          pricingCatalog: {},
-          packageCatalog: {},
-          pageStates: { ...(base().pageStates || {}), [path]: "guarded" }
-        });
-        toast("Không thể xác minh catalog giá bán canonical. Dữ liệu cũ đã được ẩn; hãy thử lại khi kết nối sẵn sàng.", "error");
-        return null;
-      }
-      if (error && error.payload && error.payload.message) toast(error.payload.message, "error");
     }
   }
 

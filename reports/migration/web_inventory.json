@@ -10,43 +10,43 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1645,
+      "line": 1642,
       "target": "_background_cleanup_edge_coordinates"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1669,
+      "line": 1666,
       "target": "_background_cleanup_matches"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1658,
+      "line": 1655,
       "target": "_background_cleanup_neighbors"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 896,
+      "line": 893,
       "target": "_background_cleanup_request_fingerprint"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 920,
+      "line": 917,
       "target": "_background_cleanup_settings"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 931,
+      "line": 928,
       "target": "_background_cleanup_settings_are_valid"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 2794,
+      "line": 2791,
       "target": "_build_background_cleanup_output"
     },
     {
@@ -58,7 +58,7 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1756,
+      "line": 1753,
       "target": "_inspect_background_cleanup_geometry"
     },
     {
@@ -88,13 +88,13 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1674,
+      "line": 1671,
       "target": "_render_background_cleanup"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 513,
+      "line": 510,
       "target": "_require_background_cleanup_enabled"
     },
     {
@@ -166,7 +166,7 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 3480,
+      "line": 3477,
       "target": "cleanup_plain_background"
     },
     {
@@ -1409,7 +1409,7 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1331,
+      "line": 1328,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -3347,7 +3347,7 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1271,
+      "line": 1268,
       "operation": "INSERT INTO",
       "table": "web_image_operation_events"
     },
@@ -3359,91 +3359,91 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1309,
+      "line": 1306,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1348,
+      "line": 1345,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 2866,
+      "line": 2863,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3063,
+      "line": 3060,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3090,
+      "line": 3087,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3135,
+      "line": 3132,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3358,
+      "line": 3355,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3386,
+      "line": 3383,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3411,
+      "line": 3408,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3638,
+      "line": 3635,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3666,
+      "line": 3663,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3691,
+      "line": 3688,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3992,
+      "line": 3989,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 4020,
+      "line": 4017,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 4051,
+      "line": 4048,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
@@ -6865,12 +6865,12 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1788,
+      "line": 1785,
       "name": "WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1800,
+      "line": 1797,
       "name": "WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH"
     },
     {
@@ -6885,12 +6885,12 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 544,
+      "line": 541,
       "name": "WEBAPP_IMAGE_OPERATIONS_MAX_OUTPUT_MB"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 553,
+      "line": 550,
       "name": "WEBAPP_IMAGE_OPERATIONS_QUOTA_MB"
     },
     {
@@ -7663,7 +7663,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1661,
+      "occurrences": 1664,
       "provider": "Telegram"
     }
   ],
@@ -8472,7 +8472,7 @@
     {
       "endpoint": "cleanup_plain_background",
       "file": "copyfast_image_operations.py",
-      "line": 3480,
+      "line": 3477,
       "methods": [
         "POST"
       ],
@@ -8508,7 +8508,7 @@
     {
       "endpoint": "create_brand_overlay",
       "file": "copyfast_image_operations.py",
-      "line": 3760,
+      "line": 3757,
       "methods": [
         "POST"
       ],
@@ -9570,7 +9570,7 @@
     {
       "endpoint": "enhance_image",
       "file": "copyfast_image_operations.py",
-      "line": 3201,
+      "line": 3198,
       "methods": [
         "POST"
       ],
@@ -11829,7 +11829,7 @@
     {
       "endpoint": "resize_image",
       "file": "copyfast_image_operations.py",
-      "line": 2973,
+      "line": 2970,
       "methods": [
         "POST"
       ],
@@ -13422,7 +13422,7 @@
     {
       "endpoint": "get_image_operation",
       "file": "copyfast_image_operations.py",
-      "line": 4321,
+      "line": 4318,
       "methods": [
         "GET"
       ],
@@ -13503,7 +13503,7 @@
     {
       "endpoint": "download_image_operation",
       "file": "copyfast_image_operations.py",
-      "line": 4271,
+      "line": 4268,
       "methods": [
         "GET"
       ],
@@ -13566,7 +13566,7 @@
     {
       "endpoint": "export_image_operation_to_asset_vault",
       "file": "copyfast_image_operations.py",
-      "line": 4125,
+      "line": 4122,
       "methods": [
         "POST"
       ],
@@ -13701,7 +13701,7 @@
     {
       "endpoint": "list_image_operations",
       "file": "copyfast_image_operations.py",
-      "line": 2931,
+      "line": 2928,
       "methods": [
         "GET"
       ],
@@ -13810,7 +13810,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 157,
   "source_files_scanned": 157,
-  "source_fingerprint_sha256": "41afdf43bc0d7ba1e4f8edd349df204fd1c104da45367eae399e14d655ab3929",
+  "source_fingerprint_sha256": "cbba1f89df529b799a7a84598b7add6d2c76a0c4ecb178fae01c33922d423605",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -14030,7 +14030,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 27812,
+      "line": 27821,
       "path": "/features"
     },
     {

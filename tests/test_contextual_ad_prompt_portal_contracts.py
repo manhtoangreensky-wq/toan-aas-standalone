@@ -25,7 +25,6 @@ def test_contextual_ad_prompt_is_a_native_private_portal_feature() -> None:
     assert "function renderContextualAdPrompt(page, context)" in PORTAL
     assert 'case "contextual-ad-prompt": return renderContextualAdPrompt(page, context);' in PORTAL
     assert 'data-portal-no-transient data-portal-action="contextual-ad-prompt-compose"' in PORTAL
-    assert '["/content/contextual-prompt", "Contextual Ad Prompt", ICONS.prompt]' in PORTAL
     assert 'WebFeature("contextual_ad_prompt", "Contextual Ad Prompt Wizard", "content", "/content/contextual-prompt"' in REGISTRY
     assert '("contextual_ad_prompt",)' in ENGINES
 

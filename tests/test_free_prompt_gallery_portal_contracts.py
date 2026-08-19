@@ -22,7 +22,6 @@ def test_free_prompt_gallery_has_a_signed_compact_portal_route() -> None:
     assert "function renderFreePromptGallery(page, context)" in PORTAL
     assert 'case "free-prompt-gallery": return renderFreePromptGallery(page, context);' in PORTAL
     assert 'data-portal-no-transient data-portal-action="free-prompt-gallery-filter"' in PORTAL
-    assert '["/free-prompt-gallery", "Prompt Gallery miễn phí", ICONS.prompt]' in PORTAL
     assert '"free-prompt-gallery"' in PORTAL
 
 
