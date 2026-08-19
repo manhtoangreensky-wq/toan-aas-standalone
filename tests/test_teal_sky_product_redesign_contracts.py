@@ -87,7 +87,7 @@ def test_access_header_preserves_locale_targets_at_320px() -> None:
     assert "@media (max-width: 380px)" in layer
     assert ".portal-auth-page--access .portal-auth-header { gap: 6px; }" in layer
     assert ".portal-auth-page--access .portal-auth-brand > span:last-child {\n    position: absolute;" in layer
-    assert "clip-path: inset(50%);" in layer
+    assert "clip: rect(0, 0, 0, 0);" in layer
     assert "white-space: nowrap;" in layer
     assert ".portal-auth-page--access .portal-auth-locale-link {\n  display: inline-grid;\n  min-width: 44px;\n  min-height: 44px;" in THEME
     assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;\n  min-width: 44px;" in THEME
