@@ -17146,3 +17146,128 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     transform: none !important;
   }
 }
+
+/* ==========================================================================
+   DIRECT PROMINENT SOCIAL & TELEGRAM BOT LOGIN (GOOGLE / APPLE STYLE)
+   ========================================================================== */
+.portal-direct-social-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 12px;
+  width: 100%;
+}
+
+.portal-btn-direct-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.portal-btn-direct-social:hover {
+  transform: translateY(-1.5px) translate3d(0, 0, 0);
+  text-decoration: none;
+}
+
+/* 1. Google Button (Clean Standard White) */
+.portal-btn-direct-social.google {
+  background: #ffffff !important;
+  color: #1f1f1f !important;
+  border: 1px solid #dadce0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.portal-btn-direct-social.google:hover {
+  background: #f8f9fa !important;
+  border-color: #c0c4cc !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* 2. Apple Button (High-End Midnight Black) */
+.portal-btn-direct-social.apple {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.portal-btn-direct-social.apple:hover {
+  background: #111111 !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* 3. Telegram Bot Button (Vibrant Telegram Blue) */
+.portal-btn-direct-social.telegram {
+  background: linear-gradient(135deg, #2AABEE, #229ED9) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 3px 10px rgba(34, 158, 217, 0.3);
+}
+
+.portal-btn-direct-social.telegram:hover {
+  background: linear-gradient(135deg, #3bb6f7, #24a2dc) !important;
+  box-shadow: 0 6px 18px rgba(34, 158, 217, 0.5);
+}
+
+/* Divider Line */
+.portal-auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 14px 0 8px;
+  width: 100%;
+}
+
+.portal-auth-divider::before,
+.portal-auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--portal-border, rgba(255, 255, 255, 0.1));
+}
+
+.portal-auth-divider span {
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--portal-muted, #7e9bb0);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Clean, Compact Footer for bottom details */
+.portal-auth-compact-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--portal-border, rgba(255, 255, 255, 0.08));
+}
+
+.portal-auth-compact-footer details summary {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: var(--portal-control-surface, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--portal-border, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+}
+
+.portal-auth-compact-footer details summary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
