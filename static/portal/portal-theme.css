@@ -1447,19 +1447,20 @@ body {
 }
 
 .portal-auth-context-list li {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .portal-auth-context-list li::before {
+  content: "";
+  display: block;
   width: 7px;
   height: 7px;
-  margin-top: .48em;
+  flex-shrink: 0;
+  margin-top: .55em;
   border-radius: 50%;
   background: var(--portal-brand);
-  content: "";
 }
 
 @media (max-width: 980px) {
@@ -3694,6 +3695,28 @@ body {
   }
 }
 
+/* Admin ERP mobile data surface harmony ---------------------------------
+   The server-issued ERP tables keep their semantic markup and scroll-region
+   contract. This final presentation layer only restores a readable light/dark
+   token surface for the mobile scroll cue and frozen first cell. */
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table-scroll-hint {
+    border-bottom-color: var(--portal-border);
+    background: var(--portal-surface-soft);
+    color: var(--portal-muted);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table th:first-child,
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-surface-light);
+    box-shadow: 8px 0 12px -12px color-mix(in srgb, var(--portal-ink) 60%, transparent);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-light-hover-surface);
+  }
+}
+
 /* Customer Shell Harmony ----------------------------------------------
    The customer app keeps its server-rendered navigation and route manifest;
    this final visual layer only clarifies the already-mounted desktop rail,
@@ -4158,19 +4181,20 @@ body {
 }
 
 .portal-auth-context-list li {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .portal-auth-context-list li::before {
+  content: "";
+  display: block;
   width: 7px;
   height: 7px;
-  margin-top: .48em;
+  flex-shrink: 0;
+  margin-top: .55em;
   border-radius: 50%;
   background: var(--portal-brand);
-  content: "";
 }
 
 @media (max-width: 1080px) {
@@ -4211,9 +4235,14 @@ body {
     margin: -1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
   }
+}
+
+@media (max-width: 1180px) and (min-width: 701px) {
+  .portal-header-actions .portal-theme-toggle-label { display: none; }
 }
 
 /* These legacy studios authored their intro metrics for dark gradient panels.
@@ -16375,28 +16404,6 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
     outline: 1px solid transparent;
     outline-offset: 2px;
     animation: portal-delivery-receipt-confirmed 200ms var(--portal-motion-ease-emphasis) both;
-  }
-}
-
-/* Admin ERP mobile data surface harmony ---------------------------------
-   The server-issued ERP tables keep their semantic markup and scroll-region
-   contract. This final presentation layer only restores a readable light/dark
-   token surface for the mobile scroll cue and frozen first cell. */
-@media (max-width: 700px) {
-  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table-scroll-hint {
-    border-bottom-color: var(--portal-border);
-    background: var(--portal-surface-soft);
-    color: var(--portal-muted);
-  }
-
-  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table th:first-child,
-  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody td:first-child:not(.portal-empty-cell) {
-    background: var(--portal-surface-light);
-    box-shadow: 8px 0 12px -12px color-mix(in srgb, var(--portal-ink) 60%, transparent);
-  }
-
-  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) {
-    background: var(--portal-light-hover-surface);
   }
 }
 

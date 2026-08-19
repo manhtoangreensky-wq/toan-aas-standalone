@@ -112,9 +112,8 @@ def test_workspace_setup_is_a_signed_app_route_not_a_video_or_landing_change() -
         assert requirement in view
     for forbidden in ("localStorage", "sessionStorage", "telegram_id", "canonical_user_id", "/video", "aria-current=\"step\""):
         assert forbidden not in view
-    dashboard = _between(PORTAL, "function renderDashboardWorkspaceSummary", "function renderDashboardRecentDrafts")
-    assert 'href="/workspace/setup"' in dashboard
-    assert "setupActionLabel" in dashboard
+    guide = _between(PORTAL, "function renderDashboardStartGuide", "function renderDashboardAccountLane")
+    assert 'href: "/workspace/setup"' in guide
     focus_limit = _between(PORTAL, "function synchronizeWorkspaceSetupFocusLimit", "function copyCanonicalDraftText")
     for requirement in ("checked.length > 3", "atLimit && !input.checked", "data-workspace-setup-focus-status", "status.textContent"):
         assert requirement in focus_limit

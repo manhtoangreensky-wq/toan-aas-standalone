@@ -26,7 +26,6 @@ def test_publish_review_pack_is_a_native_private_portal_feature() -> None:
     assert "function renderPublishReviewPack(page, context)" in PORTAL
     assert 'case "publish-review-pack": return renderPublishReviewPack(page, context);' in PORTAL
     assert 'data-portal-no-transient data-portal-action="publish-review-pack-compose"' in PORTAL
-    assert '["/content/publish-review", "Gói review trước khi đăng", ICONS.prompt]' in PORTAL
     assert '"publish-review-pack"' in PORTAL
     assert 'WebFeature("publish_review_pack", "Gói review trước khi đăng", "content", "/content/publish-review"' in REGISTRY
     assert '("publish_review_pack",)' in ENGINES

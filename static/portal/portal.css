@@ -7916,6 +7916,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 
 
+.portal-direct-social-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 /* Google, Apple & Telegram Brand Buttons - Standard OAuth UX */
 .portal-oauth-btn-brand {
   display: inline-flex;
@@ -8187,6 +8194,12 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-security-posture-head { align-items: stretch; flex-direction: column; }
   .portal-security-posture-head .portal-button { width: 100%; justify-content: center; }
   .portal-security-posture-facts { grid-template-columns: 1fr; }
+  .portal-image-hub .portal-button,
+  .portal-image-hub-detail .portal-button,
+  .portal-image-hub .portal-input,
+  .portal-image-hub-detail .portal-input,
+  .portal-image-hub .portal-select,
+  .portal-image-hub-detail .portal-select { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .portal-account-page .portal-settings-nav a,

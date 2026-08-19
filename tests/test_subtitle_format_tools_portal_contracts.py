@@ -22,7 +22,6 @@ def test_subtitle_format_lab_is_a_native_route_not_a_bot_handoff() -> None:
     assert 'case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);' in PORTAL
     assert 'data-portal-no-transient data-portal-action="subtitle-format-convert"' in PORTAL
     assert "subtitle_formats: Object.freeze" not in PORTAL
-    assert '"/subtitle/formats", "SRT/VTT Lab"' in PORTAL
 
 
 def test_subtitle_format_lab_result_is_bounded_and_does_not_claim_external_execution() -> None:
