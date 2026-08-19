@@ -20,7 +20,7 @@
 | **Voice Studio & TTS AI** | /voice/tts<br>/voice-studio | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **Từ 0.10 Xu / từ**<br>(Voice clone: 1st Free, sau 50 Xu) |
 | **AI Music & Sound Effects** | /music/create<br>/music | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **100 - 200 Xu / bài (Nhạc nền)**<br>**200 - 300 Xu / bài (Có lời)** |
 | **Video Factory & Storyboard** | /video/create<br>/video | ✅ | ✅ | ✅ | 🟡 | **CONTRACT_READY** | **Theo phân cảnh (Scene-based)** |
-| **AI Image Studio 4K** | /image/create<br>/image | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **50 - 600 Xu / ảnh** (tùy resolution) |
+| **AI Image Studio 4K** | /image/create<br>/image | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **10 / 20 / 30 / 50 / 70 / 100 / 140 Xu** (7 mức từ Nhanh gọn đến Cao cấp + BH) |
 | **AI Document & DeepOCR** | /documents<br>/pdf-vault | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **Miễn phí / 3 Xu theo tệp** |
 | **AI Marketing & Chat Copilot** | /chat | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **Tích hợp phiên làm việc** |
 | **Ví Xu & Nạp Tiền VietQR PayOS** | /pricing<br>/packages | ✅ | ✅ | ✅ | ✅ | **LIVE_VERIFIED** | **Tự động 5s (+10% Xu)** |
