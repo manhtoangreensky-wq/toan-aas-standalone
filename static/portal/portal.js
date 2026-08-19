@@ -15250,7 +15250,7 @@
                 <span>Văn bản / Kịch bản thuyết minh</span>
                 <textarea class="portal-input" rows="3" placeholder="Nhập đoạn văn bản bạn muốn tạo giọng đọc...">TOAN AAS là nền tảng sáng tạo nội dung và tự động hóa AI hàng đầu. Giọng đọc được tạo ra với độ tự nhiên cao, ngắt nghỉ đúng ngữ điệu và chuẩn phòng thu.</textarea>
               </label>
-              
+
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <label class="portal-field">
                   <span>Diễn viên lồng tiếng (Voice Actor)</span>
@@ -25873,7 +25873,7 @@
       : (isRegister
         ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
         : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu an toàn.") : safeText(page.description)));
-    
+
     // Sleek glass highlight box on left
     const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
       <div class="portal-auth-context-head">
@@ -25889,7 +25889,7 @@
     </aside>`;
 
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
-    
+
     // Direct, Prominent 1-Click Social & Bot Login
     const directSocialLogin = mfaLoginPending ? "" : `
       <div class="portal-direct-social-auth">
@@ -30858,7 +30858,7 @@
             <button type="button" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">🤖 Android</button>
             <button type="button" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">🍏 iPhone / iPad</button>
           </div>
-          
+
           <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
             <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
             <ol class="portal-ios-steps">

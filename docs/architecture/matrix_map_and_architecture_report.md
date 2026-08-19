@@ -1,10 +1,10 @@
 # Báo Cáo Ma Trận Chức Năng, Sơ Đồ Điều Hướng & Kiểm Định Trạng Thái TOAN AAS Web App
 
-> **Phiên bản:** 2026.1 Reconciliation Baseline  
-> **Commit SHA:** 34bc94ef60f75dd749a5f05957db10e262edefad  
-> **Repository:** manhtoangreensky-wq/toan-aas-standalone  
-> **Domain:** app.toanaas.vn  
-> **Quy chuẩn nhận diện:** Teal (#0f766e) / Sky Blue (#0284c7) / Deep Petrol (#063b47)  
+> **Phiên bản:** 2026.1 Reconciliation Baseline
+> **Commit SHA:** 34bc94ef60f75dd749a5f05957db10e262edefad
+> **Repository:** manhtoangreensky-wq/toan-aas-standalone
+> **Domain:** app.toanaas.vn
+> **Quy chuẩn nhận diện:** Teal (#0f766e) / Sky Blue (#0284c7) / Deep Petrol (#063b47)
 
 ---
 
