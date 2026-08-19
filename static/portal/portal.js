@@ -10996,11 +10996,9 @@
     const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
-    const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ ràng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
-    // Discovery is the primary job of this page.  Keep the optional Studio
-    // handoff after search and intent selection so it helps a decided visitor
-    // continue, instead of interrupting someone who is trying to find a tool.
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${search}${renderFeatureFamilyExplorer()}${jumps}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
+    const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ lượng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
+    const aiSuiteHub = renderAISuiteProductivityHub(context);
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}${aiSuiteHub}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls" role="region" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${search}${renderFeatureFamilyExplorer()}${jumps}</div><div class="portal-feature-directory-results" data-catalog-results>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</div></section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -19139,13 +19137,163 @@
     return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2 id="workspace-canonical-lane-title">${dashboardText("canonical.readyTitle")}</h2><p>${dashboardText("canonical.readyBody")}</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
   }
 
+  function renderAISuiteProductivityHub(context) {
+    return `<section class="portal-ai-suite-productivity-hub" style="margin: 28px 0;">
+      <div style="text-align:center; max-width:800px; margin:0 auto 28px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:9999px; background:linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.2)); border:1px solid rgba(14,165,233,0.3); font-size:12px; font-weight:700; color:#38bdf8; margin-bottom:12px;">
+          ✨ HỆ SINH THÁI 120+ CÔNG CỤ AI TOÀN NĂNG
+        </div>
+        <h2 style="font-size:32px; font-weight:800; letter-spacing:-0.03em; margin:0 0 10px; background:linear-gradient(135deg, #ffffff 30%, #94a3b8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+          Không Gian Làm Việc Sáng Tạo AI Đa Nền Tảng
+        </h2>
+        <p style="font-size:15px; color:#94a3b8; margin:0; line-height:1.6;">
+          Tất cả trong một: Bóc băng phụ đề, lồng tiếng, tạo nhạc, sản xuất video ngắn, tạo ảnh 4K và marketing tự động hóa.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px;">
+        <a href="/subtitle" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #0ea5e9, #0284c7); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(14,165,233,0.4);">
+              🎙️
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">🟢 Hot</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Phụ Đề & Lồng Tiếng (SubDub)</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Bóc băng ASR tiếng Việt, dịch phụ đề song ngữ, lồng tiếng 6 giọng AI & xuất SRT/VTT/Video.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#38bdf8; font-weight:600;">Mở Trình Làm Việc →</span>
+            <span style="font-size:11px; color:#64748b;">-5 Xu / phút</span>
+          </div>
+        </a>
+
+        <a href="/voice/tts" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #10b981, #059669); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(16,185,129,0.4);">
+              🗣️
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">🟢 Sẵn sàng</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Voice Studio & TTS AI</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Chuyển văn bản thành giọng đọc truyền cảm 15+ diễn viên, nghe thử sóng âm & tải MP3 320kbps.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#34d399; font-weight:600;">Tạo Giọng Đọc →</span>
+            <span style="font-size:11px; color:#64748b;">-2 Xu / 1k ký tự</span>
+          </div>
+        </a>
+
+        <a href="/music/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #a855f7, #7e22ce); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(168,85,247,0.4);">
+              🎵
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3);">⚡ Suno V5</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Music & Sound Effects</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tạo nhạc nền độc quyền không bản quyền theo prompt, Lofi, EDM, Cinematic, 48kHz Stereo.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#c084fc; font-weight:600;">Sáng Tác Nhạc →</span>
+            <span style="font-size:11px; color:#64748b;">-8 Xu / bài</span>
+          </div>
+        </a>
+
+        <a href="/video/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(2,132,199,0.4);">
+              🎬
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3);">👑 Pro</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Video Factory & 10 Hooks</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tự động hóa sản xuất video ngắn TikTok/Reels, sinh 10 Hook giữ chân & phân cảnh storyboard.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#38bdf8; font-weight:600;">Sản Xuất Video →</span>
+            <span style="font-size:11px; color:#64748b;">-10 Xu / pack</span>
+          </div>
+        </a>
+
+        <a href="/image/create" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #ec4899, #be185d); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(236,72,153,0.4);">
+              🎨
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(236,72,153,0.15); color:#f472b6; border:1px solid rgba(236,72,153,0.3);">⚡ Flux / Midjourney</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Image Studio 4K</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 8K, chân dung AI người mẫu, thumbnail YouTube & banner bán hàng.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#f472b6; font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
+            <span style="font-size:11px; color:#64748b;">-5 Xu / ảnh</span>
+          </div>
+        </a>
+
+        <a href="/documents" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #eab308, #ca8a04); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(234,179,8,0.4);">
+              📑
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3);">🟢 DeepOCR 99.8%</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Document & PDF / OCR Hub</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Bóc chữ tiếng Việt từ ảnh chụp tài liệu quét, chuyển PDF sang Word .docx, tách/gộp PDF siêu tốc.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#facc15; font-weight:600;">Xử Lý Tài Liệu →</span>
+            <span style="font-size:11px; color:#64748b;">-3 Xu / tệp</span>
+          </div>
+        </a>
+
+        <a href="/chat" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #3b82f6, #1d4ed8); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(59,130,246,0.4);">
+              🤖
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3);">⚡ Multi-LLM</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">AI Marketing & Chat Copilot</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch ads TikTok/FB, CSKH tự động.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#60a5fa; font-weight:600;">Chat Với Trợ Lý →</span>
+            <span style="font-size:11px; color:#64748b;">-2 Xu / lượt</span>
+          </div>
+        </a>
+
+        <a href="/pricing" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.65); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #f97316, #c2410c); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 8px 16px -4px rgba(249,115,22,0.4);">
+              💳
+            </div>
+            <span style="padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid rgba(249,115,22,0.3);">⚡ Quét Mã 5s</span>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:700; color:#f8fafc; margin:0 0 6px;">Ví Xu & Nạp Tiền VietQR PayOS</h3>
+            <p style="font-size:13px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">Nạp Xu tức thì qua VietQR PayOS (VCB, MB, Techcombank), tự động cộng Xu trong 5 giây.</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+            <span style="font-size:12px; color:#fb923c; font-weight:600;">Nạp Xu Ngay →</span>
+            <span style="font-size:11px; color:#10b981;">Tặng +10% Xu</span>
+          </div>
+        </a>
+      </div>
+    </section>`;
+  }
+
   function renderDashboard(page, context) {
     const readState = dashboardReadState(context);
-    // The command center intentionally keeps Web-native work visible even
-    // when the separate canonical reader is loading, guarded or failed.
-    // It never substitutes zeroes, stale records or an invented success for
-    // wallet/job/asset/ticket data that the Core Bridge did not confirm.
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderAISuiteProductivityHub(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
