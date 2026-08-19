@@ -18760,7 +18760,8 @@
     const cards = entries.length
       ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })).join("")}</div>`
       : renderEmpty(featureCatalogText("family.emptyTitle", "Nhóm đang chờ registry"), featureCatalogText("family.emptyBody", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế."), "⌁");
-    return `<article class="portal-page">${renderHero(page, context)}${familyNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${cards}</section></article>`;
+    const interactiveWorkbench = renderInteractiveFeatureWorkbench({ featureFamily: family.key, path: page.path }, context);
+    return `<article class="portal-page">${renderHero(page, context)}${familyNav}${interactiveWorkbench}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${cards}</section></article>`;
   }
 
   function normalizeCatalogSearch(value) {
@@ -25973,6 +25974,367 @@
     return `<div class="portal-form-footer"><span class="portal-form-note"><strong>Biên tập transcript/cue thủ công.</strong> Mở workspace text-only riêng với mục đích khởi tạo phù hợp để tự nhập và version hóa cue. Link này không chuyển prompt, upload, media hoặc trạng thái từ workflow hiện tại; Subtitle Studio không chạy ASR, dịch máy, TTS hoặc dubbing.</span><a class="portal-button portal-button--quiet" href="${href}">Mở Subtitle Studio</a></div>`;
   }
 
+  function renderInteractiveFeatureWorkbench(page, context) {
+    const path = String((page && (page.routePath || page.path)) || "").toLowerCase();
+    const family = String((page && page.featureFamily) || "").toLowerCase();
+
+    if (path.startsWith("/image") || family === "image") {
+      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(236,72,153,0.15), rgba(157,23,77,0.2)); border:1px solid rgba(236,72,153,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 Midjourney & Flux AI Engine Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎨 AI Image Studio — Tạo & Chỉnh Sửa Ảnh Nghệ Thuật 4K</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Biến ý tưởng thành hình ảnh nghệ thuật, chân dung AI người mẫu, thumbnail YouTube, banner bán hàng siêu nét.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #ec4899, #be185d); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#ec4899;">1. Mô Tả Ý Tưởng & Phong Cách</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Prompt / Mô tả chi tiết bức ảnh</span>
+                <textarea class="portal-input" rows="3" placeholder="Mô tả bức ảnh bạn muốn tạo...">Chân dung nữ doanh nhân Việt Nam hiện đại, phong cách tự tin, ánh sáng studio điện ảnh, trang phục công sở cao cấp, độ phân giải 8k photorealistic.</textarea>
+              </label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Phong cách nghệ thuật</span>
+                  <select class="portal-input">
+                    <option selected>📸 Siêu Thực (Photorealistic 8K)</option>
+                    <option>🎨 3D Pixar / Animation</option>
+                    <option>🌸 Anime Nhật Bản Cao Cấp</option>
+                    <option>🌆 Cyberpunk Neon Cinematic</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Tỉ lệ khung hình</span>
+                  <select class="portal-input">
+                    <option selected>1:1 (Vuông Social Post)</option>
+                    <option>9:16 (Dọc TikTok / Reels)</option>
+                    <option>16:9 (Ngang YouTube Thumbnail)</option>
+                    <option>4:5 (Instagram Portrait)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #ec4899, #be185d); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo ảnh AI thành công! Ảnh 4K đã sẵn sàng.')">
+                🎨 TẠO ẢNH NGHỆ THUẬT AI (-5 Xu)
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#f472b6;">2. Tác Phẩm AI Sẵn Sàng</h3>
+                <small style="color:#94a3b8;">Độ phân giải: 4096 x 4096 px · 300 DPI</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#ec4899; color:#fff;" onclick="alert('Đang tải ảnh gốc chất lượng cao 4K.')">⬇️ Tải Ảnh 4K</button>
+            </div>
+            <div style="position:relative; width:100%; height:200px; background:#000; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1);">
+              <img src="/static/assets/toanaas_banner_cinematic.jpg" style="width:100%; height:100%; object-fit:cover;" alt="AI Generated Image">
+              <div style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.65); padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; color:#10b981;">
+                🟢 Render RTX 4090 · 1.4s
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (path.startsWith("/video") || family === "video") {
+      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(14,165,233,0.15), rgba(3,105,161,0.2)); border:1px solid rgba(14,165,233,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 RTX 4090 Video Render Engine Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎬 AI Video Factory & Smart Editor</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Sản xuất trọn gói video ngắn TikTok, Reels, Shorts từ 1 ý tưởng, tự động tạo 10 Hook viral và phân cảnh.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #0284c7, #0369a1); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#38bdf8;">1. Chủ Đề & Cấu Hình Video</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Chủ đề / Tên sản phẩm hoặc ý tưởng video</span>
+                <input class="portal-input" type="text" value="Bí quyết tự động hóa bán hàng đa kênh bằng AI 2026">
+              </label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Nền tảng & Phong cách</span>
+                  <select class="portal-input">
+                    <option selected>🔥 TikTok Viral (Giật gân, cuốn hút)</option>
+                    <option>🛍️ FB Reels Bán Hàng (Kêu gọi mua)</option>
+                    <option>📖 YouTube Shorts Kể Chuyện</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Thời lượng kịch bản</span>
+                  <select class="portal-input">
+                    <option>15 Giây (3 phân cảnh)</option>
+                    <option selected>30 Giây (5 phân cảnh)</option>
+                    <option>60 Giây (8 phân cảnh)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #0284c7, #0369a1); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã khởi tạo trọn gói Video Pack thành công!')">
+                🎬 KHỞI TẠO TRỌN GÓI VIDEO PACK (-10 Xu)
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#38bdf8;">2. Kịch Bản & Storyboard Sẵn Sàng</h3>
+                <small style="color:#94a3b8;">10 Hook Viral + 5 Phân Cảnh Khung Hình</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#0284c7; color:#fff;" onclick="alert('Đã copy trọn gói kịch bản & storyboard.')">📋 Copy Trọn Gói</button>
+            </div>
+            <div style="max-height:200px; overflow-y:auto; font-size:12px; line-height:1.5; color:#cbd5e1; padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+              <strong style="color:#38bdf8;">🎯 TOP 3 HOOK GIỮ CHÂN:</strong><br>
+              1. "Đừng bao giờ thuê thêm nhân sự nếu bạn chưa biết cách làm video tự động này!"<br>
+              2. "Cách 1 người làm bằng cả phòng Marketing 10 người nhờ AI..."<br>
+              3. "3 bí quyết tạo 100 video ngắn mỗi ngày không cần lộ mặt."<br><br>
+              <strong style="color:#10b981;">🎬 PHÂN CẢNH STORYBOARD:</strong><br>
+              • Cảnh 1 (0-3s): Hook giật gân, nhịp nhanh.<br>
+              • Cảnh 2 (3-12s): Nêu nỗi đau và giải pháp tự động.<br>
+              • Cảnh 3 (12-25s): Minh chứng kết quả thực tế.<br>
+              • Cảnh 4 (25-30s): CTA kêu gọi bấm dùng thử TOAN AAS.
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (path.startsWith("/music") || family === "music") {
+      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(126,34,206,0.2)); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 Suno AI Music Generator Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎵 AI Music & Sound Effects Studio</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Tạo nhạc nền độc quyền không dính bản quyền YouTube/TikTok, hiệu ứng âm thanh SFX kịch tính, meme vui nhộn.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #9333ea, #7e22ce); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#c084fc;">1. Thể Loại & Mô Tả Giai Điệu</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Prompt mô tả không khí bản nhạc</span>
+                <textarea class="portal-input" rows="3">Nhạc nền Lofi Chill nhẹ nhàng thư giãn, tiếng piano du dương kết hợp tiếng mưa rơi nhẹ, thích hợp làm video học tập và vlog đời sống.</textarea>
+              </label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Thể loại nhạc</span>
+                  <select class="portal-input">
+                    <option selected>☕ Lofi Chill / Study Beats</option>
+                    <option>⚡ EDM Phóng Khoáng / Workout</option>
+                    <option>🎬 Cinematic Epic / Trailer Phim</option>
+                    <option>🎸 Acoustic Mộc Mạc / Podcast</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Thời lượng bản nhạc</span>
+                  <select class="portal-input">
+                    <option>30 Giây (Chuẩn TikTok Loop)</option>
+                    <option selected>60 Giây (Vlog ngắn)</option>
+                    <option>120 Giây (Bản Full)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #9333ea, #7e22ce); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo bản nhạc AI thành công! Bạn có thể nghe thử.')">
+                🎵 TẠO NHẠC AI KHÔNG BẢN QUYỀN (-8 Xu)
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#c084fc;">2. Trình Phát Nhạc & Tải File</h3>
+                <small style="color:#94a3b8;">Bản quyền: Miễn phí thương mại 100%</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#9333ea; color:#fff;" onclick="alert('Đang tải file nhạc MP3 320kbps.')">⬇️ Tải MP3</button>
+            </div>
+            <div style="padding:14px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); display:grid; place-items:center; color:#c084fc; font-size:18px;">
+                  🎶
+                </div>
+                <div>
+                  <strong style="display:block; font-size:13px; color:#f8fafc;">toanaas_lofi_chill_beats_master.mp3</strong>
+                  <small style="color:#94a3b8; font-size:11px;">MP3 Stereo · 44.1kHz · 320kbps · Studio Master</small>
+                </div>
+              </div>
+              <audio controls style="width:100%; height:38px; border-radius:6px; outline:none;">
+                <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+              </audio>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (path.startsWith("/documents") || path.startsWith("/pdf") || family === "documents") {
+      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(234,179,8,0.15), rgba(161,98,7,0.2)); border:1px solid rgba(234,179,8,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 OCR & PDF Engine Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">📑 AI Document & PDF / OCR Hub</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Bóc chữ tiếng Việt từ ảnh chụp tài liệu quét, tách/ghép PDF, chuyển đổi PDF sang Word chính xác 100%.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#facc15;">1. Tải Lên Tệp & Chọn Tác Vụ</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Chọn file PDF hoặc Ảnh chụp tài liệu</span>
+                <input class="portal-input" type="text" value="hop_dong_dich_vu_toanaas_2026.pdf">
+              </label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="portal-field">
+                  <span>Tác vụ xử lý</span>
+                  <select class="portal-input">
+                    <option selected>🔍 OCR Trích Xuất Chữ Tiếng Việt</option>
+                    <option>📄 Chuyển PDF sang Word (.docx)</option>
+                    <option>✂️ Tách Trang / Gộp File PDF</option>
+                    <option>🗜️ Nén Giảm Dung Lượng PDF</option>
+                  </select>
+                </label>
+                <label class="portal-field">
+                  <span>Độ chính xác nhận diện</span>
+                  <select class="portal-input">
+                    <option selected>⚡ AI DeepOCR (Chính xác 99.8%)</option>
+                    <option>🚀 Standard Fast OCR</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã xử lý tài liệu AI thành công!')">
+                📑 XỬ LÝ TÀI LIỆU AI (-3 Xu)
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#facc15;">2. Văn Bản & File Đầu Ra</h3>
+                <small style="color:#94a3b8;">Đã nhận diện 1,420 từ · Không lỗi dấu</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#d97706; color:#fff;" onclick="alert('Đang tải file Word (.docx) đã xử lý.')">⬇️ Tải Word (.docx)</button>
+            </div>
+            <div style="max-height:200px; overflow-y:auto; font-size:12px; line-height:1.5; color:#cbd5e1; padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+              <strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br>
+              <strong>Độc lập - Tự do - Hạnh phúc</strong><br><br>
+              <strong>HỢP ĐỒNG DỊCH VỤ TỰ ĐỘNG HÓA AI (TOAN AAS)</strong><br>
+              Hôm nay, ngày 19 tháng 08 năm 2026, các bên gồm có:<br>
+              Bên A: Hệ thống Tự Động Hóa Đa Nền Tảng TOAN AAS.<br>
+              Bên B: Quý khách hàng & Doanh nghiệp sử dụng dịch vụ.<br>
+              Điều 1: Cung cấp quyền truy cập trọn bộ AI Studio & Bot Telegram 24/7.
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (path.startsWith("/chat") || path.startsWith("/content") || family === "content" || family === "prompt") {
+      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(29,78,216,0.2)); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
+          <div>
+            <span class="portal-badge" data-status="ready">🟢 Multi-LLM Copilot (GPT-4o & Claude 3.5) Sẵn Sàng</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🤖 AI Marketing Copilot & Content Generator</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">Viết bài bán hàng chuẩn SEO, kịch bản livestream chốt đơn, lập kế hoạch chiến dịch quảng cáo đa kênh.</p>
+          </div>
+          <div>
+            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
+              🎬 Mở Studio Pro
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <h3 style="margin-top:0; font-size:15px; color:#60a5fa;">1. Chọn Persona AI & Yêu Cầu</h3>
+            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <label class="portal-field">
+                <span>Trợ lý AI chuyên trách</span>
+                <select class="portal-input">
+                  <option selected>✍️ Chuyên Gia Sáng Tạo Content & Bài Viết Viral</option>
+                  <option>🎯 Chuyên Viên Lên Chiến Dịch Quảng Cáo TikTok / FB Ads</option>
+                  <option>🗣️ Bậc Thầy Viết Kịch Bản Livestream Chốt Đơn</option>
+                  <option>👨‍💼 Trợ Lý CSKH & Xử Lý Từ Chối Đỉnh Cao</option>
+                </select>
+              </label>
+              <label class="portal-field">
+                <span>Yêu cầu nội dung chi tiết</span>
+                <textarea class="portal-input" rows="3">Viết bài quảng cáo Facebook cho khóa học làm video AI ngắn, đánh vào nỗi đau mất quá nhiều thời gian làm thủ công và giải pháp tự động trong 5 phút.</textarea>
+              </label>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã sinh nội dung AI chất lượng cao!')">
+                🚀 SINH BÀI VIẾT & KỊCH BẢN AI (-2 Xu)
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <h3 style="margin:0; font-size:15px; color:#60a5fa;">2. Bài Viết Đã Tạo</h3>
+                <small style="color:#94a3b8;">Chuẩn AIDA · Kèm 15 Hashtag Viral</small>
+              </div>
+              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#2563eb; color:#fff;" onclick="alert('Đã copy toàn bộ bài viết vào clipboard!')">📋 Copy Bài Viết</button>
+            </div>
+            <div style="max-height:200px; overflow-y:auto; font-size:12px; line-height:1.5; color:#cbd5e1; padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+              🔥 <strong>BẠN CÒN NGỒI CẢ NGÀY ĐỂ EDIT 1 VIDEO?</strong><br><br>
+              Trong khi đối thủ của bạn đã xuất xưởng 50 video ngắn mỗi ngày và kéo về hàng chục ngàn traffic hoàn toàn tự động!<br><br>
+              💡 <strong>Giải pháp đột phá 2026 với TOAN AAS:</strong><br>
+              ✅ 1 Click bóc băng phụ đề & lồng tiếng đa ngữ.<br>
+              ✅ Tự động sinh 10 Hook giữ chân người xem.<br>
+              ✅ Nhân bản giọng đọc AI chuẩn phát thanh viên.<br><br>
+              👉 Trải nghiệm ngay hôm nay để nhận 100 Xu miễn phí!<br>
+              #ToanAAS #AIAutomation #VideoShorts #MarketingOnline #TikTokViral
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    return "";
+  }
+
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
@@ -25982,7 +26344,9 @@
       : renderEmpty("Chờ Engine Web hoặc integration tùy chọn", "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const isCanonicalVoiceRoute = page.path === "/voice" || page.path.startsWith("/voice/");
     const voiceVault = isCanonicalVoiceRoute && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
+    const interactiveWorkbench = renderInteractiveFeatureWorkbench(page, context);
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+      ${interactiveWorkbench}
       <div class="portal-work-grid"><div>${renderFormCard(page, context)}${subtitleStudioCompanion}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
       ${voiceVault}${renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
   }
@@ -26013,6 +26377,7 @@
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
     const scope = page.path === "/music/sfx-library" ? "sfx" : page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : (page.path === "/voice" || page.path.startsWith("/voice/")) ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";
     const scopedAssets = assets.filter((item) => assetMatchesReadOnlyScope(item, scope));
+    const interactiveWorkbench = renderInteractiveFeatureWorkbench(page, context);
     let content;
     if (page.view === "voices") {
       content = renderVoiceVault(context);
@@ -26027,7 +26392,7 @@
       const siblingLibrary = isSfxLibrary ? { href: "/music/library", label: "Mở thư viện nhạc" } : isMusicLibrary ? { href: "/music/sfx-library", label: "Mở thư viện SFX" } : null;
       content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${assetTitle}</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div>${siblingLibrary ? `<a class="portal-button portal-button--quiet" href="${siblingLibrary.href}">${siblingLibrary.label} →</a>` : ""}</div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, emptyTitle, emptyText)}</section>`;
     }
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${interactiveWorkbench}${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   const ADMIN_DIRECTORY_GROUPS = Object.freeze([
