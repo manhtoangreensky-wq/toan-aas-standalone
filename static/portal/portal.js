@@ -1035,6 +1035,13 @@
       "Sao chép prompt không gọi Bot, Core Bridge, provider, job, ví Xu, PayOS, Asset Vault, publish hoặc delivery. Tự kiểm tra claim, nguồn và quyền sử dụng trước khi dùng bên ngoài."
     ]
   });
+  customerPage("/free-tools", "Công cụ miễn phí & Tiện ích sáng tạo", "Bộ công cụ tiện ích sáng tạo nội dung miễn phí không tốn Xu: làm sạch phụ đề, trích xuất metadata YouTube, định dạng JSON/Text, tạo mã VietQR nhanh.", ICONS.prompt, {
+    layout: "free-tools", type: "free-tools", fields: [], action: "none", status: "ready",
+    notes: [
+      "Bộ công cụ hoạt động client-side hoàn toàn miễn phí, không tiêu hao Xu.",
+      "Xử lý siêu tốc: Làm sạch timestamp phụ đề SRT/VTT, trích xuất thumbnail/tags video, format JSON, tạo mã QR ngân hàng."
+    ]
+  });
   customerPage("/media-workspace", "Audio Library & Briefing", "Tổ chức Audio Asset Vault và music/SFX brief riêng tư với version history, không chạy provider hoặc tạo audio giả.", ICONS.music, {
     layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
     notes: ["Workspace này chỉ quản lý metadata, creative brief và tham chiếu Asset Vault thuộc signed Web account. Nó không gọi Bot, provider, Xu, PayOS, job hay delivery.", "Music library bên ngoài, AI generation, enhance, translate, mux/render và preview provider vẫn được giữ guarded cho tới khi có adapter riêng đã được kiểm chứng."]
@@ -9747,7 +9754,7 @@
       {
         label: "Tạo mới",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/free-tools", "Công cụ miễn phí", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
         ]
       },
       {
@@ -10662,6 +10669,7 @@
     { key: "music", title: "Music & SFX", description: "Nhạc AI, bài hát, SFX và thư viện tài sản âm thanh." },
     { key: "subtitle", title: "Phụ đề & Lồng tiếng", description: "ASR, SRT/VTT, dịch và lồng tiếng." },
     { key: "documents", title: "Documents & PDF", description: "PDF, OCR, gộp, tách, nén và dịch tài liệu." },
+    { key: "free_tools", title: "🆓 Công cụ miễn phí (0 Xu)", description: "Dịch thuật mở, tỷ giá USD/VND & quy đổi Xu, tạo mã QR, sinh Avatar AI và dự báo thời tiết hoàn toàn miễn phí." },
     { key: "support", title: "Hỗ trợ & thông tin", description: "Ticket, bảng giá và thông tin pháp lý." }
   ]);
 
@@ -10833,6 +10841,7 @@
   }
 
   function fallbackCatalogGroup(path) {
+    if (path === "/free-tools" || path.startsWith("/free-tools")) return "free_tools";
     if (["/dashboard", "/account"].includes(path)) return "account";
     if (path.startsWith("/wallet") || ["/packages"].includes(path)) return "wallet";
     if (["/jobs", "/assets"].includes(path)) return "jobs";
@@ -11911,6 +11920,922 @@
     const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;
     const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;
     return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Signed Web-only · read-only snapshot</span><h2>Tìm một prompt seed rõ ngữ cảnh, rồi tự review trước khi dùng.</h2><p>Gallery thay việc lục lại Free Hub trong Telegram bằng catalog Web gọn, có bộ lọc server-side, phân trang và chi tiết theo thao tác của bạn. Nó không tạo AI output hoặc kết nối bất kỳ runtime nào.</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>Nhóm prompt</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>Ngành</dd></div><div><dt>0</dt><dd>Execution / payment</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Snapshot catalog</span><h2 class="portal-card-title">Khám phá ${safeText(String(catalogTotal || "—"))} prompt seed</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || "Catalog sẽ xuất hiện sau khi signed session được máy chủ xác nhận."))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc và query chỉ dùng cho request hiện tại; không lưu vào URL, localStorage, sessionStorage, Project hay Memory Center.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>Làm mới catalog</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>Áp dụng bộ lọc</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Read-only results</span><h2 class="portal-card-title">Prompt phù hợp</h2><p class="portal-card-subtitle">Mỗi thẻ là dữ liệu snapshot đã trả về từ server; chỉ nút “Xem chi tiết” mới gọi endpoint chi tiết riêng.</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Catalog để tham khảo, không thực thi</h2><p class="portal-card-subtitle">Không có provider, Bot, Core Bridge, job, ví Xu, PayOS, asset, render, publish hoặc delivery trong Gallery. Hãy kiểm tra claim, nguồn và quyền dùng trước khi đưa prompt vào một workflow khác.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Provider / Bot / bridge</strong><em>off</em></span><span><strong>Job / wallet / PayOS</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div>${renderNotes(page)}</section></article>`;
+  }
+
+  const VIETQR_BANKS = [
+    { code: "ICB", shortName: "VietinBank", name: "Ngân hàng TMCP Công thương Việt Nam" },
+    { code: "VCB", shortName: "Vietcombank", name: "Ngân hàng TMCP Ngoại thương Việt Nam" },
+    { code: "MB", shortName: "MBBank", name: "Ngân hàng TMCP Quân đội" },
+    { code: "TCB", shortName: "Techcombank", name: "Ngân hàng TMCP Kỹ thương Việt Nam" },
+    { code: "ACB", shortName: "ACB", name: "Ngân hàng TMCP Á Châu" },
+    { code: "VPB", shortName: "VPBank", name: "Ngân hàng TMCP Việt Nam Thịnh Vượng" },
+    { code: "BIDV", shortName: "BIDV", name: "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam" },
+    { code: "VBA", shortName: "Agribank", name: "Ngân hàng Nông nghiệp và Phát triển Nông thôn VN" },
+    { code: "TPB", shortName: "TPBank", name: "Ngân hàng TMCP Tiên Phong" },
+    { code: "STB", shortName: "Sacombank", name: "Ngân hàng TMCP Sài Gòn Thương Tín" },
+    { code: "HDB", shortName: "HDBank", name: "Ngân hàng TMCP Phát triển TP.HCM" },
+    { code: "VIB", shortName: "VIB", name: "Ngân hàng TMCP Quốc tế Việt Nam" },
+    { code: "SHB", shortName: "SHB", name: "Ngân hàng TMCP Sài Gòn - Hà Nội" },
+    { code: "OCB", shortName: "OCB", name: "Ngân hàng TMCP Phương Đông" },
+    { code: "MSB", shortName: "MSB", name: "Ngân hàng TMCP Hàng Hải" },
+    { code: "LPB", shortName: "LPBank", name: "Ngân hàng TMCP Lộc Phát Việt Nam" },
+    { code: "SEAB", shortName: "SeABank", name: "Ngân hàng TMCP Đông Nam Á" },
+    { code: "CAKE", shortName: "CAKE by VPBank", name: "Ngân hàng số CAKE by VPBank" },
+    { code: "TIMO", shortName: "Timo", name: "Ngân hàng số Timo by BVBank" }
+  ];
+
+  function cleanSubtitleContent(raw, options) {
+    if (!raw) return "";
+    const opts = options || {};
+    let text = String(raw).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    text = text.replace(/^WEBVTT[^\n]*\n+/i, "");
+    text = text.replace(/(?:\d{2}:)?\d{2}:\d{2}[,\.]\d{3}\s*-->\s*(?:\d{2}:)?\d{2}:\d{2}[,\.]\d{3}[^\n]*/g, "");
+    text = text.replace(/^\s*\d+\s*$/gm, "");
+    if (opts.stripTags !== false) {
+      text = text.replace(/<[^>]+>/g, "");
+    }
+    const lines = text.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+    if (opts.mergeParagraphs) {
+      return lines.join(" ");
+    }
+    return lines.join("\n");
+  }
+
+  function parseYouTubeVideoId(url) {
+    if (!url) return null;
+    const raw = String(url).trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
+    const match = raw.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/i);
+    return match ? match[1] : null;
+  }
+
+  function removeVietnameseAccents(str) {
+    if (!str) return "";
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  }
+
+  function slugifyVietnamese(str) {
+    if (!str) return "";
+    return removeVietnameseAccents(str)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/[\s-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function analyzeTextMetrics(text) {
+    const raw = String(text || "");
+    const chars = raw.length;
+    const charsNoSpaces = raw.replace(/\s/g, "").length;
+    const words = raw.trim() ? raw.trim().split(/\s+/).length : 0;
+    const lines = raw ? raw.split(/\r\n|\r|\n/).length : 0;
+    const sentences = raw.trim() ? raw.split(/[.!?]+/).filter(Boolean).length : 0;
+    const readingTimeMin = Math.max(1, Math.ceil(words / 200));
+    const speakingTimeMin = (words / 150).toFixed(1);
+    return { chars, charsNoSpaces, words, lines, sentences, readingTimeMin, speakingTimeMin };
+  }
+
+  function utf8ToBase64(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode("0x" + p1)));
+  }
+
+  function base64ToUtf8(str) {
+    return decodeURIComponent(Array.prototype.map.call(atob(str.trim()), (c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+  }
+
+  async function copyPlainText(text, label) {
+    const msg = label || "Đã sao chép vào bộ nhớ tạm.";
+    if (!text) {
+      showToast("Không có nội dung để sao chép.", "warning");
+      return;
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.appendChild(field);
+        field.select();
+        document.execCommand("copy");
+        field.remove();
+      }
+      showToast(msg);
+    } catch (err) {
+      showToast("Không thể tự động sao chép. Vui lòng copy thủ công.", "warning");
+    }
+  }
+
+  function downloadTextAsFile(content, fileName) {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName || "export.txt";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function updateFreeToolsTextStats(text) {
+    const metrics = analyzeTextMetrics(text);
+    const cEl = document.getElementById("free-tools-text-chars");
+    const cnEl = document.getElementById("free-tools-text-chars-nospaces");
+    const wEl = document.getElementById("free-tools-text-words");
+    const lsEl = document.getElementById("free-tools-text-lines-sentences");
+    const rtEl = document.getElementById("free-tools-text-read-time");
+    const vtEl = document.getElementById("free-tools-text-voice-time");
+    if (cEl) cEl.textContent = String(metrics.chars);
+    if (cnEl) cnEl.textContent = String(metrics.charsNoSpaces);
+    if (wEl) wEl.textContent = String(metrics.words);
+    if (lsEl) lsEl.textContent = `${metrics.lines} / ${metrics.sentences}`;
+    if (rtEl) rtEl.textContent = metrics.words > 0 ? `~${metrics.readingTimeMin}p` : "~0s";
+    if (vtEl) vtEl.textContent = metrics.words > 0 ? `~${metrics.speakingTimeMin}p` : "~0s";
+  }
+
+  function autoUpdateVietQrPreview(triggerNotice) {
+    const bank = document.getElementById("free-tools-qr-bank")?.value || "VCB";
+    const account = document.getElementById("free-tools-qr-account")?.value.trim() || "";
+    const name = document.getElementById("free-tools-qr-name")?.value.trim() || "";
+    const amount = document.getElementById("free-tools-qr-amount")?.value.trim() || "";
+    const memo = document.getElementById("free-tools-qr-memo")?.value.trim() || "";
+    const template = document.getElementById("free-tools-qr-template")?.value || "compact2";
+
+    const img = document.getElementById("free-tools-qr-img");
+    const placeholder = document.getElementById("free-tools-qr-placeholder");
+    const actions = document.getElementById("free-tools-qr-actions");
+
+    if (!account) {
+      if (img) { img.style.display = "none"; img.src = ""; }
+      if (placeholder) placeholder.style.display = "block";
+      if (actions) actions.style.display = "none";
+      if (triggerNotice) showToast("Vui lòng nhập số tài khoản ngân hàng.", "warning");
+      return;
+    }
+
+    const qrUrl = `https://img.vietqr.io/image/${encodeURIComponent(bank)}-${encodeURIComponent(account)}-${encodeURIComponent(template)}.jpg?amount=${encodeURIComponent(amount)}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(name)}`;
+    if (img) {
+      img.src = qrUrl;
+      img.style.display = "block";
+    }
+    if (placeholder) placeholder.style.display = "none";
+    if (actions) actions.style.display = "flex";
+    if (triggerNotice) showToast("Đã tạo mã VietQR thành công!");
+  }
+
+  function renderFreeTools(page, context) {
+    const defaultBank = "VCB";
+    return `<article class="portal-page portal-free-tools">${renderHero(page, context)}
+      <section class="portal-free-tools-intro">
+        <div>
+          <span class="portal-section-kicker">100% Client-Side · Không tốn Xu · Hoàn toàn Miễn phí</span>
+          <h2>Bộ công cụ tiện ích sáng tạo nội dung nhanh</h2>
+          <p>Tất cả công cụ hoạt động tức thì ngay trong trình duyệt của bạn với tốc độ cao, không gọi API trừ phí, không lưu trữ dữ liệu cá nhân, đảm bảo an toàn tuyệt đối và riêng tư.</p>
+        </div>
+        <dl>
+          <div><dt>6</dt><dd>Công cụ tích hợp</dd></div>
+          <div><dt>0đ</dt><dd>Chi phí / Xu</dd></div>
+          <div><dt>Instant</dt><dd>Xử lý tại Browser</dd></div>
+        </dl>
+      </section>
+
+      <nav class="portal-free-tools-nav" aria-label="Danh mục công cụ miễn phí">
+        <button class="portal-free-tools-tab is-active" type="button" data-free-tool-tab="subtitle">✂️ Làm sạch Phụ đề (SRT/VTT)</button>
+        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="youtube">📺 YouTube Extractor & Thumbnails</button>
+        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="vietqr">⚡ Tạo mã VietQR</button>
+        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="json">📝 Định dạng & Soát lỗi JSON</button>
+        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="text">📊 Xử lý & Phân tích Văn bản</button>
+        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="codec">🔐 Base64 & URL Codec</button>
+      </nav>
+
+      <!-- Panel 1: Subtitle Cleaner -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel is-active" data-free-tool-panel="subtitle">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Subtitle Processor</span>
+            <h2 class="portal-card-title">Làm sạch phụ đề SRT / VTT thành văn bản thuần</h2>
+            <p class="portal-card-subtitle">Tách bỏ toàn bộ timestamp, số thứ tự cue, thẻ định dạng HTML/VTT để lấy lại bài viết hoặc kịch bản đọc mượt mà.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <label class="portal-label" for="free-tools-sub-input">Dán nội dung SRT / VTT vào đây</label>
+              <textarea id="free-tools-sub-input" class="portal-textarea" style="min-height: 220px; font-family: monospace; font-size: 12px;" placeholder="1&#10;00:00:01,000 --> 00:00:04,500&#10;Chào mừng các bạn đến với TOAN AAS.&#10;&#10;2&#10;00:00:05,000 --> 00:00:08,200&#10;Hệ thống tự động hóa nội dung đa nền tảng."></textarea>
+            </div>
+            <div class="portal-free-tool-options" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-merge" /> Nối thành đoạn văn bản liền mạch (Paragraphs)</label>
+              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-tags" checked /> Xóa bỏ thẻ HTML/VTT (&lt;i&gt;, &lt;c&gt;...)</label>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="clean-subtitle">✨ Làm sạch phụ đề</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-subtitle">📋 Dữ liệu mẫu</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-subtitle">🗑️ Xóa</button>
+            </div>
+          </div>
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <div class="portal-field-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                <label class="portal-label" for="free-tools-sub-output">Văn bản thuần đã làm sạch</label>
+                <span id="free-tools-sub-stats" class="portal-text-counter" style="font-size: 11px; color: var(--portal-muted);">0 từ · 0 ký tự</span>
+              </div>
+              <textarea id="free-tools-sub-output" class="portal-textarea" readonly style="min-height: 220px; font-size: 13px; line-height: 1.6;" placeholder="Kết quả văn bản sau khi lọc sẽ hiển thị tại đây..."></textarea>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-clean-subtitle">📋 Sao chép kết quả</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="download-clean-subtitle">💾 Tải về file .txt</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: YouTube Extractor -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="youtube">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Video Assets & Metadata</span>
+            <h2 class="portal-card-title">Trích xuất Thumbnail & Mã nhúng YouTube</h2>
+            <p class="portal-card-subtitle">Nhận trực tiếp link ảnh thumbnail độ phân giải cao nhất (Full HD 1080p, HD 720p), Video ID và mã nhúng Iframe chuẩn SEO.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-field" style="margin-bottom: 20px;">
+          <label class="portal-label" for="free-tools-yt-url">Dán link YouTube (Video thông thường, Shorts, hoặc Live)</label>
+          <div class="portal-input-group" style="display:flex; gap: 8px;">
+            <input type="url" id="free-tools-yt-url" class="portal-input" style="flex:1;" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ hoặc https://youtu.be/..." />
+            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="extract-youtube">🔍 Trích xuất</button>
+          </div>
+        </div>
+        <div id="free-tools-yt-result" style="display:none;">
+          <div class="portal-yt-info-banner" style="padding: 12px 16px; background: rgba(123, 237, 219, 0.08); border: 1px solid rgba(123, 237, 219, 0.2); border-radius: 12px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>Video ID:</strong> <span id="free-tools-yt-id" style="font-family: monospace; color: var(--portal-accent);">-</span>
+            </div>
+            <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="#" target="_blank" rel="noopener noreferrer">🔗 Mở trên YouTube ↗</a>
+          </div>
+          <h3 style="font-size: 14px; margin-bottom: 12px;">Ảnh Thumbnail các độ phân giải:</h3>
+          <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">MaxRes (1080p Full HD)</div>
+              <img id="free-tools-yt-thumb-max" src="" alt="Thumbnail MaxRes" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" onerror="this.src='https://placehold.co/600x338?text=Kh%C3%B4ng+c%C3%B3+1080p'" />
+              <div style="margin-top: 10px; display:flex; gap: 6px;">
+                <a id="free-tools-yt-thumb-max-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="max" style="font-size: 11px;">Copy Link</button>
+              </div>
+            </div>
+            <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">High Quality (720p HD)</div>
+              <img id="free-tools-yt-thumb-hq" src="" alt="Thumbnail HQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="margin-top: 10px; display:flex; gap: 6px;">
+                <a id="free-tools-yt-thumb-hq-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="hq" style="font-size: 11px;">Copy Link</button>
+              </div>
+            </div>
+            <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">Medium Quality (360p)</div>
+              <img id="free-tools-yt-thumb-mq" src="" alt="Thumbnail MQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="margin-top: 10px; display:flex; gap: 6px;">
+                <a id="free-tools-yt-thumb-mq-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="mq" style="font-size: 11px;">Copy Link</button>
+              </div>
+            </div>
+          </div>
+          <div class="portal-field">
+            <label class="portal-label" for="free-tools-yt-embed">Mã nhúng Responsive Iframe (HTML)</label>
+            <div style="display:flex; gap: 8px;">
+              <input type="text" id="free-tools-yt-embed" class="portal-input" readonly style="font-family: monospace; font-size: 12px; flex:1;" />
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-embed">📋 Sao chép</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: VietQR Quick Generator -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="vietqr">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">NAPAS 247 Standard</span>
+            <h2 class="portal-card-title">Tạo mã VietQR chuyển khoản ngân hàng siêu tốc</h2>
+            <p class="portal-card-subtitle">Sinh mã QR thanh toán chuẩn ngân hàng Việt Nam, quét trực tiếp trên tất cả các app Mobile Banking.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-bank">Chọn Ngân hàng</label>
+              <select id="free-tools-qr-bank" class="portal-select" data-vietqr-input>
+                ${VIETQR_BANKS.map((b) => `<option value="${safeText(b.code)}"${b.code === defaultBank ? " selected" : ""}>${safeText(b.shortName)} - ${safeText(b.name)} (${safeText(b.code)})</option>`).join("")}
+              </select>
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-account">Số tài khoản nhận tiền *</label>
+              <input type="text" id="free-tools-qr-account" class="portal-input" placeholder="Ví dụ: 0123456789" data-vietqr-input />
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-name">Tên chủ tài khoản (Không dấu)</label>
+              <input type="text" id="free-tools-qr-name" class="portal-input" placeholder="Ví dụ: NGUYEN VAN A" style="text-transform: uppercase;" data-vietqr-input />
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-amount">Số tiền (VNĐ - Tùy chọn)</label>
+              <input type="number" id="free-tools-qr-amount" class="portal-input" placeholder="Ví dụ: 50000" min="0" step="1000" data-vietqr-input />
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-memo">Nội dung chuyển khoản (Tùy chọn)</label>
+              <input type="text" id="free-tools-qr-memo" class="portal-input" placeholder="Ví dụ: Thanh toan don hang #1024" data-vietqr-input />
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-qr-template">Mẫu giao diện VietQR</label>
+              <select id="free-tools-qr-template" class="portal-select" data-vietqr-input>
+                <option value="compact2" selected>Giao diện Hiện đại (Compact 2 - Có khung thông tin)</option>
+                <option value="compact">Giao diện Tiêu chuẩn (Compact)</option>
+                <option value="qr_only">Chỉ mã QR (QR Only)</option>
+                <option value="print">Bản in hóa đơn (Print)</option>
+              </select>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 16px;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="generate-vietqr">⚡ Tạo mã QR</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-vietqr">📋 Thông tin mẫu</button>
+            </div>
+          </div>
+          <div class="portal-free-tool-col" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div id="free-tools-qr-preview-container" class="portal-card portal-card-pad" style="width: 100%; max-width: 360px; text-align:center; background: rgba(0,0,0,0.25); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;">
+              <div style="font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;">MÃ VIETQR THANH TOÁN</div>
+              <div style="min-height: 260px; display:flex; align-items:center; justify-content:center; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 14px;">
+                <img id="free-tools-qr-img" src="" alt="Mã VietQR" style="max-width: 100%; height: auto; display:none;" />
+                <div id="free-tools-qr-placeholder" style="color: #666666; font-size: 13px; padding: 40px 10px;">Nhập số tài khoản và bấm <strong>Tạo mã QR</strong> để xem trước mã</div>
+              </div>
+              <div id="free-tools-qr-actions" style="display:none; gap: 8px; justify-content:center; flex-wrap: wrap;">
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="download-vietqr">💾 Tải ảnh QR</button>
+                <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="copy-vietqr-link">📋 Copy Link QR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 4: JSON Formatter & Validator -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="json">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Developer Utilities</span>
+            <h2 class="portal-card-title">Định dạng & Kiểm tra cú pháp JSON</h2>
+            <p class="portal-card-subtitle">Format JSON có thụt dòng đẹp mắt, nén gọn (Minify), phát hiện lỗi cú pháp và vị trí sai sót chính xác.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <label class="portal-label" for="free-tools-json-input">Dán chuỗi JSON vào đây</label>
+              <textarea id="free-tools-json-input" class="portal-textarea" style="min-height: 240px; font-family: monospace; font-size: 12px;" placeholder='{"title":"TOAN AAS","features":["tools","ai","bot"],"active":true}'></textarea>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-2">✨ Format (2 spaces)</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-4">Format (4 spaces)</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="minify-json">⚡ Minify (Nén)</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-json">📋 Mẫu</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-json">🗑️ Xóa</button>
+            </div>
+          </div>
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <div class="portal-field-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                <label class="portal-label" for="free-tools-json-output">Kết quả JSON</label>
+                <span id="free-tools-json-status" style="font-size: 11px; font-weight: 600;"></span>
+              </div>
+              <textarea id="free-tools-json-output" class="portal-textarea" readonly style="min-height: 240px; font-family: monospace; font-size: 12px; line-height: 1.5;" placeholder="Kết quả JSON sau khi định dạng..."></textarea>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-json">📋 Sao chép JSON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 5: Text & Word Counter & Tools -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="text">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Content & Typography</span>
+            <h2 class="portal-card-title">Phân tích số liệu & Biến đổi định dạng văn bản</h2>
+            <p class="portal-card-subtitle">Đếm từ, ký tự, ước tính thời gian đọc / lồng tiếng, chuyển đổi chữ hoa/thường, xóa dấu tiếng Việt và tạo URL slug chuẩn SEO.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-free-tools-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Tổng ký tự</div>
+            <div id="free-tools-text-chars" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
+          </div>
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Không khoảng trắng</div>
+            <div id="free-tools-text-chars-nospaces" style="font-size: 20px; font-weight: 700; color: #a6fff0; margin-top: 4px;">0</div>
+          </div>
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Số từ</div>
+            <div id="free-tools-text-words" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
+          </div>
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Số dòng / Số câu</div>
+            <div id="free-tools-text-lines-sentences" style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 4px;">0 / 0</div>
+          </div>
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Thời gian đọc</div>
+            <div id="free-tools-text-read-time" style="font-size: 20px; font-weight: 700; color: #7beddb; margin-top: 4px;">~0s</div>
+          </div>
+          <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: var(--portal-muted);">Đọc Voiceover</div>
+            <div id="free-tools-text-voice-time" style="font-size: 20px; font-weight: 700; color: #ffd166; margin-top: 4px;">~0s</div>
+          </div>
+        </div>
+        <div class="portal-field">
+          <label class="portal-label" for="free-tools-text-input">Nhập văn bản cần xử lý</label>
+          <textarea id="free-tools-text-input" class="portal-textarea" style="min-height: 180px; font-size: 13px; line-height: 1.6;" placeholder="Nhập hoặc dán đoạn văn bản bất kỳ để xem phân tích số liệu và áp dụng các thao tác biến đổi..."></textarea>
+        </div>
+        <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-uppercase">IN HOA</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-lowercase">in thường</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-titlecase">Viết Hoa Đầu Từ</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-sentencecase">Viết hoa đầu câu</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-remove-accents">Xóa dấu tiếng Việt</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-slugify">Tạo URL Slug</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-trim-spaces">Xóa khoảng trắng thừa</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-text-main">📋 Sao chép</button>
+        </div>
+      </section>
+
+      <!-- Panel 6: Base64 & URL Codec -->
+      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="codec">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Encoding & Hashing Utilities</span>
+            <h2 class="portal-card-title">Mã hóa & Giải mã Base64 / URL Component</h2>
+            <p class="portal-card-subtitle">Hỗ trợ đầy đủ bảng mã UTF-8 tiếng Việt, không bị lỗi font khi chuyển đổi chuỗi văn bản phức tạp.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <label class="portal-label" for="free-tools-codec-input">Dữ liệu nguồn (Input)</label>
+              <textarea id="free-tools-codec-input" class="portal-textarea" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="Nhập chuỗi văn bản hoặc mã cần chuyển đổi..."></textarea>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="b64-encode">🔒 Base64 Encode</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="b64-decode">🔓 Base64 Decode</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="url-encode">🌐 URL Encode</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="url-decode">🔓 URL Decode</button>
+            </div>
+          </div>
+          <div class="portal-free-tool-col">
+            <div class="portal-field">
+              <label class="portal-label" for="free-tools-codec-output">Kết quả sau khi chuyển đổi (Output)</label>
+              <textarea id="free-tools-codec-output" class="portal-textarea" readonly style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="Kết quả sẽ hiển thị tại đây..."></textarea>
+            </div>
+            <div class="portal-inline-actions" style="margin-top: 14px;">
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-codec">📋 Sao chép kết quả</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Safety & Boundary Card -->
+      <section class="portal-card portal-card-pad">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Cam kết riêng tư & Bảo mật</span>
+            <h2 class="portal-card-title">Xử lý cục bộ 100% trên trình duyệt</h2>
+            <p class="portal-card-subtitle">Tất cả các thao tác trên trang Công cụ miễn phí đều được thực thi bằng thuật toán Javascript cục bộ trong trình duyệt của bạn. Hệ thống không gửi dữ liệu văn bản lên server, không tiêu tốn Xu, và hoàn toàn độc lập với các tác vụ có phí.</p>
+          </div>
+          ${badge("guarded")}
+        </div>
+        <div class="portal-content-prompt-pack-guard-list">
+          <span><strong>Ví Xu / PayOS</strong><em>0đ / Không trừ Xu</em></span>
+          <span><strong>Lưu trữ Server</strong><em>Không lưu dữ liệu</em></span>
+          <span><strong>AI Token / Provider</strong><em>Không tiêu hao</em></span>
+        </div>
+        ${renderNotes(page)}
+      </section>
+    </article>`;
+  }
+
+  function handleFreeToolTab(tabBtn) {
+    if (!tabBtn) return;
+    const target = tabBtn.getAttribute("data-free-tool-tab");
+    if (!target) return;
+    const root = tabBtn.closest(".portal-free-tools");
+    if (!root) return;
+    root.querySelectorAll("[data-free-tool-tab]").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.getAttribute("data-free-tool-tab") === target);
+    });
+    root.querySelectorAll("[data-free-tool-panel]").forEach((panel) => {
+      panel.classList.toggle("is-active", panel.getAttribute("data-free-tool-panel") === target);
+    });
+  }
+
+  function handleFreeToolAction(actionEl, event) {
+    if (!actionEl) return;
+    const action = actionEl.getAttribute("data-free-tool-action");
+    if (!action) return;
+
+    if (action === "clean-subtitle") {
+      const input = document.getElementById("free-tools-sub-input")?.value || "";
+      const merge = Boolean(document.getElementById("free-tools-sub-opt-merge")?.checked);
+      const tags = Boolean(document.getElementById("free-tools-sub-opt-tags")?.checked);
+      const cleaned = cleanSubtitleContent(input, { mergeParagraphs: merge, stripTags: tags });
+      const outEl = document.getElementById("free-tools-sub-output");
+      if (outEl) outEl.value = cleaned;
+      const metrics = analyzeTextMetrics(cleaned);
+      const statsEl = document.getElementById("free-tools-sub-stats");
+      if (statsEl) statsEl.textContent = `${metrics.words} từ · ${metrics.chars} ký tự`;
+      showToast("Đã làm sạch phụ đề thành công!");
+      return;
+    }
+
+    if (action === "sample-subtitle") {
+      const sampleSRT = `1\n00:00:01,000 --> 00:00:03,800\nChào mừng bạn đến với <b>TOAN AAS Ecosystem</b>.\n\n2\n00:00:04,100 --> 00:00:07,500\nNền tảng tự động hóa và hỗ trợ sáng tạo nội dung số toàn diện.\n\n3\n00:00:08,000 --> 00:00:11,900\nGiúp bạn tối ưu hóa thời gian và quy trình sản xuất nội dung mỗi ngày.`;
+      const subIn = document.getElementById("free-tools-sub-input");
+      if (subIn) {
+        subIn.value = sampleSRT;
+        const cleaned = cleanSubtitleContent(sampleSRT, { mergeParagraphs: false, stripTags: true });
+        const outEl = document.getElementById("free-tools-sub-output");
+        if (outEl) outEl.value = cleaned;
+        const metrics = analyzeTextMetrics(cleaned);
+        const statsEl = document.getElementById("free-tools-sub-stats");
+        if (statsEl) statsEl.textContent = `${metrics.words} từ · ${metrics.chars} ký tự`;
+        showToast("Đã tải dữ liệu phụ đề SRT mẫu.");
+      }
+      return;
+    }
+
+    if (action === "clear-subtitle") {
+      const inEl = document.getElementById("free-tools-sub-input");
+      const outEl = document.getElementById("free-tools-sub-output");
+      const statsEl = document.getElementById("free-tools-sub-stats");
+      if (inEl) inEl.value = "";
+      if (outEl) outEl.value = "";
+      if (statsEl) statsEl.textContent = "0 từ · 0 ký tự";
+      showToast("Đã xóa nội dung phụ đề.");
+      return;
+    }
+
+    if (action === "copy-clean-subtitle") {
+      const outEl = document.getElementById("free-tools-sub-output");
+      copyPlainText(outEl ? outEl.value : "", "Đã sao chép văn bản phụ đề.");
+      return;
+    }
+
+    if (action === "download-clean-subtitle") {
+      const outEl = document.getElementById("free-tools-sub-output");
+      const val = outEl ? outEl.value : "";
+      if (!val) { showToast("Không có nội dung để tải về.", "warning"); return; }
+      downloadTextAsFile(val, "subtitle_cleaned.txt");
+      showToast("Đang tải file subtitle_cleaned.txt...");
+      return;
+    }
+
+    if (action === "extract-youtube") {
+      const url = document.getElementById("free-tools-yt-url")?.value.trim() || "";
+      const vidId = parseYouTubeVideoId(url);
+      const resBox = document.getElementById("free-tools-yt-result");
+      if (!vidId) {
+        showToast("Vui lòng nhập đường link hoặc ID YouTube hợp lệ.", "warning");
+        return;
+      }
+      const idEl = document.getElementById("free-tools-yt-id");
+      const linkEl = document.getElementById("free-tools-yt-link");
+      const maxImg = document.getElementById("free-tools-yt-thumb-max");
+      const maxLink = document.getElementById("free-tools-yt-thumb-max-link");
+      const hqImg = document.getElementById("free-tools-yt-thumb-hq");
+      const hqLink = document.getElementById("free-tools-yt-thumb-hq-link");
+      const mqImg = document.getElementById("free-tools-yt-thumb-mq");
+      const mqLink = document.getElementById("free-tools-yt-thumb-mq-link");
+      const embedEl = document.getElementById("free-tools-yt-embed");
+
+      const maxUrl = `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`;
+      const hqUrl = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+      const mqUrl = `https://img.youtube.com/vi/${vidId}/mqdefault.jpg`;
+      const watchUrl = `https://www.youtube.com/watch?v=${vidId}`;
+      const embedHtml = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${vidId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+
+      if (idEl) idEl.textContent = vidId;
+      if (linkEl) linkEl.href = watchUrl;
+      if (maxImg) maxImg.src = maxUrl;
+      if (maxLink) maxLink.href = maxUrl;
+      if (hqImg) hqImg.src = hqUrl;
+      if (hqLink) hqLink.href = hqUrl;
+      if (mqImg) mqImg.src = mqUrl;
+      if (mqLink) mqLink.href = mqUrl;
+      if (embedEl) embedEl.value = embedHtml;
+      if (resBox) resBox.style.display = "block";
+      showToast("Đã trích xuất thông tin video YouTube thành công!");
+      return;
+    }
+
+    if (action === "copy-yt-thumb") {
+      const target = actionEl.getAttribute("data-thumb-target");
+      const vidId = document.getElementById("free-tools-yt-id")?.textContent.trim();
+      if (!vidId || vidId === "-") { showToast("Chưa trích xuất video nào.", "warning"); return; }
+      let thumbUrl = `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`;
+      if (target === "hq") thumbUrl = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+      if (target === "mq") thumbUrl = `https://img.youtube.com/vi/${vidId}/mqdefault.jpg`;
+      copyPlainText(thumbUrl, "Đã sao chép link ảnh Thumbnail.");
+      return;
+    }
+
+    if (action === "copy-yt-embed") {
+      const embedEl = document.getElementById("free-tools-yt-embed");
+      copyPlainText(embedEl ? embedEl.value : "", "Đã sao chép mã nhúng Iframe YouTube.");
+      return;
+    }
+
+    if (action === "generate-vietqr") {
+      autoUpdateVietQrPreview(true);
+      return;
+    }
+
+    if (action === "sample-vietqr") {
+      const bEl = document.getElementById("free-tools-qr-bank");
+      const accEl = document.getElementById("free-tools-qr-account");
+      const nEl = document.getElementById("free-tools-qr-name");
+      const amtEl = document.getElementById("free-tools-qr-amount");
+      const memoEl = document.getElementById("free-tools-qr-memo");
+      if (bEl) bEl.value = "VCB";
+      if (accEl) accEl.value = "0011001234567";
+      if (nEl) nEl.value = "NGUYEN VAN A";
+      if (amtEl) amtEl.value = "200000";
+      if (memoEl) memoEl.value = "DICH VU TOAN AAS";
+      autoUpdateVietQrPreview(true);
+      return;
+    }
+
+    if (action === "download-vietqr") {
+      const img = document.getElementById("free-tools-qr-img");
+      if (img && img.src && img.style.display !== "none") {
+        const a = document.createElement("a");
+        a.href = img.src;
+        a.download = "vietqr_payment.jpg";
+        a.target = "_blank";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 500);
+        showToast("Đang mở tải ảnh mã VietQR...");
+      } else {
+        showToast("Vui lòng tạo mã QR trước khi tải.", "warning");
+      }
+      return;
+    }
+
+    if (action === "copy-vietqr-link") {
+      const img = document.getElementById("free-tools-qr-img");
+      if (img && img.src && img.style.display !== "none") {
+        copyPlainText(img.src, "Đã sao chép link ảnh VietQR.");
+      } else {
+        showToast("Chưa có mã QR để sao chép.", "warning");
+      }
+      return;
+    }
+
+    if (action === "format-json-2" || action === "format-json-4") {
+      const indent = action === "format-json-4" ? 4 : 2;
+      const inp = document.getElementById("free-tools-json-input")?.value || "";
+      const out = document.getElementById("free-tools-json-output");
+      const status = document.getElementById("free-tools-json-status");
+      if (!inp.trim()) {
+        if (out) out.value = "";
+        if (status) status.textContent = "";
+        showToast("Vui lòng nhập chuỗi JSON cần format.", "warning");
+        return;
+      }
+      try {
+        const parsed = JSON.parse(inp);
+        const formatted = JSON.stringify(parsed, null, indent);
+        if (out) out.value = formatted;
+        if (status) {
+          status.textContent = "✅ Cú pháp JSON hợp lệ";
+          status.style.color = "var(--portal-accent, #7beddb)";
+        }
+        showToast("Đã định dạng JSON thành công!");
+      } catch (err) {
+        if (status) {
+          status.textContent = `❌ Lỗi cú pháp: ${err.message}`;
+          status.style.color = "#ff6b6b";
+        }
+        showToast("Cú pháp JSON không hợp lệ.", "warning");
+      }
+      return;
+    }
+
+    if (action === "minify-json") {
+      const inp = document.getElementById("free-tools-json-input")?.value || "";
+      const out = document.getElementById("free-tools-json-output");
+      const status = document.getElementById("free-tools-json-status");
+      if (!inp.trim()) {
+        if (out) out.value = "";
+        if (status) status.textContent = "";
+        return;
+      }
+      try {
+        const parsed = JSON.parse(inp);
+        const minified = JSON.stringify(parsed);
+        if (out) out.value = minified;
+        if (status) {
+          status.textContent = "✅ Đã nén Minify gọn";
+          status.style.color = "var(--portal-accent, #7beddb)";
+        }
+        showToast("Đã nén Minify JSON!");
+      } catch (err) {
+        if (status) {
+          status.textContent = `❌ Lỗi cú pháp: ${err.message}`;
+          status.style.color = "#ff6b6b";
+        }
+        showToast("Cú pháp JSON không hợp lệ.", "warning");
+      }
+      return;
+    }
+
+    if (action === "sample-json") {
+      const sample = JSON.stringify({
+        name: "TOAN AAS Content Platform",
+        version: "2.4.0",
+        features: ["audio-hub", "music-library", "free-tools", "crm"],
+        active: true,
+        stats: { users: 1250, storage_mb: 512 }
+      }, null, 2);
+      const inp = document.getElementById("free-tools-json-input");
+      const out = document.getElementById("free-tools-json-output");
+      const status = document.getElementById("free-tools-json-status");
+      if (inp) inp.value = sample;
+      if (out) out.value = sample;
+      if (status) {
+        status.textContent = "✅ Cú pháp JSON hợp lệ";
+        status.style.color = "var(--portal-accent, #7beddb)";
+      }
+      showToast("Đã tải dữ liệu JSON mẫu.");
+      return;
+    }
+
+    if (action === "clear-json") {
+      const inp = document.getElementById("free-tools-json-input");
+      const out = document.getElementById("free-tools-json-output");
+      const status = document.getElementById("free-tools-json-status");
+      if (inp) inp.value = "";
+      if (out) out.value = "";
+      if (status) status.textContent = "";
+      showToast("Đã xóa JSON.");
+      return;
+    }
+
+    if (action === "copy-json") {
+      const out = document.getElementById("free-tools-json-output");
+      copyPlainText(out ? out.value : "", "Đã sao chép nội dung JSON.");
+      return;
+    }
+
+    if (action === "text-uppercase") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = inp.value.toUpperCase();
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã chuyển thành chữ IN HOA.");
+      }
+      return;
+    }
+
+    if (action === "text-lowercase") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = inp.value.toLowerCase();
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã chuyển thành chữ in thường.");
+      }
+      return;
+    }
+
+    if (action === "text-titlecase") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = inp.value.toLowerCase().replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã Viết Hoa Đầu Mỗi Từ.");
+      }
+      return;
+    }
+
+    if (action === "text-sentencecase") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = inp.value.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase());
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã viết hoa đầu câu.");
+      }
+      return;
+    }
+
+    if (action === "text-remove-accents") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = removeVietnameseAccents(inp.value);
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã xóa dấu tiếng Việt.");
+      }
+      return;
+    }
+
+    if (action === "text-slugify") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = slugifyVietnamese(inp.value);
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã chuyển thành URL Slug.");
+      }
+      return;
+    }
+
+    if (action === "text-trim-spaces") {
+      const inp = document.getElementById("free-tools-text-input");
+      if (inp && inp.value) {
+        inp.value = inp.value.replace(/[ \t]+/g, " ").replace(/\n\s+/g, "\n").trim();
+        updateFreeToolsTextStats(inp.value);
+        showToast("Đã xóa các khoảng trắng thừa.");
+      }
+      return;
+    }
+
+    if (action === "copy-text-main") {
+      const inp = document.getElementById("free-tools-text-input");
+      copyPlainText(inp ? inp.value : "", "Đã sao chép văn bản.");
+      return;
+    }
+
+    if (action === "b64-encode") {
+      const inp = document.getElementById("free-tools-codec-input")?.value || "";
+      const out = document.getElementById("free-tools-codec-output");
+      if (!inp) { showToast("Vui lòng nhập chuỗi cần mã hóa.", "warning"); return; }
+      try {
+        const encoded = utf8ToBase64(inp);
+        if (out) out.value = encoded;
+        showToast("Đã mã hóa Base64 thành công!");
+      } catch (err) {
+        showToast("Lỗi khi mã hóa Base64: " + err.message, "warning");
+      }
+      return;
+    }
+
+    if (action === "b64-decode") {
+      const inp = document.getElementById("free-tools-codec-input")?.value || "";
+      const out = document.getElementById("free-tools-codec-output");
+      if (!inp.trim()) { showToast("Vui lòng nhập chuỗi Base64 cần giải mã.", "warning"); return; }
+      try {
+        const decoded = base64ToUtf8(inp);
+        if (out) out.value = decoded;
+        showToast("Đã giải mã Base64 thành công!");
+      } catch (err) {
+        showToast("Chuỗi Base64 không hợp lệ.", "warning");
+      }
+      return;
+    }
+
+    if (action === "url-encode") {
+      const inp = document.getElementById("free-tools-codec-input")?.value || "";
+      const out = document.getElementById("free-tools-codec-output");
+      if (!inp) { showToast("Vui lòng nhập chuỗi cần encode.", "warning"); return; }
+      if (out) out.value = encodeURIComponent(inp);
+      showToast("Đã URL Encode thành công!");
+      return;
+    }
+
+    if (action === "url-decode") {
+      const inp = document.getElementById("free-tools-codec-input")?.value || "";
+      const out = document.getElementById("free-tools-codec-output");
+      if (!inp) { showToast("Vui lòng nhập chuỗi cần decode.", "warning"); return; }
+      try {
+        if (out) out.value = decodeURIComponent(inp);
+        showToast("Đã URL Decode thành công!");
+      } catch (err) {
+        showToast("Chuỗi URL encode không hợp lệ.", "warning");
+      }
+      return;
+    }
+
+    if (action === "copy-codec") {
+      const out = document.getElementById("free-tools-codec-output");
+      copyPlainText(out ? out.value : "", "Đã sao chép kết quả Codec.");
+      return;
+    }
   }
 
   function guideCenterCatalogState(context) {
@@ -28862,6 +29787,7 @@
       case "prompt-library": return renderPromptLibrary(page, context);
       case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
       case "free-prompt-gallery": return renderFreePromptGallery(page, context);
+      case "free-tools": return renderFreeTools(page, context);
       case "guide-center": return renderGuideCenter(page, context);
       case "community-trust-center": return renderCommunityTrustCenter(page, context);
       case "media-workspace": return renderMediaWorkspace(page, context);
@@ -30766,6 +31692,45 @@
     );
   }
 
+  function isAndroidDevice() {
+    return Boolean(
+      typeof navigator !== "undefined"
+      && /android/i.test(navigator.userAgent || "")
+    );
+  }
+
+  function isInAppBrowser() {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || navigator.vendor || "";
+    return /telegram|fban|fbav|instagram|zalo|line|musical_ly|tiktok|microMessenger/i.test(ua);
+  }
+
+  function copyCurrentUrlToClipboard() {
+    const url = window.location.origin + "/dashboard";
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("📋 Đã sao chép liên kết! Dán vào Chrome (Android) hoặc Safari (iPhone) để cài đặt.");
+      }).catch(() => {
+        showToast("Liên kết cài đặt: " + url);
+      });
+    } else {
+      showToast("Liên kết cài đặt: " + url);
+    }
+  }
+
+  function downloadAppLauncherShortcut() {
+    const url = window.location.origin + "/dashboard";
+    const content = `[InternetShortcut]\nURL=${url}\nIconIndex=0\nIconFile=${window.location.origin}/static/portal/app-icon.svg\n`;
+    const blob = new Blob([content], { type: "application/internet-shortcut" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "TOAN_AAS_App.url";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast("⬇️ Đã tải phím tắt TOAN AAS về máy!");
+  }
+
   function pwaInstallCanBeOffered() {
     if (isStandaloneApp()) return false;
     const context = getBootstrap();
@@ -30804,9 +31769,11 @@
     }
 
     const isIos = isIosDevice();
+    const isAndroid = isAndroidDevice();
     const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
-    const installLabel = isIos ? "📲 Cài app cho iPhone" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⚡ Tải & Cài App");
+    const installLabel = isIos ? "📲 Cài cho iPhone" : (isAndroid ? "⚡ Tải & Cài Android" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⚡ Tải & Cài App"));
     const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
+    const subDesc = isIos ? "Thêm vào màn hình chính iPhone / iPad mượt mà" : (isAndroid ? "Cài ứng dụng toàn màn hình không có thanh URL" : "Trải nghiệm mượt 60 FPS, mở độc lập toàn màn hình");
 
     let banner = document.querySelector("[data-portal-smart-install-banner]");
     if (!banner) {
@@ -30828,7 +31795,7 @@
           <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
           <div class="portal-smart-install-meta">
             <strong class="portal-smart-install-title">TOAN AAS App</strong>
-            <span class="portal-smart-install-desc">Trải nghiệm mượt 60 FPS, mở toàn màn hình</span>
+            <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
           </div>
         </div>
         <div class="portal-smart-install-actions">
@@ -30846,7 +31813,7 @@
     const banner = document.querySelector("[data-portal-smart-install-banner]");
     if (banner) {
       banner.style.opacity = "0";
-      banner.style.transform = "translateY(16px)";
+      banner.style.transform = "translateY(-20px)";
       banner.style.transition = "opacity .2s ease, transform .2s ease";
       window.setTimeout(() => banner.remove(), 220);
     }
@@ -30856,11 +31823,22 @@
     const existing = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
     if (existing) existing.remove();
     const isIos = isIosDevice();
-    const initialTab = activeTab || (isIos ? "ios" : (/Android/i.test(navigator.userAgent || "") ? "android" : "desktop"));
+    const isAndroid = isAndroidDevice();
+    const inApp = isInAppBrowser();
+    const initialTab = activeTab || (isIos ? "ios" : (isAndroid ? "android" : "desktop"));
     const modal = document.createElement("div");
     modal.className = "portal-modal-backdrop";
     modal.setAttribute("data-portal-ios-modal", "true");
     modal.setAttribute("data-portal-install-modal", "true");
+
+    const inAppAlert = inApp ? `
+      <div class="portal-inapp-alert" style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.35); color:#fef08a; font-size:12.5px; line-height:1.5;">
+        <strong style="color:#fde047; display:flex; align-items:center; gap:6px;">⚠️ Phát hiện mở trong Telegram / Zalo / Facebook</strong>
+        <p style="margin:4px 0 8px 0; color:#fef08a;">Trình duyệt phụ đang chặn quyền cài đặt. Hãy bấm biểu tượng <strong>(⋮)</strong> hoặc <strong>(⋯)</strong> ở góc trên ➔ chọn <strong>"Mở bằng Chrome"</strong> (Android) hoặc <strong>"Mở bằng Safari"</strong> (iPhone) để cài đặt.</p>
+        <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.12); color:#fff; border:none; border-radius:6px; cursor:pointer;">📋 Sao chép liên kết</button>
+      </div>
+    ` : "";
+
     modal.innerHTML = `
       <div class="portal-modal-card portal-install-guide-modal" role="dialog" aria-modal="true" aria-labelledby="install-guide-title">
         <div class="portal-modal-head">
@@ -30868,28 +31846,11 @@
           <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="Đóng">✕</button>
         </div>
         <div class="portal-modal-body">
+          ${inAppAlert}
           <div class="portal-install-tabs" role="tablist">
-            <button type="button" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">💻 Máy tính (PC/Mac)</button>
             <button type="button" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">🤖 Android</button>
             <button type="button" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">🍏 iPhone / iPad</button>
-          </div>
-
-          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
-            <p class="portal-ios-guide-intro">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
-            <ol class="portal-ios-steps">
-              <li>
-                <div class="portal-ios-step-num">1</div>
-                <div class="portal-ios-step-text">Bấm vào biểu tượng <strong>Cài đặt (⊕ hoặc 📲)</strong> trên thanh địa chỉ của trình duyệt Chrome / Edge / Brave.</div>
-              </li>
-              <li>
-                <div class="portal-ios-step-num">2</div>
-                <div class="portal-ios-step-text">Hoặc bấm menu <strong>3 chấm (⋮) ➔ Chọn "Cài đặt TOAN AAS" (Install App)</strong>.</div>
-              </li>
-              <li>
-                <div class="portal-ios-step-num">3</div>
-                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để tạo biểu tượng ứng dụng ngoài Desktop và thanh Taskbar.</div>
-              </li>
-            </ol>
+            <button type="button" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">💻 Máy tính (PC/Mac)</button>
           </div>
 
           <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-panel="android">
@@ -30897,7 +31858,7 @@
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
-                <div class="portal-ios-step-text">Mở bằng <strong>Chrome</strong> hoặc <strong>Samsung Internet</strong>, bấm menu <strong>3 chấm (⋮)</strong> ở góc trên bên phải.</div>
+                <div class="portal-ios-step-text">Mở trang bằng <strong>Chrome</strong> hoặc <strong>Samsung Internet</strong>, bấm menu <strong>3 chấm (⋮)</strong> ở góc trên bên phải.</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">2</div>
@@ -30908,6 +31869,10 @@
                 <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để mở ứng dụng toàn màn hình không có thanh URL.</div>
               </li>
             </ol>
+            <div class="portal-install-direct-action">
+              <span>Nếu trình duyệt hỗ trợ phím tắt:</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">⬇️ Tải Phím tắt Web (.url)</button>
+            </div>
           </div>
 
           <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-panel="ios">
@@ -30923,13 +31888,39 @@
               </li>
               <li>
                 <div class="portal-ios-step-num">3</div>
-                <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải.</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải để hoàn tất.</div>
               </li>
             </ol>
+            <div class="portal-install-direct-action">
+              <span>Dán link vào Safari:</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:6px 12px; font-size:12px;">📋 Sao chép liên kết</button>
+            </div>
+          </div>
+
+          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
+            <p class="portal-ios-guide-intro">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
+            <ol class="portal-ios-steps">
+              <li>
+                <div class="portal-ios-step-num">1</div>
+                <div class="portal-ios-step-text">Bấm vào biểu tượng <strong>Cài đặt (⊕ hoặc 📲)</strong> trên thanh địa chỉ của trình duyệt Chrome / Edge / Brave.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">2</div>
+                <div class="portal-ios-step-text">Hoặc bấm menu <strong>3 chấm (⋮) ➔ Chọn "Cài đặt TOAN AAS" (Install App)</strong>.</div>
+              </li>
+              <li>
+                <div class="portal-ios-step-num">3</div>
+                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để tạo biểu tượng ứng dụng ngoài Desktop và Taskbar.</div>
+              </li>
+            </ol>
+            <div class="portal-install-direct-action">
+              <span>Hoặc tải phím tắt trực tiếp:</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">⬇️ Tải Phím tắt App (.url)</button>
+            </div>
           </div>
         </div>
-        <div class="portal-modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt cài đặt ngay</button>
+        <div class="portal-modal-foot">
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt Cài đặt ngay</button>
           <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">Đã hiểu</button>
         </div>
       </div>
@@ -30968,10 +31959,12 @@
         ? await prompt.userChoice
         : null;
       if (choice && choice.outcome === "accepted") {
-        showToast("Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất phần còn lại.");
+        showToast("✅ Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất cài đặt vào thiết bị!");
         dismissSmartInstallBanner();
+        const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
+        if (modal) modal.remove();
       } else if (choice && choice.outcome === "dismissed") {
-        showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi trình duyệt cho phép.", "warning");
+        showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi cần.", "warning");
       }
     } catch (_) {
       openUniversalInstallGuideModal();
@@ -30996,7 +31989,9 @@
       pwaInstallInFlight = false;
       syncPwaInstallControl();
       dismissSmartInstallBanner();
-      showToast("TOAN AAS đã được thêm vào thiết bị này. Dữ liệu riêng tư vẫn luôn cần signed session.");
+      const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
+      if (modal) modal.remove();
+      showToast("🎉 TOAN AAS đã được cài đặt thành công vào thiết bị của bạn!");
     });
   }
 
@@ -31124,8 +32119,10 @@
       const installApp = event.target.closest("[data-portal-install-app]");
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
-      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal(); return; }
+      if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal("ios"); return; }
       if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
+      if (event.target.closest('[data-portal-action="pwa-copy-link"]')) { copyCurrentUrlToClipboard(); return; }
+      if (event.target.closest('[data-portal-action="pwa-download-shortcut"]')) { downloadAppLauncherShortcut(); return; }
       const installTabBtn = event.target.closest("[data-portal-install-tab]");
       if (installTabBtn) {
         const tab = installTabBtn.getAttribute("data-portal-install-tab");
@@ -31139,8 +32136,14 @@
       if (event.target.closest('[data-portal-action="pwa-try-prompt"]')) {
         if (pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function") {
           requestPwaInstall();
+        } else if (isInAppBrowser()) {
+          showToast("⚠️ Trình duyệt nội bộ đang chặn. Hãy bấm (⋮) chọn 'Mở bằng Chrome/Safari'!", "warning");
+        } else if (isIosDevice()) {
+          showToast("🍏 Hãy bấm nút Chia sẻ (Share ⬆️) trong Safari ➔ 'Thêm vào MH chính'!");
+        } else if (isAndroidDevice()) {
+          showToast("🤖 Bấm menu 3 chấm (⋮) góc trên phải Chrome ➔ 'Cài đặt ứng dụng'!");
         } else {
-          showToast("Trình duyệt chưa sẵn sàng mở popup tự động. Hãy làm theo hướng dẫn các bước ở trên để cài đặt!");
+          downloadAppLauncherShortcut();
         }
         return;
       }
@@ -31187,6 +32190,16 @@
         applyContentPromptPackSuggestion(contentPromptSuggestion);
         return;
       }
+      const freeToolTab = event.target.closest("[data-free-tool-tab]");
+      if (freeToolTab) {
+        handleFreeToolTab(freeToolTab);
+        return;
+      }
+      const freeToolAction = event.target.closest("[data-free-tool-action]");
+      if (freeToolAction) {
+        handleFreeToolAction(freeToolAction, event);
+        return;
+      }
       const action = event.target.closest("[data-portal-action]");
       if (action && action.tagName !== "FORM" && !action.disabled) {
         if (action.tagName === "BUTTON" && action.type === "submit") return;
@@ -31203,6 +32216,12 @@
       }
     });
     document.addEventListener("input", (event) => {
+      if (event.target.id === "free-tools-text-input") {
+        updateFreeToolsTextStats(event.target.value);
+      }
+      if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
+        autoUpdateVietQrPreview(false);
+      }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
       if (form && form.getAttribute("data-portal-action") === "consultation-crm-preview") {
@@ -31234,6 +32253,9 @@
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
     });
     document.addEventListener("change", (event) => {
+      if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
+        autoUpdateVietQrPreview(false);
+      }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
         if (form.getAttribute("data-portal-action") === "consultation-crm-preview") {

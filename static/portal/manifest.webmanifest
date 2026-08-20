@@ -1,19 +1,21 @@
 {
   "id": "/",
-  "name": "TOAN AAS Control Portal",
+  "name": "TOAN AAS - Autonomous Automation Suite",
   "short_name": "TOAN AAS",
-  "description": "TOAN AAS customer portal and admin control center.",
+  "description": "Nền tảng Tự động hóa Đa phương tiện & Trợ lý Thông minh TOAN AAS",
   "lang": "vi",
   "dir": "ltr",
-  "start_url": "/dashboard",
+  "start_url": "/portal",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#063b47",
-  "theme_color": "#063b47",
+  "orientation": "any",
+  "background_color": "#03141f",
+  "theme_color": "#03141f",
+  "categories": ["productivity", "utilities", "business"],
   "shortcuts": [
     {
-      "name": "Tổng quan",
-      "short_name": "Tổng quan",
+      "name": "Bàn làm việc",
+      "short_name": "Dashboard",
       "description": "Mở tổng quan workspace TOAN AAS.",
       "url": "/dashboard"
     },
@@ -35,6 +37,18 @@
       "src": "/static/portal/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/portal/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/portal/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {

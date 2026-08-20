@@ -7626,22 +7626,22 @@ button, a, input, select, textarea { touch-action: manipulation; }
 }
 
 /* ==========================================================================
-   SMART APP INSTALL BANNER & IOS GUIDE MODAL (PWA / ANDROID / IOS / DESKTOP)
+   SMART APP INSTALL BANNER & IOS / ANDROID GUIDE MODAL (PWA / ANDROID / IOS / DESKTOP)
    ========================================================================== */
 .portal-smart-install-banner {
   position: fixed;
-  bottom: calc(var(--portal-safe-bottom, 0px) + 16px);
-  right: 16px;
-  z-index: 999;
-  max-width: 420px;
-  width: calc(100vw - 32px);
+  top: calc(var(--portal-safe-top, 0px) + 12px);
+  right: 18px;
+  z-index: 9999;
+  max-width: 440px;
+  width: calc(100vw - 36px);
   padding: 12px 14px;
-  border: 1px solid rgba(81, 213, 188, .36);
+  border: 1px solid rgba(81, 213, 188, .42);
   border-radius: 16px;
-  background: rgba(11, 22, 33, .92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, .45), 0 0 24px rgba(81, 213, 188, .12);
+  background: rgba(11, 22, 33, .95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .55), 0 0 28px rgba(81, 213, 188, .18);
   contain: layout paint;
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
@@ -7714,6 +7714,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(13, 148, 136, 0.4);
   transition: transform .14s ease, filter .14s ease;
+  cursor: pointer;
 }
 
 .portal-btn-install:hover {
@@ -7732,6 +7733,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, .06);
   color: #94a3b8 !important;
+  cursor: pointer;
   transition: background .14s ease, color .14s ease;
 }
 
@@ -7740,29 +7742,29 @@ button, a, input, select, textarea { touch-action: manipulation; }
   color: #ffffff !important;
 }
 
-/* Modal iOS Guide */
+/* Modal Install Guide */
 .portal-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 100000;
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(0, 0, 0, .75);
+  background: rgba(0, 0, 0, .8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .portal-ios-guide-modal,
 .portal-install-guide-modal {
-  max-width: 480px;
+  max-width: 520px;
   width: 100%;
   padding: 24px;
   border: 1px solid rgba(255, 255, 255, .15) !important;
   border-radius: 20px;
   background: #0f172a !important;
   color: #ffffff !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .7);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .75);
   contain: layout paint;
   will-change: transform, opacity;
 }
@@ -7819,6 +7821,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .portal-install-direct-action span {
@@ -7867,9 +7870,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-ios-steps {
   list-style: none;
   padding: 0;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .portal-ios-steps li {
@@ -7916,15 +7919,22 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-modal-foot {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .portal-smart-install-banner {
-    left: 12px;
-    right: 12px;
-    bottom: calc(var(--portal-safe-bottom, 0px) + 70px);
-    width: auto;
+    top: calc(var(--portal-safe-top, 0px) + 8px);
+    bottom: auto;
+    left: 10px;
+    right: 10px;
+    width: calc(100vw - 20px);
+    max-width: none;
+    padding: 10px 12px;
   }
 }
 
@@ -7933,70 +7943,110 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-direct-social-auth {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-/* Google, Apple & Telegram Brand Buttons - Standard OAuth UX */
-.portal-oauth-btn-brand {
-  display: inline-flex;
+/* Telegram, Google & Apple Distinct Boxes */
+.portal-btn-direct-social {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 8px;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
   will-change: transform;
 }
-.portal-oauth-btn-brand:hover {
+.portal-btn-direct-social:hover {
   transform: translateY(-1px);
 }
-.portal-oauth-btn-brand:active {
-  transform: translateY(0);
+.portal-btn-direct-social:active {
+  transform: scale(0.98);
 }
-.portal-oauth-btn-google {
+.portal-btn-direct-social.telegram {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, rgba(34, 158, 217, 0.22), rgba(15, 76, 110, 0.42));
+  color: #7ce5ff;
+  border: 1px solid rgba(34, 158, 217, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.portal-btn-direct-social.telegram:hover {
+  background: linear-gradient(135deg, rgba(34, 158, 217, 0.35), rgba(15, 76, 110, 0.6));
+  border-color: #229ed9;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35);
+}
+.portal-social-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.portal-btn-direct-social.google {
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f8fa;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.portal-btn-direct-social.google:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+.portal-btn-direct-social.apple {
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f8fa;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.portal-btn-direct-social.apple:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+[data-portal-theme="light"] .portal-btn-direct-social.google {
   background: #ffffff;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: #1a2b3c;
+  border: 1px solid #c8d8e4;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
-.portal-oauth-btn-google:hover {
-  background: #f9fafb;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+[data-portal-theme="light"] .portal-btn-direct-social.google:hover {
+  background: #f4f8fa;
+  border-color: #9abed4;
 }
-.portal-oauth-btn-apple {
-  background: #000000;
+[data-portal-theme="light"] .portal-btn-direct-social.apple {
+  background: #111a24;
   color: #ffffff;
-  border: 1px solid #374151;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid #111a24;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
-.portal-oauth-btn-apple:hover {
-  background: #111827;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+[data-portal-theme="light"] .portal-btn-direct-social.apple:hover {
+  background: #223244;
 }
-.portal-oauth-btn-telegram {
-  background: #24a1de;
-  color: #ffffff;
-  border: 1px solid #2093cb;
-  box-shadow: 0 2px 8px rgba(36, 161, 222, 0.35);
-}
-.portal-oauth-btn-telegram:hover {
-  background: #1e96d1;
-  box-shadow: 0 4px 14px rgba(36, 161, 222, 0.5);
-}
+
 .portal-auth-divider {
   display: flex;
   align-items: center;
-  margin: 18px 0;
+  margin: 10px 0;
   color: var(--portal-muted);
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 760;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 .portal-auth-divider::before,
 .portal-auth-divider::after {
@@ -8005,7 +8055,216 @@ button, a, input, select, textarea { touch-action: manipulation; }
   border-bottom: 1px solid var(--portal-border);
 }
 .portal-auth-divider span {
-  padding: 0 12px;
+  padding: 0 10px;
+}
+
+.portal-auth-form-submit-row {
+  width: 100%;
+  margin-top: 6px;
+}
+.portal-auth-submit-btn {
+  width: 100% !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  border-radius: 10px !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.portal-auth-submit-btn:hover {
+  transform: translateY(-1px);
+}
+.portal-auth-submit-btn:active {
+  transform: scale(0.99);
+}
+.portal-auth-form-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(151, 191, 205, 0.18);
+}
+.portal-auth-app-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid rgba(99, 225, 208, 0.28);
+  border-radius: 8px;
+  background: rgba(99, 225, 208, 0.08);
+  color: #63e1d0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.16s ease;
+}
+.portal-auth-app-link:hover {
+  background: rgba(99, 225, 208, 0.16);
+  border-color: #63e1d0;
+  color: #b8fff4;
+  transform: translateY(-1px);
+}
+.portal-auth-app-link .portal-icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Hide Technical Debug / Assurance clutter from user facing surfaces */
+.portal-status-grid,
+.portal-capability-audit,
+.portal-dashboard-assurance,
+.portal-onboarding-assurance,
+.portal-account-assurance,
+.portal-wallet-assurance {
+  display: none !important;
+}
+
+/* Free Tools Suite Styling */
+.portal-free-tools-page {
+  display: grid;
+  gap: 18px;
+}
+.portal-free-tools-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+.portal-free-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  background: rgba(13, 27, 39, 0.6);
+  color: var(--portal-muted-strong);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.portal-free-tab-btn:hover {
+  border-color: rgba(99, 225, 208, 0.45);
+  background: rgba(99, 225, 208, 0.08);
+  color: #def2f8;
+  transform: translateY(-1px);
+}
+.portal-free-tab-btn.is-active {
+  border-color: #63e1d0;
+  background: rgba(99, 225, 208, 0.16);
+  color: #e8fffb;
+  box-shadow: 0 0 12px rgba(99, 225, 208, 0.2);
+}
+.portal-free-panel {
+  display: none;
+}
+.portal-free-panel.is-active {
+  display: grid;
+  gap: 16px;
+  animation: portalFadeIn 0.2s ease-out;
+}
+.portal-free-tool-body {
+  display: grid;
+  gap: 16px;
+}
+.portal-free-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.portal-free-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.portal-free-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.portal-free-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.portal-free-center-col {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  background: rgba(3, 20, 31, 0.35);
+  border: 1px dashed rgba(151, 191, 205, 0.2);
+  border-radius: 12px;
+}
+.portal-free-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.55;
+  font-family: inherit;
+}
+.portal-free-lang-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.portal-free-action-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.portal-free-calc-box {
+  padding: 16px;
+  background: rgba(3, 20, 31, 0.32);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+.portal-free-calc-box h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #def2f8;
+}
+.portal-free-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.portal-free-metric strong {
+  font-size: 18px;
+}
+.portal-free-qr-preview,
+.portal-free-avatar-preview {
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 12px;
+  display: inline-flex;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+.portal-free-qr-preview img,
+.portal-free-avatar-preview img {
+  display: block;
+  border-radius: 6px;
+}
+.portal-free-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+}
+
+@media (max-width: 768px) {
+  .portal-free-grid-2,
+  .portal-free-grid-3,
+  .portal-free-grid-4,
+  .portal-free-calc-grid {
+    grid-template-columns: 1fr;
+  }
 }
 /* AISuite Mounikai Card Shine & Glow Orbs progressive styling */
 .landing-glow-orb {
@@ -8036,6 +8295,282 @@ button, a, input, select, textarea { touch-action: manipulation; }
 }
 .card-shine:hover::after {
   transform: rotate(25deg) translateY(100%);
+}
+
+/* Universal PWA Smart Install Banner & Modal Suite */
+.portal-smart-install-banner {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 580px;
+  z-index: 99999;
+  border-radius: 16px;
+  background: rgba(13, 27, 42, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(99, 225, 208, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 24px rgba(99, 225, 208, 0.15);
+  padding: 10px 14px;
+  animation: portalSlideDown 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes portalSlideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.portal-smart-install-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portal-smart-install-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.portal-smart-install-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(99, 225, 208, 0.18);
+  border: 1px solid rgba(99, 225, 208, 0.4);
+  color: #63e1d0;
+}
+
+.portal-smart-install-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.portal-smart-install-title {
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-smart-install-desc {
+  color: #97bfcd;
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-smart-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.portal-btn-install {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: var(--portal-accent);
+  color: #03141f;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 750;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(45, 212, 191, 0.35);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.portal-btn-install:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(45, 212, 191, 0.5);
+  filter: brightness(1.08);
+}
+
+.portal-btn-install:active {
+  transform: scale(0.97);
+}
+
+.portal-btn-dismiss {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #97bfcd;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.portal-btn-dismiss:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* Install Guide Modal Styling */
+.portal-install-guide-modal {
+  max-width: 540px !important;
+  width: 92% !important;
+  background: rgba(13, 27, 42, 0.95) !important;
+  backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(99, 225, 208, 0.3) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6) !important;
+}
+
+.portal-install-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: rgba(3, 20, 31, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(151, 191, 205, 0.15);
+  margin-bottom: 16px;
+}
+
+.portal-install-tab-btn {
+  flex: 1;
+  padding: 8px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--portal-muted-strong);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: center;
+}
+
+.portal-install-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.portal-install-tab-btn.is-active {
+  background: rgba(45, 212, 191, 0.16);
+  border-color: rgba(45, 212, 191, 0.45);
+  color: #63e1d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.portal-install-panel {
+  display: none;
+}
+
+.portal-install-panel.is-active {
+  display: block;
+  animation: portalFadeIn 0.2s ease-out;
+}
+
+.portal-ios-steps {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 16px 0;
+  display: grid;
+  gap: 10px;
+}
+
+.portal-ios-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(151, 191, 205, 0.12);
+  border-radius: 10px;
+}
+
+.portal-ios-step-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.2);
+  color: #63e1d0;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.portal-ios-step-text {
+  color: #def2f8;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.portal-ios-step-text strong {
+  color: #ffffff;
+}
+
+.portal-install-direct-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(3, 20, 31, 0.4);
+  border: 1px dashed rgba(151, 191, 205, 0.2);
+  border-radius: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--portal-muted-strong);
+}
+
+.portal-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(151, 191, 205, 0.15);
+  margin-top: 14px;
+}
+
+@media (max-width: 540px) {
+  .portal-smart-install-banner {
+    top: auto;
+    bottom: 12px;
+    width: calc(100% - 20px);
+  }
+  .portal-smart-install-desc {
+    display: none;
+  }
+  .portal-install-tabs {
+    flex-direction: column;
+  }
+  .portal-install-direct-action {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    text-align: center;
+  }
 }
 
 /* Account & Security workspace UX. The security center retains every signed
@@ -8222,3 +8757,4 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-account-data-controls .portal-settings-nav a,
   .portal-interface-locale-navigator .portal-settings-nav a { transition: none; }
 }
+

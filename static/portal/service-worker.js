@@ -274,6 +274,12 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 function matchCurrentShell(path) {
   // Cache Storage is origin-wide.  Restrict every offline lookup to this
   // exact build generation; another portal generation cannot be used as a

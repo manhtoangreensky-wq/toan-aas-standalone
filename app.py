@@ -2626,6 +2626,26 @@ async def health():
     return {"ok": True, "app": "TOAN AAS Web App", "entrypoint": "app.py", "version": "P0.WEBAPP.COPYFAST1"}
 
 
+@app.get("/manifest.json", include_in_schema=False)
+@app.get("/manifest.webmanifest", include_in_schema=False)
+async def pwa_manifest():
+    manifest_path = ROOT / "static" / "portal" / "manifest.webmanifest"
+    return FileResponse(manifest_path, media_type="application/manifest+json")
+
+
+@app.get("/portal-sw.js", include_in_schema=False)
+@app.get("/service-worker.js", include_in_schema=False)
+async def pwa_service_worker():
+    sw_path = ROOT / "static" / "portal" / "service-worker.js"
+    return FileResponse(sw_path, media_type="application/javascript", headers={"Service-Worker-Allowed": "/"})
+
+
+@app.get("/offline.html", include_in_schema=False)
+async def pwa_offline_page():
+    offline_path = ROOT / "static" / "portal" / "offline.html"
+    return FileResponse(offline_path, media_type="text/html")
+
+
 @app.get("/admin-app", include_in_schema=False)
 async def legacy_admin_redirect():
     return RedirectResponse("/admin", status_code=307)

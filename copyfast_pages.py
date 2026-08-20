@@ -134,6 +134,7 @@ _PORTAL_SHELL_TITLES = {
     "/features/music": {"vi": "Music & SFX · TOAN AAS", "en": "Music & SFX · TOAN AAS", "zh": "音乐与音效 · TOAN AAS"},
     "/features/subtitle": {"vi": "Phụ đề & Lồng tiếng · TOAN AAS", "en": "Subtitles & Dubbing · TOAN AAS", "zh": "字幕与配音 · TOAN AAS"},
     "/features/documents": {"vi": "Documents & PDF · TOAN AAS", "en": "Documents & PDF · TOAN AAS", "zh": "文档与 PDF · TOAN AAS"},
+    "/free-tools": {"vi": "Công cụ miễn phí (0 Xu) · TOAN AAS", "en": "Free Tools (0 Xu) · TOAN AAS", "zh": "免费工具 (0 积分) · TOAN AAS"},
     "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},
     "/login": {"vi": "Đăng nhập · TOAN AAS", "en": "Sign in · TOAN AAS", "zh": "登录 · TOAN AAS"},
     "/register": {"vi": "Tạo tài khoản · TOAN AAS", "en": "Create account · TOAN AAS", "zh": "创建账户 · TOAN AAS"},
@@ -197,6 +198,11 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "vi": "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.",
         "en": "Completed files appear only after Core Bridge verifies ownership and supplies a temporary signed URL.",
         "zh": "只有在 Core Bridge 验证所有权并提供临时签名 URL 后，完成的文件才会显示。",
+    },
+    "/free-tools": {
+        "vi": "Bộ công cụ tiện ích mở 0 Xu: Dịch thuật mở, tỷ giá USD/VND & quy đổi Xu, tạo mã QR nhanh, sinh Avatar AI và dự báo thời tiết.",
+        "en": "Free open utilities (0 Credits): Open translate, USD/VND rates & Xu converter, fast QR code generator, AI avatars and live weather.",
+        "zh": "0 积分免费实用工具集：开放翻译、美元/越南盾汇率与积分换算、快速二维码生成、AI 头像和实时天气。",
     },
     "/support": {
         "vi": "Tạo và theo dõi yêu cầu Support Desk theo signed Web account; Web không gửi nội dung sang Telegram hoặc provider.",
