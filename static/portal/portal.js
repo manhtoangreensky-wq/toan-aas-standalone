@@ -31771,7 +31771,7 @@
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
     const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
-    const installLabel = isIos ? "📲 Cài cho iPhone" : (isAndroid ? "⚡ Tải & Cài Android" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⚡ Tải & Cài App"));
+    const installLabel = isIos ? "📲 Cài cho iPhone" : (isAndroid ? "⚡ Cài Android" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⬇️ Tải & Cài App"));
     const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
     const subDesc = isIos ? "Thêm vào màn hình chính iPhone / iPad mượt mà" : (isAndroid ? "Cài ứng dụng toàn màn hình không có thanh URL" : "Trải nghiệm mượt 60 FPS, mở độc lập toàn màn hình");
 
@@ -31914,13 +31914,13 @@
               </li>
             </ol>
             <div class="portal-install-direct-action">
-              <span>Hoặc tải phím tắt trực tiếp:</span>
+              <span>Tải file phím tắt khởi chạy nhanh:</span>
               <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">⬇️ Tải Phím tắt App (.url)</button>
             </div>
           </div>
         </div>
         <div class="portal-modal-foot">
-          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt Cài đặt ngay</button>
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt Cài đặt / Tải App</button>
           <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">Đã hiểu</button>
         </div>
       </div>
@@ -31941,38 +31941,47 @@
 
   async function requestPwaInstall() {
     if (!pwaInstallCanBeOffered() || pwaInstallInFlight) {
-      openUniversalInstallGuideModal();
+      if (isIosDevice()) openUniversalInstallGuideModal("ios");
+      else {
+        downloadAppLauncherShortcut();
+        openUniversalInstallGuideModal();
+      }
       syncPwaInstallControl();
       return;
     }
     const prompt = pwaInstallPrompt;
-    if (!prompt) {
-      openUniversalInstallGuideModal();
+    if (prompt && typeof prompt.prompt === "function") {
+      pwaInstallInFlight = true;
       syncPwaInstallControl();
+      try {
+        await prompt.prompt();
+        const choice = prompt.userChoice && typeof prompt.userChoice.then === "function"
+          ? await prompt.userChoice
+          : null;
+        if (choice && choice.outcome === "accepted") {
+          showToast("✅ Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất cài đặt vào thiết bị!");
+          dismissSmartInstallBanner();
+          const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
+          if (modal) modal.remove();
+        } else if (choice && choice.outcome === "dismissed") {
+          showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi cần.", "warning");
+        }
+      } catch (_) {
+        openUniversalInstallGuideModal();
+      } finally {
+        pwaInstallPrompt = null;
+        pwaInstallInFlight = false;
+        syncPwaInstallControl();
+      }
       return;
     }
-    pwaInstallInFlight = true;
-    syncPwaInstallControl();
-    try {
-      await prompt.prompt();
-      const choice = prompt.userChoice && typeof prompt.userChoice.then === "function"
-        ? await prompt.userChoice
-        : null;
-      if (choice && choice.outcome === "accepted") {
-        showToast("✅ Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất cài đặt vào thiết bị!");
-        dismissSmartInstallBanner();
-        const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
-        if (modal) modal.remove();
-      } else if (choice && choice.outcome === "dismissed") {
-        showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi cần.", "warning");
-      }
-    } catch (_) {
+    if (isIosDevice()) {
+      openUniversalInstallGuideModal("ios");
+    } else {
+      downloadAppLauncherShortcut();
       openUniversalInstallGuideModal();
-    } finally {
-      pwaInstallPrompt = null;
-      pwaInstallInFlight = false;
-      syncPwaInstallControl();
     }
+    syncPwaInstallControl();
   }
 
   function bindPwaInstallEvents() {

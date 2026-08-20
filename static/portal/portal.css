@@ -8300,30 +8300,43 @@ button, a, input, select, textarea { touch-action: manipulation; }
 /* Universal PWA Smart Install Banner & Modal Suite */
 .portal-smart-install-banner {
   position: fixed;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 580px;
-  z-index: 99999;
+  bottom: 24px;
+  left: 24px;
+  top: auto;
+  right: auto;
+  transform: none;
+  width: auto;
+  max-width: 380px;
+  z-index: 9999;
   border-radius: 16px;
-  background: rgba(13, 27, 42, 0.88);
+  background: rgba(13, 27, 42, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(99, 225, 208, 0.35);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 24px rgba(99, 225, 208, 0.15);
   padding: 10px 14px;
-  animation: portalSlideDown 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: portalSlideInLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes portalSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 @keyframes portalSlideDown {
   from {
     opacity: 0;
-    transform: translate(-50%, -24px) scale(0.96);
+    transform: translateY(-16px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -8337,15 +8350,15 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-smart-install-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
 .portal-smart-install-icon {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   border-radius: 10px;
   background: rgba(99, 225, 208, 0.18);
@@ -8361,7 +8374,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-smart-install-title {
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 780;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -8371,7 +8384,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-smart-install-desc {
   color: #97bfcd;
-  font-size: 11.5px;
+  font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8380,7 +8393,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-smart-install-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -8388,13 +8401,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 9px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
   background: var(--portal-accent);
   color: #03141f;
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 750;
   border: none;
   cursor: pointer;
@@ -8416,13 +8429,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-btn-dismiss {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #97bfcd;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -8553,14 +8566,42 @@ button, a, input, select, textarea { touch-action: manipulation; }
   margin-top: 14px;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 768px) {
   .portal-smart-install-banner {
-    top: auto;
-    bottom: 12px;
-    width: calc(100% - 20px);
+    top: 8px;
+    bottom: auto;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: none;
+    padding: 6px 10px;
+    border-radius: 12px;
+    animation: portalSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .portal-smart-install-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  .portal-smart-install-icon .portal-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .portal-smart-install-title {
+    font-size: 12px;
   }
   .portal-smart-install-desc {
     display: none;
+  }
+  .portal-btn-install {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 11.5px;
+    border-radius: 7px;
+  }
+  .portal-btn-dismiss {
+    width: 26px;
+    height: 26px;
   }
   .portal-install-tabs {
     flex-direction: column;

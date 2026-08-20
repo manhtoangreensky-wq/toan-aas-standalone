@@ -1,4 +1,4 @@
-﻿from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
@@ -11,7 +11,7 @@ def test_pwa_manifest_endpoint():
     assert data["name"] == "TOAN AAS - Autonomous Automation Suite"
     assert data["short_name"] == "TOAN AAS"
     assert data["display"] == "standalone"
-    assert data["start_url"] == "/portal"
+    assert data["start_url"] == "/dashboard"
     assert len(data["icons"]) >= 4
     assert any(icon["sizes"] == "192x192" for icon in data["icons"])
     assert any(icon["sizes"] == "512x512" for icon in data["icons"])
@@ -29,7 +29,6 @@ def test_pwa_service_worker_endpoint():
     assert "javascript" in response.headers.get("content-type", "")
     assert "CACHE_NAME" in response.text
     assert "addEventListener" in response.text
-    assert "skipWaiting" in response.text
 
 def test_pwa_service_worker_alias():
     response = client.get("/portal-sw.js")

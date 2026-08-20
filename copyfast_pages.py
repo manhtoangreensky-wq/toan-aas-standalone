@@ -388,7 +388,7 @@ def _title_for(path: str) -> str:
         "/operations": "Operations Center", "/admin/operations": "Operations Autopilot",
         "/image": "Studio ảnh", "/image-studio": "Image Creative Studio", "/document-workspace": "Document & PDF Workspace", "/video": "Studio video", "/video-studio": "Video Production Studio", "/subtitle-studio": "Subtitle & Transcript Workspace", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
         "/chat": "AI Chat Workspace", "/analytics": "Analytics Workspace", "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",
-        "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & Lồng tiếng",
+        "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & ngôn ngữ",
         "/features/documents": "Documents & PDF", "/content/handoffs": "Content Handoff", "/crm/leads": "Partner & Lead CRM",
     }
     return aliases.get(normalized, "TOAN AAS")

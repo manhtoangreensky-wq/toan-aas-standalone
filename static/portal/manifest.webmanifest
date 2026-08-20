@@ -5,7 +5,7 @@
   "description": "Nền tảng Tự động hóa Đa phương tiện & Trợ lý Thông minh TOAN AAS",
   "lang": "vi",
   "dir": "ltr",
-  "start_url": "/portal",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
@@ -14,7 +14,7 @@
   "categories": ["productivity", "utilities", "business"],
   "shortcuts": [
     {
-      "name": "Bàn làm việc",
+      "name": "Tổng quan",
       "short_name": "Dashboard",
       "description": "Mở tổng quan workspace TOAN AAS.",
       "url": "/dashboard"
