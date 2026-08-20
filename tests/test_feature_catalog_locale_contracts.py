@@ -33,6 +33,8 @@ def test_feature_catalogue_chrome_has_reviewed_vi_en_zh_messages() -> None:
         "featureCatalog.group.account.title",
         "featureCatalog.group.content.title",
         "featureCatalog.group.documents.description",
+        "featureCatalog.group.free_tools.title",
+        "featureCatalog.group.free_tools.description",
         "featureCatalog.guidedStart.title",
         "featureCatalog.capabilityHub.title",
         "featureCatalog.search.label",
