@@ -132,7 +132,7 @@ _PORTAL_SHELL_TITLES = {
     "/features/video": {"vi": "Video Studio · TOAN AAS", "en": "Video Studio · TOAN AAS", "zh": "视频工作室 · TOAN AAS"},
     "/features/voice": {"vi": "Voice Studio · TOAN AAS", "en": "Voice Studio · TOAN AAS", "zh": "语音工作室 · TOAN AAS"},
     "/features/music": {"vi": "Music & SFX · TOAN AAS", "en": "Music & SFX · TOAN AAS", "zh": "音乐与音效 · TOAN AAS"},
-    "/features/subtitle": {"vi": "Phụ đề & ngôn ngữ · TOAN AAS", "en": "Subtitles & language · TOAN AAS", "zh": "字幕与语言 · TOAN AAS"},
+    "/features/subtitle": {"vi": "Phụ đề & Lồng tiếng · TOAN AAS", "en": "Subtitles & Dubbing · TOAN AAS", "zh": "字幕与配音 · TOAN AAS"},
     "/features/documents": {"vi": "Documents & PDF · TOAN AAS", "en": "Documents & PDF · TOAN AAS", "zh": "文档与 PDF · TOAN AAS"},
     "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},
     "/login": {"vi": "Đăng nhập · TOAN AAS", "en": "Sign in · TOAN AAS", "zh": "登录 · TOAN AAS"},
@@ -382,7 +382,7 @@ def _title_for(path: str) -> str:
         "/operations": "Operations Center", "/admin/operations": "Operations Autopilot",
         "/image": "Studio ảnh", "/image-studio": "Image Creative Studio", "/document-workspace": "Document & PDF Workspace", "/video": "Studio video", "/video-studio": "Video Production Studio", "/subtitle-studio": "Subtitle & Transcript Workspace", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
         "/chat": "AI Chat Workspace", "/analytics": "Analytics Workspace", "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",
-        "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & ngôn ngữ",
+        "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & Lồng tiếng",
         "/features/documents": "Documents & PDF", "/content/handoffs": "Content Handoff", "/crm/leads": "Partner & Lead CRM",
     }
     return aliases.get(normalized, "TOAN AAS")

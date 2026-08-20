@@ -61,7 +61,7 @@ FAMILY_SPECS: tuple[dict[str, str], ...] = (
     },
     {
         "key": "subtitle",
-        "title": "Phụ đề & ngôn ngữ",
+        "title": "Phụ đề & Lồng tiếng",
         "route": "/features/subtitle",
         "description": "Transcript, ASR, SRT/VTT, translation và dubbing.",
     },

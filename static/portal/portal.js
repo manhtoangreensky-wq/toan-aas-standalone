@@ -9305,7 +9305,9 @@
       const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
       return audioAssetOperationsReadBadge(effectiveState);
     }
-    return badge(stateFor(page, context));
+    const state = stateFor(page, context);
+    if (state === "read_only" || state === "ready") return "";
+    return badge(state);
   }
 
   function icon(name) { return safeText(ICONS[name] || name || ICONS.default); }
@@ -9403,7 +9405,7 @@
     "Voice & Music": "shellNav.voiceMusic",
     "Ngôn ngữ & Docs": "shellNav.languageDocs",
     "Music & SFX": "featureCatalog.group.music.title",
-    "Phụ đề & ngôn ngữ": "featureCatalog.group.subtitle.title",
+    "Phụ đề & Lồng tiếng": "featureCatalog.group.subtitle.title",
     "Documents & PDF": "featureCatalog.group.documents.title",
     "Nạp Xu": "shellNav.topupCredit",
     "Membership": "shellNav.membership",
@@ -10658,7 +10660,7 @@
     { key: "video", title: "Video Studio", description: "Brief, cảnh, tiến độ, preview và export có kiểm soát." },
     { key: "voice", title: "Voice Studio", description: "TTS, Voice Vault, clone và preview riêng tư." },
     { key: "music", title: "Music & SFX", description: "Nhạc AI, bài hát, SFX và thư viện tài sản âm thanh." },
-    { key: "subtitle", title: "Phụ đề & ngôn ngữ", description: "ASR, SRT/VTT, dịch và lồng tiếng." },
+    { key: "subtitle", title: "Phụ đề & Lồng tiếng", description: "ASR, SRT/VTT, dịch và lồng tiếng." },
     { key: "documents", title: "Documents & PDF", description: "PDF, OCR, gộp, tách, nén và dịch tài liệu." },
     { key: "support", title: "Hỗ trợ & thông tin", description: "Ticket, bảng giá và thông tin pháp lý." }
   ]);
@@ -25900,18 +25902,20 @@
     // Direct, Prominent 1-Click Social & Bot Login
     const directSocialLogin = mfaLoginPending ? "" : `
       <div class="portal-direct-social-auth">
-        <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="Đăng nhập bằng Google">
-          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span>Tiếp tục với Google</span>
-        </a>
-        <a class="portal-btn-direct-social apple" href="/api/v1/auth/oauth/apple/start?next=/dashboard" title="Đăng nhập bằng Apple ID">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.88-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.76 1 .08 2.03-.49 2.65-1.23"/></svg>
-          <span>Đăng nhập với Apple</span>
-        </a>
-        <a class="portal-btn-direct-social telegram" href="https://t.me/toanaasbot?start=auth_login" target="_blank" rel="noopener noreferrer" title="Mở Bot Telegram @toanaasbot xác thực 1-chạm">
+        <button type="button" class="portal-btn-direct-social telegram" data-portal-action="start-telegram-login" data-portal-route="/login" title="Tạo mã bảo mật và mở Bot Telegram @toanaasbot">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.674c.458 0 .66-.21.916-.458l2.199-2.138 4.573 3.378c.843.464 1.448.225 1.658-.783l3-14.137c.308-1.234-.471-1.794-1.289-1.423z"/></svg>
           <span>Đăng nhập với Telegram Bot</span>
-        </a>
+        </button>
+        <div class="portal-social-pair">
+          <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="Đăng nhập bằng Google">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            <span>Google</span>
+          </a>
+          <a class="portal-btn-direct-social apple" href="/api/v1/auth/oauth/apple/start?next=/dashboard" title="Đăng nhập bằng Apple ID">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.88-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.76 1 .08 2.03-.49 2.65-1.23"/></svg>
+            <span>Apple</span>
+          </a>
+        </div>
       </div>
       <div class="portal-auth-divider"><span>HOẶC TIẾP TỤC VỚI EMAIL</span></div>
     `;
@@ -25924,7 +25928,9 @@
 
     const securityFootnote = `<div class="portal-auth-security-foot"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div>`;
 
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${securityFootnote}<div class="portal-auth-compact-footer">${alternativeMethods}${authAssurance}${operationalNotes}</div></section></div></article>`;
+    const authFooter = `<footer class="portal-auth-footer"><div class="portal-auth-footer-security"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
+
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${securityFootnote}</section></div>${authFooter}</article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -30869,7 +30875,7 @@
           </div>
 
           <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
-            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
+            <p class="portal-ios-guide-intro">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
@@ -30887,7 +30893,7 @@
           </div>
 
           <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-panel="android">
-            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Cài đặt TOAN AAS trên điện thoại Android:</p>
+            <p class="portal-ios-guide-intro">Cài đặt TOAN AAS trên điện thoại Android:</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
@@ -30905,7 +30911,7 @@
           </div>
 
           <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-panel="ios">
-            <p style="font-size:13px;color:var(--portal-muted);margin:0 0 12px;">Thêm TOAN AAS vào màn hình chính iPhone / iPad bằng Safari:</p>
+            <p class="portal-ios-guide-intro">Thêm TOAN AAS vào màn hình chính iPhone / iPad bằng Safari:</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
