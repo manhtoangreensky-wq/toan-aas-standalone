@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
 # Local signed-session store used only for development smoke checks
 toanaas_webapp_session.db
 

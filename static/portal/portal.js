@@ -503,25 +503,25 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng Email + mật khẩu đã tạo tài khoản. Google (OAuth) là một phương thức riêng và chỉ được bật khi server có cấu hình OAuth.", helpKey: "access.help.loginEmail" },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254 },
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Nhập mật khẩu", placeholderKey: "access.placeholder.password", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên bạn muốn dùng", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh.", helpKey: "access.help.registerName" },
-      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng.", helpKey: "access.help.registerEmail" },
+      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên của bạn", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Tên hiển thị trong bảng điều khiển và dự án của bạn.", helpKey: "access.help.registerName" },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng để đăng nhập và nhận thông báo dự án của bạn.", helpKey: "access.help.registerEmail" },
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "access.placeholder.passwordMin", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu", labelKey: "access.field.passwordConfirm", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "access.placeholder.passwordConfirm", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     passwordRecovery: [
-      { name: "email", label: "Email tài khoản", labelKey: "access.field.recoveryEmail", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không.", helpKey: "access.help.recoveryEmail" }
+      { name: "email", label: "Email tài khoản", labelKey: "access.field.recoveryEmail", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Hệ thống sẽ gửi hướng dẫn khôi phục mật khẩu về email của bạn.", helpKey: "access.help.recoveryEmail" }
     ],
     telegramAccountUpgrade: [
-      { name: "email", label: "Email đăng nhập (có thể dùng Gmail)", labelKey: "accountCenter.profile.upgradeEmailLabel", type: "email", placeholder: "you@example.com", placeholderKey: "accountCenter.profile.upgradeEmailPlaceholder", autocomplete: "email", required: true, maxLength: 254, help: "Thêm Email + mật khẩu vào đúng tài khoản Telegram đang đăng nhập; không ghép tự động với tài khoản Web khác.", helpKey: "accountCenter.profile.upgradeEmailHelp" },
+      { name: "email", label: "Email đăng nhập", labelKey: "accountCenter.profile.upgradeEmailLabel", type: "email", placeholder: "you@example.com", placeholderKey: "accountCenter.profile.upgradeEmailPlaceholder", autocomplete: "email", required: true, maxLength: 254, help: "Thêm Email và mật khẩu để đăng nhập thuận tiện trên mọi thiết bị.", helpKey: "accountCenter.profile.upgradeEmailHelp" },
       { name: "password", label: "Mật khẩu mới", labelKey: "accountCenter.profile.upgradePasswordLabel", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "accountCenter.profile.upgradePasswordPlaceholder", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu mới", labelKey: "accountCenter.profile.upgradePasswordConfirmLabel", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "accountCenter.profile.upgradePasswordConfirmPlaceholder", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     prompt: [
-      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp. Các helper content/prompt P0 hiện trả bản nháp tiếng Việt; chọn ngôn ngữ chỉ xuất hiện khi bridge có contract riêng. Viết brief rõ hơn để có draft hữu ích hơn.", required: true, minLength: 1 }
+      { name: "request", label: "Yêu cầu sáng tạo", control: "textarea", placeholder: "Mô tả nội dung hoặc ý tưởng bạn muốn tạo…", help: "helper content/prompt P0 hiện trả bản nháp tiếng Việt; mô tả càng chi tiết thì nội dung tạo ra sẽ càng chất lượng và sát với mong muốn của bạn.", required: true, minLength: 1 }
     ],
     // These names intentionally mirror the pure storyboard helper exposed by
     // the frozen Bot P0 bridge.  Keep `duration` (rather than only a display
@@ -939,7 +939,7 @@
     path: "/password-recovery", title: "Khôi phục mật khẩu", icon: ICONS.account, section: "Tài khoản",
     description: "Yêu cầu liên kết đặt lại mật khẩu cho tài khoản Email + mật khẩu. Phản hồi không phân biệt email; chỉ liên kết một lần trong mailbox mới có thể thay đổi mật khẩu.",
     access: "public", layout: "auth", status: "ready", action: "auth-password-recovery-start", actionLabel: "Gửi liên kết đặt lại", actionLabelKey: "access.action.recovery", fields: copyFields(FIELD_SETS.passwordRecovery),
-    notes: ["Yêu cầu không tiết lộ email có tài khoản hay không. Dịch vụ gửi thư cần được operator bật và cấu hình trên server trước khi có email thật.", "Link chỉ hiển thị form xác nhận; preview/scanner không thể reset. Khi hoàn tất, Web thu hồi mọi signed session cũ và không tự đăng nhập.", "Không dùng Telegram ID, Bot, provider, PayOS, Xu hay localStorage trong recovery flow."]
+    notes: ["Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không. Dịch vụ gửi thư cần được operator bật và cấu hình trên server trước khi có email thật.", "Link chỉ hiển thị form xác nhận; preview/scanner không thể reset. Khi hoàn tất, Web thu hồi mọi signed session cũ và không tự đăng nhập.", "Không dùng Telegram ID, Bot, provider, PayOS, Xu hay localStorage trong recovery flow."]
   });
   // Marketing remains available only as an explicit secondary route. The app
   // origin itself is a product surface: the server sends unsigned visitors to
@@ -10225,9 +10225,9 @@
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Kết nối workspace sẵn sàng") : uiText("chrome.safeMode", "Workspace đang ở chế độ an toàn"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Tính năng được cấp theo phiên hiện tại") : uiText("chrome.safeModeDetail", "Không gọi provider, Xu hoặc payment từ browser"))}</span></span>
+        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Hệ thống đã sẵn sàng") : uiText("chrome.safeMode", "TOAN AAS Workspace"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Đã đồng bộ hoá tài khoản và dữ liệu") : uiText("chrome.safeModeDetail", "Không gian làm việc tự động hoá AI"))}</span></span>
       </div>
-      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & riêng tư"))}</span></a>
+      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & bảo mật"))}</span></a>
     </div>`;
   }
 
@@ -20295,9 +20295,7 @@
       { route: "/documents", icon: ICONS.document, title: dashboardText("launchpad.studio.documents.title"), description: dashboardText("launchpad.studio.documents.body"), tags: [dashboardText("launchpad.studio.documents.tagFiles"), dashboardText("launchpad.studio.documents.tagGuarded")] }
     ];
     return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("launchpad.kicker")}</span><h2>${dashboardText("launchpad.title")}</h2><p>${dashboardText("launchpad.body")}</p></div><a class="portal-button portal-button--quiet" href="/pricing">${dashboardText("launchpad.pricing")}</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
-      const studioPage = manifest[studio.route] || { path: studio.route, access: "member", action: "none" };
-      const state = stateFor(studioPage, context);
-      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${studio.title}</h3><p>${studio.description}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${tag}</span>`).join("")}</div><span class="portal-studio-open">${dashboardText("launchpad.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
+      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span></div><div><h3>${studio.title}</h3><p>${studio.description}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${tag}</span>`).join("")}</div><span class="portal-studio-open">${dashboardText("launchpad.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
     }).join("")}</div></section>`;
   }
 
@@ -31752,21 +31750,35 @@
 
   function syncSmartInstallBanner() {
     if (isStandaloneApp()) {
-      const existing = document.querySelector("[data-portal-smart-install-banner]");
-      if (existing) existing.remove();
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
       return;
     }
     let dismissed = false;
     try {
+      if (window.localStorage && window.localStorage.getItem("toanaas_install_dismissed") === "true") {
+        dismissed = true;
+      }
       if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_dismissed") === "true") {
         dismissed = true;
       }
     } catch (_) {}
     if (dismissed) {
-      const existing = document.querySelector("[data-portal-smart-install-banner]");
-      if (existing) existing.remove();
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
       return;
     }
+
+    let isExpanded = false;
+    try {
+      if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_expanded") === "true") {
+        isExpanded = true;
+      }
+    } catch (_) {}
 
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
@@ -31775,47 +31787,76 @@
     const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
     const subDesc = isIos ? "Thêm vào màn hình chính iPhone / iPad mượt mà" : (isAndroid ? "Cài ứng dụng toàn màn hình không có thanh URL" : "Trải nghiệm mượt 60 FPS, mở độc lập toàn màn hình");
 
-    let banner = document.querySelector("[data-portal-smart-install-banner]");
-    if (!banner) {
-      banner = document.createElement("aside");
-      banner.className = "portal-smart-install-banner";
-      banner.setAttribute("data-portal-smart-install-banner", "true");
-      banner.setAttribute("role", "complementary");
-      banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
-      if (document.body && typeof document.body.appendChild === "function") {
-        document.body.appendChild(banner);
-      }
-      const motion = window.TOANAASPortalMotion;
-      if (motion && typeof motion.enter === "function") motion.enter(banner, "pop");
-    }
+    if (isExpanded) {
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
 
-    banner.innerHTML = `
-      <div class="portal-smart-install-inner">
-        <div class="portal-smart-install-badge">
-          <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
-          <div class="portal-smart-install-meta">
-            <strong class="portal-smart-install-title">TOAN AAS App</strong>
-            <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
+      let banner = document.querySelector("[data-portal-smart-install-banner]");
+      if (!banner) {
+        banner = document.createElement("aside");
+        banner.className = "portal-smart-install-banner";
+        banner.setAttribute("data-portal-smart-install-banner", "true");
+        banner.setAttribute("role", "complementary");
+        banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
+        if (document.body && typeof document.body.appendChild === "function") {
+          document.body.appendChild(banner);
+        }
+      }
+
+      banner.innerHTML = `
+        <div class="portal-smart-install-inner">
+          <div class="portal-smart-install-badge">
+            <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
+            <div class="portal-smart-install-meta">
+              <strong class="portal-smart-install-title">TOAN AAS App</strong>
+              <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
+            </div>
+          </div>
+          <div class="portal-smart-install-actions">
+            <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
+            <button type="button" class="portal-btn-collapse" data-portal-action="pwa-install-collapse" title="Thu gọn" aria-label="Thu gọn">—</button>
+            <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" title="Tắt hẳn" aria-label="Tắt hẳn">✕</button>
           </div>
         </div>
-        <div class="portal-smart-install-actions">
-          <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
-          <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" aria-label="Để sau">✕</button>
-        </div>
-      </div>
-    `;
+      `;
+    } else {
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+
+      let fab = document.querySelector("[data-portal-pwa-fab]");
+      if (!fab) {
+        fab = document.createElement("button");
+        fab.type = "button";
+        fab.className = "portal-pwa-fab-trigger";
+        fab.setAttribute("data-portal-pwa-fab", "true");
+        fab.setAttribute("data-portal-action", "pwa-toggle-banner");
+        fab.setAttribute("title", "Tải & Cài đặt App TOAN AAS");
+        fab.setAttribute("aria-label", "Tải & Cài đặt App TOAN AAS");
+        if (document.body && typeof document.body.appendChild === "function") {
+          document.body.appendChild(fab);
+        }
+      }
+      fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">Tải App</span>`;
+    }
   }
 
   function dismissSmartInstallBanner() {
     try {
+      if (window.localStorage) window.localStorage.setItem("toanaas_install_dismissed", "true");
       if (window.sessionStorage) window.sessionStorage.setItem("toanaas_install_dismissed", "true");
     } catch (_) {}
     const banner = document.querySelector("[data-portal-smart-install-banner]");
     if (banner) {
       banner.style.opacity = "0";
-      banner.style.transform = "translateY(-20px)";
+      banner.style.transform = "translateY(20px)";
       banner.style.transition = "opacity .2s ease, transform .2s ease";
       window.setTimeout(() => banner.remove(), 220);
+    }
+    const fab = document.querySelector("[data-portal-pwa-fab]");
+    if (fab) {
+      fab.style.opacity = "0";
+      fab.style.transition = "opacity .2s ease";
+      window.setTimeout(() => fab.remove(), 220);
     }
   }
 
@@ -32129,6 +32170,16 @@
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal("ios"); return; }
+      if (event.target.closest('[data-portal-action="pwa-toggle-banner"]')) {
+        try { if (window.sessionStorage) window.sessionStorage.setItem("toanaas_install_expanded", "true"); } catch (_) {}
+        syncSmartInstallBanner();
+        return;
+      }
+      if (event.target.closest('[data-portal-action="pwa-install-collapse"]')) {
+        try { if (window.sessionStorage) window.sessionStorage.removeItem("toanaas_install_expanded"); } catch (_) {}
+        syncSmartInstallBanner();
+        return;
+      }
       if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
       if (event.target.closest('[data-portal-action="pwa-copy-link"]')) { copyCurrentUrlToClipboard(); return; }
       if (event.target.closest('[data-portal-action="pwa-download-shortcut"]')) { downloadAppLauncherShortcut(); return; }
