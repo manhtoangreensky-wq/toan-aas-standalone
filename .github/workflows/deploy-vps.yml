@@ -35,11 +35,10 @@ jobs:
 
             echo '=== Restarting Web Service ==='
             systemctl restart toanaas-web.service
-            sleep 2
 
             echo '=== Verifying Active Web Service ==='
             systemctl is-active toanaas-web.service
-            curl -f http://127.0.0.1:8000/health
+            curl --retry 5 --retry-delay 2 --retry-connrefused -f http://127.0.0.1:8000/health
 
             echo '=== WEB DEPLOY SUCCESS ==='
           "
