@@ -4,7 +4,7 @@
     {
       "file": "app.py",
       "kind": "create_task",
-      "line": 231,
+      "line": 237,
       "target": "<dynamic>"
     },
     {
@@ -212,6 +212,12 @@
       "target": "parse_native_job_id"
     },
     {
+      "file": "app.py",
+      "kind": "function",
+      "line": 2644,
+      "target": "pwa_service_worker"
+    },
+    {
       "file": "ai_media.py",
       "kind": "function",
       "line": 61,
@@ -226,7 +232,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2465,
+      "line": 2471,
       "target": "root_service_worker"
     },
     {
@@ -248,7 +254,7 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 40,
+    "background_jobs": 41,
     "callback_data": 0,
     "callback_handlers": 0,
     "callback_templates": 0,
@@ -257,7 +263,7 @@
     "database_tables": 224,
     "env_references": 250,
     "providers": 11,
-    "routes": 682,
+    "routes": 687,
     "ui_path_references": 47
   },
   "database_references": [
@@ -593,7 +599,7 @@
     },
     {
       "file": "app.py",
-      "line": 1695,
+      "line": 1701,
       "operation": "UPDATE",
       "table": "family"
     },
@@ -6250,7 +6256,7 @@
     },
     {
       "file": "app.py",
-      "line": 133,
+      "line": 139,
       "name": "CORS_ALLOW_ORIGINS"
     },
     {
@@ -7536,7 +7542,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 738,
+      "occurrences": 739,
       "provider": "PayOS"
     },
     {
@@ -7663,7 +7669,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 1664,
+      "occurrences": 1665,
       "provider": "Telegram"
     }
   ],
@@ -7698,7 +7704,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2630,
+      "line": 2656,
       "methods": [
         "GET"
       ],
@@ -7959,7 +7965,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2650,
+      "line": 2676,
       "methods": [
         "GET"
       ],
@@ -7995,7 +8001,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2532,
+      "line": 2538,
       "methods": [
         "POST"
       ],
@@ -8004,7 +8010,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2518,
+      "line": 2524,
       "methods": [
         "POST"
       ],
@@ -8013,7 +8019,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2546,
+      "line": 2552,
       "methods": [
         "POST"
       ],
@@ -8022,7 +8028,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2625,
+      "line": 2631,
       "methods": [
         "GET"
       ],
@@ -8418,7 +8424,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2661,
+      "line": 2687,
       "methods": [
         "GET"
       ],
@@ -8463,7 +8469,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2666,
+      "line": 2692,
       "methods": [
         "GET"
       ],
@@ -8697,7 +8703,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2645,
+      "line": 2671,
       "methods": [
         "GET"
       ],
@@ -8931,7 +8937,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2661,
+      "line": 2687,
       "methods": [
         "GET"
       ],
@@ -9867,7 +9873,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2625,
+      "line": 2631,
       "methods": [
         "GET"
       ],
@@ -10279,6 +10285,24 @@
       "path": "/manager/leads"
     },
     {
+      "endpoint": "pwa_manifest",
+      "file": "app.py",
+      "line": 2637,
+      "methods": [
+        "GET"
+      ],
+      "path": "/manifest.json"
+    },
+    {
+      "endpoint": "pwa_manifest",
+      "file": "app.py",
+      "line": 2637,
+      "methods": [
+        "GET"
+      ],
+      "path": "/manifest.webmanifest"
+    },
+    {
       "endpoint": "submit_manual_topup",
       "file": "customer_api.py",
       "line": 55,
@@ -10317,7 +10341,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2655,
+      "line": 2681,
       "methods": [
         "GET"
       ],
@@ -10493,6 +10517,15 @@
         "POST"
       ],
       "path": "/ocr-pdf"
+    },
+    {
+      "endpoint": "pwa_offline_page",
+      "file": "app.py",
+      "line": 2650,
+      "methods": [
+        "GET"
+      ],
+      "path": "/offline.html"
     },
     {
       "endpoint": "add_okr",
@@ -10934,6 +10967,15 @@
         "GET"
       ],
       "path": "/policy"
+    },
+    {
+      "endpoint": "pwa_service_worker",
+      "file": "app.py",
+      "line": 2644,
+      "methods": [
+        "GET"
+      ],
+      "path": "/portal-sw.js"
     },
     {
       "endpoint": "customer_affiliates",
@@ -11937,7 +11979,16 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2465,
+      "line": 2471,
+      "methods": [
+        "GET"
+      ],
+      "path": "/service-worker.js"
+    },
+    {
+      "endpoint": "pwa_service_worker",
+      "file": "app.py",
+      "line": 2644,
       "methods": [
         "GET"
       ],
@@ -13089,7 +13140,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2640,
+      "line": 2666,
       "methods": [
         "GET"
       ],
@@ -13116,7 +13167,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2635,
+      "line": 2661,
       "methods": [
         "GET"
       ],
@@ -13575,7 +13626,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2671,
+      "line": 2697,
       "methods": [
         "GET"
       ],
@@ -13810,7 +13861,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 157,
   "source_files_scanned": 157,
-  "source_fingerprint_sha256": "cbba1f89df529b799a7a84598b7add6d2c76a0c4ecb178fae01c33922d423605",
+  "source_fingerprint_sha256": "41692e9ea70cf0efb1faa90c99a35f8a8c8f4206fd74594c832e032a27a7befc",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -14030,7 +14081,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 27821,
+      "line": 28750,
       "path": "/features"
     },
     {
