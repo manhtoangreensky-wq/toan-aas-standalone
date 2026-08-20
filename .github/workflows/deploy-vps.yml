@@ -35,6 +35,7 @@ jobs:
 
             echo '=== Restarting Web Service ==='
             systemctl restart toanaas-web.service
+            sleep 2
 
             echo '=== Verifying Active Web Service ==='
             systemctl is-active toanaas-web.service
