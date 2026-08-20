@@ -20295,9 +20295,7 @@
       { route: "/documents", icon: ICONS.document, title: dashboardText("launchpad.studio.documents.title"), description: dashboardText("launchpad.studio.documents.body"), tags: [dashboardText("launchpad.studio.documents.tagFiles"), dashboardText("launchpad.studio.documents.tagGuarded")] }
     ];
     return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">${dashboardText("launchpad.kicker")}</span><h2>${dashboardText("launchpad.title")}</h2><p>${dashboardText("launchpad.body")}</p></div><a class="portal-button portal-button--quiet" href="/pricing">${dashboardText("launchpad.pricing")}</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
-      const studioPage = manifest[studio.route] || { path: studio.route, access: "member", action: "none" };
-      const state = stateFor(studioPage, context);
-      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${studio.title}</h3><p>${studio.description}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${tag}</span>`).join("")}</div><span class="portal-studio-open">${dashboardText("launchpad.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
+      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span></div><div><h3>${studio.title}</h3><p>${studio.description}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${tag}</span>`).join("")}</div><span class="portal-studio-open">${dashboardText("launchpad.open")} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
     }).join("")}</div></section>`;
   }
 
@@ -31752,21 +31750,35 @@
 
   function syncSmartInstallBanner() {
     if (isStandaloneApp()) {
-      const existing = document.querySelector("[data-portal-smart-install-banner]");
-      if (existing) existing.remove();
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
       return;
     }
     let dismissed = false;
     try {
+      if (window.localStorage && window.localStorage.getItem("toanaas_install_dismissed") === "true") {
+        dismissed = true;
+      }
       if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_dismissed") === "true") {
         dismissed = true;
       }
     } catch (_) {}
     if (dismissed) {
-      const existing = document.querySelector("[data-portal-smart-install-banner]");
-      if (existing) existing.remove();
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
       return;
     }
+
+    let isExpanded = false;
+    try {
+      if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_expanded") === "true") {
+        isExpanded = true;
+      }
+    } catch (_) {}
 
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
@@ -31775,47 +31787,76 @@
     const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
     const subDesc = isIos ? "Thêm vào màn hình chính iPhone / iPad mượt mà" : (isAndroid ? "Cài ứng dụng toàn màn hình không có thanh URL" : "Trải nghiệm mượt 60 FPS, mở độc lập toàn màn hình");
 
-    let banner = document.querySelector("[data-portal-smart-install-banner]");
-    if (!banner) {
-      banner = document.createElement("aside");
-      banner.className = "portal-smart-install-banner";
-      banner.setAttribute("data-portal-smart-install-banner", "true");
-      banner.setAttribute("role", "complementary");
-      banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
-      if (document.body && typeof document.body.appendChild === "function") {
-        document.body.appendChild(banner);
-      }
-      const motion = window.TOANAASPortalMotion;
-      if (motion && typeof motion.enter === "function") motion.enter(banner, "pop");
-    }
+    if (isExpanded) {
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
 
-    banner.innerHTML = `
-      <div class="portal-smart-install-inner">
-        <div class="portal-smart-install-badge">
-          <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
-          <div class="portal-smart-install-meta">
-            <strong class="portal-smart-install-title">TOAN AAS App</strong>
-            <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
+      let banner = document.querySelector("[data-portal-smart-install-banner]");
+      if (!banner) {
+        banner = document.createElement("aside");
+        banner.className = "portal-smart-install-banner";
+        banner.setAttribute("data-portal-smart-install-banner", "true");
+        banner.setAttribute("role", "complementary");
+        banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
+        if (document.body && typeof document.body.appendChild === "function") {
+          document.body.appendChild(banner);
+        }
+      }
+
+      banner.innerHTML = `
+        <div class="portal-smart-install-inner">
+          <div class="portal-smart-install-badge">
+            <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
+            <div class="portal-smart-install-meta">
+              <strong class="portal-smart-install-title">TOAN AAS App</strong>
+              <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
+            </div>
+          </div>
+          <div class="portal-smart-install-actions">
+            <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
+            <button type="button" class="portal-btn-collapse" data-portal-action="pwa-install-collapse" title="Thu gọn" aria-label="Thu gọn">—</button>
+            <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" title="Tắt hẳn" aria-label="Tắt hẳn">✕</button>
           </div>
         </div>
-        <div class="portal-smart-install-actions">
-          <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
-          <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" aria-label="Để sau">✕</button>
-        </div>
-      </div>
-    `;
+      `;
+    } else {
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+
+      let fab = document.querySelector("[data-portal-pwa-fab]");
+      if (!fab) {
+        fab = document.createElement("button");
+        fab.type = "button";
+        fab.className = "portal-pwa-fab-trigger";
+        fab.setAttribute("data-portal-pwa-fab", "true");
+        fab.setAttribute("data-portal-action", "pwa-toggle-banner");
+        fab.setAttribute("title", "Tải & Cài đặt App TOAN AAS");
+        fab.setAttribute("aria-label", "Tải & Cài đặt App TOAN AAS");
+        if (document.body && typeof document.body.appendChild === "function") {
+          document.body.appendChild(fab);
+        }
+      }
+      fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">Tải App</span>`;
+    }
   }
 
   function dismissSmartInstallBanner() {
     try {
+      if (window.localStorage) window.localStorage.setItem("toanaas_install_dismissed", "true");
       if (window.sessionStorage) window.sessionStorage.setItem("toanaas_install_dismissed", "true");
     } catch (_) {}
     const banner = document.querySelector("[data-portal-smart-install-banner]");
     if (banner) {
       banner.style.opacity = "0";
-      banner.style.transform = "translateY(-20px)";
+      banner.style.transform = "translateY(20px)";
       banner.style.transition = "opacity .2s ease, transform .2s ease";
       window.setTimeout(() => banner.remove(), 220);
+    }
+    const fab = document.querySelector("[data-portal-pwa-fab]");
+    if (fab) {
+      fab.style.opacity = "0";
+      fab.style.transition = "opacity .2s ease";
+      window.setTimeout(() => fab.remove(), 220);
     }
   }
 
@@ -32129,6 +32170,16 @@
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-ios-guide"]')) { openUniversalInstallGuideModal("ios"); return; }
+      if (event.target.closest('[data-portal-action="pwa-toggle-banner"]')) {
+        try { if (window.sessionStorage) window.sessionStorage.setItem("toanaas_install_expanded", "true"); } catch (_) {}
+        syncSmartInstallBanner();
+        return;
+      }
+      if (event.target.closest('[data-portal-action="pwa-install-collapse"]')) {
+        try { if (window.sessionStorage) window.sessionStorage.removeItem("toanaas_install_expanded"); } catch (_) {}
+        syncSmartInstallBanner();
+        return;
+      }
       if (event.target.closest('[data-portal-action="pwa-install-dismiss"]')) { dismissSmartInstallBanner(); return; }
       if (event.target.closest('[data-portal-action="pwa-copy-link"]')) { copyCurrentUrlToClipboard(); return; }
       if (event.target.closest('[data-portal-action="pwa-download-shortcut"]')) { downloadAppLauncherShortcut(); return; }

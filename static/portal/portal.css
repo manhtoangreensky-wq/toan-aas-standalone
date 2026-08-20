@@ -8426,7 +8426,8 @@ button, a, input, select, textarea { touch-action: manipulation; }
   transform: scale(0.97);
 }
 
-.portal-btn-dismiss {
+.portal-btn-dismiss,
+.portal-btn-collapse {
   display: grid;
   place-items: center;
   width: 28px;
@@ -8440,10 +8441,83 @@ button, a, input, select, textarea { touch-action: manipulation; }
   transition: all 0.15s ease;
 }
 
-.portal-btn-dismiss:hover {
+.portal-btn-dismiss:hover,
+.portal-btn-collapse:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
+
+.portal-install-banner-pill {
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 12px;
+  background: rgba(13, 27, 42, 0.92);
+  border: 1px solid rgba(99, 225, 208, 0.35);
+  border-radius: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(99, 225, 208, 0.12);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.portal-install-banner-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 225, 208, 0.6);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 225, 208, 0.25);
+}
+
+.portal-install-pill-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portal-install-pill-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(99, 225, 208, 0.2);
+  color: #63e1d0;
+  flex-shrink: 0;
+}
+
+.portal-install-pill-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.portal-install-pill-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(99, 225, 208, 0.15);
+  color: #63e1d0;
+  border: 1px solid rgba(99, 225, 208, 0.3);
+}
+
+.portal-btn-guide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #97bfcd;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.portal-btn-guide-link:hover {
+  color: #63e1d0;
+  background: rgba(99, 225, 208, 0.08);
+}
+
 
 /* Install Guide Modal Styling */
 .portal-install-guide-modal {

@@ -29,6 +29,11 @@ def test_portal_js_has_smart_app_install_banner() -> None:
     assert "pwa-install-ios-guide" in PORTAL_JS
     assert "pwa-install-prompt" in PORTAL_JS
     assert "pwa-install-dismiss" in PORTAL_JS
+    assert "pwa-install-collapse" in PORTAL_JS
+    assert "pwa-toggle-banner" in PORTAL_JS
+    assert "dismissSmartInstallBanner" in PORTAL_JS
+    assert "data-portal-pwa-fab" in PORTAL_JS
+
 
 
 def test_portal_css_has_smart_install_banner_and_modal_styling() -> None:
@@ -38,5 +43,8 @@ def test_portal_css_has_smart_install_banner_and_modal_styling() -> None:
     assert ".portal-install-tabs" in PORTAL_CSS
     assert ".portal-install-tab-btn" in PORTAL_CSS
     assert ".portal-modal-backdrop" in PORTAL_CSS
+    assert ".portal-install-banner-pill" in PORTAL_CSS
+    assert ".portal-btn-collapse" in PORTAL_CSS
     assert "contain: layout paint;" in PORTAL_CSS
     assert "will-change: transform, opacity;" in PORTAL_CSS
+
