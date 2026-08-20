@@ -132,7 +132,7 @@ _PORTAL_SHELL_TITLES = {
     "/features/video": {"vi": "Video Studio · TOAN AAS", "en": "Video Studio · TOAN AAS", "zh": "视频工作室 · TOAN AAS"},
     "/features/voice": {"vi": "Voice Studio · TOAN AAS", "en": "Voice Studio · TOAN AAS", "zh": "语音工作室 · TOAN AAS"},
     "/features/music": {"vi": "Music & SFX · TOAN AAS", "en": "Music & SFX · TOAN AAS", "zh": "音乐与音效 · TOAN AAS"},
-    "/features/subtitle": {"vi": "Phụ đề & Lồng tiếng · TOAN AAS", "en": "Subtitles & Dubbing · TOAN AAS", "zh": "字幕与配音 · TOAN AAS"},
+    "/features/subtitle": {"vi": "Phụ đề & ngôn ngữ · TOAN AAS", "en": "Subtitles & Dubbing · TOAN AAS", "zh": "字幕与配音 · TOAN AAS"},
     "/features/documents": {"vi": "Documents & PDF · TOAN AAS", "en": "Documents & PDF · TOAN AAS", "zh": "文档与 PDF · TOAN AAS"},
     "/free-tools": {"vi": "Công cụ miễn phí (0 Xu) · TOAN AAS", "en": "Free Tools (0 Xu) · TOAN AAS", "zh": "免费工具 (0 积分) · TOAN AAS"},
     "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},

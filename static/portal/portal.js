@@ -503,25 +503,25 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng Email + mật khẩu đã tạo tài khoản. Google (OAuth) là một phương thức riêng và chỉ được bật khi server có cấu hình OAuth.", helpKey: "access.help.loginEmail" },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254 },
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Nhập mật khẩu", placeholderKey: "access.placeholder.password", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên bạn muốn dùng", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh.", helpKey: "access.help.registerName" },
-      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng.", helpKey: "access.help.registerEmail" },
+      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên của bạn", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Tên hiển thị trong bảng điều khiển và dự án của bạn.", helpKey: "access.help.registerName" },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng để đăng nhập và nhận thông báo dự án của bạn.", helpKey: "access.help.registerEmail" },
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "access.placeholder.passwordMin", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu", labelKey: "access.field.passwordConfirm", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "access.placeholder.passwordConfirm", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     passwordRecovery: [
-      { name: "email", label: "Email tài khoản", labelKey: "access.field.recoveryEmail", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không.", helpKey: "access.help.recoveryEmail" }
+      { name: "email", label: "Email tài khoản", labelKey: "access.field.recoveryEmail", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Hệ thống sẽ gửi hướng dẫn khôi phục mật khẩu về email của bạn.", helpKey: "access.help.recoveryEmail" }
     ],
     telegramAccountUpgrade: [
-      { name: "email", label: "Email đăng nhập (có thể dùng Gmail)", labelKey: "accountCenter.profile.upgradeEmailLabel", type: "email", placeholder: "you@example.com", placeholderKey: "accountCenter.profile.upgradeEmailPlaceholder", autocomplete: "email", required: true, maxLength: 254, help: "Thêm Email + mật khẩu vào đúng tài khoản Telegram đang đăng nhập; không ghép tự động với tài khoản Web khác.", helpKey: "accountCenter.profile.upgradeEmailHelp" },
+      { name: "email", label: "Email đăng nhập", labelKey: "accountCenter.profile.upgradeEmailLabel", type: "email", placeholder: "you@example.com", placeholderKey: "accountCenter.profile.upgradeEmailPlaceholder", autocomplete: "email", required: true, maxLength: 254, help: "Thêm Email và mật khẩu để đăng nhập thuận tiện trên mọi thiết bị.", helpKey: "accountCenter.profile.upgradeEmailHelp" },
       { name: "password", label: "Mật khẩu mới", labelKey: "accountCenter.profile.upgradePasswordLabel", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "accountCenter.profile.upgradePasswordPlaceholder", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu mới", labelKey: "accountCenter.profile.upgradePasswordConfirmLabel", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "accountCenter.profile.upgradePasswordConfirmPlaceholder", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     prompt: [
-      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp. Các helper content/prompt P0 hiện trả bản nháp tiếng Việt; chọn ngôn ngữ chỉ xuất hiện khi bridge có contract riêng. Viết brief rõ hơn để có draft hữu ích hơn.", required: true, minLength: 1 }
+      { name: "request", label: "Yêu cầu sáng tạo", control: "textarea", placeholder: "Mô tả nội dung hoặc ý tưởng bạn muốn tạo…", help: "helper content/prompt P0 hiện trả bản nháp tiếng Việt; mô tả càng chi tiết thì nội dung tạo ra sẽ càng chất lượng và sát với mong muốn của bạn.", required: true, minLength: 1 }
     ],
     // These names intentionally mirror the pure storyboard helper exposed by
     // the frozen Bot P0 bridge.  Keep `duration` (rather than only a display
@@ -939,7 +939,7 @@
     path: "/password-recovery", title: "Khôi phục mật khẩu", icon: ICONS.account, section: "Tài khoản",
     description: "Yêu cầu liên kết đặt lại mật khẩu cho tài khoản Email + mật khẩu. Phản hồi không phân biệt email; chỉ liên kết một lần trong mailbox mới có thể thay đổi mật khẩu.",
     access: "public", layout: "auth", status: "ready", action: "auth-password-recovery-start", actionLabel: "Gửi liên kết đặt lại", actionLabelKey: "access.action.recovery", fields: copyFields(FIELD_SETS.passwordRecovery),
-    notes: ["Yêu cầu không tiết lộ email có tài khoản hay không. Dịch vụ gửi thư cần được operator bật và cấu hình trên server trước khi có email thật.", "Link chỉ hiển thị form xác nhận; preview/scanner không thể reset. Khi hoàn tất, Web thu hồi mọi signed session cũ và không tự đăng nhập.", "Không dùng Telegram ID, Bot, provider, PayOS, Xu hay localStorage trong recovery flow."]
+    notes: ["Phản hồi luôn giống nhau để không tiết lộ tài khoản có tồn tại hay không. Dịch vụ gửi thư cần được operator bật và cấu hình trên server trước khi có email thật.", "Link chỉ hiển thị form xác nhận; preview/scanner không thể reset. Khi hoàn tất, Web thu hồi mọi signed session cũ và không tự đăng nhập.", "Không dùng Telegram ID, Bot, provider, PayOS, Xu hay localStorage trong recovery flow."]
   });
   // Marketing remains available only as an explicit secondary route. The app
   // origin itself is a product surface: the server sends unsigned visitors to
@@ -10225,9 +10225,9 @@
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Kết nối workspace sẵn sàng") : uiText("chrome.safeMode", "Workspace đang ở chế độ an toàn"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Tính năng được cấp theo phiên hiện tại") : uiText("chrome.safeModeDetail", "Không gọi provider, Xu hoặc payment từ browser"))}</span></span>
+        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Hệ thống đã sẵn sàng") : uiText("chrome.safeMode", "TOAN AAS Workspace"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Đã đồng bộ hoá tài khoản và dữ liệu") : uiText("chrome.safeModeDetail", "Không gian làm việc tự động hoá AI"))}</span></span>
       </div>
-      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & riêng tư"))}</span></a>
+      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & bảo mật"))}</span></a>
     </div>`;
   }
 

@@ -89,12 +89,6 @@ FAMILY_SPECS: tuple[dict[str, str], ...] = (
         "route": "/dashboard",
         "description": "Project, bản nháp, workboard, memory, account và hỗ trợ.",
     },
-    {
-        "key": "free_tools",
-        "title": "🆓 Công cụ miễn phí",
-        "route": "/free-tools",
-        "description": "Dịch thuật mở, tỷ giá USD/VND & quy đổi Xu, tạo mã QR, sinh Avatar AI và thời tiết 0 Xu.",
-    },
 )
 FAMILY_BY_KEY = {item["key"]: item for item in FAMILY_SPECS}
 
