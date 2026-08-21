@@ -1,5 +1,12 @@
-from pydantic_settings import BaseSettings
 import os
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    try:
+        from pydantic import BaseSettings
+    except ImportError:
+        class BaseSettings:
+            pass
 
 def default_db_file() -> str:
     if os.environ.get("DB_PATH"):

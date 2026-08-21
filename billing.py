@@ -98,7 +98,48 @@ def verify_payos_signature(data: dict, received_sig: str) -> bool:
     ).hexdigest()
     return hmac.compare_digest(computed_sig, received_sig)
 
+@router.get("/bank-info")
+@router.get("/api/v1/billing/bank-info")
+async def get_bank_info():
+    return {
+        "success": True,
+        "bank_name": os.environ.get("BANK_NAME", "MB Bank (Ngân Hàng Quân Đội)"),
+        "bank_id": os.environ.get("BANK_ID", "mbbank"),
+        "account_no": os.environ.get("BANK_ACCOUNT_NO", "0387532320"),
+        "account_name": os.environ.get("BANK_ACCOUNT_NAME", "NGUYEN MANH TOAN"),
+        "hotline": os.environ.get("SUPPORT_HOTLINE", "0387532320"),
+        "telegram_bot": os.environ.get("TELEGRAM_BOT_USERNAME", "toanaasbot"),
+        "conversion_rate": "100 VND = 1 Xu"
+    }
+
+@router.get("/order-status/{order_code}")
+@router.get("/api/v1/billing/order-status/{order_code}")
+async def get_order_status(order_code: str):
+    conn = db_connect()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT order_code, user_id, amount, xu, status, payment_type, created_at, paid_at FROM payos_orders WHERE order_code=?", (str(order_code),))
+        row = c.fetchone()
+        if not row:
+            return {"success": False, "message": "Không tìm thấy đơn hàng"}
+        return {
+            "success": True,
+            "data": {
+                "order_code": row[0],
+                "user_id": row[1],
+                "amount": row[2],
+                "xu": row[3],
+                "status": row[4],
+                "payment_type": row[5],
+                "created_at": row[6],
+                "paid_at": row[7]
+            }
+        }
+    finally:
+        conn.close()
+
 @router.post("/create-payment-link")
+@router.post("/api/v1/billing/create-payment-link")
 async def create_payment_link(payload: dict):
     try:
         # Bắt lỗi số 1: Thiếu cấu hình Key trên Railway
