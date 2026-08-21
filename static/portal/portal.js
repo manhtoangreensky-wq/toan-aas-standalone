@@ -328,7 +328,7 @@
     dismissed: "Đã bỏ qua",
     cancelled: "Đã hủy",
     refunded: "Đã hoàn Xu",
-    read_only: "Chỉ đọc",
+    read_only: "Sẵn sàng",
     failed: "Thất bại",
     failed_no_charge: "Thất bại · chưa trừ Xu",
     guarded: "Được bảo vệ",
@@ -341,14 +341,15 @@
     ready: "states.ready", draft: "states.draft", awaiting_confirm: "states.awaitingConfirm",
     queued: "states.queued", processing: "states.processing", completed: "states.completed",
     failed: "states.failed", unavailable: "states.unavailable", guarded: "states.guarded", disabled: "states.disabled",
-    read_only: "states.readOnly", empty: "states.empty", backlog: "states.backlog",
+    read_only: "states.ready", empty: "states.empty", backlog: "states.backlog",
     planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
     review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled",
     archived: "states.archived"
   });
 
   function stateLabel(status) {
-    const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
+    const mapped = status === "read_only" ? "ready" : status;
+    const normalized = ALLOWED_STATES.has(mapped) ? mapped : "guarded";
     return uiText(STATE_I18N_KEYS[normalized] || "", STATE_LABELS[normalized] || normalized);
   }
 
@@ -362,7 +363,7 @@
     cancelled: "Đã hủy",
     refunded: "Đã hoàn tiền",
     guarded: "Được bảo vệ",
-    read_only: "Chỉ đọc"
+    read_only: "Sẵn sàng"
   });
 
   const ICONS = Object.freeze({
@@ -9270,7 +9271,8 @@
   }
 
   function badge(status, label) {
-    const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
+    const mapped = status === "read_only" ? "ready" : status;
+    const normalized = ALLOWED_STATES.has(mapped) ? mapped : "guarded";
     return `<span class="portal-badge" data-status="${normalized}">${safeText(label || stateLabel(normalized))}</span>`;
   }
 
@@ -9754,7 +9756,7 @@
       {
         label: "Tạo mới",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/free-tools", "Công cụ miễn phí", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
         ]
       },
       {
@@ -26849,9 +26851,9 @@
     const authAssurance = `<details class="portal-auth-assurance"><summary><span>🛡️ ${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</span></summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary><span>ℹ️ ${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</span></summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
 
-    const securityFootnote = `<div class="portal-auth-security-foot"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div>`;
+    const securityFootnote = "";
 
-    const authFooter = `<footer class="portal-auth-footer"><div class="portal-auth-footer-security"><span aria-hidden="true">🔒</span><span>Bảo mật Signed Session & CSRF Token Guard</span></div><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
+    const authFooter = `<footer class="portal-auth-footer"><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
 
     return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${securityFootnote}</section></div>${authFooter}</article>`;
   }
@@ -31756,15 +31758,19 @@
       if (existingFab) existingFab.remove();
       return;
     }
+    // On auth pages (login/register), always show install banner for new visitors
+    const isAuthPage = Boolean(document.querySelector(".portal-auth-page"));
     let dismissed = false;
-    try {
-      if (window.localStorage && window.localStorage.getItem("toanaas_install_dismissed") === "true") {
-        dismissed = true;
-      }
-      if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_dismissed") === "true") {
-        dismissed = true;
-      }
-    } catch (_) {}
+    if (!isAuthPage) {
+      try {
+        if (window.localStorage && window.localStorage.getItem("toanaas_install_dismissed") === "true") {
+          dismissed = true;
+        }
+        if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_dismissed") === "true") {
+          dismissed = true;
+        }
+      } catch (_) {}
+    }
     if (dismissed) {
       const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
       if (existingBanner) existingBanner.remove();
