@@ -2625,7 +2625,6 @@ app.include_router(copyfast_reliability.router)
 app.include_router(copyfast_operations_desk.router)
 app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
-app.include_router(billing.router)
 
 
 @app.get("/health")
