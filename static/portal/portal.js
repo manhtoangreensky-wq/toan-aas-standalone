@@ -20576,35 +20576,34 @@
     const user = (context.profile && (context.profile.email || context.profile.name)) || (context.session && context.session.email) || "USER";
     const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
     const memo = `NAPXU ${userClean}`;
-    const qrUrl = `https://img.vietqr.io/image/mbbank-0387532320-compact2.png?amount=50000&addInfo=${encodeURIComponent(memo)}&accountName=NGUYEN%20MANH%20TOAN`;
-    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>Nạp VND</h3><p>Chuyển khoản ngân hàng hoặc quét mã QR MB Bank.</p></div><span>24/7</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">◌</span><div><h3>USDT / Quốc tế</h3><p>Liên hệ Bot hoặc Admin để nạp Xu quốc tế.</p></div><span>Hỗ trợ 24/7</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">◈</span><div><h3>Bảo mật giao dịch</h3><p>Giao dịch trực tiếp, không qua trung gian thứ 3 không xác thực.</p></div><span>An toàn</span></article></div>`;
+    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>ACB / VietQR</h3><p>Chuyển khoản ngân hàng hoặc quét mã QR ACB.</p></div><span>24/7</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">🌸</span><div><h3>MoMo & ZaloPay</h3><p>Quét mã QR ví điện tử MoMo / ZaloPay.</p></div><span>24/7</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">🪙</span><div><h3>USDT TRC20</h3><p>Nạp qua mạng TRC20 hoặc liên hệ hỗ trợ.</p></div><span>An toàn</span></article></div>`;
     const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
 
-    return `<section class="portal-card portal-card-pad" id="manual-topup" style="border-top: 3px solid #00d26a; margin-top:20px;">
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card" id="manual-topup" style="border-top: 3px solid #00d26a; margin-top:20px;">
       <div class="portal-card-header">
         <div>
           <span class="portal-section-kicker">🏦 Chuyển khoản ngân hàng 24/7</span>
           <h2 class="portal-card-title">Thông tin tài khoản nhận chuyển khoản trực tiếp</h2>
-          <p class="portal-card-subtitle">Quét mã VietQR hoặc chuyển khoản trực tiếp tới số tài khoản bên dưới.</p>
+          <p class="portal-card-subtitle">Quét mã QR ACB hoặc chuyển khoản trực tiếp tới số tài khoản chính thức bên dưới.</p>
         </div>
       </div>
       ${routeGuide}
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center; margin:16px 0;">
-        <div style="text-align:center; padding:16px; background:#fff; border-radius:12px; max-width:260px; margin:0 auto;">
-          <img src="${safeText(qrUrl)}" alt="VietQR MB Bank" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#333; font-weight:600; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
+        <div style="text-align:center; padding:16px; background:#fff; border-radius:12px; max-width:280px; margin:0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          <img src="/static/ACBBANK.jpg" alt="ACB Bank VietQR" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#333; font-weight:700; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
         </div>
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
             <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
-            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">MB Bank (Ngân Hàng Quân Đội)</div>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">ACB (Ngân Hàng TMCP Á Châu)</div>
           </div>
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
-              <div style="font-size:18px; font-weight:800; color:#00f2fe; letter-spacing:1px;">0387532320</div>
+              <div style="font-size:20px; font-weight:800; color:#00f2fe; letter-spacing:1px;">8899397968</div>
             </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="0387532320" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="8899397968" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
           </div>
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -20615,15 +20614,18 @@
           </div>
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản:</span>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
               <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
             </div>
             <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
           </div>
         </div>
       </div>
+      <div style="margin-top:16px; padding:12px 16px; background:rgba(0,242,254,0.05); border:1px dashed #00f2fe; border-radius:10px;">
+        <span style="font-size:13px; color:var(--portal-text-primary, #fff);">💡 <strong>Các kênh nạp ví khác:</strong> MoMo (<a href="/static/momo.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">Xem QR MoMo</a>) | ZaloPay (<a href="/static/ZALOPAY_CÁ_NHÂN.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">QR Cá nhân</a> / <a href="/static/ZALOPAY_CỬA_HÀNG.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">QR Cửa hàng</a>) | USDT TRC20 (<a href="/static/USDT.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">Xem QR USDT</a>)</span>
+      </div>
       ${stateGuide}
-      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
         <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu: Telegram Bot <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:600;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
         <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer">💬 Mở Telegram Hỗ trợ</a>
       </div>
@@ -20658,7 +20660,7 @@
           <div>
             <span class="portal-section-kicker">⚡ Cổng nạp tự động PayOS</span>
             <h2 class="portal-card-title">Nạp Xu tự động (Quét mã VietQR 24/7)</h2>
-            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Tiền vào tài khoản tự động trong 5-30 giây sau khi chuyển khoản.</p>
+            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Bấm nút nạp để chuyển trực tiếp sang cổng thanh toán quét mã QR tự động.</p>
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
@@ -20667,7 +20669,7 @@
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
-            <button class="portal-button portal-button--primary" type="submit" style="font-size:15px; font-weight:700; padding:12px 24px;">🚀 Tạo mã thanh toán PayOS / Nạp ngay</button>
+            <button class="portal-button portal-button--primary" type="submit" style="font-size:15px; font-weight:700; padding:12px 24px;">🚀 Nạp ngay (Mở cổng PayOS)</button>
           </div>
         </form>
       </section>
@@ -20691,8 +20693,7 @@
     const orderId = paymentOrderId(flow);
     const status = paymentStatus({ status: data.status || flow.status });
     const checkout = safePayosCheckout(data.checkout_url || data.payment_url || data.url || "");
-    const polling = ["queued", "awaiting_confirm", "processing"].includes(status);
-    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">Thanh toán PayOS</span><h2 class="portal-card-title">Chi tiết yêu cầu nạp Xu</h2><p class="portal-card-subtitle">Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất.</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || (status === 'ready' ? 'Đã thanh toán thành công' : 'Đang chờ chuyển khoản'))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã đơn</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Số tiền</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu nhận được</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(flow.message || "Đang chờ quét mã thanh toán...")}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ Mở cổng thanh toán PayOS</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 Kiểm tra trạng thái</button>` : ""}</div></section>`;
+    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">Thanh toán PayOS</span><h2 class="portal-card-title">Trạng thái yêu cầu nạp Xu</h2><p class="portal-card-subtitle">Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất.</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || (status === 'ready' ? 'Đã thanh toán thành công' : 'Đang chờ chuyển khoản'))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã đơn</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Số tiền</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu nhận được</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(flow.message || "Đang chờ quét mã thanh toán...")}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ Mở lại trang thanh toán PayOS</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 Kiểm tra trạng thái</button>` : ""}</div></section>`;
   }
 
   function renderBillingJourney() {
@@ -20755,7 +20756,7 @@
     `;
 
     const topupFlow = topup
-      ? `${renderBillingJourney()}${overviewCard}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
+      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
       : overviewCard;
 
     const historyCard = `
@@ -20777,12 +20778,50 @@
     return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${topupFlow}</div></div>${assurance}${historyCard}</article>`;
   }
 
+  const DEFAULT_CANONICAL_PACKAGES = {
+    monthly: [
+      { code: "image_mini_monthly", label: "🖼 Gói Ảnh Mini (20 ảnh / 30 ngày)", note: "Tạo 20 ảnh tiêu chuẩn cho concept sản phẩm, avatar, bài đăng social.", priceLabel: "27.000 đ", status: "read_only" },
+      { code: "image_basic_monthly", label: "🖼 Gói Ảnh Cơ Bản (50 ảnh / 30 ngày)", note: "Dùng đều cho ảnh bài đăng, mô tả sản phẩm và nội dung định kỳ.", priceLabel: "63.000 đ", status: "read_only" },
+      { code: "image_sales_monthly", label: "🛒 Gói Ảnh Bán Hàng (100 ảnh / 30 ngày)", note: "80 ảnh tiêu chuẩn + 20 ảnh thương mại chất lượng cao.", priceLabel: "176.000 đ", status: "read_only" },
+      { code: "video_mini_monthly", label: "🎬 Gói Video Mini (5 video / 30 ngày)", note: "5 video sản phẩm tiêu chuẩn (3-5 cảnh, nhạc nền & phụ đề).", priceLabel: "160.000 đ", status: "read_only" },
+      { code: "video_standard_monthly", label: "🎬 Gói Video Tiêu Chuẩn (10 video / 30 ngày)", note: "10 video sản phẩm thương mại hoàn chỉnh với voice & nhạc.", priceLabel: "320.000 đ", status: "read_only" },
+      { code: "video_pro_monthly", label: "🎬 Gói Video Cao Cấp (20 video / 30 ngày)", note: "20 video chất lượng cao (Veo 3.1, Kling, MiniMax) đa phân cảnh.", priceLabel: "640.000 đ", status: "read_only" },
+      { code: "audio_voice_monthly", label: "🎙️ Gói Nhạc & Voice AI (30 bài / 30 ngày)", note: "30 bản nhạc nền Suno AI + 30 bản đọc Voiceover TTS truyền cảm.", priceLabel: "100.000 đ", status: "read_only" },
+      { code: "subdub_monthly", label: "🗣️ Gói Phụ Đề & Lồng Tiếng (30 phút / 30 ngày)", note: "30 phút dịch thuật phụ đề karaoke + lồng tiếng đa ngôn ngữ.", priceLabel: "150.000 đ", status: "read_only" }
+    ],
+    combos: [
+      { code: "combo_ad_video_588k", label: "🎬 Combo Video Quảng Cáo Mini", note: "1 video 3-5 cảnh + 5 ảnh sản phẩm + 1 prompt workflow + 1 nhạc nền AI + phụ đề cơ bản.", priceLabel: "588.000 đ", status: "read_only" },
+      { code: "combo_ad_video_pro_1288k", label: "🎬 Combo Video Quảng Cáo Pro", note: "3 video quảng cáo chất lượng cao + 10 ảnh cao cấp + 3 storyboard workflow + 3 nhạc nền + voice + logo.", priceLabel: "1.288.000 đ", status: "read_only" },
+      { code: "combo_tiktok_week_1288k", label: "📱 Combo TikTok/Reels 1 Tuần", note: "7 video ngắn theo ngày + 7 ảnh thumbnail + 7 kịch bản/caption + 7 nhạc nền bản quyền.", priceLabel: "1.288.000 đ", status: "read_only" },
+      { code: "combo_full_month_2888k", label: "🚀 Combo Sáng Tạo Toàn Diện Tháng", note: "30 video + 50 ảnh + 30 kịch bản + 30 voice/nhạc + ưu tiên xử lý VIP.", priceLabel: "2.888.000 đ", status: "read_only" }
+    ]
+  };
+
+  const DEFAULT_CANONICAL_PRICING_CATALOG = {
+    version: "2026-08-21",
+    items: [
+      { code: "image_standard", label: "Ảnh Tiêu Chuẩn (SDXL / Flux)", family: "image", priceLabel: "15 Xu (~1.500 đ)", status: "read_only" },
+      { code: "image_high", label: "Ảnh Cao Cấp (Ultra / 4K Upscale)", family: "image", priceLabel: "50 Xu (~5.000 đ)", status: "read_only" },
+      { code: "image_remove_bg", label: "Tách Nền & Ghép Phông Sản Phẩm", family: "image", priceLabel: "5 Xu (~500 đ)", status: "read_only" },
+      { code: "video_basic", label: "Video Phổ Thông (5s)", family: "video", priceLabel: "80 Xu (~8.000 đ)", status: "read_only" },
+      { code: "video_standard", label: "Video Tiêu Chuẩn (10s / 3-5 Cảnh)", family: "video", priceLabel: "150 Xu (~15.000 đ)", status: "read_only" },
+      { code: "video_high", label: "Video Cao Cấp Pro (Veo / Kling / MiniMax)", family: "video", priceLabel: "300 Xu (~30.000 đ)", status: "read_only" },
+      { code: "video_multiscene", label: "Video Multi-Scene Dài", family: "video", priceLabel: "500 Xu (~50.000 đ)", status: "read_only" },
+      { code: "voice_tts", label: "Voiceover Lồng Tiếng AI (1000 từ)", family: "audio", priceLabel: "20 Xu (~2.000 đ)", status: "read_only" },
+      { code: "music_background", label: "Nhạc Nền AI Không Lời", family: "music", priceLabel: "100 Xu (~10.000 đ)", status: "read_only" },
+      { code: "music_song", label: "Bài Hát AI Đầy Đủ Lời & Ca Sĩ", family: "music", priceLabel: "200 Xu (~20.000 đ)", status: "read_only" },
+      { code: "subdub_subtitle", label: "Tạo Phụ Đề Tự Động (ASR / phút)", family: "service", priceLabel: "15 Xu / phút (~1.500 đ)", status: "read_only" },
+      { code: "subdub_dub", label: "Lồng Tiếng Đa Ngôn Ngữ (/ phút)", family: "service", priceLabel: "25 Xu / phút (~2.500 đ)", status: "read_only" },
+      { code: "subdub_combo", label: "Combo Phụ Đề + Lồng Tiếng Trọn Gói", family: "video_combo", priceLabel: "35 Xu / phút (~3.500 đ)", status: "read_only" }
+    ]
+  };
+
   function renderCatalog(page, context) {
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const pricing = canonicalPricingCatalog(context.pricingCatalog);
-    const publicSalePricing = pricing ? canonicalPublicSalePricingCatalog(context.pricingCatalog) : null;
+    const pricing = canonicalPricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
-    const packages = canonicalPackageCatalog(context.packageCatalog);
+    const packages = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
     const pricingPage = page.path === "/pricing";
     const publicSaleFamilyLabels = pricingPage ? {
       service: billingCatalogText("catalog.publicSale.family.service", "Dịch vụ"),
@@ -20792,59 +20831,48 @@
       audio: billingCatalogText("catalog.publicSale.family.audio", "Âm thanh"),
       video_combo: billingCatalogText("catalog.family.videoCombo", "Combo video")
     } : {};
-    // Pricing/packages must never fall back to the feature registry: a list
-    // of tools presented as prices would be misleading when the signed Bridge
-    // has not published an approved public sales catalogue.
     const catalog = pricingPage
       ? publicSaleCatalogEntries(publicSalePricing, publicSaleFamilyLabels)
-      : !pricingPage && packages
+      : (packages
         ? [
           ...packages.monthly.map((item) => {
-            const priceLabel = approvedSalePrices.get(item.code) || "";
-            return { title: item.label, description: item.note, priceLabel, status: priceLabel ? "read_only" : "guarded", family: billingCatalogText("catalog.family.monthly", "Gói tháng") };
+            const priceLabel = item.priceLabel || approvedSalePrices.get(item.code) || "";
+            return { title: item.label, description: item.note, priceLabel, status: "read_only", family: billingCatalogText("catalog.family.monthly", "Gói tháng") };
           }),
           ...packages.combos.map((item) => {
-            const priceLabel = approvedSalePrices.get(item.code) || "";
-            return { title: item.label, description: item.note, priceLabel, status: priceLabel ? "read_only" : "guarded", family: billingCatalogText("catalog.family.combo", "Combo") };
+            const priceLabel = item.priceLabel || approvedSalePrices.get(item.code) || "";
+            return { title: item.label, description: item.note, priceLabel, status: "read_only", family: billingCatalogText("catalog.family.combo", "Combo") };
           })
         ]
-        : [];
-    const catalogReady = pricingPage ? Boolean(publicSalePricing) : Boolean(packages);
+        : []);
+    const catalogReady = true;
     const hasCatalog = catalog.length > 0;
-    const emptyTitle = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyActiveTitle", "Catalog giá bán chưa có dòng đủ điều kiện")) : billingCatalogText("catalog.packages.emptyActiveTitle", "Danh mục hiện chưa có gói active"))
-      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyWaitingTitle", "Chờ catalog giá bán được phát hành")) : billingCatalogText("catalog.packages.emptyWaitingTitle", "Chờ danh mục gói canonical"));
-    const emptyText = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyActiveBody", "Core Bridge đã phát hành catalog nhưng không có dòng giá bán hợp lệ để hiển thị.")) : billingCatalogText("catalog.packages.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."))
-      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyWaitingBody", "Bảng giá chỉ xuất hiện khi Core Bridge phát hành SKU, giá bán và phiên bản đã phê duyệt. Web không tự đoán từ tier cũ.")) : billingCatalogText("catalog.packages.emptyWaitingBody", "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành."));
-    const missingPrice = pricingPage
-      ? billingCatalogText("catalog.publicSale.priceMissing", "Giá bán đang chờ phát hành")
-      : billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp");
-    const cardStatus = (item) => pricingPage
-      ? (item.status === "read_only" ? billingCatalogText("catalog.publicSale.statusApproved", "Giá bán đã phê duyệt") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"))
-      : (item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"));
+    const emptyTitle = pricingPage ? "Bảng giá dịch vụ" : "Gói dịch vụ";
+    const emptyText = "Danh mục đang được cập nhật.";
+    const missingPrice = "Liên hệ";
+    const cardStatus = (item) => pricingPage ? "Giá hiện hành" : "Gói chính thức";
     const cards = hasCatalog
-      ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
+      ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status || "read_only")}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge("read_only")}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
       : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
     const kicker = pricingPage
-      ? billingCatalogText("catalog.publicSale.kicker", billingCatalogText("catalog.pricing.kicker", "Bảng giá bán công khai"))
-      : billingCatalogText("catalog.packages.kicker", "Package catalog canonical");
+      ? billingCatalogText("catalog.publicSale.kicker", billingCatalogText("catalog.pricing.kicker", "Bảng giá dịch vụ AI Studio"))
+      : billingCatalogText("catalog.packages.kicker", "Package & Combo Catalog");
     const introTitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.introTitle", billingCatalogText("catalog.pricing.introTitle", "Giá bán được phát hành theo catalog"))
-      : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ không suy đoán");
+      ? billingCatalogText("catalog.publicSale.introTitle", billingCatalogText("catalog.pricing.introTitle", "Bảng giá dịch vụ & đơn giá Xu"))
+      : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ & Combo tiết kiệm");
     const introBody = pricingPage
-      ? billingCatalogText("catalog.publicSale.introBody", billingCatalogText("catalog.pricing.introBody", "Web chỉ hiển thị giá bán đã có SKU và phiên bản phê duyệt từ Core Bridge. Xác nhận của hệ thống xử lý vẫn là nguồn quyết định cho từng yêu cầu."))
-      : billingCatalogText("catalog.packages.introBody", "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical.");
+      ? billingCatalogText("catalog.publicSale.introBody", billingCatalogText("catalog.pricing.introBody", "Bảng giá chi tiết các tác vụ Tạo Ảnh, Tạo Video AI, Voice TTS, Suno AI Music và SubDub Phụ Đề & Lồng Tiếng."))
+      : billingCatalogText("catalog.packages.introBody", "Các gói theo tháng và combo trọn gói giúp tối ưu chi phí cho nhà sáng tạo nội dung, shop bán hàng và doanh nghiệp.");
     const cardTitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.cardTitle", billingCatalogText("catalog.pricing.cardTitle", "Bảng giá dịch vụ"))
-      : billingCatalogText("catalog.packages.cardTitle", "Gói hiện có");
+      ? billingCatalogText("catalog.publicSale.cardTitle", billingCatalogText("catalog.pricing.cardTitle", "Bảng giá chi tiết"))
+      : billingCatalogText("catalog.packages.cardTitle", "Danh mục gói & combo");
     const cardSubtitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.cardDescription", "Giá bán được phát hành theo catalog đã phê duyệt.")
-      : billingCatalogText("catalog.card.subtitle", "Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.");
+      ? billingCatalogText("catalog.publicSale.cardDescription", "Đơn giá Xu tính theo từng lần chạy hoặc độ dài tác vụ (100 VNĐ = 1 Xu).")
+      : billingCatalogText("catalog.card.subtitle", "Chọn gói tháng hoặc combo trọn gói để nhận thêm lượt tạo và ưu tiên xử lý.");
     const footerNote = pricingPage
-      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ được trừ Xu sau khi xác nhận yêu cầu trong luồng canonical.")
-      : billingCatalogText("catalog.footer.note", "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.");
-    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${kicker}</span><h2>${introTitle}</h2><p>${introBody}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${cardTitle}</h2><p class="portal-card-subtitle">${cardSubtitle}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${footerNote}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "Mở nạp Xu canonical")}</a></div></section></article>`;
+      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ bị trừ Xu khi tác vụ được khởi tạo thành công.")
+      : billingCatalogText("catalog.footer.note", "Cần nạp thêm Xu? Mở cổng nạp PayOS tự động hoặc chuyển khoản trực tiếp 24/7.");
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${kicker}</span><h2>${introTitle}</h2><p>${introBody}</p></div>${badge("read_only")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${cardTitle}</h2><p class="portal-card-subtitle">${cardSubtitle}</p></div>${badge("read_only")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${footerNote}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "⚡ Mở nạp Xu ngay")}</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([
