@@ -28,6 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+import billing
 import copyfast_api
 import copyfast_admin_audit
 import copyfast_admin_automation
@@ -2624,6 +2625,7 @@ app.include_router(copyfast_reliability.router)
 app.include_router(copyfast_operations_desk.router)
 app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
+app.include_router(billing.router)
 
 
 @app.get("/health")

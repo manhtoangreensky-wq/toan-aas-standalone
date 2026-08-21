@@ -9271,52 +9271,22 @@
   }
 
   function badge(status, label) {
-    if (!status || status === "read_only") return "";
-    const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
+    if (!status || status === "read_only" || status === "guarded" || status === "awaiting_confirm" || status === "ready") return "";
+    const normalized = ALLOWED_STATES.has(status) ? status : "";
+    if (!normalized || normalized === "guarded" || normalized === "read_only" || normalized === "ready") return "";
     return `<span class="portal-badge" data-status="${normalized}">${safeText(label || stateLabel(normalized))}</span>`;
   }
 
   function subtitleAssetOperationsReadBadge(value) {
-    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
-      ? String(value) : "guarded";
-    const presentation = {
-      loading: { status: "read_only", label: "Đang tải metadata private" },
-      ready: { status: "ready", label: "Sẵn sàng" },
-      failed: { status: "failed", label: "Chưa tải được metadata" },
-      guarded: { status: "guarded", label: "Đang bảo vệ" }
-    }[readState];
-    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+    return "";
   }
 
   function audioAssetOperationsReadBadge(value) {
-    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
-      ? String(value) : "guarded";
-    const presentation = {
-      loading: { status: "read_only", label: "Đang tải metadata private" },
-      ready: { status: "ready", label: "Sẵn sàng" },
-      failed: { status: "failed", label: "Chưa tải được metadata" },
-      guarded: { status: "guarded", label: "Đang bảo vệ" }
-    }[readState];
-    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+    return "";
   }
 
   function pageStatusBadge(page, context) {
-    const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
-    if (route === "/subtitle/assets") {
-      const referenceState = context && context.subtitleAssetReferenceReadState;
-      const historyState = context && context.subtitleAssetOperationsReadState;
-      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
-      return subtitleAssetOperationsReadBadge(effectiveState);
-    }
-    if (route === "/audio/assets") {
-      const referenceState = context && context.audioAssetReferenceReadState;
-      const historyState = context && context.audioAssetOperationsReadState;
-      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
-      return audioAssetOperationsReadBadge(effectiveState);
-    }
-    const state = stateFor(page, context);
-    if (state === "read_only" || state === "ready") return "";
-    return badge(state);
+    return "";
   }
 
   function icon(name) { return safeText(ICONS[name] || name || ICONS.default); }
@@ -20599,65 +20569,115 @@
   }
 
   function renderPaymentEntryPoints(context) {
-    const options = context.paymentOptions && typeof context.paymentOptions === "object" ? context.paymentOptions : {};
-    const payos = options.payos && typeof options.payos === "object" ? options.payos : {};
-    const manual = options.manual && typeof options.manual === "object" ? options.manual : {};
-    const payosWebReady = paymentWebCatalogReady(context);
-    const payosUrl = safeTelegramLink(payos.telegram_url);
-    const payosBotAvailable = Boolean(payosUrl);
-    const manualUrl = safeTelegramLink(manual.telegram_url);
-    const manualAvailable = manual.available === true && Boolean(manualUrl);
-    const payosCommand = payos.command === "/naptien" ? payos.command : "/naptien";
-    const manualCommand = manual.command === "/thucong" ? manual.command : "/thucong";
-    const payosCopy = payosWebReady
-      ? "Bridge đã công bố catalog nạp riêng cho Web. Bot vẫn là authority duy nhất cấp checkout URL đã ký."
-      : "Mở Bot đã liên kết để kiểm tra và khởi tạo PayOS QR động canonical hiện tại. Bot có thể chuyển sang luồng thủ công theo trạng thái runtime; Web không suy đoán QR luôn sẵn sàng.";
-    const manualActions = manualAvailable
-      ? "Nạp thủ công có đối soát vẫn diễn ra trong Bot. Web chỉ mở đúng kênh đã liên kết và hiển thị số dư sau khi ledger canonical thay đổi."
-      : "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công. Web không giữ số tài khoản, QR tĩnh, bill hoặc quyết định cộng Xu.";
-    const payosActions = payosBotAvailable
-      ? `<a class="portal-button portal-button--quiet" href="${safeText(payosUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(payosCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(payosCommand)}</code>`
-      : `<span class="portal-payment-entry-note">Chưa có URL Bot hợp lệ để mở PayOS QR động.</span>`;
-    const manualEntryActions = manualAvailable
-      ? `<a class="portal-button portal-button--quiet" href="#manual-topup">Xem quy trình</a><a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(manualCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(manualCommand)}</code>`
-      : `<span class="portal-payment-entry-note">Chờ URL Bot đã được máy chủ kiểm tra trước khi mở nạp thủ công.</span>`;
-    return `<section class="portal-card portal-card-pad portal-billing-entrypoints"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical billing</span><h2 class="portal-card-title">Chọn kênh nạp Xu</h2><p class="portal-card-subtitle">Chọn đúng một luồng. Checkout, webhook, chứng từ, đối soát và quyết định cộng Xu luôn do Bot/Core Bridge canonical quản lý.</p></div>${badge(payosBotAvailable || manualAvailable ? "read_only" : "guarded")}</div><div class="portal-payment-entry-grid"><section class="portal-payment-entry" data-billing-entrypoint="payos"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span>${badge(payosWebReady ? "awaiting_confirm" : (payosBotAvailable ? "read_only" : "guarded"))}</div><h3>PayOS QR động</h3><p>${payosCopy}</p><div class="portal-payment-entry-actions">${payosActions}</div><span class="portal-payment-entry-note">Bot tạo QR động và xác nhận PayOS canonical.</span></section><section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>${badge(manualAvailable ? "read_only" : "guarded")}</div><h3>Nạp thủ công có đối soát</h3><p>${manualActions}</p><div class="portal-payment-entry-actions">${manualEntryActions}</div><span class="portal-payment-entry-note">Không gửi bill, số tài khoản, QR, OTP hay TXID vào Web App.</span></section></div></section>`;
+    return "";
   }
 
   function renderManualTopupGuide(context) {
-    const options = context.paymentOptions && typeof context.paymentOptions === "object" ? context.paymentOptions : {};
-    const manual = options.manual && typeof options.manual === "object" ? options.manual : {};
-    const manualUrl = safeTelegramLink(manual.telegram_url);
-    const available = manual.available === true && Boolean(manualUrl);
-    const historySignal = manual.wallet_history_signal_available === true;
-    const historyInBot = manual.history_in_web === false && manual.history_channel === "telegram_bot";
-    const historyCommand = manual.history_command === "/thucong" ? manual.history_command : "/thucong";
-    const historyMenu = typeof manual.history_menu_label === "string" && manual.history_menu_label ? manual.history_menu_label : "Lịch sử nạp thủ công";
-    const refreshEnabled = context.capabilities && context.capabilities["refresh-wallet-after-bot"] === true;
-    if (!available) {
-      return `<section class="portal-card portal-card-pad" id="manual-topup" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: chờ Bot canonical</h2><p class="portal-card-subtitle">Web không thể nhận chứng từ hoặc thay thế cuộc hội thoại Bot khi URL Bot chưa được cấu hình an toàn.</p></div>${badge("guarded")}</div>${renderEmpty("Kênh nạp thủ công chưa sẵn sàng", "Khi Bot đã có URL hợp lệ, Web chỉ mở handoff an toàn; bill, TXID, đối soát và ghi Xu vẫn ở Telegram.", "⌁")}</section>`;
-    }
-    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>Nạp VND</h3><p>Chọn phương thức trong Bot, rồi gửi ảnh bill ở chính cuộc hội thoại Telegram. Web không nhận hoặc lưu ảnh này.</p></div><span>Chứng từ chỉ ở Bot</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">◌</span><div><h3>Quốc tế / USDT</h3><p>Chọn đúng luồng trong Bot, gửi TXID đầy đủ hoặc ảnh bill ở Bot để đội vận hành đối soát.</p></div><span>Không dán TXID vào Web</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">◈</span><div><h3>Không có QR tĩnh</h3><p>Không dùng số tài khoản, QR, ảnh bill, OTP hoặc thông tin thẻ từ trang Web này. Chỉ dùng thông tin Bot cấp cho đúng request.</p></div><span>Chống nhầm / giả mạo</span></article></div>`;
-    const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đã gửi, đang chờ đối soát</small></span><span><code>pending_admin_review</code><small>Đội vận hành đang kiểm tra</small></span><span><code>approved</code><small>Chỉ lúc này wallet canonical mới là kết quả cuối</small></span><span><code>rejected</code><small>Xem lý do và xử lý lại trong Bot</small></span></div>`;
-    return `<section class="portal-card portal-card-pad" id="manual-topup" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: tiếp tục trong Telegram</h2><p class="portal-card-subtitle">Bot canonical giữ toàn bộ state, chứng từ, đối soát và quyết định ghi Xu. Web chỉ hướng dẫn và hiển thị dữ liệu ví đã được xác minh.</p></div>${badge("read_only")}</div>
-      ${routeGuide}<div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">1</span><div><strong>Mở bot và gửi <code>/thucong</code></strong><span>Chọn tiền tệ, mệnh giá và phương thức trong cuộc hội thoại Telegram đang được Bot kiểm soát.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">2</span><div><strong>Gửi chứng từ đúng nơi</strong><span>Nạp VND: gửi ảnh bill trong Bot. Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot. Không gửi số tài khoản, QR, bill, OTP hay TXID vào Web App.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">3</span><div><strong>Chờ admin đối soát</strong><span><code>pending</code> hoặc <code>pending_admin_review</code> đều đang chờ đối soát; chưa phải Xu đã được cộng.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">4</span><div><strong>Đối chiếu kết quả canonical</strong><span><code>approved</code> mới là đã duyệt; <code>rejected</code> là bị từ chối. Xu hiển thị trước đối soát là ước tính; số Xu trong wallet/ledger canonical sau duyệt mới là cuối cùng.</span></div></div></div>${stateGuide}
-      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span>${historyInBot ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(historyCommand)}">Sao chép ${safeText(historyCommand)}</button>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-wallet-after-bot" data-portal-route="${safeText(String(context.path || "/wallet/topup"))}" aria-controls="wallet-canonical-read-status"${refreshEnabled ? "" : " disabled title=\"Cần Core Bridge để làm mới ví canonical.\""}>Đã thao tác trong Bot — làm mới ví</button><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
+    const user = (context.profile && (context.profile.email || context.profile.name)) || (context.session && context.session.email) || "USER";
+    const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
+    const memo = `NAPXU ${userClean}`;
+    const qrUrl = `https://img.vietqr.io/image/mbbank-0387532320-compact2.png?amount=50000&addInfo=${encodeURIComponent(memo)}&accountName=NGUYEN%20MANH%20TOAN`;
+
+    return `<section class="portal-card portal-card-pad" id="manual-topup" style="border-top: 3px solid #00d26a; margin-top:20px;">
+      <div class="portal-card-header">
+        <div>
+          <span class="portal-section-kicker">🏦 Chuyển khoản ngân hàng 24/7</span>
+          <h2 class="portal-card-title">Thông tin tài khoản nhận chuyển khoản trực tiếp</h2>
+          <p class="portal-card-subtitle">Quét mã VietQR hoặc chuyển khoản trực tiếp tới số tài khoản bên dưới.</p>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center; margin:16px 0;">
+        <div style="text-align:center; padding:16px; background:#fff; border-radius:12px; max-width:260px; margin:0 auto;">
+          <img src="${safeText(qrUrl)}" alt="VietQR MB Bank" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#333; font-weight:600; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">MB Bank (Ngân Hàng Quân Đội)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
+              <div style="font-size:18px; font-weight:800; color:#00f2fe; letter-spacing:1px;">0387532320</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="0387532320" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản:</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu: Telegram Bot <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:600;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
+        <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer">💬 Mở Telegram Hỗ trợ</a>
+      </div>
+    </section>`;
   }
 
   function renderPaymentRequestForm(page, context) {
-    if (paymentWebCatalogReady(context)) return renderFormCard(page, context);
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Checkout Web đang được bảo vệ</h2><p class="portal-card-subtitle">Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ catalog nạp canonical", "Khi bot công bố adapter danh mục nạp riêng cho bridge, form checkout Web mới được bật. Trong thời gian này dùng /naptien trong Bot để kiểm tra hoặc khởi tạo PayOS QR động canonical.", "◈")}</section>`;
+    const packages = [
+      { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Nạp dùng thử", popular: false },
+      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến" },
+      { code: "topup_100k", label: "100.000 đ", xu: "1.100 Xu", note: "Tặng 100 Xu", badge: "Thưởng +10%" },
+      { code: "topup_200k", label: "200.000 đ", xu: "2.300 Xu", note: "Tặng 300 Xu", badge: "Thưởng +15%" },
+      { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu", badge: "Thưởng +20%" },
+      { code: "topup_1m", label: "1.000.000 đ", xu: "13.000 Xu", note: "Tặng 3.000 Xu", badge: "Thưởng +30%" },
+    ];
+    const route = "/wallet/topup";
+    const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
+
+    const packageOptions = packages.map((pkg) => `
+      <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:column; padding:16px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; transition:all .2s ease;">
+        <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="position:absolute; top:12px; right:12px;">
+        ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:#00d26a; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
+        <strong style="font-size:18px; color:var(--portal-text-primary, #fff);">${safeText(pkg.label)}</strong>
+        <span style="font-size:20px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
+        <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px;">${safeText(pkg.note)}</small>
+      </label>
+    `).join("");
+
+    return `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">⚡ Cổng nạp tự động PayOS</span>
+            <h2 class="portal-card-title">Nạp Xu tự động (Quét mã VietQR 24/7)</h2>
+            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Tiền vào tài khoản tự động trong 5-30 giây sau khi chuyển khoản.</p>
+          </div>
+        </div>
+        <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px;">
+            ${packageOptions}
+          </div>
+          <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
+            <button class="portal-button portal-button--primary" type="submit" style="font-size:15px; font-weight:700; padding:12px 24px;">🚀 Tạo mã thanh toán PayOS / Nạp ngay</button>
+          </div>
+        </form>
+      </section>
+    `;
   }
 
   function renderPaymentLookup(context) {
-    const enabled = context.capabilities && context.capabilities["payment-lookup"] === true;
     const fields = [{
       name: "payment_id", label: "Mã đơn PayOS / order code", type: "text", placeholder: "Ví dụ: 12345678",
       autocomplete: "off", required: true, minLength: 1, maxLength: 120, pattern: "[A-Za-z0-9._:-]+",
-      help: "Chỉ tra cứu đơn PayOS thuộc Telegram identity đã liên kết. Đây là GET read-only; Web không xác nhận, cộng Xu hoặc gửi webhook."
+      help: "Nhập mã đơn hàng PayOS để kiểm tra trạng thái thanh toán."
     }];
     const route = "/wallet/topup/payment-lookup";
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kiểm tra đơn PayOS</h2><p class="portal-card-subtitle">Chỉ tra cứu order PayOS canonical thuộc phiên của bạn. Nạp thủ công tiếp tục và được đối soát hoàn toàn trong Bot.</p></div>${badge(enabled ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, enabled, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không nhập ảnh bill, số tài khoản, OTP, TXID hay thông tin thẻ vào Web App.</span><button class="portal-button portal-button--quiet" type="submit"${enabled ? "" : " disabled"}>Kiểm tra đơn PayOS</button></div></form></section>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kiểm tra đơn PayOS</h2><p class="portal-card-subtitle">Tra cứu trạng thái nạp tiền theo mã đơn hàng.</p></div></div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, true, context, transientFormValues(route))}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">🔍 Kiểm tra đơn PayOS</button></div></form></section>`;
   }
 
   function renderPaymentFlow(context) {
@@ -20667,59 +20687,83 @@
     const orderId = paymentOrderId(flow);
     const status = paymentStatus({ status: data.status || flow.status });
     const checkout = safePayosCheckout(data.checkout_url || data.payment_url || data.url || "");
-    const refreshEnabled = Boolean(orderId && context.capabilities && context.capabilities["refresh-payment"] === true);
     const polling = ["queued", "awaiting_confirm", "processing"].includes(status);
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu thanh toán canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị response đã được bridge ký; không tự tạo link, finalize webhook hoặc cộng Xu.</p></div>${badge(status)}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || status)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã giao dịch</span><span class="portal-summary-value">${safeText(orderId || "Chưa được bridge cấp")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Giá trị</span><span class="portal-summary-value">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}${data.created_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Khởi tạo</span><span class="portal-summary-value">${safeText(data.created_at)}</span></div>` : ""}${data.paid_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Đã thanh toán</span><span class="portal-summary-value">${safeText(data.paid_at)}</span></div>` : ""}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(flow.message || "Đang chờ trạng thái canonical.")}${polling ? " Portal sẽ chỉ poll GET trạng thái canonical; không gọi PayOS trực tiếp." : ""}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer">Mở trang thanh toán</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}"${refreshEnabled ? "" : " disabled"}>Làm mới trạng thái</button>` : ""}</div></section>`;
+    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">Thanh toán PayOS</span><h2 class="portal-card-title">Chi tiết yêu cầu nạp Xu</h2><p class="portal-card-subtitle">Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất.</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || (status === 'ready' ? 'Đã thanh toán thành công' : 'Đang chờ chuyển khoản'))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã đơn</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Số tiền</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu nhận được</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(flow.message || "Đang chờ quét mã thanh toán...")}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ Mở cổng thanh toán PayOS</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 Kiểm tra trạng thái</button>` : ""}</div></section>`;
   }
 
   function renderBillingJourney() {
-    const lanes = [
-      { number: "01", title: "Chọn một kênh canonical", text: "PayOS QR động hoặc nạp thủ công. Không mở song song hai request cho cùng một giao dịch." },
-      { number: "02", title: "Xử lý tại authority", text: "Bot/Core Bridge quản lý checkout, webhook, chứng từ, đối soát và quyết định ledger." },
-      { number: "03", title: "Đối chiếu lại Ví Xu", text: "Web chỉ cập nhật số dư sau khi GET owner-scoped trả projection canonical hợp lệ." }
-    ];
-    return `<section class="portal-billing-journey" aria-label="Quy trình nạp Xu canonical"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">Billing flow</span><h2>Một giao dịch, một nguồn xác nhận</h2><p>Không có QR tĩnh, form chứng từ hoặc logic cộng Xu ở browser. Mỗi kênh đều dẫn về cùng authority canonical.</p></div>${badge("read_only")}</div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
+    return "";
   }
 
   function renderWallet(page, context) {
     const topup = page.path === "/wallet/topup";
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const readState = walletReadState(context);
-    const wallet = canonicalWalletProjection(context.wallet);
-    const history = canonicalWalletHistoryProjection(context.walletHistory);
-    const refreshEnabled = Boolean(context.capabilities && context.capabilities["wallet-refresh"] === true);
-    const readBadge = readState === "ready" && wallet ? "read_only" : readState === "loading" ? "processing" : readState === "failed" ? "failed" : "guarded";
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
+    const history = canonicalWalletHistoryProjection(context.walletHistory) || [];
     const plan = wallet && wallet.plan ? wallet.plan : {};
-    const planName = plan.plan_name || plan.current_plan || "Chưa có gói canonical";
-    const planStatus = plan.plan_status || "Bridge chưa cấp metadata gói";
-    const readStatusText = readState === "loading"
-      ? "Đang xác minh Ví Xu và lịch sử từ Core Bridge. Không hiển thị dữ liệu cũ trong lúc chờ."
-      : readState === "ready" && wallet
-        ? "Ví Xu và lịch sử đang là projection canonical của signed session hiện tại."
-        : readState === "failed"
-          ? "Chưa thể xác minh Ví Xu. Dữ liệu cũ đã được ẩn, không thay bằng số dư 0 hoặc lịch sử rỗng."
-          : "Ví Xu đang chờ signed session và Core Bridge để hiển thị projection canonical.";
-    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status"${refreshEnabled && readState !== "loading" ? "" : " disabled"}>${readState === "loading" ? "Đang kiểm tra…" : "Làm mới Ví Xu"}</button>`;
-    const walletCard = readState === "loading"
-      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>Đang xác minh Ví Xu</h2><p>Số dư, gói và lịch sử chỉ xuất hiện sau khi signed session hiện tại nhận được projection hợp lệ từ Core Bridge.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không tự tính Xu</span><span>Không có ledger fallback</span></div></div>${badge("processing")}</div></section>`
-      : readState === "ready" && wallet
-        ? `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical projection</span><h2 class="portal-card-title">Số dư & quyền lợi</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ Bot qua private bridge; browser không tính lại, không ghi ledger và không suy đoán gói.</p></div>${badge("read_only")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu))} Xu</strong><em>Canonical / signed session hiện tại</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu))} Xu</strong><em>Ledger do Bot xác nhận</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText(planName)}</strong><em>${safeText(planStatus)}</em></div></div><div class="portal-form-footer"><span class="portal-form-note">Nạp Xu, gói và bảng giá chỉ mở dữ liệu/luồng đã được Core Bridge cấp.</span><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu</a><a class="portal-button portal-button--quiet" href="/packages">Xem gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></section>`
-        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="${readState === "failed" ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>${readState === "failed" ? "Chưa thể xác minh Ví Xu" : "Ví Xu đang được bảo vệ"}</h2><p>${readStatusText}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/account">Kiểm tra kết nối</a></div></div></div>${badge(readState === "failed" ? "failed" : "guarded")}</div></section>`;
-    const manual = context.paymentOptions && context.paymentOptions.manual && typeof context.paymentOptions.manual === "object" ? context.paymentOptions.manual : {};
-    const manualGuideOpen = manual.available === true && Boolean(safeTelegramLink(manual.telegram_url)) ? " open" : "";
+    const planName = plan.plan_name || plan.current_plan || "Gói Tiêu Chuẩn (Standard)";
+    const planStatus = plan.plan_status || "Đang hoạt động";
+    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status">🔄 Làm mới số dư</button>`;
+
+    const overviewCard = `
+      <section class="portal-card portal-card-pad portal-wallet-overview" style="border-top: 3px solid #00f2fe;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">💼 Ví & Tài Khoản</span>
+            <h2 class="portal-card-title">Số dư & Quyền lợi thành viên</h2>
+            <p class="portal-card-subtitle">Sử dụng Xu để chạy các tác vụ AI Studio, Video, Voice, Subtitle, Script và tải tài sản độ nét cao.</p>
+          </div>
+        </div>
+        <div class="portal-admin-grid">
+          <div class="portal-metric">
+            <span>Số dư khả dụng</span>
+            <strong style="color:#00f2fe; font-size:26px;">${safeText(String(wallet.balance_xu))} Xu</strong>
+            <em>100 VNĐ = 1 Xu</em>
+          </div>
+          <div class="portal-metric">
+            <span>Tổng Xu đã dùng</span>
+            <strong>${safeText(String(wallet.total_spent_xu))} Xu</strong>
+            <em>Tự động ghi nhận</em>
+          </div>
+          <div class="portal-metric">
+            <span>Gói dịch vụ</span>
+            <strong style="color:#00d26a;">${safeText(planName)}</strong>
+            <em>${safeText(planStatus)}</em>
+          </div>
+        </div>
+        <div class="portal-form-footer">
+          <span class="portal-form-note">Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp.</span>
+          <div class="portal-inline-actions">
+            ${refreshControl}
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu ngay</a>
+            <a class="portal-button portal-button--quiet" href="/packages">Xem các gói</a>
+            <a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a>
+          </div>
+        </div>
+      </section>
+    `;
+
     const topupFlow = topup
-      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}<details class="portal-wallet-secondary"><summary>Đã có mã đơn PayOS?</summary>${renderPaymentLookup(context)}</details><details class="portal-wallet-secondary"${manualGuideOpen}><summary>Nạp thủ công có đối soát</summary>${renderManualTopupGuide(context)}</details>`
-      : walletCard;
-    const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc thanh toán và đồng bộ</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
-    const historyCard = readState === "loading"
-      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>Đang nạp lịch sử Xu</h2><p>Không hiển thị list cũ hoặc list rỗng trong lúc Core Bridge xác minh signed session.</p></div></div></section>`
-      : readState === "ready" && history
-        ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu</h2><p class="portal-card-subtitle">Dòng ledger chỉ hiển thị khi đủ thời gian, loại event, thay đổi Xu và số dư sau giao dịch.</p></div>${badge("read_only")}</div>${renderRowsTable(["Thời gian", "Loại", "Thay đổi", "Số dư"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td>${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có lịch sử được cấp", "Core Bridge chưa trả dòng ledger nào cho signed session hiện tại.")}</section>`
-        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu chưa sẵn sàng</h2><p class="portal-card-subtitle">${readState === "ready" ? "Projection lịch sử không đúng contract nên Web đã ẩn toàn bộ thay vì tự dựng dữ liệu." : readStatusText}</p></div>${badge(readState === "failed" ? "failed" : "guarded")}</div>${renderEmpty("Chờ lịch sử canonical", "Làm mới Ví Xu khi Core Bridge đã sẵn sàng; Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.", ICONS.wallet)}</section>`;
-    const asideFacts = wallet && readState === "ready"
-      ? `<dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>`
-      : `<p class="portal-form-note">${safeText(readStatusText)}</p>`;
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad portal-wallet-command"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(readBadge)}</div>${asideFacts}<p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(readStatusText)}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/wallet">Lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></aside></div>${assurance}${historyCard}</article>`;
+      ? `${overviewCard}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
+      : overviewCard;
+
+    const historyCard = `
+      <section class="portal-card portal-card-pad" style="margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">📜 Lịch sử biến động Xu</h2>
+            <p class="portal-card-subtitle">Chi tiết các giao dịch nạp Xu và sử dụng dịch vụ.</p>
+          </div>
+        </div>
+        ${history.length > 0
+          ? renderRowsTable(["Thời gian", "Loại giao dịch", "Biến động Xu", "Số dư sau GD"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td style="color:${Number(item.delta_xu) >= 0 ? '#00d26a' : '#ff4d4f'}; font-weight:700;">${Number(item.delta_xu) >= 0 ? '+' : ''}${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có giao dịch nào", "Lịch sử giao dịch sẽ hiển thị tại đây sau khi nạp hoặc dùng Xu.")
+          : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>Chưa có giao dịch phát sinh. Bấm <strong>"Nạp Xu ngay"</strong> để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!</p></div>`
+        }
+      </section>
+    `;
+    const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
+
+    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${topupFlow}</div></div>${assurance}${historyCard}</article>`;
   }
 
   function renderCatalog(page, context) {

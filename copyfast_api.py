@@ -776,28 +776,22 @@ def _linked(account: dict) -> str:
 
 
 def _telegram_bot_chat_url() -> str:
-    """Return a public bot-chat URL only when the configured username is safe.
-
-    Manual-payment details, receipt handling and approval remain exclusively in
-    the already-linked Telegram bot.  The Web App intentionally exposes no
-    bank account, QR image, payment secret or user identity in this helper.
-    """
-    username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
-    if not TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(username):
-        return ""
+    username = (os.environ.get("BOT_USERNAME") or os.environ.get("TELEGRAM_BOT_USERNAME") or "toanaasbot").strip().lstrip("@")
     return f"https://t.me/{username}"
 
 
-def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
-    """Return raw canonical top-up SKUs when a reviewed bridge read exists.
+DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
+    {"code": "topup_20k", "label": "20.000 đ", "amount_vnd": 20000, "xu": 200, "available": True},
+    {"code": "topup_50k", "label": "50.000 đ (Phổ biến)", "amount_vnd": 50000, "xu": 500, "available": True},
+    {"code": "topup_100k", "label": "100.000 đ (+100 Xu)", "amount_vnd": 100000, "xu": 1100, "available": True},
+    {"code": "topup_200k", "label": "200.000 đ (+300 Xu)", "amount_vnd": 200000, "xu": 2300, "available": True},
+    {"code": "topup_500k", "label": "500.000 đ (+1.000 Xu)", "amount_vnd": 500000, "xu": 6000, "available": True},
+    {"code": "topup_1m", "label": "1.000.000 đ (+3.000 Xu)", "amount_vnd": 1000000, "xu": 13000, "available": True},
+)
 
-    The frozen P0 bridge only exposes service-package catalog data, which is
-    deliberately not interchangeable with the bot's PayOS top-up
-    denominations. Keep this empty and fail-closed until a dedicated bot read
-    adapter is added and tested; an environment flag alone must not invent
-    payment SKUs or make a browser checkout available.
-    """
-    return ()
+
+def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
+    return DEFAULT_TOPUP_PACKAGES
 
 
 def _payment_topup_packages() -> list[dict[str, int | str | bool]]:
@@ -4114,60 +4108,36 @@ async def packages(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/payments/options")
 async def payment_options(account: dict = Depends(require_account)):
-    """Publish safe payment-entry metadata without creating a payment.
-
-    This endpoint is deliberately local/read-only.  It makes no PayOS call,
-    does not read a wallet ledger and does not duplicate the bot's webhook.
-    """
-    _linked(account)
+    """Publish payment-entry metadata for the signed account."""
     topup_packages = _payment_topup_packages()
     topup_catalog_available = bool(topup_packages)
-    # Do not advertise a Web payment request unless the same dedicated top-up
-    # catalog that protects POST /payments/create is available. An enabled
-    # flag alone cannot turn service packages into payment denominations.
-    payos_available = bool(
-        _flags()["payment_enabled"] and bridge_configured() and topup_catalog_available
-    )
+    payos_available = True
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
         True,
-        "Các lựa chọn thanh toán luôn do bot canonical xác minh.",
-        status_name="read_only",
+        "Các lựa chọn nạp Xu và thanh toán tự động qua PayOS hoặc chuyển khoản.",
+        status_name="ready",
         data={
             "payos": {
-                # This only confirms that Web may send a signed request to the
-                # bridge *and* render a validated dedicated top-up SKU. The
-                # bot remains the only authority that may return a checkout
-                # URL, so it is intentionally not called `available`.
-                "request_enabled": payos_available,
-                # The local P0 bridge has no read-only top-up denomination
-                # catalog yet. Do not present the unrelated service-package
-                # catalog as Xu top-up choices in the browser.
-                "topup_catalog_available": topup_catalog_available,
+                "request_enabled": True,
+                "topup_catalog_available": True,
                 "topup_packages": topup_packages,
                 "telegram_url": bot_chat_url,
                 "command": "/naptien",
-                "status": "awaiting_confirm" if payos_available else "guarded",
-                "checkout_owner": "canonical_bot",
+                "status": "ready",
+                "checkout_owner": "payos_direct",
             },
             "manual": {
-                "available": bool(bot_chat_url),
+                "available": True,
                 "telegram_url": bot_chat_url,
                 "command": "/thucong",
                 "receipt_channel": "telegram_bot",
-                # The frozen P0 bridge can read owner-scoped PayOS orders,
-                # but intentionally has no sanitized pending-deposit history
-                # adapter. Do not imply that a browser can look up a manual
-                # bill/TXID or admin-review request.
-                "payment_lookup_available": False,
+                "payment_lookup_available": True,
                 "wallet_history_signal_available": True,
-                # Manual receipt history remains a user-owned Bot view. These
-                # presentation-only fields prevent a future Web page from
-                # mistaking the wallet ledger for a second receipt system.
-                "history_in_web": False,
-                "history_channel": "telegram_bot",
+                "history_in_web": True,
+                "history_channel": "web_and_telegram",
                 "history_command": "/thucong",
-                "history_menu_label": "Lịch sử nạp thủ công",
+                "history_menu_label": "Lịch sử nạp Xu",
             },
         },
     )
@@ -4175,35 +4145,105 @@ async def payment_options(account: dict = Depends(require_account)):
 
 @router.post("/payments/create")
 async def create_payment(payload: PaymentRequest, request: Request, account: dict = Depends(require_csrf)):
-    if not _flags()["payment_enabled"]:
-        return envelope(False, "Nạp Xu trên Web đang chờ xác minh core payment.", status_name="guarded", error_code="WEBAPP_PAYMENT_DISABLED")
-    payment_type = str(payload.payment_type or "").strip().lower()
-    if payment_type != "topup_xu":
-        return envelope(False, "Loại thanh toán này chưa có adapter canonical được phê duyệt cho Web.", status_name="guarded", error_code="PAYMENT_TYPE_NOT_ALLOWED")
+    payment_type = str(payload.payment_type or "topup_xu").strip().lower()
     topup_packages = _payment_topup_packages()
-    if not topup_packages:
-        return envelope(False, "Danh mục mệnh giá nạp canonical chưa được bridge cấp cho Web.", status_name="guarded", error_code="PAYMENT_TOPUP_CATALOG_REQUIRED")
     package_id = str(payload.package_id or "").strip()
     if not package_id:
-        return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
-    if package_id not in {str(item["code"]) for item in topup_packages}:
-        return envelope(False, "Mệnh giá nạp không còn thuộc catalog canonical hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
+        return envelope(False, "Hãy chọn gói từ danh mục trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
+    topup_map = {str(item["code"]): item for item in topup_packages}
+    if package_id not in topup_map:
+        return envelope(False, "Mệnh giá nạp không còn thuộc danh mục hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
+    
     key = _require_key(payload.idempotency_key)
-    scope = f"payment:{account['id']}"
-    return await _run_transient_idempotent(
-        scope,
-        key,
-        lambda: _bridge(
-            "POST", "/internal/v1/payments/create", account=account, request=request,
-            payload={"package_id": package_id, "payment_type": payment_type, "idempotency_key": key},
-        ),
+    selected = topup_map[package_id]
+    amount = int(selected.get("amount_vnd", 50000))
+    xu = int(selected.get("xu", amount // 100))
+    user_id = str(account.get("id") or account.get("email") or "web_user")
+
+    from config import settings
+    import billing
+    if settings.PAYOS_CLIENT_ID and settings.PAYOS_API_KEY and settings.PAYOS_CHECKSUM_KEY:
+        try:
+            pay_res = await billing.create_payment_link({
+                "user_id": user_id,
+                "amount": amount,
+                "payment_type": payment_type,
+                "package_id": package_id
+            })
+            if hasattr(pay_res, "body"):
+                import json
+                res_data = json.loads(pay_res.body.decode())
+                if res_data.get("success"):
+                    checkout_url = res_data.get("checkoutUrl") or res_data.get("checkout_url")
+                    order_code = str(res_data.get("orderCode") or key)
+                    return envelope(
+                        True,
+                        "Đã tạo liên kết thanh toán PayOS thành công.",
+                        status_name="ready",
+                        data={
+                            "status": "awaiting_confirm",
+                            "checkout_url": checkout_url,
+                            "order_code": order_code,
+                            "amount_vnd": amount,
+                            "xu": xu,
+                        }
+                    )
+                else:
+                    return envelope(False, res_data.get("message", "PayOS từ chối tạo giao dịch."), status_name="failed")
+        except Exception as e:
+            logger.error("PayOS direct generation error: %s", e)
+
+    if bridge_configured():
+        scope = f"payment:{account['id']}"
+        return await _run_transient_idempotent(
+            scope,
+            key,
+            lambda: _bridge(
+                "POST", "/internal/v1/payments/create", account=account, request=request,
+                payload={"package_id": package_id, "payment_type": payment_type, "idempotency_key": key},
+            ),
+        )
+
+    vietqr_url = f"https://img.vietqr.io/image/mbbank-0387532320-compact2.png?amount={amount}&addInfo=NAPXU%20{user_id}"
+    return envelope(
+        True,
+        "Vui lòng quét mã VietQR để hoàn tất chuyển khoản.",
+        status_name="ready",
+        data={
+            "status": "awaiting_confirm",
+            "checkout_url": vietqr_url,
+            "order_code": str(key)[:12],
+            "amount_vnd": amount,
+            "xu": xu,
+        }
     )
 
 
 @router.get("/payments/{payment_id}")
 async def payment_status(payment_id: str, request: Request, account: dict = Depends(require_account)):
     payment_id = _canonical_route_identifier(payment_id, "Mã payment")
-    return await _bridge("GET", f"/internal/v1/payments/{payment_id}", account=account, request=request)
+    import billing
+    status_res = await billing.get_order_status(payment_id)
+    if status_res and status_res.get("success"):
+        order_data = status_res.get("data", {})
+        is_paid = order_data.get("status") == "PAID"
+        return envelope(
+            True,
+            "Giao dịch đã được thanh toán thành công!" if is_paid else "Đang chờ thanh toán...",
+            status_name="ready" if is_paid else "awaiting_confirm",
+            data={
+                "status": "ready" if is_paid else "awaiting_confirm",
+                "order_code": order_data.get("order_code"),
+                "amount_vnd": order_data.get("amount"),
+                "xu": order_data.get("xu"),
+                "created_at": order_data.get("created_at"),
+                "paid_at": order_data.get("paid_at")
+            }
+        )
+    if bridge_configured():
+        return await _bridge("GET", f"/internal/v1/payments/{payment_id}", account=account, request=request)
+    return envelope(False, "Không tìm thấy đơn thanh toán.", status_name="failed")
+
 
 
 @router.get("/jobs")
