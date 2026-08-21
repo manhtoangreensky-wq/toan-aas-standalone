@@ -9271,8 +9271,8 @@
   }
 
   function badge(status, label) {
-    const mapped = status === "read_only" ? "ready" : status;
-    const normalized = ALLOWED_STATES.has(mapped) ? mapped : "guarded";
+    if (!status || status === "read_only") return "";
+    const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
     return `<span class="portal-badge" data-status="${normalized}">${safeText(label || stateLabel(normalized))}</span>`;
   }
 
@@ -10226,10 +10226,7 @@
     <button class="portal-sidebar-search" type="button" aria-label="${safeText(sidebarSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>${safeText(sidebarSearchLabel)}</span><kbd aria-hidden="true">Ctrl K</kbd></button>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
-      <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Hệ thống đã sẵn sàng") : uiText("chrome.safeMode", "TOAN AAS Workspace"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Đã đồng bộ hoá tài khoản và dữ liệu") : uiText("chrome.safeModeDetail", "Không gian làm việc tự động hoá AI"))}</span></span>
-      </div>
-      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & bảo mật"))}</span></a>
+      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & quyền riêng tư"))}</span></a>
     </div>`;
   }
 
@@ -10256,8 +10253,53 @@
     const crumbs = crumbItems
       .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
       .join("");
-    const accountHref = context.session.authenticated === true ? "/account" : "/login";
-    const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;
+    const userDropdown = context.session.authenticated === true
+      ? `<div class="portal-user-dropdown-container">
+          <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
+            <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span>
+            <span class="portal-session-copy">${safeText(name)}</span>
+            <span class="portal-session-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="portal-user-dropdown-menu" data-portal-user-dropdown hidden>
+            <div class="portal-user-dropdown-header">
+              <span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>
+              <div class="portal-user-dropdown-meta">
+                <strong>${safeText(name)}</strong>
+                <small>${safeText(context.session.email || context.profile.email || "Workspace Account")}</small>
+              </div>
+            </div>
+            <div class="portal-user-dropdown-divider"></div>
+            <div class="portal-user-dropdown-items">
+              <a class="portal-user-dropdown-item" href="/wallet">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
+                <div><strong>Ví & Số dư Xu</strong><small>Nạp Xu, kiểm tra số dư</small></div>
+              </a>
+              <a class="portal-user-dropdown-item" href="/wallet/topup">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span>
+                <div><strong>Nạp Xu nhanh</strong><small>Thanh toán PayOS tự động</small></div>
+              </a>
+              <a class="portal-user-dropdown-item" href="/account">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
+                <div><strong>Hồ sơ & Cài đặt</strong><small>Quản lý tài khoản</small></div>
+              </a>
+              <a class="portal-user-dropdown-item" href="/account/security">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
+                <div><strong>Bảo mật & Đổi mật khẩu</strong><small>Phiên đăng nhập, mật khẩu</small></div>
+              </a>
+            </div>
+            <div class="portal-user-dropdown-divider"></div>
+            <div class="portal-user-dropdown-footer">
+              <button class="portal-user-dropdown-logout" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">⎋</span>
+                <span>Đăng xuất / Thoát tài khoản</span>
+              </button>
+            </div>
+          </div>
+        </div>`
+      : `<a class="portal-session-chip" href="/login" aria-label="${safeText(uiText("chrome.openAccount", "Đăng nhập"))}">
+          <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
+        </a>`;
+
     return `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
       <nav class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</nav>
       <div class="portal-header-actions">
@@ -10265,9 +10307,7 @@
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
         <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
         ${pageStatusBadge(page, context)}
-        <a class="portal-session-chip" href="${accountHref}" aria-label="${safeText(uiText("chrome.openAccount", "Mở tài khoản"))}">
-          <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
-        </a>
+        ${userDropdown}
       </div>`;
   }
 
@@ -26851,11 +26891,9 @@
     const authAssurance = `<details class="portal-auth-assurance"><summary><span>🛡️ ${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</span></summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary><span>ℹ️ ${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</span></summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
 
-    const securityFootnote = "";
+    const authFooter = `<footer class="portal-auth-footer" hidden><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
 
-    const authFooter = `<footer class="portal-auth-footer"><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
-
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${securityFootnote}</section></div>${authFooter}</article>`;
+    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div></section></div>${authFooter}</article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -32217,6 +32255,24 @@
         const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
         if (modal) modal.remove();
         return;
+      }
+      if (event.target.closest('[data-portal-action="toggle-user-dropdown"]')) {
+        const dropdown = document.querySelector("[data-portal-user-dropdown]");
+        const trigger = document.querySelector('[data-portal-action="toggle-user-dropdown"]');
+        if (dropdown && trigger) {
+          const isHidden = dropdown.hidden;
+          dropdown.hidden = !isHidden;
+          trigger.setAttribute("aria-expanded", String(isHidden));
+        }
+        return;
+      }
+      if (!event.target.closest(".portal-user-dropdown-container")) {
+        const dropdown = document.querySelector("[data-portal-user-dropdown]");
+        const trigger = document.querySelector('[data-portal-action="toggle-user-dropdown"]');
+        if (dropdown && !dropdown.hidden) {
+          dropdown.hidden = true;
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        }
       }
       const paletteTrigger = event.target.closest("[data-portal-open-command-palette]");
       if (paletteTrigger) { openCommandPalette(paletteTrigger); return; }

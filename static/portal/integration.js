@@ -35836,6 +35836,9 @@
           stopTelegramLoginPolling();
           const result = await api("/auth/telegram/login/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
           merge({ telegramLoginFlow: { status: result.status || "awaiting_confirm", message: result.message, errorCode: result.error_code || "", data: result.data || {} } });
+          if (result.data && result.data.deep_link) {
+            try { window.open(result.data.deep_link, "_blank"); } catch (_) {}
+          }
           toast(result.message || publicAccessText("telegram.waitingFallback", "Đang chờ Telegram xác minh mã trong Bot."));
           scheduleTelegramLoginPolling();
         } finally {
