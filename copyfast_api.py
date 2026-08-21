@@ -777,7 +777,13 @@ def _linked(account: dict) -> str:
 
 def _telegram_bot_chat_url() -> str:
     username = (os.environ.get("BOT_USERNAME") or os.environ.get("TELEGRAM_BOT_USERNAME") or "toanaasbot").strip().lstrip("@")
+    if not TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(username):
+        return ""
     return f"https://t.me/{username}"
+
+
+def _payment_topup_catalog_available() -> bool:
+    return False
 
 
 DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
@@ -801,6 +807,8 @@ def _payment_topup_packages() -> list[dict[str, int | str | bool]]:
     may supply raw data through ``_payment_topup_catalog``, but neither a
     browser-supplied code nor an empty/partial catalog can unlock checkout.
     """
+    if not _payment_topup_catalog_available():
+        return []
     raw = _payment_topup_catalog()
     if not isinstance(raw, (list, tuple)):
         return []
@@ -4109,35 +4117,36 @@ async def packages(request: Request, account: dict = Depends(require_account)):
 @router.get("/payments/options")
 async def payment_options(account: dict = Depends(require_account)):
     """Publish payment-entry metadata for the signed account."""
+    _linked(account)
     topup_packages = _payment_topup_packages()
-    topup_catalog_available = bool(topup_packages)
-    payos_available = True
+    topup_catalog_available = _payment_topup_catalog_available()
+    payos_available = bool(_flags()["payment_enabled"] and bridge_configured() and topup_catalog_available)
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
         True,
         "Các lựa chọn nạp Xu và thanh toán tự động qua PayOS hoặc chuyển khoản.",
-        status_name="ready",
+        status_name="read_only",
         data={
             "payos": {
-                "request_enabled": True,
-                "topup_catalog_available": True,
+                "request_enabled": payos_available,
+                "topup_catalog_available": topup_catalog_available,
                 "topup_packages": topup_packages,
                 "telegram_url": bot_chat_url,
                 "command": "/naptien",
-                "status": "ready",
-                "checkout_owner": "payos_direct",
+                "status": "awaiting_confirm" if payos_available else "guarded",
+                "checkout_owner": "canonical_bot",
             },
             "manual": {
-                "available": True,
+                "available": bool(bot_chat_url),
                 "telegram_url": bot_chat_url,
                 "command": "/thucong",
                 "receipt_channel": "telegram_bot",
-                "payment_lookup_available": True,
+                "payment_lookup_available": False,
                 "wallet_history_signal_available": True,
-                "history_in_web": True,
-                "history_channel": "web_and_telegram",
+                "history_in_web": False,
+                "history_channel": "telegram_bot",
                 "history_command": "/thucong",
-                "history_menu_label": "Lịch sử nạp Xu",
+                "history_menu_label": "Lịch sử nạp thủ công",
             },
         },
     )

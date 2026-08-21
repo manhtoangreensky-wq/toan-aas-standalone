@@ -41,6 +41,7 @@ def make_client(tmp_path, monkeypatch, *, base_url="http://testserver", session_
     monkeypatch.delenv("CORE_BRIDGE_BASE_URL", raising=False)
     monkeypatch.delenv("CORE_BRIDGE_TOKEN", raising=False)
     monkeypatch.delenv("CORE_BRIDGE_HMAC_SECRET", raising=False)
+    monkeypatch.delenv("CORS_ALLOW_ORIGINS", raising=False)
     for name in MODULES:
         sys.modules.pop(name, None)
     application = importlib.import_module("app").app
