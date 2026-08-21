@@ -41,6 +41,9 @@
 | /api/v1/auth/login | POST | durable_login |
 | /api/v1/auth/register | POST | durable_register |
 | /api/v1/auth/security/password | POST | durable_password_change |
+| /api/v1/billing/bank-info | GET | get_bank_info |
+| /api/v1/billing/create-payment-link | POST | create_payment_link |
+| /api/v1/billing/order-status/{order_code} | GET | get_order_status |
 | /api/v1/health | GET | health |
 | /api/v1/inbox/items | GET | items |
 | /api/v1/inbox/items/{item_id}/dismiss | POST | dismiss_item |
@@ -92,6 +95,7 @@
 | /audit-events | GET | audit_events |
 | /b2b-app | GET | legacy_b2b_redirect |
 | /background-cleanup | POST | cleanup_plain_background |
+| /bank-info | GET | get_bank_info |
 | /banners | POST | add_banner |
 | /banners | GET | get_banners |
 | /blueprint | POST | create_media_factory_blueprint |
@@ -158,9 +162,5 @@
 | /collections/{collection_id}/restore-version | POST | restore_collection_version |
 | /collections/{collection_id}/review-pack | POST | review_collection_pack |
 | /compose | POST | compose_prompt_blueprint |
-| /consultation-brief/catalog | GET | consultation_brief_catalog |
-| /consultation-brief/compose | POST | compose_consultation_brief |
-| /consultations | POST | confirm_consultation |
-| /consultations/catalog | GET | consultation_catalog |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
