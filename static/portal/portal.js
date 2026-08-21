@@ -20569,7 +20569,7 @@
   }
 
   function renderPaymentEntryPoints(context) {
-    return "";
+    return `<section class="portal-card portal-card-pad portal-billing-entrypoints"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical billing</span><h2 class="portal-card-title">Chọn kênh nạp Xu</h2><p class="portal-card-subtitle">Nạp Xu tự động qua PayOS hoặc chuyển khoản trực tiếp 24/7.</p></div></div><div class="portal-payment-entry-grid"><section class="portal-payment-entry" data-billing-entrypoint="payos"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span></div><h3>Cổng tự động PayOS</h3><p>Tạo mã thanh toán trực tiếp, quét VietQR xử lý tự động trong 5-30 giây.</p><div class="portal-payment-entry-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="/naptien">Sao chép /naptien</button><code class="portal-link-code">/naptien</code></div><span class="portal-payment-entry-note">Hỗ trợ tất cả ngân hàng Việt Nam và ví điện tử.</span></section><section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span></div><h3>Chuyển khoản trực tiếp</h3><p>Quét mã VietQR MB Bank hoặc chuyển khoản theo thông tin tài khoản bên dưới.</p><div class="portal-payment-entry-actions"><a class="portal-button portal-button--quiet" href="#manual-topup">Xem STK & QR</a></div><span class="portal-payment-entry-note">Xử lý và đối soát nhanh chóng 24/7.</span></section></div></section>`;
   }
 
   function renderManualTopupGuide(context) {
@@ -20577,6 +20577,8 @@
     const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
     const memo = `NAPXU ${userClean}`;
     const qrUrl = `https://img.vietqr.io/image/mbbank-0387532320-compact2.png?amount=50000&addInfo=${encodeURIComponent(memo)}&accountName=NGUYEN%20MANH%20TOAN`;
+    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>Nạp VND</h3><p>Chuyển khoản ngân hàng hoặc quét mã QR MB Bank.</p></div><span>24/7</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">◌</span><div><h3>USDT / Quốc tế</h3><p>Liên hệ Bot hoặc Admin để nạp Xu quốc tế.</p></div><span>Hỗ trợ 24/7</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">◈</span><div><h3>Bảo mật giao dịch</h3><p>Giao dịch trực tiếp, không qua trung gian thứ 3 không xác thực.</p></div><span>An toàn</span></article></div>`;
+    const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
 
     return `<section class="portal-card portal-card-pad" id="manual-topup" style="border-top: 3px solid #00d26a; margin-top:20px;">
       <div class="portal-card-header">
@@ -20586,6 +20588,7 @@
           <p class="portal-card-subtitle">Quét mã VietQR hoặc chuyển khoản trực tiếp tới số tài khoản bên dưới.</p>
         </div>
       </div>
+      ${routeGuide}
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center; margin:16px 0;">
         <div style="text-align:center; padding:16px; background:#fff; border-radius:12px; max-width:260px; margin:0 auto;">
           <img src="${safeText(qrUrl)}" alt="VietQR MB Bank" style="width:100%; height:auto; border-radius:8px; display:block;" />
@@ -20619,6 +20622,7 @@
           </div>
         </div>
       </div>
+      ${stateGuide}
       <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
         <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu: Telegram Bot <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:600;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
         <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer">💬 Mở Telegram Hỗ trợ</a>
@@ -20692,7 +20696,12 @@
   }
 
   function renderBillingJourney() {
-    return "";
+    const lanes = [
+      { number: "01", title: "Chọn gói nạp", text: "Chọn mệnh giá hoặc gói Xu phù hợp nhu cầu." },
+      { number: "02", title: "Thanh toán QR 24/7", text: "Quét mã VietQR hoặc cổng PayOS bảo mật." },
+      { number: "03", title: "Nhận Xu tức thì", text: "Số dư tự động cập nhật trong 5-30 giây." }
+    ];
+    return `<section class="portal-billing-journey" aria-label="Quy trình nạp Xu canonical"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">Billing flow</span><h2>Quy trình nạp Xu tức thì</h2><p>Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử Việt Nam.</p></div></div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
   }
 
   function renderWallet(page, context) {
@@ -20731,6 +20740,8 @@
             <em>${safeText(planStatus)}</em>
           </div>
         </div>
+        <dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>
+        <p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">Ví Xu canonical đã sẵn sàng</p>
         <div class="portal-form-footer">
           <span class="portal-form-note">Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp.</span>
           <div class="portal-inline-actions">
@@ -20744,7 +20755,7 @@
     `;
 
     const topupFlow = topup
-      ? `${overviewCard}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
+      ? `${renderBillingJourney()}${overviewCard}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
       : overviewCard;
 
     const historyCard = `
