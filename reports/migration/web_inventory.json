@@ -7577,7 +7577,7 @@
         "copyfast_trend_research.py",
         "copyfast_video_operations.py"
       ],
-      "occurrences": 732,
+      "occurrences": 736,
       "provider": "PayOS"
     },
     {
@@ -13941,7 +13941,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 157,
   "source_files_scanned": 157,
-  "source_fingerprint_sha256": "bb0db9549fe821a28e3e8129154b845327c5a0c9ff5758d73bc276a69d99dbd5",
+  "source_fingerprint_sha256": "c4d2bc20e7495d643487d22974753b6b9fb3992051a6ac7fed0247ce261a3e9b",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -14161,7 +14161,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 28835,
+      "line": 28846,
       "path": "/features"
     },
     {
