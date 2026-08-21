@@ -10253,7 +10253,8 @@
     const crumbs = crumbItems
       .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
       .join("");
-    const userDropdown = context.session.authenticated === true
+    const canOfferPwaInstall = Boolean(context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
+    const userDropdown = (context && context.session && context.session.authenticated === true)
       ? `<div class="portal-user-dropdown-container">
           <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
             <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span>
@@ -10265,7 +10266,7 @@
               <span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>
               <div class="portal-user-dropdown-meta">
                 <strong>${safeText(name)}</strong>
-                <small>${safeText(context.session.email || context.profile.email || "Workspace Account")}</small>
+                <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || "Workspace Account")}</small>
               </div>
             </div>
             <div class="portal-user-dropdown-divider"></div>
