@@ -214,7 +214,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2646,
+      "line": 2645,
       "target": "pwa_service_worker"
     },
     {
@@ -7739,7 +7739,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2658,
+      "line": 2657,
       "methods": [
         "GET"
       ],
@@ -8000,7 +8000,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2678,
+      "line": 2677,
       "methods": [
         "GET"
       ],
@@ -8090,7 +8090,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2633,
+      "line": 2632,
       "methods": [
         "GET"
       ],
@@ -8486,7 +8486,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2689,
+      "line": 2688,
       "methods": [
         "GET"
       ],
@@ -8531,7 +8531,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2694,
+      "line": 2693,
       "methods": [
         "GET"
       ],
@@ -8774,7 +8774,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2673,
+      "line": 2672,
       "methods": [
         "GET"
       ],
@@ -9008,7 +9008,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2689,
+      "line": 2688,
       "methods": [
         "GET"
       ],
@@ -9944,7 +9944,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2633,
+      "line": 2632,
       "methods": [
         "GET"
       ],
@@ -10358,7 +10358,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2639,
+      "line": 2638,
       "methods": [
         "GET"
       ],
@@ -10367,7 +10367,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2639,
+      "line": 2638,
       "methods": [
         "GET"
       ],
@@ -10412,7 +10412,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2683,
+      "line": 2682,
       "methods": [
         "GET"
       ],
@@ -10592,7 +10592,7 @@
     {
       "endpoint": "pwa_offline_page",
       "file": "app.py",
-      "line": 2652,
+      "line": 2651,
       "methods": [
         "GET"
       ],
@@ -11051,7 +11051,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2646,
+      "line": 2645,
       "methods": [
         "GET"
       ],
@@ -12068,7 +12068,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2646,
+      "line": 2645,
       "methods": [
         "GET"
       ],
@@ -13220,7 +13220,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2668,
+      "line": 2667,
       "methods": [
         "GET"
       ],
@@ -13247,7 +13247,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2663,
+      "line": 2662,
       "methods": [
         "GET"
       ],
@@ -13706,7 +13706,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2699,
+      "line": 2698,
       "methods": [
         "GET"
       ],
@@ -13941,7 +13941,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 157,
   "source_files_scanned": 157,
-  "source_fingerprint_sha256": "231b9d873c9389995ab47d2e16bdb297e897b8a0af51e574179e00180af57b3f",
+  "source_fingerprint_sha256": "bb0db9549fe821a28e3e8129154b845327c5a0c9ff5758d73bc276a69d99dbd5",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
