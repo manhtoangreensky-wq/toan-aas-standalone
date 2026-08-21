@@ -953,8 +953,8 @@
   }
 
   async function copyPaymentBotCommand(value) {
-    const command = String(value || "");
-    if (!["/naptien", "/thucong"].includes(command)) throw new Error("Lệnh thanh toán canonical không hợp lệ.");
+    const command = String(value || "").trim();
+    if (!command) throw new Error("Nội dung sao chép không được để trống.");
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(command);
       return;
@@ -968,7 +968,7 @@
     field.select();
     const copied = document.execCommand("copy");
     field.remove();
-    if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép. Hãy copy lệnh hiển thị bên cạnh.");
+    if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép.");
   }
 
   async function copyTelegramLinkCommand(value) {
@@ -36725,7 +36725,7 @@
       if (action === "copy-payment-command") {
         const command = String(detail.copyText || "");
         await copyPaymentBotCommand(command);
-        toast(`Đã sao chép ${command}. Hãy dán lệnh vào bot TOAN AAS đã liên kết.`);
+        toast(`Đã sao chép: ${command}`);
         return;
       }
       if (action === "copy-telegram-link-command") {

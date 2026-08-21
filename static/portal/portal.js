@@ -20569,39 +20569,70 @@
   }
 
   function renderPaymentEntryPoints(context) {
-    return `<section class="portal-card portal-card-pad portal-billing-entrypoints"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical billing</span><h2 class="portal-card-title">Chọn kênh nạp Xu</h2><p class="portal-card-subtitle">Nạp Xu tự động qua PayOS hoặc chuyển khoản trực tiếp 24/7.</p></div></div><div class="portal-payment-entry-grid"><section class="portal-payment-entry" data-billing-entrypoint="payos"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span></div><h3>Cổng tự động PayOS</h3><p>Tạo mã thanh toán trực tiếp, quét VietQR xử lý tự động trong 5-30 giây.</p><div class="portal-payment-entry-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="/naptien">Sao chép /naptien</button><code class="portal-link-code">/naptien</code></div><span class="portal-payment-entry-note">Hỗ trợ tất cả ngân hàng Việt Nam và ví điện tử.</span></section><section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span></div><h3>Chuyển khoản trực tiếp</h3><p>Quét mã VietQR MB Bank hoặc chuyển khoản theo thông tin tài khoản bên dưới.</p><div class="portal-payment-entry-actions"><a class="portal-button portal-button--quiet" href="#manual-topup">Xem STK & QR</a></div><span class="portal-payment-entry-note">Xử lý và đối soát nhanh chóng 24/7.</span></section></div></section>`;
+    return `<div class="portal-billing-entrypoints" style="margin-bottom:20px;">
+      <div class="portal-topup-lane-switch" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
+        <button type="button" class="portal-button portal-button--primary portal-topup-tab-btn is-active" data-portal-topup-lane="payos" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+          <span style="font-size:20px;">⚡</span>
+          <span>Cổng Nạp Tự Động PayOS (5-30s)</span>
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-topup-tab-btn" data-portal-topup-lane="manual" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+          <span style="font-size:20px;">🏦</span>
+          <span>Nạp Thủ Công (ACB / MoMo / ZaloPay / Binance)</span>
+        </button>
+      </div>
+      <div class="portal-payment-entry-grid" style="display:none;">
+        <section class="portal-payment-entry" data-billing-entrypoint="payos"></section>
+        <section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"></section>
+      </div>
+    </div>`;
   }
 
   function renderManualTopupGuide(context) {
     const user = (context.profile && (context.profile.email || context.profile.name)) || (context.session && context.session.email) || "USER";
     const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
     const memo = `NAPXU ${userClean}`;
-    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>ACB / VietQR</h3><p>Chuyển khoản ngân hàng hoặc quét mã QR ACB.</p></div><span>24/7</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">🌸</span><div><h3>MoMo & ZaloPay</h3><p>Quét mã QR ví điện tử MoMo / ZaloPay.</p></div><span>24/7</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">🪙</span><div><h3>USDT TRC20</h3><p>Nạp qua mạng TRC20 hoặc liên hệ hỗ trợ.</p></div><span>An toàn</span></article></div>`;
-    const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
+    const routeGuide = `<div class="portal-manual-topup-routes" style="display:none;"><article class="portal-manual-topup-route"><span>₫</span><div><h3>ACB</h3></div></article><article class="portal-manual-topup-route"><span>🌸</span><div><h3>MoMo & ZaloPay</h3></div></article><article class="portal-manual-topup-route"><span>🪙</span><div><h3>Binance USDT</h3></div></article></div>`;
+    const stateGuide = `<div class="portal-manual-topup-status" style="display:none;"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
 
-    return `<section class="portal-card portal-card-pad portal-manual-topup-card" id="manual-topup" style="border-top: 3px solid #00d26a; margin-top:20px;">
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" style="border-top: 3px solid #00d26a; display:none;">
       <div class="portal-card-header">
         <div>
-          <span class="portal-section-kicker">🏦 Chuyển khoản ngân hàng 24/7</span>
-          <h2 class="portal-card-title">Thông tin tài khoản nhận chuyển khoản trực tiếp</h2>
-          <p class="portal-card-subtitle">Quét mã QR ACB hoặc chuyển khoản trực tiếp tới số tài khoản chính thức bên dưới.</p>
+          <span class="portal-section-kicker">🏦 Chuyển khoản & Nạp tiền trực tiếp 24/7</span>
+          <h2 class="portal-card-title">Kênh Nạp Tiền Thủ Công (ACB / MoMo / ZaloPay / Binance)</h2>
+          <p class="portal-card-subtitle">Chọn phương thức nạp bên dưới để xem thông tin tài khoản và quét mã QR chuyển khoản.</p>
         </div>
       </div>
-      ${routeGuide}
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center; margin:16px 0;">
-        <div style="text-align:center; padding:16px; background:#fff; border-radius:12px; max-width:280px; margin:0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-          <img src="/static/ACBBANK.jpg" alt="ACB Bank VietQR" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#333; font-weight:700; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
+
+      <div class="portal-manual-subtabs" style="display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 24px;">
+        <button type="button" class="portal-button portal-manual-tab-btn is-active" data-portal-manual-tab="acb" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🏦 Ngân Hàng ACB (VietQR)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="momo" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🌸 Ví MoMo (Túi Thần Tài)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="zalopay" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          💚 Ví ZaloPay (QR Đa Năng)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="binance" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🪙 Binance USDT (TRC20)
+        </button>
+      </div>
+
+      <!-- Pane 1: ACB Bank -->
+      <div class="portal-manual-pane" data-portal-manual-pane="acb" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/ACBBANK.jpg" alt="ACB VietQR" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#333; font-weight:800; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
         </div>
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng thụ hưởng:</span>
             <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">ACB (Ngân Hàng TMCP Á Châu)</div>
           </div>
           <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
-              <div style="font-size:20px; font-weight:800; color:#00f2fe; letter-spacing:1px;">8899397968</div>
+              <div style="font-size:22px; font-weight:800; color:#00f2fe; letter-spacing:1px;">8899397968</div>
             </div>
             <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="8899397968" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
           </div>
@@ -20621,13 +20652,108 @@
           </div>
         </div>
       </div>
-      <div style="margin-top:16px; padding:12px 16px; background:rgba(0,242,254,0.05); border:1px dashed #00f2fe; border-radius:10px;">
-        <span style="font-size:13px; color:var(--portal-text-primary, #fff);">💡 <strong>Các kênh nạp ví khác:</strong> MoMo (<a href="/static/momo.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">Xem QR MoMo</a>) | ZaloPay (<a href="/static/ZALOPAY_CÁ_NHÂN.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">QR Cá nhân</a> / <a href="/static/ZALOPAY_CỬA_HÀNG.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">QR Cửa hàng</a>) | USDT TRC20 (<a href="/static/USDT.jpg" target="_blank" style="color:#00f2fe; text-decoration:underline;">Xem QR USDT</a>)</span>
+
+      <!-- Pane 2: MoMo Túi Thần Tài -->
+      <div class="portal-manual-pane" data-portal-manual-pane="momo" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/momo_tuithantai.png" alt="MoMo Túi Thần Tài VPBank" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#d82d8b; font-weight:800; margin-top:8px; display:block;">Quét mã từ MoMo hoặc App Ngân Hàng</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">VPBank (Túi Thần Tài MoMo - Napas 247)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
+              <div style="font-size:22px; font-weight:800; color:#d82d8b; letter-spacing:1px;">01MMTTT0053945533</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="01MMTTT0053945533" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tên người nhận:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">MOMO - TKTH NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="MOMO - TKTH NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Pane 3: ZaloPay -->
+      <div class="portal-manual-pane" data-portal-manual-pane="zalopay" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/zalopay_danang.png" alt="ZaloPay QR Đa Năng" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#008fe5; font-weight:800; margin-top:8px; display:block;">ZaloPay QR Đa Năng (50+ Ngân Hàng)</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Đơn vị thụ hưởng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">Nguyen Manh Toan (Thu Ngân ZaloPay)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:10px 14px; background:rgba(0, 143, 229, 0.1); border:1px solid #008fe5; border-radius:8px; font-size:13px; color:#fff;">
+            💡 Kênh phụ: <a href="/static/zalopay_canhan.png" target="_blank" style="color:#00f2fe; text-decoration:underline; font-weight:700;">Xem QR ZaloPay Cá Nhân</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 4: Binance USDT TRC20 -->
+      <div class="portal-manual-pane" data-portal-manual-pane="binance" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/binance_usdt.png" alt="Binance USDT TRC20" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#f3ba2f; font-weight:800; margin-top:8px; display:block;">Nạp USDT vào Binance</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Mạng lưới (Network):</span>
+              <div style="font-size:16px; font-weight:800; color:#f3ba2f;">Tron (TRC20)</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TRC20" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Địa chỉ Ví USDT (Wallet Address):</span>
+            <div style="font-size:15px; font-weight:800; color:#00f2fe; word-break:break-all; margin:6px 0;">TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5</div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5" style="padding:6px 12px; font-size:12px;">📋 Sao chép địa chỉ ví</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tỷ giá quy đổi:</span>
+            <div style="font-size:16px; font-weight:700; color:#00d26a;">1 USDT = 26.000 VNĐ = 260 Xu</div>
+          </div>
+          <div style="padding:10px 14px; background:rgba(243, 186, 47, 0.1); border:1px solid #f3ba2f; border-radius:8px; font-size:12px; color:#fff;">
+            ⚠️ <strong>Lưu ý:</strong> Chỉ gửi USDT qua mạng Tron (TRC20). Sau khi chuyển tiền, gửi hash TXID hoặc ảnh biên lai qua Telegram Admin để duyệt Xu ngay.
+          </div>
+        </div>
+      </div>
+
+      ${routeGuide}
       ${stateGuide}
-      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
-        <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu: Telegram Bot <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:600;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
-        <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer">💬 Mở Telegram Hỗ trợ</a>
+
+      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid var(--portal-border, #2a3b4c);">
+        <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu 24/7: Telegram Admin <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:700;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
+        <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="font-weight:700;">💬 Mở Telegram Hỗ trợ</a>
       </div>
     </section>`;
   }
@@ -20635,11 +20761,11 @@
   function renderPaymentRequestForm(page, context) {
     const packages = [
       { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Nạp dùng thử", popular: false },
-      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến" },
+      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến nhất" },
       { code: "topup_100k", label: "100.000 đ", xu: "1.100 Xu", note: "Tặng 100 Xu", badge: "Thưởng +10%" },
       { code: "topup_200k", label: "200.000 đ", xu: "2.300 Xu", note: "Tặng 300 Xu", badge: "Thưởng +15%" },
       { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu", badge: "Thưởng +20%" },
-      { code: "topup_1m", label: "1.000.000 đ", xu: "13.000 Xu", note: "Tặng 3.000 Xu", badge: "Thưởng +30%" },
+      { code: "topup_1m", label: "1.000.000 đ", xu: "13.000 Xu", note: "Tặng 3.000 Xu", badge: "Thưởng +30% VIP" },
     ];
     const route = "/wallet/topup";
     const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
@@ -20649,18 +20775,18 @@
         <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="position:absolute; top:12px; right:12px;">
         ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:#00d26a; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
         <strong style="font-size:18px; color:var(--portal-text-primary, #fff);">${safeText(pkg.label)}</strong>
-        <span style="font-size:20px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
+        <span style="font-size:22px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
         <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px;">${safeText(pkg.note)}</small>
       </label>
     `).join("");
 
     return `
-      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+      <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe;">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">⚡ Cổng nạp tự động PayOS</span>
-            <h2 class="portal-card-title">Nạp Xu tự động (Quét mã VietQR 24/7)</h2>
-            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Bấm nút nạp để chuyển trực tiếp sang cổng thanh toán quét mã QR tự động.</p>
+            <span class="portal-section-kicker">⚡ Cổng nạp tự động VietQR 24/7</span>
+            <h2 class="portal-card-title">Nạp Xu Tự Động Trực Tuyến Qua PayOS</h2>
+            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Chọn mệnh giá nạp và nhấn nút để mở cổng thanh toán quét mã VietQR tự động khớp tiền trong <strong>5-30 giây</strong>.</p>
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
@@ -20669,9 +20795,14 @@
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
-            <button class="portal-button portal-button--primary" type="submit" style="font-size:15px; font-weight:700; padding:12px 24px;">🚀 Nạp ngay (Mở cổng PayOS)</button>
+            <button class="portal-button portal-button--primary" type="submit" style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px;">🚀 Nạp ngay (Mở cổng PayOS)</button>
           </div>
         </form>
+        ${renderPaymentFlow(context)}
+        <details class="portal-wallet-secondary" style="margin-top:20px;">
+          <summary>Tra cứu trạng thái đơn hàng PayOS</summary>
+          ${renderPaymentLookup(context)}
+        </details>
       </section>
     `;
   }
@@ -20756,7 +20887,7 @@
     `;
 
     const topupFlow = topup
-      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}${renderManualTopupGuide(context)}<details class="portal-wallet-secondary"><summary>Tra cứu trạng thái đơn hàng PayOS</summary>${renderPaymentLookup(context)}</details>`
+      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
       : overviewCard;
 
     const historyCard = `
@@ -32319,6 +32450,37 @@
           modal.querySelectorAll("[data-portal-install-tab]").forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-portal-install-tab") === tab));
           modal.querySelectorAll("[data-portal-install-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.getAttribute("data-portal-install-panel") === tab));
         }
+        return;
+      }
+      const topupLaneBtn = event.target.closest("[data-portal-topup-lane]");
+      if (topupLaneBtn) {
+        const targetLane = topupLaneBtn.getAttribute("data-portal-topup-lane");
+        const pageContainer = event.target.closest(".portal-wallet-page, .portal-page") || document;
+        pageContainer.querySelectorAll("[data-portal-topup-lane]").forEach((btn) => {
+          const active = btn.getAttribute("data-portal-topup-lane") === targetLane;
+          btn.classList.toggle("is-active", active);
+          btn.classList.toggle("portal-button--primary", active);
+          btn.classList.toggle("portal-button--quiet", !active);
+        });
+        pageContainer.querySelectorAll("[data-portal-topup-pane]").forEach((pane) => {
+          const active = pane.getAttribute("data-portal-topup-pane") === targetLane;
+          pane.style.display = active ? "block" : "none";
+        });
+        return;
+      }
+      const manualTabBtn = event.target.closest("[data-portal-manual-tab]");
+      if (manualTabBtn) {
+        const targetTab = manualTabBtn.getAttribute("data-portal-manual-tab");
+        const card = event.target.closest(".portal-manual-topup-card") || document;
+        card.querySelectorAll("[data-portal-manual-tab]").forEach((btn) => {
+          const active = btn.getAttribute("data-portal-manual-tab") === targetTab;
+          btn.classList.toggle("is-active", active);
+          btn.classList.toggle("portal-button--quiet", !active);
+        });
+        card.querySelectorAll("[data-portal-manual-pane]").forEach((pane) => {
+          const active = pane.getAttribute("data-portal-manual-pane") === targetTab;
+          pane.style.display = active ? "grid" : "none";
+        });
         return;
       }
       if (event.target.closest('[data-portal-action="pwa-try-prompt"]')) {
