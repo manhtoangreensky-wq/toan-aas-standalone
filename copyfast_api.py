@@ -4108,35 +4108,19 @@ async def packages(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/payments/options")
 async def payment_options(account: dict = Depends(require_account)):
-    """Publish safe payment-entry metadata without creating a payment.
-
-    This endpoint is deliberately local/read-only.  It makes no PayOS call,
-    does not read a wallet ledger and does not duplicate the bot's webhook.
-    """
+    """Publish payment-entry metadata for the signed account."""
     _linked(account)
     topup_packages = _payment_topup_packages()
-    topup_catalog_available = bool(topup_packages)
-    # Do not advertise a Web payment request unless the same dedicated top-up
-    # catalog that protects POST /payments/create is available. An enabled
-    # flag alone cannot turn service packages into payment denominations.
-    payos_available = bool(
-        _flags()["payment_enabled"] and bridge_configured() and topup_catalog_available
-    )
+    topup_catalog_available = _payment_topup_catalog_available()
+    payos_available = bool(_flags()["payment_enabled"] and bridge_configured() and topup_catalog_available)
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
         True,
-        "Các lựa chọn thanh toán luôn do bot canonical xác minh.",
+        "Các lựa chọn nạp Xu và thanh toán tự động qua PayOS hoặc chuyển khoản.",
         status_name="read_only",
         data={
             "payos": {
-                # This only confirms that Web may send a signed request to the
-                # bridge *and* render a validated dedicated top-up SKU. The
-                # bot remains the only authority that may return a checkout
-                # URL, so it is intentionally not called `available`.
                 "request_enabled": payos_available,
-                # The local P0 bridge has no read-only top-up denomination
-                # catalog yet. Do not present the unrelated service-package
-                # catalog as Xu top-up choices in the browser.
                 "topup_catalog_available": topup_catalog_available,
                 "topup_packages": topup_packages,
                 "telegram_url": bot_chat_url,
@@ -4149,15 +4133,8 @@ async def payment_options(account: dict = Depends(require_account)):
                 "telegram_url": bot_chat_url,
                 "command": "/thucong",
                 "receipt_channel": "telegram_bot",
-                # The frozen P0 bridge can read owner-scoped PayOS orders,
-                # but intentionally has no sanitized pending-deposit history
-                # adapter. Do not imply that a browser can look up a manual
-                # bill/TXID or admin-review request.
                 "payment_lookup_available": False,
                 "wallet_history_signal_available": True,
-                # Manual receipt history remains a user-owned Bot view. These
-                # presentation-only fields prevent a future Web page from
-                # mistaking the wallet ledger for a second receipt system.
                 "history_in_web": False,
                 "history_channel": "telegram_bot",
                 "history_command": "/thucong",
