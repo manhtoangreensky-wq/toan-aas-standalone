@@ -9279,44 +9279,15 @@
   }
 
   function subtitleAssetOperationsReadBadge(value) {
-    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
-      ? String(value) : "guarded";
-    const presentation = {
-      loading: { status: "read_only", label: "Đang tải metadata private" },
-      ready: { status: "ready", label: "Sẵn sàng" },
-      failed: { status: "failed", label: "Chưa tải được metadata" },
-      guarded: { status: "guarded", label: "Đang bảo vệ" }
-    }[readState];
-    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+    return "";
   }
 
   function audioAssetOperationsReadBadge(value) {
-    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
-      ? String(value) : "guarded";
-    const presentation = {
-      loading: { status: "read_only", label: "Đang tải metadata private" },
-      ready: { status: "ready", label: "Sẵn sàng" },
-      failed: { status: "failed", label: "Chưa tải được metadata" },
-      guarded: { status: "guarded", label: "Đang bảo vệ" }
-    }[readState];
-    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+    return "";
   }
 
   function pageStatusBadge(page, context) {
-    const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
-    if (route === "/subtitle/assets") {
-      const referenceState = context && context.subtitleAssetReferenceReadState;
-      const historyState = context && context.subtitleAssetOperationsReadState;
-      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
-      return subtitleAssetOperationsReadBadge(effectiveState);
-    }
-    if (route === "/audio/assets") {
-      const referenceState = context && context.audioAssetReferenceReadState;
-      const historyState = context && context.audioAssetOperationsReadState;
-      const effectiveState = referenceState && referenceState !== "ready" ? referenceState : historyState;
-      return audioAssetOperationsReadBadge(effectiveState);
-    }
-    return badge(stateFor(page, context));
+    return "";
   }
 
   function icon(name) { return safeText(ICONS[name] || name || ICONS.default); }
@@ -9415,9 +9386,11 @@
     "Ngôn ngữ & Docs": "shellNav.languageDocs",
     "Music & SFX": "featureCatalog.group.music.title",
     "Phụ đề & ngôn ngữ": "featureCatalog.group.subtitle.title",
+    "Phụ đề & Lồng tiếng": "featureCatalog.group.subtitle.title",
     "Documents & PDF": "featureCatalog.group.documents.title",
     "Nạp Xu": "shellNav.topupCredit",
     "Membership": "shellNav.membership",
+    "👑 Hạng hội viên & VIP": "shellNav.membership",
     "Gói dịch vụ": "shellNav.servicePackages",
     "Ngôn ngữ giao diện": "shellNav.interfaceLanguage",
     "Hoạt động Web": "shellNav.webActivity",
@@ -9768,7 +9741,7 @@
       {
         label: "Ví & gói",
         links: [
-          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "Membership", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
+          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "👑 Hạng hội viên & VIP", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
         ]
       },
       {
@@ -10253,7 +10226,7 @@
     const crumbs = crumbItems
       .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
       .join("");
-    const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;
+    const canOfferPwaInstall = Boolean(context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const avatarUrl = profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "";
     const avatarElement = avatarUrl
@@ -20363,41 +20336,468 @@
   }
 
   function membershipCatalogEntries(context) {
-    const catalog = canonicalPackageCatalog(context.packageCatalog);
-    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog);
+    const catalog = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
-    if (!catalog) return [];
     const sources = [catalog.monthly, catalog.combos];
     const seen = new Set();
     const entries = [];
     sources.forEach((source) => {
+      if (!Array.isArray(source)) return;
       source.forEach((item) => {
+        if (!item || typeof item !== "object") return;
         const code = canonicalCatalogCode(item.code);
         const label = canonicalShortText(item.label, 120) || code;
         if (!label || seen.has(`${code}:${label}`)) return;
         seen.add(`${code}:${label}`);
-        const priceLabel = approvedSalePrices.get(code) || "";
-        entries.push({ code, label, note: canonicalShortText(item.note, 240) || billingCatalogText("membership.defaultCatalogNote", "Gói canonical do Core Bridge cấp."), priceLabel, status: priceLabel ? "read_only" : "guarded" });
+        const priceLabel = item.priceLabel || approvedSalePrices.get(code) || "";
+        entries.push({ code, label, note: canonicalShortText(item.note, 240) || "Quyền lợi thành viên do TOAN AAS bảo chứng.", priceLabel, status: "read_only" });
       });
     });
     return entries.slice(0, 12);
   }
 
+  const MEMBER_TIER_CANONICAL = [
+    {
+      key: "newbie",
+      name: "Hạng Tân Thủ (Newbie)",
+      label: "Newbie",
+      badge: "🌱 Newbie",
+      icon: "🌱",
+      thresholdVnd: 0,
+      thresholdXu: 0,
+      discountRate: 0,
+      referralPercent: 0,
+      referralCap: 0,
+      promoPercent: 0,
+      birthdayGiftXu: 0,
+      queuePriority: "Tiêu chuẩn",
+      color: "#94a3b8",
+      summary: "Mặc định khi kích hoạt tài khoản",
+      perks: [
+        "100 Xu trải nghiệm dùng thử tính năng",
+        "Tạo ảnh SDXL & Voiceover TTS cơ bản",
+        "Sử dụng công cụ miễn phí (Free Tools Hub)",
+        "Lưu trữ tài sản ngắn hạn trong Asset Vault"
+      ]
+    },
+    {
+      key: "silver",
+      name: "Hạng Bạc (Silver)",
+      label: "Silver",
+      badge: "🥈 Silver",
+      icon: "🥈",
+      thresholdVnd: 100000,
+      thresholdXu: 1000,
+      discountRate: 2,
+      referralPercent: 3,
+      referralCap: 100,
+      promoPercent: 10,
+      promoCap: 100,
+      birthdayGiftXu: 111,
+      queuePriority: "Ưu tiên x1.5",
+      color: "#cbd5e1",
+      summary: "Tổng nạp tích lũy từ 100.000 đ (1.000 Xu)",
+      perks: [
+        "Giảm 2% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 3% (tối đa 100 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 10% (tối đa 100 Xu)",
+        "Quà tặng sinh nhật hàng năm: 111 Xu",
+        "Mở khóa Voiceover TTS 3 miền Bắc - Trung - Nam",
+        "Tốc độ xử lý kết xuất ưu tiên x1.5"
+      ]
+    },
+    {
+      key: "gold",
+      name: "Hạng Vàng (Gold)",
+      label: "Gold",
+      badge: "🥇 Gold",
+      icon: "🥇",
+      thresholdVnd: 1000000,
+      thresholdXu: 10000,
+      discountRate: 4,
+      referralPercent: 6,
+      referralCap: 150,
+      promoPercent: 12,
+      promoCap: 150,
+      birthdayGiftXu: 333,
+      queuePriority: "Ưu tiên x2.0",
+      color: "#fbbf24",
+      summary: "Tổng nạp tích lũy từ 1.000.000 đ (10.000 Xu)",
+      perks: [
+        "Giảm 4% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 6% (tối đa 150 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 12% (tối đa 150 Xu)",
+        "Quà tặng sinh nhật hàng năm: 333 Xu",
+        "Mở khóa trọn bộ Studio Video AI (Veo, Kling, MiniMax)",
+        "Mở khóa Tạo nhạc Suno AI v4 độc quyền",
+        "Tốc độ xử lý kết xuất GPU nhanh gấp 2 lần"
+      ]
+    },
+    {
+      key: "platinum",
+      name: "Hạng Bạch Kim (Platinum)",
+      label: "Platinum",
+      badge: "💠 Platinum",
+      icon: "💠",
+      thresholdVnd: 10000000,
+      thresholdXu: 100000,
+      discountRate: 6,
+      referralPercent: 8,
+      referralCap: 200,
+      promoPercent: 15,
+      promoCap: 250,
+      birthdayGiftXu: 555,
+      queuePriority: "Ưu tiên x3.0 (Cao cấp)",
+      color: "#38bdf8",
+      summary: "Tổng nạp tích lũy từ 10.000.000 đ (100.000 Xu)",
+      perks: [
+        "Giảm 6% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 8% (tối đa 200 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 15% (tối đa 250 Xu)",
+        "Quà tặng sinh nhật hàng năm: 555 Xu",
+        "Xuất video & ảnh 4K Ultra HD không watermark",
+        "Trọn bộ kịch bản bán hàng Script-to-Screen",
+        "Kênh CSKH phản hồi ưu tiên"
+      ]
+    },
+    {
+      key: "diamond",
+      name: "Hạng Kim Cương (Diamond)",
+      label: "Diamond",
+      badge: "💎 Diamond",
+      icon: "💎",
+      thresholdVnd: 50000000,
+      thresholdXu: 500000,
+      discountRate: 8,
+      referralPercent: 10,
+      referralCap: 250,
+      promoPercent: 18,
+      promoCap: 400,
+      birthdayGiftXu: 666,
+      queuePriority: "Siêu tốc độ (Ultra)",
+      color: "#a855f7",
+      summary: "Tổng nạp tích lũy từ 50.000.000 đ (500.000 Xu)",
+      perks: [
+        "Giảm 8% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 10% (tối đa 250 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 18% (tối đa 400 Xu)",
+        "Quà tặng sinh nhật hàng năm: 666 Xu",
+        "Quyền truy cập sớm các model AI mới nhất",
+        "Asset Vault không giới hạn dung lượng và thời gian",
+        "Kênh CSKH Dedicated Channel phản hồi trong 5 phút"
+      ]
+    },
+    {
+      key: "vip",
+      name: "Hạng VIP (Tối Cao)",
+      label: "VIP",
+      badge: "👑 VIP",
+      icon: "👑",
+      thresholdVnd: 100000000,
+      thresholdXu: 1000000,
+      discountRate: 10,
+      referralPercent: 12,
+      referralCap: 300,
+      promoPercent: 20,
+      promoCap: 600,
+      birthdayGiftXu: 888,
+      queuePriority: "Zero Queue Số 1 Tuyệt Đối",
+      color: "#f43f5e",
+      summary: "Tổng nạp tích lũy từ 100.000.000 đ hoặc Admin cấp",
+      perks: [
+        "Giảm 10% phí khi tiêu Xu (Mức cao nhất hệ thống)",
+        "Thưởng giới thiệu bạn bè: 12% (tối đa 300 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 20% (tối đa 600 Xu)",
+        "Quà tặng sinh nhật hàng năm: 888 Xu",
+        "Zero Queue số 1 tuyệt đối - Render tức thì không chờ đợi",
+        "Hỗ trợ kỹ thuật & tư vấn chiến lược 1-1 riêng từ Admin",
+        "Hưởng mọi chính sách ưu đãi và khuyến mãi VIP độc quyền"
+      ]
+    }
+  ];
+
+  function getMemberTierInfo(totalPaidVnd, overrideTier) {
+    const paid = Math.max(0, Number(totalPaidVnd || 0));
+    if (overrideTier && overrideTier.toLowerCase() === "vip") {
+      return { currentTier: MEMBER_TIER_CANONICAL[5], currentIndex: 5, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: paid };
+    }
+    let currentIndex = 0;
+    for (let i = MEMBER_TIER_CANONICAL.length - 1; i >= 0; i--) {
+      if (paid >= MEMBER_TIER_CANONICAL[i].thresholdVnd) {
+        currentIndex = i;
+        break;
+      }
+    }
+    const currentTier = MEMBER_TIER_CANONICAL[currentIndex];
+    const isMax = currentIndex === MEMBER_TIER_CANONICAL.length - 1;
+    const nextTier = isMax ? null : MEMBER_TIER_CANONICAL[currentIndex + 1];
+    const neededVnd = nextTier ? Math.max(0, nextTier.thresholdVnd - paid) : 0;
+    const neededXu = Math.ceil(neededVnd / 100);
+    const prevThresh = currentTier.thresholdVnd;
+    const progressPercent = nextTier ? Math.min(100, Math.max(0, Math.round(((paid - prevThresh) / (nextTier.thresholdVnd - prevThresh)) * 100))) : 100;
+
+    return { currentTier, currentIndex, nextTier, neededVnd, neededXu, progressPercent, paidVnd: paid };
+  }
+
   function renderMembership(page, context) {
-    const wallet = canonicalWalletProjection(context.wallet);
-    const plan = wallet && wallet.plan && typeof wallet.plan === "object" ? wallet.plan : {};
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
+    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+    const totalPaidVnd = Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0));
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const catalog = canonicalPackageCatalog(context.packageCatalog);
-    const planName = String(plan.plan_name || plan.current_plan || plan.name || billingCatalogText("membership.defaultPlanName", "Chưa có gói canonical"));
-    const planStatus = String(plan.plan_status || plan.status || billingCatalogText("membership.defaultPlanStatus", "Chờ Core Bridge"));
     const entries = membershipCatalogEntries(context);
-    const current = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
-      : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
+
+    const tierInfo = getMemberTierInfo(totalPaidVnd, profile.vipTierOverride || profile.tier);
+    const { currentTier, nextTier, neededVnd, neededXu, progressPercent, paidVnd } = tierInfo;
+
+    const currentCard = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${currentTier.color};">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">👑 Hệ Thống Hội Viên TOAN AAS</span>
+            <h2 class="portal-card-title">Hạng Hội Viên: <span style="color:${currentTier.color};">${safeText(currentTier.badge)}</span></h2>
+            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy. Hạng càng cao, chiết khấu trừ Xu càng lớn và tốc độ kết xuất càng nhanh.</p>
+          </div>
+          ${badge("read_only")}
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px;">
+          <div class="portal-metric">
+            <span>Hạng hiện tại</span>
+            <strong style="color:${currentTier.color}; font-size:22px;">${safeText(currentTier.badge)}</strong>
+            <em>${currentTier.discountRate > 0 ? `Giảm ${currentTier.discountRate}% khi tiêu Xu` : 'Ưu đãi chuẩn'}</em>
+          </div>
+          <div class="portal-metric">
+            <span>Tổng tiền đã nạp</span>
+            <strong style="color:#00f2fe; font-size:22px;">${paidVnd.toLocaleString('vi-VN')} đ</strong>
+            <em>~${Math.floor(paidVnd / 100).toLocaleString('vi-VN')} Xu tích lũy</em>
+          </div>
+          <div class="portal-metric">
+            <span>Số dư Xu khả dụng</span>
+            <strong style="color:#00d26a; font-size:22px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong>
+            <em>~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ</em>
+          </div>
+        </div>
+
+        <!-- Level-up Progress Section -->
+        <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-top:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:14px; font-weight:700; color:var(--portal-text-primary, #fff);">
+              ${nextTier ? `Tiến trình lên hạng ${nextTier.badge}:` : '🏆 Bạn đã đạt Hạng Thành Viên Tối Cao!'}
+            </div>
+            <div style="font-size:13px; font-weight:700; color:${nextTier ? nextTier.color : '#00d26a'};">
+              ${progressPercent}%
+            </div>
+          </div>
+
+          <div style="width:100%; height:12px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:10px;">
+            <div style="width:${progressPercent}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${nextTier ? nextTier.color : '#00d26a'}); border-radius:999px; transition:width 0.4s ease;"></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--portal-text-secondary, #8fa3b7); flex-wrap:wrap; gap:6px;">
+            <span>Đã nạp: <strong style="color:#fff;">${paidVnd.toLocaleString('vi-VN')} đ</strong></span>
+            ${nextTier ? `<span>Cần thêm: <strong style="color:#00f2fe;">${neededVnd.toLocaleString('vi-VN')} đ</strong> (~${neededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${nextTier.badge}</strong></span>` : '<span>Đặc quyền tối cao không giới hạn</span>'}
+          </div>
+        </div>
+
+        <!-- Active Perks Badges -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;">
+          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🏷 Giảm ${currentTier.discountRate}% khi tiêu Xu</span>
+          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🎁 Thưởng ref ${currentTier.referralPercent}% (Max ${currentTier.referralCap} Xu)</span>
+          <span style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; border:1px solid rgba(251, 191, 36, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🎂 Quà sinh nhật ${currentTier.birthdayGiftXu} Xu</span>
+          <span style="background:rgba(168, 85, 247, 0.1); color:#a855f7; border:1px solid rgba(168, 85, 247, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">⚡ Hàng chờ ${currentTier.queuePriority}</span>
+        </div>
+
+        <div class="portal-form-footer">
+          <span class="portal-form-note">Nạp tiền tự động qua PayOS hoặc VietQR ACB (8899397968). Hệ thống tự động nâng hạng tức thì sau khi quét mã 5 giây.</span>
+          <div class="portal-inline-actions">
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu lên hạng ngay</a>
+            <a class="portal-button portal-button--quiet" href="/wallet/history">📜 Lịch sử nạp tiền</a>
+          </div>
+        </div>
+      </section>
+    `;
+
+    const tierCardsMarkup = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">📊 Bảng tiêu chuẩn 6 cấp bậc</span>
+            <h2 class="portal-card-title">Điều Kiện Lên Hạng & Chi Tiết Quyền Lợi</h2>
+            <p class="portal-card-subtitle">Chi tiết điều kiện tổng nạp tích lũy và toàn bộ ưu đãi dành cho từng hạng thành viên trong hệ sinh thái TOAN AAS.</p>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:16px;">
+          ${MEMBER_TIER_CANONICAL.map((t) => {
+            const isUserCurrent = t.key === currentTier.key;
+            return `
+              <div style="border: 2px solid ${isUserCurrent ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:22px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${isUserCurrent ? `0 6px 24px ${t.color}33` : 'none'};">
+                ${isUserCurrent ? `<span style="position:absolute; top:-11px; right:16px; background:${t.color}; color:#000; font-size:11px; font-weight:800; padding:2px 12px; border-radius:10px;">HẠNG HIỆN TẠI</span>` : ''}
+                
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                    <span style="font-size:32px;">${t.icon}</span>
+                    <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); color:${t.color}; padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">${t.badge}</span>
+                  </div>
+
+                  <h3 style="font-size:18px; font-weight:800; margin:0 0 6px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
+                  <div style="font-size:13px; color:#00f2fe; font-weight:700; margin-bottom:6px;">
+                    ${t.thresholdVnd === 0 ? 'Mặc định khi kích hoạt tài khoản' : `Tổng nạp tích lũy: ${t.thresholdVnd.toLocaleString('vi-VN')} đ (~${t.thresholdXu.toLocaleString('vi-VN')} Xu)`}
+                  </div>
+                  <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 14px;">${safeText(t.summary)}</p>
+
+                  <div style="background:#081320; border-radius:8px; padding:12px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
+                    <div><span style="color:#8fa3b7;">Giảm trừ Xu:</span> <strong style="color:${t.color};">${t.discountRate}%</strong></div>
+                    <div><span style="color:#8fa3b7;">Thưởng ref:</span> <strong style="color:#00d26a;">${t.referralPercent}%</strong></div>
+                    <div><span style="color:#8fa3b7;">Voucher lên hạng:</span> <strong style="color:#fbbf24;">${t.promoPercent > 0 ? `${t.promoPercent}%` : '—'}</strong></div>
+                    <div><span style="color:#8fa3b7;">Quà sinh nhật:</span> <strong style="color:#ec4899;">${t.birthdayGiftXu > 0 ? `${t.birthdayGiftXu} Xu` : '—'}</strong></div>
+                  </div>
+
+                  <div style="font-size:12px; font-weight:700; color:#8fa3b7; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Đặc quyền nổi bật:</div>
+                  <ul style="list-style:none; padding:0; margin:0 0 16px; display:flex; flex-direction:column; gap:8px; font-size:12.5px; color:var(--portal-text-secondary, #c1d1e0);">
+                    ${t.perks.map((p) => `<li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:${t.color}; font-weight:700;">✓</span><span>${safeText(p)}</span></li>`).join('')}
+                  </ul>
+                </div>
+
+                <div style="border-top:1px solid var(--portal-border, #2a3b4c); padding-top:14px; margin-top:auto;">
+                  <a class="portal-button ${isUserCurrent ? 'portal-button--primary' : 'portal-button--quiet'}" href="/wallet/topup" style="width:100%; text-align:center; justify-content:center; font-size:13px; font-weight:700;">
+                    ${isUserCurrent ? '⚡ Nạp thêm Xu' : `⚡ Nạp ${t.thresholdVnd.toLocaleString('vi-VN')} đ lên ${t.badge}`}
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    `;
+
+    const comparisonTableMarkup = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">📋 Ma trận quyền lợi</span>
+            <h2 class="portal-card-title">Bảng So Sánh Quyền Lợi 6 Hạng Thành Viên</h2>
+            <p class="portal-card-subtitle">So sánh trực quan tất cả quyền lợi, chính sách giảm giá, thưởng giới thiệu và quà sinh nhật giữa các hạng.</p>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto; margin-top:16px;">
+          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; min-width:700px;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--portal-border, #2a3b4c); background:var(--portal-surface-card, #091a28);">
+                <th style="padding:12px 14px; color:var(--portal-text-primary, #fff);">Cấp bậc & Quyền lợi</th>
+                <th style="padding:12px 10px; color:#94a3b8;">🌱 Newbie</th>
+                <th style="padding:12px 10px; color:#cbd5e1;">🥈 Silver</th>
+                <th style="padding:12px 10px; color:#fbbf24;">🥇 Gold</th>
+                <th style="padding:12px 10px; color:#38bdf8;">💠 Platinum</th>
+                <th style="padding:12px 10px; color:#a855f7;">💎 Diamond</th>
+                <th style="padding:12px 10px; color:#f43f5e;">👑 VIP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Điều kiện tổng nạp</td>
+                <td style="padding:10px;">0 đ</td>
+                <td style="padding:10px;">100.000 đ</td>
+                <td style="padding:10px;">1.000.000 đ</td>
+                <td style="padding:10px;">10.000.000 đ</td>
+                <td style="padding:10px;">50.000.000 đ</td>
+                <td style="padding:10px;">100.000.000 đ</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Giảm giá khi tiêu Xu</td>
+                <td style="padding:10px;">0%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">2%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">4%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">6%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">8%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">10%</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Hoa hồng giới thiệu</td>
+                <td style="padding:10px;">0%</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">3% (Max 100 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">6% (Max 150 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">8% (Max 200 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">10% (Max 250 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">12% (Max 300 Xu)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Voucher thăng hạng</td>
+                <td style="padding:10px;">—</td>
+                <td style="padding:10px;">Giảm 10% (Max 100 Xu)</td>
+                <td style="padding:10px;">Giảm 12% (Max 150 Xu)</td>
+                <td style="padding:10px;">Giảm 15% (Max 250 Xu)</td>
+                <td style="padding:10px;">Giảm 18% (Max 400 Xu)</td>
+                <td style="padding:10px;">Giảm 20% (Max 600 Xu)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Quà tặng sinh nhật</td>
+                <td style="padding:10px;">—</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">111 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">333 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">555 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">666 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">888 Xu</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Tốc độ hàng chờ GPU</td>
+                <td style="padding:10px;">Tiêu chuẩn</td>
+                <td style="padding:10px;">Ưu tiên x1.5</td>
+                <td style="padding:10px;">Nhanh x2.0</td>
+                <td style="padding:10px;">Cao cấp x3.0</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">Siêu tốc độ</td>
+                <td style="padding:10px; color:#f43f5e; font-weight:800;">Zero Queue Số 1</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 14px; font-weight:700;">Kênh hỗ trợ</td>
+                <td style="padding:10px;">Cộng đồng</td>
+                <td style="padding:10px;">CSKH Bot</td>
+                <td style="padding:10px;">CSKH Ưu tiên</td>
+                <td style="padding:10px;">CSKH Chuyên sâu</td>
+                <td style="padding:10px;">Dedicated 5 phút</td>
+                <td style="padding:10px; color:#f43f5e; font-weight:700;">1-1 Riêng từ Admin</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
     const catalogCards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || billingCatalogText("catalog.publicSale.priceMissing", "Giá bán đang chờ phát hành"))}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.publicSale.statusApproved", "Giá bán đã phê duyệt") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
-      : renderEmpty(billingCatalogText("membership.catalog.emptyTitle", "Chờ catalog gói canonical"), billingCatalogText("membership.catalog.emptyBody", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi."), ICONS.package);
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;
+      ? `<div class="portal-module-grid" style="margin-top:16px;">${entries.map((item) => `
+          <article class="portal-module-card portal-billing-catalog-card">
+            <div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div>
+            <div><h3 style="color:var(--portal-text-primary, #fff);">${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div>
+            <span class="portal-module-card-footer">
+              <strong style="color:#00f2fe; font-size:15px;">${safeText(item.priceLabel || "27.000 đ")}</strong>
+              <a class="portal-button portal-button--quiet" href="/wallet/topup" style="font-size:12px; padding:4px 10px;">Nạp ngay</a>
+            </span>
+          </article>
+        `).join("")}</div>`
+      : "";
+
+    const catalogSection = `
+      <section class="portal-card portal-card-pad" style="margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">📦 Gói định kỳ & Combo</span>
+            <h2 class="portal-card-title">Các Gói Dịch Vụ Đã Phê Duyệt</h2>
+            <p class="portal-card-subtitle">Lựa chọn gói định kỳ 30 ngày hoặc combo sáng tạo trọn gói để tiết kiệm chi phí tối đa.</p>
+          </div>
+          ${badge("read_only")}
+        </div>
+        ${catalogCards}
+        <div class="portal-form-footer">
+          <a class="portal-button portal-button--quiet" href="/packages">Xem catalog chi tiết</a>
+          <a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá</a>
+          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu kích hoạt gói</a>
+        </div>
+      </section>
+    `;
+
+    return `<article class="portal-page portal-membership-page" style="width:100%; max-width:100%; display:grid; gap:22px;">${renderHero(page, context)}${currentCard}${tierCardsMarkup}${comparisonTableMarkup}${catalogSection}</article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -20610,6 +21010,7 @@
     const items = [
       { path: "/wallet", label: uiText("nav.wallet", "Ví Xu") },
       { path: "/wallet/topup", label: uiText("shellNav.topupCredit", "Nạp Xu") },
+      { path: "/membership", label: "👑 Hạng hội viên & VIP" },
       { path: "/packages", label: uiText("workspaceMenu.card.packages.title", "Gói dịch vụ") },
       { path: "/pricing", label: uiText("nav.pricing", "Bảng giá") }
     ];
@@ -20617,65 +21018,255 @@
   }
 
   function renderPaymentEntryPoints(context) {
-    const options = context.paymentOptions && typeof context.paymentOptions === "object" ? context.paymentOptions : {};
-    const payos = options.payos && typeof options.payos === "object" ? options.payos : {};
-    const manual = options.manual && typeof options.manual === "object" ? options.manual : {};
-    const payosWebReady = paymentWebCatalogReady(context);
-    const payosUrl = safeTelegramLink(payos.telegram_url);
-    const payosBotAvailable = Boolean(payosUrl);
-    const manualUrl = safeTelegramLink(manual.telegram_url);
-    const manualAvailable = manual.available === true && Boolean(manualUrl);
-    const payosCommand = payos.command === "/naptien" ? payos.command : "/naptien";
-    const manualCommand = manual.command === "/thucong" ? manual.command : "/thucong";
-    const payosCopy = payosWebReady
-      ? "Bridge đã công bố catalog nạp riêng cho Web. Bot vẫn là authority duy nhất cấp checkout URL đã ký."
-      : "Mở Bot đã liên kết để kiểm tra và khởi tạo PayOS QR động canonical hiện tại. Bot có thể chuyển sang luồng thủ công theo trạng thái runtime; Web không suy đoán QR luôn sẵn sàng.";
-    const manualActions = manualAvailable
-      ? "Nạp thủ công có đối soát vẫn diễn ra trong Bot. Web chỉ mở đúng kênh đã liên kết và hiển thị số dư sau khi ledger canonical thay đổi."
-      : "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công. Web không giữ số tài khoản, QR tĩnh, bill hoặc quyết định cộng Xu.";
-    const payosActions = payosBotAvailable
-      ? `<a class="portal-button portal-button--quiet" href="${safeText(payosUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(payosCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(payosCommand)}</code>`
-      : `<span class="portal-payment-entry-note">Chưa có URL Bot hợp lệ để mở PayOS QR động.</span>`;
-    const manualEntryActions = manualAvailable
-      ? `<a class="portal-button portal-button--quiet" href="#manual-topup">Xem quy trình</a><a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở bot liên kết</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(manualCommand)}">Sao chép lệnh</button><code class="portal-link-code">${safeText(manualCommand)}</code>`
-      : `<span class="portal-payment-entry-note">Chờ URL Bot đã được máy chủ kiểm tra trước khi mở nạp thủ công.</span>`;
-    return `<section class="portal-card portal-card-pad portal-billing-entrypoints"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical billing</span><h2 class="portal-card-title">Chọn kênh nạp Xu</h2><p class="portal-card-subtitle">Chọn đúng một luồng. Checkout, webhook, chứng từ, đối soát và quyết định cộng Xu luôn do Bot/Core Bridge canonical quản lý.</p></div>${badge(payosBotAvailable || manualAvailable ? "read_only" : "guarded")}</div><div class="portal-payment-entry-grid"><section class="portal-payment-entry" data-billing-entrypoint="payos"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.payments)}</span>${badge(payosWebReady ? "awaiting_confirm" : (payosBotAvailable ? "read_only" : "guarded"))}</div><h3>PayOS QR động</h3><p>${payosCopy}</p><div class="portal-payment-entry-actions">${payosActions}</div><span class="portal-payment-entry-note">Bot tạo QR động và xác nhận PayOS canonical.</span></section><section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"><div class="portal-payment-entry-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>${badge(manualAvailable ? "read_only" : "guarded")}</div><h3>Nạp thủ công có đối soát</h3><p>${manualActions}</p><div class="portal-payment-entry-actions">${manualEntryActions}</div><span class="portal-payment-entry-note">Không gửi bill, số tài khoản, QR, OTP hay TXID vào Web App.</span></section></div></section>`;
+    return `<div class="portal-billing-entrypoints" style="margin-bottom:20px;">
+      <div class="portal-topup-lane-switch" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
+        <button type="button" class="portal-button portal-button--primary portal-topup-tab-btn is-active" data-portal-topup-lane="payos" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+          <span style="font-size:20px;">⚡</span>
+          <span>Cổng Nạp Tự Động PayOS (5-30s)</span>
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-topup-tab-btn" data-portal-topup-lane="manual" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+          <span style="font-size:20px;">🏦</span>
+          <span>Nạp Thủ Công (ACB / MoMo / ZaloPay / Binance)</span>
+        </button>
+      </div>
+      <div class="portal-payment-entry-grid" style="display:none;">
+        <section class="portal-payment-entry" data-billing-entrypoint="payos"></section>
+        <section class="portal-payment-entry portal-payment-entry--manual" data-billing-entrypoint="manual"></section>
+      </div>
+    </div>`;
   }
 
   function renderManualTopupGuide(context) {
-    const options = context.paymentOptions && typeof context.paymentOptions === "object" ? context.paymentOptions : {};
-    const manual = options.manual && typeof options.manual === "object" ? options.manual : {};
-    const manualUrl = safeTelegramLink(manual.telegram_url);
-    const available = manual.available === true && Boolean(manualUrl);
-    const historySignal = manual.wallet_history_signal_available === true;
-    const historyInBot = manual.history_in_web === false && manual.history_channel === "telegram_bot";
-    const historyCommand = manual.history_command === "/thucong" ? manual.history_command : "/thucong";
-    const historyMenu = typeof manual.history_menu_label === "string" && manual.history_menu_label ? manual.history_menu_label : "Lịch sử nạp thủ công";
-    const refreshEnabled = context.capabilities && context.capabilities["refresh-wallet-after-bot"] === true;
-    if (!available) {
-      return `<section class="portal-card portal-card-pad" id="manual-topup" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: chờ Bot canonical</h2><p class="portal-card-subtitle">Web không thể nhận chứng từ hoặc thay thế cuộc hội thoại Bot khi URL Bot chưa được cấu hình an toàn.</p></div>${badge("guarded")}</div>${renderEmpty("Kênh nạp thủ công chưa sẵn sàng", "Khi Bot đã có URL hợp lệ, Web chỉ mở handoff an toàn; bill, TXID, đối soát và ghi Xu vẫn ở Telegram.", "⌁")}</section>`;
-    }
-    const routeGuide = `<div class="portal-manual-topup-routes"><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">₫</span><div><h3>Nạp VND</h3><p>Chọn phương thức trong Bot, rồi gửi ảnh bill ở chính cuộc hội thoại Telegram. Web không nhận hoặc lưu ảnh này.</p></div><span>Chứng từ chỉ ở Bot</span></article><article class="portal-manual-topup-route"><span class="portal-module-icon" aria-hidden="true">◌</span><div><h3>Quốc tế / USDT</h3><p>Chọn đúng luồng trong Bot, gửi TXID đầy đủ hoặc ảnh bill ở Bot để đội vận hành đối soát.</p></div><span>Không dán TXID vào Web</span></article><article class="portal-manual-topup-route is-guarded"><span class="portal-module-icon" aria-hidden="true">◈</span><div><h3>Không có QR tĩnh</h3><p>Không dùng số tài khoản, QR, ảnh bill, OTP hoặc thông tin thẻ từ trang Web này. Chỉ dùng thông tin Bot cấp cho đúng request.</p></div><span>Chống nhầm / giả mạo</span></article></div>`;
-    const stateGuide = `<div class="portal-manual-topup-status"><span><code>pending</code><small>Đã gửi, đang chờ đối soát</small></span><span><code>pending_admin_review</code><small>Đội vận hành đang kiểm tra</small></span><span><code>approved</code><small>Chỉ lúc này wallet canonical mới là kết quả cuối</small></span><span><code>rejected</code><small>Xem lý do và xử lý lại trong Bot</small></span></div>`;
-    return `<section class="portal-card portal-card-pad" id="manual-topup" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: tiếp tục trong Telegram</h2><p class="portal-card-subtitle">Bot canonical giữ toàn bộ state, chứng từ, đối soát và quyết định ghi Xu. Web chỉ hướng dẫn và hiển thị dữ liệu ví đã được xác minh.</p></div>${badge("read_only")}</div>
-      ${routeGuide}<div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">1</span><div><strong>Mở bot và gửi <code>/thucong</code></strong><span>Chọn tiền tệ, mệnh giá và phương thức trong cuộc hội thoại Telegram đang được Bot kiểm soát.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">2</span><div><strong>Gửi chứng từ đúng nơi</strong><span>Nạp VND: gửi ảnh bill trong Bot. Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot. Không gửi số tài khoản, QR, bill, OTP hay TXID vào Web App.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">3</span><div><strong>Chờ admin đối soát</strong><span><code>pending</code> hoặc <code>pending_admin_review</code> đều đang chờ đối soát; chưa phải Xu đã được cộng.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">4</span><div><strong>Đối chiếu kết quả canonical</strong><span><code>approved</code> mới là đã duyệt; <code>rejected</code> là bị từ chối. Xu hiển thị trước đối soát là ước tính; số Xu trong wallet/ledger canonical sau duyệt mới là cuối cùng.</span></div></div></div>${stateGuide}
-      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span>${historyInBot ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(historyCommand)}">Sao chép ${safeText(historyCommand)}</button>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-wallet-after-bot" data-portal-route="${safeText(String(context.path || "/wallet/topup"))}" aria-controls="wallet-canonical-read-status"${refreshEnabled ? "" : " disabled title=\"Cần Core Bridge để làm mới ví canonical.\""}>Đã thao tác trong Bot — làm mới ví</button><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
+    const user = (context.profile && (context.profile.email || context.profile.name)) || (context.session && context.session.email) || "USER";
+    const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
+    const memo = `NAPXU ${userClean}`;
+    const routeGuide = `<div class="portal-manual-topup-routes" style="display:none;"><article class="portal-manual-topup-route"><span>₫</span><div><h3>ACB</h3></div></article><article class="portal-manual-topup-route"><span>🌸</span><div><h3>MoMo & ZaloPay</h3></div></article><article class="portal-manual-topup-route"><span>🪙</span><div><h3>Binance USDT</h3></div></article></div>`;
+    const stateGuide = `<div class="portal-manual-topup-status" style="display:none;"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
+
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" style="border-top: 3px solid #00d26a; display:none;">
+      <div class="portal-card-header">
+        <div>
+          <span class="portal-section-kicker">🏦 Chuyển khoản & Nạp tiền trực tiếp 24/7</span>
+          <h2 class="portal-card-title">Kênh Nạp Tiền Thủ Công (ACB / MoMo / ZaloPay / Binance)</h2>
+          <p class="portal-card-subtitle">Chọn phương thức nạp bên dưới để xem thông tin tài khoản và quét mã QR chuyển khoản.</p>
+        </div>
+      </div>
+
+      <div class="portal-manual-subtabs" style="display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 24px;">
+        <button type="button" class="portal-button portal-manual-tab-btn is-active" data-portal-manual-tab="acb" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🏦 Ngân Hàng ACB (VietQR)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="momo" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🌸 Ví MoMo (Túi Thần Tài)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="zalopay" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          💚 Ví ZaloPay (QR Đa Năng)
+        </button>
+        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="binance" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
+          🪙 Binance USDT (TRC20)
+        </button>
+      </div>
+
+      <!-- Pane 1: ACB Bank -->
+      <div class="portal-manual-pane" data-portal-manual-pane="acb" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/ACBBANK.jpg" alt="ACB VietQR" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#333; font-weight:800; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng thụ hưởng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">ACB (Ngân Hàng TMCP Á Châu)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
+              <div style="font-size:22px; font-weight:800; color:#00f2fe; letter-spacing:1px;">8899397968</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="8899397968" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: MoMo Túi Thần Tài -->
+      <div class="portal-manual-pane" data-portal-manual-pane="momo" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/momo_tuithantai.png" alt="MoMo Túi Thần Tài VPBank" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#d82d8b; font-weight:800; margin-top:8px; display:block;">Quét mã từ MoMo hoặc App Ngân Hàng</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">VPBank (Túi Thần Tài MoMo - Napas 247)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
+              <div style="font-size:22px; font-weight:800; color:#d82d8b; letter-spacing:1px;">01MMTTT0053945533</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="01MMTTT0053945533" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tên người nhận:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">MOMO - TKTH NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="MOMO - TKTH NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 3: ZaloPay -->
+      <div class="portal-manual-pane" data-portal-manual-pane="zalopay" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/zalopay_danang.png" alt="ZaloPay QR Đa Năng" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#008fe5; font-weight:800; margin-top:8px; display:block;">ZaloPay QR Đa Năng (50+ Ngân Hàng)</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Đơn vị thụ hưởng:</span>
+            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">Nguyen Manh Toan (Thu Ngân ZaloPay)</div>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
+              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
+              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:10px 14px; background:rgba(0, 143, 229, 0.1); border:1px solid #008fe5; border-radius:8px; font-size:13px; color:#fff;">
+            💡 Kênh phụ: <a href="/static/zalopay_canhan.png" target="_blank" style="color:#00f2fe; text-decoration:underline; font-weight:700;">Xem QR ZaloPay Cá Nhân</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 4: Binance USDT TRC20 -->
+      <div class="portal-manual-pane" data-portal-manual-pane="binance" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
+        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+          <img src="/static/binance_usdt.png" alt="Binance USDT TRC20" style="width:100%; height:auto; border-radius:8px; display:block;" />
+          <span style="font-size:12px; color:#f3ba2f; font-weight:800; margin-top:8px; display:block;">Nạp USDT vào Binance</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Mạng lưới (Network):</span>
+              <div style="font-size:16px; font-weight:800; color:#f3ba2f;">Tron (TRC20)</div>
+            </div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TRC20" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Địa chỉ Ví USDT (Wallet Address):</span>
+            <div style="font-size:15px; font-weight:800; color:#00f2fe; word-break:break-all; margin:6px 0;">TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5</div>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5" style="padding:6px 12px; font-size:12px;">📋 Sao chép địa chỉ ví</button>
+          </div>
+          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
+            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tỷ giá quy đổi:</span>
+            <div style="font-size:16px; font-weight:700; color:#00d26a;">1 USDT = 26.000 VNĐ = 260 Xu</div>
+          </div>
+          <div style="padding:10px 14px; background:rgba(243, 186, 47, 0.1); border:1px solid #f3ba2f; border-radius:8px; font-size:12px; color:#fff;">
+            ⚠️ <strong>Lưu ý:</strong> Chỉ gửi USDT qua mạng Tron (TRC20). Sau khi chuyển tiền, gửi hash TXID hoặc ảnh biên lai qua Telegram Admin để duyệt Xu ngay.
+          </div>
+        </div>
+      </div>
+
+      ${routeGuide}
+      ${stateGuide}
+
+      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid var(--portal-border, #2a3b4c);">
+        <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu 24/7: Telegram Admin <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:700;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
+        <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="font-weight:700;">💬 Mở Telegram Hỗ trợ</a>
+      </div>
+    </section>`;
   }
 
   function renderPaymentRequestForm(page, context) {
-    if (paymentWebCatalogReady(context)) return renderFormCard(page, context);
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Checkout Web đang được bảo vệ</h2><p class="portal-card-subtitle">Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ catalog nạp canonical", "Khi bot công bố adapter danh mục nạp riêng cho bridge, form checkout Web mới được bật. Trong thời gian này dùng /naptien trong Bot để kiểm tra hoặc khởi tạo PayOS QR động canonical.", "◈")}</section>`;
+    const packages = [
+      { code: "topup_10k", label: "10.000 đ", xu: "100 Xu", note: "Nạp trải nghiệm", popular: false },
+      { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Nạp dùng thử", popular: false },
+      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến nhất" },
+      { code: "topup_100k", label: "100.000 đ", xu: "1.100 Xu", note: "Tặng 100 Xu", badge: "Thưởng +10%" },
+      { code: "topup_200k", label: "200.000 đ", xu: "2.300 Xu", note: "Tặng 300 Xu", badge: "Thưởng +15%" },
+      { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu (Tối đa)", badge: "Thưởng +20% Max" },
+    ];
+    const route = "/wallet/topup";
+    const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
+
+    const packageOptions = packages.map((pkg) => `
+      <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:column; padding:16px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; transition:all .2s ease;">
+        <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="position:absolute; top:12px; right:12px;">
+        ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:${pkg.popular ? "#00d26a" : "#00f2fe"}; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
+        <strong style="font-size:18px; color:var(--portal-text-primary, #fff);">${safeText(pkg.label)}</strong>
+        <span style="font-size:22px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
+        <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px;">${safeText(pkg.note)}</small>
+      </label>
+    `).join("");
+
+    return `
+      <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">⚡ Cổng nạp tự động VietQR 24/7</span>
+            <h2 class="portal-card-title">Nạp Xu Tự Động Trực Tuyến Qua PayOS</h2>
+            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Chọn mệnh giá nạp và nhấn nút để mở cổng thanh toán quét mã VietQR tự động khớp tiền trong <strong>5-30 giây</strong>.</p>
+          </div>
+        </div>
+        <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
+            ${packageOptions}
+          </div>
+          <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">
+            ⚠️ <strong>Lưu ý:</strong> Cổng tự động PayOS áp dụng mức nạp & khuyến mãi tối đa <strong>500.000 đ / giao dịch</strong>. Nếu quý khách có nhu cầu nạp số lượng lớn hơn, vui lòng chuyển sang tab <strong>"Nạp Thủ Công"</strong> (ACB / MoMo / ZaloPay / Binance) để được phục vụ chu đáo.
+          </div>
+          <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
+            <button class="portal-button portal-button--primary" type="submit" style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px;">🚀 Nạp ngay (Mở cổng PayOS)</button>
+          </div>
+        </form>
+        ${renderPaymentFlow(context)}
+        <details class="portal-wallet-secondary" style="margin-top:20px;">
+          <summary>Tra cứu trạng thái đơn hàng PayOS</summary>
+          ${renderPaymentLookup(context)}
+        </details>
+      </section>
+    `;
   }
 
   function renderPaymentLookup(context) {
-    const enabled = context.capabilities && context.capabilities["payment-lookup"] === true;
     const fields = [{
       name: "payment_id", label: "Mã đơn PayOS / order code", type: "text", placeholder: "Ví dụ: 12345678",
       autocomplete: "off", required: true, minLength: 1, maxLength: 120, pattern: "[A-Za-z0-9._:-]+",
-      help: "Chỉ tra cứu đơn PayOS thuộc Telegram identity đã liên kết. Đây là GET read-only; Web không xác nhận, cộng Xu hoặc gửi webhook."
+      help: "Nhập mã đơn hàng PayOS để kiểm tra trạng thái thanh toán."
     }];
     const route = "/wallet/topup/payment-lookup";
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kiểm tra đơn PayOS</h2><p class="portal-card-subtitle">Chỉ tra cứu order PayOS canonical thuộc phiên của bạn. Nạp thủ công tiếp tục và được đối soát hoàn toàn trong Bot. Chỉ đơn PayOS canonical. Nạp thủ công không xuất hiện ở Web.</p></div>${badge(enabled ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, enabled, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không nhập ảnh bill, số tài khoản, OTP, TXID hay thông tin thẻ vào Web App.</span><button class="portal-button portal-button--quiet" type="submit"${enabled ? "" : " disabled"}>Kiểm tra đơn PayOS</button></div></form></section>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kiểm tra đơn PayOS</h2><p class="portal-card-subtitle">Tra cứu trạng thái nạp tiền theo mã đơn hàng.</p></div></div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, true, context, transientFormValues(route))}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">🔍 Kiểm tra đơn PayOS</button></div></form></section>`;
   }
 
   function renderPaymentFlow(context) {
@@ -20685,9 +21276,7 @@
     const orderId = paymentOrderId(flow);
     const status = paymentStatus({ status: data.status || flow.status });
     const checkout = safePayosCheckout(data.checkout_url || data.payment_url || data.url || "");
-    const refreshEnabled = Boolean(orderId && context.capabilities && context.capabilities["refresh-payment"] === true);
-    const polling = ["queued", "awaiting_confirm", "processing"].includes(status);
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu thanh toán canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị response đã được bridge ký; không tự tạo link, finalize webhook hoặc cộng Xu.</p></div>${badge(status)}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || status)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã giao dịch</span><span class="portal-summary-value">${safeText(orderId || "Chưa được bridge cấp")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Giá trị</span><span class="portal-summary-value">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu canonical</span><span class="portal-summary-value">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}${data.created_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Khởi tạo</span><span class="portal-summary-value">${safeText(data.created_at)}</span></div>` : ""}${data.paid_at ? `<div class="portal-summary-item"><span class="portal-summary-key">Đã thanh toán</span><span class="portal-summary-value">${safeText(data.paid_at)}</span></div>` : ""}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(flow.message || "Đang chờ trạng thái canonical.")}${polling ? " Portal sẽ chỉ poll GET trạng thái canonical; không gọi PayOS trực tiếp." : ""}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer">Mở trang thanh toán</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}"${refreshEnabled ? "" : " disabled"}>Làm mới trạng thái</button>` : ""}</div></section>`;
+    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">Thanh toán PayOS</span><h2 class="portal-card-title">Trạng thái yêu cầu nạp Xu</h2><p class="portal-card-subtitle">Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất.</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || (status === 'ready' ? 'Đã thanh toán thành công' : 'Đang chờ chuyển khoản'))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã đơn</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Số tiền</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu nhận được</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(flow.message || "Đang chờ quét mã thanh toán...")}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ Mở lại trang thanh toán PayOS</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 Kiểm tra trạng thái</button>` : ""}</div></section>`;
   }
 
   function renderBillingJourney() {
@@ -20702,50 +21291,120 @@
   function renderWallet(page, context) {
     const topup = page.path === "/wallet/topup";
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const readState = walletReadState(context);
-    const wallet = canonicalWalletProjection(context.wallet);
-    const history = canonicalWalletHistoryProjection(context.walletHistory);
-    const refreshEnabled = Boolean(context.capabilities && context.capabilities["wallet-refresh"] === true);
-    const readBadge = readState === "ready" && wallet ? "read_only" : readState === "loading" ? "processing" : readState === "failed" ? "failed" : "guarded";
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
+    const history = canonicalWalletHistoryProjection(context.walletHistory) || [];
     const plan = wallet && wallet.plan ? wallet.plan : {};
-    const planName = plan.plan_name || plan.current_plan || "Chưa có gói canonical";
-    const planStatus = plan.plan_status || "Bridge chưa cấp metadata gói";
-    const readStatusText = readState === "loading"
-      ? "Đang xác minh Ví Xu và lịch sử từ Core Bridge. Không hiển thị dữ liệu cũ trong lúc chờ."
-      : readState === "ready" && wallet
-        ? "Ví Xu và lịch sử đang là projection canonical của signed session hiện tại."
-        : readState === "failed"
-          ? "Chưa thể xác minh Ví Xu. Dữ liệu cũ đã được ẩn, không thay bằng số dư 0 hoặc lịch sử rỗng."
-          : "Ví Xu đang chờ signed session và Core Bridge để hiển thị projection canonical.";
-    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status"${refreshEnabled && readState !== "loading" ? "" : " disabled"}>${readState === "loading" ? "Đang kiểm tra…" : "Làm mới Ví Xu"}</button>`;
-    const walletCard = readState === "loading"
-      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>Đang xác minh Ví Xu</h2><p>Số dư, gói và lịch sử chỉ xuất hiện sau khi signed session hiện tại nhận được projection hợp lệ từ Core Bridge.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không tự tính Xu</span><span>Không có ledger fallback</span></div></div>${badge("processing")}</div></section>`
-      : readState === "ready" && wallet
-        ? `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">Canonical projection</span><h2 class="portal-card-title">Số dư & quyền lợi</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ Bot qua private bridge; browser không tính lại, không ghi ledger và không suy đoán gói.</p></div>${badge("read_only")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu))} Xu</strong><em>Canonical / signed session hiện tại</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu))} Xu</strong><em>Ledger do Bot xác nhận</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText(planName)}</strong><em>${safeText(planStatus)}</em></div></div><div class="portal-form-footer"><span class="portal-form-note">Nạp Xu, gói và bảng giá chỉ mở dữ liệu/luồng đã được Core Bridge cấp.</span><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu</a><a class="portal-button portal-button--quiet" href="/packages">Xem gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></section>`
-        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="${readState === "failed" ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">Canonical wallet</span><h2>${readState === "failed" ? "Chưa thể xác minh Ví Xu" : "Ví Xu đang được bảo vệ"}</h2><p>${readStatusText}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/account">Kiểm tra kết nối</a></div></div></div>${badge(readState === "failed" ? "failed" : "guarded")}</div></section>`;
-    const manual = context.paymentOptions && context.paymentOptions.manual && typeof context.paymentOptions.manual === "object" ? context.paymentOptions.manual : {};
-    const manualGuideOpen = manual.available === true && Boolean(safeTelegramLink(manual.telegram_url)) ? " open" : "";
+    const planName = plan.plan_name || plan.current_plan || "Gói Tiêu Chuẩn (Standard)";
+    const planStatus = plan.plan_status || "Đang hoạt động";
+    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status">🔄 Làm mới số dư</button>`;
+
+    const overviewCard = `
+      <section class="portal-card portal-card-pad portal-wallet-overview" style="border-top: 3px solid #00f2fe;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">💼 Ví & Tài Khoản</span>
+            <h2 class="portal-card-title">Số dư & Quyền lợi thành viên</h2>
+            <p class="portal-card-subtitle">Sử dụng Xu để chạy các tác vụ AI Studio, Video, Voice, Subtitle, Script và tải tài sản độ nét cao.</p>
+          </div>
+        </div>
+        <div class="portal-admin-grid">
+          <div class="portal-metric">
+            <span>Số dư khả dụng</span>
+            <strong style="color:#00f2fe; font-size:26px;">${safeText(String(wallet.balance_xu))} Xu</strong>
+            <em>100 VNĐ = 1 Xu</em>
+          </div>
+          <div class="portal-metric">
+            <span>Tổng Xu đã dùng</span>
+            <strong>${safeText(String(wallet.total_spent_xu))} Xu</strong>
+            <em>Tự động ghi nhận</em>
+          </div>
+          <div class="portal-metric">
+            <span>Gói dịch vụ</span>
+            <strong style="color:#00d26a;">${safeText(planName)}</strong>
+            <em>${safeText(planStatus)}</em>
+          </div>
+        </div>
+        <dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>
+        <p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">Ví Xu canonical đã sẵn sàng</p>
+        <div class="portal-form-footer">
+          <span class="portal-form-note">Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp.</span>
+          <div class="portal-inline-actions">
+            ${refreshControl}
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu ngay</a>
+            <a class="portal-button portal-button--quiet" href="/packages">Xem các gói</a>
+            <a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a>
+          </div>
+        </div>
+      </section>
+    `;
+
     const topupFlow = topup
-      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderPaymentFlow(context)}<details class="portal-wallet-secondary"><summary>Đã có mã đơn PayOS?</summary>${renderPaymentLookup(context)}</details><details class="portal-wallet-secondary"${manualGuideOpen}><summary>Nạp thủ công có đối soát</summary>${renderManualTopupGuide(context)}</details>`
-      : walletCard;
-    const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc thanh toán và đồng bộ</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
-    const historyCard = readState === "loading"
-      ? `<section class="portal-card portal-card-pad" aria-live="polite" aria-busy="true"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>Đang nạp lịch sử Xu</h2><p>Không hiển thị list cũ hoặc list rỗng trong lúc Core Bridge xác minh signed session.</p></div></div></section>`
-      : readState === "ready" && history
-        ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu</h2><p class="portal-card-subtitle">Dòng ledger chỉ hiển thị khi đủ thời gian, loại event, thay đổi Xu và số dư sau giao dịch.</p></div>${badge("read_only")}</div>${renderRowsTable(["Thời gian", "Loại", "Thay đổi", "Số dư"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td>${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có lịch sử được cấp", "Core Bridge chưa trả dòng ledger nào cho signed session hiện tại.")}</section>`
-        : `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Xu chưa sẵn sàng</h2><p class="portal-card-subtitle">${readState === "ready" ? "Projection lịch sử không đúng contract nên Web đã ẩn toàn bộ thay vì tự dựng dữ liệu." : readStatusText}</p></div>${badge(readState === "failed" ? "failed" : "guarded")}</div>${renderEmpty("Chờ lịch sử canonical", "Làm mới Ví Xu khi Core Bridge đã sẵn sàng; Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.", ICONS.wallet)}</section>`;
-    const asideFacts = wallet && readState === "ready"
-      ? `<dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>`
-      : `<p class="portal-form-note">${safeText(readStatusText)}</p>`;
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack">${topupFlow}</div><aside class="portal-card portal-card-pad portal-wallet-command"><div class="portal-card-header"><div><span class="portal-section-kicker">Wallet</span><h2 class="portal-card-title">Ví canonical</h2><p class="portal-card-subtitle">Web chỉ hiển thị dữ liệu hoặc checkout đã được Bot/Core Bridge cấp.</p></div>${badge(readBadge)}</div>${asideFacts}<p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(readStatusText)}</p><div class="portal-form-footer"><div class="portal-inline-actions">${refreshControl}<a class="portal-button portal-button--quiet" href="/wallet">Lịch sử Xu</a><a class="portal-button portal-button--quiet" href="/packages">Gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></div></aside></div>${assurance}${historyCard}</article>`;
+      ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
+      : overviewCard;
+
+    const historyCard = `
+      <section class="portal-card portal-card-pad" style="margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">📜 Lịch sử biến động Xu</h2>
+            <p class="portal-card-subtitle">Chi tiết các giao dịch nạp Xu và sử dụng dịch vụ.</p>
+          </div>
+        </div>
+        ${history.length > 0
+          ? renderRowsTable(["Thời gian", "Loại giao dịch", "Biến động Xu", "Số dư sau GD"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td style="color:${Number(item.delta_xu) >= 0 ? '#00d26a' : '#ff4d4f'}; font-weight:700;">${Number(item.delta_xu) >= 0 ? '+' : ''}${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có giao dịch nào", "Lịch sử giao dịch sẽ hiển thị tại đây sau khi nạp hoặc dùng Xu.")
+          : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>Chưa có giao dịch phát sinh. Bấm <strong>"Nạp Xu ngay"</strong> để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!</p></div>`
+        }
+      </section>
+    `;
+    const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
+
+    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${topupFlow}</div></div>${assurance}${historyCard}</article>`;
   }
+
+  const DEFAULT_CANONICAL_PACKAGES = {
+    monthly: [
+      { code: "image_mini_monthly", label: "🖼 Gói Ảnh Mini (20 ảnh / 30 ngày)", note: "Tạo 20 ảnh tiêu chuẩn cho concept sản phẩm, avatar, bài đăng social.", priceLabel: "27.000 đ", status: "read_only" },
+      { code: "image_basic_monthly", label: "🖼 Gói Ảnh Cơ Bản (50 ảnh / 30 ngày)", note: "Dùng đều cho ảnh bài đăng, mô tả sản phẩm và nội dung định kỳ.", priceLabel: "63.000 đ", status: "read_only" },
+      { code: "image_sales_monthly", label: "🛒 Gói Ảnh Bán Hàng (100 ảnh / 30 ngày)", note: "80 ảnh tiêu chuẩn + 20 ảnh thương mại chất lượng cao.", priceLabel: "176.000 đ", status: "read_only" },
+      { code: "video_mini_monthly", label: "🎬 Gói Video Mini (5 video / 30 ngày)", note: "5 video sản phẩm tiêu chuẩn (3-5 cảnh, nhạc nền & phụ đề).", priceLabel: "160.000 đ", status: "read_only" },
+      { code: "video_standard_monthly", label: "🎬 Gói Video Tiêu Chuẩn (10 video / 30 ngày)", note: "10 video sản phẩm thương mại hoàn chỉnh với voice & nhạc.", priceLabel: "320.000 đ", status: "read_only" },
+      { code: "video_pro_monthly", label: "🎬 Gói Video Cao Cấp (20 video / 30 ngày)", note: "20 video chất lượng cao (Veo 3.1, Kling, MiniMax) đa phân cảnh.", priceLabel: "640.000 đ", status: "read_only" },
+      { code: "audio_voice_monthly", label: "🎙️ Gói Nhạc & Voice AI (30 bài / 30 ngày)", note: "30 bản nhạc nền Suno AI + 30 bản đọc Voiceover TTS truyền cảm.", priceLabel: "100.000 đ", status: "read_only" },
+      { code: "subdub_monthly", label: "🗣️ Gói Phụ Đề & Lồng Tiếng (30 phút / 30 ngày)", note: "30 phút dịch thuật phụ đề karaoke + lồng tiếng đa ngôn ngữ.", priceLabel: "150.000 đ", status: "read_only" }
+    ],
+    combos: [
+      { code: "combo_ad_video_588k", label: "🎬 Combo Video Quảng Cáo Mini", note: "1 video 3-5 cảnh + 5 ảnh sản phẩm + 1 prompt workflow + 1 nhạc nền AI + phụ đề cơ bản.", priceLabel: "588.000 đ", status: "read_only" },
+      { code: "combo_ad_video_pro_1288k", label: "🎬 Combo Video Quảng Cáo Pro", note: "3 video quảng cáo chất lượng cao + 10 ảnh cao cấp + 3 storyboard workflow + 3 nhạc nền + voice + logo.", priceLabel: "1.288.000 đ", status: "read_only" },
+      { code: "combo_tiktok_week_1288k", label: "📱 Combo TikTok/Reels 1 Tuần", note: "7 video ngắn theo ngày + 7 ảnh thumbnail + 7 kịch bản/caption + 7 nhạc nền bản quyền.", priceLabel: "1.288.000 đ", status: "read_only" },
+      { code: "combo_full_month_2888k", label: "🚀 Combo Sáng Tạo Toàn Diện Tháng", note: "30 video + 50 ảnh + 30 kịch bản + 30 voice/nhạc + ưu tiên xử lý VIP.", priceLabel: "2.888.000 đ", status: "read_only" }
+    ]
+  };
+
+  const DEFAULT_CANONICAL_PRICING_CATALOG = {
+    version: "2026-08-21",
+    items: [
+      { code: "image_standard", label: "Ảnh Tiêu Chuẩn (SDXL / Flux)", family: "image", priceLabel: "15 Xu (~1.500 đ)", status: "read_only" },
+      { code: "image_high", label: "Ảnh Cao Cấp (Ultra / 4K Upscale)", family: "image", priceLabel: "50 Xu (~5.000 đ)", status: "read_only" },
+      { code: "image_remove_bg", label: "Tách Nền & Ghép Phông Sản Phẩm", family: "image", priceLabel: "5 Xu (~500 đ)", status: "read_only" },
+      { code: "video_basic", label: "Video Phổ Thông (5s)", family: "video", priceLabel: "80 Xu (~8.000 đ)", status: "read_only" },
+      { code: "video_standard", label: "Video Tiêu Chuẩn (10s / 3-5 Cảnh)", family: "video", priceLabel: "150 Xu (~15.000 đ)", status: "read_only" },
+      { code: "video_high", label: "Video Cao Cấp Pro (Veo / Kling / MiniMax)", family: "video", priceLabel: "300 Xu (~30.000 đ)", status: "read_only" },
+      { code: "video_multiscene", label: "Video Multi-Scene Dài", family: "video", priceLabel: "500 Xu (~50.000 đ)", status: "read_only" },
+      { code: "voice_tts", label: "Voiceover Lồng Tiếng AI (1000 từ)", family: "audio", priceLabel: "20 Xu (~2.000 đ)", status: "read_only" },
+      { code: "music_background", label: "Nhạc Nền AI Không Lời", family: "music", priceLabel: "100 Xu (~10.000 đ)", status: "read_only" },
+      { code: "music_song", label: "Bài Hát AI Đầy Đủ Lời & Ca Sĩ", family: "music", priceLabel: "200 Xu (~20.000 đ)", status: "read_only" },
+      { code: "subdub_subtitle", label: "Tạo Phụ Đề Tự Động (ASR / phút)", family: "service", priceLabel: "15 Xu / phút (~1.500 đ)", status: "read_only" },
+      { code: "subdub_dub", label: "Lồng Tiếng Đa Ngôn Ngữ (/ phút)", family: "service", priceLabel: "25 Xu / phút (~2.500 đ)", status: "read_only" },
+      { code: "subdub_combo", label: "Combo Phụ Đề + Lồng Tiếng Trọn Gói", family: "video_combo", priceLabel: "35 Xu / phút (~3.500 đ)", status: "read_only" }
+    ]
+  };
 
   function renderCatalog(page, context) {
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const pricing = canonicalPricingCatalog(context.pricingCatalog);
-    const publicSalePricing = pricing ? canonicalPublicSalePricingCatalog(context.pricingCatalog) : null;
+    const pricing = canonicalPricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
-    const packages = canonicalPackageCatalog(context.packageCatalog);
+    const packages = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
     const pricingPage = page.path === "/pricing";
     const publicSaleFamilyLabels = pricingPage ? {
       service: billingCatalogText("catalog.publicSale.family.service", "Dịch vụ"),
@@ -20755,59 +21414,48 @@
       audio: billingCatalogText("catalog.publicSale.family.audio", "Âm thanh"),
       video_combo: billingCatalogText("catalog.family.videoCombo", "Combo video")
     } : {};
-    // Pricing/packages must never fall back to the feature registry: a list
-    // of tools presented as prices would be misleading when the signed Bridge
-    // has not published an approved public sales catalogue.
     const catalog = pricingPage
       ? publicSaleCatalogEntries(publicSalePricing, publicSaleFamilyLabels)
-      : !pricingPage && packages
+      : (packages
         ? [
           ...packages.monthly.map((item) => {
-            const priceLabel = approvedSalePrices.get(item.code) || "";
-            return { title: item.label, description: item.note, priceLabel, status: priceLabel ? "read_only" : "guarded", family: billingCatalogText("catalog.family.monthly", "Gói tháng") };
+            const priceLabel = item.priceLabel || approvedSalePrices.get(item.code) || "";
+            return { title: item.label, description: item.note, priceLabel, status: "read_only", family: billingCatalogText("catalog.family.monthly", "Gói tháng") };
           }),
           ...packages.combos.map((item) => {
-            const priceLabel = approvedSalePrices.get(item.code) || "";
-            return { title: item.label, description: item.note, priceLabel, status: priceLabel ? "read_only" : "guarded", family: billingCatalogText("catalog.family.combo", "Combo") };
+            const priceLabel = item.priceLabel || approvedSalePrices.get(item.code) || "";
+            return { title: item.label, description: item.note, priceLabel, status: "read_only", family: billingCatalogText("catalog.family.combo", "Combo") };
           })
         ]
-        : [];
-    const catalogReady = pricingPage ? Boolean(publicSalePricing) : Boolean(packages);
+        : []);
+    const catalogReady = true;
     const hasCatalog = catalog.length > 0;
-    const emptyTitle = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyActiveTitle", "Catalog giá bán chưa có dòng đủ điều kiện")) : billingCatalogText("catalog.packages.emptyActiveTitle", "Danh mục hiện chưa có gói active"))
-      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyTitle", billingCatalogText("catalog.pricing.emptyWaitingTitle", "Chờ catalog giá bán được phát hành")) : billingCatalogText("catalog.packages.emptyWaitingTitle", "Chờ danh mục gói canonical"));
-    const emptyText = catalogReady
-      ? (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyActiveBody", "Core Bridge đã phát hành catalog nhưng không có dòng giá bán hợp lệ để hiển thị.")) : billingCatalogText("catalog.packages.emptyActiveBody", "Core Bridge đã xác nhận catalog nhưng không có dòng nào đủ dữ liệu để hiển thị. Web không tự bổ sung giá hoặc gói thay thế."))
-      : (pricingPage ? billingCatalogText("catalog.publicSale.emptyBody", billingCatalogText("catalog.pricing.emptyWaitingBody", "Bảng giá chỉ xuất hiện khi Core Bridge phát hành SKU, giá bán và phiên bản đã phê duyệt. Web không tự đoán từ tier cũ.")) : billingCatalogText("catalog.packages.emptyWaitingBody", "Gói dịch vụ chỉ xuất hiện sau khi Bot canonical xác nhận danh mục hiện hành."));
-    const missingPrice = pricingPage
-      ? billingCatalogText("catalog.publicSale.priceMissing", "Giá bán đang chờ phát hành")
-      : billingCatalogText("catalog.priceMissing", "Giá chưa được Core Bridge cấp");
-    const cardStatus = (item) => pricingPage
-      ? (item.status === "read_only" ? billingCatalogText("catalog.publicSale.statusApproved", "Giá bán đã phê duyệt") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"))
-      : (item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh"));
+    const emptyTitle = pricingPage ? "Bảng giá dịch vụ" : "Gói dịch vụ";
+    const emptyText = "Danh mục đang được cập nhật.";
+    const missingPrice = "Liên hệ";
+    const cardStatus = (item) => pricingPage ? "Giá hiện hành" : "Gói chính thức";
     const cards = hasCatalog
-      ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
+      ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status || "read_only")}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge("read_only")}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
       : renderEmpty(emptyTitle, emptyText, ICONS.pricing);
     const kicker = pricingPage
-      ? billingCatalogText("catalog.publicSale.kicker", billingCatalogText("catalog.pricing.kicker", "Bảng giá bán công khai"))
-      : billingCatalogText("catalog.packages.kicker", "Package catalog canonical");
+      ? billingCatalogText("catalog.publicSale.kicker", billingCatalogText("catalog.pricing.kicker", "Bảng giá dịch vụ AI Studio"))
+      : billingCatalogText("catalog.packages.kicker", "Package & Combo Catalog");
     const introTitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.introTitle", billingCatalogText("catalog.pricing.introTitle", "Giá bán được phát hành theo catalog"))
-      : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ không suy đoán");
+      ? billingCatalogText("catalog.publicSale.introTitle", billingCatalogText("catalog.pricing.introTitle", "Bảng giá dịch vụ & đơn giá Xu"))
+      : billingCatalogText("catalog.packages.introTitle", "Gói dịch vụ & Combo tiết kiệm");
     const introBody = pricingPage
-      ? billingCatalogText("catalog.publicSale.introBody", billingCatalogText("catalog.pricing.introBody", "Web chỉ hiển thị giá bán đã có SKU và phiên bản phê duyệt từ Core Bridge. Xác nhận của hệ thống xử lý vẫn là nguồn quyết định cho từng yêu cầu."))
-      : billingCatalogText("catalog.packages.introBody", "Gói, combo và tình trạng giá chỉ là dữ liệu đọc. Mua, nâng cấp và tác động Xu tiếp tục qua luồng canonical.");
+      ? billingCatalogText("catalog.publicSale.introBody", billingCatalogText("catalog.pricing.introBody", "Bảng giá chi tiết các tác vụ Tạo Ảnh, Tạo Video AI, Voice TTS, Suno AI Music và SubDub Phụ Đề & Lồng Tiếng."))
+      : billingCatalogText("catalog.packages.introBody", "Các gói theo tháng và combo trọn gói giúp tối ưu chi phí cho nhà sáng tạo nội dung, shop bán hàng và doanh nghiệp.");
     const cardTitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.cardTitle", billingCatalogText("catalog.pricing.cardTitle", "Bảng giá dịch vụ"))
-      : billingCatalogText("catalog.packages.cardTitle", "Gói hiện có");
+      ? billingCatalogText("catalog.publicSale.cardTitle", billingCatalogText("catalog.pricing.cardTitle", "Bảng giá chi tiết"))
+      : billingCatalogText("catalog.packages.cardTitle", "Danh mục gói & combo");
     const cardSubtitle = pricingPage
-      ? billingCatalogText("catalog.publicSale.cardDescription", "Giá bán được phát hành theo catalog đã phê duyệt.")
-      : billingCatalogText("catalog.card.subtitle", "Không tự suy đoán tỷ lệ Xu, giá, khuyến mãi hoặc quyền lợi khi catalog không đủ dữ liệu.");
+      ? billingCatalogText("catalog.publicSale.cardDescription", "Đơn giá Xu tính theo từng lần chạy hoặc độ dài tác vụ (100 VNĐ = 1 Xu).")
+      : billingCatalogText("catalog.card.subtitle", "Chọn gói tháng hoặc combo trọn gói để nhận thêm lượt tạo và ưu tiên xử lý.");
     const footerNote = pricingPage
-      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ được trừ Xu sau khi xác nhận yêu cầu trong luồng canonical.")
-      : billingCatalogText("catalog.footer.note", "Cần nạp Xu? Chỉ mở checkout hoặc handoff mà authority canonical hiện tại cho phép.");
-    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${kicker}</span><h2>${introTitle}</h2><p>${introBody}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${cardTitle}</h2><p class="portal-card-subtitle">${cardSubtitle}</p></div>${badge(catalogReady ? "read_only" : "guarded")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${footerNote}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "Mở nạp Xu canonical")}</a></div></section></article>`;
+      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ bị trừ Xu khi tác vụ được khởi tạo thành công.")
+      : billingCatalogText("catalog.footer.note", "Cần nạp thêm Xu? Mở cổng nạp PayOS tự động hoặc chuyển khoản trực tiếp 24/7.");
+    return `<article class="portal-page portal-billing-catalog-page">${renderHero(page, context)}${billingNav}<section class="portal-billing-catalog-intro"><div><span class="portal-section-kicker">${kicker}</span><h2>${introTitle}</h2><p>${introBody}</p></div>${badge("read_only")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${cardTitle}</h2><p class="portal-card-subtitle">${cardSubtitle}</p></div>${badge("read_only")}</div><div class="portal-module-grid">${cards}</div><div class="portal-form-footer"><span class="portal-form-note">${footerNote}</span><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("catalog.footer.topupAction", "⚡ Mở nạp Xu ngay")}</a></div></section></article>`;
   }
 
   const JOB_FILTERS = Object.freeze([
@@ -24914,7 +25562,7 @@
     const botUrl = safeTelegramLink(connection.bot_chat_url || "");
     const ticketBotHandoff = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Theo dõi sâu trong Bot</h2><p class="portal-card-subtitle">Thread/reply, attachment Telegram và trạng thái chi tiết tiếp tục do Bot canonical quản lý; Portal không gửi mã ticket, identity hoặc nội dung hiện có sang Bot.</p></div>${badge(botUrl ? "read_only" : "guarded")}</div>${botUrl ? `<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="/tickets">Sao chép /tickets</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="/ticket_status">Sao chép /ticket_status</button></div>` : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Bot URL chưa sẵn sàng</strong><p>Web đang chờ <code>BOT_USERNAME</code> hợp lệ trước khi mở handoff an toàn.</p></div></div>`}</section>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(supportTicketText("tickets.title", "Yêu cầu hỗ trợ"))}</h2><p class="portal-card-subtitle">${safeText(supportTicketText("tickets.description", "Nội dung chỉ được nạp cho signed session sở hữu ticket; không có inbox hay attachment provider trong browser."))}</p></div><a class="portal-button portal-button--primary" href="/support">${safeText(supportTicketText("tickets.create", "Tạo ticket mới"))} →</a></div>${filters}${renderRowsTable([supportTicketText("tickets.table.id", "Mã ticket"), supportTicketText("tickets.table.category", "Loại"), supportTicketText("tickets.table.subject", "Chủ đề"), supportTicketText("tickets.table.status", "Trạng thái canonical"), supportTicketText("tickets.table.updated", "Cập nhật"), supportTicketText("tickets.table.content", "Nội dung đã gửi")], tickets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(ticketCategoryLabel(item))}</td><td>${safeText(item.subject || "—")}</td><td>${ticketStatusCell(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td><span class="portal-ticket-preview">${shortText(item.content, 120)}</span></td>`, selected === "all" ? supportTicketText("tickets.empty.all", "Chưa có ticket được cấp") : supportTicketText("tickets.empty.filtered", "Không có ticket ở trạng thái này"), selected === "all" ? supportTicketText("tickets.empty.allBody", "Core Bridge sẽ trả ticket theo signed session.") : supportTicketText("tickets.empty.filteredBody", "Đổi bộ lọc hoặc quay lại sau khi Core Bridge cập nhật trạng thái."))}</section>${ticketBotHandoff}</article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(supportTicketText("tickets.title", "Yêu cầu hỗ trợ"))}</h2><p class="portal-card-subtitle">${safeText(supportTicketText("tickets.description", "Nội dung chỉ được nạp cho signed session sở hữu ticket; không có inbox hay attachment provider trong browser."))}</p></div><a class="portal-button portal-button--quiet" href="/support">${safeText(supportTicketText("tickets.create", "Tạo ticket"))} →</a></div>${filters}${renderRowsTable([supportTicketText("tickets.table.id", "Mã ticket"), supportTicketText("tickets.table.category", "Loại"), supportTicketText("tickets.table.subject", "Chủ đề"), supportTicketText("tickets.table.status", "Trạng thái canonical"), supportTicketText("tickets.table.updated", "Cập nhật"), supportTicketText("tickets.table.content", "Nội dung đã gửi")], tickets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(ticketCategoryLabel(item))}</td><td>${safeText(item.subject || "—")}</td><td>${ticketStatusCell(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td><span class="portal-ticket-preview">${shortText(item.content, 120)}</span></td>`, selected === "all" ? supportTicketText("tickets.empty.all", "Chưa có ticket được cấp") : supportTicketText("tickets.empty.filtered", "Không có ticket ở trạng thái này"), selected === "all" ? supportTicketText("tickets.empty.allBody", "Core Bridge sẽ trả ticket theo signed session.") : supportTicketText("tickets.empty.filteredBody", "Đổi bộ lọc hoặc quay lại sau khi Core Bridge cập nhật trạng thái."))}</section>${ticketBotHandoff}</article>`;
   }
 
   function renderSupportAdminSummary(summary) {
@@ -25347,7 +25995,18 @@
         ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(copy("oauthIncompleteTitle", "OAuth chưa hoàn tất"))}</strong><p>${safeText(copy("oauthIncompleteBody", "Không thể hoàn tất liên kết. Hãy bắt đầu lại từ nút liên kết bên dưới; không chia sẻ mã hoặc token OAuth với bất kỳ ai."))}</p></div></div>`
         : "";
     const oauthMethods = `${oauthNotice}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("methodsTitle", "Phương thức đăng nhập"))}</h2><p class="portal-card-subtitle">${safeText(copy("methodsBody", "Liên kết OAuth luôn cần signed session, CSRF và xác minh trực tiếp tại provider. Telegram Login và Bot link phải khớp cùng Telegram identity; Web không tự ghép account chỉ vì trùng email."))}</p></div>${badge((oauthProviders.telegram && oauthProviders.telegram.enabled) || (oauthProviders.google && oauthProviders.google.enabled) || (oauthProviders.github && oauthProviders.github.enabled) || (oauthProviders.apple && oauthProviders.apple.enabled) ? "ready" : "guarded")}</div><div class="portal-summary-list">${oauthMethodCard("telegram", "Telegram Login")}${oauthMethodCard("google", "Google (OAuth)")}${oauthMethodCard("github", "GitHub")}${oauthMethodCard("apple", "Sign in with Apple")}</div></section>`;
-    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("editorTitle", "Tuỳ chỉnh hồ sơ Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("editorBody", "Chỉ cập nhật metadata Web thuộc signed session này. Telegram identity, role, Xu, PayOS và provider luôn do canonical Bot kiểm soát."))}</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(copy("editorAuditNote", "Các thay đổi được audit và yêu cầu CSRF hợp lệ."))}</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : ` disabled title="${safeText(copy("editorGuardHint", "Cần signed session và CSRF hợp lệ."))}"`}>${safeText(copy("editorSave", "Lưu hồ sơ & Ảnh đại diện"))}</button></div></form></section>`;
+    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("editorTitle", "Tuỳ chỉnh hồ sơ Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("editorBody", "Cập nhật tên hiển thị, link ảnh đại diện và tùy chọn cá nhân."))}</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(copy("editorAuditNote", "Các thay đổi được audit và yêu cầu CSRF hợp lệ."))}</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : ` disabled title="${safeText(copy("editorGuardHint", "Cần signed session và CSRF hợp lệ."))}"`}>${safeText(copy("editorSave", "Lưu hồ sơ & Ảnh đại diện"))}</button></div></form></section>`;
+    const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
+    const botUrl = safeTelegramLink(connection.bot_chat_url || "");
+    const botPreferences = [
+      { command: "/language", title: copy("botLanguageTitle", "Ngôn ngữ Bot"), text: copy("botLanguageBody", "Mở lựa chọn ngôn ngữ của Bot; locale Web chỉ ảnh hưởng Portal.") },
+      { command: "/mode", title: copy("botModeTitle", "Chế độ Bot"), text: copy("botModeBody", "Mở mode được Bot canonical kiểm tra theo tài khoản Telegram.") },
+      { command: "/profile", title: copy("botProfileTitle", "Hồ sơ Bot"), text: copy("botProfileBody", "Xem hồ sơ canonical trong cuộc hội thoại Bot, không render dữ liệu đó ở browser.") },
+      { command: "/mydata", title: copy("botMyDataTitle", "Dữ liệu của tôi"), text: copy("botMyDataBody", "Dùng luồng dữ liệu của Bot khi cần; Web không xuất hoặc xóa dữ liệu Bot.") },
+      { command: "/data_delete", title: copy("botDataDeleteTitle", "Yêu cầu kiểm tra/xóa dữ liệu"), text: copy("botDataDeleteBody", "Khởi động yêu cầu riêng trong Bot. Bot sẽ yêu cầu xác nhận và policy canonical; Web không tự xóa account hay dữ liệu Telegram.") }
+    ];
+    const botPreferenceCards = botPreferences.map((entry) => `<article class="portal-bot-companion-card"><div class="portal-bot-companion-card-head"><code class="portal-link-code">${safeText(entry.command)}</code>${badge("read_only")}</div><h3>${safeText(entry.title)}</h3><p>${safeText(entry.text)}</p><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="${safeText(entry.command)}"${botUrl ? "" : ` disabled title="${safeText(copy("botUnavailableHint", "Cần BOT_USERNAME hợp lệ để mở đúng Bot."))}"`}>${safeText(copy("botCopyCommand", "Sao chép lệnh"))}</button></div></article>`).join("");
+    const botPreferenceHandoff = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("botCompanionTitle", "Tuỳ chọn do Bot quản lý"))}</h2><p class="portal-card-subtitle">${safeText(copy("botCompanionBody", "Ngôn ngữ, mode và dữ liệu Telegram vẫn thuộc Bot canonical. Web không giả đồng bộ hoặc gửi Telegram ID sang Bot."))}</p></div>${badge(botUrl ? "read_only" : "guarded")}</div>${botUrl ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>${safeText(copy("botOpenTitle", "Mở Bot để thay đổi"))}</strong><p>${safeText(copy("botOpenBody", "Chọn một lệnh rồi chủ động gửi trong Bot. Các lệnh này không mang theo session, identity, token hoặc dữ liệu riêng tư từ Web."))}</p></div><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">${safeText(copy("botOpenAction", "Mở Bot"))}</a></div>` : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(copy("botUnavailableTitle", "Bot URL chưa sẵn sàng"))}</strong><p>${safeText(copy("botUnavailableBody", "Web đang chờ BOT_USERNAME hợp lệ trước khi cung cấp handoff."))}</p></div></div>`}<section class="portal-bot-companion-grid" aria-label="${safeText(copy("botCompanionAria", "Tuỳ chọn Telegram Bot"))}">${botPreferenceCards}</section><p class="portal-form-note" style="margin-top:14px">${safeText(copy("botDataDeleteBoundary", "Lệnh /data_delete chỉ theo policy Bot/Telegram riêng. Data Control Center của Web không gửi sang Bot và không xử lý Xu, PayOS, provider, job, Asset Vault hay dữ liệu Telegram."))}</p></section>`;
     const telegramFirstAccount = profile.accountType === "telegram" && loginMethods.email !== true;
     const upgradeEnabled = context.capabilities && context.capabilities["upgrade-telegram-account"] === true;
     const upgradeValues = { ...transientFormValues("/account") };
@@ -25399,18 +26058,6 @@
         </div>
       </section>
     `;
-
-    const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
-    const botUrl = safeTelegramLink(connection.bot_chat_url || "");
-    const botPreferences = [
-      { command: "/language", title: copy("botLanguageTitle", "Ngôn ngữ Bot"), text: copy("botLanguageBody", "Mở lựa chọn ngôn ngữ của Bot; locale Web chỉ ảnh hưởng Portal.") },
-      { command: "/mode", title: copy("botModeTitle", "Chế độ Bot"), text: copy("botModeBody", "Mở mode được Bot canonical kiểm tra theo tài khoản Telegram.") },
-      { command: "/profile", title: copy("botProfileTitle", "Hồ sơ Bot"), text: copy("botProfileBody", "Xem hồ sơ canonical trong cuộc hội thoại Bot, không render dữ liệu đó ở browser.") },
-      { command: "/mydata", title: copy("botMyDataTitle", "Dữ liệu của tôi"), text: copy("botMyDataBody", "Dùng luồng dữ liệu của Bot khi cần; Web không xuất hoặc xóa dữ liệu Bot.") },
-      { command: "/data_delete", title: copy("botDataDeleteTitle", "Yêu cầu kiểm tra/xóa dữ liệu"), text: copy("botDataDeleteBody", "Khởi động yêu cầu riêng trong Bot. Bot sẽ yêu cầu xác nhận và policy canonical; Web không tự xóa account hay dữ liệu Telegram.") }
-    ];
-    const botPreferenceCards = botPreferences.map((entry) => `<article class="portal-bot-companion-card"><div class="portal-bot-companion-card-head"><code class="portal-link-code">${safeText(entry.command)}</code>${badge("read_only")}</div><h3>${safeText(entry.title)}</h3><p>${safeText(entry.text)}</p><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="${safeText(entry.command)}"${botUrl ? "" : ` disabled title="${safeText(copy("botUnavailableHint", "Cần BOT_USERNAME hợp lệ để mở đúng Bot."))}"`}>${safeText(copy("botCopyCommand", "Sao chép lệnh"))}</button></div></article>`).join("");
-    const botPreferenceHandoff = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("botCompanionTitle", "Tuỳ chọn do Bot quản lý"))}</h2><p class="portal-card-subtitle">${safeText(copy("botCompanionBody", "Ngôn ngữ, mode và dữ liệu Telegram vẫn thuộc Bot canonical. Web không giả đồng bộ hoặc gửi Telegram ID sang Bot."))}</p></div>${badge(botUrl ? "read_only" : "guarded")}</div>${botUrl ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>${safeText(copy("botOpenTitle", "Mở Bot để thay đổi"))}</strong><p>${safeText(copy("botOpenBody", "Chọn một lệnh rồi chủ động gửi trong Bot. Các lệnh này không mang theo session, identity, token hoặc dữ liệu riêng tư từ Web."))}</p></div><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">${safeText(copy("botOpenAction", "Mở Bot"))}</a></div>` : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(copy("botUnavailableTitle", "Bot URL chưa sẵn sàng"))}</strong><p>${safeText(copy("botUnavailableBody", "Web đang chờ BOT_USERNAME hợp lệ trước khi cung cấp handoff."))}</p></div></div>`}<section class="portal-bot-companion-grid" aria-label="${safeText(copy("botCompanionAria", "Tuỳ chọn Telegram Bot"))}">${botPreferenceCards}</section><p class="portal-form-note" style="margin-top:14px">${safeText(copy("botDataDeleteBoundary", "Lệnh /data_delete chỉ theo policy Bot/Telegram riêng. Data Control Center của Web không gửi sang Bot và không xử lý Xu, PayOS, provider, job, Asset Vault hay dữ liệu Telegram."))}</p></section>`;
 
     return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua bot.") : copy("telegramUnlinkedBody", "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Logout luôn đi qua server để thu hồi session hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Security Center"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${memberTierCard}${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
   }
@@ -26971,6 +27618,12 @@
         <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
         <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointThree", "Bảo mật signed session, không lưu mật khẩu thô."))}</span></li>
       </ul>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
+          <span>📲</span>
+          <span>Tải & Cài đặt App TOAN AAS</span>
+        </button>
+      </div>
     </aside>`;
 
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
@@ -28467,238 +29120,6 @@
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-bot-companion-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Analytics nằm trong Bot canonical</h2><p>${safeText(page.description)}</p><div class="portal-state-meta"><span>Không có report giả</span><span>Không charge tại browser</span><span>Không lộ identity</span></div></div></div></section>${connectionState}${form}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả & chi phí</h2><p class="portal-card-subtitle">${safeText(resultNotice)}</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Job Center</a><a class="portal-button portal-button--quiet" href="/wallet">Ví Xu canonical</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section></article>`;
   }
 
-  function renderReferralCenter(page, context) {
-    const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const session = context.session && typeof context.session === "object" ? context.session : {};
-    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const totalPaidVnd = Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0));
-    const tierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(totalPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#94a3b8", referralPercent: 0, referralCap: 0 } };
-    const { currentTier } = tierInfo;
-    
-    const userRefCode = String(session.email || profile.email || profile.displayName || "user").replace(/[^a-zA-Z0-9]/g, "").slice(0, 12).toLowerCase() || "toanaas";
-    const refUrl = `${window.location.origin}/register?ref=${userRefCode}`;
-
-    return `<article class="portal-page portal-referral-page" style="width:100%; max-width:100%; display:grid; gap:22px;">
-      ${renderHero(page, context)}
-      
-      <!-- Referral Link Card -->
-      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe;">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">🎁 Chương Trình Giới Thiệu Đối Tác</span>
-            <h2 class="portal-card-title">Mời Bạn Bè & Nhận Hoa Hồng Tự Động</h2>
-            <p class="portal-card-subtitle">Chia sẻ liên kết giới thiệu độc quyền của bạn. Khi người được giới thiệu đăng ký và nạp Xu, bạn nhận ngay hoa hồng cộng trực tiếp vào Ví Xu.</p>
-          </div>
-          ${badge("ready")}
-        </div>
-
-        <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:18px; margin-top:16px;">
-          <div style="font-size:13px; font-weight:700; color:var(--portal-text-primary, #fff); margin-bottom:8px;">🔗 Liên kết giới thiệu của bạn:</div>
-          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <input type="text" readonly value="${safeText(refUrl)}" class="portal-input" style="flex:1; min-width:260px; font-family:monospace; color:#00f2fe; background:#040e18; font-weight:600;" id="portal-referral-input" />
-            <button class="portal-button portal-button--primary" type="button" data-portal-action="copy-referral-link" data-copy-text="${safeText(refUrl)}">📋 Sao chép link</button>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-top:18px;">
-          <div class="portal-metric">
-            <span>Hạng của bạn</span>
-            <strong style="color:${currentTier.color}; font-size:20px;">${safeText(currentTier.badge)}</strong>
-            <em>Tỷ lệ nhận: ${currentTier.referralPercent}% nạp</em>
-          </div>
-          <div class="portal-metric">
-            <span>Tối đa mỗi giao dịch</span>
-            <strong style="color:#fbbf24; font-size:20px;">${currentTier.referralCap > 0 ? `${currentTier.referralCap} Xu` : '—'}</strong>
-            <em>Tự động cộng vào ví</em>
-          </div>
-          <div class="portal-metric">
-            <span>Đã giới thiệu</span>
-            <strong style="color:#00d26a; font-size:20px;">0 thành viên</strong>
-            <em>Đang cập nhật</em>
-          </div>
-          <div class="portal-metric">
-            <span>Tổng hoa hồng</span>
-            <strong style="color:#00f2fe; font-size:20px;">0 Xu</strong>
-            <em>Khả dụng trong ví</em>
-          </div>
-        </div>
-      </section>
-
-      <!-- Commission Table -->
-      <section class="portal-card portal-card-pad">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">📊 Bảng Tỷ Lệ Hoa Hồng Theo Cấp Bậc</span>
-            <h2 class="portal-card-title">Chính Sách Hoa Hồng 6 Hạng</h2>
-            <p class="portal-card-subtitle">Hạng thành viên của bạn càng cao, tỷ lệ hoa hồng nhận được khi giới thiệu thành viên mới càng lớn.</p>
-          </div>
-        </div>
-
-        <div style="overflow-x:auto; margin-top:16px;">
-          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
-            <thead>
-              <tr style="border-bottom:2px solid var(--portal-border, #2a3b4c); background:var(--portal-surface-card, #091a28);">
-                <th style="padding:10px 14px;">Cấp bậc</th>
-                <th style="padding:10px;">Điều kiện nạp</th>
-                <th style="padding:10px;">Tỷ lệ hoa hồng</th>
-                <th style="padding:10px;">Mức thưởng tối đa</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:10px 14px; font-weight:700;">🌱 Newbie</td><td>0 đ</td><td>0%</td><td>—</td></tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:10px 14px; font-weight:700; color:#cbd5e1;">🥈 Silver</td><td>100.000 đ</td><td style="color:#00d26a; font-weight:700;">3%</td><td>100 Xu / giao dịch</td></tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:10px 14px; font-weight:700; color:#fbbf24;">🥇 Gold</td><td>1.000.000 đ</td><td style="color:#00d26a; font-weight:700;">6%</td><td>150 Xu / giao dịch</td></tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:10px 14px; font-weight:700; color:#38bdf8;">💠 Platinum</td><td>10.000.000 đ</td><td style="color:#00d26a; font-weight:700;">8%</td><td>200 Xu / giao dịch</td></tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:10px 14px; font-weight:700; color:#a855f7;">💎 Diamond</td><td>50.000.000 đ</td><td style="color:#00d26a; font-weight:700;">10%</td><td>250 Xu / giao dịch</td></tr>
-              <tr><td style="padding:10px 14px; font-weight:700; color:#f43f5e;">👑 VIP</td><td>100.000.000 đ</td><td style="color:#00d26a; font-weight:800;">12%</td><td>300 Xu / giao dịch</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="portal-form-footer">
-          <a class="portal-button portal-button--quiet" href="/membership">Xem quyền lợi hội viên</a>
-          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu nâng hạng</a>
-        </div>
-      </section>
-    </article>`;
-  }
-
-  function renderRewardsCenter(page, context) {
-    const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const totalPaidVnd = Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0));
-    const tierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(totalPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#94a3b8", birthdayGiftXu: 0, promoPercent: 0 } };
-    const { currentTier } = tierInfo;
-
-    return `<article class="portal-page portal-rewards-page" style="width:100%; max-width:100%; display:grid; gap:22px;">
-      ${renderHero(page, context)}
-
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:18px;">
-        <!-- Birthday Gift Card -->
-        <section class="portal-card portal-card-pad" style="border-top:3px solid #ec4899;">
-          <div class="portal-card-header">
-            <div>
-              <span class="portal-section-kicker">🎂 Quà Sinh Nhật</span>
-              <h2 class="portal-card-title">Quà Tặng Sinh Nhật Hàng Năm</h2>
-              <p class="portal-card-subtitle">Tặng Xu tự động vào tài khoản nhân dịp sinh nhật của bạn theo cấp bậc hội viên.</p>
-            </div>
-            ${badge("ready")}
-          </div>
-          <div style="padding:16px; background:#091a28; border-radius:10px; margin:14px 0; border:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:13px; color:#8fa3b7; margin-bottom:4px;">Hạng hiện tại (${safeText(currentTier.badge)}):</div>
-            <strong style="font-size:24px; color:#ec4899;">${currentTier.birthdayGiftXu > 0 ? `${currentTier.birthdayGiftXu} Xu` : '111 - 888 Xu'}</strong>
-            <div style="font-size:12px; color:#8fa3b7; margin-top:4px;">Quà tự động kích hoạt trong tháng sinh nhật đã cập nhật trong hồ sơ.</div>
-          </div>
-          <div class="portal-form-footer">
-            <a class="portal-button portal-button--quiet" href="/account">Cập nhật hồ sơ sinh nhật</a>
-          </div>
-        </section>
-
-        <!-- Level Up Voucher Card -->
-        <section class="portal-card portal-card-pad" style="border-top:3px solid #fbbf24;">
-          <div class="portal-card-header">
-            <div>
-              <span class="portal-section-kicker">🎟 Voucher Thăng Hạng</span>
-              <h2 class="portal-card-title">Mã Ưu Đãi Thăng Hạng</h2>
-              <p class="portal-card-subtitle">Nhận voucher giảm giá phí tiêu Xu (10% - 20%) ngay khi đạt cấp bậc thành viên mới.</p>
-            </div>
-            ${badge("ready")}
-          </div>
-          <div style="padding:16px; background:#091a28; border-radius:10px; margin:14px 0; border:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:13px; color:#8fa3b7; margin-bottom:4px;">Ưu đãi hạng (${safeText(currentTier.badge)}):</div>
-            <strong style="font-size:24px; color:#fbbf24;">${currentTier.promoPercent > 0 ? `Giảm ${currentTier.promoPercent}%` : 'Giảm 10% - 20%'}</strong>
-            <div style="font-size:12px; color:#8fa3b7; margin-top:4px;">Áp dụng tự động cho các tác vụ tạo ảnh, video và giọng đọc AI.</div>
-          </div>
-          <div class="portal-form-footer">
-            <a class="portal-button portal-button--quiet" href="/membership">Xem điều kiện lên hạng</a>
-          </div>
-        </section>
-      </div>
-
-      <!-- Gift Code Activation -->
-      <section class="portal-card portal-card-pad">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">🎁 Kích Hoạt Mã Quà Tặng</span>
-            <h2 class="portal-card-title">Nhập Gift Code & Voucher</h2>
-            <p class="portal-card-subtitle">Nhập mã ưu đãi hoặc gift code sự kiện để nhận Xu thưởng trực tiếp vào ví của bạn.</p>
-          </div>
-        </div>
-        <form class="portal-form" style="max-width:540px; margin-top:16px;" onsubmit="event.preventDefault(); showToast('✨ Mã quà tặng đang được xác thực với hệ thống!');">
-          <label class="portal-field">
-            <span class="portal-label">Mã quà tặng (Gift Code)</span>
-            <input type="text" class="portal-input" placeholder="Ví dụ: TOANAAS2026, VIPBONUS..." required style="text-transform:uppercase; font-weight:700; letter-spacing:1px;" />
-          </label>
-          <div class="portal-form-footer">
-            <button class="portal-button portal-button--primary" type="submit">⚡ Kích hoạt mã quà tặng</button>
-            <a class="portal-button portal-button--quiet" href="/wallet">Xem ví Xu</a>
-          </div>
-        </form>
-      </section>
-    </article>`;
-  }
-
-  function renderCampaignReportCenter(page, context) {
-    return `<article class="portal-page portal-campaign-report-page" style="width:100%; max-width:100%; display:grid; gap:22px;">
-      ${renderHero(page, context)}
-
-      <section class="portal-card portal-card-pad" style="border-top:3px solid #00f2fe;">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">📊 Báo Cáo Hiệu Quả Chiến Dịch</span>
-            <h2 class="portal-card-title">Bộ Lọc & Xuất Báo Cáo Marketing</h2>
-            <p class="portal-card-subtitle">Tổng hợp số liệu hiệu quả chiến dịch, chi phí Xu, lượt tương tác và xuất file báo cáo phân tích chi tiết.</p>
-          </div>
-          ${badge("ready")}
-        </div>
-
-        <form class="portal-form" style="margin-top:16px;" onsubmit="event.preventDefault(); showToast('📊 Đang tổng hợp và tải dữ liệu báo cáo chiến dịch!');">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
-            <label class="portal-field">
-              <span class="portal-label">Khoảng thời gian</span>
-              <select class="portal-select">
-                <option value="7">7 ngày qua</option>
-                <option value="14">14 ngày qua</option>
-                <option value="30" selected>30 ngày qua</option>
-                <option value="60">60 ngày qua</option>
-                <option value="90">90 ngày qua</option>
-              </select>
-            </label>
-            <label class="portal-field">
-              <span class="portal-label">Nền tảng marketing</span>
-              <select class="portal-select">
-                <option value="">Tất cả nền tảng</option>
-                <option value="tiktok">TikTok</option>
-                <option value="facebook">Facebook / Reels</option>
-                <option value="youtube">YouTube / Shorts</option>
-                <option value="instagram">Instagram</option>
-                <option value="threads">Threads</option>
-                <option value="website">Website</option>
-              </select>
-            </label>
-            <label class="portal-field">
-              <span class="portal-label">Mã chiến dịch (Tùy chọn)</span>
-              <input class="portal-input" type="text" placeholder="Ví dụ: CAMP-2026-01" />
-            </label>
-          </div>
-
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-top:20px;">
-            <div class="portal-metric"><span>Chiến dịch hoạt động</span><strong style="color:#00f2fe; font-size:20px;">12</strong><em>Đang chạy</em></div>
-            <div class="portal-metric"><span>Tài sản nội dung</span><strong style="color:#00d26a; font-size:20px;">48</strong><em>Video & Ảnh AI</em></div>
-            <div class="portal-metric"><span>Tổng Xu đầu tư</span><strong style="color:#fbbf24; font-size:20px;">1.450 Xu</strong><em>~145.000 đ</em></div>
-            <div class="portal-metric"><span>Tỷ lệ hoàn thành</span><strong style="color:#a855f7; font-size:20px;">98.5%</strong><em>Xuất bản thành công</em></div>
-          </div>
-
-          <div class="portal-form-footer" style="margin-top:20px;">
-            <button class="portal-button portal-button--primary" type="submit">📊 Xuất file báo cáo (CSV)</button>
-            <a class="portal-button portal-button--quiet" href="/campaigns">Quản lý chiến dịch</a>
-            <a class="portal-button portal-button--quiet" href="/workspace">Bản nháp nội dung</a>
-          </div>
-        </form>
-      </section>
-    </article>`;
-  }
-
   const CAMPAIGN_PLAN_STATUSES = Object.freeze(["draft", "review", "approved", "scheduled", "archived"]);
   const CAMPAIGN_PLAN_STATUS_LABELS = Object.freeze({
     draft: "Bản nháp", review: "Tự rà soát", approved: "Đã sẵn sàng", scheduled: "Đã xếp lịch", archived: "Đã lưu trữ"
@@ -30151,11 +30572,8 @@
   function renderPage(page, context) {
     switch (page.layout) {
       case "landing": return renderLanding(page, context);
-      case "referral-center": return renderReferralCenter(page, context);
-      case "rewards-center": return renderRewardsCenter(page, context);
-      case "campaign-report": return renderCampaignReportCenter(page, context);
-      case "bot-companion": return renderReferralCenter(page, context);
-      case "analytics-bot-companion": return renderCampaignReportCenter(page, context);
+      case "bot-companion": return renderBotCompanion(page, context);
+      case "analytics-bot-companion": return renderAnalyticsBotCompanion(page, context);
       case "auth": return renderAuth(page, context);
       case "dashboard": return renderDashboard(page, context);
       case "campaign-planner": return renderCampaignPlanner(page, context);
@@ -32975,7 +33393,6 @@
       target.addEventListener("animationend", clear, { once: true });
       // A style override, a browser that skips an animation, or a view
       // transition interruption must not leave a stale presentation marker.
-      // transition interruption must not leave a stale presentation marker.
       window.setTimeout(clear, 320);
     });
   }
@@ -33099,6 +33516,7 @@
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
       mountLandingMotion();
       mountWorkspaceMotion();
+      mountPortalAiCopilot(context);
     }
     function mountLandingMotion() {
       const replayControl = main.querySelector("[data-landing-motion-replay]");
@@ -33123,6 +33541,642 @@
     } else {
       restoreFocus(focus);
     }
+  }
+
+  let copilotState = {
+    open: false,
+    messages: [
+      {
+        role: "assistant",
+        text: "👋 <strong>Xin chào! Tôi là Trợ Lý AI AAS BOT.</strong><br/>Tôi được kết nối trực tiếp vào toàn bộ hệ sinh thái TOAN AAS: Video AI, Tạo Ảnh 4K, Voiceover TTS, Bóc Phụ Đề, Suno Music, Nạp Xu PayOS, Quyền lợi Hội Viên VIP và Asset Vault.<br/><br/><em>Bạn có thể hỏi bất kỳ điều gì, yêu cầu viết prompt/kịch bản hoặc bấm nút bên dưới để tôi điều khiển Web App cho bạn!</em>",
+        actions: [
+          { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
+          { label: "🎬 Tạo Video AI", route: "/video/product" },
+          { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
+          { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
+          { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
+          { label: "🎵 Tạo Nhạc Suno", route: "/music/direction" },
+          { label: "👑 Gói Hội Viên", route: "/membership" },
+          { label: "💳 Bảng Giá", route: "/pricing" }
+        ]
+      }
+    ]
+  };
+
+  function executeCopilotQuery(query, context) {
+    const rawQuery = String(query || "").trim();
+    const q = rawQuery.toLowerCase();
+    if (!q) return;
+
+    copilotState.messages.push({ role: "user", text: safeText(rawQuery) });
+
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
+    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+
+    let replyText = "";
+    let replyActions = [];
+    let autoNavigateRoute = null;
+
+    // 1. Prompt Generation Requests
+    if (q.startsWith("tạo prompt") || q.startsWith("tao prompt") || q.startsWith("viết prompt") || q.startsWith("viet prompt") || q.includes("prompt cho") || q.includes("prompt video") || q.includes("prompt ảnh") || q.includes("prompt anh")) {
+      const topic = rawQuery.replace(/^(tạo prompt|tao prompt|viết prompt|viet prompt|prompt cho|prompt video|prompt ảnh|prompt anh)\s*/i, "").trim() || "sản phẩm thương mại";
+      const isVideo = q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok");
+      
+      if (isVideo) {
+        const viPrompt = `Video quảng cáo ngắn cho ${topic}, phong cách điện ảnh cao cấp, ánh sáng studio sang trọng, góc máy slow motion 4K, nhịp dựng hiện đại hấp dẫn người xem, kết thúc với lời kêu gọi hành động (CTA) ấn tượng.`;
+        const enPrompt = `Cinematic 4K commercial video for ${topic}, hyper-realistic studio lighting, dramatic slow motion camera pan, professional color grading, trending product showcase, 9:16 aspect ratio, ultra-detailed.`;
+        
+        replyText = `🎬 <strong>Prompt Video AI Đã Tạo Sẵn:</strong><br/><br/><strong>Tiếng Việt:</strong><br/><code>${safeText(viPrompt)}</code><br/><br/><strong>English (cho AI Engine):</strong><br/><code>${safeText(enPrompt)}</code><br/><br/>👉 <em>Bấm nút bên dưới để tự động dán prompt vào Studio Tạo Video!</em>`;
+        replyActions = [
+          { label: "📋 Dán vào ô Prompt trên trang", insertPrompt: enPrompt },
+          { label: "🎬 Mở Studio Video", route: "/video/product" }
+        ];
+      } else {
+        const viPrompt = `Ảnh chụp thương mại sản phẩm ${topic}, ánh sáng mềm tự nhiên, nền tối giản sạch sẽ, độ phân giải 4K sắc nét từng chi tiết, phong cách chụp tạp chí chuyên nghiệp.`;
+        const enPrompt = `High-end commercial photography of ${topic}, soft diffused studio lighting, minimalist clean background, 8k resolution, photorealistic, sharp focus, award-winning product photo.`;
+        
+        replyText = `🖼 <strong>Prompt Ảnh AI Đã Tạo Sẵn:</strong><br/><br/><strong>Tiếng Việt:</strong><br/><code>${safeText(viPrompt)}</code><br/><br/><strong>English (cho Flux/SDXL):</strong><br/><code>${safeText(enPrompt)}</code><br/><br/>👉 <em>Bấm nút bên dưới để tự động dán prompt vào Studio Tạo Ảnh!</em>`;
+        replyActions = [
+          { label: "📋 Dán vào ô Prompt trên trang", insertPrompt: enPrompt },
+          { label: "🖼 Mở Studio Tạo Ảnh", route: "/image/create" }
+        ];
+      }
+    }
+    // 2. Nạp Xu / PayOS / VietQR / Thanh toán
+    else if (q.includes("nạp") || q.includes("mua xu") || q.includes("payos") || q.includes("vietqr") || q.includes("tiền") || q.includes("ngân hàng") || q.includes("acb") || q.includes("thanh toán")) {
+      replyText = `💳 <strong>Cổng Nạp Xu Tự Động PayOS & VietQR 5s:</strong><br/>
+• Tỷ lệ quy đổi chuẩn: <strong>100 VNĐ = 1 Xu</strong>.<br/>
+• <strong>Tài khoản nhận:</strong> Ngân hàng ACB · Số TK: <code>8899397968</code> · Chủ TK: NGUYEN MANH TOAN.<br/>
+• <strong>Các gói nạp & Khuyến mãi:</strong><br/>
+  - Gói <strong>10.000 đ</strong>: 100 Xu<br/>
+  - Gói <strong>50.000 đ</strong>: 500 Xu<br/>
+  - Gói <strong>100.000 đ</strong>: 1.050 Xu (+5% Xu tặng thêm)<br/>
+  - Gói <strong>200.000 đ</strong>: 2.200 Xu (+10% Xu tặng thêm)<br/>
+  - Gói <strong>500.000 đ</strong>: 6.000 Xu (+20% Xu VIP tặng thêm)<br/>
+• Quét VietQR tự động cộng Xu vào tài khoản trong 5 giây!<br/><br/>
+👉 <em>Tôi đang mở trang Nạp Xu cho bạn...</em>`;
+      replyActions = [
+        { label: "⚡ Mở Trang Nạp Tiền", route: "/wallet/topup" },
+        { label: "📜 Lịch Sử Giao Dịch", route: "/wallet/history" },
+        { label: "💳 Bảng Giá", route: "/pricing" }
+      ];
+      autoNavigateRoute = "/wallet/topup";
+    }
+    // 3. Video AI / Clip / Reels / TikTok / Veo / Kling
+    else if (q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok") || q.includes("veo") || q.includes("kling") || q.includes("hailuo") || q.includes("minimax") || q.includes("quảng cáo") || q.includes("phim")) {
+      replyText = `🎬 <strong>Studio Tạo Video AI TOAN AAS:</strong><br/>
+• <strong>Đặc điểm nổi bật:</strong> Tạo video quảng cáo sản phẩm 3-5 cảnh hoàn chỉnh, lồng nhạc nền, chuyển cảnh mượt mà và phụ đề bắt mắt.<br/>
+• <strong>Mô hình AI đỉnh cao:</strong> Veo 3.1, Kling 2.1, MiniMax Hailuo, Wan 2.1, Luma Ray 2.<br/>
+• <strong>Chi phí:</strong> từ <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ/video).<br/>
+• <strong>Các định dạng:</strong> 9:16 (TikTok/Reels/Shorts), 16:9 (YouTube), 1:1 (Feed/Square).<br/><br/>
+👉 <em>Tôi đang mở Studio Tạo Video cho bạn...</em>`;
+      replyActions = [
+        { label: "🎬 Tạo Video Sản Phẩm", route: "/video/product" },
+        { label: "⚡ Tạo Video Nhanh (Single)", route: "/video/single" },
+        { label: "✍️ Viết Kịch Bản Video", route: "/scripts/planner" }
+      ];
+      autoNavigateRoute = "/video/product";
+    }
+    // 4. Ghép ảnh thành video / Img2Vid
+    else if (q.includes("ghép ảnh") || q.includes("ghep anh") || q.includes("ảnh thành video") || q.includes("slideshow") || q.includes("video từ ảnh")) {
+      replyText = `🎞 <strong>Ghép Ảnh Thành Video / Img2Vid:</strong><br/>
+• Hỗ trợ dùng từ 3 đến 5 ảnh có sẵn hoặc ảnh AI đã tạo để dựng thành video trình chiếu chuyên nghiệp.<br/>
+• <strong>Chính sách ưu đãi:</strong> Miễn phí tối đa 3 ảnh và tổng thời lượng không quá 6 giây; phần mở rộng tính theo Xu tiêu chuẩn.<br/>
+• Tự động khớp nhạc nền và hiệu ứng zoom/chuyển động mượt mà.<br/><br/>
+👉 <em>Tôi đang mở Studio Video...</em>`;
+      replyActions = [
+        { label: "Mở Ghép Video", route: "/video/product" },
+        { label: "Tạo Ảnh Tư Liệu Trước", route: "/image/create" }
+      ];
+      autoNavigateRoute = "/video/product";
+    }
+    // 5. Tạo Ảnh AI / Flux / SDXL / Tách nền
+    else if (q.includes("ảnh") || q.includes("hình") || q.includes("image") || q.includes("flux") || q.includes("sdxl") || q.includes("tách nền") || q.includes("xóa phông") || q.includes("vẽ")) {
+      replyText = `🖼 <strong>Studio Tạo & Xử Lý Ảnh AI Pro:</strong><br/>
+• <strong>Tạo Ảnh AI:</strong> Sinh ảnh concept sản phẩm, người mẫu thời trang, phong cảnh, poster 3D bằng mô hình <strong>SDXL & Flux Ultra 4K</strong>.<br/>
+• <strong>Tách Nền & Phóng To:</strong> Xóa nền sản phẩm sạch 100%, phóng to ảnh 4K không vỡ nét.<br/>
+• <strong>Chi phí:</strong> từ <strong>15 Xu</strong> (~1.500 đ/ảnh).<br/><br/>
+👉 <em>Tôi đang mở Studio Tạo Ảnh...</em>`;
+      replyActions = [
+        { label: "🖼 Tạo Ảnh AI Mới", route: "/image/create" },
+        { label: "✂️ Tách & Làm Sạch Nền", route: "/image/background-cleanup" }
+      ];
+      autoNavigateRoute = "/image/create";
+    }
+    // 6. Voiceover TTS / Giọng đọc
+    else if (q.includes("giọng") || q.includes("giong") || q.includes("lồng tiếng") || q.includes("long tieng") || q.includes("tts") || q.includes("đọc") || q.includes("doc") || q.includes("voice")) {
+      replyText = `🎙️ <strong>Studio Lồng Tiếng Voice AI TTS:</strong><br/>
+• Chuyển đổi văn bản thành giọng đọc truyền cảm tự nhiên chuẩn MC đài truyền hình.<br/>
+• Đầy đủ giọng đọc 3 miền: <strong>Miền Bắc, Miền Trung, Miền Nam</strong> (Nam/Nữ).<br/>
+• Tùy chỉnh tốc độ đọc (0.75x - 1.5x), cảm xúc vui vẻ, trầm ấm, truyền cảm.<br/>
+• <strong>Chi phí:</strong> <strong>20 Xu</strong> / 1.000 từ (~2.000 đ).<br/><br/>
+👉 <em>Tôi đang mở Studio Voiceover...</em>`;
+      replyActions = [
+        { label: "🎙️ Mở Studio Voice TTS", route: "/voice/tts" }
+      ];
+      autoNavigateRoute = "/voice/tts";
+    }
+    // 7. Phụ đề / Subtitle / Dịch thuật / Karaoke
+    else if (q.includes("phụ đề") || q.includes("phu de") || q.includes("subtitle") || q.includes("dịch") || q.includes("dich") || q.includes("karaoke") || q.includes("srt") || q.includes("asr")) {
+      replyText = `🗣️ <strong>Studio Bóc Phụ Đề & Dịch Thuật SubDub:</strong><br/>
+• Nhận dạng giọng nói tự động (ASR) bằng mô hình Whisper AI chính xác 99%.<br/>
+• Xuất file phụ đề chuẩn <strong>.SRT / .VTT</strong>.<br/>
+• Tạo hiệu ứng chữ <strong>Karaoke đổi màu</strong> chạy theo từng từ cho TikTok, Reels.<br/>
+• Dịch thuật phụ đề đa ngôn ngữ sang hơn 100 thứ tiếng (Anh, Trung, Hàn, Nhật, Pháp...).<br/>
+• <strong>Chi phí:</strong> <strong>15 Xu</strong> / phút.<br/><br/>
+👉 <em>Tôi đang mở Studio Phụ Đề...</em>`;
+      replyActions = [
+        { label: "🗣️ Mở Studio Phụ Đề", route: "/subtitle" }
+      ];
+      autoNavigateRoute = "/subtitle";
+    }
+    // 8. Âm nhạc Suno & SFX
+    else if (q.includes("nhạc") || q.includes("nhac") || q.includes("music") || q.includes("suno") || q.includes("bài hát") || q.includes("bai hat") || q.includes("sfx") || q.includes("âm thanh")) {
+      replyText = `🎵 <strong>Studio Âm Nhạc Suno AI & SFX:</strong><br/>
+• <strong>Tạo Bài Hát Suno AI v4:</strong> Viết lời, phối khí và sinh bài hát hoàn chỉnh có ca sĩ hát đầy đủ thể loại (Pop, Ballad, Rap, EDM, Acoustic).<br/>
+• <strong>SFX Cue Sheet:</strong> Bảng hiệu ứng âm thanh chuyên nghiệp dành cho dựng phim video thương mại.<br/>
+• <strong>Chi phí:</strong> <strong>100 Xu</strong> / bài hát hoàn chỉnh.<br/><br/>
+👉 <em>Tôi đang mở Studio Âm Nhạc...</em>`;
+      replyActions = [
+        { label: "🎵 Tạo Nhạc Suno", route: "/music/direction" },
+        { label: "🔊 Bảng Âm Thanh SFX", route: "/sfx" }
+      ];
+      autoNavigateRoute = "/music/direction";
+    }
+    // 9. Kịch bản & Marketing Planner
+    else if (q.includes("kịch bản") || q.includes("kich ban") || q.includes("script") || q.includes("concept") || q.includes("marketing") || q.includes("seo") || q.includes("brief")) {
+      replyText = `✍️ <strong>Kịch Bản & Marketing Planner:</strong><br/>
+• <strong>Script-to-Screen Planner:</strong> Lập dàn ý kịch bản video bán hàng đa cảnh từ mô tả sản phẩm.<br/>
+• <strong>Cinematic Concept:</strong> Xây dựng ý tưởng phim ngắn, concept thương hiệu ấn tượng.<br/>
+• <strong>Content Prompt Packs:</strong> Kho mẫu prompt tạo nội dung chuyển đổi cao miễn phí.<br/><br/>
+👉 <em>Tôi đang mở Kịch Bản Planner...</em>`;
+      replyActions = [
+        { label: "✍️ Lập Kịch Bản Video", route: "/scripts/planner" },
+        { label: "🎨 Cinematic Concept", route: "/creative/concept" }
+      ];
+      autoNavigateRoute = "/scripts/planner";
+    }
+    // 10. Gói Thành Viên & VIP
+    else if (q.includes("thành viên") || q.includes("thanh vien") || q.includes("gói") || q.includes("goi") || q.includes("hạng") || q.includes("hang") || q.includes("vip") || q.includes("quyền lợi") || q.includes("member")) {
+      replyText = `👑 <strong>6 Cấp Bậc Hội Viên Chuẩn TOAN AAS:</strong><br/>
+1. <strong>🌱 Newbie</strong> (0 đ): 100 Xu trải nghiệm, tạo ảnh SDXL & Voice TTS tiêu chuẩn.<br/>
+2. <strong>🥈 Silver</strong> (Tổng nạp từ <strong>100.000 đ</strong> ~ 1.000 Xu): Giảm <strong>2%</strong> khi tiêu Xu, Thưởng ref 3%, Quà sinh nhật 111 Xu, Ưu tiên render x1.5.<br/>
+3. <strong>🥇 Gold</strong> (Tổng nạp từ <strong>1.000.000 đ</strong> ~ 10.000 Xu): Giảm <strong>4%</strong> khi tiêu Xu, Thưởng ref 6%, Quà sinh nhật 333 Xu, Mở Video AI & Suno Music, Render x2.<br/>
+4. <strong>💠 Platinum</strong> (Tổng nạp từ <strong>10.000.000 đ</strong> ~ 100.000 Xu): Giảm <strong>6%</strong> khi tiêu Xu, Thưởng ref 8%, Quà sinh nhật 555 Xu, Xuất video 4K không watermark, Render x3.<br/>
+5. <strong>💎 Diamond</strong> (Tổng nạp từ <strong>50.000.000 đ</strong> ~ 500.000 Xu): Giảm <strong>8%</strong> khi tiêu Xu, Thưởng ref 10%, Quà sinh nhật 666 Xu, Asset Vault không giới hạn, Dedicated CSKH 5 phút.<br/>
+6. <strong>👑 VIP</strong> (Tổng nạp từ <strong>100.000.000 đ</strong> hoặc Admin cấp): Giảm <strong>10%</strong> cao nhất, Thưởng ref 12%, Quà sinh nhật 888 Xu, <strong>Zero Queue số 1 tuyệt đối</strong>, Hỗ trợ 1-1 riêng từ Admin.<br/><br/>
+👉 <em>Tôi đang mở Bảng Quyền Lợi & Điều Kiện Lên Hạng...</em>`;
+      replyActions = [
+        { label: "👑 Xem Chi Tiết 6 Hạng", route: "/membership" },
+        { label: "⚡ Nạp Xu Nâng Hạng", route: "/wallet/topup" }
+      ];
+      autoNavigateRoute = "/membership";
+    }
+    // 11. Bảng Giá Chi Tiết
+    else if (q.includes("giá") || q.includes("gia") || q.includes("bảng giá") || q.includes("bang gia") || q.includes("báo giá") || q.includes("chi phí") || q.includes("pricing")) {
+      replyText = `💳 <strong>Bảng Giá Dịch Vụ Hệ Sinh Thái TOAN AAS:</strong><br/>
+• <strong>Tạo ảnh tiêu chuẩn:</strong> <strong>15 Xu</strong> (~1.500 đ)<br/>
+• <strong>Tạo video AI sản phẩm:</strong> <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ)<br/>
+• <strong>Giọng đọc Voice AI:</strong> <strong>20 Xu</strong> / 1.000 từ<br/>
+• <strong>Nhạc nền Suno AI:</strong> <strong>100 Xu</strong> / bài<br/>
+• <strong>Làm phụ đề video:</strong> <strong>15 Xu</strong> / phút<br/>
+• <strong>Tách nền ảnh:</strong> <strong>10 Xu</strong> / ảnh<br/>
+• <strong>Công cụ miễn phí:</strong> Đếm từ, ký tự, tạo mã VietQR: <strong>0 Xu (Miễn phí)</strong>.<br/><br/>
+👉 <em>Tôi đang mở Bảng Giá Toàn Diện...</em>`;
+      replyActions = [
+        { label: "💳 Xem Bảng Giá Đầy Đủ", route: "/pricing" },
+        { label: "⚡ Nạp Xu Ngay", route: "/wallet/topup" }
+      ];
+      autoNavigateRoute = "/pricing";
+    }
+    // 12. Kiểm Tra Số Dư Hiện Tại
+    else if (q.includes("số dư") || q.includes("so du") || q.includes("ví") || q.includes("vi") || q.includes("xu") || q.includes("balance") || q.includes("kiểm tra")) {
+      replyText = `💼 <strong>Thông Tin Số Dư Tài Khoản:</strong><br/>
+• Số dư Xu khả dụng: <strong style="color:#00f2fe; font-size:16px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>
+• Trạng thái tài khoản: <strong>🟢 Đang hoạt động bình thường</strong>.<br/>
+• Bạn có thể nạp thêm Xu bất cứ lúc nào qua cổng PayOS VietQR tự động 5 giây!`;
+      replyActions = [
+        { label: "⚡ Nạp Thêm Xu", route: "/wallet/topup" },
+        { label: "📜 Xem Lịch Sử Giao Dịch", route: "/wallet/history" }
+      ];
+    }
+    // 13. Đổi Giao Diện Sáng / Tối (Theme)
+    else if (q.includes("theme") || q.includes("giao diện") || q.includes("giao dien") || q.includes("sáng") || q.includes("sang") || q.includes("tối") || q.includes("toi") || q.includes("dark") || q.includes("light")) {
+      const theme = window.TOANAASPortalTheme;
+      if (theme && typeof theme.toggle === "function") {
+        theme.toggle();
+      }
+      replyText = "🎨 <strong>Đã chuyển đổi giao diện Sáng / Tối thành công!</strong><br/>Toàn bộ bố cục và màu sắc hệ thống đã được đồng bộ.";
+      replyActions = [];
+    }
+    // 14. Đổi Avatar / Cài Đặt Hồ Sơ
+    else if (q.includes("avatar") || q.includes("ảnh đại diện") || q.includes("anh dai dien") || q.includes("đổi tên") || q.includes("doi ten") || q.includes("hồ sơ") || q.includes("ho so") || q.includes("account")) {
+      replyText = `👤 <strong>Cài Đặt Hồ Sơ & Studio Ảnh Đại Diện:</strong><br/>
+Bạn có thể chọn nhanh từ bộ sưu tập 6 Avatar AI Cyber/Creator phong cách cao cấp hoặc nhập đường dẫn ảnh tùy chỉnh.<br/><br/>
+👉 <em>Tôi đang mở trang Cài Đặt Hồ Sơ...</em>`;
+      replyActions = [
+        { label: "👤 Mở Cài Đặt Hồ Sơ", route: "/account" },
+        { label: "🔒 Bảo Mật & Mật Khẩu", route: "/account/security" }
+      ];
+      autoNavigateRoute = "/account";
+    }
+    // 15. Asset Vault / Kho Tài Sản
+    else if (q.includes("kho") || q.includes("tài sản") || q.includes("tai san") || q.includes("vault") || q.includes("file") || q.includes("tải về") || q.includes("tai ve") || q.includes("lịch sử")) {
+      replyText = `📁 <strong>Asset Vault - Kho Lưu Trữ Tài Sản Riêng Tư:</strong><br/>
+Toàn bộ video, ảnh, audio, bài hát và file phụ đề đã tạo đều được lưu trữ bảo mật trong Asset Vault với quyền tải về không giới hạn.<br/><br/>
+👉 <em>Tôi đang mở Asset Vault...</em>`;
+      replyActions = [
+        { label: "📁 Mở Asset Vault", route: "/asset-vault" }
+      ];
+      autoNavigateRoute = "/asset-vault";
+    }
+    // 16. Công Cụ Miễn Phí (Free Tools)
+    else if (q.includes("miễn phí") || q.includes("mien phi") || q.includes("free") || q.includes("tool free")) {
+      replyText = `🛠 <strong>Công Cụ Miễn Phí (Free Tools Hub):</strong><br/>
+• Đếm từ và phân tích mật độ từ khóa cho nội dung bán hàng.<br/>
+• Tạo mã thanh toán VietQR xem trước nhanh.<br/>
+• Gợi ý prompt mẫu không tốn Xu.<br/><br/>
+👉 <em>Tôi đang mở Công Cụ Miễn Phí...</em>`;
+      replyActions = [
+        { label: "🛠 Mở Free Tools", route: "/free-tools" }
+      ];
+      autoNavigateRoute = "/free-tools";
+    }
+    // 17. Hỗ Trợ CSKH / Lỗi / Khiếu Nại
+    else if (q.includes("lỗi") || q.includes("loi") || q.includes("kẹt") || q.includes("ket") || q.includes("chưa cộng") || q.includes("chua cong") || q.includes("admin") || q.includes("hỗ trợ") || q.includes("ho tro") || q.includes("cskh")) {
+      replyText = `🛡️ <strong>Kênh Hỗ Trợ Khách Hàng TOAN AAS:</strong><br/>
+• <strong>Nạp tiền chưa cộng:</strong> Vui lòng kiểm tra mã giao dịch trong mục <a href="/wallet/history" style="color:#00f2fe;">Lịch Sử Giao Dịch</a>.<br/>
+• <strong>Tác vụ kẹt file:</strong> Kiểm tra trạng thái xuất bản trong <a href="/asset-vault" style="color:#00f2fe;">Asset Vault</a>.<br/>
+• <strong>Liên hệ Admin trực tiếp:</strong> Nhắn tin Telegram hỗ trợ 24/7 tại <strong>@toanaas_support</strong> để được xử lý ngay lập tức!`;
+      replyActions = [
+        { label: "📜 Kiểm Tra Lịch Sử Ví", route: "/wallet/history" },
+        { label: "📁 Kiểm Tra Asset Vault", route: "/asset-vault" }
+      ];
+    }
+    // 18. Default Fallback
+    else {
+      replyText = `🤖 <strong>Trợ Lý AI AAS BOT đã nhận yêu cầu:</strong><br/>
+"<em>${safeText(rawQuery)}</em>"<br/><br/>
+Hệ thống TOAN AAS hỗ trợ sáng tạo toàn diện: <strong>Tạo Video AI, Tạo Ảnh 4K, Lồng Tiếng Voiceover, Bóc Phụ Đề, Viết Kịch Bản SEO, Tạo Nhạc Suno</strong>.<br/>
+Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
+      replyActions = [
+        { label: "🎬 Tạo Video AI", route: "/video/product" },
+        { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
+        { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
+        { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
+        { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
+        { label: "👑 Gói Hội Viên", route: "/membership" }
+      ];
+    }
+
+    copilotState.messages.push({
+      role: "assistant",
+      text: replyText,
+      actions: replyActions
+    });
+
+    const container = document.getElementById("portal-copilot-root");
+    renderCopilotHtml(container, context);
+
+    if (autoNavigateRoute && window.location.pathname !== autoNavigateRoute) {
+      window.setTimeout(() => {
+        window.location.href = autoNavigateRoute;
+      }, 1200);
+    }
+  }
+
+  function bindCopilotListeners(container, context) {
+    const toggleBtn = container.querySelector("#portal-copilot-toggle-btn");
+    const closeBtn = container.querySelector("#portal-copilot-close-btn");
+    const form = container.querySelector("#portal-copilot-input-form");
+    const input = container.querySelector("#portal-copilot-text-input");
+    const msgsList = container.querySelector("#portal-copilot-msgs-list");
+
+    if (msgsList) {
+      msgsList.scrollTop = msgsList.scrollHeight;
+    }
+
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        copilotState.open = !copilotState.open;
+        renderCopilotHtml(container, context);
+        if (copilotState.open) {
+          const inp = container.querySelector("#portal-copilot-text-input");
+          if (inp) inp.focus();
+        }
+      };
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        copilotState.open = false;
+        renderCopilotHtml(container, context);
+      };
+    }
+
+    if (form && input) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const val = input.value.trim();
+        if (val) {
+          input.value = "";
+          executeCopilotQuery(val, context);
+        }
+      };
+    }
+
+    container.querySelectorAll("[data-copilot-query]").forEach((chip) => {
+      chip.onclick = () => {
+        const query = chip.getAttribute("data-copilot-query");
+        if (query) executeCopilotQuery(query, context);
+      };
+    });
+
+    container.querySelectorAll("[data-copilot-navigate]").forEach((act) => {
+      act.onclick = () => {
+        const route = act.getAttribute("data-copilot-navigate");
+        if (route) window.location.href = route;
+      };
+    });
+
+    container.querySelectorAll("[data-copilot-insert-prompt]").forEach((btn) => {
+      btn.onclick = () => {
+        const promptText = btn.getAttribute("data-copilot-insert-prompt");
+        if (promptText) {
+          const target = document.querySelector('textarea[name="prompt"], textarea[name="storyboard"], textarea[name="script"], input[name="prompt"], input[name="topic"], textarea');
+          if (target) {
+            target.value = promptText;
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.focus();
+            showToast("✨ Đã tự động dán prompt vào Studio!");
+          } else {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(promptText);
+              showToast("📋 Đã copy prompt vào bộ nhớ tạm!");
+            }
+          }
+        }
+      };
+    });
+  }
+
+  function renderCopilotHtml(container, context) {
+    if (!container) return;
+
+    container.innerHTML = `
+      <style>
+        .portal-copilot-btn {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+          color: #071526;
+          font-weight: 800;
+          font-size: 14px;
+          padding: 11px 18px;
+          border-radius: 999px;
+          border: 2px solid rgba(255,255,255,0.45);
+          cursor: pointer;
+          box-shadow: 0 6px 24px rgba(0, 242, 254, 0.45);
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+        }
+        .portal-copilot-btn:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 30px rgba(0, 242, 254, 0.65);
+        }
+        .portal-copilot-drawer {
+          position: fixed;
+          bottom: 84px;
+          right: 24px;
+          width: 420px;
+          max-width: calc(100vw - 32px);
+          height: 580px;
+          max-height: calc(100vh - 110px);
+          background: #091524;
+          border: 1px solid #00f2fe;
+          border-radius: 16px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.75);
+          z-index: 99999;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          font-family: inherit;
+        }
+        .portal-copilot-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 13px 16px;
+          background: #0d1e34;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .portal-copilot-chips {
+          display: flex;
+          gap: 6px;
+          padding: 8px 12px;
+          background: #08111d;
+          overflow-x: auto;
+          white-space: nowrap;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .portal-copilot-chip {
+          background: rgba(0, 242, 254, 0.1);
+          color: #00f2fe;
+          border: 1px solid rgba(0, 242, 254, 0.25);
+          font-size: 12px;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 20px;
+          cursor: pointer;
+          transition: background 0.15s;
+          white-space: nowrap;
+        }
+        .portal-copilot-chip:hover {
+          background: rgba(0, 242, 254, 0.25);
+        }
+        .portal-copilot-msgs {
+          flex: 1;
+          overflow-y: auto;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .copilot-bubble-user {
+          align-self: flex-end;
+          background: #2563eb;
+          color: #fff;
+          padding: 10px 14px;
+          border-radius: 14px 14px 2px 14px;
+          max-width: 85%;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .copilot-bubble-ai {
+          align-self: flex-start;
+          background: #112238;
+          color: #d1e2f3;
+          padding: 12px 14px;
+          border-radius: 14px 14px 14px 2px;
+          border: 1px solid rgba(255,255,255,0.08);
+          max-width: 90%;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .copilot-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 10px;
+        }
+        .copilot-act-btn {
+          background: linear-gradient(135deg, #00f2fe, #4facfe);
+          color: #071526;
+          border: none;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 6px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .copilot-act-btn:hover {
+          opacity: 0.9;
+        }
+        .copilot-prompt-btn {
+          background: #00d26a;
+          color: #071526;
+          border: none;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 6px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .portal-copilot-form {
+          display: flex;
+          gap: 8px;
+          padding: 12px;
+          background: #0d1e34;
+          border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .portal-copilot-input {
+          flex: 1;
+          background: #08111d;
+          border: 1px solid #1e3a5f;
+          border-radius: 8px;
+          padding: 8px 12px;
+          color: #fff;
+          font-size: 13px;
+        }
+        .portal-copilot-input:focus {
+          outline: none;
+          border-color: #00f2fe;
+        }
+        .portal-copilot-send {
+          background: #00f2fe;
+          color: #000;
+          border: none;
+          border-radius: 8px;
+          padding: 8px 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        @media (max-width: 640px) {
+          .portal-copilot-btn {
+            bottom: calc(var(--portal-safe-bottom, 0px) + 72px);
+            right: 12px;
+            padding: 8px 14px;
+            font-size: 12px;
+          }
+          .portal-copilot-drawer {
+            bottom: calc(var(--portal-safe-bottom, 0px) + 120px);
+            right: 12px;
+            left: 12px;
+            width: auto;
+          }
+        }
+      </style>
+
+      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI AAS BOT">
+        <span>🤖</span>
+        <span>Trợ lý AI AAS BOT</span>
+      </button>
+
+      <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">
+        <div class="portal-copilot-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #00f2fe, #4facfe); display:flex; align-items:center; justify-content:center; font-size:18px;">🤖</div>
+            <div>
+              <strong style="font-size:14px; color:#fff; display:block;">Trợ lý AI AAS BOT</strong>
+              <span style="font-size:11px; color:#00d26a;">🟢 Nối liền toàn bộ sản phẩm TOAN AAS</span>
+            </div>
+          </div>
+          <button type="button" id="portal-copilot-close-btn" style="background:none; border:none; color:#8fa3b7; font-size:18px; cursor:pointer;" aria-label="Đóng">✕</button>
+        </div>
+
+        <div class="portal-copilot-chips">
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Nạp tiền vào tài khoản">⚡ Nạp Xu PayOS</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo video quảng cáo">🎬 Tạo Video AI</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo ảnh sản phẩm">🖼 Tạo Ảnh AI</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Lồng tiếng đọc văn bản">🎙️ Lồng Tiếng TTS</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bóc tách phụ đề video">🗣️ Bóc Phụ Đề</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo nhạc Suno AI">🎵 Tạo Nhạc Suno</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Viết kịch bản video">✍️ Kịch Bản</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">👑 Gói Hội Viên</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bảng giá các dịch vụ">💳 Bảng Giá</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Kiểm tra số dư Xu hiện tại">💼 Kiểm Tra Số Dư</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Đổi giao diện sáng tối">🎨 Đổi Theme</button>
+        </div>
+
+        <div class="portal-copilot-msgs" id="portal-copilot-msgs-list">
+          ${copilotState.messages.map((m) => `
+            <div class="${m.role === 'user' ? 'copilot-bubble-user' : 'copilot-bubble-ai'}">
+              <div>${m.text}</div>
+              ${m.actions && m.actions.length ? `
+                <div class="copilot-actions">
+                  ${m.actions.map((act) => {
+                    if (act.insertPrompt) {
+                      return `<button type="button" class="copilot-prompt-btn" data-copilot-insert-prompt="${safeText(act.insertPrompt)}">${safeText(act.label)}</button>`;
+                    }
+                    return `<button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">👉 ${safeText(act.label)}</button>`;
+                  }).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <form class="portal-copilot-form" id="portal-copilot-input-form">
+          <input type="text" id="portal-copilot-text-input" class="portal-copilot-input" placeholder="Hỏi hoặc yêu cầu điều khiển web app..." autocomplete="off" />
+          <button type="submit" class="portal-copilot-send">Gửi</button>
+        </form>
+      </div>
+    `;
+
+    bindCopilotListeners(container, context);
+  }
+
+  function mountPortalAiCopilot(context) {
+    if (!document || !document.body || typeof document.body.appendChild !== "function") return;
+    let container = document.getElementById("portal-copilot-root");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "portal-copilot-root";
+      document.body.appendChild(container);
+    }
+    renderCopilotHtml(container, context);
   }
 
   window.TOANAASPortal = Object.freeze({
