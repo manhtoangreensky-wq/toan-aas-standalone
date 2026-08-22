@@ -13725,12 +13725,12 @@
       // talks to PayOS from the browser.
       "wallet-refresh": Boolean(bridgeAvailable),
       "refresh-wallet-after-bot": Boolean(bridgeAvailable),
-      "payment-lookup": Boolean(bridgeAvailable),
+      "payment-lookup": true,
       "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
       "admin-retry": adminWriteEnabled,
       "admin-refund": adminWriteEnabled,
       "admin-freeze": adminWriteEnabled,
-      "payment-create": Boolean(status.flags && status.flags.payment_enabled && bridgeAvailable),
+      "payment-create": Boolean(status.flags && status.flags.payment_enabled),
       "feature-draft": Boolean(bridgeAvailable),
       "feature-estimate": Boolean(bridgeAvailable),
       "feature-confirm": webFeatureExecutionAvailable,
@@ -36944,24 +36944,39 @@
       }
       if (action === "payment-create") {
         const packageId = String(fields.package || "").trim();
-        if (!packageId) throw new Error("Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.");
-        const submission = acquireSubmission("payment", packageId);
+        const promoInput = document.getElementById("portal-topup-promo-input");
+        const promoCode = String((fields && fields.promo_code) || (promoInput && promoInput.value) || "").trim().toUpperCase();
+        if (!packageId) throw new Error("Hãy chọn gói nạp trước khi tạo yêu cầu thanh toán.");
+        const submission = acquireSubmission("payment", packageId + (promoCode ? ":" + promoCode : ""));
         if (!submission) {
-          toast("Yêu cầu thanh toán đang được gửi. Vui lòng chờ phản hồi canonical.", "error");
+          toast("Yêu cầu thanh toán đang được gửi. Vui lòng chờ phản hồi.", "error");
           return;
         }
         try {
-          const result = await api("/payments/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: packageId, payment_type: "topup_xu", idempotency_key: submission.key }) });
-          const nextFlow = { status: (result.data && result.data.status) || result.status || "awaiting_confirm", message: result.message, data: result.data || {} };
+          const result = await api("/payments/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              package_id: packageId,
+              payment_type: "topup_xu",
+              promo_code: promoCode,
+              idempotency_key: submission.key
+            })
+          });
+          const nextFlow = {
+            status: (result.data && result.data.status) || result.status || "awaiting_confirm",
+            message: result.message,
+            data: result.data || {}
+          };
           merge({ paymentFlow: nextFlow });
           schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
           toast(result.message);
           const checkoutUrl = result.data && (result.data.checkout_url || result.data.checkoutUrl || result.data.payment_url || result.data.url);
           if (checkoutUrl) {
             try {
-              window.location.href = checkoutUrl;
+              window.open(checkoutUrl, "_blank");
             } catch (_) {
-              try { window.open(checkoutUrl, "_blank"); } catch (_) {}
+              try { window.location.href = checkoutUrl; } catch (_) {}
             }
           }
         } finally {

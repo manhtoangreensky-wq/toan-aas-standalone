@@ -996,7 +996,7 @@ a { color: inherit; text-decoration: none; }
 .portal-empty h3 { margin: 0; font-size: 13px; }
 .portal-empty p { max-width: 440px; margin: 0; color: var(--portal-muted); font-size: 11px; line-height: 1.55; }
 
-.portal-auth-page { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); min-height: calc(100vh - clamp(68px, 7.2vw, 112px)); gap: clamp(24px, 5vw, 78px); align-items: start; align-content: start; padding-top: 68px; }
+.portal-auth-page { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); min-height: calc(100vh - 40px); gap: clamp(20px, 4vw, 56px); align-items: center; align-content: center; padding-top: 40px; padding-bottom: 40px; }
 .portal-auth-brand { position: absolute; top: 0; left: 0; display: inline-flex; gap: 10px; align-items: center; color: var(--portal-text); }
 .portal-auth-brand .portal-brand-mark { width: 36px; height: 36px; margin: 0; border-radius: 12px; font-size: 13px; }
 .portal-auth-brand strong { display: block; font-size: 13px; font-weight: 880; letter-spacing: .02em; }

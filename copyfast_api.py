@@ -786,9 +786,9 @@ DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
     {"code": "topup_10k", "label": "10.000 đ", "amount_vnd": 10000, "xu": 100, "available": True},
     {"code": "topup_20k", "label": "20.000 đ", "amount_vnd": 20000, "xu": 200, "available": True},
     {"code": "topup_50k", "label": "50.000 đ", "amount_vnd": 50000, "xu": 500, "available": True},
-    {"code": "topup_100k", "label": "100.000 đ", "amount_vnd": 100000, "xu": 1100, "available": True},
-    {"code": "topup_200k", "label": "200.000 đ", "amount_vnd": 200000, "xu": 2300, "available": True},
-    {"code": "topup_500k", "label": "500.000 đ", "amount_vnd": 500000, "xu": 6000, "available": True},
+    {"code": "topup_100k", "label": "100.000 đ", "amount_vnd": 100000, "xu": 1000, "available": True},
+    {"code": "topup_200k", "label": "200.000 đ", "amount_vnd": 200000, "xu": 2000, "available": True},
+    {"code": "topup_500k", "label": "500.000 đ", "amount_vnd": 500000, "xu": 5000, "available": True},
 )
 
 
@@ -1897,6 +1897,7 @@ class FeatureRequest(BaseModel):
 class PaymentRequest(BaseModel):
     package_id: str = Field(default="", max_length=120)
     payment_type: str = Field(default="topup_xu", max_length=80)
+    promo_code: Optional[str] = Field(default="", max_length=64)
     idempotency_key: str = Field(min_length=12, max_length=160)
 
 
@@ -4204,11 +4205,32 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         "topup_10k": (10000, 100),
         "topup_20k": (20000, 200),
         "topup_50k": (50000, 500),
-        "topup_100k": (100000, 1100),
-        "topup_200k": (200000, 2300),
-        "topup_500k": (500000, 6000),
+        "topup_100k": (100000, 1000),
+        "topup_200k": (200000, 2000),
+        "topup_500k": (500000, 5000),
     }
-    amount, expected_xu = pkg_map.get(package_id, (50000, 500))
+    amount, base_xu = pkg_map.get(package_id, (50000, 500))
+    expected_xu = base_xu
+    promo_code = str(payload.promo_code or "").strip().upper()
+    promo_bonus = 0
+    promo_msg = ""
+
+    if promo_code:
+        promo_rates = {
+            "WEEKLY10": (10, 50000, 500),
+            "MONTHLY20": (20, 100000, 1500),
+            "DAILY5": (5, 50000, 150),
+            "BETA50": (50, 50000, 1000),
+        }
+        if promo_code in promo_rates:
+            pct, min_amt, max_b = promo_rates[promo_code]
+            if amount >= min_amt:
+                promo_bonus = min(int(base_xu * pct / 100), max_b)
+                expected_xu += promo_bonus
+                promo_msg = f" (Đã áp dụng mã {promo_code}: +{promo_bonus} Xu)"
+            else:
+                promo_msg = f" (Mã {promo_code} yêu cầu đơn từ {min_amt:,}đ)"
+
     import random
     order_code = random.randint(100000, 99999999)
     description = f"Nap Xu {order_code}"
@@ -4246,7 +4268,7 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
                     
                     return envelope(
                         True,
-                        "Đã tạo cổng thanh toán PayOS thành công. Vui lòng quét mã VietQR để hoàn tất nạp Xu.",
+                        f"Đã tạo cổng thanh toán PayOS thành công. Vui lòng quét mã VietQR để hoàn tất nạp Xu.{promo_msg}",
                         data={
                             "order_code": order_code,
                             "orderCode": order_code,
