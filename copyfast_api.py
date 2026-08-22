@@ -1897,7 +1897,7 @@ class FeatureRequest(BaseModel):
 class PaymentRequest(BaseModel):
     package_id: str = Field(default="", max_length=120)
     payment_type: str = Field(default="topup_xu", max_length=80)
-    promo_code: Optional[str] = Field(default="", max_length=64)
+    promo_code: str = Field(default="", max_length=64)
     idempotency_key: str = Field(min_length=12, max_length=160)
 
 
