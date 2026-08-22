@@ -9739,7 +9739,7 @@
       {
         label: "Ví & gói",
         links: [
-          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "Membership", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
+          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "👑 Hạng hội viên & VIP", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
         ]
       },
       {
@@ -10234,6 +10234,10 @@
       ? `<span class="portal-user-dropdown-avatar" aria-hidden="true" style="padding:0; overflow:hidden;"><img src="${safeText(avatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;" /></span>`
       : `<span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>`;
 
+    const headerWallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
+    const headerPaidVnd = Number(headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu ? headerWallet.balance_xu * 100 : 0));
+    const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe" } };
+
     const userDropdown = (context && context.session && context.session.authenticated === true)
       ? `<div class="portal-user-dropdown-container">
           <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
@@ -10245,12 +10249,19 @@
             <div class="portal-user-dropdown-header">
               ${dropdownAvatarElement}
               <div class="portal-user-dropdown-meta">
-                <strong>${safeText(name)}</strong>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <strong>${safeText(name)}</strong>
+                  <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierInfo.currentTier.color}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierInfo.currentTier.color}44;">${safeText(headerTierInfo.currentTier.badge)}</span>
+                </div>
                 <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || "Workspace Account")}</small>
               </div>
             </div>
             <div class="portal-user-dropdown-divider"></div>
             <div class="portal-user-dropdown-items">
+              <a class="portal-user-dropdown-item" href="/membership">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
+                <div><strong style="color:${headerTierInfo.currentTier.color};">${safeText(headerTierInfo.currentTier.badge)} · Hạng & Quyền Lợi</strong><small>Tiến trình lên hạng, giảm giá Xu</small></div>
+              </a>
               <a class="portal-user-dropdown-item" href="/wallet">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
                 <div><strong>Ví & Số dư Xu</strong><small>Nạp Xu, kiểm tra số dư</small></div>
@@ -20344,153 +20355,404 @@
     return entries.slice(0, 12);
   }
 
+  const MEMBER_TIER_CANONICAL = [
+    {
+      key: "newbie",
+      label: "Newbie",
+      badge: "🌱 Newbie",
+      icon: "🌱",
+      thresholdVnd: 0,
+      thresholdXu: 0,
+      discountRate: 0,
+      referralPercent: 0,
+      referralCap: 0,
+      promoPercent: 0,
+      birthdayGiftXu: 0,
+      queuePriority: "Tiêu chuẩn",
+      color: "#94a3b8",
+      summary: "Mặc định khi đăng ký",
+      perks: [
+        "100 Xu trải nghiệm dùng thử tính năng",
+        "Tạo ảnh SDXL & Voiceover TTS cơ bản",
+        "Sử dụng công cụ miễn phí (Free Tools Hub)",
+        "Lưu trữ tài sản ngắn hạn trong Asset Vault"
+      ]
+    },
+    {
+      key: "silver",
+      label: "Silver",
+      badge: "🥈 Silver",
+      icon: "🥈",
+      thresholdVnd: 100000,
+      thresholdXu: 1000,
+      discountRate: 2,
+      referralPercent: 3,
+      referralCap: 100,
+      promoPercent: 10,
+      promoCap: 100,
+      birthdayGiftXu: 111,
+      queuePriority: "Ưu tiên x1.5",
+      color: "#cbd5e1",
+      summary: "Tổng nạp từ 100.000 đ (1.000 Xu)",
+      perks: [
+        "Giảm 2% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 3% (tối đa 100 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 10% (tối đa 100 Xu)",
+        "Quà tặng sinh nhật hàng năm: 111 Xu",
+        "Mở khóa Voiceover TTS 3 miền Bắc - Trung - Nam",
+        "Tốc độ xử lý kết xuất ưu tiên x1.5"
+      ]
+    },
+    {
+      key: "gold",
+      label: "Gold",
+      badge: "🥇 Gold",
+      icon: "🥇",
+      thresholdVnd: 1000000,
+      thresholdXu: 10000,
+      discountRate: 4,
+      referralPercent: 6,
+      referralCap: 150,
+      promoPercent: 12,
+      promoCap: 150,
+      birthdayGiftXu: 333,
+      queuePriority: "Ưu tiên x2.0",
+      color: "#fbbf24",
+      summary: "Tổng nạp từ 1.000.000 đ (10.000 Xu)",
+      perks: [
+        "Giảm 4% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 6% (tối đa 150 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 12% (tối đa 150 Xu)",
+        "Quà tặng sinh nhật hàng năm: 333 Xu",
+        "Mở khóa trọn bộ Studio Video AI (Veo, Kling, MiniMax)",
+        "Mở khóa Tạo nhạc Suno AI v4 độc quyền",
+        "Tốc độ xử lý kết xuất GPU nhanh gấp 2 lần"
+      ]
+    },
+    {
+      key: "platinum",
+      label: "Platinum",
+      badge: "💠 Platinum",
+      icon: "💠",
+      thresholdVnd: 10000000,
+      thresholdXu: 100000,
+      discountRate: 6,
+      referralPercent: 8,
+      referralCap: 200,
+      promoPercent: 15,
+      promoCap: 250,
+      birthdayGiftXu: 555,
+      queuePriority: "Ưu tiên x3.0 (Cao cấp)",
+      color: "#38bdf8",
+      summary: "Tổng nạp từ 10.000.000 đ (100.000 Xu)",
+      perks: [
+        "Giảm 6% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 8% (tối đa 200 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 15% (tối đa 250 Xu)",
+        "Quà tặng sinh nhật hàng năm: 555 Xu",
+        "Xuất video & ảnh 4K Ultra HD không watermark",
+        "Trọn bộ kịch bản bán hàng Script-to-Screen",
+        "Kênh CSKH phản hồi ưu tiên"
+      ]
+    },
+    {
+      key: "diamond",
+      label: "Diamond",
+      badge: "💎 Diamond",
+      icon: "💎",
+      thresholdVnd: 50000000,
+      thresholdXu: 500000,
+      discountRate: 8,
+      referralPercent: 10,
+      referralCap: 250,
+      promoPercent: 18,
+      promoCap: 400,
+      birthdayGiftXu: 666,
+      queuePriority: "Siêu tốc độ (Ultra)",
+      color: "#a855f7",
+      summary: "Tổng nạp từ 50.000.000 đ (500.000 Xu)",
+      perks: [
+        "Giảm 8% phí khi tiêu Xu cho toàn bộ tác vụ",
+        "Thưởng giới thiệu bạn bè: 10% (tối đa 250 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 18% (tối đa 400 Xu)",
+        "Quà tặng sinh nhật hàng năm: 666 Xu",
+        "Quyền truy cập sớm các model AI mới nhất",
+        "Asset Vault không giới hạn dung lượng và thời gian",
+        "Kênh CSKH Dedicated Channel phản hồi trong 5 phút"
+      ]
+    },
+    {
+      key: "vip",
+      label: "VIP",
+      badge: "👑 VIP",
+      icon: "👑",
+      thresholdVnd: 100000000,
+      thresholdXu: 1000000,
+      discountRate: 10,
+      referralPercent: 12,
+      referralCap: 300,
+      promoPercent: 20,
+      promoCap: 600,
+      birthdayGiftXu: 888,
+      queuePriority: "Zero Queue Số 1 Tuyệt Đối",
+      color: "#f43f5e",
+      summary: "Tổng nạp từ 100.000.000 đ hoặc Admin cấp",
+      perks: [
+        "Giảm 10% phí khi tiêu Xu (Mức cao nhất hệ thống)",
+        "Thưởng giới thiệu bạn bè: 12% (tối đa 300 Xu)",
+        "Mã ưu đãi thăng hạng: Giảm 20% (tối đa 600 Xu)",
+        "Quà tặng sinh nhật hàng năm: 888 Xu",
+        "Zero Queue số 1 tuyệt đối - Render tức thì không chờ đợi",
+        "Hỗ trợ kỹ thuật & tư vấn chiến lược 1-1 riêng từ Admin",
+        "Hưởng mọi chính sách ưu đãi và khuyến mãi VIP độc quyền"
+      ]
+    }
+  ];
+
+  function getMemberTierInfo(totalPaidVnd, overrideTier) {
+    const paid = Math.max(0, Number(totalPaidVnd || 0));
+    if (overrideTier && overrideTier.toLowerCase() === "vip") {
+      return { currentTier: MEMBER_TIER_CANONICAL[5], currentIndex: 5, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: paid };
+    }
+    let currentIndex = 0;
+    for (let i = MEMBER_TIER_CANONICAL.length - 1; i >= 0; i--) {
+      if (paid >= MEMBER_TIER_CANONICAL[i].thresholdVnd) {
+        currentIndex = i;
+        break;
+      }
+    }
+    const currentTier = MEMBER_TIER_CANONICAL[currentIndex];
+    const isMax = currentIndex === MEMBER_TIER_CANONICAL.length - 1;
+    const nextTier = isMax ? null : MEMBER_TIER_CANONICAL[currentIndex + 1];
+    const neededVnd = nextTier ? Math.max(0, nextTier.thresholdVnd - paid) : 0;
+    const neededXu = Math.ceil(neededVnd / 100);
+    const prevThresh = currentTier.thresholdVnd;
+    const progressPercent = nextTier ? Math.min(100, Math.max(0, Math.round(((paid - prevThresh) / (nextTier.thresholdVnd - prevThresh)) * 100))) : 100;
+
+    return { currentTier, currentIndex, nextTier, neededVnd, neededXu, progressPercent, paidVnd: paid };
+  }
+
   function renderMembership(page, context) {
     const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const plan = wallet && wallet.plan && typeof wallet.plan === "object" ? wallet.plan : {};
+    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+    const totalPaidVnd = Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0));
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const catalog = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
-    const planName = String(plan.plan_name || plan.current_plan || plan.name || "Gói Tiêu Chuẩn (Standard)");
-    const planStatus = String(plan.plan_status || plan.status || "Đang hoạt động");
     const entries = membershipCatalogEntries(context);
 
-    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
-    const currentTierName = balanceXu >= 6000 ? "Enterprise VIP (Doanh Nghiệp VIP)" : (balanceXu >= 2300 ? "E-Commerce & Ads (Bán Hàng)" : (balanceXu >= 500 ? "Creator Pro (Sáng Tạo Pro)" : "Standard (Tiêu Chuẩn)"));
+    const tierInfo = getMemberTierInfo(totalPaidVnd, profile.vipTierOverride || profile.tier);
+    const { currentTier, nextTier, neededVnd, neededXu, progressPercent, paidVnd } = tierInfo;
 
     const currentCard = `
-      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe;">
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${currentTier.color};">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">💼 Hội Viên TOAN AAS</span>
-            <h2 class="portal-card-title">Hạng Thành Viên & Quyền Lợi Hiện Tại</h2>
-            <p class="portal-card-subtitle">Hệ thống ghi nhận trạng thái hội viên tự động. Xu dùng cho toàn bộ công cụ Studio, Render và Tải file không watermark.</p>
+            <span class="portal-section-kicker">👑 Hệ Thống Hội Viên TOAN AAS</span>
+            <h2 class="portal-card-title">Hạng Hội Viên: <span style="color:${currentTier.color};">${safeText(currentTier.badge)}</span></h2>
+            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy. Hạng càng cao, chiết khấu trừ Xu càng lớn và tốc độ kết xuất càng nhanh.</p>
           </div>
           ${badge("read_only")}
         </div>
-        <div class="portal-admin-grid">
+
+        <div class="portal-admin-grid" style="margin-top:16px;">
           <div class="portal-metric">
-            <span>Hạng hội viên</span>
-            <strong style="color:#00f2fe; font-size:22px;">${safeText(currentTierName)}</strong>
-            <em>${safeText(planStatus)}</em>
+            <span>Hạng hiện tại</span>
+            <strong style="color:${currentTier.color}; font-size:22px;">${safeText(currentTier.badge)}</strong>
+            <em>${currentTier.discountRate > 0 ? `Giảm ${currentTier.discountRate}% khi tiêu Xu` : 'Ưu đãi chuẩn'}</em>
           </div>
           <div class="portal-metric">
-            <span>Số dư khả dụng</span>
-            <strong style="color:#00d26a; font-size:22px;">${safeText(String(balanceXu))} Xu</strong>
-            <em>100 VNĐ = 1 Xu</em>
+            <span>Tổng tiền đã nạp</span>
+            <strong style="color:#00f2fe; font-size:22px;">${paidVnd.toLocaleString('vi-VN')} đ</strong>
+            <em>~${Math.floor(paidVnd / 100).toLocaleString('vi-VN')} Xu tích lũy</em>
           </div>
           <div class="portal-metric">
-            <span>Gói đăng ký</span>
-            <strong>${safeText(planName)}</strong>
-            <em>Tài khoản Web: ${safeText(String(profile.accountType || "standard"))}</em>
+            <span>Số dư Xu khả dụng</span>
+            <strong style="color:#00d26a; font-size:22px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong>
+            <em>~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ</em>
           </div>
         </div>
+
+        <!-- Level-up Progress Section -->
+        <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-top:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:14px; font-weight:700; color:var(--portal-text-primary, #fff);">
+              ${nextTier ? `Tiến trình lên hạng ${nextTier.badge}:` : '🏆 Bạn đã đạt Hạng Thành Viên Tối Cao!'}
+            </div>
+            <div style="font-size:13px; font-weight:700; color:${nextTier ? nextTier.color : '#00d26a'};">
+              ${progressPercent}%
+            </div>
+          </div>
+
+          <div style="width:100%; height:12px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:10px;">
+            <div style="width:${progressPercent}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${nextTier ? nextTier.color : '#00d26a'}); border-radius:999px; transition:width 0.4s ease;"></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--portal-text-secondary, #8fa3b7); flex-wrap:wrap; gap:6px;">
+            <span>Đã nạp: <strong style="color:#fff;">${paidVnd.toLocaleString('vi-VN')} đ</strong></span>
+            ${nextTier ? `<span>Cần thêm: <strong style="color:#00f2fe;">${neededVnd.toLocaleString('vi-VN')} đ</strong> (~${neededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${nextTier.badge}</strong></span>` : '<span>Đặc quyền tối cao không giới hạn</span>'}
+          </div>
+        </div>
+
+        <!-- Active Perks Badges -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;">
+          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🏷 Giảm ${currentTier.discountRate}% khi tiêu Xu</span>
+          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🎁 Thưởng ref ${currentTier.referralPercent}% (Max ${currentTier.referralCap} Xu)</span>
+          <span style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; border:1px solid rgba(251, 191, 36, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">🎂 Quà sinh nhật ${currentTier.birthdayGiftXu} Xu</span>
+          <span style="background:rgba(168, 85, 247, 0.1); color:#a855f7; border:1px solid rgba(168, 85, 247, 0.25); font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px;">⚡ Hàng chờ ${currentTier.queuePriority}</span>
+        </div>
+
         <div class="portal-form-footer">
-          <span class="portal-form-note">Tự động tích lũy số dư khi nạp tiền qua cổng PayOS hoặc chuyển khoản ngân hàng.</span>
+          <span class="portal-form-note">Nạp tiền tự động qua PayOS hoặc VietQR ACB (8899397968). Hệ thống tự động nâng hạng tức thì sau khi quét mã 5 giây.</span>
           <div class="portal-inline-actions">
-            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu nâng hạng</a>
-            <a class="portal-button portal-button--quiet" href="/pricing">Bảng giá dịch vụ</a>
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu lên hạng ngay</a>
+            <a class="portal-button portal-button--quiet" href="/wallet/history">📜 Lịch sử nạp tiền</a>
           </div>
         </div>
       </section>
     `;
 
-    const tiers = [
-      {
-        icon: "🌱",
-        name: "Hạng Tiêu Chuẩn (Standard)",
-        sub: "Khởi đầu sáng tạo",
-        minXu: "0 - 499 Xu",
-        features: [
-          "Tặng 100 Xu trải nghiệm khi kích hoạt tài khoản",
-          "Tạo ảnh SDXL / Flux tiêu chuẩn (15 Xu/ảnh)",
-          "Giọng đọc AI Voiceover TTS tự nhiên (20 Xu/1000 từ)",
-          "Xử lý OCR văn bản, ghép/tách PDF (10 Xu/lần)",
-          "Tốc độ xử lý hàng đợi tiêu chuẩn"
-        ],
-        badge: "Cơ bản",
-        color: "#00f2fe",
-        current: balanceXu < 500
-      },
-      {
-        icon: "⭐",
-        name: "Hạng Sáng Tạo Pro (Creator Pro)",
-        sub: "Dành cho Content Creator",
-        minXu: "500 - 2.299 Xu",
-        features: [
-          "Mở khóa toàn bộ tính năng Video AI (Kling 2.1, Veo, MiniMax)",
-          "Tạo nhạc nền AI Suno độc quyền không bản quyền (100 Xu)",
-          "Tách nền, ghép phông Studio 4K chuyên nghiệp",
-          "Ưu tiên tài nguyên GPU render nhanh gấp 2 lần",
-          "Lưu trữ tài sản an toàn trong Asset Vault"
-        ],
-        badge: "Phổ biến",
-        color: "#00d26a",
-        current: balanceXu >= 500 && balanceXu < 2300
-      },
-      {
-        icon: "🔥",
-        name: "Hạng Bán Hàng & Ads (E-Commerce)",
-        sub: "Dành cho Shop & Doanh nghiệp",
-        minXu: "2.300 - 5.999 Xu",
-        features: [
-          "Tạo video quảng cáo thương mại đa phân cảnh TikTok/Reels",
-          "Bộ ảnh sản phẩm đa góc độ kèm Prompt tối ưu",
-          "Kịch bản chốt đơn livestream & Content Studio không giới hạn",
-          "Dịch thuật & làm phụ đề đa ngôn ngữ tự động",
-          "Xuất video/ảnh chất lượng Ultra HD 4K không watermark"
-        ],
-        badge: "Đề xuất",
-        color: "#f59e0b",
-        current: balanceXu >= 2300 && balanceXu < 6000
-      },
-      {
-        icon: "👑",
-        name: "Hạng Doanh Nghiệp VIP (Enterprise)",
-        sub: "Dành cho Agency & Đội ngũ lớn",
-        minXu: "Từ 6.000 Xu trở lên",
-        features: [
-          "Ưu tiên hàng đợi số 1 (Zero Queue, render tức thì)",
-          "Không giới hạn dung lượng lưu trữ Asset Vault",
-          "Hỗ trợ API Key riêng tích hợp trực tiếp vào phần mềm",
-          "Được tư vấn chiến lược nội dung 1-1 riêng từ Admin qua Telegram",
-          "Hưởng chiết khấu nạp Xu và khuyến mãi cao nhất (+20% đến +30%)"
-        ],
-        badge: "VIP Cao cấp",
-        color: "#ec4899",
-        current: balanceXu >= 6000
-      }
-    ];
-
     const tierCardsMarkup = `
       <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">👑 Bảng đặc quyền 4 hạng hội viên</span>
-            <h2 class="portal-card-title">Cấp Độ Thành Viên & Quyền Lợi TOAN AAS</h2>
-            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo số Xu nạp tích lũy. Thành viên cấp càng cao càng nhận được nhiều quyền lợi ưu tiên và tài nguyên GPU tốc độ cao.</p>
+            <span class="portal-section-kicker">📊 Bảng tiêu chuẩn 6 cấp bậc</span>
+            <h2 class="portal-card-title">Điều Kiện Lên Hạng & Chi Tiết Quyền Lợi</h2>
+            <p class="portal-card-subtitle">Chi tiết điều kiện tổng nạp tích lũy và toàn bộ ưu đãi dành cho từng hạng thành viên trong hệ sinh thái TOAN AAS.</p>
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top:16px;">
-          ${tiers.map((t) => `
-            <div style="border: 2px solid ${t.current ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:20px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${t.current ? '0 4px 20px rgba(0, 242, 254, 0.15)' : 'none'};">
-              ${t.current ? `<span style="position:absolute; top:-10px; right:16px; background:${t.color}; color:#000; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px;">ĐANG ÁP DỤNG</span>` : ''}
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                  <span style="font-size:32px;">${t.icon}</span>
-                  <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); color:${t.color}; padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">${t.badge}</span>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
+          ${MEMBER_TIER_CANONICAL.map((t) => {
+            const isUserCurrent = t.key === currentTier.key;
+            return `
+              <div style="border: 2px solid ${isUserCurrent ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:20px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${isUserCurrent ? `0 6px 24px ${t.color}33` : 'none'};">
+                ${isUserCurrent ? `<span style="position:absolute; top:-11px; right:16px; background:${t.color}; color:#000; font-size:11px; font-weight:800; padding:2px 12px; border-radius:10px;">HẠNG HIỆN TẠI</span>` : ''}
+                
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                    <span style="font-size:32px;">${t.icon}</span>
+                    <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); color:${t.color}; padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">${t.badge}</span>
+                  </div>
+
+                  <h3 style="font-size:18px; font-weight:800; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
+                  <div style="font-size:13px; color:#00f2fe; font-weight:700; margin-bottom:6px;">
+                    ${t.thresholdVnd === 0 ? 'Mặc định khi đăng ký' : `Tổng nạp từ: ${t.thresholdVnd.toLocaleString('vi-VN')} đ (~${t.thresholdXu.toLocaleString('vi-VN')} Xu)`}
+                  </div>
+                  <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 14px;">${safeText(t.summary)}</p>
+
+                  <div style="background:#081320; border-radius:8px; padding:10px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
+                    <div><span style="color:#8fa3b7;">Giảm trừ Xu:</span> <strong style="color:${t.color};">${t.discountRate}%</strong></div>
+                    <div><span style="color:#8fa3b7;">Thưởng ref:</span> <strong style="color:#00d26a;">${t.referralPercent}%</strong></div>
+                    <div><span style="color:#8fa3b7;">Voucher thăng hạng:</span> <strong style="color:#fbbf24;">${t.promoPercent > 0 ? `${t.promoPercent}%` : '—'}</strong></div>
+                    <div><span style="color:#8fa3b7;">Quà sinh nhật:</span> <strong style="color:#ec4899;">${t.birthdayGiftXu > 0 ? `${t.birthdayGiftXu} Xu` : '—'}</strong></div>
+                  </div>
+
+                  <div style="font-size:12px; font-weight:700; color:#8fa3b7; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Đặc quyền nổi bật:</div>
+                  <ul style="list-style:none; padding:0; margin:0 0 16px; display:flex; flex-direction:column; gap:8px; font-size:12.5px; color:var(--portal-text-secondary, #c1d1e0);">
+                    ${t.perks.map((p) => `<li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:${t.color}; font-weight:700;">✓</span><span>${safeText(p)}</span></li>`).join('')}
+                  </ul>
                 </div>
-                <h3 style="font-size:17px; font-weight:700; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
-                <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 12px;">${safeText(t.sub)} · <strong>${safeText(t.minXu)}</strong></p>
-                <ul style="list-style:none; padding:0; margin:0 0 16px; display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--portal-text-secondary, #c1d1e0);">
-                  ${t.features.map((f) => `<li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:${t.color}; font-weight:700;">✓</span><span>${safeText(f)}</span></li>`).join('')}
-                </ul>
+
+                <div style="border-top:1px solid var(--portal-border, #2a3b4c); padding-top:14px; margin-top:auto;">
+                  <a class="portal-button ${isUserCurrent ? 'portal-button--primary' : 'portal-button--quiet'}" href="/wallet/topup" style="width:100%; text-align:center; justify-content:center; font-size:13px; font-weight:700;">
+                    ${isUserCurrent ? '⚡ Nạp thêm Xu' : `⚡ Nạp ${t.thresholdVnd.toLocaleString('vi-VN')} đ lên ${t.badge}`}
+                  </a>
+                </div>
               </div>
-              <div style="border-top:1px solid var(--portal-border, #2a3b4c); padding-top:14px; margin-top:auto;">
-                <a class="portal-button ${t.current ? 'portal-button--primary' : 'portal-button--quiet'}" href="/wallet/topup" style="width:100%; text-align:center; justify-content:center; font-size:13px; font-weight:700;">
-                  ${t.current ? '⚡ Nạp thêm Xu' : '⚡ Nâng hạng ngay'}
-                </a>
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
+        </div>
+      </section>
+    `;
+
+    const comparisonTableMarkup = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">📋 Ma trận quyền lợi</span>
+            <h2 class="portal-card-title">Bảng So Sánh Quyền Lợi 6 Hạng Thành Viên</h2>
+            <p class="portal-card-subtitle">So sánh trực quan tất cả quyền lợi, chính sách giảm giá, thưởng giới thiệu và quà sinh nhật giữa các hạng.</p>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto; margin-top:16px;">
+          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; min-width:700px;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--portal-border, #2a3b4c); background:var(--portal-surface-card, #091a28);">
+                <th style="padding:12px 14px; color:var(--portal-text-primary, #fff);">Cấp bậc & Quyền lợi</th>
+                <th style="padding:12px 10px; color:#94a3b8;">🌱 Newbie</th>
+                <th style="padding:12px 10px; color:#cbd5e1;">🥈 Silver</th>
+                <th style="padding:12px 10px; color:#fbbf24;">🥇 Gold</th>
+                <th style="padding:12px 10px; color:#38bdf8;">💠 Platinum</th>
+                <th style="padding:12px 10px; color:#a855f7;">💎 Diamond</th>
+                <th style="padding:12px 10px; color:#f43f5e;">👑 VIP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Điều kiện tổng nạp</td>
+                <td style="padding:10px;">0 đ</td>
+                <td style="padding:10px;">100.000 đ</td>
+                <td style="padding:10px;">1.000.000 đ</td>
+                <td style="padding:10px;">10.000.000 đ</td>
+                <td style="padding:10px;">50.000.000 đ</td>
+                <td style="padding:10px;">100.000.000 đ</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Giảm giá khi tiêu Xu</td>
+                <td style="padding:10px;">0%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">2%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">4%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">6%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">8%</td>
+                <td style="padding:10px; color:#00f2fe; font-weight:700;">10%</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Hoa hồng giới thiệu</td>
+                <td style="padding:10px;">0%</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">3% (Max 100 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">6% (Max 150 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">8% (Max 200 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">10% (Max 250 Xu)</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">12% (Max 300 Xu)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Voucher thăng hạng</td>
+                <td style="padding:10px;">—</td>
+                <td style="padding:10px;">Giảm 10% (Max 100 Xu)</td>
+                <td style="padding:10px;">Giảm 12% (Max 150 Xu)</td>
+                <td style="padding:10px;">Giảm 15% (Max 250 Xu)</td>
+                <td style="padding:10px;">Giảm 18% (Max 400 Xu)</td>
+                <td style="padding:10px;">Giảm 20% (Max 600 Xu)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <td style="padding:10px 14px; font-weight:700;">Quà tặng sinh nhật</td>
+                <td style="padding:10px;">—</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">111 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">333 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">555 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">666 Xu</td>
+                <td style="padding:10px; color:#ec4899; font-weight:700;">888 Xu</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">
+                <td style="padding:10px 14px; font-weight:700;">Tốc độ hàng chờ GPU</td>
+                <td style="padding:10px;">Tiêu chuẩn</td>
+                <td style="padding:10px;">Ưu tiên x1.5</td>
+                <td style="padding:10px;">Nhanh x2.0</td>
+                <td style="padding:10px;">Cao cấp x3.0</td>
+                <td style="padding:10px; color:#00d26a; font-weight:700;">Siêu tốc độ</td>
+                <td style="padding:10px; color:#f43f5e; font-weight:800;">Zero Queue Số 1</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 14px; font-weight:700;">Kênh hỗ trợ</td>
+                <td style="padding:10px;">Cộng đồng</td>
+                <td style="padding:10px;">CSKH Bot</td>
+                <td style="padding:10px;">CSKH Ưu tiên</td>
+                <td style="padding:10px;">CSKH Chuyên sâu</td>
+                <td style="padding:10px;">Dedicated 5 phút</td>
+                <td style="padding:10px; color:#f43f5e; font-weight:700;">1-1 Riêng từ Admin</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     `;
@@ -20527,7 +20789,7 @@
       </section>
     `;
 
-    return `<article class="portal-page portal-membership-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${currentCard}${tierCardsMarkup}${catalogSection}</div></div></article>`;
+    return `<article class="portal-page portal-membership-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${currentCard}${tierCardsMarkup}${comparisonTableMarkup}${catalogSection}</div></div></article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -25749,7 +26011,46 @@
     const accountQuickHealth = `<section class="portal-account-command" aria-label="${safeText(copy("quickHealthAria", "Tình trạng tài khoản và bước tiếp theo"))}"><div class="portal-account-command-copy"><h2>${safeText(copy("quickHealthTitle", "Tình trạng tài khoản"))}</h2><p>${safeText(accountPrimaryAction.title)}. ${safeText(linked ? copy("linkedBody", "Dữ liệu canonical chỉ được đọc sau xác minh server-side.") : copy("unlinkedBody", "Workspace Web vẫn hoạt động độc lập khi chưa liên kết Telegram."))}</p></div><dl class="portal-account-command-facts"><div><dt>${safeText(copy("sessionFact", "Phiên"))}</dt><dd>${portalIcon(session.authenticated ? ICONS.check : ICONS.info)} ${safeText(session.authenticated ? copy("sessionValid", "Signed session hợp lệ") : copy("needsVerification", "Cần xác minh"))}</dd></div><div><dt>${safeText(copy("profileFact", "Hồ sơ Web"))}</dt><dd>${portalIcon((profile.displayName || profile.name || profile.email || session.email) ? ICONS.check : ICONS.info)} ${safeText((profile.displayName || profile.name || profile.email || session.email) ? copy("ready", "Đã sẵn sàng") : copy("pendingCompletion", "Chờ hoàn thiện"))}</dd></div><div><dt>${safeText(copy("canonicalFact", "Canonical"))}</dt><dd>${portalIcon(linked ? ICONS.link : ICONS.info)} ${safeText(linked ? copy("oauthLinkedState", "Đã liên kết") : copy("optional", "Tùy chọn"))}</dd></div></dl><a class="portal-button portal-button--primary" href="${safeText(accountPrimaryAction.href)}">${safeText(accountPrimaryAction.label)}</a></section>`;
     const settingsNav = renderAccountSettingsNav("/account");
     const accountAssurance = `<details class="portal-account-assurance"><summary>${safeText(copy("assurance", "Trạng thái tích hợp và bảo mật"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
-    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua bot.") : copy("telegramUnlinkedBody", "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Logout luôn đi qua server để thu hồi session hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Security Center"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
+    const accountWallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
+    const accountPaidVnd = Number(accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu ? accountWallet.balance_xu * 100 : 0));
+    const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe", discountRate: 0, referralPercent: 0, birthdayGiftXu: 0 }, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: 0 };
+    const { currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
+
+    const memberTierCard = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${accTier.color};">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
+            <h2 class="portal-card-title">Hạng Hội Viên: <span style="color:${accTier.color};">${safeText(accTier.badge)}</span></h2>
+            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy (${accPaidVnd.toLocaleString('vi-VN')} đ).</p>
+          </div>
+          ${badge("read_only")}
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px;">
+            <strong style="color:var(--portal-text-primary, #fff);">${accNextTier ? `Tiến trình lên ${accNextTier.badge}:` : '🏆 Đạt Hạng Tối Cao VIP'}</strong>
+            <span style="color:${accNextTier ? accNextTier.color : '#00d26a'}; font-weight:700;">${accProgress}%</span>
+          </div>
+          <div style="width:100%; height:10px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:8px;">
+            <div style="width:${accProgress}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${accNextTier ? accNextTier.color : '#00d26a'}); border-radius:999px;"></div>
+          </div>
+          <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">
+            ${accNextTier ? `Còn thiếu: <strong style="color:#00f2fe;">${accNeededVnd.toLocaleString('vi-VN')} đ</strong> (~${accNeededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${accNextTier.badge}</strong>` : 'Đang hưởng trọn vẹn đặc quyền tối cao VIP'}
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🏷 Giảm ${accTier.discountRate}% trừ Xu</span>
+          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎁 Ref ${accTier.referralPercent}%</span>
+          <span style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; border:1px solid rgba(251, 191, 36, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎂 Sinh nhật ${accTier.birthdayGiftXu} Xu</span>
+        </div>
+        <div class="portal-form-footer">
+          <a class="portal-button portal-button--quiet" href="/membership">Xem bảng quyền lợi 6 hạng →</a>
+          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu lên hạng</a>
+        </div>
+      </section>
+    `;
+
+    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua bot.") : copy("telegramUnlinkedBody", "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Logout luôn đi qua server để thu hồi session hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Security Center"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${memberTierCard}${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
   }
 
   function renderInterfaceLocaleNavigator(page, context) {
@@ -33256,14 +33557,16 @@
     }
     // 10. Gói Thành Viên & VIP
     else if (q.includes("thành viên") || q.includes("thanh vien") || q.includes("gói") || q.includes("goi") || q.includes("hạng") || q.includes("hang") || q.includes("vip") || q.includes("quyền lợi") || q.includes("member")) {
-      replyText = `👑 <strong>4 Cấp Bậc Hội Viên VIP TOAN AAS:</strong><br/>
-1. <strong>Standard</strong> (0 - 499 Xu tích lũy): Trải nghiệm đầy đủ tính năng tạo ảnh AI và Voiceover TTS cơ bản.<br/>
-2. <strong>Creator Pro</strong> (500 - 2.299 Xu tích lũy): Mở khóa Video AI sản phẩm, Suno AI Music, ưu tiên hàng chờ kết xuất x2.<br/>
-3. <strong>E-Commerce & Ads</strong> (2.300 - 5.999 Xu tích lũy): Trọn gói video quảng cáo TikTok/Reels thương mại, xuất video 4K Ultra không watermark, hỗ trợ ưu tiên.<br/>
-4. <strong>Enterprise VIP</strong> (6.000+ Xu tích lũy): Zero Queue ưu tiên số 1 tuyệt đối, Asset Vault không giới hạn thời gian, kênh hỗ trợ 1-1 riêng từ Admin.<br/><br/>
-👉 <em>Tôi đang mở Bảng Quyền Lợi Hội Viên...</em>`;
+      replyText = `👑 <strong>6 Cấp Bậc Hội Viên Chuẩn TOAN AAS:</strong><br/>
+1. <strong>🌱 Newbie</strong> (0 đ): 100 Xu trải nghiệm, tạo ảnh SDXL & Voice TTS tiêu chuẩn.<br/>
+2. <strong>🥈 Silver</strong> (Tổng nạp từ <strong>100.000 đ</strong> ~ 1.000 Xu): Giảm <strong>2%</strong> khi tiêu Xu, Thưởng ref 3%, Quà sinh nhật 111 Xu, Ưu tiên render x1.5.<br/>
+3. <strong>🥇 Gold</strong> (Tổng nạp từ <strong>1.000.000 đ</strong> ~ 10.000 Xu): Giảm <strong>4%</strong> khi tiêu Xu, Thưởng ref 6%, Quà sinh nhật 333 Xu, Mở Video AI & Suno Music, Render x2.<br/>
+4. <strong>💠 Platinum</strong> (Tổng nạp từ <strong>10.000.000 đ</strong> ~ 100.000 Xu): Giảm <strong>6%</strong> khi tiêu Xu, Thưởng ref 8%, Quà sinh nhật 555 Xu, Xuất video 4K không watermark, Render x3.<br/>
+5. <strong>💎 Diamond</strong> (Tổng nạp từ <strong>50.000.000 đ</strong> ~ 500.000 Xu): Giảm <strong>8%</strong> khi tiêu Xu, Thưởng ref 10%, Quà sinh nhật 666 Xu, Asset Vault không giới hạn, Dedicated CSKH 5 phút.<br/>
+6. <strong>👑 VIP</strong> (Tổng nạp từ <strong>100.000.000 đ</strong> hoặc Admin cấp): Giảm <strong>10%</strong> cao nhất, Thưởng ref 12%, Quà sinh nhật 888 Xu, <strong>Zero Queue số 1 tuyệt đối</strong>, Hỗ trợ 1-1 riêng từ Admin.<br/><br/>
+👉 <em>Tôi đang mở Bảng Quyền Lợi & Điều Kiện Lên Hạng...</em>`;
       replyActions = [
-        { label: "👑 Xem Chi Tiết Hội Viên", route: "/membership" },
+        { label: "👑 Xem Chi Tiết 6 Hạng", route: "/membership" },
         { label: "⚡ Nạp Xu Nâng Hạng", route: "/wallet/topup" }
       ];
       autoNavigateRoute = "/membership";
