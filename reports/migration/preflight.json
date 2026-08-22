@@ -2,27 +2,27 @@
   "audit_mode": "static-only",
   "bot": {
     "audit_source": {
-      "files_materialized": 242,
-      "mode": "git_baseline_snapshot",
-      "reason": "requested_baseline_materialized_static_only",
-      "revision": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
+      "files_materialized": 0,
+      "mode": "working_tree_fallback",
+      "reason": "not_a_git_worktree",
+      "revision": ""
     },
     "baseline_bridge_source": {
       "path": "webapp_core_bridge.py",
-      "present": false,
-      "state": "missing"
+      "present": null,
+      "state": "baseline_unavailable"
     },
     "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
-    "entrypoint_present": true,
+    "entrypoint_present": false,
     "revision": {
-      "ahead_commits": 1757,
-      "baseline_relation": "ahead_of_requested_baseline",
-      "behind_commits": 0,
-      "checkout_sha": "e900eb9a869d4a4cbafcb513cb73395141eea5bf"
+      "ahead_commits": null,
+      "baseline_relation": "not_a_git_worktree",
+      "behind_commits": null,
+      "checkout_sha": ""
     },
     "root": "repository-root"
   },
-  "generated_at_utc": "2026-08-22T04:27:43+00:00",
+  "generated_at_utc": "2026-08-22T19:36:09+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "8a87c655aa8ec109e70bb7bd0f633580f670b1b9",
-      "requested_relation": "different",
-      "requested_sha": "1e285f4ffbfa65066a39f347020066815634d662",
-      "source_fingerprint_sha256": "818bd856bfec291310c564fa89b74c10e4c3021b23e6246ce7a6dd89bba18eba",
+      "checkout_sha": "7db7e3ffe8dd8deb055dd6418982c06414a70ea5",
+      "requested_relation": "exact",
+      "requested_sha": "7db7e3ffe8dd8deb055dd6418982c06414a70ea5",
+      "source_fingerprint_sha256": "8ee0aa1942503e726bd267ba53109844285404a6d6a79d1603bc62122caa11b6",
       "working_tree_state": "clean"
     },
     "root": "repository-root"

@@ -10,7 +10,7 @@
 
 | Table set | Count | Examples |
 | --- | --- | --- |
-| Bot | 97 | affiliate_links, api_debug_events, audit_logs, birthday, birthday_gifts, birthday_review_requests, campaigns, channel_profiles, content_calendar, content_performance_events, creative_variants, credit_events, feature_flags, feedback, finance_compliance_notes, finance_expense_events, finance_revenue_events, finance_usage_events, gift_assignments, gift_beta_requests, gift_redemptions, growth_recommendations, internal_documents, launch_bonus_redemptions, leads, local_worker_jobs, long_video_projects, long_video_scenes, manual_performance_events, media_factory_jobs |
+| Bot | 554 | _update, _utils, _valid_url, a, above, acodec, active, affiliate_links, again, all, an, ang, ann, annot, any, api_debug_events, application, applies, are, arr, associated, attached, attributes, audit_logs, available, b2b_projects, belongs, birthday, birthday_gifts, birthday_review_requests |
 | Web | 224 | a, above, affiliate_links, any, b2b_projects, campaigns, clears, credit_events, erp_approvals, erp_assets, erp_attendance, erp_banners, erp_chat, erp_customers, erp_employees, erp_goals, erp_inventory, erp_okrs, erp_production, erp_projects, erp_purchases, erp_sales, erp_social, erp_transactions, erp_workloads, family, feedback, manual_orders, manual_performance_events, media_assets |
 
 Bot Workboard/Task callbacks are distinct from the Web Workboard: the Browser must never replay a Bot production job/task identifier, stage/status value, handoff prompt or Telegram-admin context. See `WORKBOARD_TASK_CALLBACK_CONTRACT.md`.
