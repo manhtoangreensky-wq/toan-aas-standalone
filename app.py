@@ -2733,6 +2733,31 @@ async def page(page_path: str, request: Request):
             return RedirectResponse("/login", status_code=307)
         return RedirectResponse("/dashboard", status_code=307)
 
+    if (
+        normalized == "/admin/support"
+        or normalized.startswith("/admin/support/")
+        or normalized == "/admin/operations"
+        or normalized.startswith("/admin/operations/")
+        or normalized == "/admin/autopilot"
+        or normalized.startswith("/admin/autopilot/")
+        or normalized == "/admin/reliability"
+        or normalized.startswith("/admin/reliability/")
+        or normalized == "/admin/content-handoffs"
+        or normalized == "/admin/work-queue"
+    ):
+        copyfast_support.require_support_staff(current_session(request)["account"])
+    elif normalized in {
+        "/admin/crm/leads",
+        "/admin/finance/planning",
+        "/admin/automation",
+        "/admin/system-stewardship",
+        "/admin/security",
+        "/admin/access",
+    } or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
+        copyfast_auth.require_admin(request)
+    elif normalized == "/admin" or normalized.startswith("/admin/"):
+        await require_canonical_admin(request)
+
     account = {}
     if normalized not in public_pages:
         try:
@@ -2746,32 +2771,6 @@ async def page(page_path: str, request: Request):
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
-
-        # Role-based access control for admin and staff routes
-        if (
-            normalized == "/admin/support"
-            or normalized.startswith("/admin/support/")
-            or normalized == "/admin/operations"
-            or normalized.startswith("/admin/operations/")
-            or normalized == "/admin/autopilot"
-            or normalized.startswith("/admin/autopilot/")
-            or normalized == "/admin/reliability"
-            or normalized.startswith("/admin/reliability/")
-            or normalized == "/admin/content-handoffs"
-            or normalized == "/admin/work-queue"
-        ):
-            copyfast_support.require_support_staff(account)
-        elif normalized in {
-            "/admin/crm/leads",
-            "/admin/finance/planning",
-            "/admin/automation",
-            "/admin/system-stewardship",
-            "/admin/security",
-            "/admin/access",
-        } or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
-            copyfast_auth.require_admin(request)
-        elif normalized == "/admin" or normalized.startswith("/admin/"):
-            await require_canonical_admin(request)
 
     if normalized == "/welcome":
         portal_interface_locale = _public_welcome_interface_locale(request)
