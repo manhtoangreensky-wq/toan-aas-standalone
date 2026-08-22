@@ -2346,7 +2346,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         # runtime crash. Keep it out of the reliability signal intake while
         # preserving the existing truthful API response.
         request.state.reliability_expected_failure = True
-    if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/"):
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/") or request.url.path == "/admin" or request.url.path.startswith("/admin/"):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
         is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
         is_media_factory = request.url.path.startswith("/api/v1/media-factory/")
