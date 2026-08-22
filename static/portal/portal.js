@@ -33086,24 +33086,27 @@
     messages: [
       {
         role: "assistant",
-        text: "👋 <strong>Xin chào! Tôi là Trợ Lý AI TOAN AAS Copilot.</strong><br/>Tôi có thể giải đáp mọi thắc mắc về công cụ sáng tạo (Video, Ảnh, Lồng tiếng, Phụ đề, Nạp Xu PayOS, Quyền lợi VIP) và <strong>trực tiếp điều khiển Web App</strong> theo yêu cầu của bạn.<br/><br/><em>Bạn có thể gõ câu hỏi hoặc bấm vào các nút điều hướng nhanh bên dưới!</em>",
+        text: "👋 <strong>Xin chào! Tôi là Trợ Lý AI AAS BOT.</strong><br/>Tôi được kết nối trực tiếp vào toàn bộ hệ sinh thái TOAN AAS: Video AI, Tạo Ảnh 4K, Voiceover TTS, Bóc Phụ Đề, Suno Music, Nạp Xu PayOS, Quyền lợi Hội Viên VIP và Asset Vault.<br/><br/><em>Bạn có thể hỏi bất kỳ điều gì, yêu cầu viết prompt/kịch bản hoặc bấm nút bên dưới để tôi điều khiển Web App cho bạn!</em>",
         actions: [
           { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
           { label: "🎬 Tạo Video AI", route: "/video/product" },
           { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
           { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
           { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
-          { label: "👑 Gói Thành Viên", route: "/membership" }
+          { label: "🎵 Tạo Nhạc Suno", route: "/music/direction" },
+          { label: "👑 Gói Hội Viên", route: "/membership" },
+          { label: "💳 Bảng Giá", route: "/pricing" }
         ]
       }
     ]
   };
 
   function executeCopilotQuery(query, context) {
-    const q = String(query || "").trim().toLowerCase();
+    const rawQuery = String(query || "").trim();
+    const q = rawQuery.toLowerCase();
     if (!q) return;
 
-    copilotState.messages.push({ role: "user", text: safeText(query) });
+    copilotState.messages.push({ role: "user", text: safeText(rawQuery) });
 
     const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
     const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
@@ -33112,85 +33115,253 @@
     let replyActions = [];
     let autoNavigateRoute = null;
 
-    if (q.includes("nạp") || q.includes("mua xu") || q.includes("payos") || q.includes("vietqr") || q.includes("tiền") || q.includes("ngân hàng")) {
-      replyText = "💳 <strong>Cổng nạp Xu tự động PayOS & VietQR 5s:</strong><br/>• Quy đổi: <strong>100 VNĐ = 1 Xu</strong>.<br/>• Gói nạp từ <strong>10.000 đ</strong> (100 Xu) đến <strong>500.000 đ</strong> (6.000 Xu - tặng 20%).<br/>• Hỗ trợ quét VietQR tự động qua ngân hàng ACB (8899397968) hoặc chuyển khoản MoMo, ZaloPay, Binance USDT.<br/><br/>👉 <em>Tôi đang mở trang Nạp Xu cho bạn...</em>";
+    // 1. Prompt Generation Requests
+    if (q.startsWith("tạo prompt") || q.startsWith("tao prompt") || q.startsWith("viết prompt") || q.startsWith("viet prompt") || q.includes("prompt cho") || q.includes("prompt video") || q.includes("prompt ảnh") || q.includes("prompt anh")) {
+      const topic = rawQuery.replace(/^(tạo prompt|tao prompt|viết prompt|viet prompt|prompt cho|prompt video|prompt ảnh|prompt anh)\s*/i, "").trim() || "sản phẩm thương mại";
+      const isVideo = q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok");
+      
+      if (isVideo) {
+        const viPrompt = `Video quảng cáo ngắn cho ${topic}, phong cách điện ảnh cao cấp, ánh sáng studio sang trọng, góc máy slow motion 4K, nhịp dựng hiện đại hấp dẫn người xem, kết thúc với lời kêu gọi hành động (CTA) ấn tượng.`;
+        const enPrompt = `Cinematic 4K commercial video for ${topic}, hyper-realistic studio lighting, dramatic slow motion camera pan, professional color grading, trending product showcase, 9:16 aspect ratio, ultra-detailed.`;
+        
+        replyText = `🎬 <strong>Prompt Video AI Đã Tạo Sẵn:</strong><br/><br/><strong>Tiếng Việt:</strong><br/><code>${safeText(viPrompt)}</code><br/><br/><strong>English (cho AI Engine):</strong><br/><code>${safeText(enPrompt)}</code><br/><br/>👉 <em>Bấm nút bên dưới để tự động dán prompt vào Studio Tạo Video!</em>`;
+        replyActions = [
+          { label: "📋 Dán vào ô Prompt trên trang", insertPrompt: enPrompt },
+          { label: "🎬 Mở Studio Video", route: "/video/product" }
+        ];
+      } else {
+        const viPrompt = `Ảnh chụp thương mại sản phẩm ${topic}, ánh sáng mềm tự nhiên, nền tối giản sạch sẽ, độ phân giải 4K sắc nét từng chi tiết, phong cách chụp tạp chí chuyên nghiệp.`;
+        const enPrompt = `High-end commercial photography of ${topic}, soft diffused studio lighting, minimalist clean background, 8k resolution, photorealistic, sharp focus, award-winning product photo.`;
+        
+        replyText = `🖼 <strong>Prompt Ảnh AI Đã Tạo Sẵn:</strong><br/><br/><strong>Tiếng Việt:</strong><br/><code>${safeText(viPrompt)}</code><br/><br/><strong>English (cho Flux/SDXL):</strong><br/><code>${safeText(enPrompt)}</code><br/><br/>👉 <em>Bấm nút bên dưới để tự động dán prompt vào Studio Tạo Ảnh!</em>`;
+        replyActions = [
+          { label: "📋 Dán vào ô Prompt trên trang", insertPrompt: enPrompt },
+          { label: "🖼 Mở Studio Tạo Ảnh", route: "/image/create" }
+        ];
+      }
+    }
+    // 2. Nạp Xu / PayOS / VietQR / Thanh toán
+    else if (q.includes("nạp") || q.includes("mua xu") || q.includes("payos") || q.includes("vietqr") || q.includes("tiền") || q.includes("ngân hàng") || q.includes("acb") || q.includes("thanh toán")) {
+      replyText = `💳 <strong>Cổng Nạp Xu Tự Động PayOS & VietQR 5s:</strong><br/>
+• Tỷ lệ quy đổi chuẩn: <strong>100 VNĐ = 1 Xu</strong>.<br/>
+• <strong>Tài khoản nhận:</strong> Ngân hàng ACB · Số TK: <code>8899397968</code> · Chủ TK: NGUYEN MANH TOAN.<br/>
+• <strong>Các gói nạp & Khuyến mãi:</strong><br/>
+  - Gói <strong>10.000 đ</strong>: 100 Xu<br/>
+  - Gói <strong>50.000 đ</strong>: 500 Xu<br/>
+  - Gói <strong>100.000 đ</strong>: 1.050 Xu (+5% Xu tặng thêm)<br/>
+  - Gói <strong>200.000 đ</strong>: 2.200 Xu (+10% Xu tặng thêm)<br/>
+  - Gói <strong>500.000 đ</strong>: 6.000 Xu (+20% Xu VIP tặng thêm)<br/>
+• Quét VietQR tự động cộng Xu vào tài khoản trong 5 giây!<br/><br/>
+👉 <em>Tôi đang mở trang Nạp Xu cho bạn...</em>`;
       replyActions = [
-        { label: "Mở Trang Nạp Tiền", route: "/wallet/topup" },
-        { label: "Xem Bảng Giá", route: "/pricing" }
+        { label: "⚡ Mở Trang Nạp Tiền", route: "/wallet/topup" },
+        { label: "📜 Lịch Sử Giao Dịch", route: "/wallet/history" },
+        { label: "💳 Bảng Giá", route: "/pricing" }
       ];
       autoNavigateRoute = "/wallet/topup";
-    } else if (q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok") || q.includes("veo") || q.includes("kling")) {
-      replyText = "🎬 <strong>Studio Video AI TOAN AAS:</strong><br/>• Tạo video sản phẩm thương mại 3-5 cảnh hoàn chỉnh với nhạc và phụ đề.<br/>• Hỗ trợ mô hình tạo video hàng đầu thế giới: <strong>Veo 3.1, Kling 2.1, MiniMax Hailuo</strong>.<br/>• Chi phí: từ 80 Xu (~8.000 đ/video).<br/><br/>👉 <em>Tôi đang mở Studio Tạo Video...</em>";
+    }
+    // 3. Video AI / Clip / Reels / TikTok / Veo / Kling
+    else if (q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok") || q.includes("veo") || q.includes("kling") || q.includes("hailuo") || q.includes("minimax") || q.includes("quảng cáo") || q.includes("phim")) {
+      replyText = `🎬 <strong>Studio Tạo Video AI TOAN AAS:</strong><br/>
+• <strong>Đặc điểm nổi bật:</strong> Tạo video quảng cáo sản phẩm 3-5 cảnh hoàn chỉnh, lồng nhạc nền, chuyển cảnh mượt mà và phụ đề bắt mắt.<br/>
+• <strong>Mô hình AI đỉnh cao:</strong> Veo 3.1, Kling 2.1, MiniMax Hailuo, Wan 2.1, Luma Ray 2.<br/>
+• <strong>Chi phí:</strong> từ <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ/video).<br/>
+• <strong>Các định dạng:</strong> 9:16 (TikTok/Reels/Shorts), 16:9 (YouTube), 1:1 (Feed/Square).<br/><br/>
+👉 <em>Tôi đang mở Studio Tạo Video cho bạn...</em>`;
       replyActions = [
-        { label: "Tạo Video Sản Phẩm", route: "/video/product" },
-        { label: "Tạo Video Nhanh (Single)", route: "/video/single" }
+        { label: "🎬 Tạo Video Sản Phẩm", route: "/video/product" },
+        { label: "⚡ Tạo Video Nhanh (Single)", route: "/video/single" },
+        { label: "✍️ Viết Kịch Bản Video", route: "/scripts/planner" }
       ];
       autoNavigateRoute = "/video/product";
-    } else if (q.includes("ảnh") || q.includes("hình") || q.includes("image") || q.includes("flux") || q.includes("sdxl") || q.includes("vẽ")) {
-      replyText = "🖼 <strong>Studio Tạo Ảnh AI Pro:</strong><br/>• Sinh ảnh sản phẩm, người mẫu, concept 3D chân thực bằng mô hình <strong>SDXL & Flux Ultra</strong>.<br/>• Tách nền xóa phông, phóng to ảnh 4K không vỡ nét.<br/>• Chi phí: từ 15 Xu (~1.500 đ/ảnh).<br/><br/>👉 <em>Tôi đang mở Studio Tạo Ảnh...</em>";
+    }
+    // 4. Ghép ảnh thành video / Img2Vid
+    else if (q.includes("ghép ảnh") || q.includes("ghep anh") || q.includes("ảnh thành video") || q.includes("slideshow") || q.includes("video từ ảnh")) {
+      replyText = `🎞 <strong>Ghép Ảnh Thành Video / Img2Vid:</strong><br/>
+• Hỗ trợ dùng từ 3 đến 5 ảnh có sẵn hoặc ảnh AI đã tạo để dựng thành video trình chiếu chuyên nghiệp.<br/>
+• <strong>Chính sách ưu đãi:</strong> Miễn phí tối đa 3 ảnh và tổng thời lượng không quá 6 giây; phần mở rộng tính theo Xu tiêu chuẩn.<br/>
+• Tự động khớp nhạc nền và hiệu ứng zoom/chuyển động mượt mà.<br/><br/>
+👉 <em>Tôi đang mở Studio Video...</em>`;
       replyActions = [
-        { label: "Tạo Ảnh AI", route: "/image/create" },
-        { label: "Tách & Ghép Nền Ảnh", route: "/image/background-cleanup" }
+        { label: "Mở Ghép Video", route: "/video/product" },
+        { label: "Tạo Ảnh Tư Liệu Trước", route: "/image/create" }
+      ];
+      autoNavigateRoute = "/video/product";
+    }
+    // 5. Tạo Ảnh AI / Flux / SDXL / Tách nền
+    else if (q.includes("ảnh") || q.includes("hình") || q.includes("image") || q.includes("flux") || q.includes("sdxl") || q.includes("tách nền") || q.includes("xóa phông") || q.includes("vẽ")) {
+      replyText = `🖼 <strong>Studio Tạo & Xử Lý Ảnh AI Pro:</strong><br/>
+• <strong>Tạo Ảnh AI:</strong> Sinh ảnh concept sản phẩm, người mẫu thời trang, phong cảnh, poster 3D bằng mô hình <strong>SDXL & Flux Ultra 4K</strong>.<br/>
+• <strong>Tách Nền & Phóng To:</strong> Xóa nền sản phẩm sạch 100%, phóng to ảnh 4K không vỡ nét.<br/>
+• <strong>Chi phí:</strong> từ <strong>15 Xu</strong> (~1.500 đ/ảnh).<br/><br/>
+👉 <em>Tôi đang mở Studio Tạo Ảnh...</em>`;
+      replyActions = [
+        { label: "🖼 Tạo Ảnh AI Mới", route: "/image/create" },
+        { label: "✂️ Tách & Làm Sạch Nền", route: "/image/background-cleanup" }
       ];
       autoNavigateRoute = "/image/create";
-    } else if (q.includes("giọng") || q.includes("lồng tiếng") || q.includes("tts") || q.includes("đọc") || q.includes("voice")) {
-      replyText = "🎙️ <strong>Studio Lồng Tiếng Voice AI TTS:</strong><br/>• Đọc văn bản tiếng Việt truyền cảm, tự nhiên chuẩn đài truyền hình.<br/>• Đa dạng giọng đọc nam/nữ: Miền Bắc, Miền Trung, Miền Nam.<br/>• Chi phí: 20 Xu / 1.000 từ.<br/><br/>👉 <em>Tôi đang mở Studio Lồng Tiếng...</em>";
+    }
+    // 6. Voiceover TTS / Giọng đọc
+    else if (q.includes("giọng") || q.includes("giong") || q.includes("lồng tiếng") || q.includes("long tieng") || q.includes("tts") || q.includes("đọc") || q.includes("doc") || q.includes("voice")) {
+      replyText = `🎙️ <strong>Studio Lồng Tiếng Voice AI TTS:</strong><br/>
+• Chuyển đổi văn bản thành giọng đọc truyền cảm tự nhiên chuẩn MC đài truyền hình.<br/>
+• Đầy đủ giọng đọc 3 miền: <strong>Miền Bắc, Miền Trung, Miền Nam</strong> (Nam/Nữ).<br/>
+• Tùy chỉnh tốc độ đọc (0.75x - 1.5x), cảm xúc vui vẻ, trầm ấm, truyền cảm.<br/>
+• <strong>Chi phí:</strong> <strong>20 Xu</strong> / 1.000 từ (~2.000 đ).<br/><br/>
+👉 <em>Tôi đang mở Studio Voiceover...</em>`;
       replyActions = [
-        { label: "Mở Voiceover TTS", route: "/voice/tts" }
+        { label: "🎙️ Mở Studio Voice TTS", route: "/voice/tts" }
       ];
       autoNavigateRoute = "/voice/tts";
-    } else if (q.includes("phụ đề") || q.includes("subtitle") || q.includes("dịch") || q.includes("translat") || q.includes("asr")) {
-      replyText = "🗣️ <strong>Studio Bóc Phụ Đề & Dịch Thuật:</strong><br/>• Nghe nhận dạng giọng nói tự động (ASR) tạo file .SRT / .VTT.<br/>• Hiệu ứng phụ đề Karaoke bắt mắt cho TikTok, Shorts, Reels.<br/>• Dịch thuật phụ đề đa ngôn ngữ (Anh, Trung, Hàn, Nhật...).<br/><br/>👉 <em>Tôi đang mở Studio Phụ Đề...</em>";
+    }
+    // 7. Phụ đề / Subtitle / Dịch thuật / Karaoke
+    else if (q.includes("phụ đề") || q.includes("phu de") || q.includes("subtitle") || q.includes("dịch") || q.includes("dich") || q.includes("karaoke") || q.includes("srt") || q.includes("asr")) {
+      replyText = `🗣️ <strong>Studio Bóc Phụ Đề & Dịch Thuật SubDub:</strong><br/>
+• Nhận dạng giọng nói tự động (ASR) bằng mô hình Whisper AI chính xác 99%.<br/>
+• Xuất file phụ đề chuẩn <strong>.SRT / .VTT</strong>.<br/>
+• Tạo hiệu ứng chữ <strong>Karaoke đổi màu</strong> chạy theo từng từ cho TikTok, Reels.<br/>
+• Dịch thuật phụ đề đa ngôn ngữ sang hơn 100 thứ tiếng (Anh, Trung, Hàn, Nhật, Pháp...).<br/>
+• <strong>Chi phí:</strong> <strong>15 Xu</strong> / phút.<br/><br/>
+👉 <em>Tôi đang mở Studio Phụ Đề...</em>`;
       replyActions = [
-        { label: "Mở Studio Phụ Đề", route: "/subtitle" }
+        { label: "🗣️ Mở Studio Phụ Đề", route: "/subtitle" }
       ];
       autoNavigateRoute = "/subtitle";
-    } else if (q.includes("thành viên") || q.includes("gói") || q.includes("hạng") || q.includes("vip") || q.includes("quyền lợi") || q.includes("member")) {
-      replyText = "👑 <strong>4 Cấp Độ Hội Viên TOAN AAS:</strong><br/>1. <strong>Standard</strong> (0 - 499 Xu): Khởi đầu sáng tạo, tạo ảnh & TTS cơ bản.<br/>2. <strong>Creator Pro</strong> (500 - 2.299 Xu): Mở khóa Video AI, Suno AI Music, ưu tiên render x2.<br/>3. <strong>E-Commerce & Ads</strong> (2.300 - 5.999 Xu): Video quảng cáo TikTok/Reels trọn gói, xuất file 4K không watermark.<br/>4. <strong>Enterprise VIP</strong> (6.000+ Xu): Zero Queue số 1, Asset Vault không giới hạn, hỗ trợ 1-1 riêng từ Admin.<br/><br/>👉 <em>Tôi đang mở Bảng Quyền Lợi Thành Viên...</em>";
+    }
+    // 8. Âm nhạc Suno & SFX
+    else if (q.includes("nhạc") || q.includes("nhac") || q.includes("music") || q.includes("suno") || q.includes("bài hát") || q.includes("bai hat") || q.includes("sfx") || q.includes("âm thanh")) {
+      replyText = `🎵 <strong>Studio Âm Nhạc Suno AI & SFX:</strong><br/>
+• <strong>Tạo Bài Hát Suno AI v4:</strong> Viết lời, phối khí và sinh bài hát hoàn chỉnh có ca sĩ hát đầy đủ thể loại (Pop, Ballad, Rap, EDM, Acoustic).<br/>
+• <strong>SFX Cue Sheet:</strong> Bảng hiệu ứng âm thanh chuyên nghiệp dành cho dựng phim video thương mại.<br/>
+• <strong>Chi phí:</strong> <strong>100 Xu</strong> / bài hát hoàn chỉnh.<br/><br/>
+👉 <em>Tôi đang mở Studio Âm Nhạc...</em>`;
       replyActions = [
-        { label: "Xem Chi Tiết Quyền Lợi", route: "/membership" },
-        { label: "Nạp Xu Nâng Cấp", route: "/wallet/topup" }
+        { label: "🎵 Tạo Nhạc Suno", route: "/music/direction" },
+        { label: "🔊 Bảng Âm Thanh SFX", route: "/sfx" }
+      ];
+      autoNavigateRoute = "/music/direction";
+    }
+    // 9. Kịch bản & Marketing Planner
+    else if (q.includes("kịch bản") || q.includes("kich ban") || q.includes("script") || q.includes("concept") || q.includes("marketing") || q.includes("seo") || q.includes("brief")) {
+      replyText = `✍️ <strong>Kịch Bản & Marketing Planner:</strong><br/>
+• <strong>Script-to-Screen Planner:</strong> Lập dàn ý kịch bản video bán hàng đa cảnh từ mô tả sản phẩm.<br/>
+• <strong>Cinematic Concept:</strong> Xây dựng ý tưởng phim ngắn, concept thương hiệu ấn tượng.<br/>
+• <strong>Content Prompt Packs:</strong> Kho mẫu prompt tạo nội dung chuyển đổi cao miễn phí.<br/><br/>
+👉 <em>Tôi đang mở Kịch Bản Planner...</em>`;
+      replyActions = [
+        { label: "✍️ Lập Kịch Bản Video", route: "/scripts/planner" },
+        { label: "🎨 Cinematic Concept", route: "/creative/concept" }
+      ];
+      autoNavigateRoute = "/scripts/planner";
+    }
+    // 10. Gói Thành Viên & VIP
+    else if (q.includes("thành viên") || q.includes("thanh vien") || q.includes("gói") || q.includes("goi") || q.includes("hạng") || q.includes("hang") || q.includes("vip") || q.includes("quyền lợi") || q.includes("member")) {
+      replyText = `👑 <strong>4 Cấp Bậc Hội Viên VIP TOAN AAS:</strong><br/>
+1. <strong>Standard</strong> (0 - 499 Xu tích lũy): Trải nghiệm đầy đủ tính năng tạo ảnh AI và Voiceover TTS cơ bản.<br/>
+2. <strong>Creator Pro</strong> (500 - 2.299 Xu tích lũy): Mở khóa Video AI sản phẩm, Suno AI Music, ưu tiên hàng chờ kết xuất x2.<br/>
+3. <strong>E-Commerce & Ads</strong> (2.300 - 5.999 Xu tích lũy): Trọn gói video quảng cáo TikTok/Reels thương mại, xuất video 4K Ultra không watermark, hỗ trợ ưu tiên.<br/>
+4. <strong>Enterprise VIP</strong> (6.000+ Xu tích lũy): Zero Queue ưu tiên số 1 tuyệt đối, Asset Vault không giới hạn thời gian, kênh hỗ trợ 1-1 riêng từ Admin.<br/><br/>
+👉 <em>Tôi đang mở Bảng Quyền Lợi Hội Viên...</em>`;
+      replyActions = [
+        { label: "👑 Xem Chi Tiết Hội Viên", route: "/membership" },
+        { label: "⚡ Nạp Xu Nâng Hạng", route: "/wallet/topup" }
       ];
       autoNavigateRoute = "/membership";
-    } else if (q.includes("giá") || q.includes("bảng giá") || q.includes("báo giá") || q.includes("chi phí") || q.includes("pricing")) {
-      replyText = "💳 <strong>Bảng Giá Dịch Vụ TOAN AAS:</strong><br/>• Tạo ảnh tiêu chuẩn: <strong>15 Xu</strong> (~1.500 đ)<br/>• Tạo video AI: <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ)<br/>• Giọng đọc Voice AI: <strong>20 Xu</strong> / 1.000 từ<br/>• Nhạc nền Suno AI: <strong>100 Xu</strong> / bài<br/>• Làm phụ đề video: <strong>15 Xu</strong> / phút<br/><br/>👉 <em>Tôi đang mở Bảng Giá Toàn Diện...</em>";
+    }
+    // 11. Bảng Giá Chi Tiết
+    else if (q.includes("giá") || q.includes("gia") || q.includes("bảng giá") || q.includes("bang gia") || q.includes("báo giá") || q.includes("chi phí") || q.includes("pricing")) {
+      replyText = `💳 <strong>Bảng Giá Dịch Vụ Hệ Sinh Thái TOAN AAS:</strong><br/>
+• <strong>Tạo ảnh tiêu chuẩn:</strong> <strong>15 Xu</strong> (~1.500 đ)<br/>
+• <strong>Tạo video AI sản phẩm:</strong> <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ)<br/>
+• <strong>Giọng đọc Voice AI:</strong> <strong>20 Xu</strong> / 1.000 từ<br/>
+• <strong>Nhạc nền Suno AI:</strong> <strong>100 Xu</strong> / bài<br/>
+• <strong>Làm phụ đề video:</strong> <strong>15 Xu</strong> / phút<br/>
+• <strong>Tách nền ảnh:</strong> <strong>10 Xu</strong> / ảnh<br/>
+• <strong>Công cụ miễn phí:</strong> Đếm từ, ký tự, tạo mã VietQR: <strong>0 Xu (Miễn phí)</strong>.<br/><br/>
+👉 <em>Tôi đang mở Bảng Giá Toàn Diện...</em>`;
       replyActions = [
-        { label: "Xem Bảng Giá Đầy Đủ", route: "/pricing" },
-        { label: "Nạp Xu Ngay", route: "/wallet/topup" }
+        { label: "💳 Xem Bảng Giá Đầy Đủ", route: "/pricing" },
+        { label: "⚡ Nạp Xu Ngay", route: "/wallet/topup" }
       ];
       autoNavigateRoute = "/pricing";
-    } else if (q.includes("số dư") || q.includes("ví") || q.includes("xu") || q.includes("balance") || q.includes("kiểm tra")) {
-      replyText = `💼 <strong>Thông Tin Số Dư Hiện Tại:</strong><br/>• Số dư Xu khả dụng: <strong style="color:#00d26a; font-size:16px;">${balanceXu} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>• Trạng thái tài khoản: <strong>Đang hoạt động tốt</strong>.<br/>• Bạn có thể nạp thêm Xu bất cứ lúc nào qua PayOS hoặc VietQR!`;
+    }
+    // 12. Kiểm Tra Số Dư Hiện Tại
+    else if (q.includes("số dư") || q.includes("so du") || q.includes("ví") || q.includes("vi") || q.includes("xu") || q.includes("balance") || q.includes("kiểm tra")) {
+      replyText = `💼 <strong>Thông Tin Số Dư Tài Khoản:</strong><br/>
+• Số dư Xu khả dụng: <strong style="color:#00f2fe; font-size:16px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>
+• Trạng thái tài khoản: <strong>🟢 Đang hoạt động bình thường</strong>.<br/>
+• Bạn có thể nạp thêm Xu bất cứ lúc nào qua cổng PayOS VietQR tự động 5 giây!`;
       replyActions = [
         { label: "⚡ Nạp Thêm Xu", route: "/wallet/topup" },
-        { label: "Xem Lịch Sử Giao Dịch", route: "/wallet/history" }
+        { label: "📜 Xem Lịch Sử Giao Dịch", route: "/wallet/history" }
       ];
-    } else if (q.includes("theme") || q.includes("giao diện") || q.includes("sáng") || q.includes("tối") || q.includes("dark") || q.includes("light")) {
+    }
+    // 13. Đổi Giao Diện Sáng / Tối (Theme)
+    else if (q.includes("theme") || q.includes("giao diện") || q.includes("giao dien") || q.includes("sáng") || q.includes("sang") || q.includes("tối") || q.includes("toi") || q.includes("dark") || q.includes("light")) {
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.toggle === "function") {
         theme.toggle();
       }
-      replyText = "🎨 <strong>Đã chuyển đổi giao diện Sáng / Tối thành công!</strong><br/>Giao diện đã được cập nhật đồng bộ toàn hệ thống.";
+      replyText = "🎨 <strong>Đã chuyển đổi giao diện Sáng / Tối thành công!</strong><br/>Toàn bộ bố cục và màu sắc hệ thống đã được đồng bộ.";
       replyActions = [];
-    } else if (q.includes("avatar") || q.includes("ảnh đại diện") || q.includes("đổi tên") || q.includes("hồ sơ") || q.includes("account")) {
-      replyText = "👤 <strong>Cài Đặt Hồ Sơ & Đổi Ảnh Đại Diện:</strong><br/>Bạn có thể chọn nhanh từ bộ sưu tập Avatar AI hoặc dán đường dẫn ảnh đại diện tùy chỉnh.<br/><br/>👉 <em>Tôi đang mở trang Cài Đặt Hồ Sơ...</em>";
+    }
+    // 14. Đổi Avatar / Cài Đặt Hồ Sơ
+    else if (q.includes("avatar") || q.includes("ảnh đại diện") || q.includes("anh dai dien") || q.includes("đổi tên") || q.includes("doi ten") || q.includes("hồ sơ") || q.includes("ho so") || q.includes("account")) {
+      replyText = `👤 <strong>Cài Đặt Hồ Sơ & Studio Ảnh Đại Diện:</strong><br/>
+Bạn có thể chọn nhanh từ bộ sưu tập 6 Avatar AI Cyber/Creator phong cách cao cấp hoặc nhập đường dẫn ảnh tùy chỉnh.<br/><br/>
+👉 <em>Tôi đang mở trang Cài Đặt Hồ Sơ...</em>`;
       replyActions = [
-        { label: "Mở Cài Đặt Hồ Sơ", route: "/account" }
+        { label: "👤 Mở Cài Đặt Hồ Sơ", route: "/account" },
+        { label: "🔒 Bảo Mật & Mật Khẩu", route: "/account/security" }
       ];
       autoNavigateRoute = "/account";
-    } else if (q.includes("kho") || q.includes("tài sản") || q.includes("vault") || q.includes("file") || q.includes("tải về")) {
-      replyText = "📁 <strong>Asset Vault - Kho Lưu Trữ Tài Sản Riêng Tư:</strong><br/>Toàn bộ ảnh, video, âm thanh và văn bản đã tạo được lưu trữ bảo mật và cho phép tải về không giới hạn.";
+    }
+    // 15. Asset Vault / Kho Tài Sản
+    else if (q.includes("kho") || q.includes("tài sản") || q.includes("tai san") || q.includes("vault") || q.includes("file") || q.includes("tải về") || q.includes("tai ve") || q.includes("lịch sử")) {
+      replyText = `📁 <strong>Asset Vault - Kho Lưu Trữ Tài Sản Riêng Tư:</strong><br/>
+Toàn bộ video, ảnh, audio, bài hát và file phụ đề đã tạo đều được lưu trữ bảo mật trong Asset Vault với quyền tải về không giới hạn.<br/><br/>
+👉 <em>Tôi đang mở Asset Vault...</em>`;
       replyActions = [
-        { label: "Mở Asset Vault", route: "/asset-vault" }
+        { label: "📁 Mở Asset Vault", route: "/asset-vault" }
       ];
       autoNavigateRoute = "/asset-vault";
-    } else {
-      replyText = `🤖 <strong>Trợ Lý AI TOAN AAS đã nhận yêu cầu:</strong><br/>"<em>${safeText(query)}</em>"<br/><br/>Hệ thống TOAN AAS hỗ trợ sáng tạo toàn diện: <strong>Tạo Video AI, Tạo Ảnh 4K, Lồng Tiếng Voiceover, Bóc Phụ Đề, Viết Kịch Bản SEO</strong>.<br/>Bạn muốn tôi chuyển đến công cụ nào?`;
+    }
+    // 16. Công Cụ Miễn Phí (Free Tools)
+    else if (q.includes("miễn phí") || q.includes("mien phi") || q.includes("free") || q.includes("tool free")) {
+      replyText = `🛠 <strong>Công Cụ Miễn Phí (Free Tools Hub):</strong><br/>
+• Đếm từ và phân tích mật độ từ khóa cho nội dung bán hàng.<br/>
+• Tạo mã thanh toán VietQR xem trước nhanh.<br/>
+• Gợi ý prompt mẫu không tốn Xu.<br/><br/>
+👉 <em>Tôi đang mở Công Cụ Miễn Phí...</em>`;
+      replyActions = [
+        { label: "🛠 Mở Free Tools", route: "/free-tools" }
+      ];
+      autoNavigateRoute = "/free-tools";
+    }
+    // 17. Hỗ Trợ CSKH / Lỗi / Khiếu Nại
+    else if (q.includes("lỗi") || q.includes("loi") || q.includes("kẹt") || q.includes("ket") || q.includes("chưa cộng") || q.includes("chua cong") || q.includes("admin") || q.includes("hỗ trợ") || q.includes("ho tro") || q.includes("cskh")) {
+      replyText = `🛡️ <strong>Kênh Hỗ Trợ Khách Hàng TOAN AAS:</strong><br/>
+• <strong>Nạp tiền chưa cộng:</strong> Vui lòng kiểm tra mã giao dịch trong mục <a href="/wallet/history" style="color:#00f2fe;">Lịch Sử Giao Dịch</a>.<br/>
+• <strong>Tác vụ kẹt file:</strong> Kiểm tra trạng thái xuất bản trong <a href="/asset-vault" style="color:#00f2fe;">Asset Vault</a>.<br/>
+• <strong>Liên hệ Admin trực tiếp:</strong> Nhắn tin Telegram hỗ trợ 24/7 tại <strong>@toanaas_support</strong> để được xử lý ngay lập tức!`;
+      replyActions = [
+        { label: "📜 Kiểm Tra Lịch Sử Ví", route: "/wallet/history" },
+        { label: "📁 Kiểm Tra Asset Vault", route: "/asset-vault" }
+      ];
+    }
+    // 18. Default Fallback
+    else {
+      replyText = `🤖 <strong>Trợ Lý AI AAS BOT đã nhận yêu cầu:</strong><br/>
+"<em>${safeText(rawQuery)}</em>"<br/><br/>
+Hệ thống TOAN AAS hỗ trợ sáng tạo toàn diện: <strong>Tạo Video AI, Tạo Ảnh 4K, Lồng Tiếng Voiceover, Bóc Phụ Đề, Viết Kịch Bản SEO, Tạo Nhạc Suno</strong>.<br/>
+Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
       replyActions = [
         { label: "🎬 Tạo Video AI", route: "/video/product" },
         { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
+        { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
+        { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
         { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
-        { label: "👑 Gói Thành Viên", route: "/membership" }
+        { label: "👑 Gói Hội Viên", route: "/membership" }
       ];
     }
 
@@ -33263,6 +33434,27 @@
         if (route) window.location.href = route;
       };
     });
+
+    container.querySelectorAll("[data-copilot-insert-prompt]").forEach((btn) => {
+      btn.onclick = () => {
+        const promptText = btn.getAttribute("data-copilot-insert-prompt");
+        if (promptText) {
+          const target = document.querySelector('textarea[name="prompt"], textarea[name="storyboard"], textarea[name="script"], input[name="prompt"], input[name="topic"], textarea');
+          if (target) {
+            target.value = promptText;
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.focus();
+            showToast("✨ Đã tự động dán prompt vào Studio!");
+          } else {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(promptText);
+              showToast("📋 Đã copy prompt vào bộ nhớ tạm!");
+            }
+          }
+        }
+      };
+    });
   }
 
   function renderCopilotHtml(container, context) {
@@ -33279,32 +33471,32 @@
           align-items: center;
           gap: 8px;
           background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-          color: #0b1726;
+          color: #071526;
           font-weight: 800;
           font-size: 14px;
-          padding: 12px 20px;
+          padding: 11px 18px;
           border-radius: 999px;
-          border: 2px solid rgba(255,255,255,0.4);
+          border: 2px solid rgba(255,255,255,0.45);
           cursor: pointer;
-          box-shadow: 0 6px 24px rgba(0, 242, 254, 0.4);
-          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 6px 24px rgba(0, 242, 254, 0.45);
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
         }
         .portal-copilot-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 242, 254, 0.6);
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 30px rgba(0, 242, 254, 0.65);
         }
         .portal-copilot-drawer {
           position: fixed;
           bottom: 84px;
           right: 24px;
-          width: 400px;
-          max-width: calc(100vw - 36px);
-          height: 560px;
-          max-height: calc(100vh - 120px);
+          width: 420px;
+          max-width: calc(100vw - 32px);
+          height: 580px;
+          max-height: calc(100vh - 110px);
           background: #091524;
           border: 1px solid #00f2fe;
           border-radius: 16px;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+          box-shadow: 0 16px 48px rgba(0,0,0,0.75);
           z-index: 99999;
           display: flex;
           flex-direction: column;
@@ -33315,7 +33507,7 @@
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 16px;
+          padding: 13px 16px;
           background: #0d1e34;
           border-bottom: 1px solid rgba(255,255,255,0.1);
         }
@@ -33338,6 +33530,7 @@
           border-radius: 20px;
           cursor: pointer;
           transition: background 0.15s;
+          white-space: nowrap;
         }
         .portal-copilot-chip:hover {
           background: rgba(0, 242, 254, 0.25);
@@ -33379,11 +33572,11 @@
         }
         .copilot-act-btn {
           background: linear-gradient(135deg, #00f2fe, #4facfe);
-          color: #0b1726;
+          color: #071526;
           border: none;
           font-weight: 700;
           font-size: 12px;
-          padding: 5px 12px;
+          padding: 6px 12px;
           border-radius: 8px;
           cursor: pointer;
           text-decoration: none;
@@ -33393,6 +33586,19 @@
         }
         .copilot-act-btn:hover {
           opacity: 0.9;
+        }
+        .copilot-prompt-btn {
+          background: #00d26a;
+          color: #071526;
+          border: none;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 6px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
         }
         .portal-copilot-form {
           display: flex;
@@ -33423,11 +33629,25 @@
           font-weight: 700;
           cursor: pointer;
         }
+        @media (max-width: 640px) {
+          .portal-copilot-btn {
+            bottom: calc(var(--portal-safe-bottom, 0px) + 72px);
+            right: 12px;
+            padding: 8px 14px;
+            font-size: 12px;
+          }
+          .portal-copilot-drawer {
+            bottom: calc(var(--portal-safe-bottom, 0px) + 120px);
+            right: 12px;
+            left: 12px;
+            width: auto;
+          }
+        }
       </style>
 
-      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI TOAN AAS">
+      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI AAS BOT">
         <span>🤖</span>
-        <span>Trợ lý AI Copilot</span>
+        <span>Trợ lý AI AAS BOT</span>
       </button>
 
       <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">
@@ -33435,8 +33655,8 @@
           <div style="display:flex; align-items:center; gap:10px;">
             <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #00f2fe, #4facfe); display:flex; align-items:center; justify-content:center; font-size:18px;">🤖</div>
             <div>
-              <strong style="font-size:14px; color:#fff; display:block;">TOAN AAS Copilot</strong>
-              <span style="font-size:11px; color:#00d26a;">🟢 Sẵn sàng hỗ trợ & điều khiển Web</span>
+              <strong style="font-size:14px; color:#fff; display:block;">Trợ lý AI AAS BOT</strong>
+              <span style="font-size:11px; color:#00d26a;">🟢 Nối liền toàn bộ sản phẩm TOAN AAS</span>
             </div>
           </div>
           <button type="button" id="portal-copilot-close-btn" style="background:none; border:none; color:#8fa3b7; font-size:18px; cursor:pointer;" aria-label="Đóng">✕</button>
@@ -33448,7 +33668,9 @@
           <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo ảnh sản phẩm">🖼 Tạo Ảnh AI</button>
           <button type="button" class="portal-copilot-chip" data-copilot-query="Lồng tiếng đọc văn bản">🎙️ Lồng Tiếng TTS</button>
           <button type="button" class="portal-copilot-chip" data-copilot-query="Bóc tách phụ đề video">🗣️ Bóc Phụ Đề</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">👑 Gói Thành Viên</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo nhạc Suno AI">🎵 Tạo Nhạc Suno</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Viết kịch bản video">✍️ Kịch Bản</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">👑 Gói Hội Viên</button>
           <button type="button" class="portal-copilot-chip" data-copilot-query="Bảng giá các dịch vụ">💳 Bảng Giá</button>
           <button type="button" class="portal-copilot-chip" data-copilot-query="Kiểm tra số dư Xu hiện tại">💼 Kiểm Tra Số Dư</button>
           <button type="button" class="portal-copilot-chip" data-copilot-query="Đổi giao diện sáng tối">🎨 Đổi Theme</button>
@@ -33460,11 +33682,12 @@
               <div>${m.text}</div>
               ${m.actions && m.actions.length ? `
                 <div class="copilot-actions">
-                  ${m.actions.map((act) => `
-                    <button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">
-                      👉 ${safeText(act.label)}
-                    </button>
-                  `).join('')}
+                  ${m.actions.map((act) => {
+                    if (act.insertPrompt) {
+                      return `<button type="button" class="copilot-prompt-btn" data-copilot-insert-prompt="${safeText(act.insertPrompt)}">${safeText(act.label)}</button>`;
+                    }
+                    return `<button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">👉 ${safeText(act.label)}</button>`;
+                  }).join('')}
                 </div>
               ` : ''}
             </div>
