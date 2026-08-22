@@ -20760,12 +20760,12 @@
 
   function renderPaymentRequestForm(page, context) {
     const packages = [
+      { code: "topup_10k", label: "10.000 đ", xu: "100 Xu", note: "Nạp trải nghiệm", popular: false },
       { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Nạp dùng thử", popular: false },
       { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến nhất" },
       { code: "topup_100k", label: "100.000 đ", xu: "1.100 Xu", note: "Tặng 100 Xu", badge: "Thưởng +10%" },
       { code: "topup_200k", label: "200.000 đ", xu: "2.300 Xu", note: "Tặng 300 Xu", badge: "Thưởng +15%" },
-      { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu", badge: "Thưởng +20%" },
-      { code: "topup_1m", label: "1.000.000 đ", xu: "13.000 Xu", note: "Tặng 3.000 Xu", badge: "Thưởng +30% VIP" },
+      { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu (Tối đa)", badge: "Thưởng +20% Max" },
     ];
     const route = "/wallet/topup";
     const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
@@ -20773,7 +20773,7 @@
     const packageOptions = packages.map((pkg) => `
       <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:column; padding:16px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; transition:all .2s ease;">
         <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="position:absolute; top:12px; right:12px;">
-        ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:#00d26a; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
+        ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:${pkg.popular ? "#00d26a" : "#00f2fe"}; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
         <strong style="font-size:18px; color:var(--portal-text-primary, #fff);">${safeText(pkg.label)}</strong>
         <span style="font-size:22px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
         <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px;">${safeText(pkg.note)}</small>
@@ -20790,8 +20790,11 @@
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
             ${packageOptions}
+          </div>
+          <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">
+            ⚠️ <strong>Lưu ý:</strong> Cổng tự động PayOS áp dụng mức nạp & khuyến mãi tối đa <strong>500.000 đ / giao dịch</strong>. Nếu quý khách có nhu cầu nạp số lượng lớn hơn, vui lòng chuyển sang tab <strong>"Nạp Thủ Công"</strong> (ACB / MoMo / ZaloPay / Binance) để được phục vụ chu đáo.
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>

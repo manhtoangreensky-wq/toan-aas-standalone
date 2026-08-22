@@ -787,12 +787,12 @@ def _payment_topup_catalog_available() -> bool:
 
 
 DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
+    {"code": "topup_10k", "label": "10.000 đ", "amount_vnd": 10000, "xu": 100, "available": True},
     {"code": "topup_20k", "label": "20.000 đ", "amount_vnd": 20000, "xu": 200, "available": True},
-    {"code": "topup_50k", "label": "50.000 đ (Phổ biến)", "amount_vnd": 50000, "xu": 500, "available": True},
+    {"code": "topup_50k", "label": "50.000 đ (Phổ biến nhất)", "amount_vnd": 50000, "xu": 500, "available": True},
     {"code": "topup_100k", "label": "100.000 đ (+100 Xu)", "amount_vnd": 100000, "xu": 1100, "available": True},
     {"code": "topup_200k", "label": "200.000 đ (+300 Xu)", "amount_vnd": 200000, "xu": 2300, "available": True},
     {"code": "topup_500k", "label": "500.000 đ (+1.000 Xu)", "amount_vnd": 500000, "xu": 6000, "available": True},
-    {"code": "topup_1m", "label": "1.000.000 đ (+3.000 Xu)", "amount_vnd": 1000000, "xu": 13000, "available": True},
 )
 
 
@@ -4155,7 +4155,7 @@ async def payment_options(account: dict = Depends(require_account)):
 @router.post("/payments/create")
 async def create_payment(payload: PaymentRequest, request: Request, account: dict = Depends(require_csrf)):
     payment_type = str(payload.payment_type or "topup_xu").strip().lower()
-    topup_packages = _payment_topup_packages()
+    topup_packages = _payment_topup_packages() or list(DEFAULT_TOPUP_PACKAGES)
     package_id = str(payload.package_id or "").strip()
     if not package_id:
         return envelope(False, "Hãy chọn gói từ danh mục trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
@@ -4192,7 +4192,9 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
                         data={
                             "status": "awaiting_confirm",
                             "checkout_url": checkout_url,
+                            "checkoutUrl": checkout_url,
                             "order_code": order_code,
+                            "orderCode": order_code,
                             "amount_vnd": amount,
                             "xu": xu,
                         }
@@ -4213,7 +4215,7 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
             ),
         )
 
-    vietqr_url = f"https://img.vietqr.io/image/mbbank-0387532320-compact2.png?amount={amount}&addInfo=NAPXU%20{user_id}"
+    vietqr_url = f"https://img.vietqr.io/image/acb-8899397968-compact2.png?amount={amount}&addInfo=NAPXU%20{user_id}"
     return envelope(
         True,
         "Vui lòng quét mã VietQR để hoàn tất chuyển khoản.",
@@ -4221,7 +4223,9 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         data={
             "status": "awaiting_confirm",
             "checkout_url": vietqr_url,
+            "checkoutUrl": vietqr_url,
             "order_code": str(key)[:12],
+            "orderCode": str(key)[:12],
             "amount_vnd": amount,
             "xu": xu,
         }
