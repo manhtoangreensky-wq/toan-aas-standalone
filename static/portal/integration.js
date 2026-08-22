@@ -1274,6 +1274,7 @@
     // browser-provided identity, role or Telegram identifier crosses it.
     return {
       display_name: typeof source.display_name === "string" ? source.display_name : "",
+      avatar_url: typeof source.avatar_url === "string" ? source.avatar_url.trim() : "",
       locale: profileUpdateInterfaceLocale(source.locale),
       timezone: typeof source.timezone === "string" && source.timezone.trim()
         ? source.timezone.trim()

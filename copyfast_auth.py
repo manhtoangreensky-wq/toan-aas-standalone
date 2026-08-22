@@ -1189,6 +1189,7 @@ def browser_account_payload(account: dict) -> dict:
             "locale": normalize_interface_locale(account.get("locale")),
             "timezone": str(account.get("timezone") or "Asia/Ho_Chi_Minh"),
             "avatar_style": str(account.get("avatar_style") or "gradient"),
+            "avatar_url": str(account.get("avatar_url") or account.get("avatar_style") or ""),
         },
         "login_methods": {
             "email": password_login_enabled and not telegram_only,
@@ -1585,6 +1586,7 @@ class TelegramAccountUpgradeRequest(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     display_name: str = Field(default="", max_length=120)
+    avatar_url: str = Field(default="", max_length=500)
     locale: str = Field(default="vi", max_length=16)
     timezone: str = Field(default="Asia/Ho_Chi_Minh", max_length=64)
 
@@ -4048,6 +4050,7 @@ async def unlink_security_oauth(
 async def update_profile(payload: ProfileUpdateRequest, request: Request, account: dict = Depends(require_csrf)):
     """Update only Web-owned presentation defaults for the signed account."""
     display_name = payload.display_name.strip()
+    avatar_url = payload.avatar_url.strip()
     locale = payload.locale.strip().lower()
     timezone_name = payload.timezone.strip()
     if any(ord(character) < 32 for character in display_name):
@@ -4056,6 +4059,7 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
         return envelope(False, "Ngôn ngữ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_LOCALE_INVALID")
     if timezone_name not in {"Asia/Ho_Chi_Minh", "UTC"}:
         return envelope(False, "Múi giờ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_TIMEZONE_INVALID")
+    avatar_val = avatar_url if avatar_url.startswith(("http://", "https://", "data:image/")) else "gradient"
     with transaction() as conn:
         now = utc_now()
         conn.execute(
@@ -4065,9 +4069,9 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
         conn.execute(
             """INSERT INTO web_account_profiles
             (account_id, locale, timezone, avatar_style, created_at, updated_at)
-            VALUES (?, ?, ?, 'gradient', ?, ?)
-            ON CONFLICT(account_id) DO UPDATE SET locale=excluded.locale, timezone=excluded.timezone, updated_at=excluded.updated_at""",
-            (account["id"], locale, timezone_name, now, now),
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(account_id) DO UPDATE SET locale=excluded.locale, timezone=excluded.timezone, avatar_style=excluded.avatar_style, updated_at=excluded.updated_at""",
+            (account["id"], locale, timezone_name, avatar_val, now, now),
         )
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.profile_update", request_id=_request_id(request))
     updated = {
@@ -4075,9 +4079,10 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
         "display_name": display_name,
         "locale": locale,
         "timezone": timezone_name,
-        "avatar_style": "gradient",
+        "avatar_style": avatar_val,
+        "avatar_url": avatar_url,
     }
-    return envelope(True, "Đã cập nhật hồ sơ Web.", data={"account": browser_account_payload(updated)}, status_name="completed")
+    return envelope(True, "Đã cập nhật hồ sơ Web và ảnh đại diện.", data={"account": browser_account_payload(updated)}, status_name="completed")
 
 
 @router.post("/profile/interface-locale")
