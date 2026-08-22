@@ -7884,12 +7884,12 @@ button, a, input, select, textarea { touch-action: manipulation; }
   color: #ffffff !important;
 }
 
-/* Floating PWA Install Trigger */
+/* Floating PWA Install Trigger - positioned next to AI Assistant */
 .portal-pwa-fab-trigger {
   position: fixed;
   bottom: 24px;
-  right: 24px;
-  z-index: 9999;
+  right: 245px;
+  z-index: 9998;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -7936,8 +7936,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
 @media (max-width: 640px) {
   .portal-pwa-fab-trigger {
     bottom: calc(var(--portal-safe-bottom, 0px) + 72px);
-    right: 16px;
-    padding: 8px 14px;
+    right: auto;
+    left: 12px;
+    padding: 8px 12px;
     font-size: 12px;
   }
 }
@@ -8497,17 +8498,17 @@ button, a, input, select, textarea { touch-action: manipulation; }
   transform: rotate(25deg) translateY(100%);
 }
 
-/* Universal PWA Smart Install Banner & Modal Suite */
+/* Universal PWA Smart Install Banner & Modal Suite - offset next to AI assistant */
 .portal-smart-install-banner {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: 245px;
   top: auto;
   left: auto;
   transform: none;
   width: auto;
   max-width: 380px;
-  z-index: 9999;
+  z-index: 9998;
   border-radius: 16px;
   background: rgba(13, 27, 42, 0.95);
   backdrop-filter: blur(20px) saturate(180%);
