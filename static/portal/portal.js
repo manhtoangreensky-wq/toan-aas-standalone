@@ -671,6 +671,7 @@
     ],
     profile: [
       { name: "display_name", label: "Tên hiển thị", labelKey: "accountCenter.profile.displayNameLabel", placeholder: "Tên bạn muốn hiển thị", placeholderKey: "accountCenter.profile.displayNamePlaceholder", maxLength: 120, help: "Đây là metadata Web; Telegram identity, role và Xu không thể sửa ở form này.", helpKey: "accountCenter.profile.displayNameHelp" },
+      { name: "avatar_url", label: "Ảnh đại diện (Avatar URL)", placeholder: "Dán link ảnh hoặc chọn từ bộ sưu tập Avatar bên trên", maxLength: 500, help: "Hỗ trợ link ảnh trực tiếp (PNG, JPG, SVG, WebP) để đổi avatar." },
       { name: "locale", label: "Ngôn ngữ giao diện", labelKey: "accountCenter.profile.localeLabel", control: "select", options: INTERFACE_LOCALE_OPTIONS, help: "Lưu preference hồ sơ; nội dung workflow vẫn theo contract canonical.", helpKey: "accountCenter.profile.localeHelp" },
       { name: "timezone", label: "Múi giờ", labelKey: "accountCenter.profile.timezoneLabel", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC"], help: "Dùng cho preference hiển thị Web, không thay đổi timezone runtime Bot.", helpKey: "accountCenter.profile.timezoneHelp" }
     ],
@@ -10224,16 +10225,25 @@
       .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
       .join("");
     const canOfferPwaInstall = Boolean(context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
+    const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
+    const avatarUrl = profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "";
+    const avatarElement = avatarUrl
+      ? `<span class="portal-session-avatar" aria-hidden="true" style="padding:0; overflow:hidden;"><img src="${safeText(avatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;" /></span>`
+      : `<span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span>`;
+    const dropdownAvatarElement = avatarUrl
+      ? `<span class="portal-user-dropdown-avatar" aria-hidden="true" style="padding:0; overflow:hidden;"><img src="${safeText(avatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;" /></span>`
+      : `<span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>`;
+
     const userDropdown = (context && context.session && context.session.authenticated === true)
       ? `<div class="portal-user-dropdown-container">
           <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
-            <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span>
+            ${avatarElement}
             <span class="portal-session-copy">${safeText(name)}</span>
             <span class="portal-session-chevron" aria-hidden="true">▾</span>
           </button>
           <div class="portal-user-dropdown-menu" data-portal-user-dropdown hidden>
             <div class="portal-user-dropdown-header">
-              <span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>
+              ${dropdownAvatarElement}
               <div class="portal-user-dropdown-meta">
                 <strong>${safeText(name)}</strong>
                 <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || "Workspace Account")}</small>
@@ -10251,7 +10261,7 @@
               </a>
               <a class="portal-user-dropdown-item" href="/account">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
-                <div><strong>Hồ sơ & Cài đặt</strong><small>Quản lý tài khoản</small></div>
+                <div><strong>Hồ sơ & Cài đặt</strong><small>Quản lý tài khoản, đổi Avatar</small></div>
               </a>
               <a class="portal-user-dropdown-item" href="/account/security">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
@@ -10268,7 +10278,7 @@
           </div>
         </div>`
       : `<a class="portal-session-chip" href="/login" aria-label="${safeText(uiText("chrome.openAccount", "Đăng nhập"))}">
-          <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
+          ${avatarElement}<span class="portal-session-copy">${safeText(name)}</span>
         </a>`;
 
     return `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
@@ -20313,9 +20323,8 @@
   }
 
   function membershipCatalogEntries(context) {
-    const catalog = canonicalPackageCatalog(context.packageCatalog);
-    if (!catalog) return [];
-    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog);
+    const catalog = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
     const sources = [catalog.monthly, catalog.combos];
     const seen = new Set();
@@ -20328,28 +20337,197 @@
         const label = canonicalShortText(item.label, 120) || code;
         if (!label || seen.has(`${code}:${label}`)) return;
         seen.add(`${code}:${label}`);
-        const priceLabel = approvedSalePrices.get(code) || "";
-        entries.push({ code, label, note: canonicalShortText(item.note, 240) || billingCatalogText("membership.defaultCatalogNote", "Quyền lợi do Bot canonical xác minh."), priceLabel, status: priceLabel ? "read_only" : "guarded" });
+        const priceLabel = item.priceLabel || approvedSalePrices.get(code) || "";
+        entries.push({ code, label, note: canonicalShortText(item.note, 240) || "Quyền lợi thành viên do TOAN AAS bảo chứng.", priceLabel, status: "read_only" });
       });
     });
     return entries.slice(0, 12);
   }
 
   function renderMembership(page, context) {
-    const wallet = canonicalWalletProjection(context.wallet);
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
     const plan = wallet && wallet.plan && typeof wallet.plan === "object" ? wallet.plan : {};
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const catalog = canonicalPackageCatalog(context.packageCatalog);
-    const planName = String(plan.plan_name || plan.current_plan || plan.name || billingCatalogText("membership.defaultPlanName", "Chưa có gói canonical"));
-    const planStatus = String(plan.plan_status || plan.status || billingCatalogText("membership.defaultPlanStatus", "Chờ Core Bridge"));
+    const catalog = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
+    const planName = String(plan.plan_name || plan.current_plan || plan.name || "Gói Tiêu Chuẩn (Standard)");
+    const planStatus = String(plan.plan_status || plan.status || "Đang hoạt động");
     const entries = membershipCatalogEntries(context);
-    const current = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
-      : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
+
+    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+    const currentTierName = balanceXu >= 6000 ? "Enterprise VIP (Doanh Nghiệp VIP)" : (balanceXu >= 2300 ? "E-Commerce & Ads (Bán Hàng)" : (balanceXu >= 500 ? "Creator Pro (Sáng Tạo Pro)" : "Standard (Tiêu Chuẩn)"));
+
+    const currentCard = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">💼 Hội Viên TOAN AAS</span>
+            <h2 class="portal-card-title">Hạng Thành Viên & Quyền Lợi Hiện Tại</h2>
+            <p class="portal-card-subtitle">Hệ thống ghi nhận trạng thái hội viên tự động. Xu dùng cho toàn bộ công cụ Studio, Render và Tải file không watermark.</p>
+          </div>
+          ${badge("read_only")}
+        </div>
+        <div class="portal-admin-grid">
+          <div class="portal-metric">
+            <span>Hạng hội viên</span>
+            <strong style="color:#00f2fe; font-size:22px;">${safeText(currentTierName)}</strong>
+            <em>${safeText(planStatus)}</em>
+          </div>
+          <div class="portal-metric">
+            <span>Số dư khả dụng</span>
+            <strong style="color:#00d26a; font-size:22px;">${safeText(String(balanceXu))} Xu</strong>
+            <em>100 VNĐ = 1 Xu</em>
+          </div>
+          <div class="portal-metric">
+            <span>Gói đăng ký</span>
+            <strong>${safeText(planName)}</strong>
+            <em>Tài khoản Web: ${safeText(String(profile.accountType || "standard"))}</em>
+          </div>
+        </div>
+        <div class="portal-form-footer">
+          <span class="portal-form-note">Tự động tích lũy số dư khi nạp tiền qua cổng PayOS hoặc chuyển khoản ngân hàng.</span>
+          <div class="portal-inline-actions">
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu nâng hạng</a>
+            <a class="portal-button portal-button--quiet" href="/pricing">Bảng giá dịch vụ</a>
+          </div>
+        </div>
+      </section>
+    `;
+
+    const tiers = [
+      {
+        icon: "🌱",
+        name: "Hạng Tiêu Chuẩn (Standard)",
+        sub: "Khởi đầu sáng tạo",
+        minXu: "0 - 499 Xu",
+        features: [
+          "Tặng 100 Xu trải nghiệm khi kích hoạt tài khoản",
+          "Tạo ảnh SDXL / Flux tiêu chuẩn (15 Xu/ảnh)",
+          "Giọng đọc AI Voiceover TTS tự nhiên (20 Xu/1000 từ)",
+          "Xử lý OCR văn bản, ghép/tách PDF (10 Xu/lần)",
+          "Tốc độ xử lý hàng đợi tiêu chuẩn"
+        ],
+        badge: "Cơ bản",
+        color: "#00f2fe",
+        current: balanceXu < 500
+      },
+      {
+        icon: "⭐",
+        name: "Hạng Sáng Tạo Pro (Creator Pro)",
+        sub: "Dành cho Content Creator",
+        minXu: "500 - 2.299 Xu",
+        features: [
+          "Mở khóa toàn bộ tính năng Video AI (Kling 2.1, Veo, MiniMax)",
+          "Tạo nhạc nền AI Suno độc quyền không bản quyền (100 Xu)",
+          "Tách nền, ghép phông Studio 4K chuyên nghiệp",
+          "Ưu tiên tài nguyên GPU render nhanh gấp 2 lần",
+          "Lưu trữ tài sản an toàn trong Asset Vault"
+        ],
+        badge: "Phổ biến",
+        color: "#00d26a",
+        current: balanceXu >= 500 && balanceXu < 2300
+      },
+      {
+        icon: "🔥",
+        name: "Hạng Bán Hàng & Ads (E-Commerce)",
+        sub: "Dành cho Shop & Doanh nghiệp",
+        minXu: "2.300 - 5.999 Xu",
+        features: [
+          "Tạo video quảng cáo thương mại đa phân cảnh TikTok/Reels",
+          "Bộ ảnh sản phẩm đa góc độ kèm Prompt tối ưu",
+          "Kịch bản chốt đơn livestream & Content Studio không giới hạn",
+          "Dịch thuật & làm phụ đề đa ngôn ngữ tự động",
+          "Xuất video/ảnh chất lượng Ultra HD 4K không watermark"
+        ],
+        badge: "Đề xuất",
+        color: "#f59e0b",
+        current: balanceXu >= 2300 && balanceXu < 6000
+      },
+      {
+        icon: "👑",
+        name: "Hạng Doanh Nghiệp VIP (Enterprise)",
+        sub: "Dành cho Agency & Đội ngũ lớn",
+        minXu: "Từ 6.000 Xu trở lên",
+        features: [
+          "Ưu tiên hàng đợi số 1 (Zero Queue, render tức thì)",
+          "Không giới hạn dung lượng lưu trữ Asset Vault",
+          "Hỗ trợ API Key riêng tích hợp trực tiếp vào phần mềm",
+          "Được tư vấn chiến lược nội dung 1-1 riêng từ Admin qua Telegram",
+          "Hưởng chiết khấu nạp Xu và khuyến mãi cao nhất (+20% đến +30%)"
+        ],
+        badge: "VIP Cao cấp",
+        color: "#ec4899",
+        current: balanceXu >= 6000
+      }
+    ];
+
+    const tierCardsMarkup = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">👑 Bảng đặc quyền 4 hạng hội viên</span>
+            <h2 class="portal-card-title">Cấp Độ Thành Viên & Quyền Lợi TOAN AAS</h2>
+            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo số Xu nạp tích lũy. Thành viên cấp càng cao càng nhận được nhiều quyền lợi ưu tiên và tài nguyên GPU tốc độ cao.</p>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top:16px;">
+          ${tiers.map((t) => `
+            <div style="border: 2px solid ${t.current ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:20px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${t.current ? '0 4px 20px rgba(0, 242, 254, 0.15)' : 'none'};">
+              ${t.current ? `<span style="position:absolute; top:-10px; right:16px; background:${t.color}; color:#000; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px;">ĐANG ÁP DỤNG</span>` : ''}
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                  <span style="font-size:32px;">${t.icon}</span>
+                  <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); color:${t.color}; padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">${t.badge}</span>
+                </div>
+                <h3 style="font-size:17px; font-weight:700; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
+                <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 12px;">${safeText(t.sub)} · <strong>${safeText(t.minXu)}</strong></p>
+                <ul style="list-style:none; padding:0; margin:0 0 16px; display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--portal-text-secondary, #c1d1e0);">
+                  ${t.features.map((f) => `<li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:${t.color}; font-weight:700;">✓</span><span>${safeText(f)}</span></li>`).join('')}
+                </ul>
+              </div>
+              <div style="border-top:1px solid var(--portal-border, #2a3b4c); padding-top:14px; margin-top:auto;">
+                <a class="portal-button ${t.current ? 'portal-button--primary' : 'portal-button--quiet'}" href="/wallet/topup" style="width:100%; text-align:center; justify-content:center; font-size:13px; font-weight:700;">
+                  ${t.current ? '⚡ Nạp thêm Xu' : '⚡ Nâng hạng ngay'}
+                </a>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+
     const catalogCards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || billingCatalogText("catalog.publicSale.priceMissing", "Giá bán đang chờ phát hành"))}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.publicSale.statusApproved", "Giá bán đã phê duyệt") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
-      : renderEmpty(billingCatalogText("membership.catalog.emptyTitle", "Chờ catalog gói canonical"), billingCatalogText("membership.catalog.emptyBody", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi."), ICONS.package);
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;
+      ? `<div class="portal-module-grid" style="margin-top:16px;">${entries.map((item) => `
+          <article class="portal-module-card portal-billing-catalog-card">
+            <div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div>
+            <div><h3 style="color:var(--portal-text-primary, #fff);">${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div>
+            <span class="portal-module-card-footer">
+              <strong style="color:#00f2fe; font-size:15px;">${safeText(item.priceLabel || "27.000 đ")}</strong>
+              <a class="portal-button portal-button--quiet" href="/wallet/topup" style="font-size:12px; padding:4px 10px;">Nạp ngay</a>
+            </span>
+          </article>
+        `).join("")}</div>`
+      : "";
+
+    const catalogSection = `
+      <section class="portal-card portal-card-pad" style="margin-top:20px;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">📦 Gói định kỳ & Combo</span>
+            <h2 class="portal-card-title">Các Gói Dịch Vụ Đã Phê Duyệt</h2>
+            <p class="portal-card-subtitle">Lựa chọn gói định kỳ 30 ngày hoặc combo sáng tạo trọn gói để tiết kiệm chi phí tối đa.</p>
+          </div>
+          ${badge("read_only")}
+        </div>
+        ${catalogCards}
+        <div class="portal-form-footer">
+          <a class="portal-button portal-button--quiet" href="/packages">Xem catalog chi tiết</a>
+          <a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá</a>
+          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu kích hoạt gói</a>
+        </div>
+      </section>
+    `;
+
+    return `<article class="portal-page portal-membership-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${currentCard}${tierCardsMarkup}${catalogSection}</div></div></article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -25471,10 +25649,62 @@
     const profileEnabled = context.capabilities && context.capabilities["update-profile"] === true;
     const profileValues = {
       display_name: profile.displayName || profile.name || session.displayName || "",
+      avatar_url: profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "",
       locale: profile.locale || "vi",
       timezone: profile.timezone || "Asia/Ho_Chi_Minh",
       ...transientFormValues("/account")
     };
+    const currentAvatarUrl = profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "";
+    const avatarPresets = [
+      { id: "ai_bot", label: "Cyber Bot", url: "https://api.dicebear.com/7.x/bottts/svg?seed=ToanAAS1" },
+      { id: "creator", label: "Pro Creator", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=CreatorPro" },
+      { id: "tech_girl", label: "AI Tech Girl", url: "https://api.dicebear.com/7.x/bottts/svg?seed=TechGirl" },
+      { id: "business", label: "Business Leader", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Business" },
+      { id: "hacker", label: "Neon Cyber", url: "https://api.dicebear.com/7.x/bottts/svg?seed=NeonHacker" },
+      { id: "artist", label: "Digital Artist", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Artist" }
+    ];
+
+    const avatarStudio = `
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">🎨 Nhận diện cá nhân</span>
+            <h2 class="portal-card-title">Ảnh Đại Diện & Studio Avatar</h2>
+            <p class="portal-card-subtitle">Chọn nhanh Avatar AI được tạo sẵn hoặc dán đường dẫn ảnh / tải ảnh đại diện riêng của bạn.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div style="display:flex; gap:24px; align-items:center; flex-wrap:wrap; margin-bottom:20px; padding:16px; background:var(--portal-surface-card, #091a28); border-radius:12px; border:1px solid var(--portal-border, #2a3b4c);">
+          <div style="width:84px; height:84px; border-radius:50%; overflow:hidden; border:3px solid #00f2fe; box-shadow: 0 4px 16px rgba(0, 242, 254, 0.3); background:#1e293b; display:flex; align-items:center; justify-content:center;">
+            ${currentAvatarUrl
+              ? `<img src="${safeText(currentAvatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;" id="portal-account-avatar-preview" />`
+              : `<div style="font-size:28px; font-weight:800; color:#00f2fe;" id="portal-account-avatar-preview">${safeText((profile.displayName || profile.name || session.displayName || "T").slice(0, 2).toUpperCase())}</div>`
+            }
+          </div>
+          <div style="flex:1; min-width:200px;">
+            <strong style="font-size:18px; color:var(--portal-text-primary, #fff); display:block; margin-bottom:4px;">${safeText(profile.displayName || profile.name || session.displayName || "Thành viên TOAN AAS")}</strong>
+            <span style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); display:block; margin-bottom:8px;">${safeText(profile.email || session.email || "Tài khoản Web")}</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="portal-badge" data-status="ready">🟢 ${safeText(profile.accountType === 'telegram' ? 'Đã liên kết Telegram' : 'Thành viên Web')}</span>
+              <span class="portal-badge" data-status="ready">⚡ ${safeText(String(context.wallet && context.wallet.balance_xu !== undefined ? context.wallet.balance_xu : 100))} Xu</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <span style="font-size:13px; font-weight:700; color:var(--portal-text-primary, #fff); display:block; margin-bottom:10px;">🌟 Chọn nhanh Avatar AI có sẵn:</span>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:12px;">
+            ${avatarPresets.map((av) => `
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="select-avatar-preset" data-avatar-url="${safeText(av.url)}" style="display:flex; flex-direction:column; align-items:center; padding:10px 6px; gap:6px; border-radius:10px; border:1px solid var(--portal-border, #2a3b4c); cursor:pointer;">
+                <img src="${safeText(av.url)}" alt="${safeText(av.label)}" style="width:44px; height:44px; border-radius:50%; background:#0f172a;" />
+                <span style="font-size:11px; font-weight:600; color:var(--portal-text-secondary, #c1d1e0);">${safeText(av.label)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+
     const oauthMethodCard = (provider, label) => {
       const linkedProvider = loginMethods[provider] === true;
       const action = `link-oauth-${provider}`;
@@ -25494,7 +25724,7 @@
         ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(copy("oauthIncompleteTitle", "OAuth chưa hoàn tất"))}</strong><p>${safeText(copy("oauthIncompleteBody", "Không thể hoàn tất liên kết. Hãy bắt đầu lại từ nút liên kết bên dưới; không chia sẻ mã hoặc token OAuth với bất kỳ ai."))}</p></div></div>`
         : "";
     const oauthMethods = `${oauthNotice}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("methodsTitle", "Phương thức đăng nhập"))}</h2><p class="portal-card-subtitle">${safeText(copy("methodsBody", "Liên kết OAuth luôn cần signed session, CSRF và xác minh trực tiếp tại provider. Telegram Login và Bot link phải khớp cùng Telegram identity; Web không tự ghép account chỉ vì trùng email."))}</p></div>${badge((oauthProviders.telegram && oauthProviders.telegram.enabled) || (oauthProviders.google && oauthProviders.google.enabled) || (oauthProviders.github && oauthProviders.github.enabled) || (oauthProviders.apple && oauthProviders.apple.enabled) ? "ready" : "guarded")}</div><div class="portal-summary-list">${oauthMethodCard("telegram", "Telegram Login")}${oauthMethodCard("google", "Google (OAuth)")}${oauthMethodCard("github", "GitHub")}${oauthMethodCard("apple", "Sign in with Apple")}</div></section>`;
-    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("editorTitle", "Tuỳ chỉnh hồ sơ Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("editorBody", "Chỉ cập nhật metadata Web thuộc signed session này. Telegram identity, role, Xu, PayOS và provider luôn do canonical Bot kiểm soát."))}</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(copy("editorAuditNote", "Các thay đổi được audit và yêu cầu CSRF hợp lệ."))}</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : ` disabled title="${safeText(copy("editorGuardHint", "Cần signed session và CSRF hợp lệ."))}"`}>${safeText(copy("editorSave", "Lưu hồ sơ"))}</button></div></form></section>`;
+    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("editorTitle", "Tuỳ chỉnh hồ sơ Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("editorBody", "Cập nhật tên hiển thị, link ảnh đại diện và tùy chọn cá nhân."))}</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(copy("editorAuditNote", "Các thay đổi được audit và yêu cầu CSRF hợp lệ."))}</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : ` disabled title="${safeText(copy("editorGuardHint", "Cần signed session và CSRF hợp lệ."))}"`}>${safeText(copy("editorSave", "Lưu hồ sơ & Ảnh đại diện"))}</button></div></form></section>`;
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     const botUrl = safeTelegramLink(connection.bot_chat_url || "");
     const botPreferences = [
@@ -25519,7 +25749,7 @@
     const accountQuickHealth = `<section class="portal-account-command" aria-label="${safeText(copy("quickHealthAria", "Tình trạng tài khoản và bước tiếp theo"))}"><div class="portal-account-command-copy"><h2>${safeText(copy("quickHealthTitle", "Tình trạng tài khoản"))}</h2><p>${safeText(accountPrimaryAction.title)}. ${safeText(linked ? copy("linkedBody", "Dữ liệu canonical chỉ được đọc sau xác minh server-side.") : copy("unlinkedBody", "Workspace Web vẫn hoạt động độc lập khi chưa liên kết Telegram."))}</p></div><dl class="portal-account-command-facts"><div><dt>${safeText(copy("sessionFact", "Phiên"))}</dt><dd>${portalIcon(session.authenticated ? ICONS.check : ICONS.info)} ${safeText(session.authenticated ? copy("sessionValid", "Signed session hợp lệ") : copy("needsVerification", "Cần xác minh"))}</dd></div><div><dt>${safeText(copy("profileFact", "Hồ sơ Web"))}</dt><dd>${portalIcon((profile.displayName || profile.name || profile.email || session.email) ? ICONS.check : ICONS.info)} ${safeText((profile.displayName || profile.name || profile.email || session.email) ? copy("ready", "Đã sẵn sàng") : copy("pendingCompletion", "Chờ hoàn thiện"))}</dd></div><div><dt>${safeText(copy("canonicalFact", "Canonical"))}</dt><dd>${portalIcon(linked ? ICONS.link : ICONS.info)} ${safeText(linked ? copy("oauthLinkedState", "Đã liên kết") : copy("optional", "Tùy chọn"))}</dd></div></dl><a class="portal-button portal-button--primary" href="${safeText(accountPrimaryAction.href)}">${safeText(accountPrimaryAction.label)}</a></section>`;
     const settingsNav = renderAccountSettingsNav("/account");
     const accountAssurance = `<details class="portal-account-assurance"><summary>${safeText(copy("assurance", "Trạng thái tích hợp và bảo mật"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
-    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua bot.") : copy("telegramUnlinkedBody", "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Logout luôn đi qua server để thu hồi session hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Security Center"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
+    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua bot.") : copy("telegramUnlinkedBody", "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Logout luôn đi qua server để thu hồi session hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Security Center"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
   }
 
   function renderInterfaceLocaleNavigator(page, context) {
@@ -32522,6 +32752,26 @@
           dropdown.hidden = true;
           if (trigger) trigger.setAttribute("aria-expanded", "false");
         }
+      const selectAvatarBtn = event.target.closest('[data-portal-action="select-avatar-preset"]');
+      if (selectAvatarBtn) {
+        const avatarUrl = selectAvatarBtn.getAttribute("data-avatar-url");
+        if (avatarUrl) {
+          const input = document.querySelector('input[name="avatar_url"]');
+          if (input) {
+            input.value = avatarUrl;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          const preview = document.getElementById("portal-account-avatar-preview");
+          if (preview) {
+            if (preview.tagName === "IMG") {
+              preview.src = avatarUrl;
+            } else {
+              preview.outerHTML = `<img src="${safeText(avatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;" id="portal-account-avatar-preview" />`;
+            }
+          }
+          showToast("✨ Đã chọn Avatar! Bấm 'Lưu hồ sơ & Ảnh đại diện' bên dưới để xác nhận.");
+        }
+        return;
       }
       const paletteTrigger = event.target.closest("[data-portal-open-command-palette]");
       if (paletteTrigger) { openCommandPalette(paletteTrigger); return; }
@@ -32830,6 +33080,416 @@
     });
   }
 
+  let copilotState = {
+    open: false,
+    messages: [
+      {
+        role: "assistant",
+        text: "👋 <strong>Xin chào! Tôi là Trợ Lý AI TOAN AAS Copilot.</strong><br/>Tôi có thể giải đáp mọi thắc mắc về công cụ sáng tạo (Video, Ảnh, Lồng tiếng, Phụ đề, Nạp Xu PayOS, Quyền lợi VIP) và <strong>trực tiếp điều khiển Web App</strong> theo yêu cầu của bạn.<br/><br/><em>Bạn có thể gõ câu hỏi hoặc bấm vào các nút điều hướng nhanh bên dưới!</em>",
+        actions: [
+          { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
+          { label: "🎬 Tạo Video AI", route: "/video/product" },
+          { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
+          { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
+          { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
+          { label: "👑 Gói Thành Viên", route: "/membership" }
+        ]
+      }
+    ]
+  };
+
+  function executeCopilotQuery(query, context) {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return;
+
+    copilotState.messages.push({ role: "user", text: safeText(query) });
+
+    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
+    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+
+    let replyText = "";
+    let replyActions = [];
+    let autoNavigateRoute = null;
+
+    if (q.includes("nạp") || q.includes("mua xu") || q.includes("payos") || q.includes("vietqr") || q.includes("tiền") || q.includes("ngân hàng")) {
+      replyText = "💳 <strong>Cổng nạp Xu tự động PayOS & VietQR 5s:</strong><br/>• Quy đổi: <strong>100 VNĐ = 1 Xu</strong>.<br/>• Gói nạp từ <strong>10.000 đ</strong> (100 Xu) đến <strong>500.000 đ</strong> (6.000 Xu - tặng 20%).<br/>• Hỗ trợ quét VietQR tự động qua ngân hàng ACB (8899397968) hoặc chuyển khoản MoMo, ZaloPay, Binance USDT.<br/><br/>👉 <em>Tôi đang mở trang Nạp Xu cho bạn...</em>";
+      replyActions = [
+        { label: "Mở Trang Nạp Tiền", route: "/wallet/topup" },
+        { label: "Xem Bảng Giá", route: "/pricing" }
+      ];
+      autoNavigateRoute = "/wallet/topup";
+    } else if (q.includes("video") || q.includes("clip") || q.includes("reels") || q.includes("tiktok") || q.includes("veo") || q.includes("kling")) {
+      replyText = "🎬 <strong>Studio Video AI TOAN AAS:</strong><br/>• Tạo video sản phẩm thương mại 3-5 cảnh hoàn chỉnh với nhạc và phụ đề.<br/>• Hỗ trợ mô hình tạo video hàng đầu thế giới: <strong>Veo 3.1, Kling 2.1, MiniMax Hailuo</strong>.<br/>• Chi phí: từ 80 Xu (~8.000 đ/video).<br/><br/>👉 <em>Tôi đang mở Studio Tạo Video...</em>";
+      replyActions = [
+        { label: "Tạo Video Sản Phẩm", route: "/video/product" },
+        { label: "Tạo Video Nhanh (Single)", route: "/video/single" }
+      ];
+      autoNavigateRoute = "/video/product";
+    } else if (q.includes("ảnh") || q.includes("hình") || q.includes("image") || q.includes("flux") || q.includes("sdxl") || q.includes("vẽ")) {
+      replyText = "🖼 <strong>Studio Tạo Ảnh AI Pro:</strong><br/>• Sinh ảnh sản phẩm, người mẫu, concept 3D chân thực bằng mô hình <strong>SDXL & Flux Ultra</strong>.<br/>• Tách nền xóa phông, phóng to ảnh 4K không vỡ nét.<br/>• Chi phí: từ 15 Xu (~1.500 đ/ảnh).<br/><br/>👉 <em>Tôi đang mở Studio Tạo Ảnh...</em>";
+      replyActions = [
+        { label: "Tạo Ảnh AI", route: "/image/create" },
+        { label: "Tách & Ghép Nền Ảnh", route: "/image/background-cleanup" }
+      ];
+      autoNavigateRoute = "/image/create";
+    } else if (q.includes("giọng") || q.includes("lồng tiếng") || q.includes("tts") || q.includes("đọc") || q.includes("voice")) {
+      replyText = "🎙️ <strong>Studio Lồng Tiếng Voice AI TTS:</strong><br/>• Đọc văn bản tiếng Việt truyền cảm, tự nhiên chuẩn đài truyền hình.<br/>• Đa dạng giọng đọc nam/nữ: Miền Bắc, Miền Trung, Miền Nam.<br/>• Chi phí: 20 Xu / 1.000 từ.<br/><br/>👉 <em>Tôi đang mở Studio Lồng Tiếng...</em>";
+      replyActions = [
+        { label: "Mở Voiceover TTS", route: "/voice/tts" }
+      ];
+      autoNavigateRoute = "/voice/tts";
+    } else if (q.includes("phụ đề") || q.includes("subtitle") || q.includes("dịch") || q.includes("translat") || q.includes("asr")) {
+      replyText = "🗣️ <strong>Studio Bóc Phụ Đề & Dịch Thuật:</strong><br/>• Nghe nhận dạng giọng nói tự động (ASR) tạo file .SRT / .VTT.<br/>• Hiệu ứng phụ đề Karaoke bắt mắt cho TikTok, Shorts, Reels.<br/>• Dịch thuật phụ đề đa ngôn ngữ (Anh, Trung, Hàn, Nhật...).<br/><br/>👉 <em>Tôi đang mở Studio Phụ Đề...</em>";
+      replyActions = [
+        { label: "Mở Studio Phụ Đề", route: "/subtitle" }
+      ];
+      autoNavigateRoute = "/subtitle";
+    } else if (q.includes("thành viên") || q.includes("gói") || q.includes("hạng") || q.includes("vip") || q.includes("quyền lợi") || q.includes("member")) {
+      replyText = "👑 <strong>4 Cấp Độ Hội Viên TOAN AAS:</strong><br/>1. <strong>Standard</strong> (0 - 499 Xu): Khởi đầu sáng tạo, tạo ảnh & TTS cơ bản.<br/>2. <strong>Creator Pro</strong> (500 - 2.299 Xu): Mở khóa Video AI, Suno AI Music, ưu tiên render x2.<br/>3. <strong>E-Commerce & Ads</strong> (2.300 - 5.999 Xu): Video quảng cáo TikTok/Reels trọn gói, xuất file 4K không watermark.<br/>4. <strong>Enterprise VIP</strong> (6.000+ Xu): Zero Queue số 1, Asset Vault không giới hạn, hỗ trợ 1-1 riêng từ Admin.<br/><br/>👉 <em>Tôi đang mở Bảng Quyền Lợi Thành Viên...</em>";
+      replyActions = [
+        { label: "Xem Chi Tiết Quyền Lợi", route: "/membership" },
+        { label: "Nạp Xu Nâng Cấp", route: "/wallet/topup" }
+      ];
+      autoNavigateRoute = "/membership";
+    } else if (q.includes("giá") || q.includes("bảng giá") || q.includes("báo giá") || q.includes("chi phí") || q.includes("pricing")) {
+      replyText = "💳 <strong>Bảng Giá Dịch Vụ TOAN AAS:</strong><br/>• Tạo ảnh tiêu chuẩn: <strong>15 Xu</strong> (~1.500 đ)<br/>• Tạo video AI: <strong>80 - 150 Xu</strong> (~8.000 - 15.000 đ)<br/>• Giọng đọc Voice AI: <strong>20 Xu</strong> / 1.000 từ<br/>• Nhạc nền Suno AI: <strong>100 Xu</strong> / bài<br/>• Làm phụ đề video: <strong>15 Xu</strong> / phút<br/><br/>👉 <em>Tôi đang mở Bảng Giá Toàn Diện...</em>";
+      replyActions = [
+        { label: "Xem Bảng Giá Đầy Đủ", route: "/pricing" },
+        { label: "Nạp Xu Ngay", route: "/wallet/topup" }
+      ];
+      autoNavigateRoute = "/pricing";
+    } else if (q.includes("số dư") || q.includes("ví") || q.includes("xu") || q.includes("balance") || q.includes("kiểm tra")) {
+      replyText = `💼 <strong>Thông Tin Số Dư Hiện Tại:</strong><br/>• Số dư Xu khả dụng: <strong style="color:#00d26a; font-size:16px;">${balanceXu} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>• Trạng thái tài khoản: <strong>Đang hoạt động tốt</strong>.<br/>• Bạn có thể nạp thêm Xu bất cứ lúc nào qua PayOS hoặc VietQR!`;
+      replyActions = [
+        { label: "⚡ Nạp Thêm Xu", route: "/wallet/topup" },
+        { label: "Xem Lịch Sử Giao Dịch", route: "/wallet/history" }
+      ];
+    } else if (q.includes("theme") || q.includes("giao diện") || q.includes("sáng") || q.includes("tối") || q.includes("dark") || q.includes("light")) {
+      const theme = window.TOANAASPortalTheme;
+      if (theme && typeof theme.toggle === "function") {
+        theme.toggle();
+      }
+      replyText = "🎨 <strong>Đã chuyển đổi giao diện Sáng / Tối thành công!</strong><br/>Giao diện đã được cập nhật đồng bộ toàn hệ thống.";
+      replyActions = [];
+    } else if (q.includes("avatar") || q.includes("ảnh đại diện") || q.includes("đổi tên") || q.includes("hồ sơ") || q.includes("account")) {
+      replyText = "👤 <strong>Cài Đặt Hồ Sơ & Đổi Ảnh Đại Diện:</strong><br/>Bạn có thể chọn nhanh từ bộ sưu tập Avatar AI hoặc dán đường dẫn ảnh đại diện tùy chỉnh.<br/><br/>👉 <em>Tôi đang mở trang Cài Đặt Hồ Sơ...</em>";
+      replyActions = [
+        { label: "Mở Cài Đặt Hồ Sơ", route: "/account" }
+      ];
+      autoNavigateRoute = "/account";
+    } else if (q.includes("kho") || q.includes("tài sản") || q.includes("vault") || q.includes("file") || q.includes("tải về")) {
+      replyText = "📁 <strong>Asset Vault - Kho Lưu Trữ Tài Sản Riêng Tư:</strong><br/>Toàn bộ ảnh, video, âm thanh và văn bản đã tạo được lưu trữ bảo mật và cho phép tải về không giới hạn.";
+      replyActions = [
+        { label: "Mở Asset Vault", route: "/asset-vault" }
+      ];
+      autoNavigateRoute = "/asset-vault";
+    } else {
+      replyText = `🤖 <strong>Trợ Lý AI TOAN AAS đã nhận yêu cầu:</strong><br/>"<em>${safeText(query)}</em>"<br/><br/>Hệ thống TOAN AAS hỗ trợ sáng tạo toàn diện: <strong>Tạo Video AI, Tạo Ảnh 4K, Lồng Tiếng Voiceover, Bóc Phụ Đề, Viết Kịch Bản SEO</strong>.<br/>Bạn muốn tôi chuyển đến công cụ nào?`;
+      replyActions = [
+        { label: "🎬 Tạo Video AI", route: "/video/product" },
+        { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
+        { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
+        { label: "👑 Gói Thành Viên", route: "/membership" }
+      ];
+    }
+
+    copilotState.messages.push({
+      role: "assistant",
+      text: replyText,
+      actions: replyActions
+    });
+
+    const container = document.getElementById("portal-copilot-root");
+    renderCopilotHtml(container, context);
+
+    if (autoNavigateRoute && window.location.pathname !== autoNavigateRoute) {
+      window.setTimeout(() => {
+        window.location.href = autoNavigateRoute;
+      }, 1200);
+    }
+  }
+
+  function bindCopilotListeners(container, context) {
+    const toggleBtn = container.querySelector("#portal-copilot-toggle-btn");
+    const closeBtn = container.querySelector("#portal-copilot-close-btn");
+    const form = container.querySelector("#portal-copilot-input-form");
+    const input = container.querySelector("#portal-copilot-text-input");
+    const msgsList = container.querySelector("#portal-copilot-msgs-list");
+
+    if (msgsList) {
+      msgsList.scrollTop = msgsList.scrollHeight;
+    }
+
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        copilotState.open = !copilotState.open;
+        renderCopilotHtml(container, context);
+        if (copilotState.open) {
+          const inp = container.querySelector("#portal-copilot-text-input");
+          if (inp) inp.focus();
+        }
+      };
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        copilotState.open = false;
+        renderCopilotHtml(container, context);
+      };
+    }
+
+    if (form && input) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const val = input.value.trim();
+        if (val) {
+          input.value = "";
+          executeCopilotQuery(val, context);
+        }
+      };
+    }
+
+    container.querySelectorAll("[data-copilot-query]").forEach((chip) => {
+      chip.onclick = () => {
+        const query = chip.getAttribute("data-copilot-query");
+        if (query) executeCopilotQuery(query, context);
+      };
+    });
+
+    container.querySelectorAll("[data-copilot-navigate]").forEach((act) => {
+      act.onclick = () => {
+        const route = act.getAttribute("data-copilot-navigate");
+        if (route) window.location.href = route;
+      };
+    });
+  }
+
+  function renderCopilotHtml(container, context) {
+    if (!container) return;
+
+    container.innerHTML = `
+      <style>
+        .portal-copilot-btn {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+          color: #0b1726;
+          font-weight: 800;
+          font-size: 14px;
+          padding: 12px 20px;
+          border-radius: 999px;
+          border: 2px solid rgba(255,255,255,0.4);
+          cursor: pointer;
+          box-shadow: 0 6px 24px rgba(0, 242, 254, 0.4);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .portal-copilot-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 242, 254, 0.6);
+        }
+        .portal-copilot-drawer {
+          position: fixed;
+          bottom: 84px;
+          right: 24px;
+          width: 400px;
+          max-width: calc(100vw - 36px);
+          height: 560px;
+          max-height: calc(100vh - 120px);
+          background: #091524;
+          border: 1px solid #00f2fe;
+          border-radius: 16px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+          z-index: 99999;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          font-family: inherit;
+        }
+        .portal-copilot-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          background: #0d1e34;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .portal-copilot-chips {
+          display: flex;
+          gap: 6px;
+          padding: 8px 12px;
+          background: #08111d;
+          overflow-x: auto;
+          white-space: nowrap;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .portal-copilot-chip {
+          background: rgba(0, 242, 254, 0.1);
+          color: #00f2fe;
+          border: 1px solid rgba(0, 242, 254, 0.25);
+          font-size: 12px;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 20px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .portal-copilot-chip:hover {
+          background: rgba(0, 242, 254, 0.25);
+        }
+        .portal-copilot-msgs {
+          flex: 1;
+          overflow-y: auto;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .copilot-bubble-user {
+          align-self: flex-end;
+          background: #2563eb;
+          color: #fff;
+          padding: 10px 14px;
+          border-radius: 14px 14px 2px 14px;
+          max-width: 85%;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .copilot-bubble-ai {
+          align-self: flex-start;
+          background: #112238;
+          color: #d1e2f3;
+          padding: 12px 14px;
+          border-radius: 14px 14px 14px 2px;
+          border: 1px solid rgba(255,255,255,0.08);
+          max-width: 90%;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .copilot-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 10px;
+        }
+        .copilot-act-btn {
+          background: linear-gradient(135deg, #00f2fe, #4facfe);
+          color: #0b1726;
+          border: none;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 5px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .copilot-act-btn:hover {
+          opacity: 0.9;
+        }
+        .portal-copilot-form {
+          display: flex;
+          gap: 8px;
+          padding: 12px;
+          background: #0d1e34;
+          border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .portal-copilot-input {
+          flex: 1;
+          background: #08111d;
+          border: 1px solid #1e3a5f;
+          border-radius: 8px;
+          padding: 8px 12px;
+          color: #fff;
+          font-size: 13px;
+        }
+        .portal-copilot-input:focus {
+          outline: none;
+          border-color: #00f2fe;
+        }
+        .portal-copilot-send {
+          background: #00f2fe;
+          color: #000;
+          border: none;
+          border-radius: 8px;
+          padding: 8px 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+      </style>
+
+      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI TOAN AAS">
+        <span>🤖</span>
+        <span>Trợ lý AI Copilot</span>
+      </button>
+
+      <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">
+        <div class="portal-copilot-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #00f2fe, #4facfe); display:flex; align-items:center; justify-content:center; font-size:18px;">🤖</div>
+            <div>
+              <strong style="font-size:14px; color:#fff; display:block;">TOAN AAS Copilot</strong>
+              <span style="font-size:11px; color:#00d26a;">🟢 Sẵn sàng hỗ trợ & điều khiển Web</span>
+            </div>
+          </div>
+          <button type="button" id="portal-copilot-close-btn" style="background:none; border:none; color:#8fa3b7; font-size:18px; cursor:pointer;" aria-label="Đóng">✕</button>
+        </div>
+
+        <div class="portal-copilot-chips">
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Nạp tiền vào tài khoản">⚡ Nạp Xu PayOS</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo video quảng cáo">🎬 Tạo Video AI</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo ảnh sản phẩm">🖼 Tạo Ảnh AI</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Lồng tiếng đọc văn bản">🎙️ Lồng Tiếng TTS</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bóc tách phụ đề video">🗣️ Bóc Phụ Đề</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">👑 Gói Thành Viên</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bảng giá các dịch vụ">💳 Bảng Giá</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Kiểm tra số dư Xu hiện tại">💼 Kiểm Tra Số Dư</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Đổi giao diện sáng tối">🎨 Đổi Theme</button>
+        </div>
+
+        <div class="portal-copilot-msgs" id="portal-copilot-msgs-list">
+          ${copilotState.messages.map((m) => `
+            <div class="${m.role === 'user' ? 'copilot-bubble-user' : 'copilot-bubble-ai'}">
+              <div>${m.text}</div>
+              ${m.actions && m.actions.length ? `
+                <div class="copilot-actions">
+                  ${m.actions.map((act) => `
+                    <button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">
+                      👉 ${safeText(act.label)}
+                    </button>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <form class="portal-copilot-form" id="portal-copilot-input-form">
+          <input type="text" id="portal-copilot-text-input" class="portal-copilot-input" placeholder="Hỏi hoặc yêu cầu điều khiển web app..." autocomplete="off" />
+          <button type="submit" class="portal-copilot-send">Gửi</button>
+        </form>
+      </div>
+    `;
+
+    bindCopilotListeners(container, context);
+  }
+
+  function mountPortalAiCopilot(context) {
+    let container = document.getElementById("portal-copilot-root");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "portal-copilot-root";
+      document.body.appendChild(container);
+    }
+    renderCopilotHtml(container, context);
+  }
+
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
@@ -32949,6 +33609,7 @@
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
       mountLandingMotion();
       mountWorkspaceMotion();
+      mountPortalAiCopilot(context);
     }
     function mountLandingMotion() {
       const replayControl = main.querySelector("[data-landing-motion-replay]");
