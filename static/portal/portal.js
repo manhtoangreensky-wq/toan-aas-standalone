@@ -21244,12 +21244,18 @@
     const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
 
     const packageOptions = packages.map((pkg) => `
-      <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:column; padding:16px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; transition:all .2s ease;">
-        <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="position:absolute; top:12px; right:12px;">
-        ${pkg.badge ? `<span style="align-self:flex-start; font-size:11px; font-weight:700; background:${pkg.popular ? "#00d26a" : "#00f2fe"}; color:#000; padding:2px 8px; border-radius:6px; margin-bottom:8px;">${safeText(pkg.badge)}</span>` : ""}
-        <strong style="font-size:18px; color:var(--portal-text-primary, #fff);">${safeText(pkg.label)}</strong>
-        <span style="font-size:22px; font-weight:800; color:#00f2fe; margin:4px 0;">⚡ ${safeText(pkg.xu)}</span>
-        <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px;">${safeText(pkg.note)}</small>
+      <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; gap:12px; transition:all .2s ease;">
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <strong style="font-size:17px; color:var(--portal-text-primary, #fff); font-weight:800; white-space:nowrap;">${safeText(pkg.label)}</strong>
+            ${pkg.badge ? `<span style="font-size:10px; font-weight:700; background:${pkg.popular ? "#00d26a" : "#00f2fe"}; color:#000; padding:1px 7px; border-radius:4px; white-space:nowrap;">${safeText(pkg.badge)}</span>` : ""}
+          </div>
+          <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeText(pkg.note)}</small>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+          <span style="font-size:19px; font-weight:800; color:#00f2fe; white-space:nowrap;">⚡ ${safeText(pkg.xu)}</span>
+          <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="accent-color:#00f2fe; width:18px; height:18px; cursor:pointer; margin:0;">
+        </div>
       </label>
     `).join("");
 
@@ -21263,7 +21269,7 @@
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
+          <div class="portal-topup-pkg-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:18px;">
             ${packageOptions}
           </div>
           <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">

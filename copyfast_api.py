@@ -4150,6 +4150,40 @@ async def payment_options(account: dict = Depends(require_account)):
     )
 
 
+def _payos_config() -> dict[str, str]:
+    client_id = (os.environ.get("PAYOS_CLIENT_ID") or "").strip('\"').strip("'").strip()
+    api_key = (os.environ.get("PAYOS_API_KEY") or "").strip('\"').strip("'").strip()
+    checksum = (os.environ.get("PAYOS_CHECKSUM_KEY") or "").strip('\"').strip("'").strip()
+    return {"client_id": client_id, "api_key": api_key, "checksum": checksum}
+
+
+async def _create_payos_checkout(amount: int, order_code: int, description: str, public_base_url: str) -> dict[str, Any]:
+    cfg = _payos_config()
+    if not cfg["client_id"] or not cfg["api_key"] or not cfg["checksum"]:
+        return {"code": "CONFIG_ERROR", "desc": "Cấu hình cổng PayOS chưa đầy đủ (thiếu client/api/checksum key)."}
+    cancel_url = f"{public_base_url}/wallet/topup"
+    return_url = f"{public_base_url}/wallet/topup"
+    raw_str = f"amount={amount}&cancelUrl={cancel_url}&description={description}&orderCode={order_code}&returnUrl={return_url}"
+    signature = hmac.new(cfg["checksum"].encode("utf-8"), raw_str.encode("utf-8"), hashlib.sha256).hexdigest()
+    payload = {
+        "orderCode": order_code,
+        "amount": amount,
+        "description": description[:25],
+        "cancelUrl": cancel_url,
+        "returnUrl": return_url,
+        "signature": signature,
+    }
+    headers = {
+        "x-client-id": cfg["client_id"],
+        "x-api-key": cfg["api_key"],
+        "Content-Type": "application/json",
+    }
+    import httpx
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        res = await client.post("https://api-merchant.payos.vn/v2/payment-requests", json=payload, headers=headers)
+        return res.json()
+
+
 @router.post("/payments/create")
 async def create_payment(payload: PaymentRequest, request: Request, account: dict = Depends(require_csrf)):
     if not _flags()["payment_enabled"]:
@@ -4165,22 +4199,116 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
     if package_id not in {str(item["code"]) for item in topup_packages}:
         return envelope(False, "Mệnh giá nạp không còn thuộc catalog canonical hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
+    
+    pkg_map = {
+        "topup_10k": (10000, 100),
+        "topup_20k": (20000, 200),
+        "topup_50k": (50000, 500),
+        "topup_100k": (100000, 1100),
+        "topup_200k": (200000, 2300),
+        "topup_500k": (500000, 6000),
+    }
+    amount, expected_xu = pkg_map.get(package_id, (50000, 500))
+    import random
+    order_code = random.randint(100000, 99999999)
+    description = f"Nap Xu {order_code}"
+    public_base_url = (os.environ.get("PUBLIC_BASE_URL") or os.environ.get("WEBAPP_BASE_URL") or "https://app.toanaas.vn").rstrip("/")
+    
     key = _require_key(payload.idempotency_key)
     scope = f"payment:{account['id']}"
-    return await _run_transient_idempotent(
-        scope,
-        key,
-        lambda: _bridge(
+
+    async def _do_create_payment():
+        cfg = _payos_config()
+        if cfg["client_id"] and cfg["api_key"] and cfg["checksum"]:
+            try:
+                res_json = await _create_payos_checkout(amount, order_code, description, public_base_url)
+                if res_json.get("code") == "00" and res_json.get("data"):
+                    data = res_json["data"]
+                    checkout_url = data.get("checkoutUrl") or data.get("checkout_url") or ""
+                    qr_code = data.get("qrCode") or ""
+                    payment_link_id = data.get("paymentLinkId") or ""
+                    user_id = str(account.get("canonical_user_id") or account.get("id") or "web_user")
+                    
+                    try:
+                        from db import db_connect, now_text
+                        conn = db_connect()
+                        c = conn.cursor()
+                        c.execute(
+                            """INSERT OR REPLACE INTO payos_orders 
+                               (order_code, user_id, amount, xu, status, payment_type, package_id, created_at) 
+                               VALUES (?, ?, ?, ?, 'PENDING', ?, ?, ?)""",
+                            (str(order_code), user_id, amount, expected_xu, payment_type, package_id, now_text())
+                        )
+                        conn.commit()
+                        conn.close()
+                    except Exception:
+                        pass
+                    
+                    return envelope(
+                        True,
+                        "Đã tạo cổng thanh toán PayOS thành công. Vui lòng quét mã VietQR để hoàn tất nạp Xu.",
+                        data={
+                            "order_code": order_code,
+                            "orderCode": order_code,
+                            "payment_id": str(order_code),
+                            "checkout_url": checkout_url,
+                            "checkoutUrl": checkout_url,
+                            "payment_url": checkout_url,
+                            "qr_code": qr_code,
+                            "qrCode": qr_code,
+                            "payment_link_id": payment_link_id,
+                            "amount_vnd": amount,
+                            "xu": expected_xu,
+                            "status": "awaiting_confirm",
+                        },
+                        status_name="awaiting_confirm",
+                    )
+                else:
+                    desc = res_json.get("desc") or "Cổng PayOS tạm thời không phản hồi"
+                    return envelope(False, f"PayOS từ chối: {desc}", status_name="failed", error_code="PAYOS_ERROR")
+            except Exception as exc:
+                return envelope(False, f"Lỗi tạo giao dịch PayOS: {str(exc)}", status_name="failed", error_code="PAYOS_EXCEPTION")
+        return await _bridge(
             "POST", "/internal/v1/payments/create", account=account, request=request,
             payload={"package_id": package_id, "payment_type": payment_type, "idempotency_key": key},
-        ),
-    )
+        )
+
+    return await _run_transient_idempotent(scope, key, _do_create_payment)
 
 
 @router.get("/payments/{payment_id}")
 async def payment_status(payment_id: str, request: Request, account: dict = Depends(require_account)):
     payment_id = _canonical_route_identifier(payment_id, "Mã payment")
-    return await _bridge("GET", f"/internal/v1/payments/{payment_id}", account=account, request=request)
+    try:
+        from db import db_connect
+        conn = db_connect()
+        c = conn.cursor()
+        c.execute("SELECT order_code, user_id, amount, xu, status, payment_type, created_at, paid_at FROM payos_orders WHERE order_code=?", (str(payment_id),))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            st = str(row[4] or "PENDING").upper()
+            is_paid = st in ("PAID", "COMPLETED", "SUCCESS")
+            return envelope(
+                True,
+                "Đã thanh toán thành công!" if is_paid else "Đang chờ thanh toán chuyển khoản...",
+                data={
+                    "order_code": row[0],
+                    "user_id": row[1],
+                    "amount_vnd": row[2],
+                    "xu": row[3],
+                    "status": "ready" if is_paid else "awaiting_confirm",
+                    "payment_type": row[5],
+                    "created_at": row[6],
+                    "paid_at": row[7],
+                },
+                status_name="ready" if is_paid else "awaiting_confirm",
+            )
+    except Exception:
+        pass
+    if _canonical_companion_ready(account):
+        return await _bridge("GET", f"/internal/v1/payments/{payment_id}", account=account, request=request)
+    return envelope(False, "Không tìm thấy đơn hàng PayOS.", status_name="guarded", error_code="PAYMENT_NOT_FOUND")
 
 
 

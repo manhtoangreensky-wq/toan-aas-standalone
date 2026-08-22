@@ -9109,4 +9109,23 @@ button, a, input, select, textarea { touch-action: manipulation; }
   box-shadow: 0 0 0 1px #00f2fe, 0 8px 24px rgba(0, 242, 254, 0.2);
 }
 
+.portal-topup-pkg-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+@media (max-width: 900px) {
+  .portal-topup-pkg-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .portal-topup-pkg-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
 
