@@ -1,0 +1,15 @@
+# Task3D / vproduct callback disposition contract
+
+The frozen baseline Task3D `vproduct` flow is a Bot conversation backed by `get_video_session(uid)`. Only four reviewed text-first literals may open a **fresh signed** Web Script-to-Screen Planner. That navigation transfers no callback, Telegram identity, product ID, selected idea, panel/style/color/pace/image choice, media, prompt bundle, package/Xu state, quote, provider/job state, payment state or Telegram delivery state. Every other branch below remains a symbolic authority boundary, never a browser callback/action.
+
+| Frozen Bot source | Web target/boundary | Audit resolution | Status | Required boundary |
+| --- | --- | --- | --- | --- |
+| vproduct\|ideas\|multi_scene_film, vproduct\|ideas\|script_image_video, vproduct\|input_text\|multi_scene_film, vproduct\|input_text\|script_image_video | /video-studio/script-to-screen-planner | reviewed_vproduct_fresh_web_planner_navigation | NAVIGATION_ONLY | fresh signed planner only; no Telegram callback, Bot session or runtime state is transferred |
+| vproduct\|open\|script_image_video, vproduct\|open\|multi_scene_film and reviewed guided choices | BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED | bot_vproduct_guided_state_requires_fresh_web_compose | NEEDS_FEATURE_DISPOSITION | get_video_session(uid) / selected idea / platform / panels / style / image-plan / pace / media state remains Bot-local |
+| vproduct\|prompt_image*, vproduct\|prompt_video* and vproduct\|export* | BOT_VPRODUCT_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED | bot_vproduct_prompt_or_telegram_delivery_requires_separate_web_contract | NEEDS_FEATURE_DISPOSITION | prompt bundle, selected shot and Telegram document/message delivery are not Web assets or downloads |
+| vproduct\|prompt_image_package*, prompt_image_execute, prompt_video_create, render | VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED | bot_vproduct_runtime_provider_wallet_or_payment_guard | NEEDS_FEATURE_DISPOSITION | canonical package/Xu/provider/job/render/payment authority remains outside this planner |
+| vproduct\|open\|{*} and every unreviewed vproduct\|* spelling | VPRODUCT_SOURCE_REVIEW_REQUIRED | vproduct_callback_requires_source_review | NEEDS_FEATURE_DISPOSITION | opaque product/state/identifier values never inherit a Web route or action |
+
+The Web planner accepts only a new signed form: project kind, original brief, audience, platform, ratio, Bot-compatible panel count (6/9/12/16 among the bounded 3–16 range), style, color, pace, image-plan, 0/1/2 extra scenes (maximum 18 planning scenes), selected episode and locale. Compose is transient; durable save sends only the original bounded source and the server recomputes one owner-only Video Plan. The browser must compare the currently visible form with the source receipt before it acquires a save idempotency key.
+
+No Task3D callback can create an image/video/voice/music output, provider action, quote, package, Xu mutation, PayOS action, job, render, asset, publication or delivery claim. Any future Web runtime must start from an independent owner-scoped contract and cannot replay a Bot callback or session value.
