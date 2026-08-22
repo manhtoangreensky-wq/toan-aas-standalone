@@ -20358,6 +20358,7 @@
   const MEMBER_TIER_CANONICAL = [
     {
       key: "newbie",
+      name: "Hạng Tân Thủ (Newbie)",
       label: "Newbie",
       badge: "🌱 Newbie",
       icon: "🌱",
@@ -20370,7 +20371,7 @@
       birthdayGiftXu: 0,
       queuePriority: "Tiêu chuẩn",
       color: "#94a3b8",
-      summary: "Mặc định khi đăng ký",
+      summary: "Mặc định khi kích hoạt tài khoản",
       perks: [
         "100 Xu trải nghiệm dùng thử tính năng",
         "Tạo ảnh SDXL & Voiceover TTS cơ bản",
@@ -20380,6 +20381,7 @@
     },
     {
       key: "silver",
+      name: "Hạng Bạc (Silver)",
       label: "Silver",
       badge: "🥈 Silver",
       icon: "🥈",
@@ -20393,7 +20395,7 @@
       birthdayGiftXu: 111,
       queuePriority: "Ưu tiên x1.5",
       color: "#cbd5e1",
-      summary: "Tổng nạp từ 100.000 đ (1.000 Xu)",
+      summary: "Tổng nạp tích lũy từ 100.000 đ (1.000 Xu)",
       perks: [
         "Giảm 2% phí khi tiêu Xu cho toàn bộ tác vụ",
         "Thưởng giới thiệu bạn bè: 3% (tối đa 100 Xu)",
@@ -20405,6 +20407,7 @@
     },
     {
       key: "gold",
+      name: "Hạng Vàng (Gold)",
       label: "Gold",
       badge: "🥇 Gold",
       icon: "🥇",
@@ -20418,7 +20421,7 @@
       birthdayGiftXu: 333,
       queuePriority: "Ưu tiên x2.0",
       color: "#fbbf24",
-      summary: "Tổng nạp từ 1.000.000 đ (10.000 Xu)",
+      summary: "Tổng nạp tích lũy từ 1.000.000 đ (10.000 Xu)",
       perks: [
         "Giảm 4% phí khi tiêu Xu cho toàn bộ tác vụ",
         "Thưởng giới thiệu bạn bè: 6% (tối đa 150 Xu)",
@@ -20431,6 +20434,7 @@
     },
     {
       key: "platinum",
+      name: "Hạng Bạch Kim (Platinum)",
       label: "Platinum",
       badge: "💠 Platinum",
       icon: "💠",
@@ -20444,7 +20448,7 @@
       birthdayGiftXu: 555,
       queuePriority: "Ưu tiên x3.0 (Cao cấp)",
       color: "#38bdf8",
-      summary: "Tổng nạp từ 10.000.000 đ (100.000 Xu)",
+      summary: "Tổng nạp tích lũy từ 10.000.000 đ (100.000 Xu)",
       perks: [
         "Giảm 6% phí khi tiêu Xu cho toàn bộ tác vụ",
         "Thưởng giới thiệu bạn bè: 8% (tối đa 200 Xu)",
@@ -20457,6 +20461,7 @@
     },
     {
       key: "diamond",
+      name: "Hạng Kim Cương (Diamond)",
       label: "Diamond",
       badge: "💎 Diamond",
       icon: "💎",
@@ -20470,7 +20475,7 @@
       birthdayGiftXu: 666,
       queuePriority: "Siêu tốc độ (Ultra)",
       color: "#a855f7",
-      summary: "Tổng nạp từ 50.000.000 đ (500.000 Xu)",
+      summary: "Tổng nạp tích lũy từ 50.000.000 đ (500.000 Xu)",
       perks: [
         "Giảm 8% phí khi tiêu Xu cho toàn bộ tác vụ",
         "Thưởng giới thiệu bạn bè: 10% (tối đa 250 Xu)",
@@ -20483,6 +20488,7 @@
     },
     {
       key: "vip",
+      name: "Hạng VIP (Tối Cao)",
       label: "VIP",
       badge: "👑 VIP",
       icon: "👑",
@@ -20496,7 +20502,7 @@
       birthdayGiftXu: 888,
       queuePriority: "Zero Queue Số 1 Tuyệt Đối",
       color: "#f43f5e",
-      summary: "Tổng nạp từ 100.000.000 đ hoặc Admin cấp",
+      summary: "Tổng nạp tích lũy từ 100.000.000 đ hoặc Admin cấp",
       perks: [
         "Giảm 10% phí khi tiêu Xu (Mức cao nhất hệ thống)",
         "Thưởng giới thiệu bạn bè: 12% (tối đa 300 Xu)",
@@ -20553,7 +20559,7 @@
           ${badge("read_only")}
         </div>
 
-        <div class="portal-admin-grid" style="margin-top:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px;">
           <div class="portal-metric">
             <span>Hạng hiện tại</span>
             <strong style="color:${currentTier.color}; font-size:22px;">${safeText(currentTier.badge)}</strong>
@@ -20620,11 +20626,11 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:16px;">
           ${MEMBER_TIER_CANONICAL.map((t) => {
             const isUserCurrent = t.key === currentTier.key;
             return `
-              <div style="border: 2px solid ${isUserCurrent ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:20px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${isUserCurrent ? `0 6px 24px ${t.color}33` : 'none'};">
+              <div style="border: 2px solid ${isUserCurrent ? t.color : 'var(--portal-border, #2a3b4c)'}; border-radius:14px; padding:22px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow: ${isUserCurrent ? `0 6px 24px ${t.color}33` : 'none'};">
                 ${isUserCurrent ? `<span style="position:absolute; top:-11px; right:16px; background:${t.color}; color:#000; font-size:11px; font-weight:800; padding:2px 12px; border-radius:10px;">HẠNG HIỆN TẠI</span>` : ''}
                 
                 <div>
@@ -20633,16 +20639,16 @@
                     <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); color:${t.color}; padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">${t.badge}</span>
                   </div>
 
-                  <h3 style="font-size:18px; font-weight:800; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
+                  <h3 style="font-size:18px; font-weight:800; margin:0 0 6px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
                   <div style="font-size:13px; color:#00f2fe; font-weight:700; margin-bottom:6px;">
-                    ${t.thresholdVnd === 0 ? 'Mặc định khi đăng ký' : `Tổng nạp từ: ${t.thresholdVnd.toLocaleString('vi-VN')} đ (~${t.thresholdXu.toLocaleString('vi-VN')} Xu)`}
+                    ${t.thresholdVnd === 0 ? 'Mặc định khi kích hoạt tài khoản' : `Tổng nạp tích lũy: ${t.thresholdVnd.toLocaleString('vi-VN')} đ (~${t.thresholdXu.toLocaleString('vi-VN')} Xu)`}
                   </div>
                   <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 14px;">${safeText(t.summary)}</p>
 
-                  <div style="background:#081320; border-radius:8px; padding:10px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
+                  <div style="background:#081320; border-radius:8px; padding:12px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
                     <div><span style="color:#8fa3b7;">Giảm trừ Xu:</span> <strong style="color:${t.color};">${t.discountRate}%</strong></div>
                     <div><span style="color:#8fa3b7;">Thưởng ref:</span> <strong style="color:#00d26a;">${t.referralPercent}%</strong></div>
-                    <div><span style="color:#8fa3b7;">Voucher thăng hạng:</span> <strong style="color:#fbbf24;">${t.promoPercent > 0 ? `${t.promoPercent}%` : '—'}</strong></div>
+                    <div><span style="color:#8fa3b7;">Voucher lên hạng:</span> <strong style="color:#fbbf24;">${t.promoPercent > 0 ? `${t.promoPercent}%` : '—'}</strong></div>
                     <div><span style="color:#8fa3b7;">Quà sinh nhật:</span> <strong style="color:#ec4899;">${t.birthdayGiftXu > 0 ? `${t.birthdayGiftXu} Xu` : '—'}</strong></div>
                   </div>
 
@@ -20789,7 +20795,7 @@
       </section>
     `;
 
-    return `<article class="portal-page portal-membership-page">${renderHero(page, context)}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${currentCard}${tierCardsMarkup}${comparisonTableMarkup}${catalogSection}</div></div></article>`;
+    return `<article class="portal-page portal-membership-page" style="width:100%; max-width:100%; display:grid; gap:22px;">${renderHero(page, context)}${currentCard}${tierCardsMarkup}${comparisonTableMarkup}${catalogSection}</article>`;
   }
 
   function renderServiceStatus(page, context) {
