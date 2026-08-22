@@ -1269,28 +1269,21 @@ def require_admin(request: Request) -> dict:
 
 
 async def _require_current_canonical_admin(request: Request, account: dict) -> dict:
-    if account.get("role") != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chỉ quản trị viên được phép truy cập")
     canonical_user_id = str(account.get("canonical_user_id") or "").strip()
-    if canonical_user_id:
-        from copyfast_bridge import bridge_configured, bridge_request
-        if bridge_configured():
-            try:
-                result = await bridge_request(
-                    "GET",
-                    "/internal/v1/me",
-                    params={"user_id": canonical_user_id},
-                    request_id=_request_id(request),
-                    actor_id=canonical_user_id,
-                )
-                if result.get("ok"):
-                    current_role = str((result.get("data") or {}).get("role") or "")
-                    if current_role and current_role != "admin":
-                        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Quyền quản trị canonical chưa được xác nhận")
-            except HTTPException:
-                raise
-            except Exception:
-                pass
+    if not canonical_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tài khoản chưa có quyền quản trị canonical")
+    from copyfast_bridge import bridge_request
+
+    result = await bridge_request(
+        "GET",
+        "/internal/v1/me",
+        params={"user_id": canonical_user_id},
+        request_id=_request_id(request),
+        actor_id=canonical_user_id,
+    )
+    current_role = str((result.get("data") or {}).get("role") or "")
+    if not result.get("ok") or current_role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Quyền quản trị canonical chưa được xác nhận")
     return account
 
 
