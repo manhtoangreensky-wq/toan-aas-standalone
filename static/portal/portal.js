@@ -480,7 +480,8 @@
     "campaign-create", "campaign-update", "campaign-update-status",
     "campaign-schedule-create", "campaign-schedule-cancel", "campaign-schedule-reconfirm",
     "support-case-create", "support-case-reply", "support-case-resolution-feedback", "support-case-attachment", "support-case-close", "support-case-reopen",
-    "support-admin-case-reply", "support-admin-case-update"
+    "support-admin-case-reply", "support-admin-case-update",
+    "payment-create", "payment-lookup"
   ]);
 
   const LANGUAGE_OPTIONS = Object.freeze([
@@ -9236,9 +9237,8 @@
     if (WEB_LOCAL_ACTIONS.has(page.action)) return context.session.authenticated === true && csrfReady && capability;
     if (page.action === "start-telegram-link" || page.action === "refresh-link-status") return context.session.authenticated === true && csrfReady && capability;
     if (page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path)) return false;
-    if (page.action === "payment-create") {
-      const payos = context.paymentOptions && context.paymentOptions.payos;
-      return context.session.authenticated === true && csrfReady && bridgeReady && capability && Boolean(payos && payos.topup_catalog_available === true);
+    if (page.action === "payment-create" || page.action === "payment-lookup") {
+      return context.session.authenticated === true && csrfReady && capability;
     }
     return context.session.authenticated === true && csrfReady && bridgeReady && capability;
   }
@@ -10215,7 +10215,6 @@
       ${sidebarPrimaryAction}
       <button class="portal-sidebar-focus-toggle" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Bật chế độ tập trung nội dung"))}" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>${safeText(uiText("chrome.closeNavigation", "Thu gọn điều hướng"))}</span></button>
     </div>
-    <button class="portal-sidebar-search" type="button" aria-label="${safeText(sidebarSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>${safeText(sidebarSearchLabel)}</span><kbd aria-hidden="true">Ctrl K</kbd></button>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & quyền riêng tư"))}</span></a>
@@ -21233,23 +21232,20 @@
 
   function renderPaymentRequestForm(page, context) {
     const packages = [
-      { code: "topup_10k", label: "10.000 đ", xu: "100 Xu", note: "Nạp trải nghiệm", popular: false },
-      { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Nạp dùng thử", popular: false },
-      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Gói phổ biến", popular: true, badge: "Phổ biến nhất" },
-      { code: "topup_100k", label: "100.000 đ", xu: "1.100 Xu", note: "Tặng 100 Xu", badge: "Thưởng +10%" },
-      { code: "topup_200k", label: "200.000 đ", xu: "2.300 Xu", note: "Tặng 300 Xu", badge: "Thưởng +15%" },
-      { code: "topup_500k", label: "500.000 đ", xu: "6.000 Xu", note: "Tặng 1.000 Xu (Tối đa)", badge: "Thưởng +20% Max" },
+      { code: "topup_10k", label: "10.000 đ", xu: "100 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
+      { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
+      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
+      { code: "topup_100k", label: "100.000 đ", xu: "1.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
+      { code: "topup_200k", label: "200.000 đ", xu: "2.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
+      { code: "topup_500k", label: "500.000 đ", xu: "5.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
     ];
     const route = "/wallet/topup";
     const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
 
     const packageOptions = packages.map((pkg) => `
-      <label class="portal-topup-pkg-card${pkg.popular ? " is-popular" : ""}${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; gap:12px; transition:all .2s ease;">
+      <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; gap:12px; transition:all .2s ease;">
         <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <strong style="font-size:17px; color:var(--portal-text-primary, #fff); font-weight:800; white-space:nowrap;">${safeText(pkg.label)}</strong>
-            ${pkg.badge ? `<span style="font-size:10px; font-weight:700; background:${pkg.popular ? "#00d26a" : "#00f2fe"}; color:#000; padding:1px 7px; border-radius:4px; white-space:nowrap;">${safeText(pkg.badge)}</span>` : ""}
-          </div>
+          <strong style="font-size:17px; color:var(--portal-text-primary, #fff); font-weight:800; white-space:nowrap;">${safeText(pkg.label)}</strong>
           <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeText(pkg.note)}</small>
         </div>
         <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
@@ -21272,12 +21268,29 @@
           <div class="portal-topup-pkg-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:18px;">
             ${packageOptions}
           </div>
+
+          <div class="portal-topup-promo-section" style="margin-bottom:16px; padding:14px 18px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:12px;">
+            <label for="portal-topup-promo-input" style="display:block; font-size:13px; font-weight:700; color:var(--portal-text-primary, #fff); margin-bottom:8px;">
+              🎁 Nhập mã khuyến mãi / Voucher ưu đãi (Nếu có)
+            </label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+              <input type="text" name="promo_code" id="portal-topup-promo-input" placeholder="Nhập mã ưu đãi (Ví dụ: WEEKLY10, MONTHLY20, DAILY5, BETA50)" style="flex:1; min-width:240px; padding:10px 14px; border-radius:8px; border:1px solid var(--portal-border, #2a3b4c); background:var(--portal-surface-input, #040d16); color:#fff; font-size:14px; text-transform:uppercase; font-weight:700; letter-spacing:1px;" autocomplete="off">
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center;">
+              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Mã có sẵn trong hệ thống:</span>
+              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='WEEKLY10'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">WEEKLY10 (+10% từ 50k)</button>
+              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='MONTHLY20'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">MONTHLY20 (+20% từ 100k)</button>
+              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='DAILY5'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">DAILY5 (+5% từ 50k)</button>
+              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='BETA50'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">BETA50 (+50% từ 50k)</button>
+            </div>
+          </div>
+
           <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">
-            ⚠️ <strong>Lưu ý:</strong> Cổng tự động PayOS áp dụng mức nạp & khuyến mãi tối đa <strong>500.000 đ / giao dịch</strong>. Nếu quý khách có nhu cầu nạp số lượng lớn hơn, vui lòng chuyển sang tab <strong>"Nạp Thủ Công"</strong> (ACB / MoMo / ZaloPay / Binance) để được phục vụ chu đáo.
+            ⚠️ <strong>Lưu ý:</strong> Cổng tự động PayOS áp dụng mức nạp tối đa <strong>500.000 đ / giao dịch</strong>. Nếu quý khách có nhu cầu nạp số lượng lớn hơn, vui lòng chuyển sang tab <strong>"Nạp Thủ Công"</strong> (ACB / MoMo / ZaloPay / Binance) để được phục vụ chu đáo.
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
-            <button class="portal-button portal-button--primary" type="submit" style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px;">🚀 Nạp ngay (Mở cổng PayOS)</button>
+            <button class="portal-button portal-button--primary" type="submit" style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px; cursor:pointer;">🚀 Nạp ngay (Mở cổng PayOS)</button>
           </div>
         </form>
         ${renderPaymentFlow(context)}
@@ -27601,9 +27614,8 @@
     const oauthHandoff = (oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
-    const registerSetup = page.path === "/register"
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span><div><strong>${safeText(accessText("notice.defaultProfileTitle", "Hồ sơ mặc định sau khi tạo"))}</strong><p>${safeText(accessText("notice.defaultProfileBody", "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật; Bot chỉ mở dữ liệu canonical sau khi xác minh cùng identity."))}</p></div></div>`
-      : "";
+    // Security contract: Hồ sơ mặc định sau khi tạo - Không nhập ID Telegram thô
+    const registerSetup = "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
     const mfaChallengeToken = String(rawMfaFlow.challenge_token || "").trim();
