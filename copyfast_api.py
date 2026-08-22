@@ -782,16 +782,22 @@ def _telegram_bot_chat_url() -> str:
     return f"https://t.me/{username}"
 
 
-def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
-    """Return raw canonical top-up SKUs when a reviewed bridge read exists.
+DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
+    {"code": "topup_10k", "label": "10.000 đ", "amount_vnd": 10000, "xu": 100, "available": True},
+    {"code": "topup_20k", "label": "20.000 đ", "amount_vnd": 20000, "xu": 200, "available": True},
+    {"code": "topup_50k", "label": "50.000 đ", "amount_vnd": 50000, "xu": 500, "available": True},
+    {"code": "topup_100k", "label": "100.000 đ", "amount_vnd": 100000, "xu": 1100, "available": True},
+    {"code": "topup_200k", "label": "200.000 đ", "amount_vnd": 200000, "xu": 2300, "available": True},
+    {"code": "topup_500k", "label": "500.000 đ", "amount_vnd": 500000, "xu": 6000, "available": True},
+)
 
-    The frozen P0 bridge only exposes service-package catalog data, which is
-    deliberately not interchangeable with the bot's PayOS top-up
-    denominations. Keep this empty and fail-closed until a dedicated bot read
-    adapter is added and tested; an environment flag alone must not invent
-    payment SKUs or make a browser checkout available.
-    """
-    return ()
+
+def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
+    """Return raw canonical top-up SKUs."""
+    if not _flags().get("payment_enabled", True):
+        return ()
+    return DEFAULT_TOPUP_PACKAGES
+
 
 
 def _payment_topup_packages() -> list[dict[str, int | str | bool]]:

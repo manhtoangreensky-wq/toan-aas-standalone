@@ -9080,3 +9080,33 @@ button, a, input, select, textarea { touch-action: manipulation; }
   }
 }
 
+/* Balanced Full-Width Layout for Wallet, Topup, Packages and Pricing */
+.portal-wallet-layout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.portal-wallet-page .portal-work-grid {
+  display: block !important;
+  width: 100% !important;
+}
+
+.portal-topup-pkg-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+}
+
+.portal-topup-pkg-card:hover {
+  border-color: #00f2fe !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.15);
+}
+
+.portal-topup-pkg-card.is-selected {
+  border-color: #00f2fe !important;
+  background: rgba(0, 242, 254, 0.08) !important;
+  box-shadow: 0 0 0 1px #00f2fe, 0 8px 24px rgba(0, 242, 254, 0.2);
+}
+
+
