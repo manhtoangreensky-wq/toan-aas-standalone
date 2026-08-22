@@ -2346,7 +2346,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         # runtime crash. Keep it out of the reliability signal intake while
         # preserving the existing truthful API response.
         request.state.reliability_expected_failure = True
-    if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/") or request.url.path == "/admin" or request.url.path.startswith("/admin/"):
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/"):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
         is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
         is_media_factory = request.url.path.startswith("/api/v1/media-factory/")
@@ -2718,90 +2718,6 @@ async def page(page_path: str, request: Request):
         return RedirectResponse("/music/sfx-library", status_code=307)
     if normalized == "/admin/autopilot":
         return RedirectResponse("/admin/operations", status_code=307)
-    # Support Desk, Operations and the internal Content Handoff queue are
-    # separately owned Web services.  Their narrow, server-side Web roles
-    # deliberately do not require a Telegram/Bot identity.  Every other Admin
-    # ERP route retains the stricter live canonical Bot-admin verification.
-    if (
-        normalized == "/admin/support"
-        or normalized.startswith("/admin/support/")
-        or normalized == "/admin/operations"
-        or normalized.startswith("/admin/operations/")
-        or normalized == "/admin/autopilot"
-        or normalized.startswith("/admin/autopilot/")
-        or normalized == "/admin/reliability"
-        or normalized.startswith("/admin/reliability/")
-        # The ERP navigation manifest grants this exact queue to Web Support
-        # staff.  Keep its HTML gate aligned with the queue API's own
-        # ``require_support_staff`` check instead of accidentally promoting a
-        # Web-native handoff review to a canonical Bot-admin route.  Do not
-        # broaden this to a prefix: no other /admin/content-handoffs path has
-        # been reviewed as a staff surface yet.
-        or normalized == "/admin/content-handoffs"
-        # Operations Desk is an exact, read-only Web-native staff surface.
-        # Its API independently repeats this role check, and no nested route
-        # has been reviewed as an inherited support route.
-        or normalized == "/admin/work-queue"
-    ):
-        copyfast_support.require_support_staff(current_session(request)["account"])
-    # This is deliberately an exact route rather than an `/admin/crm/*`
-    # prefix.  The manager directory returns only identifier-free pipeline
-    # metadata and its JSON endpoint independently requires the signed local
-    # Web admin role.  No Bot bridge call is appropriate for this one
-    # Web-native, read-only view.
-    elif normalized == "/admin/crm/leads":
-        copyfast_auth.require_admin(request)
-    # Finance Operations Planning is a separate Web-owned internal planning
-    # surface. It must not inherit the generic canonical Bot-admin `/admin/*`
-    # path: its API has a distinct signed-Web-admin, CSRF, idempotency,
-    # revision and audit contract, and never reads or mutates Bot/PayOS/Xu
-    # finance state.
-    elif normalized == "/admin/finance/planning":
-        copyfast_auth.require_admin(request)
-    # Automation Monitor is a local Web-admin, read-only projection of the
-    # Web-owned Inbox scheduler receipt table. It deliberately does not
-    # inherit canonical Bot admin authority or a broad /admin prefix.
-    elif normalized == "/admin/automation":
-        copyfast_auth.require_admin(request)
-    # System & Data Stewardship is a local Web-admin navigation hub. It owns
-    # no Bot runtime projection or administrative write action: every linked
-    # destination repeats its own more specific authority check.
-    elif normalized == "/admin/system-stewardship":
-        copyfast_auth.require_admin(request)
-    # Security and Access are deliberately exact, signed-Web-admin posture
-    # views.  They operate on redacted aggregates owned by this application;
-    # they are not a compatibility shell for a Bot/Core Bridge security feed.
-    elif normalized in {"/admin/security", "/admin/access"}:
-        copyfast_auth.require_admin(request)
-    # Internal Document Archive is an independently flagged, signed-Web-admin
-    # surface. It has its own owner, CSRF, confirmation, revision, audit and
-    # immutable-file checks; this page guard must not accidentally require or
-    # infer the separate canonical Telegram/Bot-admin authority.
-    elif normalized == "/admin/internal-documents" or normalized.startswith("/admin/internal-documents/"):
-        copyfast_auth.require_admin(request)
-    # Governance Documents is an independently flagged, Web-native local
-    # admin surface.  Its API repeats signed admin + CSRF/revision checks and
-    # never grants access to the remaining canonical Bot-admin ERP routes.
-    elif normalized == "/admin/governance" or normalized.startswith("/admin/governance/"):
-        copyfast_auth.require_admin(request)
-    # The portal renderer is intentionally generic for parity routes, so this
-    # explicit guard is necessary before it can render any remaining /admin/*
-    # surface. Browser-supplied IDs never influence this decision.
-    elif normalized == "/admin" or normalized.startswith("/admin/"):
-        await require_canonical_admin(request)
-    # app.toanaas.vn is an application origin, not the marketing site. A
-    # signed Web account owns an independent Workspace even before it chooses
-    # to link Telegram, so root entry always opens that Workspace. Telegram is
-    # an optional connector for companion/Bot capabilities, never a gate on
-    # Web-owned projects, drafts, planning or account data.
-    # `/welcome` is the explicit, optional product introduction route.
-    if normalized in {"/", "/app"}:
-        try:
-            current_session(request)
-        except HTTPException:
-            return RedirectResponse("/login", status_code=307)
-        return RedirectResponse("/dashboard", status_code=307)
-
     public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}
     if normalized in {"/login", "/register"}:
         try:
@@ -2809,18 +2725,54 @@ async def page(page_path: str, request: Request):
         except HTTPException:
             return render_portal(page_path, interface_locale=_public_access_interface_locale(request))
         return RedirectResponse("/dashboard", status_code=307)
+
+    if normalized in {"/", "/app"}:
+        try:
+            current_session(request)
+        except HTTPException:
+            return RedirectResponse("/login", status_code=307)
+        return RedirectResponse("/dashboard", status_code=307)
+
+    account = {}
     if normalized not in public_pages:
         try:
             session = current_session(request)
+            account = session["account"]
+            portal_interface_locale = copyfast_auth.normalize_interface_locale(account.get("locale"))
         except HTTPException:
-            # A portal shell without a signed session is a dead end. Keep the
-            # requested internal route so login can return safely after auth.
+            # A portal shell without a signed session redirects to login with return target
             return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
-        account = session["account"]
-        portal_interface_locale = copyfast_auth.normalize_interface_locale(account.get("locale"))
+
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
+
+        # Role-based access control for admin and staff routes
+        if (
+            normalized == "/admin/support"
+            or normalized.startswith("/admin/support/")
+            or normalized == "/admin/operations"
+            or normalized.startswith("/admin/operations/")
+            or normalized == "/admin/autopilot"
+            or normalized.startswith("/admin/autopilot/")
+            or normalized == "/admin/reliability"
+            or normalized.startswith("/admin/reliability/")
+            or normalized == "/admin/content-handoffs"
+            or normalized == "/admin/work-queue"
+        ):
+            copyfast_support.require_support_staff(account)
+        elif normalized in {
+            "/admin/crm/leads",
+            "/admin/finance/planning",
+            "/admin/automation",
+            "/admin/system-stewardship",
+            "/admin/security",
+            "/admin/access",
+        } or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
+            copyfast_auth.require_admin(request)
+        elif normalized == "/admin" or normalized.startswith("/admin/"):
+            await require_canonical_admin(request)
+
     if normalized == "/welcome":
         portal_interface_locale = _public_welcome_interface_locale(request)
     elif normalized == "/password-recovery":
