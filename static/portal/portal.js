@@ -32752,6 +32752,7 @@
           dropdown.hidden = true;
           if (trigger) trigger.setAttribute("aria-expanded", "false");
         }
+      }
       const selectAvatarBtn = event.target.closest('[data-portal-action="select-avatar-preset"]');
       if (selectAvatarBtn) {
         const avatarUrl = selectAvatarBtn.getAttribute("data-avatar-url");
