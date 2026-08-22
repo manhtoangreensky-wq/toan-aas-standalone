@@ -36955,11 +36955,13 @@
           merge({ paymentFlow: nextFlow });
           schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
           toast(result.message);
-          const checkoutUrl = result.data && (result.data.checkout_url || result.data.payment_url || result.data.url);
+          const checkoutUrl = result.data && (result.data.checkout_url || result.data.checkoutUrl || result.data.payment_url || result.data.url);
           if (checkoutUrl) {
             try {
               window.location.href = checkoutUrl;
-            } catch (_) {}
+            } catch (_) {
+              try { window.open(checkoutUrl, "_blank"); } catch (_) {}
+            }
           }
         } finally {
           releaseSubmission(submission);
