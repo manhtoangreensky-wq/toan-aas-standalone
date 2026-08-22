@@ -9419,7 +9419,13 @@
     "Self-shot Scene Planner": "shellNav.selfShotPlanner",
     "Storyboard Composer": "shellNav.storyboardComposer",
     "Image Motion Planner": "shellNav.imageMotionPlanner",
-    "Reference Format Planner": "shellNav.referenceFormatPlanner"
+    "Reference Format Planner": "shellNav.referenceFormatPlanner",
+    "Quản trị Admin ERP": "nav.admin",
+    "Tổng quan ERP": "nav.dashboard",
+    "Quản lý Người dùng": "adminGeneric.users.route.title",
+    "Tài chính & Nạp Xu": "adminGeneric.finance.route.title",
+    "Giám sát Jobs": "nav.jobs",
+    "Bảo mật & Quyền hạn": "adminGeneric.securityAccess.route.accessTitle"
   });
 
   function localizedNavigationLabel(label) {
@@ -9751,6 +9757,19 @@
         ]
       }
     ];
+    if (hasLiveCanonicalAdmin(context) || (context.session && context.session.role === "admin") || (context.profile && context.profile.role === "admin")) {
+      groups.push({
+        label: "Quản trị Admin ERP",
+        defaultOpen: false,
+        links: [
+          ["/admin", "Tổng quan ERP", ICONS.admin],
+          ["/admin/users", "Quản lý Người dùng", ICONS.users],
+          ["/admin/finance", "Tài chính & Nạp Xu", ICONS.payments],
+          ["/admin/jobs", "Giám sát Jobs", ICONS.jobs],
+          ["/admin/access", "Bảo mật & Quyền hạn", ICONS.security]
+        ]
+      });
+    }
     const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
     if (currentGroup) groups.unshift(currentGroup);
     // Video Studio has grown into a production-planning workspace.  Keep it
@@ -10280,6 +10299,11 @@
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
                 <div><strong>Bảo mật & Đổi mật khẩu</strong><small>Phiên đăng nhập, mật khẩu</small></div>
               </a>
+              ${(hasLiveCanonicalAdmin(context) || (context.session && context.session.role === "admin") || (profile.role === "admin")) ? `
+              <a class="portal-user-dropdown-item" href="/admin" style="background: rgba(0, 242, 254, 0.08); border-left: 3px solid #00f2fe;">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span>
+                <div><strong style="color:#00f2fe;">⚙️ Trang Quản Trị Admin ERP</strong><small>Quản lý người dùng, duyệt Xu, tài chính & hệ thống</small></div>
+              </a>` : ""}
             </div>
             <div class="portal-user-dropdown-divider"></div>
             <div class="portal-user-dropdown-footer">
@@ -21358,7 +21382,7 @@
     `;
     const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
 
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-work-grid"><div class="portal-stack" style="width:100%;">${topupFlow}</div></div>${assurance}${historyCard}</article>`;
+    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
   }
 
   const DEFAULT_CANONICAL_PACKAGES = {
@@ -32553,15 +32577,14 @@
   }
 
   function syncSmartInstallBanner() {
-    if (isStandaloneApp()) {
+    const isAuthPage = Boolean(document.querySelector(".portal-auth-page"));
+    if (isStandaloneApp() || isAuthPage) {
       const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
       if (existingBanner) existingBanner.remove();
       const existingFab = document.querySelector("[data-portal-pwa-fab]");
       if (existingFab) existingFab.remove();
       return;
     }
-    // On auth pages (login/register), always show install banner for new visitors
-    const isAuthPage = Boolean(document.querySelector(".portal-auth-page"));
     let dismissed = false;
     if (!isAuthPage) {
       try {
@@ -33031,6 +33054,20 @@
           pane.style.display = active ? "grid" : "none";
         });
         return;
+      }
+      const topupPkgCard = event.target.closest(".portal-topup-pkg-card");
+      if (topupPkgCard) {
+        const form = topupPkgCard.closest("form") || document;
+        const radio = topupPkgCard.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.checked = true;
+          form.querySelectorAll(".portal-topup-pkg-card").forEach((c) => {
+            c.classList.remove("is-selected");
+            c.style.borderColor = "var(--portal-border, #2a3b4c)";
+          });
+          topupPkgCard.classList.add("is-selected");
+          topupPkgCard.style.borderColor = "#00f2fe";
+        }
       }
       if (event.target.closest('[data-portal-action="pwa-try-prompt"]')) {
         if (pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function") {
@@ -34171,6 +34208,14 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   function mountPortalAiCopilot(context) {
     if (!document || !document.body || typeof document.body.appendChild !== "function") return;
     let container = document.getElementById("portal-copilot-root");
+    const currentPath = normalizePath((context && context.path) || (typeof window !== "undefined" && window.location ? window.location.pathname : ""));
+    const isAuthPage = ["/login", "/register", "/password-recovery", "/welcome"].includes(currentPath) || (document.querySelector && Boolean(document.querySelector(".portal-auth-page")));
+    const isAuthenticated = Boolean(context && context.session && context.session.authenticated === true);
+
+    if (isAuthPage || !isAuthenticated) {
+      if (container) container.innerHTML = "";
+      return;
+    }
     if (!container) {
       container = document.createElement("div");
       container.id = "portal-copilot-root";
