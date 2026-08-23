@@ -4258,7 +4258,7 @@ body {
   .portal-auth-page--access .portal-auth-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "intro" "card";
+    grid-template-areas: "card" "intro";
     gap: 20px;
   }
 

@@ -38,6 +38,23 @@ def test_auth_keeps_email_primary_and_reveals_optional_methods_progressively() -
     assert "auth-mfa-login" in auth
 
 
+def test_auth_places_email_registration_before_optional_social_methods() -> None:
+    auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
+    markup = auth[auth.rindex('return `<article class="portal-auth-page'):]
+
+    assert markup.index('class="portal-auth-primary"') < markup.index("${directSocialLogin}")
+
+
+def test_customer_auth_hides_admin_entry_while_admin_keeps_customer_return() -> None:
+    auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
+    admin_footer = _section(auth, "const adminLinkFooter", "const primaryForm")
+
+    assert 'href="/login"' in admin_footer
+    assert "Quay lại trang đăng nhập Khách hàng" in admin_footer
+    assert 'href="/admin/login"' not in admin_footer
+    assert 'page.path === "/login"' not in admin_footer
+
+
 def test_register_defaults_and_account_entry_are_concise_without_relaxing_security() -> None:
     auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
     account = _section(PORTAL, "function renderAccount(page, context)", "function renderInterfaceLocaleNavigator")
