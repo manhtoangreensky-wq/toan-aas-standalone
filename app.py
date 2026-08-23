@@ -2763,7 +2763,9 @@ async def page(page_path: str, request: Request):
         "/admin/access",
     } or normalized.startswith("/admin/customers/") or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
         copyfast_auth.require_admin(request)
-    elif normalized == "/admin" or (normalized.startswith("/admin/") and normalized != "/admin/login"):
+    elif normalized == "/admin":
+        copyfast_auth.require_admin(request)
+    elif normalized.startswith("/admin/") and normalized != "/admin/login":
         await require_canonical_admin(request)
 
     account = {}
