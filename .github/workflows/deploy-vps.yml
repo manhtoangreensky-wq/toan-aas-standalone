@@ -144,15 +144,7 @@ jobs:
               exit 1
             fi
 
-            python3 -c \"
-            import json
-            payload = '''\$HEALTH_JSON'''
-            data = json.loads(payload)
-            assert data.get('ok') is True, 'health ok is not True'
-            assert data.get('app') == 'TOAN AAS Web App', 'app name mismatch'
-            assert data.get('entrypoint') == 'app.py', 'entrypoint mismatch'
-            print('HEALTH_PAYLOAD_VALIDATED:', data.get('app'), data.get('entrypoint'))
-            \"
+            printf '%s' \"\$HEALTH_JSON\" | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data.get(\"ok\") is True; assert data.get(\"app\") == \"TOAN AAS Web App\"; assert data.get(\"entrypoint\") == \"app.py\"; print(\"HEALTH_PAYLOAD_VALIDATED:\", data.get(\"app\"), data.get(\"entrypoint\"))'
 
             echo '=== WEB DEPLOY SUCCESS ==='
             echo \"PREVIOUS_HEAD=\$PREV_HEAD\"
