@@ -538,6 +538,9 @@
   let adminArchiveSessionEpoch = 0;
   let adminArchiveHydrationEpoch = 0;
   let adminArchiveDetailHydrationEpoch = 0;
+  let adminCustomerDirectorySessionEpoch = 0;
+  let adminCustomerDirectoryListHydrationEpoch = 0;
+  let adminCustomerDirectoryDetailHydrationEpoch = 0;
   let workspaceDraftSessionEpoch = 0;
   let workspaceDraftHydrationEpoch = 0;
   // Telegram linking and the PayOS entry metadata are signed account state.
@@ -2552,6 +2555,11 @@
   function isNativeAdminArchivePath(path) {
     const normalized = String(path || "").split("?")[0];
     return normalized === "/admin/internal-documents" || Boolean(adminArchiveDocumentIdFromPath(normalized));
+  }
+
+  function isNativeAdminCustomerDirectoryPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/admin/customers" || (window.TOANAASAdminCustomerDirectory && typeof window.TOANAASAdminCustomerDirectory.isRoute === "function" && window.TOANAASAdminCustomerDirectory.isRoute(normalized));
   }
 
   // Notification Center has an isolated scheduler identity, data boundary and
@@ -12762,6 +12770,12 @@
     ++adminArchiveSessionEpoch;
     ++adminArchiveHydrationEpoch;
     ++adminArchiveDetailHydrationEpoch;
+    ++adminCustomerDirectorySessionEpoch;
+    ++adminCustomerDirectoryListHydrationEpoch;
+    ++adminCustomerDirectoryDetailHydrationEpoch;
+    if (window.TOANAASAdminCustomerDirectory) {
+      merge({ adminCustomerDirectory: window.TOANAASAdminCustomerDirectory.emptyState() });
+    }
     ++workspaceDraftSessionEpoch;
     ++telegramLinkStatusSessionEpoch;
     ++paymentOptionsSessionEpoch;
@@ -15646,6 +15660,135 @@
         adminAuditListing: adminAuditListingProjection(filter, offset, {}, 0),
         adminAuditReadState: "guarded",
         pageStates: { ...(base().pageStates || {}), "/admin/audit": "guarded" }
+      });
+      return null;
+    }
+  }
+
+  function resetAdminCustomerDirectoryProjection(targetReadState) {
+    const mod = window.TOANAASAdminCustomerDirectory;
+    const empty = mod && typeof mod.emptyState === "function"
+      ? mod.emptyState()
+      : { items: [], customer: null, filters: { q: "", status: "all" }, pagination: { limit: 25, offset: 0, returned: 0, has_more: false, next_offset: null }, readState: targetReadState || "loading", error: "" };
+    if (targetReadState) empty.readState = targetReadState;
+    merge({ adminCustomerDirectory: empty });
+  }
+
+  function adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail) {
+    const currentEpoch = isDetail ? adminCustomerDirectoryDetailHydrationEpoch : adminCustomerDirectoryListHydrationEpoch;
+    return requestEpoch === currentEpoch
+      && sessionEpoch === adminCustomerDirectorySessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativeAdminCustomerDirectoryPath(expectedPath)
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateAdminCustomerDirectory(path, filterOverride, offsetOverride) {
+    const expectedPath = String(path || currentPortalPath()).split("?")[0];
+    const mod = window.TOANAASAdminCustomerDirectory;
+    if (!mod || !isNativeAdminCustomerDirectoryPath(expectedPath)) return null;
+
+    const accountId = mod.accountIdFromPath(expectedPath);
+    const isDetail = Boolean(accountId);
+
+    const requestEpoch = isDetail ? ++adminCustomerDirectoryDetailHydrationEpoch : ++adminCustomerDirectoryListHydrationEpoch;
+    const sessionEpoch = adminCustomerDirectorySessionEpoch;
+
+    if (isDetail) {
+      if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+      resetAdminCustomerDirectoryProjection("loading");
+      try {
+        const result = await api(`/admin/customers/${encodeURIComponent(accountId)}`);
+        if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+        if (result.status !== "read_only" || !result.data) {
+          throw new Error(result.message || "Không thể nạp thông tin khách hàng");
+        }
+        const norm = mod.normalizeDetail(result.data);
+        if (!norm || !norm.customer) throw new Error("Dữ liệu khách hàng không hợp lệ");
+        if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+        const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : mod.emptyState();
+        merge({
+          adminCustomerDirectory: {
+            ...current,
+            customer: norm.customer,
+            readState: "ready",
+            error: ""
+          },
+          pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+        });
+        return norm;
+      } catch (err) {
+        if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+        const msg = (err && err.message) || "Không thể nạp thông tin khách hàng Web";
+        const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : mod.emptyState();
+        merge({
+          adminCustomerDirectory: {
+            ...current,
+            customer: null,
+            readState: "error",
+            error: msg
+          },
+          pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+        });
+        return null;
+      }
+    }
+
+    // List hydration
+    if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+    const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : mod.emptyState();
+    const filters = filterOverride !== undefined ? filterOverride : current.filters;
+    const offset = offsetOverride !== undefined ? offsetOverride : ((current.pagination && current.pagination.offset) || 0);
+
+    merge({
+      adminCustomerDirectory: {
+        ...current,
+        filters,
+        readState: "loading",
+        error: ""
+      }
+    });
+
+    try {
+      const apiPath = mod.listPath(filters, offset);
+      const result = await api(apiPath);
+      if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+      if (result.status !== "read_only" || !result.data) {
+        throw new Error(result.message || "Không thể nạp danh sách khách hàng");
+      }
+      const norm = mod.normalizeList(result.data);
+      if (!norm) throw new Error("Dữ liệu danh sách khách hàng không hợp lệ");
+      if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+      merge({
+        adminCustomerDirectory: {
+          items: norm.customers,
+          customer: null,
+          filters: norm.filters,
+          pagination: {
+            limit: norm.limit,
+            offset: norm.offset,
+            returned: norm.returned,
+            has_more: norm.has_more,
+            next_offset: norm.next_offset
+          },
+          readState: "ready",
+          error: ""
+        },
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+      });
+      return norm;
+    } catch (err) {
+      if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+      const msg = (err && err.message) || "Không thể nạp danh sách khách hàng Web";
+      merge({
+        adminCustomerDirectory: {
+          ...current,
+          items: [],
+          customer: null,
+          readState: "error",
+          error: msg
+        },
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
       });
       return null;
     }
@@ -25477,6 +25620,7 @@
       && currentPortalPath() === expectedPath
       && expectedPath.startsWith("/admin")
       && expectedPath !== "/admin/audit"
+      && !isNativeAdminCustomerDirectoryPath(expectedPath)
       && !isNativeAdminSystemStewardshipPath(expectedPath)
       && !isNativeAdminTaxReadinessPath(expectedPath)
       && !isNativeAdminFinancePlanningPath(expectedPath)
@@ -25489,7 +25633,7 @@
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminFinancePlanningPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminCustomerDirectoryPath(expectedPath) || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminFinancePlanningPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -25787,6 +25931,9 @@
         // Governance reads the Web-owned redacted Audit Explorer instead of
         // asking the generic Bot bridge to expose a raw audit payload.
         await hydrateAdminAudit();
+        if (!isCurrent()) return null;
+      } else if (isNativeAdminCustomerDirectoryPath(path)) {
+        await hydrateAdminCustomerDirectory(path);
         if (!isCurrent()) return null;
       } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminFinancePlanningPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
         // The security/admin access routes are hydrated only by their narrow
@@ -36842,11 +36989,51 @@
         toast(action === "admin-audit-page" ? "Đã tải trang Audit Explorer đã redaction." : (clear ? "Đã xóa bộ lọc Audit Explorer." : "Đã áp dụng bộ lọc Audit Explorer."));
         return;
       }
+      if (action === "admin-customer-filter" || action === "admin-customer-clear" || action === "admin-customer-page" || action === "admin-customer-refresh") {
+        if (!(base().session && base().session.authenticated === true)) throw new Error("Cần signed Web session để xem danh sách khách hàng.");
+        const mod = window.TOANAASAdminCustomerDirectory;
+        if (!mod) throw new Error("Module Customer Directory chưa sẵn sàng.");
+        const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : mod.emptyState();
+        let filter = current.filters;
+        let offset = (current.pagination && current.pagination.offset) || 0;
+        if (action === "admin-customer-filter") {
+          filter = { q: String(fields.q || "").slice(0, 120), status: String(fields.status || "all") };
+          offset = 0;
+        } else if (action === "admin-customer-clear") {
+          filter = { q: "", status: "all" };
+          offset = 0;
+        } else if (action === "admin-customer-page") {
+          offset = Number(detail.portalOffset !== undefined ? detail.portalOffset : (fields.__offset || 0)) || 0;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateAdminCustomerDirectory(route, filter, offset);
+          if (!refreshed) throw new Error("Không thể nạp dữ liệu khách hàng.");
+          if (action === "admin-customer-refresh") {
+            toast("Đã làm mới dữ liệu khách hàng Web.");
+          } else if (action === "admin-customer-filter") {
+            toast("Đã áp dụng bộ lọc khách hàng.");
+          } else if (action === "admin-customer-clear") {
+            toast("Đã đặt lại bộ lọc khách hàng.");
+          } else if (action === "admin-customer-page") {
+            toast("Đã tải trang danh sách khách hàng.");
+          }
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "refresh-admin") {
         const path = route.startsWith("/admin") ? route : "/admin";
         if (path === "/admin/audit") {
           await hydrateAdminAudit();
           toast("Đã làm mới Audit Explorer Web-native đã redaction.");
+          return;
+        }
+        if (isNativeAdminCustomerDirectoryPath(path)) {
+          const refreshed = await hydrateAdminCustomerDirectory(path);
+          if (!refreshed) throw new Error("Không thể nạp dữ liệu khách hàng.");
+          toast("Đã làm mới danh mục khách hàng Web.");
           return;
         }
         if (isNativeAdminSecurityAccessPosturePath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminFinancePlanningPath(path) || isNativeAdminPostbackReadinessPath(path) || isNativeAdminJobRecoveryGuidePath(path)) {

@@ -74,6 +74,7 @@ _MODULE_DESCRIPTIONS = {
     "reliability": "Reliability follow-up metadata, không tự sửa code hay deploy.",
     "content_handoffs": "Hàng review bàn giao nội bộ Web-native; không có publish, delivery, provider, Xu hay PayOS.",
     "partner_crm_manager": "Directory CRM Web-native đã redaction, chỉ đọc; không có cross-account write hay dữ liệu liên hệ.",
+    "customer_directory": "Directory khách hàng Web-native đã redaction, chỉ đọc; không có role, session, wallet, payment, provider hoặc mutation action.",
     "finance_operations_planning": "Ngân sách và kế hoạch chi phí Web-native có revision/audit; không đọc hoặc thay đổi ledger, Xu, PayOS, payment, refund, revenue, tax/export hay Bot canonical.",
     "governance_documents": "Kho tài liệu vận hành nội bộ Web-native có review/version/audit; không đọc tài liệu, file hay authority Telegram Bot.",
     "internal_document_archive": "Kho hồ sơ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
@@ -405,6 +406,15 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
             "Web CRM Governance",
             authority="web_local_admin",
             modules=[
+                _module(
+                    "customer_directory",
+                    "Khách hàng Web",
+                    "/admin/customers",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability="web_native",
+                    capability="redacted_web_account_directory_read_only",
+                ),
                 _module(
                     "partner_crm_manager",
                     "CRM Manager Directory",
