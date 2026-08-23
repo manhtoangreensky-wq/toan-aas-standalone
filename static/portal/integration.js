@@ -35775,11 +35775,12 @@
         toast(result.message);
         await hydrate();
         const requested = requestedPortalRoute();
-        window.location.assign(requested || "/dashboard");
+        const isAdminLogin = currentPortalPath() === "/admin/login" || route === "/admin/login";
+        window.location.assign(requested || (isAdminLogin ? "/admin" : "/dashboard"));
         return;
       }
       if (action === "auth-mfa-login") {
-        if (route !== "/login" || currentPortalPath() !== "/login") {
+        if (!["/login", "/admin/login"].includes(route) || !["/login", "/admin/login"].includes(currentPortalPath())) {
           clearAccountSecurityMfaInputs();
           throw new Error("Chỉ có thể hoàn tất xác thực hai bước từ trang Đăng nhập.");
         }

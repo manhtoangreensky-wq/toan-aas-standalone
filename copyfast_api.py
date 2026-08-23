@@ -799,6 +799,10 @@ def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
     return DEFAULT_TOPUP_PACKAGES
 
 
+def _payment_topup_catalog_available() -> bool:
+    """Return whether valid canonical top-up packages are available."""
+    return bool(_payment_topup_packages())
+
 
 def _payment_topup_packages() -> list[dict[str, int | str | bool]]:
     """Project only selectable, well-formed canonical PayOS top-up SKUs.
