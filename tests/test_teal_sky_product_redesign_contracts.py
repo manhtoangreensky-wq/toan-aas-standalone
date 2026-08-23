@@ -94,18 +94,6 @@ def test_access_header_preserves_locale_targets_at_320px() -> None:
     assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;\n  min-width: 44px;" in THEME
 
 
-def test_register_mobile_hides_only_field_help_to_keep_primary_action_visible() -> None:
-    layer = _redesign_layer()
-
-    assert "@media (max-width: 600px)" in layer
-    assert (
-        '.portal-auth-page--access form[data-portal-action="auth-register"] .portal-field-help {\n'
-        "    display: none;\n"
-        "  }"
-    ) in layer
-    assert ".portal-auth-page--access .portal-auth-submit-btn {\n  font-weight: 750;\n  border: none;\n  border-radius: 12px;\n  height: 44px;" in layer
-
-
 def test_pwa_and_first_paint_chrome_use_the_same_deep_teal_as_the_signed_rail() -> None:
     assert MANIFEST["background_color"] == "#063b47"
     assert MANIFEST["theme_color"] == "#063b47"

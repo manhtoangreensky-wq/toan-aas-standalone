@@ -509,8 +509,8 @@
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Nhập mật khẩu", placeholderKey: "access.placeholder.password", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên của bạn", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120, help: "Tên hiển thị trong bảng điều khiển và dự án của bạn.", helpKey: "access.help.registerName" },
-      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254, help: "Dùng để đăng nhập và nhận thông báo dự án của bạn.", helpKey: "access.help.registerEmail" },
+      { name: "name", label: "Tên hiển thị", labelKey: "access.field.name", placeholder: "Tên của bạn", placeholderKey: "access.placeholder.name", autocomplete: "name", maxLength: 120 },
+      { name: "email", label: "Email (có thể dùng Gmail)", labelKey: "access.field.email", type: "email", placeholder: "you@example.com", placeholderKey: "access.placeholder.email", autocomplete: "email", required: true, maxLength: 254 },
       { name: "password", label: "Mật khẩu", labelKey: "access.field.password", type: "password", placeholder: "Tối thiểu 12 ký tự", placeholderKey: "access.placeholder.passwordMin", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu", labelKey: "access.field.passwordConfirm", type: "password", placeholder: "Nhập lại mật khẩu", placeholderKey: "access.placeholder.passwordConfirm", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
