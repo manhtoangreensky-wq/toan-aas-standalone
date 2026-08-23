@@ -4272,6 +4272,12 @@ body {
   .portal-auth-context { display: none; }
 }
 
+@media (max-width: 600px) {
+  .portal-auth-page--access form[data-portal-action="auth-register"] .portal-field-help {
+    display: none;
+  }
+}
+
 @media (max-width: 390px) {
   .portal-auth-page--access .portal-auth-header { gap: 8px; }
 }
