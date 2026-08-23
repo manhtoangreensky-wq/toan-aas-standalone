@@ -2718,10 +2718,15 @@ async def page(page_path: str, request: Request):
         return RedirectResponse("/music/sfx-library", status_code=307)
     if normalized == "/admin/autopilot":
         return RedirectResponse("/admin/operations", status_code=307)
-    public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}
-    if normalized in {"/login", "/register"}:
+    public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery", "/admin/login"}
+    if normalized in {"/login", "/register", "/admin/login"}:
         try:
-            current_session(request)
+            session = current_session(request)
+            account = session.get("account", {})
+            if normalized == "/admin/login":
+                if account.get("role") == "admin":
+                    return RedirectResponse("/admin", status_code=307)
+                return RedirectResponse("/dashboard", status_code=307)
         except HTTPException:
             return render_portal(page_path, interface_locale=_public_access_interface_locale(request))
         return RedirectResponse("/dashboard", status_code=307)
@@ -2755,7 +2760,7 @@ async def page(page_path: str, request: Request):
         "/admin/access",
     } or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
         copyfast_auth.require_admin(request)
-    elif normalized == "/admin" or normalized.startswith("/admin/"):
+    elif normalized == "/admin" or (normalized.startswith("/admin/") and normalized != "/admin/login"):
         await require_canonical_admin(request)
 
     account = {}

@@ -927,6 +927,12 @@
 
   // Public account and portal routes.
   definePage({
+    path: "/admin/login", title: "Đăng nhập Quản trị viên", icon: ICONS.admin, section: "Quản trị & Vận hành",
+    description: "Cổng đăng nhập bảo mật dành riêng cho Quản trị viên và Đội ngũ Vận hành hệ thống TOAN AAS.",
+    access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập Quản trị", actionLabelKey: "access.action.signInAdmin", fields: copyFields(FIELD_SETS.authLogin),
+    notes: ["Cổng này chỉ dành riêng cho Quản trị viên và Vận hành hệ thống.", "Mọi thao tác quản trị được kiểm soát bằng signed session cấp cao và ghi log audit đầy đủ."]
+  });
+  definePage({
     path: "/login", title: "Đăng nhập an toàn", icon: ICONS.account, section: "Tài khoản",
     description: "Đăng nhập bằng Email + mật khẩu (có thể dùng Gmail), Google/GitHub/Apple OAuth, hoặc xác minh Telegram một lần trong bot; signed session chỉ do máy chủ tạo sau xác thực.",
     access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", actionLabelKey: "access.action.signIn", fields: copyFields(FIELD_SETS.authLogin),
@@ -27573,13 +27579,14 @@
 
   function renderAuth(page, context) {
     const accessText = (key, fallback) => uiText(`access.${key}`, fallback);
-    const isLogin = page.path === "/login";
+    const isLogin = page.path === "/login" || page.path === "/admin/login";
+    const isAdminLogin = page.path === "/admin/login";
     const isRegister = page.path === "/register";
     const isRecovery = page.path === "/password-recovery";
     const alternative = isLogin
       ? ["/register", accessText("alternative.register", "Tạo tài khoản")]
       : ["/login", accessText("alternative.signIn", "Đăng nhập")];
-    const actionLabel = page.actionLabelKey ? uiText(page.actionLabelKey, page.actionLabel) : page.actionLabel;
+    const actionLabel = isAdminLogin ? "Đăng nhập Quản trị viên" : (page.actionLabelKey ? uiText(page.actionLabelKey, page.actionLabel) : page.actionLabel);
     const requestedLocale = reviewedInterfaceLocale(context && context.interfaceLocale) || "vi";
     const localeHref = (code) => {
       const params = new URLSearchParams(window.location.search || "");
@@ -27593,7 +27600,7 @@
     ].map(([code, label]) => `<a class="portal-auth-locale-link" href="${safeText(localeHref(code))}"${requestedLocale === code ? ' aria-current="true"' : ""}>${safeText(label)}</a>`).join("");
     const enabled = canAct(page, context);
     const unavailableMessage = accessText("primary.unavailable", "Đang kiểm tra phiên bảo mật trước khi cho phép thao tác.");
-    const recoveryLink = page.path === "/login"
+    const recoveryLink = (isLogin && !isAdminLogin)
       ? `<a class="portal-auth-forgot-link" href="/password-recovery?lang=${safeText(requestedLocale)}">${safeText(accessText("recovery", "Quên mật khẩu?"))}</a>`
       : "";
     const noTransient = page.path === "/password-recovery" ? " data-portal-no-transient" : "";
@@ -27611,67 +27618,88 @@
       linked: accessText("oauth.linked", "Đã liên kết OAuth với signed session hiện tại."),
       "already-linked": accessText("oauth.alreadyLinked", "OAuth này đã liên kết với tài khoản hiện tại.")
     };
-    const oauthHandoff = (oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
+    const oauthHandoff = (!isAdminLogin && oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
-    // Security contract: Hồ sơ mặc định sau khi tạo - Không nhập ID Telegram thô
     const registerSetup = "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
     const mfaChallengeToken = String(rawMfaFlow.challenge_token || "").trim();
     const mfaChallengeMinutes = Number(rawMfaFlow.expires_in_minutes);
-    const mfaLoginPending = page.path === "/login"
+    const mfaLoginPending = isLogin
       && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mfaChallengeId)
       && /^[A-Za-z0-9_-]{32,160}$/.test(mfaChallengeToken)
       && Number.isInteger(mfaChallengeMinutes)
       && mfaChallengeMinutes >= 1
       && mfaChallengeMinutes <= 10;
+    const adminLinkFooter = isAdminLogin
+      ? `<div style="margin-top:14px; text-align:center;"><a href="/login" style="font-size:12px; color:var(--portal-text-secondary); text-decoration:none;">← Quay lại trang đăng nhập Khách hàng</a></div>`
+      : (page.path === "/login" ? `<div style="margin-top:14px; text-align:center;"><a href="/admin/login" style="font-size:11px; color:var(--portal-text-secondary); opacity:0.7; text-decoration:none;">🔐 Cổng Đăng nhập Quản trị viên</a></div>` : "");
     const primaryForm = mfaLoginPending
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="/login" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="/login"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
-      : `<form class="portal-form portal-auth-compact-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-auth-form-actions">${recoveryLink}<button class="portal-button portal-button--primary portal-auth-submit-btn" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div></form>`;
-    const providerMethods = mfaLoginPending
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="${safeText(page.path)}" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="${safeText(page.path)}"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
+      : `<form class="portal-form portal-auth-compact-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${noTransient} novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-auth-form-actions">${recoveryLink}<button class="portal-button portal-button--primary portal-auth-submit-btn" type="submit"${enabled ? "" : ` disabled title="${safeText(unavailableMessage)}"`}>${safeText(actionLabel)}</button></div>${adminLinkFooter}</form>`;
+    const providerMethods = mfaLoginPending || isAdminLogin
       ? ""
       : (isLogin ? renderTelegramLoginMethod(context) : (isRegister ? renderOAuthRegistrationMethods(context) : ""));
     const telegramFlow = context.telegramLoginFlow && typeof context.telegramLoginFlow === "object" ? context.telegramLoginFlow : {};
     const telegramData = telegramFlow.data && typeof telegramFlow.data === "object" ? telegramFlow.data : {};
-    const alternativeMethodsOpen = isLogin && Boolean(
+    const alternativeMethodsOpen = isLogin && !isAdminLogin && Boolean(
       telegramFlow.errorCode || telegramData.code || telegramData.recovered === true || telegramData.ready === true
     );
-    const authHeading = isLogin ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context))));
-    const authIntroDescription = isLogin
-      ? accessText("intro.login", "Đăng nhập để vào TOAN AAS Workspace. Trải nghiệm hệ sinh thái AI toàn diện.")
-      : (isRegister
-        ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
-        : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description)));
+    const authHeading = isAdminLogin
+      ? "Đăng nhập Quản trị viên"
+      : (page.path === "/login" ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo Workspace của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context)))));
+    const authIntroDescription = isAdminLogin
+      ? "Cổng đăng nhập an toàn & bảo mật dành riêng cho Quản trị viên và Đội ngũ Vận hành hệ thống TOAN AAS."
+      : (page.path === "/login"
+        ? accessText("intro.login", "Đăng nhập để vào TOAN AAS Workspace. Trải nghiệm hệ sinh thái AI toàn diện.")
+        : (isRegister
+          ? accessText("intro.register", "Khởi tạo tài khoản Web an toàn. Quản lý dự án, tài sản và công việc tự động.")
+          : (isRecovery ? accessText("intro.recovery", "Yêu cầu liên kết đặt lại mật khẩu một cách riêng tư.") : safeText(page.description))));
 
     const recoveryGuidance = isRecovery
       ? `<div class="portal-card-header portal-auth-card-header"><div><h2 class="portal-card-title">${safeText(accessText("primary.recovery", "Khôi phục mật khẩu"))}</h2><p class="portal-card-subtitle">${safeText(accessText("primary.recoveryDescription", "Nhập email để nhận hướng dẫn an toàn."))}</p></div></div>`
       : "";
 
     // Sleek glass highlight box on left
-    const authContext = `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
-      <div class="portal-auth-context-head">
-        <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
-        <strong class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</strong>
-      </div>
-      <p class="portal-auth-context-title">${safeText(isLogin ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn.")))}</p>
-      <ul class="portal-auth-context-list">
-        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</span></li>
-        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
-        <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointThree", "Bảo mật signed session, không lưu mật khẩu thô."))}</span></li>
-      </ul>
-      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
-          <span>📲</span>
-          <span>Tải & Cài đặt App TOAN AAS</span>
-        </button>
-      </div>
-    </aside>`;
+    const authContext = isAdminLogin
+      ? `<aside class="portal-auth-context portal-auth-context--admin" aria-label="TOAN AAS Admin Portal">
+        <div class="portal-auth-context-head">
+          <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
+          <strong class="portal-auth-context-kicker">TOAN AAS Admin & Operations ERP</strong>
+        </div>
+        <p class="portal-auth-context-title">Cổng điều hành & Quản trị hệ thống.</p>
+        <ul class="portal-auth-context-list">
+          <li><span class="portal-auth-feat-check">✓</span><span>Quản lý vận hành toàn diện, phê duyệt lệnh và theo dõi hệ thống.</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>Kiểm soát đối soát dòng tiền VietQR PayOS và giao dịch Xu.</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>Xác thực signed session cấp quản trị, chống giả mạo quyền hạn.</span></li>
+        </ul>
+      </aside>`
+      : `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của Workspace"))}">
+        <div class="portal-auth-context-head">
+          <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
+          <strong class="portal-auth-context-kicker">${safeText(accessText("context.kicker", "TOAN AAS Workspace"))}</strong>
+        </div>
+        <p class="portal-auth-context-title">${safeText(page.path === "/login" ? accessText("context.loginTitle", "Mọi việc bắt đầu từ một không gian rõ ràng.") : (isRecovery ? accessText("context.recoveryTitle", "Khôi phục quyền truy cập vào Workspace của bạn.") : accessText("context.registerTitle", "Tạo không gian làm việc cho quy trình của bạn.")))}</p>
+        <ul class="portal-auth-context-list">
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointOne", "Dự án, tài sản và tiến độ được tổ chức cùng nhau."))}</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointTwo", "Báo giá minh bạch, kiểm tra hóa đơn trước khi xử lý."))}</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("context.pointThree", "Bảo mật signed session, không lưu mật khẩu thô."))}</span></li>
+        </ul>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
+            <span>📲</span>
+            <span>Tải & Cài đặt App TOAN AAS</span>
+          </button>
+        </div>
+      </aside>`;
 
-    const authSwitch = `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${isLogin ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
+    const authSwitch = isAdminLogin
+      ? `<div style="text-align:center; padding: 6px 12px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; font-weight: 700; font-size: 13px; color: #60a5fa; letter-spacing: 0.5px;">🛡️ CỔNG QUẢN TRỊ VIÊN & VẬN HÀNH</div>`
+      : `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${page.path === "/login" ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
 
     // Direct, Prominent 1-Click Social & Bot Login
-    const directSocialLogin = mfaLoginPending ? "" : `
+    const directSocialLogin = (mfaLoginPending || isAdminLogin) ? "" : `
       <div class="portal-direct-social-auth">
         <button type="button" class="portal-btn-direct-social telegram" data-portal-action="start-telegram-login" data-portal-route="/login" title="Tạo mã bảo mật và mở Bot Telegram @toanaasbot">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.674c.458 0 .66-.21.916-.458l2.199-2.138 4.573 3.378c.843.464 1.448.225 1.658-.783l3-14.137c.308-1.234-.471-1.794-1.289-1.423z"/></svg>
@@ -27692,14 +27720,14 @@
     `;
 
     const alternativeMethods = providerMethods
-      ? `<details class="portal-auth-alternatives"${alternativeMethodsOpen ? " open" : ""}><summary><span>${safeText(isLogin ? accessText("alternatives.loginTitle", "Dùng Telegram hoặc OAuth") : accessText("alternatives.registerTitle", "Tạo tài khoản qua OAuth"))}</span><small>${safeText(isLogin ? accessText("alternatives.loginHint", "Tùy chọn · chỉ hiện provider đã cấu hình") : accessText("alternatives.registerHint", "Tùy chọn · không tự ghép theo email"))}</small></summary><div class="portal-auth-alternatives-body">${providerMethods}</div></details>`
+      ? `<details class="portal-auth-alternatives"${alternativeMethodsOpen ? " open" : ""}><summary><span>${safeText(page.path === "/login" ? accessText("alternatives.loginTitle", "Dùng Telegram hoặc OAuth") : accessText("alternatives.registerTitle", "Tạo tài khoản qua OAuth"))}</span><small>${safeText(page.path === "/login" ? accessText("alternatives.loginHint", "Tùy chọn · chỉ hiện provider đã cấu hình") : accessText("alternatives.registerHint", "Tùy chọn · không tự ghép theo email"))}</small></summary><div class="portal-auth-alternatives-body">${providerMethods}</div></details>`
       : "";
     const authAssurance = `<details class="portal-auth-assurance"><summary><span>🛡️ ${safeText(accessText("assurance.summary", "Vì sao Workspace này an toàn?"))}</span></summary><div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div></details>`;
     const operationalNotes = `<details class="portal-auth-help"><summary><span>ℹ️ ${safeText(accessText("help.summary", "Thông tin bảo mật và tích hợp"))}</span></summary><div class="portal-auth-notes">${renderNotes(page)}</div><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div></details>`;
 
     const authFooter = `<footer class="portal-auth-footer" hidden><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
 
-    return `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div></section></div>${authFooter}</article>`;
+    return `<article class="portal-auth-page portal-auth-page--access${isAdminLogin ? " portal-auth-page--admin" : ""}"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${isAdminLogin ? "Admin Portal" : "AI workspace"}</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${directSocialLogin}${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div></section></div>${authFooter}</article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
