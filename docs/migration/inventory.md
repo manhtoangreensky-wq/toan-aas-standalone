@@ -2,18 +2,18 @@
 
 | Area | Bot | Web App |
 | --- | --- | --- |
-| Source files scanned | 9445 | 157 |
-| Noncanonical Bot drafts excluded | 620 | n/a |
-| Commands | 5341 | n/a |
-| Callback handler registrations | 404 | Dispatcher evidence only; not a user-action parity claim |
-| Callback-data values | 25189 | n/a |
-| Legacy handlers/ package records outside observed runtime | 0 | Evidence only; excluded from product-action coverage |
-| Unresolved callback templates | 4122 | n/a |
+| Source files scanned | 172 | 157 |
+| Noncanonical Bot drafts excluded | 4 | n/a |
+| Commands | 773 | n/a |
+| Callback handler registrations | 54 | Dispatcher evidence only; not a user-action parity claim |
+| Callback-data values | 2862 | n/a |
+| Legacy handlers/ package records outside observed runtime | 57 | Evidence only; excluded from product-action coverage |
+| Unresolved callback templates | 475 | n/a |
 | Conversation handlers | 0 | n/a |
-| FastAPI routes | 1494 | 692 |
-| Background/job signals | 3295 | 41 |
-| Database tables | 554 | 224 |
-| Environment names | 3572 | 262 |
-| Provider names | 16 | 12 |
+| FastAPI routes | 139 | 692 |
+| Background/job signals | 194 | 41 |
+| Database tables | 97 | 224 |
+| Environment names | 376 | 257 |
+| Provider names | 15 | 11 |
 
 Reports contain the complete machine-readable records. Values matching secret formats are redacted.

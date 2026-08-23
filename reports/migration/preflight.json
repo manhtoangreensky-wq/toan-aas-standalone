@@ -2,23 +2,23 @@
   "audit_mode": "static-only",
   "bot": {
     "audit_source": {
-      "files_materialized": 0,
-      "mode": "working_tree_fallback",
-      "reason": "not_a_git_worktree",
-      "revision": ""
+      "files_materialized": 242,
+      "mode": "git_baseline_snapshot",
+      "reason": "requested_baseline_materialized_static_only",
+      "revision": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
     },
     "baseline_bridge_source": {
       "path": "webapp_core_bridge.py",
-      "present": null,
-      "state": "baseline_unavailable"
+      "present": false,
+      "state": "missing"
     },
     "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
-    "entrypoint_present": false,
+    "entrypoint_present": true,
     "revision": {
-      "ahead_commits": null,
-      "baseline_relation": "not_a_git_worktree",
-      "behind_commits": null,
-      "checkout_sha": ""
+      "ahead_commits": 1757,
+      "baseline_relation": "ahead_of_requested_baseline",
+      "behind_commits": 0,
+      "checkout_sha": "e900eb9a869d4a4cbafcb513cb73395141eea5bf"
     },
     "root": "repository-root"
   },
