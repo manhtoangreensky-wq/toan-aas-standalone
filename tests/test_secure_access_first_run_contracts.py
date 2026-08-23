@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "SECURE_ACCESS_FIRST_RUN_UI_CONTRACT.md").read_text(encoding="utf-8")
@@ -43,6 +44,33 @@ def test_auth_places_email_registration_before_optional_social_methods() -> None
     markup = auth[auth.rindex('return `<article class="portal-auth-page'):]
 
     assert markup.index('class="portal-auth-primary"') < markup.index("${directSocialLogin}")
+
+
+def test_register_omits_redundant_help_without_removing_fields_or_primary_action() -> None:
+    fields = _section(PORTAL, "authRegister: [", "passwordRecovery: [")
+    register_page = _section(PORTAL, 'path: "/register"', 'path: "/password-recovery"')
+    auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
+    redundant_help = {
+        "access.help.registerEmail": "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng.",
+        "access.help.registerName": "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh.",
+    }
+
+    for key, exact_text in redundant_help.items():
+        assert exact_text not in fields
+        assert f'helpKey: "{key}"' not in fields
+        assert key not in I18N
+        assert exact_text not in I18N
+    for fallback_text in (
+        "Tên hiển thị trong bảng điều khiển và dự án của bạn.",
+        "Dùng để đăng nhập và nhận thông báo dự án của bạn.",
+    ):
+        assert fallback_text not in fields
+    for name in ("name", "email", "password", "confirm_password"):
+        assert f'name: "{name}"' in fields
+    assert fields.count("{ name:") == 4
+    assert 'action: "auth-register"' in register_page
+    assert 'actionLabel: "Tạo tài khoản"' in register_page
+    assert 'class="portal-button portal-button--primary portal-auth-submit-btn"' in auth
 
 
 def test_customer_auth_hides_admin_entry_while_admin_keeps_customer_return() -> None:
