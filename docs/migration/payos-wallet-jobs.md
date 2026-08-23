@@ -14,20 +14,15 @@
 ## Related bot tables detected statically
 
 - `credit_events`
-- `erp_transactions`
-- `frame_video_jobs`
 - `local_worker_jobs`
 - `media_factory_jobs`
 - `music_generation_jobs`
 - `payos_orders`
 - `payos_processed`
-- `payos_processed_events`
-- `payos_topup_locks`
 - `production_jobs`
 - `publish_jobs`
 - `shopaikey_jobs`
 - `transactions`
-- `video_edit_jobs`
 - `video_jobs`
 - `video_script_jobs`
 
