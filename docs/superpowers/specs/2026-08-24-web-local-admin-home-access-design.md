@@ -1,7 +1,7 @@
 # Web-local Admin Home Access Design
 
-**Ngày:** 24/08/2026  
-**Trạng thái:** Owner đã chọn phương án A; chờ xác nhận bản spec viết ra trước khi lập implementation plan.  
+**Ngày:** 24/08/2026
+**Trạng thái:** Owner đã chọn phương án A; chờ xác nhận bản spec viết ra trước khi lập implementation plan.
 **Phạm vi:** Chỉ cổng HTML `GET /admin` và test chống hồi quy quyền truy cập.
 
 ## 1. Vấn đề đã đo được
