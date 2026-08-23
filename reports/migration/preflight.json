@@ -38,7 +38,7 @@
       "checkout_sha": "7db7e3ffe8dd8deb055dd6418982c06414a70ea5",
       "requested_relation": "exact",
       "requested_sha": "7db7e3ffe8dd8deb055dd6418982c06414a70ea5",
-      "source_fingerprint_sha256": "5e54b38f1bfaad9a9ec18c82cc16e119fcf47db8fcf85a0e88b2d9232f271918",
+      "source_fingerprint_sha256": "6cdd87ee7ac466224e684b8fc6d07a4451cdbb3b7718b5d0301c0fc3b34cb77d",
       "working_tree_state": "clean"
     },
     "root": "repository-root"
