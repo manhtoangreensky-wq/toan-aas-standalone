@@ -8,10 +8,8 @@ integration, not the database authority for Web-owned work.
 
 from __future__ import annotations
 
-import base64
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import hashlib
 import os
 from pathlib import Path
 import sqlite3
@@ -6150,29 +6148,6 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_profiles_owner_updated ON web_partner_readiness_profiles(account_id, updated_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_versions_owner_revision ON web_partner_readiness_versions(account_id, revision DESC, profile_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_events_owner_created ON web_partner_readiness_events(account_id, created_at DESC, id DESC)")
-        admin_row = conn.execute("SELECT id, role_cache FROM web_accounts WHERE email = 'admin@toanaas.vn'").fetchone()
-        if not admin_row:
-            admin_id = "00000000-0000-4000-a000-000000000001"
-            now_iso = utc_now()
-            salt = b"toanaas_admin_26"
-            derived = hashlib.scrypt("Admin@ToanAAS2026!".encode("utf-8"), salt=salt, n=16384, r=8, p=1, dklen=32)
-            s_b64 = base64.urlsafe_b64encode(salt).decode("ascii")
-            d_b64 = base64.urlsafe_b64encode(derived).decode("ascii")
-            admin_p_hash = "scrypt$16384$8$1$" + s_b64 + "$" + d_b64
-            conn.execute(
-                """INSERT INTO web_accounts
-                (id, email, password_hash, display_name, role_cache, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'admin', ?, ?)""",
-                (admin_id, "admin@toanaas.vn", admin_p_hash, "Admin TOAN AAS", now_iso, now_iso),
-            )
-            conn.execute(
-                """INSERT OR IGNORE INTO web_account_profiles
-                (account_id, locale, timezone, avatar_style, created_at, updated_at)
-                VALUES (?, 'vi', 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)""",
-                (admin_id, now_iso, now_iso),
-            )
-        elif admin_row[1] != "admin":
-            conn.execute("UPDATE web_accounts SET role_cache = 'admin' WHERE email = 'admin@toanaas.vn'")
 
 
 def as_row(row: sqlite3.Row | tuple | None, columns: tuple[str, ...]) -> dict | None:
