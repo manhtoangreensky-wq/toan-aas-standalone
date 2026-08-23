@@ -3190,3 +3190,14 @@ def test_web_campaign_planner_enforces_account_ownership_without_a_telegram_gate
             assert denied.status_code == 200
             assert denied.json()["error_code"] == "CAMPAIGN_PLAN_NOT_FOUND"
             assert second.get("/api/v1/campaigns").json()["data"]["items"] == []
+
+
+def test_copyfast_schema_initialization_does_not_seed_or_promote_admin(tmp_path, monkeypatch):
+    """Schema initialization must remain purely DDL and never insert/seed accounts or roles."""
+    with make_client(tmp_path, monkeypatch) as _client:
+        from copyfast_db import ensure_copyfast_schema, transaction
+
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            accounts = conn.execute("SELECT id, email, role_cache FROM web_accounts").fetchall()
+            assert accounts == []
