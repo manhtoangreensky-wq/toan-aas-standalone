@@ -32,6 +32,7 @@ import billing
 import copyfast_api
 import copyfast_admin_audit
 import copyfast_admin_automation
+import copyfast_admin_customer_directory
 import copyfast_admin_document_archive
 import copyfast_admin_erp_navigation
 import copyfast_admin_security_posture
@@ -2577,6 +2578,7 @@ app.include_router(copyfast_api.router)
 app.include_router(copyfast_admin_erp_navigation.router)
 app.include_router(copyfast_admin_audit.router)
 app.include_router(copyfast_admin_automation.router)
+app.include_router(copyfast_admin_customer_directory.router)
 app.include_router(copyfast_admin_security_posture.router)
 app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
@@ -2752,13 +2754,14 @@ async def page(page_path: str, request: Request):
     ):
         copyfast_support.require_support_staff(current_session(request)["account"])
     elif normalized in {
+        "/admin/customers",
         "/admin/crm/leads",
         "/admin/finance/planning",
         "/admin/automation",
         "/admin/system-stewardship",
         "/admin/security",
         "/admin/access",
-    } or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
+    } or normalized.startswith("/admin/customers/") or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
         copyfast_auth.require_admin(request)
     elif normalized == "/admin" or (normalized.startswith("/admin/") and normalized != "/admin/login"):
         await require_canonical_admin(request)

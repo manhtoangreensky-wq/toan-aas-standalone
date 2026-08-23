@@ -1848,6 +1848,13 @@
 
   // ERP pages. Server routes remain the actual access-control boundary.
   adminPage("/admin", "Admin Overview", "Tổng quan ERP chỉ hiển thị dữ liệu được Core Bridge cấp cho signed admin session.", ICONS.admin, { layout: "admin-overview", action: "none" }, ["/admin/"]);
+  adminPage("/admin/customers", "Khách hàng Web", "Danh sách và tìm kiếm tài khoản khách hàng Web đã redaction; không lộ định danh/credential nội bộ và không mutation.", ICONS.users, {
+    layout: "admin-customer-directory", action: "none", status: "processing",
+    notes: [
+      "Chỉ signed Web admin do máy chủ xác minh mới xem được. Browser không gửi role, admin ID hay credential.",
+      "Trang chỉ đọc từ nguồn web_accounts đã redaction; không có role/session write, password, canonical ID, wallet, PayOS hoặc provider action."
+    ]
+  });
   adminPage("/admin/users", "Người dùng", "Tìm kiếm và xem người dùng qua quyền canonical của bot.", ICONS.users);
   adminPage("/admin/wallet", "Ví & điều chỉnh Xu", "Chỉ review dữ liệu wallet; điều chỉnh cần permission, CSRF, idempotency và audit event.", ICONS.wallet);
   adminPage("/admin/payments", "Thanh toán", "Theo dõi payment từ canonical PayOS/wallet workflow, không có webhook thứ hai.", ICONS.payments);
@@ -9186,6 +9193,16 @@
         notes: ["Vai trò support do máy chủ xác minh, không nhận role hoặc admin ID từ browser.", "Operator không gửi external delivery, thay đổi ví Xu/PayOS, refund ledger, provider hoặc trạng thái job từ trang này."]
       });
     }
+    if (/^\/admin\/customers\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const customerId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/admin/customers/:id", routePath: normalized, title: "Chi tiết khách hàng Web", icon: ICONS.users, section: "Khách hàng Web",
+        description: "Xem thông tin tài khoản và profile khách hàng Web đã redaction; không lộ định danh/credential nội bộ và không mutation.",
+        status: "processing", access: "admin", layout: "admin-customer-directory-detail", action: "none", actionLabel: "", fields: [],
+        recordId: customerId,
+        notes: ["Chỉ signed Web admin do máy chủ xác minh mới xem được. Browser không gửi role, admin ID hay credential.", "Trang chỉ đọc từ nguồn web_accounts đã redaction; không có role/session write, password, canonical ID, wallet, PayOS hoặc provider action."]
+      });
+    }
     if (/^\/admin\/users\/[^/]+$/.test(normalized)) {
       const userId = normalized.split("/").pop();
       return Object.freeze({
@@ -9901,6 +9918,7 @@
     if (linkPath === "/operations") return path === "/operations";
     if (linkPath === "/inbox") return path === "/inbox";
     if (linkPath === "/automation") return path === "/automation";
+    if (linkPath === "/admin/customers") return matchesRouteFamily(path, "/admin/customers");
     if (linkPath === "/admin/users") return matchesRouteFamily(path, "/admin/users");
     if (linkPath === "/admin/jobs") return matchesRouteFamily(path, "/admin/jobs");
     if (linkPath === "/admin/payments") return matchesRouteFamily(path, "/admin/payments");
@@ -9909,7 +9927,7 @@
     if (linkPath === "/admin/governance") return matchesRouteFamily(path, "/admin/governance");
     if (linkPath === "/admin/internal-documents") return matchesRouteFamily(path, "/admin/internal-documents");
     if (linkPath === "/admin") {
-      const directAdminFamilies = ["/admin/users", "/admin/jobs", "/admin/payments", "/admin/providers", "/admin/provider-cost", "/admin/audit", "/admin/security", "/admin/access", "/admin/governance", "/admin/internal-documents"];
+      const directAdminFamilies = ["/admin/customers", "/admin/users", "/admin/jobs", "/admin/payments", "/admin/providers", "/admin/provider-cost", "/admin/audit", "/admin/security", "/admin/access", "/admin/governance", "/admin/internal-documents"];
       return path === "/admin" || (matchesRouteFamily(path, "/admin") && !directAdminFamilies.some((root) => matchesRouteFamily(path, root)));
     }
     return matchesRouteFamily(path, linkPath);
@@ -28369,7 +28387,7 @@
   ]);
 
   function adminDirectoryGroup(path) {
-    if (["/admin", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
+    if (["/admin", "/admin/customers", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
     if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/planning", "/admin/finance/tax-readiness"].includes(path)) return "finance";
     if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/growth/postback-readiness", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
@@ -30785,6 +30803,17 @@
       case "governance-document-detail": return renderGovernanceDocumentDetail(page, context);
       case "admin-document-archive": return renderAdminDocumentArchive(page, context);
       case "admin-document-archive-detail": return renderAdminDocumentArchiveDetail(page, context);
+      case "admin-customer-directory":
+      case "admin-customer-directory-detail":
+        if (window.TOANAASAdminCustomerDirectory && typeof window.TOANAASAdminCustomerDirectory.render === "function") {
+          return window.TOANAASAdminCustomerDirectory.render(page, context, {
+            safeText,
+            badge,
+            renderHero,
+            renderEmpty: (title, message) => `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="empty"><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p></div></div></section>`
+          });
+        }
+        return '<article class="portal-page">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><div><h2>Module quản trị tạm thời không khả dụng</h2><p>Không thể nạp UI directory khách hàng. Vui lòng thử lại sau.</p></div></div></section></article>';
       case "membership": return renderMembership(page, context);
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);
@@ -33507,6 +33536,7 @@
     // The dashboard has its own, narrower decision-layer motion. Its summary
     // and canonical read lane must not inherit the generic shell entrance.
     const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
+    const isCustomerDirectoryRoute = page.path === "/admin/customers" || page.path === "/admin/customers/:id" || (typeof page.routePath === "string" && page.routePath.startsWith("/admin/customers"));
     // This presentation marker is intentionally derived from the same
     // normalized route selection used below for the server-authorized Admin
     // dock. It changes only the Aura shell styling; it neither checks nor
@@ -33558,8 +33588,8 @@
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute ? "true" : "false";
-    document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute ? "dashboard" : "default");
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute ? "true" : "false";
+    document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       setSidebarAccessibilityState(false);

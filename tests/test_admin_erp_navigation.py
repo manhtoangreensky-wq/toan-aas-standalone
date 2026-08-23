@@ -305,6 +305,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "system_stewardship",
         "security_posture",
         "access_posture",
+        "customer_directory",
     }
     assert "tax_readiness" not in _module_ids(body)
     assert "job_recovery_guide" not in _module_ids(body)
@@ -313,7 +314,8 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         for group in groups.values()
         for module in group["modules"]
     )
-    module = groups["web_private_crm"]["modules"][0]
+    crm_modules = {m["id"]: m for m in groups["web_private_crm"]["modules"]}
+    module = crm_modules["partner_crm_manager"]
     assert module["authority"] == "web_local_admin"
     assert module["availability"] == "web_native"
     assert module["capability"] == "redacted_cross_account_pipeline_read_only"
