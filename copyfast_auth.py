@@ -2526,13 +2526,11 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     password_hash = _password_hash(payload.password)
     try:
         with transaction() as conn:
-            account_count = conn.execute("SELECT COUNT(*) FROM web_accounts").fetchone()[0]
-            initial_role = "admin" if account_count == 0 else "user"
             conn.execute(
                 """INSERT INTO web_accounts
-                (id, email, password_hash, display_name, role_cache, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (account_id, email, password_hash, payload.display_name.strip(), initial_role, now, now),
+                (id, email, password_hash, display_name, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)""",
+                (account_id, email, password_hash, payload.display_name.strip(), now, now),
             )
             conn.execute(
                 """INSERT INTO web_account_profiles
