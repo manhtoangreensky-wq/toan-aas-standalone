@@ -167,7 +167,7 @@
       {
         "call": "bridge_request",
         "file": "copyfast_auth.py",
-        "line": 1277,
+        "line": 1278,
         "method": "GET",
         "path": "/internal/v1/me",
         "static": true

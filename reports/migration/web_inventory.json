@@ -52,7 +52,7 @@
     {
       "file": "copyfast_auth.py",
       "kind": "add_task",
-      "line": 3740,
+      "line": 3741,
       "target": "_deliver_password_recovery_challenge"
     },
     {
@@ -305,7 +305,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4880,
+      "line": 4881,
       "operation": "UPDATE",
       "table": "any"
     },
@@ -671,7 +671,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4055,
+      "line": 4056,
       "operation": "UPDATE",
       "table": "only"
     },
@@ -809,37 +809,37 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4702,
+      "line": 4703,
       "operation": "DELETE FROM",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4704,
+      "line": 4705,
       "operation": "INSERT INTO",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4729,
+      "line": 4730,
       "operation": "DELETE FROM",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4968,
+      "line": 4969,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 5115,
+      "line": 5116,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 5241,
+      "line": 5242,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
@@ -851,55 +851,55 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4556,
+      "line": 4557,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4558,
+      "line": 4559,
       "operation": "INSERT INTO",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4616,
+      "line": 4617,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4646,
+      "line": 4647,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4666,
+      "line": 4667,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4677,
+      "line": 4678,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4907,
+      "line": 4908,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4928,
+      "line": 4929,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4946,
+      "line": 4947,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
@@ -1001,7 +1001,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3402,
+      "line": 3403,
       "operation": "INSERT INTO",
       "table": "web_account_email_contacts"
     },
@@ -1013,13 +1013,13 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1147,
+      "line": 1148,
       "operation": "INSERT INTO",
       "table": "web_account_oauth_contacts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4009,
+      "line": 4010,
       "operation": "DELETE FROM",
       "table": "web_account_oauth_contacts"
     },
@@ -1031,31 +1031,31 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1644,
+      "line": 1645,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2352,
+      "line": 2353,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2537,
+      "line": 2538,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4072,
+      "line": 4073,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4115,
+      "line": 4116,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
@@ -1067,49 +1067,49 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1638,
+      "line": 1639,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2346,
+      "line": 2347,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2531,
+      "line": 2532,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2952,
+      "line": 2953,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3840,
+      "line": 3841,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4068,
+      "line": 4069,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4212,
+      "line": 4213,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 5235,
+      "line": 5236,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
@@ -1583,7 +1583,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1213,
+      "line": 1214,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -1619,13 +1619,13 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4819,
+      "line": 4820,
       "operation": "DELETE FROM",
       "table": "web_bridge_callback_nonces"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4823,
+      "line": 4824,
       "operation": "INSERT INTO",
       "table": "web_bridge_callback_nonces"
     },
@@ -2465,37 +2465,37 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3206,
+      "line": 3207,
       "operation": "UPDATE",
       "table": "web_email_verification_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3213,
+      "line": 3214,
       "operation": "INSERT INTO",
       "table": "web_email_verification_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3283,
+      "line": 3284,
       "operation": "UPDATE",
       "table": "web_email_verification_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3308,
+      "line": 3309,
       "operation": "UPDATE",
       "table": "web_email_verification_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3413,
+      "line": 3414,
       "operation": "UPDATE",
       "table": "web_email_verification_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3421,
+      "line": 3422,
       "operation": "UPDATE",
       "table": "web_email_verification_challenges"
     },
@@ -2507,31 +2507,31 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2278,
+      "line": 2279,
       "operation": "UPDATE",
       "table": "web_external_identities"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2302,
+      "line": 2303,
       "operation": "INSERT INTO",
       "table": "web_external_identities"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2358,
+      "line": 2359,
       "operation": "INSERT INTO",
       "table": "web_external_identities"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2463,
+      "line": 2464,
       "operation": "INSERT INTO",
       "table": "web_external_identities"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4002,
+      "line": 4003,
       "operation": "DELETE FROM",
       "table": "web_external_identities"
     },
@@ -3905,19 +3905,19 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1751,
+      "line": 1752,
       "operation": "DELETE FROM",
       "table": "web_oauth_states"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1753,
+      "line": 1754,
       "operation": "INSERT INTO",
       "table": "web_oauth_states"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1833,
+      "line": 1834,
       "operation": "UPDATE",
       "table": "web_oauth_states"
     },
@@ -4409,37 +4409,37 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3605,
+      "line": 3606,
       "operation": "UPDATE",
       "table": "web_password_recovery_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3622,
+      "line": 3623,
       "operation": "UPDATE",
       "table": "web_password_recovery_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3702,
+      "line": 3703,
       "operation": "UPDATE",
       "table": "web_password_recovery_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3709,
+      "line": 3710,
       "operation": "INSERT INTO",
       "table": "web_password_recovery_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3833,
+      "line": 3834,
       "operation": "UPDATE",
       "table": "web_password_recovery_challenges"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3848,
+      "line": 3849,
       "operation": "UPDATE",
       "table": "web_password_recovery_challenges"
     },
@@ -4649,55 +4649,55 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1241,
+      "line": 1242,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1329,
+      "line": 1330,
       "operation": "INSERT INTO",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1366,
+      "line": 1367,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2510,
+      "line": 2511,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2665,
+      "line": 2666,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2774,
+      "line": 2775,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2839,
+      "line": 2840,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 3844,
+      "line": 3845,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 5247,
+      "line": 5248,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
@@ -6201,17 +6201,17 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 399,
+      "line": 400,
       "name": "APPLE_OAUTH_KEY_ID"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 400,
+      "line": 401,
       "name": "APPLE_OAUTH_PRIVATE_KEY_BASE64"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 398,
+      "line": 399,
       "name": "APPLE_OAUTH_TEAM_ID"
     },
     {
@@ -6251,7 +6251,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 896,
+      "line": 897,
       "name": "BOT_USERNAME"
     },
     {
@@ -6806,52 +6806,52 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 288,
+      "line": 289,
       "name": "WEBAPP_EMAIL_SMTP_HOST"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 290,
+      "line": 291,
       "name": "WEBAPP_EMAIL_SMTP_PASSWORD"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 293,
+      "line": 294,
       "name": "WEBAPP_EMAIL_SMTP_PORT"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 294,
+      "line": 295,
       "name": "WEBAPP_EMAIL_SMTP_TIMEOUT_SECONDS"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 292,
+      "line": 293,
       "name": "WEBAPP_EMAIL_SMTP_TLS_MODE"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 289,
+      "line": 290,
       "name": "WEBAPP_EMAIL_SMTP_USERNAME"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 251,
+      "line": 252,
       "name": "WEBAPP_EMAIL_VERIFICATION_ENABLED"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 291,
+      "line": 292,
       "name": "WEBAPP_EMAIL_VERIFICATION_FROM"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 264,
+      "line": 265,
       "name": "WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 322,
+      "line": 323,
       "name": "WEBAPP_EMAIL_VERIFICATION_TTL_MINUTES"
     },
     {
@@ -6991,22 +6991,22 @@
     },
     {
       "file": "copyfast_auth.py",
+      "line": 908,
+      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 4800,
+      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
       "line": 907,
-      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 4799,
-      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 906,
       "name": "WEBAPP_LINK_CALLBACK_TOKEN"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 4798,
+      "line": 4799,
       "name": "WEBAPP_LINK_CALLBACK_TOKEN"
     },
     {
@@ -7136,12 +7136,12 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 257,
+      "line": 258,
       "name": "WEBAPP_PASSWORD_RECOVERY_ENABLED"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 338,
+      "line": 339,
       "name": "WEBAPP_PASSWORD_RECOVERY_TTL_MINUTES"
     },
     {
@@ -7191,12 +7191,12 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 265,
+      "line": 266,
       "name": "WEBAPP_PUBLIC_BASE_URL"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 380,
+      "line": 381,
       "name": "WEBAPP_PUBLIC_BASE_URL"
     },
     {
@@ -7276,12 +7276,12 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 928,
+      "line": 929,
       "name": "WEBAPP_TELEGRAM_AUTO_REGISTER_ENABLED"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 921,
+      "line": 922,
       "name": "WEBAPP_TELEGRAM_BOT_LINK_ENABLED"
     },
     {
@@ -7421,7 +7421,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 216,
+      "line": 217,
       "name": "WEB_COOKIE_SECURE"
     },
     {
@@ -7431,7 +7431,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 373,
+      "line": 374,
       "name": "WEB_OAUTH_IDENTITY_HMAC_SECRET"
     },
     {
@@ -7446,7 +7446,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 202,
+      "line": 203,
       "name": "WEB_SESSION_SECRET"
     },
     {
@@ -9645,7 +9645,7 @@
     {
       "endpoint": "email_verification_confirmation_page",
       "file": "copyfast_auth.py",
-      "line": 3344,
+      "line": 3345,
       "methods": [
         "GET"
       ],
@@ -9654,7 +9654,7 @@
     {
       "endpoint": "confirm_email_verification",
       "file": "copyfast_auth.py",
-      "line": 3358,
+      "line": 3359,
       "methods": [
         "POST"
       ],
@@ -10032,7 +10032,7 @@
     {
       "endpoint": "confirm_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 4831,
+      "line": 4832,
       "methods": [
         "POST"
       ],
@@ -10041,7 +10041,7 @@
     {
       "endpoint": "confirm_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 4831,
+      "line": 4832,
       "methods": [
         "POST"
       ],
@@ -10347,7 +10347,7 @@
     {
       "endpoint": "login",
       "file": "copyfast_auth.py",
-      "line": 2560,
+      "line": 2561,
       "methods": [
         "POST"
       ],
@@ -10374,7 +10374,7 @@
     {
       "endpoint": "logout",
       "file": "copyfast_auth.py",
-      "line": 2662,
+      "line": 2663,
       "methods": [
         "POST"
       ],
@@ -10419,7 +10419,7 @@
     {
       "endpoint": "me",
       "file": "copyfast_auth.py",
-      "line": 2672,
+      "line": 2673,
       "methods": [
         "GET"
       ],
@@ -10572,7 +10572,7 @@
     {
       "endpoint": "apple_oauth_callback",
       "file": "copyfast_auth.py",
-      "line": 4488,
+      "line": 4489,
       "methods": [
         "POST"
       ],
@@ -10581,7 +10581,7 @@
     {
       "endpoint": "oauth_callback",
       "file": "copyfast_auth.py",
-      "line": 4465,
+      "line": 4466,
       "methods": [
         "GET"
       ],
@@ -10590,7 +10590,7 @@
     {
       "endpoint": "start_oauth_link",
       "file": "copyfast_auth.py",
-      "line": 4297,
+      "line": 4298,
       "methods": [
         "POST"
       ],
@@ -10599,7 +10599,7 @@
     {
       "endpoint": "start_oauth",
       "file": "copyfast_auth.py",
-      "line": 4315,
+      "line": 4316,
       "methods": [
         "GET"
       ],
@@ -10671,7 +10671,7 @@
     {
       "endpoint": "password_recovery_confirmation_page",
       "file": "copyfast_auth.py",
-      "line": 3753,
+      "line": 3754,
       "methods": [
         "GET"
       ],
@@ -10680,7 +10680,7 @@
     {
       "endpoint": "confirm_password_recovery",
       "file": "copyfast_auth.py",
-      "line": 3767,
+      "line": 3768,
       "methods": [
         "POST"
       ],
@@ -10689,7 +10689,7 @@
     {
       "endpoint": "start_password_recovery",
       "file": "copyfast_auth.py",
-      "line": 3649,
+      "line": 3650,
       "methods": [
         "POST"
       ],
@@ -11157,7 +11157,7 @@
     {
       "endpoint": "update_profile",
       "file": "copyfast_auth.py",
-      "line": 4054,
+      "line": 4055,
       "methods": [
         "POST"
       ],
@@ -11211,7 +11211,7 @@
     {
       "endpoint": "update_interface_locale",
       "file": "copyfast_auth.py",
-      "line": 4090,
+      "line": 4091,
       "methods": [
         "POST"
       ],
@@ -11526,7 +11526,7 @@
     {
       "endpoint": "oauth_providers",
       "file": "copyfast_auth.py",
-      "line": 4261,
+      "line": 4262,
       "methods": [
         "GET"
       ],
@@ -11742,7 +11742,7 @@
     {
       "endpoint": "register",
       "file": "copyfast_auth.py",
-      "line": 2515,
+      "line": 2516,
       "methods": [
         "POST"
       ],
@@ -12030,7 +12030,7 @@
     {
       "endpoint": "start_email_verification",
       "file": "copyfast_auth.py",
-      "line": 3112,
+      "line": 3113,
       "methods": [
         "POST"
       ],
@@ -12039,7 +12039,7 @@
     {
       "endpoint": "security_login_methods",
       "file": "copyfast_auth.py",
-      "line": 2986,
+      "line": 2987,
       "methods": [
         "GET"
       ],
@@ -12048,7 +12048,7 @@
     {
       "endpoint": "unlink_security_oauth",
       "file": "copyfast_auth.py",
-      "line": 3901,
+      "line": 3902,
       "methods": [
         "POST"
       ],
@@ -12057,7 +12057,7 @@
     {
       "endpoint": "change_password",
       "file": "copyfast_auth.py",
-      "line": 2871,
+      "line": 2872,
       "methods": [
         "POST"
       ],
@@ -12066,7 +12066,7 @@
     {
       "endpoint": "security_sessions",
       "file": "copyfast_auth.py",
-      "line": 2686,
+      "line": 2687,
       "methods": [
         "GET"
       ],
@@ -12075,7 +12075,7 @@
     {
       "endpoint": "revoke_security_session",
       "file": "copyfast_auth.py",
-      "line": 2724,
+      "line": 2725,
       "methods": [
         "POST"
       ],
@@ -12084,7 +12084,7 @@
     {
       "endpoint": "revoke_other_security_sessions",
       "file": "copyfast_auth.py",
-      "line": 2807,
+      "line": 2808,
       "methods": [
         "POST"
       ],
@@ -12426,7 +12426,7 @@
     {
       "endpoint": "upgrade_telegram_account",
       "file": "copyfast_auth.py",
-      "line": 4137,
+      "line": 4138,
       "methods": [
         "POST"
       ],
@@ -12435,7 +12435,7 @@
     {
       "endpoint": "telegram_connection_status",
       "file": "copyfast_auth.py",
-      "line": 4267,
+      "line": 4268,
       "methods": [
         "GET"
       ],
@@ -12444,7 +12444,7 @@
     {
       "endpoint": "complete_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 5137,
+      "line": 5138,
       "methods": [
         "POST"
       ],
@@ -12453,7 +12453,7 @@
     {
       "endpoint": "start_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 4685,
+      "line": 4686,
       "methods": [
         "POST"
       ],
@@ -12462,7 +12462,7 @@
     {
       "endpoint": "telegram_link_status",
       "file": "copyfast_auth.py",
-      "line": 4714,
+      "line": 4715,
       "methods": [
         "GET"
       ],
@@ -12471,7 +12471,7 @@
     {
       "endpoint": "complete_telegram_login",
       "file": "copyfast_auth.py",
-      "line": 4633,
+      "line": 4634,
       "methods": [
         "POST"
       ],
@@ -12480,7 +12480,7 @@
     {
       "endpoint": "start_telegram_login",
       "file": "copyfast_auth.py",
-      "line": 4537,
+      "line": 4538,
       "methods": [
         "POST"
       ],
@@ -12489,7 +12489,7 @@
     {
       "endpoint": "telegram_login_status",
       "file": "copyfast_auth.py",
-      "line": 4604,
+      "line": 4605,
       "methods": [
         "GET"
       ],
@@ -13993,7 +13993,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 159,
   "source_files_scanned": 159,
-  "source_fingerprint_sha256": "a0b95bdd911884981737138275c4e8386922b127d6fd57e9cf8a750c34e9e023",
+  "source_fingerprint_sha256": "b6358068a42d7182c60106597b368cdc806783bda7d3acf3f7ff6a36a0a84e1c",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
