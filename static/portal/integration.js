@@ -35907,7 +35907,8 @@
         return;
       }
       if (action === "auth-login") {
-        const result = await api("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fields.email || "", password: fields.password || "" }) });
+        const isAdminLogin = currentPortalPath() === "/admin/login" || route === "/admin/login";
+        const result = await api("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fields.email || "", password: fields.password || "", admin_portal: isAdminLogin }) });
         const mfaFlow = accountSecurityMfaLoginChallengeProjection(result.data);
         if (result.data && result.data.mfa_required === true) {
           fields.password = "";
@@ -35919,11 +35920,13 @@
           toast(result.message || "Nhập mã từ ứng dụng xác thực để hoàn tất đăng nhập.");
           return;
         }
+        if (isAdminLogin && (!result.data || !result.data.account || result.data.account.role !== "admin")) {
+          throw new Error("Tài khoản này không có quyền truy cập Admin");
+        }
         toast(result.message);
         await hydrate();
         const requested = requestedPortalRoute();
-        const isAdminLogin = currentPortalPath() === "/admin/login" || route === "/admin/login";
-        window.location.assign(requested || (isAdminLogin ? "/admin" : "/dashboard"));
+        window.location.assign(isAdminLogin ? "/admin" : (requested || "/dashboard"));
         return;
       }
       if (action === "auth-mfa-login") {
@@ -35941,6 +35944,7 @@
           clearAccountSecurityMfaInputs();
           throw new Error("Mã xác thực hai bước không hợp lệ hoặc đã hết hạn. Hãy đăng nhập lại.");
         }
+        const isAdminLogin = currentPortalPath() === "/admin/login" || route === "/admin/login";
         setActionBusy(action, route, true);
         try {
           const result = await api("/auth/login/mfa", {
@@ -35952,12 +35956,15 @@
               code
             })
           });
+          if (isAdminLogin && (!result.data || !result.data.account || result.data.account.role !== "admin")) {
+            throw new Error("Tài khoản này không có quyền truy cập Admin");
+          }
           clearAccountSecurityMfaInputs();
           merge({ mfaLoginFlow: {} });
           toast(result.message || "Đăng nhập và xác thực hai bước thành công.");
           await hydrate();
           const requested = requestedPortalRoute();
-          window.location.assign(requested || "/dashboard");
+          window.location.assign(isAdminLogin ? "/admin" : (requested || "/dashboard"));
         } finally {
           clearAccountSecurityMfaInputs();
           setActionBusy(action, route, false);
