@@ -64,6 +64,11 @@ def test_mobile_header_uses_two_deliberate_rows_without_wrapping_locale_copy() -
     assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in mobile
     assert "white-space: nowrap;" in mobile
     assert (
+        ".portal-auth-page--access {\n"
+        "    width: 100%;\n"
+        "    row-gap: 8px;"
+    ) in mobile
+    assert (
         ".portal-auth-page--access .portal-auth-intro {\n"
         "    display: none;\n"
         "  }"
