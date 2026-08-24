@@ -1286,6 +1286,23 @@ body {
 }
 
 @media (max-width: 600px) {
+  .portal-auth-page--access .portal-auth-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "locale locale";
+    row-gap: 10px;
+  }
+
+  .portal-auth-page--access .portal-auth-brand {
+    grid-area: brand;
+  }
+
+  .portal-auth-page--access .portal-auth-header-actions {
+    grid-area: actions;
+  }
+
   .portal-auth-page--access .portal-auth-brand strong {
     white-space: nowrap;
   }
@@ -1305,15 +1322,21 @@ body {
   }
 
   .portal-auth-page--access .portal-auth-locale-nav {
+    grid-area: locale;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0;
-    margin-left: auto;
+    width: 100%;
+    margin-left: 0;
   }
 
   .portal-auth-page--access .portal-auth-locale-link {
+    width: 100%;
     min-width: 44px;
     min-height: 44px;
     padding-inline: 0;
     font-size: 10px;
+    white-space: nowrap;
   }
 
   .portal-auth-page--access {
@@ -4258,18 +4281,46 @@ body {
   .portal-auth-page--access .portal-auth-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "card" "intro";
-    gap: 20px;
+    grid-template-areas: "intro" "card";
+    gap: 12px;
   }
 
   .portal-auth-page--access .portal-auth-intro {
     justify-items: center;
+    gap: 0;
     max-width: 480px;
     padding-top: 0;
     text-align: center;
   }
 
+  .portal-auth-page--access .portal-auth-intro .portal-title {
+    max-width: none;
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .portal-auth-page--access .portal-auth-intro .portal-description { display: none; }
+
   .portal-auth-context { display: none; }
+
+  .portal-auth-page--access .portal-auth-brand strong {
+    white-space: nowrap;
+  }
+
+  .portal-auth-page--access .portal-auth-brand small,
+  .portal-auth-page--access .portal-auth-back-label {
+    display: none;
+  }
+
+  .portal-auth-page--access .portal-auth-locale-link {
+    white-space: nowrap;
+  }
+
+  .portal-auth-page--access .portal-auth-back {
+    min-width: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 390px) {

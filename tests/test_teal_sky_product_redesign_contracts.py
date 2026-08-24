@@ -76,7 +76,7 @@ def test_access_desktop_uses_a_balanced_two_column_rail_and_mobile_hides_context
     assert "minmax(420px, 480px)" in layer
     assert "width: min(100%, 1180px);" in layer
     assert "@media (max-width: 1080px)" in layer
-    assert 'grid-template-areas: "card" "intro";' in layer
+    assert 'grid-template-areas: "intro" "card";' in layer
     assert ".portal-auth-context { display: none; }" in layer
 
 
