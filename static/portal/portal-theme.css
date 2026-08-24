@@ -1307,11 +1307,6 @@ body {
     display: none;
   }
 
-  .portal-auth-page--access .portal-auth-shell {
-    grid-template-areas: "card";
-    row-gap: 0;
-  }
-
   .portal-auth-page--access .portal-auth-brand strong {
     white-space: nowrap;
   }
@@ -4335,6 +4330,13 @@ body {
     min-width: 44px;
     padding-inline: 0;
     justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .portal-auth-page--access .portal-auth-shell {
+    grid-template-areas: "card";
+    row-gap: 0;
   }
 }
 
