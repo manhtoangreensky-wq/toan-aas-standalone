@@ -446,7 +446,7 @@
   }
 
   function portalBrandMark() {
-    return '<svg class="portal-brand-mark-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="m16 3 11 6.3v13.4L16 29 5 22.7V9.3z"/><path d="m9.5 12.9 6.5 3.7 6.5-3.7M16 16.6V24"/><path d="m9.5 19.1 6.5 3.7 6.5-3.7"/></svg>';
+    return '<img class="portal-brand-mark-image" src="/static/logo_ch%C3%ADnh_th%E1%BB%A9c.png" alt="" width="56" height="56" decoding="async">';
   }
 
   // Status/empty-state marks are never supplied by a remote response. Map
@@ -10197,8 +10197,8 @@
     const adminRoutes = adminSurface ? adminErpNavigation(context).routes : new Set();
     const adminOverview = adminSurface ? adminNavigationModules(context).find((module) => module.route === "/admin") : null;
     const sidebarCaption = adminSurface
-      ? uiText("chrome.adminAppCaption", "Admin ERP")
-      : uiText("app.workspace", "TOAN AAS Workspace");
+      ? uiText("chrome.adminAppCaption", "Trung tâm quản trị")
+      : uiText("chrome.customerAppCaption", "Không gian làm việc AI");
     const sidebarSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
       : uiText("chrome.searchWorkspace", "Tìm mọi workspace");
@@ -10237,7 +10237,6 @@
     </div>
     <div class="portal-sidebar-action-row">
       ${sidebarPrimaryAction}
-      <button class="portal-sidebar-focus-toggle" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Bật chế độ tập trung nội dung"))}" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>${safeText(uiText("chrome.closeNavigation", "Thu gọn điều hướng"))}</span></button>
     </div>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">

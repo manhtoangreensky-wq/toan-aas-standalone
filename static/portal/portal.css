@@ -4067,15 +4067,23 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-brand-mark {
   width: 40px;
   height: 40px;
+  overflow: hidden;
   border-color: rgba(94, 234, 212, .56);
   border-radius: 12px;
-  background: #2dd4bf;
+  background: #fff;
   box-shadow: none;
-  color: #042f2e;
+}
+.portal-brand-mark-image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  max-width: none;
+  object-fit: contain;
+  transform: translate(-8px, -4px);
 }
 .portal-brand-name { font-size: 14px; letter-spacing: .035em; }
 .portal-brand-caption { color: #95a9bb; font-size: 11px; }
-.portal-sidebar-action-row { gap: 8px; margin: 0 8px 14px; }
+.portal-sidebar-action-row { grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0 8px 14px; }
 .portal-sidebar-create {
   min-height: var(--portal-control-height);
   margin: 0;

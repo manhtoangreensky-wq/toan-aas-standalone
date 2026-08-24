@@ -736,7 +736,8 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
             "客户支持",
         ),
         "adminHome.readiness.refresh": ("Làm mới", "Refresh", "刷新"),
-        "chrome.adminAppCaption": ("Admin ERP", "Admin ERP", "管理 ERP"),
+        "chrome.customerAppCaption": ("Không gian làm việc AI", "AI workspace", "AI 工作台"),
+        "chrome.adminAppCaption": ("Trung tâm quản trị", "System administration", "系统管理"),
         "chrome.searchAdmin": ("Tìm điều hướng ERP", "Search ERP navigation", "搜索 ERP 导航"),
         "chrome.adminCommandCount": (
             "{count} mục ERP có thể mở trong phiên này.",
@@ -773,7 +774,9 @@ def test_customer_sidebar_and_command_palette_follow_the_reviewed_interface_loca
     sidebar = _between(PORTAL, "function renderSidebar(page, context)", "function renderHeader(page, context)")
     command_filter = _between(PORTAL, "function filterCommandPalette(value)", "function closeCommandPalette(options)")
 
-    assert 'uiText("app.workspace", "TOAN AAS Workspace")' in sidebar
+    assert 'uiText("chrome.customerAppCaption", "Không gian làm việc AI")' in sidebar
+    assert 'uiText("chrome.adminAppCaption", "Trung tâm quản trị")' in sidebar
+    assert 'uiText("app.workspace", "TOAN AAS Workspace")' not in sidebar
     assert 'uiText("chrome.commandCount"' in command_filter
 
 
@@ -902,9 +905,10 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert "Workspace" in snapshot["vietnameseSidebar"]
     assert "Tạo mới" in snapshot["vietnameseSidebar"]
     assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
-    assert "TOAN AAS 工作台" in snapshot["firstSidebar"]
-    assert "TOAN AAS Workspace" in snapshot["englishSidebar"]
-    assert "TOAN AAS 工作台" in snapshot["chineseSidebar"]
+    assert "AI 工作台" in snapshot["firstSidebar"]
+    assert "AI workspace" in snapshot["englishSidebar"]
+    assert "Không gian làm việc AI" in snapshot["vietnameseSidebar"]
+    assert "AI 工作台" in snapshot["chineseSidebar"]
 
 
 def test_i18n_bundle_is_presentation_only_without_browser_persistence_or_network() -> None:
