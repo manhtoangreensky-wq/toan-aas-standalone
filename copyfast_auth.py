@@ -78,6 +78,7 @@ BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
 BRIDGE_CALLBACK_MAX_FUTURE_SKEW_SECONDS = 30
 BRIDGE_CALLBACK_MAX_BODY_BYTES = 2_048
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
+CANONICAL_ADMIN_AUTHORITY_ROLES = frozenset({"admin", "owner"})
 OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple", "telegram"})
 # Interface locale is a Web-owned presentation preference.  It intentionally
 # does not select the language of any Studio workflow, Bot conversation or
@@ -1281,8 +1282,8 @@ async def _require_current_canonical_admin(request: Request, account: dict) -> d
         request_id=_request_id(request),
         actor_id=canonical_user_id,
     )
-    current_role = str((result.get("data") or {}).get("role") or "")
-    if not result.get("ok") or current_role != "admin":
+    current_role = str((result.get("data") or {}).get("role") or "").strip().lower()
+    if not result.get("ok") or current_role not in CANONICAL_ADMIN_AUTHORITY_ROLES:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Quyền quản trị canonical chưa được xác nhận")
     return account
 
