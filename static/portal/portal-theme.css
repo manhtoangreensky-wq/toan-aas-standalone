@@ -1345,6 +1345,7 @@ body {
 
   .portal-auth-page--access {
     width: 100%;
+    row-gap: 8px;
     padding-top: 16px;
     padding-bottom: 32px;
   }
