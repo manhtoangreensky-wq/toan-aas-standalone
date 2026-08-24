@@ -80,15 +80,15 @@ def test_access_desktop_uses_a_balanced_two_column_rail_and_mobile_hides_context
     assert ".portal-auth-context { display: none; }" in layer
 
 
-def test_access_header_preserves_locale_targets_at_320px() -> None:
-    """The compact header visually hides redundant brand copy without losing its name."""
+def test_access_header_preserves_locale_targets_and_brand_name_at_320px() -> None:
+    """The compact header keeps both the product name and 44px locale targets."""
 
     layer = _redesign_layer()
 
     assert "@media (max-width: 380px)" in layer
     assert ".portal-auth-page--access .portal-auth-header { gap: 6px; }" in layer
-    assert ".portal-auth-page--access .portal-auth-brand > span:last-child {\n    position: absolute;" in layer
-    assert "clip: rect(0, 0, 0, 0);" in layer
+    assert ".portal-auth-page--access .portal-auth-brand > span:last-child" not in layer
+    assert "clip: rect(0, 0, 0, 0);" not in layer
     assert "white-space: nowrap;" in layer
     assert ".portal-auth-page--access .portal-auth-locale-link {\n  display: inline-grid;\n  min-width: 44px;\n  min-height: 44px;" in THEME
     assert ".portal-auth-back {\n  display: inline-flex;\n  min-height: 44px;\n  min-width: 44px;" in THEME

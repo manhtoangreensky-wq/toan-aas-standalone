@@ -1303,6 +1303,10 @@ body {
     grid-area: actions;
   }
 
+  .portal-auth-page--access .portal-auth-intro {
+    display: none;
+  }
+
   .portal-auth-page--access .portal-auth-brand strong {
     white-space: nowrap;
   }
@@ -4329,18 +4333,6 @@ body {
 
 @media (max-width: 380px) {
   .portal-auth-page--access .portal-auth-header { gap: 6px; }
-
-  .portal-auth-page--access .portal-auth-brand > span:last-child {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
 }
 
 @media (max-width: 1180px) and (min-width: 701px) {
