@@ -96,9 +96,11 @@ def test_mobile_auth_fields_use_an_ios_safe_font_size() -> None:
 
 
 def test_mobile_auth_shell_does_not_keep_the_hidden_intro_row() -> None:
-    start = THEME.index("@media (max-width: 600px) {")
-    mobile = THEME[start:THEME.index("@media (max-width: 700px) {", start)]
+    semantic = THEME.index("/* Teal–Sky Product Redesign -- final semantic layer. */")
+    responsive = THEME.index("@media (max-width: 1080px) {", semantic)
+    mobile = THEME[responsive:THEME.index("@media (max-width: 390px) {", responsive)]
 
+    assert "@media (max-width: 600px) {" in mobile
     assert (
         '.portal-auth-page--access .portal-auth-shell {\n'
         '    grid-template-areas: "card";\n'
