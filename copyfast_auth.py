@@ -1398,6 +1398,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=256)
+    admin_portal: bool = False
 
 
 class PasswordChangeRequest(BaseModel):
@@ -2573,6 +2574,21 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         if not row or not row[6] or not row[7] or internal_oauth_alias or not password_valid:
             _record_audit(conn, account_id=row[0] if row else None, canonical_user_id=None, action="auth.login", request_id=_request_id(request), outcome="denied")
             return envelope(False, "Email hoặc mật khẩu không đúng", status_name="failed", error_code="LOGIN_DENIED")
+        if payload.admin_portal and row[5] != "admin":
+            _record_audit(
+                conn,
+                account_id=row[0],
+                canonical_user_id=row[4],
+                action="auth.login",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+            return envelope(
+                False,
+                "Tài khoản này không có quyền truy cập Admin",
+                status_name="failed",
+                error_code="ADMIN_LOGIN_REQUIRED",
+            )
         # A Web-native TOTP factor is deliberately enforced after the
         # constant-work password check and before any signed session exists.
         # The browser receives only one opaque, short-lived challenge; it
