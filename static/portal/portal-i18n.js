@@ -1044,7 +1044,8 @@
   const INTERFACE_EXTENSION_MESSAGES = {
     vi: {
       "chrome.newWorkflow": "Luồng công việc mới",
-      "chrome.searchWorkspace": "Tìm trong workspace",
+      "chrome.searchWorkspace": "Tìm trong không gian làm việc",
+      "chrome.accountFallback": "Tài khoản không gian làm việc",
       "chrome.customerAppCaption": "Không gian làm việc AI",
       "chrome.adminAppCaption": "Trung tâm quản trị",
       "chrome.searchAdmin": "Tìm điều hướng ERP",
@@ -1386,6 +1387,7 @@
     en: {
       "chrome.newWorkflow": "New workflow",
       "chrome.searchWorkspace": "Search workspace",
+      "chrome.accountFallback": "Workspace account",
       "chrome.customerAppCaption": "AI workspace",
       "chrome.adminAppCaption": "System administration",
       "chrome.searchAdmin": "Search ERP navigation",
@@ -1727,6 +1729,7 @@
     zh: {
       "chrome.newWorkflow": "新建工作流",
       "chrome.searchWorkspace": "搜索工作台",
+      "chrome.accountFallback": "工作台账户",
       "chrome.customerAppCaption": "AI 工作台",
       "chrome.adminAppCaption": "系统管理",
       "chrome.searchAdmin": "搜索 ERP 导航",

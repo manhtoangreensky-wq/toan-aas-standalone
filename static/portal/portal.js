@@ -10376,7 +10376,7 @@
                   <strong>${safeText(name)}</strong>
                   <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierInfo.currentTier.color}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierInfo.currentTier.color}44;">${safeText(headerTierInfo.currentTier.badge)}</span>
                 </div>
-                <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || "Workspace Account")}</small>
+                <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || uiText("chrome.accountFallback", "Tài khoản không gian làm việc"))}</small>
               </div>
             </div>
             <div class="portal-user-dropdown-divider"></div>
