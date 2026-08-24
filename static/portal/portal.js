@@ -40,15 +40,95 @@
   });
 
   function adminDeliveryRuntimeNavigationText(route, field, fallback) {
+    if (field === "title") return adminErpRouteText(route, fallback);
     const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalizePath(route)];
     if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
     return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
   }
 
   function adminDeliveryRuntimeGroupText(groupId, field, fallback) {
+    if (field === "title") return adminErpGroupText(groupId, fallback);
     const entry = DELIVERY_RUNTIME_GROUP_I18N[String(groupId || "")];
     if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
     return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
+  }
+
+  const ADMIN_ERP_GROUP_I18N = Object.freeze({
+    "support_operations": "adminErpNavigation.group.supportOperations",
+    "web_private_crm": "adminErpNavigation.group.webPrivateCrm",
+    "web_finance_operations_planning": "adminErpNavigation.group.webFinanceOperationsPlanning",
+    "web_governance_documents": "adminErpNavigation.group.webGovernanceDocuments",
+    "web_internal_document_archive": "adminErpNavigation.group.webInternalDocumentArchive",
+    "web_automation_monitor": "adminErpNavigation.group.webAutomationMonitor",
+    "web_system_stewardship": "adminErpNavigation.group.webSystemStewardship",
+    "web_security_access_posture": "adminErpNavigation.group.webSecurityAccessPosture",
+    "command_center": "adminErpNavigation.group.commandCenter",
+    "commerce": "adminErpNavigation.group.commerce",
+    "delivery_runtime": "adminErpNavigation.group.deliveryRuntime",
+    "content_growth": "adminErpNavigation.group.contentGrowth",
+    "governance": "adminErpNavigation.group.governance"
+  });
+
+  const ADMIN_ERP_ROUTE_I18N = Object.freeze({
+    "/admin": "adminErpNavigation.route.overview",
+    "/admin/access": "adminErpNavigation.route.access",
+    "/admin/analytics": "adminErpNavigation.route.analytics",
+    "/admin/approvals": "adminErpNavigation.route.approvals",
+    "/admin/audit": "adminErpNavigation.route.audit",
+    "/admin/automation": "adminErpNavigation.route.automation",
+    "/admin/backups": "adminErpNavigation.route.backups",
+    "/admin/calendar": "adminErpNavigation.route.calendar",
+    "/admin/campaigns": "adminErpNavigation.route.campaigns",
+    "/admin/content-handoffs": "adminErpNavigation.route.contentHandoffs",
+    "/admin/crm/leads": "adminErpNavigation.route.crmLeads",
+    "/admin/customers": "adminErpNavigation.route.customers",
+    "/admin/features": "adminErpNavigation.route.features",
+    "/admin/finance": "adminErpNavigation.route.finance",
+    "/admin/finance/planning": "adminErpNavigation.route.financePlanning",
+    "/admin/finance/tax-readiness": "adminErpNavigation.route.taxReadiness",
+    "/admin/freezes": "adminErpNavigation.route.freezes",
+    "/admin/governance": "adminErpNavigation.route.governanceDocuments",
+    "/admin/growth": "adminErpNavigation.route.growth",
+    "/admin/growth/postback-readiness": "adminErpNavigation.route.postbackReadiness",
+    "/admin/internal-documents": "adminErpNavigation.route.internalDocuments",
+    "/admin/job-recovery-guide": "adminErpNavigation.route.jobRecoveryGuide",
+    "/admin/jobs": "adminErpNavigation.route.jobs",
+    "/admin/jobs/failed": "adminErpNavigation.route.failedJobs",
+    "/admin/leads": "adminErpNavigation.route.leads",
+    "/admin/operations": "adminErpNavigation.route.operations",
+    "/admin/packages": "adminErpNavigation.route.packages",
+    "/admin/payments": "adminErpNavigation.route.payments",
+    "/admin/pricing": "adminErpNavigation.route.pricing",
+    "/admin/promos": "adminErpNavigation.route.promos",
+    "/admin/provider-cost": "adminErpNavigation.route.providerCost",
+    "/admin/providers": "adminErpNavigation.route.providers",
+    "/admin/publishing": "adminErpNavigation.route.publishing",
+    "/admin/refunds": "adminErpNavigation.route.refunds",
+    "/admin/reliability": "adminErpNavigation.route.reliability",
+    "/admin/reports": "adminErpNavigation.route.reports",
+    "/admin/revenue": "adminErpNavigation.route.revenue",
+    "/admin/runtime": "adminErpNavigation.route.runtime",
+    "/admin/security": "adminErpNavigation.route.security",
+    "/admin/support": "adminErpNavigation.route.support",
+    "/admin/system": "adminErpNavigation.route.system",
+    "/admin/system-stewardship": "adminErpNavigation.route.systemStewardship",
+    "/admin/tickets": "adminErpNavigation.route.tickets",
+    "/admin/topups": "adminErpNavigation.route.topups",
+    "/admin/trends": "adminErpNavigation.route.trends",
+    "/admin/users": "adminErpNavigation.route.users",
+    "/admin/wallet": "adminErpNavigation.route.wallet",
+    "/admin/workers": "adminErpNavigation.route.workers",
+    "/admin/work-queue": "adminErpNavigation.route.workQueue"
+  });
+
+  function adminErpGroupText(groupId, fallback) {
+    const key = ADMIN_ERP_GROUP_I18N[String(groupId || "")];
+    return key && typeof uiText === "function" ? uiText(key, fallback) : fallback;
+  }
+
+  function adminErpRouteText(route, fallback) {
+    const key = ADMIN_ERP_ROUTE_I18N[normalizePath(route)];
+    return key && typeof uiText === "function" ? uiText(key, fallback) : fallback;
   }
 
   function publicBuildId(value) {
@@ -20152,7 +20232,7 @@
     return `<section class="portal-ai-suite-productivity-hub" style="margin: 28px 0;">
       <div style="text-align:center; max-width:820px; margin:0 auto 28px;">
         <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:9999px; background:color-mix(in srgb, var(--portal-context) 12%, transparent); border:1px solid color-mix(in srgb, var(--portal-context) 32%, transparent); font-size:12px; font-weight:700; color:var(--portal-context); margin-bottom:12px;">
-          ✨ HỆ SINH THÁI WORKSPACE & CÔNG CỤ AI TOÀN NĂNG
+          ✨ HỆ SINH THÁI KHÔNG GIAN LÀM VIỆC & CÔNG CỤ AI TOÀN NĂNG
         </div>
         <h2 style="font-size:28px; font-weight:800; letter-spacing:-0.03em; margin:0 0 10px; color:var(--portal-ink);">
           Không Gian Làm Việc Sáng Tạo AI Đa Nền Tảng
@@ -20176,7 +20256,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Trình Làm Việc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">0.10 Xu / ký tự · ASR Free</span>
+            <span style="font-size:11px; color:var(--portal-muted);">0.10 Xu / ký tự · ASR miễn phí</span>
           </div>
         </a>
 
@@ -20188,7 +20268,7 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">🟢 Sẵn sàng</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Voice Studio & TTS AI</h3>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Công cụ giọng nói & TTS AI</h3>
             <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Chuyển văn bản thành giọng đọc truyền cảm 15+ diễn viên, hỗ trợ tạo voice clone riêng và xuất MP3 320kbps.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
@@ -20205,8 +20285,8 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Nhạc AI</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Music & Sound Effects</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo nhạc nền độc quyền không dính bản quyền theo prompt, Lofi, EDM, Cinematic, 48kHz Stereo.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Nhạc AI & Hiệu ứng âm thanh</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo nhạc nền độc quyền không dính bản quyền theo câu lệnh, Lofi, EDM, Cinematic, 48kHz Stereo.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sáng Tác Nhạc →</span>
@@ -20222,8 +20302,8 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">👑 Video AI</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Video Factory & Storyboard</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tự động hóa sản xuất video ngắn TikTok/Reels, sinh hook giữ chân & phân cảnh chuyên nghiệp.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng video & Phân cảnh</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tự động hóa sản xuất video ngắn TikTok/Reels, sinh câu dẫn giữ chân & phân cảnh chuyên nghiệp.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sản Xuất Video →</span>
@@ -20239,8 +20319,8 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Ảnh AI</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Image Studio 4K</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực, chân dung AI người mẫu, thumbnail YouTube & banner quảng cáo.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng ảnh AI 4K</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực, chân dung AI người mẫu, ảnh thu nhỏ YouTube & banner quảng cáo.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
@@ -20256,7 +20336,7 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">🟢 DeepOCR</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Document & PDF / OCR Hub</h3>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Trung tâm tài liệu AI & PDF/OCR</h3>
             <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Bóc chữ tiếng Việt từ ảnh chụp tài liệu quét, chuyển PDF sang Word .docx, tách/gộp PDF siêu tốc.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
@@ -20273,8 +20353,8 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Trợ lý AI</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Marketing & Chat Copilot</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch ads TikTok/FB, CSKH tự động.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Trợ lý tiếp thị & trò chuyện AI</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch quảng cáo TikTok/FB, CSKH tự động.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Chat Với Trợ Lý →</span>
