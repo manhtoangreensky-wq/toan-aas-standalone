@@ -95,6 +95,18 @@ def test_mobile_auth_fields_use_an_ios_safe_font_size() -> None:
     ) in mobile
 
 
+def test_mobile_auth_shell_does_not_keep_the_hidden_intro_row() -> None:
+    start = THEME.index("@media (max-width: 600px) {")
+    mobile = THEME[start:THEME.index("@media (max-width: 700px) {", start)]
+
+    assert (
+        '.portal-auth-page--access .portal-auth-shell {\n'
+        '    grid-template-areas: "card";\n'
+        "    row-gap: 0;\n"
+        "  }"
+    ) in mobile
+
+
 def test_vietnamese_auth_copy_uses_khong_gian_lam_viec_consistently() -> None:
     vi = I18N[I18N.index("    vi: {"):I18N.index("    en: {")]
 
