@@ -143,6 +143,16 @@ def test_admin_desktop_sidebar_uses_only_server_authorized_groups() -> None:
     assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
 
 
+def test_admin_portal_surfaces_skip_generic_enter_motion_before_replace() -> None:
+    portal = _read("static/portal/portal.js")
+    mount = portal[
+        portal.index("function mountPortal(override)"):
+        portal.index("function renderShell()")
+    ]
+
+    assert 'main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";' in mount
+
+
 def test_full_admin_manifest_uses_a_shared_bounded_group_limit_not_a_ten_group_truncation() -> None:
     integration = _read("static/portal/integration.js")
     portal = _read("static/portal/portal.js")
