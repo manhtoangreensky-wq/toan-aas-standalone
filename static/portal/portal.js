@@ -33587,7 +33587,7 @@
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute ? "true" : "false";
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
