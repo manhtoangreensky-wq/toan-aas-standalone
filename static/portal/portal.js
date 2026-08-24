@@ -34206,10 +34206,19 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
         }
         @media (max-width: 640px) {
           .portal-copilot-btn {
-            bottom: calc(var(--portal-safe-bottom, 0px) + 72px);
+            bottom: calc(var(--portal-safe-bottom, 0px) + 80px);
             right: 12px;
-            padding: 8px 14px;
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            justify-content: center;
+            gap: 0;
+            padding: 0;
+            border-radius: 50%;
             font-size: 12px;
+          }
+          .portal-copilot-btn-label {
+            display: none;
           }
           .portal-copilot-drawer {
             bottom: calc(var(--portal-safe-bottom, 0px) + 120px);
@@ -34221,8 +34230,8 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
       </style>
 
       <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI AAS BOT">
-        <span>🤖</span>
-        <span>Trợ lý AI AAS BOT</span>
+        <span class="portal-copilot-btn-icon" aria-hidden="true">${portalIcon(ICONS.chat)}</span>
+        <span class="portal-copilot-btn-label">Trợ lý AI AAS BOT</span>
       </button>
 
       <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">

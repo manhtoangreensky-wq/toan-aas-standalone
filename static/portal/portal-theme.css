@@ -176,7 +176,7 @@
   --portal-content-max-width: 1600px;
   --portal-desktop-page-padding: clamp(24px, 3vw, 40px);
   --portal-mobile-page-padding: 16px;
-  --portal-mobile-content-inset: 104px;
+  --portal-mobile-content-inset: 128px;
   --portal-section-gap: clamp(20px, 2.4vw, 30px);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
