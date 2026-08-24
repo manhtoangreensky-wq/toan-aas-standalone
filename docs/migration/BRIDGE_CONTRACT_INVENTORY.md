@@ -37,7 +37,7 @@ Status: **BOT_BRIDGE_SOURCE_MISSING**. Web outbound calls matched: `0/30`. The c
 | GET | /internal/v1/jobs | copyfast_api.py | 4348 |
 | GET | /internal/v1/jobs | copyfast_api.py | 4351 |
 | GET | /internal/v1/jobs/{*} | copyfast_api.py | 4391 |
-| GET | /internal/v1/me | copyfast_auth.py | 1277 |
+| GET | /internal/v1/me | copyfast_auth.py | 1278 |
 | GET | /internal/v1/packages | copyfast_api.py | 4117 |
 | POST | /internal/v1/payments/create | copyfast_api.py | 4297 |
 | GET | /internal/v1/payments/{*} | copyfast_api.py | 4336 |
