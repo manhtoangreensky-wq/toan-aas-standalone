@@ -316,3 +316,50 @@ def test_admin_erp_final_layer_is_light_teal_sky_and_keeps_authority_unchanged()
     ):
         assert token in harmony
     assert "canonical signed-admin and route-authority protections" in SPEC
+
+
+def test_admin_home_final_hierarchy_is_scoped_balanced_and_motion_stable() -> None:
+    marker = "/* Admin Visual Hierarchy 001 ------------------------------------------- */"
+    assert marker in THEME
+    hierarchy = THEME[THEME.index(marker):]
+    root = '.portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home'
+
+    for selector in (
+        f"{root} {{",
+        f"{root} > .portal-hero {{",
+        f"{root} > .portal-admin-guard {{",
+        f"{root} > .portal-admin-grid {{",
+        f"{root} > .portal-admin-grid > .portal-metric {{",
+        f"{root} > .portal-admin-work-queues {{",
+        f"{root} > .portal-work-grid {{",
+        f"{root} > .portal-admin-directory {{",
+    ):
+        assert selector in hierarchy
+
+    for contract in (
+        "gap: var(--portal-space-6);",
+        "grid-template-columns: repeat(10, minmax(0, 1fr));",
+        "grid-column: span 2;",
+        "grid-template-columns: repeat(4, minmax(0, 1fr));",
+        "grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);",
+        "box-shadow: var(--portal-elevation-1);",
+        "min-height: 44px;",
+        "min-height: 128px;",
+    ):
+        assert contract in hierarchy
+
+    for breakpoint, columns in (
+        (1200, "repeat(6, minmax(0, 1fr))"),
+        (700, "repeat(2, minmax(0, 1fr))"),
+        (340, "minmax(0, 1fr)"),
+    ):
+        media = hierarchy[hierarchy.index(f"@media (max-width: {breakpoint}px)"):]
+        assert f"grid-template-columns: {columns};" in media
+
+    assert "grid-column: 1 / -1;" in hierarchy
+    assert "@media (max-width: 980px)" in hierarchy
+    assert "@media (max-width: 1100px)" in hierarchy
+    assert "linear-gradient" not in hierarchy
+    assert "rgba(" not in hierarchy
+    assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", hierarchy)
+    assert "transform: translate" not in hierarchy

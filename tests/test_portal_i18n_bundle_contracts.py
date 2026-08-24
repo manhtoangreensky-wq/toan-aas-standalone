@@ -7,6 +7,7 @@ than importing the FastAPI application or any Bot/provider module.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import shutil
@@ -584,10 +585,11 @@ const chineseSidebar = sidebar.innerHTML;
 
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "vi", profile: { locale: "vi" } });
 const vietnameseSidebar = sidebar.innerHTML;
+const vietnameseMain = main.innerHTML;
 
 context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "zh-TW" } });
 const invalidProfile = documentElement.attributes["data-portal-locale"];
-process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang, firstSidebar, englishSidebar, chineseSidebar, vietnameseSidebar }));
+process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang, firstSidebar, englishSidebar, chineseSidebar, vietnameseSidebar, vietnameseMain }));
 '''
     try:
         result = subprocess.run(
@@ -731,7 +733,7 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
             "Admin ERP 目录",
         ),
         "adminHome.queues.support.title": (
-            "CSKH & Support",
+            "Chăm sóc khách hàng & Hỗ trợ",
             "Customer support",
             "客户支持",
         ),
@@ -755,14 +757,14 @@ def test_customer_sidebar_and_command_palette_follow_the_reviewed_interface_loca
 
     source = BUNDLE.read_text(encoding="utf-8")
     expected = {
-        "app.workspace": ("TOAN AAS Workspace", "TOAN AAS Workspace", "TOAN AAS 工作台"),
+        "app.workspace": ("TOAN AAS Không gian làm việc", "TOAN AAS Workspace", "TOAN AAS 工作台"),
         "chrome.commandEmpty": (
-            "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
+            "Không tìm thấy không gian làm việc phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
             "No matching workspace found. Try a feature name or another path.",
             "未找到匹配的工作台。请尝试功能名称或其他路径。",
         ),
         "chrome.commandCount": (
-            "{count} workspace có thể mở trong phiên này.",
+            "{count} không gian làm việc có thể mở trong phiên này.",
             "{count} workspaces are available in this session.",
             "本次会话可打开 {count} 个工作台。",
         ),
@@ -902,7 +904,8 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert "Workspace" in snapshot["englishSidebar"]
     assert "Create" in snapshot["englishSidebar"]
     assert "Billing &amp; plans" in snapshot["englishSidebar"]
-    assert "Workspace" in snapshot["vietnameseSidebar"]
+    assert "Không gian làm việc" in snapshot["vietnameseSidebar"]
+    assert "Workspace" not in snapshot["vietnameseSidebar"]
     assert "Tạo mới" in snapshot["vietnameseSidebar"]
     assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
     assert "AI 工作台" in snapshot["firstSidebar"]
@@ -1052,3 +1055,67 @@ def test_app_shell_navigation_uses_the_reviewed_locale_catalogue() -> None:
         if f'"{label}": ' not in navigation
     )
     assert not unmapped_labels, f"Static App Shell labels missing i18n keys: {unmapped_labels}"
+
+
+def test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear() -> None:
+    snapshot = _node_portal_first_mount_snapshot()
+    visible_html = snapshot["vietnameseSidebar"] + " " + snapshot["vietnameseMain"]
+    visible_text = html.unescape(re.sub(r"<[^>]+>", " ", visible_html))
+    visible_text = re.sub(r"\s+", " ", visible_text).strip()
+
+    for token in (
+        "Workspace", "Project", "Projects", "Web-owned", "workflow", "brief",
+        "canonical", "signed", "authoring", "version", "Studio", "Job", "Ticket",
+        "Prompt", "Estimate", "consent", "contract", "delivery", "provider", "output",
+        "role", "browser", "server",
+    ):
+        assert not re.search(rf"\b{re.escape(token)}\b", visible_text, re.IGNORECASE), token
+
+    for label in (
+        "Không gian làm việc", "Nội dung & Trò chuyện", "Công cụ nội dung",
+        "Công cụ hình ảnh", "Hạng hội viên", "Yêu cầu hỗ trợ của tôi",
+    ):
+        assert label in visible_text
+
+    group_map = _between(PORTAL, "const ADMIN_ERP_GROUP_I18N", "const ADMIN_ERP_ROUTE_I18N")
+    route_map = _between(PORTAL, "const ADMIN_ERP_ROUTE_I18N", "function adminErpGroupText")
+    admin_normalizer = _between(PORTAL, "function adminErpNavigation(context)", "function adminRouteIcon(route)")
+
+    for group_id in (
+        "support_operations", "web_private_crm", "web_finance_operations_planning",
+        "web_governance_documents", "web_internal_document_archive", "web_automation_monitor",
+        "web_system_stewardship", "web_security_access_posture", "command_center", "commerce",
+        "delivery_runtime", "content_growth", "governance",
+    ):
+        assert f'"{group_id}"' in group_map
+
+    for route in (
+        "/admin", "/admin/access", "/admin/analytics", "/admin/approvals", "/admin/audit",
+        "/admin/automation", "/admin/backups", "/admin/calendar", "/admin/campaigns",
+        "/admin/content-handoffs", "/admin/crm/leads", "/admin/customers", "/admin/features",
+        "/admin/finance", "/admin/finance/planning", "/admin/finance/tax-readiness",
+        "/admin/freezes", "/admin/governance", "/admin/growth", "/admin/growth/postback-readiness",
+        "/admin/internal-documents", "/admin/job-recovery-guide", "/admin/jobs", "/admin/jobs/failed",
+        "/admin/leads", "/admin/operations", "/admin/packages", "/admin/payments", "/admin/pricing",
+        "/admin/promos", "/admin/provider-cost", "/admin/providers", "/admin/publishing",
+        "/admin/refunds", "/admin/reliability", "/admin/reports", "/admin/revenue", "/admin/runtime",
+        "/admin/security", "/admin/support", "/admin/system", "/admin/system-stewardship",
+        "/admin/tickets", "/admin/topups", "/admin/trends", "/admin/users", "/admin/wallet",
+        "/admin/workers", "/admin/work-queue",
+    ):
+        assert f'"{route}"' in route_map
+
+    assert 'adminDeliveryRuntimeNavigationText(route, "title", moduleTitle)' in admin_normalizer
+    assert 'adminDeliveryRuntimeGroupText(id, "title", title)' in admin_normalizer
+    assert 'if (field === "title") return adminErpRouteText(route, fallback);' in PORTAL
+    assert 'if (field === "title") return adminErpGroupText(groupId, fallback);' in PORTAL
+
+    source = BUNDLE.read_text(encoding="utf-8")
+    admin_vi = _between(source, "  const ADMIN_HOME_MESSAGES = {\n    vi: {", "    },\n    en: {")
+    admin_vi_copy = " ".join(re.findall(r':\s*"((?:[^"\\]|\\.)*)"', admin_vi))
+    for token in (
+        "capability", "Core Bridge", "shell", "Client route", "FastAPI", "signed", "canonical",
+        "render", "role check", "queue", "ledger", "Support", "Case", "triage", "Job", "Payment",
+        "topup", "refund", "Audit", "Governance", "readiness", "Adapter", "module",
+    ):
+        assert token not in admin_vi_copy
