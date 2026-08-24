@@ -752,6 +752,30 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
             assert f'"{key}": "{translation}"' in source
 
 
+def test_vi_customer_search_control_uses_the_vietnamese_workspace_term() -> None:
+    source = BUNDLE.read_text(encoding="utf-8")
+
+    assert '"chrome.searchWorkspace": "Tìm trong không gian làm việc"' in source
+
+
+def test_account_dropdown_fallback_is_locale_aware_for_telegram_only_accounts() -> None:
+    source = BUNDLE.read_text(encoding="utf-8")
+    expected = {
+        "chrome.accountFallback": (
+            "Tài khoản không gian làm việc",
+            "Workspace account",
+            "工作台账户",
+        ),
+    }
+    for key, translations in expected.items():
+        for translation in translations:
+            assert f'"{key}": "{translation}"' in source
+
+    header = _between(PORTAL, "function renderHeader(page, context)", "function renderFields(")
+    assert 'uiText("chrome.accountFallback", "Tài khoản không gian làm việc")' in header
+    assert '"Workspace Account"' not in header
+
+
 def test_customer_sidebar_and_command_palette_follow_the_reviewed_interface_locale() -> None:
     """Signed customer chrome must not fall back to Vietnamese after locale change."""
 
