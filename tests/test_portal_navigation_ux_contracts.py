@@ -303,7 +303,9 @@ def test_customer_command_palette_filter_reuses_locale_catalogue_without_changin
     command_dialog = _section("function renderCommandPalette(page, context)", "function renderSidebar(page, context)")
     command_filter = _section("function filterCommandPalette(value)", "function closeCommandPalette(options)")
 
-    assert 'uiText("app.workspace", "TOAN AAS Workspace")' in sidebar
+    assert 'uiText("chrome.customerAppCaption", "Không gian làm việc AI")' in sidebar
+    assert "data-portal-focus-navigation" not in sidebar
+    assert "portal-sidebar-focus-toggle" not in sidebar
     assert 'data-portal-command-surface="${adminSurface ? "admin" : "customer"}"' in command_dialog
     assert 'uiText("chrome.commandCount", countFallback, { count: String(visible) })' in command_filter
     assert 'uiText("chrome.adminCommandCount", countFallback, { count: String(visible) })' in command_filter

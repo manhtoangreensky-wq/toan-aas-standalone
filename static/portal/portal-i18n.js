@@ -1045,7 +1045,8 @@
     vi: {
       "chrome.newWorkflow": "Luồng công việc mới",
       "chrome.searchWorkspace": "Tìm trong workspace",
-      "chrome.adminAppCaption": "Admin ERP",
+      "chrome.customerAppCaption": "Không gian làm việc AI",
+      "chrome.adminAppCaption": "Trung tâm quản trị",
       "chrome.searchAdmin": "Tìm điều hướng ERP",
       "chrome.bridgeReady": "Kết nối nội bộ sẵn sàng",
       "chrome.safeMode": "Chế độ an toàn",
@@ -1385,7 +1386,8 @@
     en: {
       "chrome.newWorkflow": "New workflow",
       "chrome.searchWorkspace": "Search workspace",
-      "chrome.adminAppCaption": "Admin ERP",
+      "chrome.customerAppCaption": "AI workspace",
+      "chrome.adminAppCaption": "System administration",
       "chrome.searchAdmin": "Search ERP navigation",
       "chrome.bridgeReady": "Internal connection ready",
       "chrome.safeMode": "Safe mode",
@@ -1725,7 +1727,8 @@
     zh: {
       "chrome.newWorkflow": "新建工作流",
       "chrome.searchWorkspace": "搜索工作台",
-      "chrome.adminAppCaption": "管理 ERP",
+      "chrome.customerAppCaption": "AI 工作台",
+      "chrome.adminAppCaption": "系统管理",
       "chrome.searchAdmin": "搜索 ERP 导航",
       "chrome.bridgeReady": "内部连接已就绪",
       "chrome.safeMode": "安全模式",
