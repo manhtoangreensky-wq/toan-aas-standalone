@@ -1349,6 +1349,11 @@ body {
     padding-top: 16px;
     padding-bottom: 32px;
   }
+
+  .portal-auth-page--access :is(.portal-input, .portal-select, .portal-textarea) {
+    font-size: 16px;
+  }
+
   .portal-auth-page--access .portal-auth-header { padding-bottom: 12px; }
   .portal-auth-page--access .portal-auth-intro { gap: 8px; }
   .portal-auth-page--access .portal-auth-intro .portal-title { font-size: 32px; }

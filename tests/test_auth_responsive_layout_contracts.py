@@ -84,6 +84,17 @@ def test_narrow_header_keeps_the_toan_aas_name_visible() -> None:
     assert "position: absolute;" not in narrow
 
 
+def test_mobile_auth_fields_use_an_ios_safe_font_size() -> None:
+    start = THEME.index("@media (max-width: 600px) {")
+    mobile = THEME[start:THEME.index("@media (max-width: 700px) {", start)]
+
+    assert (
+        ".portal-auth-page--access :is(.portal-input, .portal-select, .portal-textarea) {\n"
+        "    font-size: 16px;\n"
+        "  }"
+    ) in mobile
+
+
 def test_vietnamese_auth_copy_uses_khong_gian_lam_viec_consistently() -> None:
     vi = I18N[I18N.index("    vi: {"):I18N.index("    en: {")]
 
