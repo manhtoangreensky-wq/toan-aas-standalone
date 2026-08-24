@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 THEME = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 SPEC = (ROOT / "docs" / "superpowers" / "specs" / "2026-07-27-product-harmony-teal-sky-design.md").read_text(encoding="utf-8")
 
@@ -89,6 +90,13 @@ def _section(source: str, start: str, end: str) -> str:
     return source[offset : source.index(end, offset + len(start))]
 
 
+def _declarations_after(source: str, selector: str, offset: int) -> str:
+    selector_offset = source.index(selector, offset)
+    opening = source.index("{", selector_offset)
+    closing = source.index("}", opening)
+    return source[opening + 1 : closing]
+
+
 def test_product_harmony_defines_semantic_geometry_and_no_raw_paint() -> None:
     root = _root_declarations()
     for token in (
@@ -96,7 +104,7 @@ def test_product_harmony_defines_semantic_geometry_and_no_raw_paint() -> None:
         "--portal-content-max-width: 1600px;",
         "--portal-desktop-page-padding: clamp(24px, 3vw, 40px);",
         "--portal-mobile-page-padding: 16px;",
-        "--portal-mobile-content-inset: 104px;",
+        "--portal-mobile-content-inset: 128px;",
         "--portal-section-gap: clamp(20px, 2.4vw, 30px);",
     ):
         assert token in root
@@ -108,6 +116,49 @@ def test_product_harmony_defines_semantic_geometry_and_no_raw_paint() -> None:
     assert "padding-bottom: calc(var(--portal-mobile-content-inset) + var(--portal-safe-bottom));" in harmony
     assert "linear-gradient" not in harmony
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", harmony)
+
+
+def test_mobile_utility_ctas_are_compact_accessible_and_safe_area_aware() -> None:
+    pwa_media = PORTAL_CSS.index(
+        "@media (max-width: 640px)",
+        PORTAL_CSS.index("/* Floating PWA Install Trigger"),
+    )
+    pwa = _declarations_after(PORTAL_CSS, ".portal-pwa-fab-trigger", pwa_media)
+    for token in (
+        "bottom: calc(var(--portal-safe-bottom, 0px) + 80px);",
+        "left: 12px;",
+        "width: 44px;",
+        "min-width: 44px;",
+        "height: 44px;",
+        "justify-content: center;",
+        "gap: 0;",
+        "padding: 0;",
+        "border-radius: 50%;",
+    ):
+        assert token in pwa
+    pwa_label = _declarations_after(PORTAL_CSS, ".portal-pwa-fab-label", pwa_media)
+    assert "display: none;" in pwa_label
+
+    copilot_render = PORTAL.index("function renderCopilotHtml")
+    copilot_media = PORTAL.index("@media (max-width: 640px)", copilot_render)
+    copilot = _declarations_after(PORTAL, ".portal-copilot-btn", copilot_media)
+    for token in (
+        "bottom: calc(var(--portal-safe-bottom, 0px) + 80px);",
+        "right: 12px;",
+        "width: 44px;",
+        "min-width: 44px;",
+        "height: 44px;",
+        "justify-content: center;",
+        "gap: 0;",
+        "padding: 0;",
+        "border-radius: 50%;",
+    ):
+        assert token in copilot
+    copilot_label = _declarations_after(PORTAL, ".portal-copilot-btn-label", copilot_media)
+    assert "display: none;" in copilot_label
+    assert 'aria-label="Mở Trợ Lý AI AAS BOT"' in PORTAL
+    assert '${portalIcon(ICONS.chat)}' in PORTAL
+    assert '<span>🤖</span>' not in PORTAL
 
 
 def test_product_harmony_keeps_dashboard_summary_even_on_a_phone() -> None:

@@ -7943,11 +7943,20 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 @media (max-width: 640px) {
   .portal-pwa-fab-trigger {
-    bottom: calc(var(--portal-safe-bottom, 0px) + 72px);
+    bottom: calc(var(--portal-safe-bottom, 0px) + 80px);
     right: auto;
     left: 12px;
-    padding: 8px 12px;
-    font-size: 12px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .portal-pwa-fab-label {
+    display: none;
   }
 }
 
