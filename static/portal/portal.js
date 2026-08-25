@@ -9817,7 +9817,7 @@
       });
       const groupCurrent = Boolean(current && modules.some((module) => module.route === current.route));
       return {
-        label: `ERP · ${group.title}`,
+        label: group.title,
         defaultOpen: groupCurrent,
         current: groupCurrent,
         links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
@@ -10197,7 +10197,7 @@
       // signed Admin never loses an authorized destination in Ctrl+K.
       adminErpNavigation(context).groups.forEach((group) => {
         if (!group || !Array.isArray(group.modules)) return;
-        const section = localizedNavigationLabel(`ERP · ${String(group.title || "Admin ERP")}`);
+        const section = localizedNavigationLabel(String(group.title || "Quản trị"));
         group.modules.forEach((module) => {
           const path = module && typeof module.route === "string" ? module.route : "";
           if (!path || seen.has(path) || !authorizedAdminRoutes.has(path)) return;
@@ -10341,7 +10341,9 @@
     const commandSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
-    const crumbItems = ["TOAN AAS", page.section, localizedPageTitle(page, context)]
+    const crumbItems = (adminSurface
+      ? ["TOAN AAS", localizedPageTitle(page, context)]
+      : ["TOAN AAS", page.section, localizedPageTitle(page, context)])
       .filter(Boolean)
       .map((piece) => safeText(localizedNavigationLabel(piece)));
     const crumbs = crumbItems
