@@ -8190,14 +8190,14 @@ button, a, input, select, textarea { touch-action: manipulation; }
   width: 100%;
   height: 40px;
   padding: 0 14px;
-  background: rgba(34, 158, 217, 0.28);
-  color: #7ce5ff;
-  border: 1px solid rgba(34, 158, 217, 0.55);
+  background: #087eae;
+  color: #ffffff;
+  border: 1px solid #087eae;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 .portal-btn-direct-social.telegram:hover {
-  background: rgba(34, 158, 217, 0.45);
-  border-color: #229ed9;
+  background: #076f9a;
+  border-color: #076f9a;
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35);
 }
