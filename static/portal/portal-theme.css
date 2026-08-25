@@ -17494,3 +17494,120 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     grid-column: span 1;
   }
 }
+
+/* Admin Visual Reset 002 ---------------------------------------------- */
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-summary {
+  min-height: 44px;
+  height: auto;
+  align-items: flex-start;
+  padding-block: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-summary::before,
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-count {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-label {
+  display: -webkit-box;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  text-transform: none;
+  line-height: 1.45;
+  letter-spacing: .045em;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-eyebrow {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-header {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: var(--portal-space-2);
+    row-gap: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-menu-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-crumbs {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 44px;
+    align-content: center;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions {
+    display: flex;
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions :is(
+    .portal-theme-toggle,
+    .portal-pwa-install-trigger,
+    .portal-command-trigger,
+    .portal-session-chip
+  ) {
+    min-height: 44px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero {
+    gap: var(--portal-space-3);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-title {
+    max-width: none;
+    margin-block: 0;
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-description {
+    font-size: 14px;
+    line-height: 1.625;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-admin-guard {
+    padding: var(--portal-space-4);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-admin-guard .portal-state {
+    gap: var(--portal-space-3);
+  }
+}
+
+@media (max-width: 460px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-crumbs {
+    display: block;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-crumbs span:last-child {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+}
