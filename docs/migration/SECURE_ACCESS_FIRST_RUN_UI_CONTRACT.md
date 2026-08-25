@@ -23,6 +23,21 @@ danh sách provider dài.
 | Google/GitHub/Apple | OAuth provider đã cấu hình ở server | Chỉ enable khi server công bố provider có cấu hình thật. |
 | Profile/Account/Security | Signed Web account | Deep MFA/OAuth/session controls vẫn ở `/account/security`; UI không tự cấp quyền. |
 
+### Bootstrap public Auth hiện hành
+
+- `/login` và `/register` là public entry. Server đã redirect một cookie signed
+  hợp lệ về `/dashboard`, nên browser public không gọi protected
+  `GET /api/v1/auth/me`. Signed workspace vẫn dùng endpoint này làm authority
+  cho account/session/CSRF như trước.
+- Google và Apple chỉ render khi `GET /api/v1/auth/providers` trả đúng literal
+  `enabled: true` cho provider tương ứng. Missing, malformed, `false`, chuỗi
+  `"true"` hoặc số `1` đều bị ẩn fail-closed. Telegram giữ readiness và flow
+  one-time riêng, không được suy ra từ trạng thái Google/Apple.
+- Theme controller gắn marker `auth` đồng bộ trong `<head>`; CSS first-paint
+  nhỏ pre-apply đúng minimal-shell geometry trước bundle chính. Auth bỏ generic
+  whole-main enter trên hydration, nên nội dung rõ ngay thay vì opacity/translate
+  lặp; không thay đổi form action, auth authority hoặc reduced-motion contract.
+
 Không có thay đổi `bot.py`, Core Bridge, PayOS, wallet ledger, webhook,
 provider call, database migration, secret hay Railway configuration.
 
@@ -46,6 +61,8 @@ provider call, database migration, secret hay Railway configuration.
   và tất cả motion mới tôn trọng `prefers-reduced-motion`.
 - Các form giữ visible label, async feedback và action contract cũ. Không có
   localStorage/token/password/Telegram ID mới.
+- First-paint CSS là public shell asset có build version, fallback-template và
+  service-worker allowlist riêng; API/private route vẫn tuyệt đối không cache.
 
 ## Kiểm tra trọng điểm
 
@@ -55,3 +72,5 @@ provider call, database migration, secret hay Railway configuration.
 - PWA: onboarding/account private, không nằm trong shell;
 - responsive/accessibility: focus, 44px mobile, reduced motion và không có
   `linear-gradient` trong scope mới.
+- public runtime: `/login|/register` không request `/auth/me`; signed route vẫn
+  hydrate; mobile CLS tối đa `0.001`; main không có generic enter animation.

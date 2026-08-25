@@ -4,18 +4,21 @@ Production Web App for `app.toanaas.vn`.
 
 ## Runtime
 
-- Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+- Production runtime: Ubuntu VPS (`tg.toanaas.vn`), systemd service
+  `toanaas-web.service`, repository at `/opt/toanaas/webapp`.
+- Deployment truth: GitHub `main` → GitHub Actions → VPS; Railway is not a
+  production runtime.
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
 - Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/inbox`, `/automation`, `/video-studio`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
-## Required Railway production configuration
+## Required production configuration
 
-- `WEB_SESSION_SECRET` is required: generate one long random value in the
-  Railway **Variables** page. It signs Web sessions and must never be placed
-  in Git, browser JavaScript, tickets or logs. The app intentionally refuses
-  to start without it in production instead of issuing forgeable sessions.
+- `WEB_SESSION_SECRET` is required and belongs only in the VPS service
+  environment. It signs Web sessions and must never be placed in Git, browser
+  JavaScript, tickets or logs. The app intentionally refuses to start without
+  it in production instead of issuing forgeable sessions.
 - Web mailbox assurance and password recovery are separately opt-in. Leave
   WEBAPP_EMAIL_VERIFICATION_ENABLED and WEBAPP_PASSWORD_RECOVERY_ENABLED
   unset until a real authenticated SMTP transport and the HTTPS public origin
@@ -27,7 +30,7 @@ Production Web App for `app.toanaas.vn`.
   [Email Verification Contract](docs/migration/EMAIL_VERIFICATION_CONTRACT.md)
   and [Password Recovery Contract](docs/migration/PASSWORD_RECOVERY_CONTRACT.md).
 - Web-native TOTP MFA is separately opt-in and defaults to guarded. Enable
-  `WEBAPP_TOTP_MFA_ENABLED=true` only with a distinct Railway-only
+  `WEBAPP_TOTP_MFA_ENABLED=true` only with a distinct production-only
   `WEBAPP_TOTP_MFA_ENCRYPTION_KEY` that is URL-safe base64 and decodes to
   exactly 32 bytes. It protects only the Web Email + password factor: no Bot
   identity, Xu, PayOS, provider, job or Telegram state is changed. An active
@@ -38,16 +41,17 @@ Production Web App for `app.toanaas.vn`.
   fingerprints of a normalized email and an effective client scope; never
   store or configure a raw email/IP list. The throttle uses
   `WEB_SESSION_SECRET` with domain separation by default; an operator may set
-  a separate Railway-only `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` during a planned
-  key rotation. Leave `WEBAPP_AUTH_TRUSTED_PROXY_CIDRS` unset unless the
-  direct Railway/reverse-proxy peer ranges are known exactly—otherwise
+  a separate production-only `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` during a
+  planned key rotation. Leave `WEBAPP_AUTH_TRUSTED_PROXY_CIDRS` unset unless
+  the direct reverse-proxy peer ranges are known exactly—otherwise
   `X-Forwarded-For` is intentionally ignored. See
   [`OAUTH_AUTH_MAP.md`](docs/migration/OAUTH_AUTH_MAP.md).
-- Persist the Web-owned session database on the service's Railway volume. In
+- Persist the Web-owned session database on persistent VPS storage. In
   `production`, `prod` **and** `live`, an explicit
   `WEBAPP_SESSION_DB_PATH` must resolve to a database file *under* the
-  existing `RAILWAY_VOLUME_MOUNT_PATH` (or the standard persistent `/data`
-  mount); an arbitrary absolute `/app/...` path is rejected at startup. See
+  existing `RAILWAY_VOLUME_MOUNT_PATH` compatibility fallback (or the
+  standard persistent `/data` mount); an arbitrary absolute `/app/...` path
+  is rejected at startup. See
   [`TELEGRAM_WEB_CONNECTION.md`](docs/migration/TELEGRAM_WEB_CONNECTION.md)
   for the full non-secret configuration contract.
 - `WEBAPP_ASSET_VAULT_ENABLED` defaults to `false`. Enable it only after this
@@ -210,8 +214,8 @@ Production Web App for `app.toanaas.vn`.
   [`OPERATIONS_AUTOPILOT_CONTRACT.md`](docs/migration/OPERATIONS_AUTOPILOT_CONTRACT.md).
 - `WEBAPP_RELIABILITY_FOLLOWUP_ENABLED` defaults to `false`. The staff-only
   `/admin/reliability` queue can aggregate only allow-listed Web-native 5xx
-  metadata and existing Support triage; it is not a raw log, auto-fix,
-  Railway restart/deploy, Bot/provider/job/payment/wallet executor or
+  metadata and existing Support triage; it is not a raw log, auto-fix, VPS
+  service restart/deploy, Bot/provider/job/payment/wallet executor or
   customer-contact channel. It requires the Autopilot contract and its
   Web-only incident secret; use the bounded retention and enablement rules in
   [`WEB_RELIABILITY_FOLLOWUP_CONTRACT.md`](docs/migration/WEB_RELIABILITY_FOLLOWUP_CONTRACT.md).

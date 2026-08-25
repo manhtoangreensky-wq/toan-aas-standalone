@@ -16,9 +16,16 @@ webhooks.
 | GitHub OAuth | Disabled unless all GitHub configuration is present. | OAuth state/PKCE are server-owned; identity comes from fixed GitHub `/user` and verified-email endpoints. |
 | Sign in with Apple | Disabled unless Apple Services ID, team/key details and `.p8` private key are present. | Apple form-POST callback uses a dedicated short-lived `SameSite=None; Secure` state cookie; the main signed session remains `Lax`. |
 
-Google/GitHub are deliberately not advertised as active merely because the
-page renders a button. The public `GET /api/v1/auth/providers` capability
-response controls the UI.
+Google/Apple are deliberately not advertised as active merely because their
+start routes exist. The public `GET /api/v1/auth/providers` capability response
+controls the UI: only the literal server value `enabled: true` renders the
+corresponding anchor. Missing, malformed, false, string or numeric lookalikes
+remain hidden. Telegram keeps its independent readiness and one-time flow.
+
+The public `/login` and `/register` shells do not probe protected
+`GET /api/v1/auth/me`; the server already redirects a browser with a valid
+signed cookie to `/dashboard`. Signed pages still use `/auth/me` as the current
+account/session/CSRF authority.
 
 ## Telegram Login OIDC
 
@@ -33,7 +40,7 @@ Bot deep-link can unlock canonical wallet/job data only if its signed Bot
 identity is the same Telegram user. This deliberately rejects a Telegram
 Login/Telegram Bot mismatch instead of connecting two people to one account.
 
-## OAuth configuration (Railway only)
+## OAuth configuration (production VPS environment only)
 
 Keep all flags `false` locally and in CI. Never put client secrets, private
 keys, access tokens, authorization codes or callback HMAC values in browser
@@ -159,7 +166,7 @@ request cannot reset or overrun either window.
   it resists distributed guessing without becoming a permanent account lock.
   The existing cheap IP gate still protects broad anonymous floods before
   parsing.
-- `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` is optional and must remain Railway-only.
+- `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` is optional and must remain production-only.
   When unset, the mandatory `WEB_SESSION_SECRET` is used with a separate HMAC
   purpose label. Rotating either secret starts new throttle fingerprints; it
   never reveals or migrates the old address values.

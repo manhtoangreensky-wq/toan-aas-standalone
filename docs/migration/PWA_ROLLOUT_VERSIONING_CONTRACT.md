@@ -19,6 +19,12 @@ opaque identifier in this order:
 3. `RAILWAY_DEPLOYMENT_ID`;
 4. a deterministic SHA-256-derived local shell-source fallback.
 
+`portal-first-paint.css` is part of that local source digest. Both the primary
+template and emergency fallback load it after the synchronous theme controller
+and before `portal.css`, using the same build ID as every other public asset.
+Changing only first-paint geometry therefore still creates a new local shell
+generation.
+
 An identifier is accepted only when it is 1–96 characters of
 `A-Za-z0-9._-`, starts with an alphanumeric character, and contains no URL,
 HTML, whitespace or credential material. Invalid environment values are
@@ -55,3 +61,7 @@ stored. There is no runtime `cache.put`, no API cache, and no cache fallback
 for dashboard, account, wallet, payments, admin, jobs, assets, support, inbox,
 automation or private delivery URLs. A route remains signed-session and
 ownership checked after any PWA update.
+
+The public allow-list includes `portal-first-paint.css`. This does not widen
+the cache boundary: Auth/session/provider responses and every private route
+remain network-only and are never added at runtime.

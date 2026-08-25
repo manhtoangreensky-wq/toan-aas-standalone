@@ -12792,7 +12792,9 @@
     const [catalogResponse, statusResponse, meResponse, providerResponse, telegramConnectionResponse] = await Promise.all([
       fetch(`${API}/catalog`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({})),
       fetch(`${API}/core/status`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({})),
-      fetch(`${API}/auth/me`, { credentials: "same-origin" }).then(async (r) => r.ok ? r.json() : ({})).catch(() => ({})),
+      loginChallengeRoute()
+        ? Promise.resolve({})
+        : fetch(`${API}/auth/me`, { credentials: "same-origin" }).then(async (r) => r.ok ? r.json() : ({})).catch(() => ({})),
       fetch(`${API}/auth/providers`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({})),
       fetch(`${API}/auth/telegram/connection/status`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({}))
     ]);

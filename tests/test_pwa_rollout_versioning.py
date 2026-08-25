@@ -38,6 +38,7 @@ def test_public_build_id_prefers_safe_explicit_then_railway_identifiers(monkeypa
 
 def test_local_build_fallback_is_deterministic_and_bounded(monkeypatch) -> None:
     _clear_build_environment(monkeypatch)
+    assert "portal-first-paint.css" in copyfast_pages._PORTAL_BUILD_SOURCE_FILES
     first = copyfast_pages._portal_build_id()
     second = copyfast_pages._portal_build_id()
     assert first == second
@@ -62,7 +63,16 @@ def test_rendered_shell_shares_one_public_build_id_with_assets(monkeypatch) -> N
     assert payload["buildId"] == "pwa-rollout-42"
     assert "/static/portal/portal.js?v=pwa-rollout-42" in body
     assert "/static/portal/integration.js?v=pwa-rollout-42" in body
+    assert "/static/portal/portal-first-paint.css?v=pwa-rollout-42" in body
     assert "/static/portal/portal.css?v=pwa-rollout-42" in body
+
+
+def test_fallback_shell_keeps_first_paint_asset_order() -> None:
+    fallback = copyfast_pages._fallback_template()
+    theme = fallback.index('/static/portal/portal-theme.js')
+    first_paint = fallback.index('/static/portal/portal-first-paint.css')
+    portal = fallback.index('/static/portal/portal.css')
+    assert theme < first_paint < portal
 
 
 def test_worker_uses_only_validated_build_id_and_a_scoped_cache_generation() -> None:
@@ -128,6 +138,7 @@ def test_worker_retains_the_private_cache_boundary() -> None:
     assert '"/dashboard"' not in shell
     assert '"/wallet"' not in shell
     assert '"/admin"' not in shell
+    assert '"/static/portal/portal-first-paint.css"' in shell
     assert '"/" + "api/v1/operations"' in private_paths
     assert '"/" + "api/v1/inbox"' in private_paths
     assert '"/admin"' in private_paths
