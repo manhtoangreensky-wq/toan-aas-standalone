@@ -13993,7 +13993,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 159,
   "source_files_scanned": 159,
-  "source_fingerprint_sha256": "ab31beaf112424c970cf40696e67205c53c0f6290f37d933281346f63dadd96b",
+  "source_fingerprint_sha256": "baf9f831990e83487f299bd5cb28fa08070354b311ba298903e938438fe70250",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -14213,7 +14213,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 29720,
+      "line": 29722,
       "path": "/features"
     },
     {
