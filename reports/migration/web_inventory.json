@@ -7738,7 +7738,7 @@
         "copyfast_prompt_studio.py",
         "copyfast_quick_image_planner.py"
       ],
-      "occurrences": 1658,
+      "occurrences": 1664,
       "provider": "Telegram"
     }
   ],
@@ -13993,7 +13993,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 159,
   "source_files_scanned": 159,
-  "source_fingerprint_sha256": "28c118a56322996cdf18e4da5dcda6c5a77d2f943d77aaea07dbdcc0def73893",
+  "source_fingerprint_sha256": "f405cf2bb4d8bcc9619e5bb71e6c2e8222408f09b9f2eb2514fe16749142ac61",
   "source_root": "webapp-root",
   "ui_path_references": [
     {

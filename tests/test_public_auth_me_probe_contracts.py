@@ -67,8 +67,10 @@ context.fetch = async (url) => {
   calls.push(path);
   if (path === "/catalog") return response({ ok: true, data: { features: [], menu_capabilities: [] } });
   if (path === "/core/status") return response({ ok: true, data: { flags: {} } });
-  if (path === "/auth/providers") return response({ ok: true, data: { providers: {} } });
-  if (path === "/auth/telegram/connection/status") return response({ ok: true, data: {} });
+  if (path === "/auth/providers") return response({ ok: true, data: { providers: {
+    telegram: { enabled: true }, google: { enabled: true }, apple: { enabled: false }
+  } } });
+  if (path === "/auth/telegram/connection/status") return response({ ok: true, data: { ready: true } });
   if (path === "/auth/me") return response({ ok: true, data: {
     account: { id: "account-1", email: "demo@example.com", display_name: "Demo", role: "standard", login_methods: {} },
     csrf_token: "csrf"
@@ -83,7 +85,14 @@ async function run(route) {
   window.__TOAN_AAS_PORTAL__ = { path: route, pageStates: {} };
   await context.__authMeHarness.hydrate();
   const state = context.__authMeHarness.state();
-  return { calls, authenticated: Boolean(state.session && state.session.authenticated), email: state.profile && state.profile.email || "" };
+  return {
+    calls,
+    authenticated: Boolean(state.session && state.session.authenticated),
+    email: state.profile && state.profile.email || "",
+    googleEnabled: Boolean(state.oauthProviders && state.oauthProviders.google && state.oauthProviders.google.enabled),
+    loginEnabled: Boolean(state.capabilities && state.capabilities["auth-login"]),
+    telegramEnabled: Boolean(state.capabilities && state.capabilities["start-telegram-login"])
+  };
 }
 (async () => {
   const result = {};
@@ -103,17 +112,24 @@ async function run(route) {
     return json.loads(result.stdout)
 
 
-def test_public_auth_routes_skip_only_the_protected_me_probe() -> None:
+def test_public_auth_routes_use_the_bounded_provider_bootstrap_only() -> None:
     result = _bootstrap_matrix()
-    expected_public = {"/catalog", "/core/status", "/auth/providers", "/auth/telegram/connection/status"}
+    expected_public = {
+        "/auth/providers",
+        "/auth/telegram/connection/status",
+        "/auth/telegram/login/status",
+    }
     for route in ("/login", "/register"):
-        assert "/auth/me" not in result[route]["calls"]
-        assert expected_public.issubset(result[route]["calls"])
+        assert set(result[route]["calls"]) == expected_public
         assert result[route]["authenticated"] is False
+        assert result[route]["email"] == ""
+        assert result[route]["googleEnabled"] is True
+        assert result[route]["loginEnabled"] is True
+        assert result[route]["telegramEnabled"] is True
 
 
 def test_signed_bootstrap_still_hydrates_the_current_account() -> None:
     result = _bootstrap_matrix()["/dashboard"]
-    assert "/auth/me" in result["calls"]
+    assert {"/catalog", "/core/status", "/auth/me", "/auth/providers", "/auth/telegram/connection/status"}.issubset(result["calls"])
     assert result["authenticated"] is True
     assert result["email"] == "demo@example.com"

@@ -12656,8 +12656,49 @@
     );
   }
 
+  async function hydratePublicAuth(bootstrapEpoch) {
+    const [providerResponse, telegramConnectionResponse] = await Promise.all([
+      fetch(`${API}/auth/providers`, { credentials: "same-origin" }).then((response) => response.json()).catch(() => ({})),
+      fetch(`${API}/auth/telegram/connection/status`, { credentials: "same-origin" }).then((response) => response.json()).catch(() => ({}))
+    ]);
+    if (bootstrapEpoch !== portalHydrationEpoch) return;
+    const oauthProviders = providerResponse && providerResponse.data && providerResponse.data.providers && typeof providerResponse.data.providers === "object"
+      ? providerResponse.data.providers
+      : {};
+    const telegramConnection = telegramConnectionResponse && telegramConnectionResponse.data && typeof telegramConnectionResponse.data === "object"
+      ? telegramConnectionResponse.data
+      : {};
+    merge({
+      oauthProviders,
+      telegramConnection,
+      isAdmin: false,
+      profile: {},
+      session: { authenticated: false, csrfReady: false, csrfToken: "", displayName: "", email: "" },
+      capabilities: {
+        "auth-login": true,
+        "auth-mfa-login": true,
+        "auth-register": true,
+        "auth-password-recovery-start": true,
+        "start-telegram-login": telegramConnectionReady(telegramConnection),
+        "refresh-telegram-login": true,
+        "start-oauth-telegram": Boolean(oauthProviders.telegram && oauthProviders.telegram.enabled === true),
+        "start-oauth-google": Boolean(oauthProviders.google && oauthProviders.google.enabled === true),
+        "start-oauth-github": Boolean(oauthProviders.github && oauthProviders.github.enabled === true),
+        "start-oauth-apple": Boolean(oauthProviders.apple && oauthProviders.apple.enabled === true)
+      }
+    });
+    await resumeTelegramLoginChallenge();
+    scheduleTelegramLoginPolling();
+  }
+
   async function hydrate() {
     const bootstrapEpoch = ++portalHydrationEpoch;
+    const initialContext = base();
+    const publicAuthEligible = loginChallengeRoute()
+      && !(initialContext.session && initialContext.session.authenticated === true)
+      && initialContext.isAdmin !== true
+      && !(initialContext.profile && Object.keys(initialContext.profile).length);
+    if (publicAuthEligible) return hydratePublicAuth(bootstrapEpoch);
     // Invalidate signed reads *before* the bootstrap fetches await.  Every
     // native helper below captures one of these session epochs, so an older
     // account response is discarded even while `/auth/me` is still loading.
