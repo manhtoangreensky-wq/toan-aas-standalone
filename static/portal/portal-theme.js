@@ -10,6 +10,13 @@
   const STORAGE_KEY = "toan-aas-portal-theme";
   const THEMES = Object.freeze(["system", "light", "dark"]);
   const EXPLICIT_THEMES = Object.freeze(["light", "dark"]);
+  const INITIAL_SURFACES = Object.freeze({
+    "/welcome": "landing",
+    "/login": "auth",
+    "/register": "auth",
+    "/password-recovery": "auth",
+    "/admin/login": "auth"
+  });
   const SVG = Object.freeze({
     sun: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2.5v2M12 19.5v2M4.5 4.5l1.4 1.4M18.1 18.1l1.4 1.4M2.5 12h2M19.5 12h2M4.5 19.5l1.4-1.4M18.1 5.9l1.4-1.4"></path></svg>',
     moon: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.2 15.6A7.8 7.8 0 0 1 8.4 4.8 8.5 8.5 0 1 0 19.2 15.6Z"></path></svg>'
@@ -189,6 +196,17 @@
     syncControls();
   }
 
+  function applyInitialSurface() {
+    if (typeof window === "undefined" || !window.location || !global.document || !global.document.documentElement) return;
+    const surface = INITIAL_SURFACES[window.location.pathname];
+    if (surface) {
+      global.document.documentElement.setAttribute("data-portal-initial-surface", surface);
+    } else {
+      global.document.documentElement.removeAttribute("data-portal-initial-surface");
+    }
+  }
+
+  applyInitialSurface();
   apply({ sync: false });
   if (global.document) {
     if (global.document.readyState === "loading") global.document.addEventListener("DOMContentLoaded", bind, { once: true });

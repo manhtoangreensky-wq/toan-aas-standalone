@@ -46,6 +46,7 @@ const OFFLINE_FALLBACK = "/static/portal/offline.html";
 // The cache is an explicit allow-list, never a runtime cache.  It contains
 // only public, account-free shell files plus a generic offline notice.
 const SHELL = Object.freeze([
+  "/static/portal/portal-first-paint.css",
   "/static/portal/portal.css",
   "/static/portal/portal-theme.css",
   "/static/portal/portal-theme.js",

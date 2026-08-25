@@ -1,0 +1,35 @@
+/* portal-first-paint.css - presentation-only minimal shell geometry */
+
+html[data-portal-initial-surface="auth"] .portal-sidebar,
+html[data-portal-initial-surface="auth"] .portal-header,
+html[data-portal-initial-surface="auth"] .portal-backdrop,
+html[data-portal-initial-surface="auth"] .portal-mobile-nav,
+html[data-portal-initial-surface="landing"] .portal-sidebar,
+html[data-portal-initial-surface="landing"] .portal-header,
+html[data-portal-initial-surface="landing"] .portal-backdrop,
+html[data-portal-initial-surface="landing"] .portal-mobile-nav {
+  display: none !important;
+}
+
+html[data-portal-initial-surface="auth"] .portal-workspace,
+html[data-portal-initial-surface="landing"] .portal-workspace {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+html[data-portal-initial-surface="landing"] .portal-main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+html[data-portal-initial-surface="auth"] .portal-main {
+  margin-top: 0 !important;
+  padding-top: 26px !important;
+  padding-bottom: 42px !important;
+}
+
+@media (max-width: 980px) {
+  html[data-portal-initial-surface="auth"] .portal-main {
+    padding-top: 22px !important;
+  }
+}
