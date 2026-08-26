@@ -1,0 +1,31 @@
+name: Báo lỗi TOAN AAS Web App
+description: Báo lỗi có thể tái hiện từ một case đã khóa
+title: "[BUG] WA-XX — "
+labels: []
+body:
+  - type: input
+    id: case
+    attributes:
+      label: Mã case và SPEC_ID
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Bước tái hiện
+      description: Ghi route, role, viewport và từng thao tác.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Mong đợi / Thực tế
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Bằng chứng
+      description: Screenshot, JSON, console/network và runtime SHA.
+    validations:
+      required: true

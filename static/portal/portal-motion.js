@@ -75,8 +75,15 @@
     window.setTimeout(clear, ENTER_CLEAR_DELAY_MS);
   }
 
-  function replace(shell, main, render) {
+  function replace(shell, main, render, options) {
     const apply = typeof render === "function" ? render : () => {};
+    const opts = options || {};
+    const isHydration = main && main.dataset && main.dataset.portalPresentationPhase === "settled";
+    if (opts.animate === false || isHydration) {
+      apply();
+      if (main) main.removeAttribute("data-portal-motion");
+      return Promise.resolve();
+    }
     const skipEnter = Boolean(main && main.dataset && main.dataset.portalMotionSkipEnter === "true");
     if (prefersReducedMotion() || typeof document.startViewTransition !== "function") {
       apply();

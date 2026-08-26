@@ -485,7 +485,7 @@ function createClassList() {
   };
 }
 
-function createElement() {
+    function createElement() {
   const attributes = {};
   return {
     hidden: false,
@@ -498,8 +498,9 @@ function createElement() {
     removeAttribute(name) { delete attributes[name]; },
     hasAttribute(name) { return Object.prototype.hasOwnProperty.call(attributes, name); },
     querySelector() { return null; },
-    querySelectorAll() { return []; },
-    addEventListener() {},
+        querySelectorAll() { return []; },
+        appendChild(child) { return child; },
+        addEventListener() {},
     removeEventListener() {},
     matches() { return false; },
     closest() { return null; },
@@ -633,19 +634,19 @@ const messages = {
   vi: {
     "chrome.commandCount": "{count} workspace có thể mở trong phiên này.",
     "chrome.commandEmpty": "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
-    "chrome.adminCommandCount": "{count} mục ERP có thể mở trong phiên này.",
+    "chrome.adminCommandCount": "{count} mục quản trị có thể mở trong phiên này.",
     "chrome.no_results": "Không tìm thấy kết quả."
   },
   en: {
     "chrome.commandCount": "{count} workspaces are available in this session.",
     "chrome.commandEmpty": "No matching workspace found. Try a feature name or another path.",
-    "chrome.adminCommandCount": "{count} ERP destinations available in this session.",
+    "chrome.adminCommandCount": "{count} administration destinations are available in this session.",
     "chrome.no_results": "No results found."
   },
   zh: {
     "chrome.commandCount": "本次会话可打开 {count} 个工作台。",
     "chrome.commandEmpty": "未找到匹配的工作台。请尝试功能名称或其他路径。",
-    "chrome.adminCommandCount": "此会话可打开 {count} 个 ERP 入口。",
+    "chrome.adminCommandCount": "此会话可打开 {count} 个管理入口。",
     "chrome.no_results": "未找到结果。"
   }
 };
@@ -728,9 +729,9 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
             "水平滚动以查看其余列。",
         ),
         "adminHome.directory.title": (
-            "Danh mục Admin ERP",
-            "Admin ERP directory",
-            "Admin ERP 目录",
+            "Danh mục phân hệ",
+            "Module directory",
+            "模块目录",
         ),
         "adminHome.queues.support.title": (
             "Chăm sóc khách hàng & Hỗ trợ",
@@ -740,11 +741,11 @@ def test_admin_and_table_chrome_have_reviewed_vi_en_zh_copy() -> None:
         "adminHome.readiness.refresh": ("Làm mới", "Refresh", "刷新"),
         "chrome.customerAppCaption": ("Không gian làm việc AI", "AI workspace", "AI 工作台"),
         "chrome.adminAppCaption": ("Trung tâm quản trị", "System administration", "系统管理"),
-        "chrome.searchAdmin": ("Tìm điều hướng ERP", "Search ERP navigation", "搜索 ERP 导航"),
+        "chrome.searchAdmin": ("Tìm trong quản trị", "Search administration", "搜索管理功能"),
         "chrome.adminCommandCount": (
-            "{count} mục ERP có thể mở trong phiên này.",
-            "{count} ERP destinations available in this session.",
-            "此会话可打开 {count} 个 ERP 入口。",
+            "{count} mục quản trị có thể mở trong phiên này.",
+            "{count} administration destinations are available in this session.",
+            "此会话可打开 {count} 个管理入口。",
         ),
     }
     for key, translations in expected.items():
@@ -821,8 +822,8 @@ def test_command_palette_filter_localizes_match_and_empty_counts_for_customer_an
     }
     assert snapshot["customerViEmpty"]["count"] == "0 workspace có thể mở trong phiên này."
     assert snapshot["customerZhEmpty"]["count"] == "本次会话可打开 0 个工作台。"
-    assert snapshot["adminEnEmpty"]["count"] == "0 ERP destinations available in this session."
-    assert snapshot["adminZhEmpty"]["count"] == "此会话可打开 0 个 ERP 入口。"
+    assert snapshot["adminEnEmpty"]["count"] == "0 administration destinations are available in this session."
+    assert snapshot["adminZhEmpty"]["count"] == "此会话可打开 0 个管理入口。"
 
 
 def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> None:

@@ -1,0 +1,71 @@
+task_id: PAYOS-SETTLEMENT-IDEMPOTENCY-001
+phase: REPORT
+status: ACCEPTED_LOCAL
+base_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
+branch: fix/webapp-live-recovery-001
+worktree: C:/Users/toann/.config/superpowers/worktrees/GitHub/fix-auth-jank-main-evidence-002
+risk: CRITICAL
+run_mode: SINGLE
+allowed_files:
+  - copyfast_api.py
+  - static/portal/integration.js
+  - tests/test_payos_checkout_restore_001_contracts.py
+  - tests/test_payos_settlement_idempotency_001_contracts.py
+  - tests/test_payos_customer_promo_clean_001_contracts.py
+protected_files:
+  - billing.py
+  - db.py
+  - copyfast_db.py
+  - copyfast_auth.py
+  - app.py
+  - static/portal/portal.js
+external_protected_root: D:/TOANAAS/bot telegram
+acceptance:
+  - canonical linked owner only; foreign account cannot read order
+  - sequential and concurrent same-key submits create one order and provider stub call
+  - persistence failure fails closed and never reports checkout success
+  - public status is PENDING, PAID, FAILED or CANCELLED
+  - direct checkout polls local status without Core Bridge
+  - canonical Bot webhook comparator remains unchanged and green
+tests:
+  - python -m pytest tests/test_payos_settlement_idempotency_001_contracts.py -q
+  - python -m pytest tests/test_payos_checkout_restore_001_contracts.py -q
+  - python -m pytest tests/test_copyfast_bridge.py -q
+  - python -m pytest tests/test_payos_customer_promo_clean_001_contracts.py -q
+  - python -m py_compile copyfast_api.py
+  - node --check static/portal/integration.js
+  - git diff --check
+bot_comparator: python -m pytest tests/test_billing_bridge_storage_v2.py tests/test_p0_17c1_payos_signature_idempotency.py -q
+provider_calls: 0
+real_external_network_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+env_mutations: 0
+telegram_mutations: 0
+commit: prohibited
+push: prohibited
+deploy: prohibited
+next_spec_locked: AUTH-GOOGLE-LIVE-001
+scope_amendment: tests/test_payos_customer_promo_clean_001_contracts.py may change exactly one stale assertion that requires INSERT OR REPLACE; replace with canonical INSERT expectation only, because the prior comparator contradicts settlement AC-03
+worker: Antigravity Gemini 3.1 Pro High
+worker_session: 71027
+handoff_round: 2
+handoff_round_1_result: SCOPE_REJECTED; worker created patch.py, patch2.py and patch3.py outside allowlist; Codex stopped worker and removed only those worker-created temp artifacts
+round_2_red_evidence: targeted settlement test returned 5 failed, 10 passed; failures are three idempotency keys shorter than 12 chars, foreign-owner test expected exception instead of API error envelope, and frontend polling still bridge-coupled
+final_payos_live_gate:
+  authorized: true
+  timing: after all specs are merged and deployed
+  action: signed user clicks Nạp ngay once and opens the real PayOS checkout with a valid order and QR
+  prohibited: no QR scan, no payment, no wallet credit
+  pass_rule: FINAL_PAYOS_PASS is NO unless this live artifact is empirically verified
+tester_project_id: PAYOS-SETTLEMENT-IDEMPOTENCY-001-R1
+tester_session: 87942
+tester_model: Claude Opus 4.6 Thinking
+tester_evidence: D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/payos-settlement-idempotency-001/r1/report.json
+tester_source_mutation: prohibited
+accepted_at: 2026-08-26T11:24:56+07:00
+tester_failure_count: 0
+checklist: 11/11
+codex_fresh_verify: settlement 9P; checkout 15P; bridge 30P; promo 5P; billing exact baseline 5F/10P; portal exact baseline 9F/69P; Bot 15P/1S; compile/node/diff exit0; protected hashes 7/7; added-secret matches0
+live_pass: NOT_TESTED
+next_spec_unlocked_for_contract: AUTH-GOOGLE-LIVE-001

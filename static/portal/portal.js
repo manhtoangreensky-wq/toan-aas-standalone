@@ -41,16 +41,34 @@
 
   function adminDeliveryRuntimeNavigationText(route, field, fallback) {
     if (field === "title") return adminErpRouteText(route, fallback);
-    const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalizePath(route)];
-    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
-    return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
+    const normalized = normalizePath(route);
+    const exactKey = ADMIN_ERP_ROUTE_I18N[normalized];
+    const exactText = exactKey && typeof uiText === "function" ? uiText(`${exactKey}.description`, "") : "";
+    if (exactText) return exactText;
+    const entry = DELIVERY_RUNTIME_ROUTE_I18N[normalized];
+    if (entry && (field === "title" || field === "description") && entry[field] && typeof uiText === "function") {
+      const reviewedText = uiText(entry[field], fallback);
+      if (reviewedText !== fallback) return reviewedText;
+    }
+    return typeof uiText === "function"
+      ? uiText("adminHome.directory.moduleDescription", fallback)
+      : fallback;
   }
 
   function adminDeliveryRuntimeGroupText(groupId, field, fallback) {
     if (field === "title") return adminErpGroupText(groupId, fallback);
-    const entry = DELIVERY_RUNTIME_GROUP_I18N[String(groupId || "")];
-    if (!entry || (field !== "title" && field !== "description") || !entry[field]) return fallback;
-    return typeof uiText === "function" ? uiText(entry[field], fallback) : fallback;
+    const normalized = String(groupId || "");
+    const exactKey = ADMIN_ERP_GROUP_I18N[normalized];
+    const exactText = exactKey && typeof uiText === "function" ? uiText(`${exactKey}.description`, "") : "";
+    if (exactText) return exactText;
+    const entry = DELIVERY_RUNTIME_GROUP_I18N[normalized];
+    if (entry && (field === "title" || field === "description") && entry[field] && typeof uiText === "function") {
+      const reviewedText = uiText(entry[field], fallback);
+      if (reviewedText !== fallback) return reviewedText;
+    }
+    return typeof uiText === "function"
+      ? uiText("adminHome.directory.groupDescription", fallback)
+      : fallback;
   }
 
   const ADMIN_ERP_GROUP_I18N = Object.freeze({
@@ -154,6 +172,7 @@
   const transientWorkspaceDraftIds = new Map();
   let sidebarReturnFocus = null;
   let commandPaletteReturnFocus = null;
+  let installModalReturnFocus = null;
   // This is a presentation preference for the current page only. It is never
   // written to storage, a URL, the signed bootstrap, or an action payload.
   // A reload intentionally restores the standard discoverable navigation.
@@ -9678,7 +9697,7 @@
     source.groups.slice(0, MAX_ADMIN_ERP_NAVIGATION_GROUPS).forEach((candidate, groupIndex) => {
       if (!candidate || typeof candidate !== "object") return;
       const id = String(candidate.id || `group-${groupIndex}`).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 60);
-      const title = String(candidate.title || "Admin ERP").trim().slice(0, 96);
+      const title = String(candidate.title || uiText("adminHome.directory.title", "Danh mục phân hệ")).trim().slice(0, 96);
       const description = String(candidate.description || "Điều hướng được máy chủ cấp theo quyền phiên hiện tại.").trim().slice(0, 280);
       if (!id || !title) return;
       const modules = [];
@@ -10204,7 +10223,7 @@
           seen.add(path);
           items.push({
             path,
-            title: localizedNavigationLabel(String(module.title || "Admin ERP")),
+            title: localizedNavigationLabel(String(module.title || uiText("adminHome.directory.title", "Danh mục phân hệ"))),
             section,
             icon: module.icon || adminRouteIcon(path),
             current: normalizePath(path) === activePath
@@ -10240,14 +10259,14 @@
     const items = commandPaletteItems(context, page);
     const adminSurface = isAdminPortalSurface(page);
     const searchKey = adminSurface ? "chrome.searchAdmin" : "chrome.searchWorkspace";
-    const searchFallback = adminSurface ? "Tìm điều hướng ERP" : "Tìm workspace";
+    const searchFallback = adminSurface ? "Tìm trong quản trị" : "Tìm workspace";
     const countKey = adminSurface ? "chrome.adminCommandCount" : "chrome.commandCount";
-    const countFallback = adminSurface ? "{count} mục ERP có thể mở trong phiên này." : "{count} workspace có thể mở trong phiên này.";
+    const countFallback = adminSurface ? "{count} mục quản trị có thể mở trong phiên này." : "{count} workspace có thể mở trong phiên này.";
     const commandKicker = adminSurface
-      ? uiText("chrome.adminAppCaption", "Admin ERP")
+      ? uiText("chrome.adminAppCaption", "Trung tâm quản trị")
       : uiText("chrome.commandKicker", "TOAN AAS workspace");
     const commandTitle = adminSurface
-      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
       : uiText("chrome.commandTitle", "Chuyển nhanh");
     const commandEmpty = adminSurface
       ? uiText("chrome.no_results", "Không tìm thấy kết quả.")
@@ -10274,19 +10293,15 @@
   function renderSidebar(page, context) {
     const bridgeReady = context.bridge.available === true;
     const adminSurface = isAdminPortalSurface(page);
-    const adminRoutes = adminSurface ? adminErpNavigation(context).routes : new Set();
-    const adminOverview = adminSurface ? adminNavigationModules(context).find((module) => module.route === "/admin") : null;
     const sidebarCaption = adminSurface
       ? uiText("chrome.adminAppCaption", "Trung tâm quản trị")
       : uiText("chrome.customerAppCaption", "Không gian làm việc AI");
     const sidebarSearchLabel = adminSurface
-      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
       : uiText("chrome.searchWorkspace", "Tìm mọi workspace");
-    const sidebarPrimaryAction = adminSurface
-      ? (adminRoutes.has("/admin") && adminOverview
-        ? `<a class="portal-sidebar-create" href="/admin"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(adminOverview.icon || ICONS.admin)}</span><span>${safeText(adminOverview.title)}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`
-        : "")
-      : `<a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`;
+    const sidebarActionRow = adminSurface ? "" : `<div class="portal-sidebar-action-row">
+      <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
+    </div>`;
     const groups = navGroups(context, page).map((group) => {
       const preparedLinks = group.links.map((link) => {
         const [path, label, linkIcon] = link;
@@ -10315,9 +10330,7 @@
       <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">${safeText(sidebarCaption)}</span></span>
       <button class="portal-sidebar-close" type="button" aria-label="${safeText(uiText("chrome.closeNavigation", "Đóng điều hướng"))}" data-portal-close-menu>${portalIcon(ICONS.close)}</button>
     </div>
-    <div class="portal-sidebar-action-row">
-      ${sidebarPrimaryAction}
-    </div>
+    ${sidebarActionRow}
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & quyền riêng tư"))}</span></a>
@@ -10339,7 +10352,7 @@
     const name = displayName(context);
     const adminSurface = isAdminPortalSurface(page);
     const commandSearchLabel = adminSurface
-      ? uiText("chrome.searchAdmin", "Tìm điều hướng ERP")
+      ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbItems = (adminSurface
       ? ["TOAN AAS", localizedPageTitle(page, context)]
@@ -10349,7 +10362,7 @@
     const crumbs = crumbItems
       .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
       .join("");
-    const canOfferPwaInstall = Boolean(context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
+    const canOfferPwaInstall = Boolean(!adminSurface && context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const avatarUrl = profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "";
     const avatarElement = avatarUrl
@@ -10362,9 +10375,17 @@
     const headerWallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
     const headerPaidVnd = Number(headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu ? headerWallet.balance_xu * 100 : 0));
     const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe" } };
+    const currentLocale = interfaceLocaleFor(context);
+    const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
+    const adminLocaleForm = adminSurface
+      ? `<form class="portal-admin-locale-form" data-portal-form data-portal-action="update-interface-locale" data-portal-route="/admin">
+          <label for="portal-admin-header-locale">${safeText(uiText("page.interfaceLocale.title", "Ngôn ngữ giao diện"))}</label>
+          <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("page.interfaceLocale.title", "Ngôn ngữ giao diện"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}${localeOption("zh", uiText("locale.zh", "中文"))}</select>
+          <button type="submit">${safeText(uiText("interfaceLocale.save", "Lưu"))}</button>
+        </form>`
+      : "";
 
-    const userDropdown = (context && context.session && context.session.authenticated === true)
-      ? `<div class="portal-user-dropdown-container">
+    const customerUserDropdown = `<div class="portal-user-dropdown-container">
           <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
             ${avatarElement}
             <span class="portal-session-copy">${safeText(name)}</span>
@@ -10384,17 +10405,17 @@
             <div class="portal-user-dropdown-divider"></div>
             <div class="portal-user-dropdown-items">
               <a class="portal-user-dropdown-item" href="/membership">
-                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
-                <div><strong style="color:${headerTierInfo.currentTier.color};">${safeText(headerTierInfo.currentTier.badge)} · Hạng & Quyền Lợi</strong><small>Tiến trình lên hạng, giảm giá Xu</small></div>
-              </a>
-              <a class="portal-user-dropdown-item" href="/wallet">
-                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
-                <div><strong>Ví & Số dư Xu</strong><small>Nạp Xu, kiểm tra số dư</small></div>
-              </a>
-              <a class="portal-user-dropdown-item" href="/wallet/topup">
-                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span>
-                <div><strong>Nạp Xu nhanh</strong><small>Thanh toán PayOS tự động</small></div>
-              </a>
+        <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
+        <div><strong style="color:${headerTierInfo.currentTier.color};">${safeText(headerTierInfo.currentTier.badge)} · Hạng & Quyền Lợi</strong><small>Tiến trình lên hạng, giảm giá Xu</small></div>
+      </a>
+      <a class="portal-user-dropdown-item" href="/wallet">
+        <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
+        <div><strong>Ví & Số dư Xu</strong><small>Nạp Xu, kiểm tra số dư</small></div>
+      </a>
+      <a class="portal-user-dropdown-item" href="/wallet/topup">
+        <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span>
+        <div><strong>Nạp Xu nhanh</strong><small>Thanh toán PayOS tự động</small></div>
+      </a>
               <a class="portal-user-dropdown-item" href="/account">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
                 <div><strong>Hồ sơ & Cài đặt</strong><small>Quản lý tài khoản, đổi Avatar</small></div>
@@ -10417,7 +10438,48 @@
               </button>
             </div>
           </div>
-        </div>`
+        </div>`;
+
+    const adminUserDropdown = `<div class="portal-user-dropdown-container">
+          <button class="portal-session-chip" type="button" aria-expanded="false" aria-haspopup="true" data-portal-action="toggle-user-dropdown" aria-label="${safeText(uiText("chrome.openAccount", "Mở menu tài khoản"))}">
+            ${avatarElement}
+            <span class="portal-session-copy">${safeText(name)}</span>
+            <span class="portal-session-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="portal-user-dropdown-menu" data-portal-user-dropdown hidden>
+            <div class="portal-user-dropdown-header">
+              ${dropdownAvatarElement}
+              <div class="portal-user-dropdown-meta">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <strong>${safeText(name)}</strong>
+                </div>
+                <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || uiText("chrome.accountFallback", "Tài khoản không gian làm việc"))}</small>
+              </div>
+            </div>
+            <div class="portal-user-dropdown-divider"></div>
+            <div class="portal-user-dropdown-items">
+              <a class="portal-user-dropdown-item" href="/account">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
+                <div><strong>${safeText(uiText("account.profile", "Hồ sơ"))}</strong><small>${safeText(uiText("account.profile_description", "Quản lý thông tin tài khoản"))}</small></div>
+              </a>
+              <a class="portal-user-dropdown-item" href="/account/security">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
+                <div><strong>${safeText(uiText("account.security", "Bảo mật"))}</strong><small>${safeText(uiText("account.security_description", "Quản lý phương thức truy cập"))}</small></div>
+              </a>
+              ${adminLocaleForm}
+            </div>
+            <div class="portal-user-dropdown-divider"></div>
+            <div class="portal-user-dropdown-footer">
+              <button class="portal-user-dropdown-logout" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(uiText("accountCenter.profile.logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}">
+                <span class="portal-user-dropdown-item-icon" aria-hidden="true">⎋</span>
+                <span>${safeText(uiText("accountCenter.profile.logout", "Đăng xuất"))}</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+
+    const userDropdown = (context && context.session && context.session.authenticated === true)
+      ? (adminSurface ? adminUserDropdown : customerUserDropdown)
       : `<a class="portal-session-chip" href="/login" aria-label="${safeText(uiText("chrome.openAccount", "Đăng nhập"))}">
           ${avatarElement}<span class="portal-session-copy">${safeText(name)}</span>
         </a>`;
@@ -10621,14 +10683,17 @@
 
   function renderSummary(page, context) {
     const status = stateFor(page, context);
-    const api = context.apiBase ? "Đã cấu hình phía server" : "Chưa công bố";
-    return `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bảo đảm luồng</h2><p class="portal-card-subtitle">Trạng thái không được suy đoán ở client.</p></div>${badge(status)}</div>
+    const summaryText = (key, fallback) => uiText(key, fallback);
+    const api = context.apiBase
+      ? summaryText("summary.serverConnection.configured", "Đã cấu hình")
+      : summaryText("summary.serverConnection.pending", "Chưa công bố");
+    return `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(summaryText("summary.title", "Bảo đảm vận hành"))}</h2><p class="portal-card-subtitle">${safeText(summaryText("summary.subtitle", "Trạng thái chỉ phản ánh dữ liệu đã được máy chủ xác nhận."))}</p></div>${badge(status)}</div>
       <div class="portal-summary-list">
-        <div class="portal-summary-item"><span class="portal-summary-key">Web Workspace</span><span class="portal-summary-value">${context.session.authenticated === true ? "Độc lập" : "Cần đăng nhập"}</span></div>
-        <div class="portal-summary-item"><span class="portal-summary-key">Bot companion</span><span class="portal-summary-value">${context.bridge.available === true ? "Đã kết nối" : "Tùy chọn"}</span></div>
-        <div class="portal-summary-item"><span class="portal-summary-key">Signed session</span><span class="portal-summary-value">${context.session.authenticated === true ? "Được xác minh" : "Đang chờ"}</span></div>
-        <div class="portal-summary-item"><span class="portal-summary-key">CSRF</span><span class="portal-summary-value">${context.session.csrfReady === true || context.bridge.csrfReady === true ? "Sẵn sàng" : "Chưa cấp"}</span></div>
-        <div class="portal-summary-item"><span class="portal-summary-key">API base</span><span class="portal-summary-value">${safeText(api)}</span></div>
+        <div class="portal-summary-item"><span class="portal-summary-key">${safeText(summaryText("summary.workspace", "Không gian làm việc trực tuyến"))}</span><span class="portal-summary-value">${safeText(context.session.authenticated === true ? summaryText("summary.workspace.ready", "Sẵn sàng") : summaryText("summary.workspace.login", "Cần đăng nhập"))}</span></div>
+        <div class="portal-summary-item"><span class="portal-summary-key">${safeText(summaryText("summary.companion", "Dịch vụ đồng hành"))}</span><span class="portal-summary-value">${safeText(context.bridge.available === true ? summaryText("summary.companion.connected", "Đã kết nối") : summaryText("summary.companion.optional", "Tùy chọn"))}</span></div>
+        <div class="portal-summary-item"><span class="portal-summary-key">${safeText(summaryText("summary.session", "Phiên đăng nhập"))}</span><span class="portal-summary-value">${safeText(context.session.authenticated === true ? summaryText("summary.session.verified", "Đã xác minh") : summaryText("summary.session.pending", "Đang chờ"))}</span></div>
+        <div class="portal-summary-item"><span class="portal-summary-key">${safeText(summaryText("summary.requestProtection", "Bảo vệ yêu cầu"))}</span><span class="portal-summary-value">${safeText(context.session.csrfReady === true || context.bridge.csrfReady === true ? summaryText("summary.requestProtection.ready", "Sẵn sàng") : summaryText("summary.requestProtection.pending", "Chưa cấp"))}</span></div>
+        <div class="portal-summary-item"><span class="portal-summary-key">${safeText(summaryText("summary.serverConnection", "Kết nối máy chủ"))}</span><span class="portal-summary-value">${safeText(api)}</span></div>
       </div></aside>`;
   }
 
@@ -21336,29 +21401,40 @@
   }
 
   function renderPaymentRequestForm(page, context) {
+    const canCreate = paymentWebCatalogReady(context);
     const packages = [
-      { code: "topup_10k", label: "10.000 đ", xu: "100 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-      { code: "topup_20k", label: "20.000 đ", xu: "200 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-      { code: "topup_50k", label: "50.000 đ", xu: "500 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-      { code: "topup_100k", label: "100.000 đ", xu: "1.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-      { code: "topup_200k", label: "200.000 đ", xu: "2.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-      { code: "topup_500k", label: "500.000 đ", xu: "5.000 Xu", note: "Tỷ lệ chuẩn 100đ = 1 Xu" },
-    ];
+      ...(context && context.paymentOptions && context.paymentOptions.payos && Array.isArray(context.paymentOptions.payos.topup_packages)
+        ? context.paymentOptions.payos.topup_packages
+        : [])
+    ].flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item) || item.available === false) return [];
+      const code = canonicalCatalogCode(item.code);
+      const amount = Number(item.amount_vnd);
+      const xu = Number(item.xu);
+      if (!code || !Number.isInteger(amount) || amount <= 0 || !Number.isInteger(xu) || xu <= 0) return [];
+      return [{
+        code,
+        label: canonicalShortText(item.label, 120) || adminNumber(amount, " đ"),
+        xu: adminNumber(xu, " Xu"),
+        note: `Tỷ lệ canonical: ${adminNumber(amount, " đ")} = ${adminNumber(xu, " Xu")}`
+      }];
+    });
     const route = "/wallet/topup";
-    const selectedPkg = (transientFormValues(route) || {}).package || "topup_50k";
+    const rememberedPkg = String((transientFormValues(route) || {}).package || "");
+    const selectedPkg = packages.some((pkg) => pkg.code === rememberedPkg) ? rememberedPkg : (packages[0] ? packages[0].code : "");
 
-    const packageOptions = packages.map((pkg) => `
-      <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; gap:12px; transition:all .2s ease;">
+    const packageOptions = packages.length ? packages.map((pkg) => `
+      <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; min-width:0; width:100%; gap:12px; transition:all .2s ease;">
         <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
           <strong style="font-size:17px; color:var(--portal-text-primary, #fff); font-weight:800; white-space:nowrap;">${safeText(pkg.label)}</strong>
           <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeText(pkg.note)}</small>
         </div>
         <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
           <span style="font-size:19px; font-weight:800; color:#00f2fe; white-space:nowrap;">⚡ ${safeText(pkg.xu)}</span>
-          <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""} style="accent-color:#00f2fe; width:18px; height:18px; cursor:pointer; margin:0;">
+          <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""}${canCreate ? "" : " disabled aria-disabled=\"true\""} style="accent-color:#00f2fe; width:18px; height:18px; cursor:pointer; margin:0;">
         </div>
       </label>
-    `).join("");
+    `).join("") : `<p class="portal-form-note">Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng.</p>`;
 
     return `
       <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe;">
@@ -21370,24 +21446,8 @@
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
-          <div class="portal-topup-pkg-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:18px;">
+          <div class="portal-topup-pkg-grid" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); min-width:0; width:100%; gap:14px; margin-bottom:18px;">
             ${packageOptions}
-          </div>
-
-          <div class="portal-topup-promo-section" style="margin-bottom:16px; padding:14px 18px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:12px;">
-            <label for="portal-topup-promo-input" style="display:block; font-size:13px; font-weight:700; color:var(--portal-text-primary, #fff); margin-bottom:8px;">
-              🎁 Nhập mã khuyến mãi / Voucher ưu đãi (Nếu có)
-            </label>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-              <input type="text" name="promo_code" id="portal-topup-promo-input" placeholder="Nhập mã ưu đãi (Ví dụ: WEEKLY10, MONTHLY20, DAILY5, BETA50)" style="flex:1; min-width:240px; padding:10px 14px; border-radius:8px; border:1px solid var(--portal-border, #2a3b4c); background:var(--portal-surface-input, #040d16); color:#fff; font-size:14px; text-transform:uppercase; font-weight:700; letter-spacing:1px;" autocomplete="off">
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center;">
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Mã có sẵn trong hệ thống:</span>
-              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='WEEKLY10'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">WEEKLY10 (+10% từ 50k)</button>
-              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='MONTHLY20'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">MONTHLY20 (+20% từ 100k)</button>
-              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='DAILY5'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">DAILY5 (+5% từ 50k)</button>
-              <button type="button" class="portal-promo-tag" onclick="document.getElementById('portal-topup-promo-input').value='BETA50'" style="background:rgba(0,242,254,0.12); border:1px solid rgba(0,242,254,0.35); color:#00f2fe; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">BETA50 (+50% từ 50k)</button>
-            </div>
           </div>
 
           <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">
@@ -21395,7 +21455,7 @@
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
-            <button class="portal-button portal-button--primary" type="submit" style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px; cursor:pointer;">🚀 Nạp ngay (Mở cổng PayOS)</button>
+            <button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled aria-disabled=\"true\""} style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px; cursor:pointer;">🚀 Nạp ngay (Mở cổng PayOS)</button>
           </div>
         </form>
         ${renderPaymentFlow(context)}
@@ -21506,7 +21566,7 @@
     `;
     const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
 
-    return `<article class="portal-page portal-wallet-page">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
+    return `<article class="portal-page portal-wallet-page" style="grid-template-columns:minmax(0,1fr)">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
   }
 
   const DEFAULT_CANONICAL_PACKAGES = {
@@ -28508,18 +28568,18 @@
     const groups = authorized.groups;
     if (!groups.length) return "";
     const mode = authorized.canonicalAdmin
-      ? adminText("directory.mode.canonicalAdmin", "Canonical admin đã xác minh")
+      ? adminText("directory.mode.canonicalAdmin", "Quản trị viên đã xác minh")
       : (authorized.supportRole !== "none"
-        ? adminText("directory.mode.supportRole", "Web Support role đã xác minh")
+        ? adminText("directory.mode.supportRole", "Vai trò hỗ trợ đã xác minh")
         : (authorized.webLocalAdmin
-          ? adminText("directory.mode.webLocalAdmin", "Web CRM authority đã xác minh")
+          ? adminText("directory.mode.webLocalAdmin", "Quyền quản trị trực tuyến đã xác minh")
           : adminText("directory.mode.serverAuthorized", "Được máy chủ cấp quyền")));
     const description = adminText(
       "directory.description",
-      "{mode}. Mỗi module tiếp tục kiểm tra signed session, authority, CSRF và redaction ở máy chủ.",
+      "{mode}. Mỗi phân hệ tiếp tục kiểm tra phiên đăng nhập, quyền hạn, bảo vệ yêu cầu và che dữ liệu nhạy cảm ở máy chủ.",
       { mode }
     );
-    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục Admin ERP"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group, index) => `<details class="portal-admin-directory-group"${index === 0 ? " open" : ""}><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} module", { count: String(group.modules.length) }))}</span></summary><div class="portal-module-grid">${group.modules.map((entry) => moduleCard(entry, context, adminText("directory.openAction", "Mở module"))).join("")}</div></details>`).join("")}</div></section>`;
+    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục phân hệ"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group, index) => `<details class="portal-admin-directory-group"${index === 0 ? " open" : ""}><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} phân hệ", { count: String(group.modules.length) }))}</span></summary><div class="portal-admin-directory-list">${group.modules.map((entry) => `<div class="portal-admin-directory-row">${moduleCard(entry, context, adminText("directory.openAction", "Mở phân hệ"))}</div>`).join("")}</div></details>`).join("")}</div></section>`;
   }
 
   function renderAdminWorkQueues(context) {
@@ -28529,31 +28589,47 @@
     const authorized = adminErpNavigation(context);
     const adminText = (key, fallback, params) => uiText(`adminHome.${key}`, fallback, params);
     const candidates = [
-      ["/admin/support", adminText("queues.support.title", "CSKH & Support"), adminText("queues.support.body", "Case cần triage hoặc phản hồi Web"), ICONS.support],
-      ["/admin/jobs/failed", adminText("queues.failedJobs.title", "Job cần xem"), adminText("queues.failedJobs.body", "Các job canonical cần kiểm tra"), ICONS.jobs],
-      ["/admin/jobs", adminText("queues.jobs.title", "Job Center"), adminText("queues.jobs.body", "Theo dõi queue đã được server cấp"), ICONS.jobs],
-      ["/admin/payments", adminText("queues.payments.title", "Thanh toán"), adminText("queues.payments.body", "Payment, topup và refund canonical"), ICONS.payments],
-      ["/admin/users", adminText("queues.users.title", "Người dùng"), adminText("queues.users.body", "Quản lý user theo quyền máy chủ"), ICONS.users],
-      ["/admin/audit", adminText("queues.audit.title", "Audit & Governance"), adminText("queues.audit.body", "Nhật ký và kiểm soát hệ thống"), ICONS.security]
+      ["/admin/support", adminText("queues.support.title", "Chăm sóc khách hàng & Hỗ trợ"), adminText("queues.support.body", "Yêu cầu cần phân loại hoặc phản hồi trực tuyến"), ICONS.support],
+      ["/admin/jobs/failed", adminText("queues.failedJobs.title", "Tác vụ cần xem"), adminText("queues.failedJobs.body", "Các tác vụ đã xác minh cần kiểm tra"), ICONS.jobs],
+      ["/admin/jobs", adminText("queues.jobs.title", "Trung tâm công việc"), adminText("queues.jobs.body", "Theo dõi hàng đợi đã được máy chủ cấp"), ICONS.jobs],
+      ["/admin/payments", adminText("queues.payments.title", "Thanh toán"), adminText("queues.payments.body", "Thanh toán, nạp Xu và hoàn tiền đã xác minh"), ICONS.payments],
+      ["/admin/users", adminText("queues.users.title", "Người dùng"), adminText("queues.users.body", "Quản lý người dùng theo quyền máy chủ"), ICONS.users],
+      ["/admin/audit", adminText("queues.audit.title", "Kiểm soát & Quản trị"), adminText("queues.audit.body", "Nhật ký và kiểm soát hệ thống"), ICONS.security]
     ];
     const cards = candidates.filter(([route]) => authorized.routes.has(route)).slice(0, 4);
     if (!cards.length) return "";
-    return `<section class="portal-admin-work-queues" aria-labelledby="admin-work-queues-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminText("queues.kicker", "My queues"))}</span><h2 id="admin-work-queues-title">${safeText(adminText("queues.title", "Vận hành cần mở"))}</h2><p>${safeText(adminText("queues.body", "Chỉ hiện module nằm trong quyền được máy chủ cấp cho phiên quản trị này."))}</p></div></div><div class="portal-admin-work-queue-grid">${cards.map(([route, title, detail, icon]) => `<a class="portal-admin-work-queue" href="${safeText(route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div></section>`;
+    return `<section class="portal-admin-work-queues" aria-labelledby="admin-work-queues-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminText("queues.kicker", "Hàng đợi của tôi"))}</span><h2 id="admin-work-queues-title">${safeText(adminText("queues.title", "Tác vụ cần xử lý"))}</h2><p>${safeText(adminText("queues.body", "Chỉ hiển thị phân hệ thuộc quyền máy chủ cấp cho phiên quản trị này."))}</p></div></div><div class="portal-admin-work-queue-grid">${cards.map(([route, title, detail, icon]) => `<a class="portal-admin-work-queue" href="${safeText(route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div></section>`;
   }
 
   function renderAdminOverview(page, context) {
     // Fixed chrome key: adminHome.title.
     const adminText = (key, fallback, params) => uiText(`adminHome.${key}`, fallback, params);
     const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
-    const canonicalAdmin = hasLiveCanonicalAdmin(context);
+    const navigation = adminErpNavigation(context);
+    const serverAuthorized = navigation.canonicalAdmin || navigation.webLocalAdmin || navigation.supportRole !== "none";
+    const statusTitle = serverAuthorized
+      ? adminText("guard.verifiedTitle", "Quyền quản trị đã được máy chủ xác nhận")
+      : adminText("guard.pendingTitle", "Đang chờ máy chủ xác minh quyền quản trị");
+    const statusBody = serverAuthorized
+      ? adminText("guard.verifiedBody", "Mọi thao tác đọc và ghi vẫn cần quyền được máy chủ xác nhận.")
+      : adminText("guard.pendingBody", "Máy chủ phải xác minh phiên đăng nhập và quyền quản trị trước khi hiển thị dữ liệu.");
     const counts = data.counts || {};
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
     const readyCount = readiness.filter(([, item]) => item && item.public_ready).length;
-    const metrics = [[adminText("metrics.users", "Users"), String(counts.users || "—"), adminText("metrics.usersNote", "Dữ liệu cần role check")], [adminText("metrics.engineJobs", "Engine jobs"), String(counts.engine_jobs || "—"), adminText("metrics.engineJobsNote", "Đọc từ queue canonical")], [adminText("metrics.workerJobs", "Worker jobs"), String(counts.worker_jobs || "—"), adminText("metrics.workerJobsNote", "Queue worker canonical")], [adminText("metrics.payments", "Payments"), String(counts.payments || "—"), adminText("metrics.paymentsNote", "Không có ledger client")], [adminText("metrics.readiness", "Readiness"), readiness.length ? `${readyCount}/${readiness.length}` : "—", adminText("metrics.readinessNote", "Feature public-ready")]];
+    const metricValue = (value) => value === undefined || value === null ? "—" : String(value);
+    const metrics = [
+      [adminText("metrics.users", "Người dùng"), metricValue(counts.users), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
+      [adminText("metrics.engineJobs", "Tác vụ hệ thống"), metricValue(counts.engine_jobs), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
+      [adminText("metrics.workerJobs", "Tác vụ xử lý"), metricValue(counts.worker_jobs), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
+      [adminText("metrics.payments", "Thanh toán"), metricValue(counts.payments), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")],
+      [adminText("metrics.readiness", "Mức sẵn sàng"), readiness.length ? `${readyCount}/${readiness.length}` : "—", adminText("metrics.readinessNote", "Mức sẵn sàng công khai")]
+    ];
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
     const readinessRows = readiness.slice(0, 8);
-    const authority = `<details class="portal-admin-authority"><summary>${safeText(adminText("authority.summary", "Authority & ranh giới quản trị"))}</summary>${renderSummary(page, context)}</details>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm Admin ERP"))}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><span class="portal-section-kicker">${safeText(adminText("guard.kicker", "ERP control center"))}</span><h2>${safeText(canonicalAdmin ? adminText("guard.verifiedTitle", "Canonical admin đã được server xác nhận") : adminText("guard.pendingTitle", "Admin ERP đang chờ signed authority"))}</h2><p>${safeText(canonicalAdmin ? adminText("guard.verifiedBody", "Mọi thao tác đọc/ghi vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị.") : adminText("guard.pendingBody", "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session và canonical authority trước khi render dữ liệu."))}</p></div></div></section><section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Readiness"))}</span><h2 class="portal-card-title">${safeText(adminText("readiness.title", "Trạng thái hệ thống"))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái Bot đã redaction; không bật/tắt provider từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Adapter")], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, adminText("readiness.emptyTitle", "Chưa có readiness được cấp"), adminText("readiness.emptyBody", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực."))}</section>${authority}</div>${renderAdminDirectory(context)}</article>`;
+    const authority = `<details class="portal-admin-authority"><summary>${safeText(adminText("authority.summary", "Quyền hạn và ranh giới quản trị"))}</summary>${renderSummary(page, context)}</details>`;
+    const titleBar = `<header class="portal-admin-titlebar"><div><h1>${safeText(adminText("title", "Trung tâm điều hành"))}</h1><p>${safeText(adminText("description", "Theo dõi dữ liệu và công việc được máy chủ cấp cho phiên quản trị hiện tại."))}</p></div><div class="portal-admin-session-status" data-state="${serverAuthorized ? "ready" : "guarded"}" role="status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><small>${safeText(adminText("guard.kicker", "Trạng thái phiên"))}</small><strong>${safeText(statusTitle)}</strong><em>${safeText(statusBody)}</em></span></div></header>`;
+    const readinessSurface = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Mức sẵn sàng"))}</span><h2 class="portal-card-title">${safeText(adminText("readiness.title", "Trạng thái hệ thống"))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái đã ẩn dữ liệu nhạy cảm; không bật hoặc tắt nhà cung cấp từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Kết nối")], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, adminText("readiness.emptyTitle", "Chưa có trạng thái sẵn sàng được cấp"), adminText("readiness.emptyBody", "Máy chủ chỉ trả trạng thái khi phiên quản trị còn hiệu lực."))}</section>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
@@ -32640,7 +32716,7 @@
     const adminSurface = commandSurface && commandSurface.getAttribute("data-portal-command-surface") === "admin";
     const countKey = adminSurface ? "chrome.adminCommandCount" : "chrome.commandCount";
     const countFallback = adminSurface
-      ? "{count} mục ERP có thể mở trong phiên này."
+      ? "{count} mục quản trị có thể mở trong phiên này."
       : "{count} workspace có thể mở trong phiên này.";
     if (empty) empty.hidden = visible > 0;
     if (count) {
@@ -32726,6 +32802,20 @@
     return true;
   }
 
+  function getUtilityDock() {
+    const main = document.querySelector("[data-portal-main]");
+    if (!main) return null;
+    let dock = main.querySelector("[data-portal-utility-dock]");
+    if (!dock) {
+      dock = document.createElement("div");
+      dock.className = "portal-utility-dock";
+      dock.id = "portal-utility-dock";
+      dock.setAttribute("data-portal-utility-dock", "true");
+      main.appendChild(dock);
+    }
+    return dock;
+  }
+
   function syncPwaInstallControl() {
     const control = document.querySelector("[data-portal-install-app]");
     if (control) {
@@ -32740,7 +32830,8 @@
 
   function syncSmartInstallBanner() {
     const isAuthPage = Boolean(document.querySelector(".portal-auth-page"));
-    if (isStandaloneApp() || isAuthPage) {
+    const isAdminSurface = Boolean(document.querySelector('.portal-shell[data-portal-app-kind="admin"]'));
+    if (isStandaloneApp() || isAuthPage || isAdminSurface) {
       const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
       if (existingBanner) existingBanner.remove();
       const existingFab = document.querySelector("[data-portal-pwa-fab]");
@@ -32773,6 +32864,14 @@
       }
     } catch (_) {}
 
+    const dock = getUtilityDock();
+    if (!dock) {
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
+      return;
+    }
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
     const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
@@ -32791,10 +32890,8 @@
         banner.setAttribute("data-portal-smart-install-banner", "true");
         banner.setAttribute("role", "complementary");
         banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
-        if (document.body && typeof document.body.appendChild === "function") {
-          document.body.appendChild(banner);
-        }
       }
+      dock.appendChild(banner);
 
       banner.innerHTML = `
         <div class="portal-smart-install-inner">
@@ -32825,10 +32922,8 @@
         fab.setAttribute("data-portal-action", "pwa-toggle-banner");
         fab.setAttribute("title", "Tải & Cài đặt App TOAN AAS");
         fab.setAttribute("aria-label", "Tải & Cài đặt App TOAN AAS");
-        if (document.body && typeof document.body.appendChild === "function") {
-          document.body.appendChild(fab);
-        }
       }
+      dock.appendChild(fab);
       fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">Tải App</span>`;
     }
   }
@@ -32853,9 +32948,35 @@
     }
   }
 
+  function installModalFocusables(modal) {
+    if (!modal) return [];
+    return Array.from(modal.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])"))
+      .filter((element) => !element.hidden && element.offsetParent !== null && element.getAttribute("aria-hidden") !== "true");
+  }
+
+  function closeInstallGuideModal(options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
+    const wasOpen = Boolean(modal);
+    const returnFocus = installModalReturnFocus && installModalReturnFocus.isConnected
+      ? installModalReturnFocus
+      : [
+          "[data-portal-install-app]:not([hidden])",
+          '[data-portal-action="pwa-install-prompt"]',
+          '[data-portal-action="pwa-install-ios-guide"]',
+          "[data-portal-pwa-fab]"
+        ].map((selector) => document.querySelector(selector)).find(Boolean);
+    if (modal) modal.remove();
+    if (wasOpen && settings.restoreFocus !== false && returnFocus && typeof returnFocus.focus === "function") {
+      returnFocus.focus({ preventScroll: true });
+    }
+    installModalReturnFocus = null;
+  }
+
   function openUniversalInstallGuideModal(activeTab) {
     const existing = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
-    if (existing) existing.remove();
+    if (existing) closeInstallGuideModal({ restoreFocus: false });
+    installModalReturnFocus = document.activeElement;
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
     const inApp = isInAppBrowser();
@@ -32864,6 +32985,7 @@
     modal.className = "portal-modal-backdrop";
     modal.setAttribute("data-portal-ios-modal", "true");
     modal.setAttribute("data-portal-install-modal", "true");
+    modal.setAttribute("data-portal-modal-backdrop", "true");
 
     const inAppAlert = inApp ? `
       <div class="portal-inapp-alert" style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.35); color:#fef08a; font-size:12.5px; line-height:1.5;">
@@ -32962,6 +33084,10 @@
     if (document.body && typeof document.body.appendChild === "function") {
       document.body.appendChild(modal);
     }
+    window.requestAnimationFrame(() => {
+      const firstControl = installModalFocusables(modal)[0];
+      if (firstControl && typeof firstControl.focus === "function") firstControl.focus({ preventScroll: true });
+    });
     const motion = window.TOANAASPortalMotion;
     if (motion && typeof motion.enter === "function") {
       const card = modal.querySelector(".portal-modal-card");
@@ -33246,8 +33372,7 @@
         return;
       }
       if (event.target.closest('[data-portal-action="modal-close"]') || event.target.matches("[data-portal-modal-backdrop]")) {
-        const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
-        if (modal) modal.remove();
+        closeInstallGuideModal();
         return;
       }
       if (event.target.closest('[data-portal-action="toggle-user-dropdown"]')) {
@@ -33486,6 +33611,19 @@
           }
         }
       }
+      const installModal = document.querySelector("[data-portal-install-modal]");
+      const installModalOpen = Boolean(installModal);
+      if (event.key === "Escape" && installModalOpen) { event.preventDefault(); closeInstallGuideModal(); return; }
+      if (event.key === "Tab" && installModalOpen) {
+        const focusables = installModalFocusables(installModal);
+        if (!focusables.length) { event.preventDefault(); return; }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const activeInside = installModal.contains(document.activeElement);
+        if (event.shiftKey && (document.activeElement === first || !activeInside)) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !activeInside)) { event.preventDefault(); first.focus(); }
+        return;
+      }
       const paletteOpen = isCommandPaletteOpen();
       if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
         event.preventDefault();
@@ -33596,7 +33734,9 @@
     });
   }
 
+  let lastNormalizedRoute = null;
   function mountPortal(override) {
+    const options = arguments[1] || {};
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
     const context = getBootstrap();
@@ -33623,6 +33763,7 @@
     // The dashboard has its own, narrower decision-layer motion. Its summary
     // and canonical read lane must not inherit the generic shell entrance.
     const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
+    const featureCatalogRoute = page.path === "/features" && page.layout === "feature-catalog";
     const isCustomerDirectoryRoute = page.path === "/admin/customers" || page.path === "/admin/customers/:id" || (typeof page.routePath === "string" && page.routePath.startsWith("/admin/customers"));
     // This presentation marker is intentionally derived from the same
     // normalized route selection used below for the server-authorized Admin
@@ -33675,9 +33816,16 @@
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
     if (isAuth) main.dataset.portalMotionSkipEnter = "true";
+    main.dataset.portalPresentationRoute = featureCatalogRoute ? "features" : "default";
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
+    const actualPath = normalizePath((context && context.path) || window.location.pathname);
+    const isHydration = options.reason === "data-hydration" && lastNormalizedRoute === actualPath;
+    lastNormalizedRoute = actualPath;
+    const phase = isHydration ? "settled" : "entry";
+    shell.dataset.portalPresentationPhase = phase;
+    main.dataset.portalPresentationPhase = phase;
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       setSidebarAccessibilityState(false);
@@ -33733,10 +33881,12 @@
       if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
     }
     function mountWorkspaceMotion() {
-      if (minimalShell || isAdminPortalSurface(page) || typeof motion.mountWorkspace !== "function") return;
+      if (isHydration || minimalShell || isAdminPortalSurface(page) || typeof motion.mountWorkspace !== "function") return;
       motion.mountWorkspace(main);
     }
-    const replaceResult = motion.replace(shell, main, renderShell);
+    const replaceResult = featureCatalogRoute
+      ? motion.replace(shell, main, renderShell, { animate: false })
+      : motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {
       replaceResult.then(() => restoreFocus(focus), () => restoreFocus(focus));
     } else {
@@ -34379,21 +34529,30 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   }
 
   function mountPortalAiCopilot(context) {
-    if (!document || !document.body || typeof document.body.appendChild !== "function") return;
+    if (!document || typeof document.getElementById !== "function") return;
     let container = document.getElementById("portal-copilot-root");
     const currentPath = normalizePath((context && context.path) || (typeof window !== "undefined" && window.location ? window.location.pathname : ""));
     const isAuthPage = ["/login", "/register", "/password-recovery", "/welcome"].includes(currentPath) || (document.querySelector && Boolean(document.querySelector(".portal-auth-page")));
+    const isAdminPath = currentPath === "/admin" || currentPath.startsWith("/admin/");
     const isAuthenticated = Boolean(context && context.session && context.session.authenticated === true);
 
-    if (isAuthPage || !isAuthenticated) {
-      if (container) container.innerHTML = "";
+    if (isAuthPage || !isAuthenticated || isAdminPath) {
+      if (container) {
+        container.innerHTML = "";
+        container.remove();
+      }
+      return;
+    }
+    const dock = getUtilityDock();
+    if (!dock) {
+      if (container) container.remove();
       return;
     }
     if (!container) {
       container = document.createElement("div");
       container.id = "portal-copilot-root";
-      document.body.appendChild(container);
     }
+    dock.appendChild(container);
     renderCopilotHtml(container, context);
   }
 

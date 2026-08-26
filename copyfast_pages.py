@@ -55,6 +55,7 @@ _PORTAL_BUILD_SOURCE_FILES = (
     "portal-theme.css",
     "portal-theme.js",
     "portal-auth.js",
+    "portal-features.js",
     "portal-i18n.js",
     "admin-customer-directory.js",
     "portal.js",
@@ -500,6 +501,10 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     motion_route = "dashboard" if normalized == "/dashboard" else "default"
     shell_copy = _PORTAL_SHELL_COPY[locale]
     template = TEMPLATE.read_text(encoding="utf-8") if TEMPLATE.exists() else _fallback_template()
+    if normalized == "/dashboard":
+        template = template.replace(
+            'class="portal-body"', 'class="portal-body portal-body--dashboard-stable"'
+        ).replace("<body>", '<body class="portal-body portal-body--dashboard-stable">')
     if normalized in {"/login", "/register"}:
         for asset in ("portal-i18n.js", "portal-motion.js", "admin-customer-directory.js", "portal.js", "integration.js"):
             template = template.replace(
@@ -509,6 +514,22 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
         template = template.replace(
             "</body>",
             '<script src="/static/portal/portal-auth.js?v=__PORTAL_ASSET_VERSION__" defer></script></body>',
+        )
+    elif normalized == "/features":
+        template = template.replace(
+            'class="portal-body"', 'class="portal-body portal-body--features"',
+        ).replace("<body>", '<body class="portal-body portal-body--features">')
+        for asset in (
+            "portal-i18n.js", "portal-motion.js", "admin-customer-directory.js",
+            "portal.js", "integration.js",
+        ):
+            template = template.replace(
+                f'<script src="/static/portal/{asset}?v=__PORTAL_ASSET_VERSION__" defer></script>',
+                "",
+            )
+        template = template.replace(
+            "</body>",
+            '<script src="/static/portal/portal-features.js?v=__PORTAL_ASSET_VERSION__" defer></script></body>',
         )
     build_id = _portal_build_id()
     payload = {

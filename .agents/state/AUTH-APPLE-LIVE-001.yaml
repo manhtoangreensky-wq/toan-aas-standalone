@@ -1,0 +1,31 @@
+task_id: AUTH-APPLE-LIVE-001
+phase: REPORT
+status: BLOCKED_EXTERNAL_CONFIGURATION_UI_SAFE
+base_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
+head_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
+branch: fix/webapp-live-recovery-001
+worktree: C:/Users/toann/.config/superpowers/worktrees/GitHub/fix-auth-jank-main-evidence-002
+risk: CRITICAL
+run_mode: SINGLE
+handoff_round: 0
+mutation_scope: none; read-only live/source/VPS readiness audit
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+env_mutations: 0
+telegram_mutations: 0
+commit: prohibited
+push: prohibited
+deploy: prohibited
+next_spec_locked: MOTION-WORKSPACE-JANK-001
+checklist: D:/TOANAAS/TOAN_AAS_WEB_APP/CHECKLIST-AUTH-APPLE-LIVE-001.md
+spec: D:/TOANAAS/TOAN_AAS_WEB_APP/specs/AUTH-APPLE-LIVE-001.md
+evidence: D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/auth-apple-live-001/r1
+verified_at: 2026-08-26T11:40:11+07:00
+providers_http: 200
+apple_enabled: false
+start_route: 303 to /login?oauth=unavailable
+required_env_names: 8/8 missing; values/private key not read or logged
+ui_matrix: 8/8 pass at current runtime SHA; google/apple anchor max 0; overflow/errors/app-long-task-over-200ms 0
+tests: provider surface 3P; Apple backend contracts 3P/78 deselected; node/diff exit0
+next_spec_unlocked_for_contract: MOTION-WORKSPACE-JANK-001
