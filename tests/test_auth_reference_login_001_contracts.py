@@ -257,14 +257,15 @@ def test_mfa_renders_primary_settled_without_entry_replay(auth_behavior: dict) -
     assert mfa["socialHidden"] is True
 
 
-def test_auth_motion_css_is_entry_only_mobile_first_and_reduced_visible() -> None:
+def test_auth_entry_keeps_semantic_content_stationary_mobile_first_and_reduced_visible() -> None:
     css = THEME_SOURCE.read_text(encoding="utf-8")
-    motion = css[css.index("/* Auth Motion Contract: AUTH-REFERENCE-LOGIN-001 */") :]
+    motion_start = css.index("/* Auth Motion Contract: AUTH-REFERENCE-LOGIN-001 */")
+    motion_end = css.index("/* Admin Visual Hierarchy 001", motion_start)
+    motion = css[motion_start:motion_end]
     assert '[data-auth-motion-mounted="true"]' in motion
     assert 'data-auth-motion-phase="entry"' not in motion
-    assert "translateY(20px)" in motion
-    assert "translateX(-20px)" in motion
-    assert all(delay in motion for delay in ("100ms", "200ms", "300ms"))
+    assert all(value in motion for value in ("animation: none;", "opacity: 1;", "transform: none;"))
+    assert all(value not in motion for value in ("@keyframes auth-motion", "translateY(20px)", "translateX(-20px)", "animation-delay:"))
     mobile = motion[motion.index("@media (max-width: 768px)") :]
     def rule(selector: str) -> str:
         return mobile[mobile.index(selector) : mobile.index("}", mobile.index(selector))]

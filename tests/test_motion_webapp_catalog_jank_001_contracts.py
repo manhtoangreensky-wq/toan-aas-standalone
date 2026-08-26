@@ -72,7 +72,7 @@ CATALOG_HARNESS = r"""
 MOTION_HARNESS = r"""
 (async () => {
   const fs = require("node:fs"), vm = require("node:vm");
-  const portal = fs.readFileSync(process.argv[2], "utf8");
+  const portal = fs.readFileSync(process.argv[2], "utf8").replace(/\r\n/g, "\n");
   const motion = fs.readFileSync(process.argv[3], "utf8");
   const mount = portal.slice(portal.indexOf("  function mountPortal"), portal.indexOf("\n  let copilotState"));
   async function run(route) {

@@ -13,7 +13,7 @@ Không có một file duy nhất liệt kê toàn bộ chức năng của Web Ap
 
 | Chức năng tài liệu gốc | Hiện tại trong batch | Trạng thái |
 |---|---|---|
-| Shared motion `140/220/420ms`, reduced-motion | Giữ token; chặn replay hydrate, observer pending và layout jank | ✅ Còn dùng |
+| Shared motion `140/220/420ms`, reduced-motion | Giữ token cho tương tác; Auth semantic đứng yên; chặn replay hydrate, observer pending và layout jank | ✅ Còn dùng |
 | Customer và ERP là hai shell khác nhau | Admin/khách giữ route/role server-authoritative, dùng chung token UI | ✅ Còn dùng |
 | Catalog nằm trong renderer lớn | Tách `portal-features.js`, render `135/135` mục | ⚠️ Đã tối ưu |
 | Auth render provider actions | Chỉ render Google/Apple khi server trả `enabled=true`; Telegram giữ nguyên | ⚠️ Fail-closed rõ hơn |
@@ -26,6 +26,7 @@ Không có một file duy nhất liệt kê toàn bộ chức năng của Web Ap
 - Catalog không còn thuộc full integration bundle; authority hiện nằm trong `portal-features.js` và canonical hydrate.
 - Google/Apple không phải action luôn hiện; readiness production hiện thiếu lần lượt `6/6` và `8/8` cấu hình, nên UI ẩn an toàn.
 - PWA/Copilot không còn floating fixed trên content; current contract là normal-flow dock trên mọi viewport.
+- Auth reference fade-up `opacity: 0` không còn dùng cho intro/form: live desktop cho thấy nội dung bị che và lệch `20px` lúc đầu; current contract là semantic content hiện ngay, vị trí ổn định.
 
 ## Không đổi trong batch
 

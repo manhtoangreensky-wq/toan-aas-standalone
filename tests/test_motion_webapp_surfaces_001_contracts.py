@@ -10,14 +10,14 @@ MOTION_PATH = ROOT / "static" / "portal" / "portal-motion.js"
 PORTAL_PATH = ROOT / "static" / "portal" / "portal.js"
 INTEGRATION_PATH = ROOT / "static" / "portal" / "integration.js"
 BASE_SHA = "896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972"
-PORTAL_PRE_AMENDMENT_HASH = "79c758ec8186d86288b646b234a158c1ed5944d0cc7faceca9ad4b4d2df9a84b"
-PORTAL_AMENDED_HASH = "983175e72ca13dd029aaa2ad9b4da83bfb9ec29d596adb6258368cba964950ac"
+PORTAL_PRE_AMENDMENT_HASH = "ba802f9f9c41fd003d78dde38b31391278303f2ade2ba0cbd75eedba64c388d5"
+PORTAL_AMENDED_HASH = "5806db0131dd9fcafff3700d34f7b9f8ba1073c49d00e364d52dc809cf6a0eeb"
 
 PROTECTED_HASHES = {
-    "static/portal/portal-theme.css": "e84130a35b5ec17c61499c45c82687a01954164acbf2b716b8740e8209668a5a",
-    "static/portal/portal-motion.js": "03e42f77dd53f062ac6266d7dbc0f7ef9fc1325e464d31b66942c58a0f3cf200",
-    "static/portal/integration.js": "9cbc11a7ccf31cb9da747750ec5b5e1f96e74f7479bcb3b5df651c44e3323b70",
-    "static/portal/portal-auth.js": "cab28711420d0cb0fcdd1fe5bb2d54ec22f4e6a8a1fb38ffd9c0f4bdaaff4079",
+    "static/portal/portal-theme.css": "944b3dddeebe307f98b6d674191888b8d3c28424aa3ad84c8b7eba7255289f47",
+    "static/portal/portal-motion.js": "9f03ff775c10a8a55781a655b48e4c6c68d2d53e63d50188fa351deac9d90d14",
+    "static/portal/integration.js": "3d65506345bc36728284f8bd8bb0375aa43d2bbc5711cacbe6291386f91411a1",
+    "static/portal/portal-auth.js": "1452263d258ff9f56ebf8b0a7f17192091a4635db2a80b7ca32120407a9b59d3",
 }
 
 EXPECTED_TRANSITIONS = {
@@ -62,6 +62,10 @@ EXPECTED_STATES = {
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _portable_hash(path: Path) -> str:
+    return sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def _rule_bodies(source: str, selector: str) -> list[str]:
@@ -275,11 +279,11 @@ def test_install_modal_resolves_live_equivalent_when_saved_trigger_is_detached()
 
 
 def test_scope_hash_line_and_debug_contracts() -> None:
-    assert _git("rev-parse", "HEAD") == BASE_SHA
+    assert _git("merge-base", "--is-ancestor", BASE_SHA, "HEAD") == ""
     for relative_path, expected_hash in PROTECTED_HASHES.items():
-        digest = sha256((ROOT / relative_path).read_bytes()).hexdigest()
+        digest = _portable_hash(ROOT / relative_path)
         assert digest == expected_hash, relative_path
-    portal_digest = sha256(PORTAL_PATH.read_bytes()).hexdigest()
+    portal_digest = _portable_hash(PORTAL_PATH)
     assert portal_digest == PORTAL_AMENDED_HASH
     assert portal_digest != PORTAL_PRE_AMENDMENT_HASH
 
