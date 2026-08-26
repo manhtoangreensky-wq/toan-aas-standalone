@@ -104,6 +104,7 @@ const runtime = [
   'const manifest = Object.freeze({});',
   extract("const MAX_ADMIN_ERP_NAVIGATION_GROUPS = 16;", "function publicBuildId(value)"),
   'function safeText(value, fallback) { if (typeof value !== "string") return fallback || ""; return value.replace(/[&<>\'\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\'": "&#39;", \'"\': "&quot;" }[character])); }',
+  'function uiText(key, fallback) { return String(fallback || key || ""); }',
   'function localizedNavigationLabel(value) { return String(value || ""); }',
   'function localizedCompareText(left, right) { return String(left || "").localeCompare(String(right || "")); }',
   'function portalIcon(icon) { return `<svg data-icon="${icon}"></svg>`; }',
@@ -284,8 +285,8 @@ def test_desktop_admin_shell_uses_the_same_issued_projection_without_customer_sh
     assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
     assert "const currentOverride = link.length > 3 ? link[3] : null;" in sidebar
     assert "const adminSurface = isAdminPortalSurface(page);" in sidebar
-    assert 'adminRoutes.has("/admin")' in sidebar
-    assert "const sidebarPrimaryAction = adminSurface" in sidebar
+    assert 'const sidebarActionRow = adminSurface ? ""' in sidebar
+    assert "const groups = navGroups(context, page).map" in sidebar
     assert 'href="/features"' in sidebar
     assert "const adminSurface = isAdminPortalSurface(page);" in header
     assert "chrome.searchAdmin" in header
