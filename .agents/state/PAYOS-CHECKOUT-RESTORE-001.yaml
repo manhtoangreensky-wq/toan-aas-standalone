@@ -1,0 +1,59 @@
+task_id: PAYOS-CHECKOUT-RESTORE-001
+phase: REPORT
+status: ACCEPTED_LOCAL_LIVE_NOT_TESTED
+base_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
+branch: fix/webapp-live-recovery-001
+worktree: C:/Users/toann/.config/superpowers/worktrees/GitHub/fix-auth-jank-main-evidence-002
+risk: CRITICAL
+run_mode: SINGLE
+allowed_files:
+  - copyfast_api.py
+  - static/portal/portal.js
+  - static/portal/integration.js
+  - tests/test_payos_checkout_restore_001_contracts.py
+protected_files:
+  - billing.py
+  - db.py
+  - copyfast_db.py
+  - copyfast_auth.py
+  - static/portal/portal-auth.js
+acceptance:
+  - one readiness contract for direct PayOS or canonical bridge
+  - server and browser fail closed on non-vetted checkout URLs
+  - concurrent same-key submit produces one order-code and one provider-stub call
+  - trusted click opens a placeholder before async request and navigates only after validation
+  - no promo, settlement, wallet, auth, Telegram, schema, ENV or deploy changes
+tests:
+  - python -m pytest tests/test_payos_checkout_restore_001_contracts.py -q
+  - python -m pytest tests/test_copyfast_bridge.py -q
+  - python -m pytest tests/test_payos_customer_promo_clean_001_contracts.py tests/test_portal_safety_contracts.py -q
+  - python -m py_compile copyfast_api.py
+  - node --check static/portal/portal.js
+  - node --check static/portal/integration.js
+prohibited_actions:
+  - real provider calls
+  - wallet or production data mutation
+  - ENV, secret or credential mutation
+  - Telegram, webhook or settlement edits
+  - commit, push, PR, merge or deploy
+stop_conditions:
+  - BASE, branch or worktree mismatch
+  - edit required outside allowlist
+  - schema, wallet, provider, secret, production or Telegram mutation required
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+env_mutations: 0
+telegram_mutations: 0
+tester_project_id: PAYOS-CHECKOUT-RESTORE-001-R1
+evidence_dir: D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/payos-checkout-restore-001/r1
+local_verdict: PASS
+live_pass: NOT_TESTED
+next_spec_unlocked: PAYOS-SETTLEMENT-IDEMPOTENCY-001
+final_payos_gate:
+  stage: after_batch_merge_and_deploy
+  action: signed user clicks Nap ngay and opens a real PayOS checkout with a valid QR/order
+  max_checkout_creations: 1
+  payment_execution: prohibited
+  qr_scan: prohibited
+  wallet_credit: prohibited

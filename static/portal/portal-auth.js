@@ -227,9 +227,34 @@
     return reason && messages[reason] ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>OAuth</strong><p>${safe(messages[reason])}</p></div></div>` : "";
   }
 
-  function render() {
+  function render(options = {}) {
     const main = document.getElementById("portal-main") || document.getElementById("portal-root");
     if (!main) return;
+    if (main.hasAttribute("data-auth-motion-phase")) {
+      main.setAttribute("data-auth-motion-phase", "settled");
+      const card = main.querySelector(".portal-auth-card");
+      if (card) {
+        const primary = card.querySelector(".portal-auth-primary");
+        if (primary && options.primary === true) primary.innerHTML = primaryForm();
+        const oldSocial = card.querySelector(".portal-direct-social-auth");
+        if (state.mfa) {
+          if (oldSocial) oldSocial.remove();
+        } else {
+          const temp = document.createElement("div");
+          temp.innerHTML = socialLogin();
+          const newSocial = temp.firstElementChild;
+          if (oldSocial) {
+            if (newSocial) card.replaceChild(newSocial, oldSocial);
+            else oldSocial.remove();
+          } else if (newSocial) {
+            card.appendChild(newSocial);
+          }
+        }
+      }
+      return;
+    }
+    main.setAttribute("data-auth-motion-mounted", "true");
+    main.setAttribute("data-auth-motion-phase", "entry");
     const shell = document.querySelector("[data-portal-shell]");
     const sidebar = document.querySelector("[data-portal-sidebar]");
     const header = document.querySelector("[data-portal-header]");
@@ -312,7 +337,7 @@
           state.mfa = validMfa(result.data);
           if (!state.mfa) throw new Error(text.genericError);
           toast(result.message);
-          render();
+          render({ primary: true });
         } else {
           toast(result.message);
           window.location.assign(nextRoute() || "/dashboard");
@@ -415,7 +440,7 @@
     if (!action) return;
     if (action.dataset.portalAction === "pwa-install-prompt") { requestPwaInstall(action); return; }
     if (action.dataset.portalAction === "start-telegram-login") startTelegram(action);
-    if (action.dataset.portalAction === "auth-mfa-login-cancel") { state.mfa = null; render(); }
+    if (action.dataset.portalAction === "auth-mfa-login-cancel") { state.mfa = null; render({ primary: true }); }
   });
   document.addEventListener("submit", (event) => {
     const form = event.target.closest && event.target.closest("[data-portal-form]");

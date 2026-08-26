@@ -1826,7 +1826,7 @@
 
   function merge(next) {
     window.__TOAN_AAS_PORTAL__ = { ...base(), ...next };
-    if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__);
+    if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__, { reason: "data-hydration" });
     if (promptStudioComposeLockRoute) setPromptStudioComposeFormLocked(promptStudioComposeLockRoute, true);
   }
 
@@ -2986,6 +2986,16 @@
 
   function validPaymentId(value) {
     return /^[A-Za-z0-9._:-]{1,120}$/.test(String(value || "").trim());
+  }
+
+  function safePayosCheckout(value) {
+    if (typeof value !== "string" || !value) return "";
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" && !url.username && !url.password && !url.port && !url.hash && (url.hostname === "pay.payos.vn" || url.hostname.endsWith(".payos.vn")) ? url.href : "";
+    } catch (_) {
+      return "";
+    }
   }
 
   function validJobRecordId(value) {
@@ -12555,8 +12565,8 @@
   }
 
   function schedulePaymentPolling(paymentId, flow, delayMs, replaceExisting) {
-    const route = (base().path || window.location.pathname).split("?")[0];
-    if (!paymentId || route !== "/wallet/topup" || !base().bridge || base().bridge.available !== true || !paymentNeedsPolling(flow)) return;
+    const currentRoute = (base().path || window.location.pathname).split("?")[0];
+    if (!paymentId || currentRoute !== "/wallet/topup" || !paymentNeedsPolling(flow)) return;
     if (replaceExisting && paymentPollTimer) {
       window.clearTimeout(paymentPollTimer);
       paymentPollTimer = 0;
@@ -25929,6 +25939,34 @@
           pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" }
         });
         scheduleJobPolling(path, record);
+      } else if (path === "/features") {
+        const response = await api("/features/status");
+        if (!isCurrent()) return null;
+        const data = response && response.data && typeof response.data === "object" && !Array.isArray(response.data)
+          ? response.data
+          : {};
+        const receivedFeatures = data.features && typeof data.features === "object" && !Array.isArray(data.features)
+          ? data.features
+          : {};
+        const knownFeatures = new Set([
+          ...Object.values(FEATURE_BY_PATH),
+          ...(Array.isArray(context.catalog) ? context.catalog.map((item) => item && typeof item.key === "string" ? item.key : "") : [])
+        ].filter(Boolean));
+        const features = {};
+        Object.entries(receivedFeatures).forEach(([key, value]) => {
+          if (!knownFeatures.has(key) || !value || typeof value !== "object" || Array.isArray(value)) return;
+          features[key] = { ...value, public_ready: value.public_ready === true };
+        });
+        const readiness = { features };
+        const current = base();
+        window.__TOAN_AAS_PORTAL__ = {
+          ...current,
+          readiness,
+          pageStates: {
+            ...(current.pageStates || {}),
+            ...featurePageStates(current.catalog || [], readiness, current.bridge && current.bridge.featureExecutionFeatures)
+          }
+        };
       } else if (path === "/voice/outputs") {
         const readiness = await api("/features/status");
         if (!isCurrent()) return null;
@@ -37182,13 +37220,16 @@
       }
       if (action === "payment-create") {
         const packageId = String(fields.package || "").trim();
-        const promoInput = document.getElementById("portal-topup-promo-input");
-        const promoCode = String((fields && fields.promo_code) || (promoInput && promoInput.value) || "").trim().toUpperCase();
         if (!packageId) throw new Error("Hãy chọn gói nạp trước khi tạo yêu cầu thanh toán.");
-        const submission = acquireSubmission("payment", packageId + (promoCode ? ":" + promoCode : ""));
+        const submission = acquireSubmission("payment", packageId);
         if (!submission) {
           toast("Yêu cầu thanh toán đang được gửi. Vui lòng chờ phản hồi.", "error");
           return;
+        }
+        let checkoutUrl = "about:blank";
+        const checkoutWindow = window.open(checkoutUrl, "_blank");
+        if (checkoutWindow) {
+          try { checkoutWindow.opener = null; } catch (_) {}
         }
         try {
           const result = await api("/payments/create", {
@@ -37197,7 +37238,6 @@
             body: JSON.stringify({
               package_id: packageId,
               payment_type: "topup_xu",
-              promo_code: promoCode,
               idempotency_key: submission.key
             })
           });
@@ -37209,14 +37249,15 @@
           merge({ paymentFlow: nextFlow });
           schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
           toast(result.message);
-          const checkoutUrl = result.data && (result.data.checkout_url || result.data.checkoutUrl || result.data.payment_url || result.data.url);
-          if (checkoutUrl) {
-            try {
-              window.open(checkoutUrl, "_blank");
-            } catch (_) {
-              try { window.location.href = checkoutUrl; } catch (_) {}
-            }
+          checkoutUrl = safePayosCheckout(result.data && result.data.checkout_url);
+          if (!checkoutUrl) throw new Error("PayOS trả về liên kết thanh toán không an toàn.");
+          if (checkoutWindow) checkoutWindow.location.href = checkoutUrl;
+          else window.location.href = checkoutUrl;
+        } catch (error) {
+          if (checkoutWindow) {
+            try { checkoutWindow.close(); } catch (_) {}
           }
+          throw error;
         } finally {
           releaseSubmission(submission);
         }

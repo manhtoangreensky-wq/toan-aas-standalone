@@ -1,0 +1,40 @@
+task_id: MOTION-TOANAAS-BATCH-001
+phase: REPORT
+owner_goal: "Motion mượt và chuyên nghiệp cho app.toanaas.vn và toanaas.vn"
+webapp_base_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
+landing_base_sha: b9b0cc3f1fdb89dab4939ab1c5bd0cdef349dc6f
+current_spec: MOTION-LANDING-TOANAAS-001
+current_status: WEBAPP_AND_LANDING_ACCEPTED_LOCAL_PREPUSH_READY
+handoff_round: 1
+spec_1_round_1_result: "FAILED: test created root test_runner.js outside allowlist; frozen-object instrumentation made AC3 invalid"
+spec_1_round_2_result: "FAILED: left test_debug.js and tests/test_debug.py outside allowlist while self-reporting FILES_CHANGED=4"
+spec_1_escalation: "Codex Sol xhigh; no Antigravity round 3"
+spec_1_result: "ACCEPTED_LOCAL: targeted 5P; comparator 19P/3F exact baseline; NEW_FAILURES=0; Tester PSI 10/10"
+spec_1_evidence: D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/motion-webapp-lifecycle-001/r1/report.md
+spec_2_allowed_files: "static/portal/portal-auth.js; static/portal/portal-theme.css; tests/test_auth_reference_login_001_contracts.py"
+spec_2_round_1_result: "FAILED: mobile grid selector targets page instead of auth shell; test is source scan only; provider hydration full-remount can interrupt 400ms entry"
+spec_2_round_2_result: "FAILED: provider hydration rewrites primary form and can erase typed input; test hardcodes ephemeral NODE_PATH and leaks TEMP test_auth.js; dead initialRender remains"
+spec_2_escalation: "Codex Sol xhigh; no Antigravity round 3"
+spec_2_status: ACCEPTED_LOCAL_CODEX_VERIFIED
+spec_2_result: "targeted 5P; auth comparator 14P; lifecycle comparator 5P; rendered QA 2 runs, run 2 has 8/8 viewports clean, CLS 0, long task >200ms 0; Tester/project remains pre-push gate if no external result"
+spec_4_status: ACCEPTED_LOCAL
+spec_4_result: "Corrective Tester AC01-AC09 9/9; bundle 23P; surface/foundation 19P; two rendered runs 4 viewports with CLS/longtask/VT/enter/overflow/clip/relevant-errors 0"
+spec_4_evidence: D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/motion-webapp-bundle-split-001/r1/report.md
+spec_5_allowed_files: "copyfast_pages.py; static/portal/portal.css; tests/test_motion_webapp_dashboard_stability_001_contracts.py"
+spec_5_status: ACCEPTED_LOCAL
+spec_5_result: "Fresh protected 51P; two cold run x4 viewport CLS/overlap/overflow/clip/app error/non-read request 0; CTA normal-flow regression 19P; Tester A01-A12 PASS"
+webapp_baseline: "19 passed, 3 failed; exact existing dashboard motion failures locked"
+landing_baseline: "14 passed, 6 failed; exact existing content/i18n failures locked"
+provider_calls: 0
+wallet_mutations: 0
+env_mutations: 0
+telegram_mutations: 0
+production_data_mutations: 0
+deploy: NO
+live_pass: NOT_TESTED
+prepush_task_suite: 118_passed
+prepush_baseline_comparator: 4_passed_3_known_failed_new_failures_0
+prepush_syntax: python_and_node_exit_0
+prepush_secret_matches: 0
+tester_projects: "toan-aas-standalone#412; bot#884"
+checklist: D:/TOANAAS/TOAN_AAS_WEB_APP/CHECKLIST-MOTION-TOANAAS-001.md

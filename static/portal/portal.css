@@ -257,7 +257,7 @@ a { color: inherit; text-decoration: none; }
 }
 .portal-session-chip {
   cursor: pointer;
-  transition: all .16s ease;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 .portal-session-chip:hover {
   border-color: rgba(102, 230, 211, .35);
@@ -8007,7 +8007,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: color .15s ease, background-color .15s ease;
   white-space: nowrap;
 }
 
@@ -8286,7 +8286,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-size: 14px !important;
   font-weight: 750 !important;
   border-radius: 10px !important;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .portal-auth-submit-btn:hover {
   transform: translateY(-1px);
@@ -8317,7 +8317,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.16s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 .portal-auth-app-link:hover {
   background: rgba(99, 225, 208, 0.16);
@@ -8365,7 +8365,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 .portal-free-tab-btn:hover {
   border-color: rgba(99, 225, 208, 0.45);
@@ -8630,7 +8630,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(45, 212, 191, 0.35);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), filter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
@@ -8656,7 +8656,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   color: #97bfcd;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .portal-btn-dismiss:hover,
@@ -8769,7 +8769,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   text-align: center;
 }
 
@@ -9145,4 +9145,4 @@ button, a, input, select, textarea { touch-action: manipulation; }
 }
 
 
-
+.portal-body--features .portal-header { min-height: 67px; } @media (min-width: 701px) { .portal-body--dashboard-stable .portal-header { min-height: 67px; } } .portal-utility-dock { position: relative; z-index: 9990; display: flex; justify-content: flex-end; align-items: flex-end; gap: 16px; min-height: 60px; padding: 24px; pointer-events: none; } .portal-utility-dock > * { pointer-events: auto; } .portal-utility-dock .portal-pwa-fab-trigger, .portal-utility-dock .portal-copilot-btn { position: static !important; top: auto !important; right: auto !important; bottom: auto !important; left: auto !important; margin: 0; } .portal-utility-dock .portal-smart-install-banner { position: static; top: auto; right: auto; bottom: auto; left: auto; margin: 0; } @media (max-width: 640px) { .portal-utility-dock { flex-flow: row-reverse wrap; justify-content: space-between; align-items: center; padding: 12px; padding-bottom: calc(var(--portal-safe-bottom, 0px) + 12px); } } @media (prefers-reduced-motion: reduce) { .portal-utility-dock .portal-smart-install-banner { animation: none !important; transition: none !important; } }

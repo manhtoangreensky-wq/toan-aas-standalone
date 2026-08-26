@@ -144,7 +144,7 @@ def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion()
     render_shell = _section(
         mount,
         "function renderShell() {",
-        "\n    const replaceResult = motion.replace(shell, main, renderShell);",
+        "\n    const replaceResult = featureCatalogRoute",
     )
     for rendering_step in (
         "sidebar.innerHTML = renderSidebar(page, context);",
@@ -155,9 +155,14 @@ def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion()
         "syncPwaInstallControl();",
     ):
         assert rendering_step in render_shell
-    assert "const replaceResult = motion.replace(shell, main, renderShell);" in mount
+    replace_assignment = (
+        "const replaceResult = featureCatalogRoute\n"
+        "      ? motion.replace(shell, main, renderShell, { animate: false })\n"
+        "      : motion.replace(shell, main, renderShell);"
+    )
+    assert replace_assignment in mount
     assert "restoreFocus(focus);" in mount
-    assert mount.index("const replaceResult = motion.replace(shell, main, renderShell);") < mount.index("restoreFocus(focus);")
+    assert mount.index(replace_assignment) < mount.index("restoreFocus(focus);")
 
 
 def test_mount_restores_focus_after_the_deferred_render_completes() -> None:
@@ -166,7 +171,8 @@ def test_mount_restores_focus_after_the_deferred_render_completes() -> None:
     # The first deferred script can mount before the optional presentation
     # utility loads, while a supported View Transition may defer the DOM swap.
     # Both paths must restore focus only after the renderer has run.
-    assert "const replaceResult = motion.replace(shell, main, renderShell);" in mount
+    assert "? motion.replace(shell, main, renderShell, { animate: false })" in mount
+    assert ": motion.replace(shell, main, renderShell);" in mount
     assert re.search(
         r"replaceResult\.then\(\(\)\s*=>\s*restoreFocus\(focus\),\s*"
         r"\(\)\s*=>\s*restoreFocus\(focus\)\)",
