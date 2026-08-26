@@ -1,10 +1,10 @@
 task_id: MOTION-TOANAAS-BATCH-001
-phase: REPORT
+phase: VERIFY
 owner_goal: "Motion mượt và chuyên nghiệp cho app.toanaas.vn và toanaas.vn"
 webapp_base_sha: 896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972
 landing_base_sha: b9b0cc3f1fdb89dab4939ab1c5bd0cdef349dc6f
-current_spec: MOTION-LANDING-TOANAAS-001
-current_status: WEBAPP_AND_LANDING_ACCEPTED_LOCAL_PREPUSH_READY
+current_spec: AUTH-REFERENCE-LOGIN-001-REOPEN
+current_status: LOCAL_GREEN_AWAITING_OWNER_GIT_AND_DEPLOY_APPROVAL
 handoff_round: 1
 spec_1_round_1_result: "FAILED: test created root test_runner.js outside allowlist; frozen-object instrumentation made AC3 invalid"
 spec_1_round_2_result: "FAILED: left test_debug.js and tests/test_debug.py outside allowlist while self-reporting FILES_CHANGED=4"
@@ -31,8 +31,8 @@ env_mutations: 0
 telegram_mutations: 0
 production_data_mutations: 0
 deploy: NO
-live_pass: NOT_TESTED
-prepush_task_suite: 118_passed
+live_pass: "PRE_DEPLOY: production finding reproduced; corrected CSS harness 50ms/750ms stable; final live pending deploy"
+prepush_task_suite: 118_passed_after_auth_stationary_corrective
 prepush_baseline_comparator: 4_passed_3_known_failed_new_failures_0
 prepush_syntax: python_and_node_exit_0
 prepush_secret_matches: 0

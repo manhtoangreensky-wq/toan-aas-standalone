@@ -2504,7 +2504,7 @@ def test_light_admin_home_keeps_erp_authority_and_work_queues_readable() -> None
         'class="portal-admin-directory-group"',
     ):
         assert marker in PORTAL_CLIENT
-    assert "Authority & ranh giới quản trị" in PORTAL_CLIENT
+    assert 'adminText("authority.summary", "Quyền hạn và ranh giới quản trị")' in PORTAL_CLIENT
     assert all(
         selector in PORTAL_CATALOGUE
         for selector in (

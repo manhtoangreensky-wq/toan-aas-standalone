@@ -9,7 +9,7 @@ Tester project: `manhtoangreensky-wq/toan-aas-standalone#412`. Sửa case ở fi
 | WA-03 | Dashboard mobile `390×667` | Dock normal-flow; không overflow/clip/overlap |
 | WA-04 | Dashboard compact `360×640` | Dock normal-flow; chữ/nút không chồng |
 | WA-05 | Reduced motion | Presentation animation/transition `0`; content/focus/navigation hoạt động |
-| WA-06 | Login/register | Form không remount khi provider hydrate; mobile form-first; Google/Apple ẩn khi disabled |
+| WA-06 | Login/register | Intro/form opacity `1`, transform `none`, vị trí giống nhau ở 50ms/750ms; không remount khi provider hydrate; mobile form-first; Google/Apple ẩn khi disabled |
 | WA-07 | Catalog `/features` | `135/135` mục; long task >`200ms` bằng `0`; không full integration parse ban đầu |
 | WA-08 | Admin shell | Route/role server-authoritative; modal focus/Escape/backdrop/return-focus đạt |
 | WA-09 | PayOS local contracts | Same key một order; foreign owner fail; URL ngoài allowlist fail; provider call thật `0` |

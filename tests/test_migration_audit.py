@@ -810,6 +810,49 @@ def evidence():
         audit.verify_web_evidence(web_root, report_dir, changed_sha)
 
 
+def test_verify_web_evidence_accepts_matching_source_after_squash_merge(tmp_path: Path) -> None:
+    """A squash-equivalent commit keeps valid evidence when eligible source is identical."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(web_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text("application.add_handler(CommandHandler('start', handler))\n", encoding="utf-8")
+    (web_root / "app.py").write_text("app = FastAPI()\n", encoding="utf-8")
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "audited source")
+    audited_sha = git("rev-parse", "HEAD").stdout.strip()
+    audit.run_audit(bot_root, web_root, "baseline", report_dir, docs_dir, web_revision_sha=audited_sha)
+
+    tree = git("rev-parse", "HEAD^{tree}").stdout.strip()
+    squash_sha = git(
+        "-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid",
+        "commit-tree", tree, "-m", "squashed source",
+    ).stdout.strip()
+    git("reset", "--hard", squash_sha)
+
+    verified = audit.verify_web_evidence(web_root, report_dir, squash_sha)
+    assert verified["recorded_audit_sha"] == audited_sha
+    assert verified["expected_sha"] == squash_sha
+    assert verified["recorded_revision_relation"] == "matching_source_snapshot"
+
+
 def test_verify_web_evidence_rejects_clean_audit_from_different_requested_revision(tmp_path: Path) -> None:
     """A clean checkout cannot validate evidence generated for another revision."""
 

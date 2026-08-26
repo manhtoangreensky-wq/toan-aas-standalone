@@ -14482,8 +14482,6 @@ def verify_web_evidence(
     ):
         raise ValueError("Migration preflight Web audit used a different requested revision")
     ancestor_status, _ = _git_read(web_root, "merge-base", "--is-ancestor", recorded_audit_sha, expected)
-    if ancestor_status != 0:
-        raise ValueError("Migration Web audit revision is not an ancestor of the expected revision")
 
     preflight_fingerprint = str(revision.get("source_fingerprint_sha256") or "")
     inventory_fingerprint = str(web_inventory.get("source_fingerprint_sha256") or "")
@@ -14500,6 +14498,7 @@ def verify_web_evidence(
     return {
         "expected_sha": expected,
         "recorded_audit_sha": recorded_audit_sha,
+        "recorded_revision_relation": "ancestor" if ancestor_status == 0 else "matching_source_snapshot",
         "source_fingerprint_sha256": current_fingerprint,
     }
 

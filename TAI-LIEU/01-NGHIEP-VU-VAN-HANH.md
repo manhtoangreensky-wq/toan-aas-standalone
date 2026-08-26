@@ -38,12 +38,13 @@
 - `MERGED != DEPLOYED != LIVE`; HTTP 200 không chứng minh hydrate, checkout hoặc motion đạt.
 - Không full-remount sau provider/catalog hydrate: có thể xóa dữ liệu người dùng đang gõ và replay motion.
 - Không dùng `transition: all`; không để content phụ thuộc observer mới nhìn thấy.
+- Không dùng keyframe bắt đầu từ `opacity: 0` trên intro/form Auth: Chrome live đo được desktop 100ms còn ẩn và lệch `20px`; semantic Auth phải hiện ngay, motion tương tác giữ riêng.
 - Google/Apple không thể E2E khi ENV còn thiếu; giữ ẩn an toàn thay vì tạo nút chết.
 - PayOS live chỉ được tạo đúng một checkout sau deploy; cấm quét QR, thanh toán hoặc cộng Xu.
 
 ## Bằng chứng local hiện tại
 
-- Motion Web App: protected `19P + 51P`; hai lượt × bốn viewport có CLS/overlap/overflow/clip/app error/non-read request `0`.
+- Motion Web App: pre-push batch `118P`; harness Auth 50ms/750ms có opacity `1`, transform `none`, animation `none` và vị trí không đổi.
 - PayOS settlement: `9P`; checkout `15P`; bridge `30P`; promo `5P`; provider call thật `0`.
 - Google/Apple readiness UI: `8/8` viewport mỗi provider an toàn; E2E bị chặn bởi cấu hình ngoài code.
 - Tester project: issue `manhtoangreensky-wq/toan-aas-standalone#412`; evidence local ở `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`.
