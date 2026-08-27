@@ -148,13 +148,18 @@ def test_render_summary_uses_reviewed_locale_keys_for_every_fixed_label_and_stat
 
 def test_admin_header_reuses_signed_locale_action_and_excludes_customer_chrome() -> None:
     header = _between(PORTAL, "function renderHeader(page, context)", "function renderFields(fields, enabled, context, fieldValues, idNamespace)")
-    _contains(header, "const canOfferPwaInstall = Boolean(!adminSurface &&", "const currentLocale = interfaceLocaleFor(context);", "const adminLocaleForm = adminSurface", 'data-portal-action="update-interface-locale"', 'name="locale"', 'value="${value}"', "const customerUserDropdown =", "const adminUserDropdown =", "adminSurface ? adminUserDropdown : customerUserDropdown")
-    for locale in ("vi", "en", "zh"):
+    _contains(header, "const canOfferPwaInstall = Boolean(!adminSurface &&", "const currentLocale = interfaceLocaleFor(context);", "const adminHeaderLocaleForm = adminSurface", 'data-portal-action="update-interface-locale"', 'data-portal-route="/admin"', 'name="locale"', 'value="${value}"', "const customerUserDropdown =", "const adminUserDropdown =", "adminSurface ? adminUserDropdown : customerUserDropdown")
+    for locale in ("vi", "en"):
         assert f'localeOption("{locale}",' in header
+    locale_form = _between(header, "const adminHeaderLocaleForm =", "const customerUserDropdown =")
+    header_actions = _between(header, '<div class="portal-header-actions">', "</div>`;")
     customer = _between(header, "const customerUserDropdown =", "const adminUserDropdown =")
     admin = _between(header, "const adminUserDropdown =", "const userDropdown =")
+    _contains(header_actions, "${adminHeaderLocaleForm}")
+    _excludes(locale_form, 'localeOption("zh",')
     _contains(customer, '<span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierInfo.currentTier.color}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierInfo.currentTier.color}44;">${safeText(headerTierInfo.currentTier.badge)}</span>', '<a class="portal-user-dropdown-item" href="/admin" style="background: rgba(0, 242, 254, 0.08); border-left: 3px solid #00f2fe;">', '<div><strong style="color:#00f2fe;">⚙️ Trang Quản Trị Admin ERP</strong><small>Quản lý người dùng, duyệt Xu, tài chính & hệ thống</small></div>')
-    _contains(admin, 'href="/account"', 'href="/account/security"', "${adminLocaleForm}", 'data-portal-action="auth-logout"')
+    _contains(admin, 'href="/account"', 'href="/account/security"', 'data-portal-action="auth-logout"')
+    _excludes(admin, "${adminHeaderLocaleForm}", 'data-portal-action="update-interface-locale"')
     for key in ("account.profile", "account.profile_description", "account.security", "account.security_description", "accountCenter.profile.logoutConfirm", "accountCenter.profile.logout"):
         assert f'uiText("{key}"' in admin
     _excludes(admin, 'href="/membership"', 'href="/wallet"', 'href="/wallet/topup"', 'href="/admin"')
