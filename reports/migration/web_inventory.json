@@ -7609,7 +7609,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 774,
+      "occurrences": 773,
       "provider": "PayOS"
     },
     {
@@ -7704,8 +7704,6 @@
     {
       "files": [
         "README.md",
-        "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
-        "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
         "app.py",
         "auth_ops.py",
         "copyfast_admin_audit.py",
@@ -7742,9 +7740,11 @@
         "copyfast_partner_crm.py",
         "copyfast_partner_readiness.py",
         "copyfast_projects.py",
-        "copyfast_prompt_library.py"
+        "copyfast_prompt_library.py",
+        "copyfast_prompt_studio.py",
+        "copyfast_quick_image_planner.py"
       ],
-      "occurrences": 1710,
+      "occurrences": 1705,
       "provider": "Telegram"
     }
   ],
@@ -13999,7 +13999,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 165,
   "source_files_scanned": 165,
-  "source_fingerprint_sha256": "c74f16e4e9548c83c3824926303178e9d8ede23df32a5da396d6e1638067b702",
+  "source_fingerprint_sha256": "0cfafb0f3680a5dfb55541f598e625b1d3595958df78d1a86724754a2caaf7d6",
   "source_root": "webapp-root",
   "ui_path_references": [
     {
@@ -14219,7 +14219,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 29817,
+      "line": 30076,
       "path": "/features"
     },
     {
