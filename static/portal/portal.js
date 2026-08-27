@@ -442,7 +442,7 @@
     failed: "states.failed", unavailable: "states.unavailable", guarded: "states.guarded", disabled: "states.disabled",
     read_only: "states.ready", empty: "states.empty", backlog: "states.backlog",
     planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
-    review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled",
+    review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled", cancelled: "states.cancelled",
     archived: "states.archived"
   });
 
@@ -9569,6 +9569,7 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
+    if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "title", fallback);
     if (path === "/features") return featureCatalogText("page.title", fallback);
     if (path === "/studio") return mediaStudioText("page.title", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
@@ -9630,6 +9631,7 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     const featureFamily = featureFamilyForPath(path);
+    if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "description", fallback);
     if (path === "/features") return featureCatalogText("page.description", fallback);
     if (path === "/studio") return mediaStudioText("page.description", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
@@ -9820,6 +9822,18 @@
     ), null);
   }
 
+  function activeAdminNavigationGroup(page, context, navigationOverride) {
+    const navigation = navigationOverride || adminErpNavigation(context);
+    if (!navigation.groups.length) return null;
+    const current = currentAdminNavigationModule(page, context, adminNavigationModules(context));
+    if (current) {
+      const matched = navigation.groups.find((group) => Array.isArray(group.modules) && group.modules.some((module) => module.route === current.route));
+      if (matched) return matched;
+    }
+    return navigation.groups.find((group) => Array.isArray(group.modules) && group.modules.some((module) => module.route === "/admin"))
+      || navigation.groups[0];
+  }
+
   function adminDesktopNavGroups(context, currentPage) {
     const navigation = adminErpNavigation(context);
     if (!navigation.groups.length) return [];
@@ -9827,21 +9841,34 @@
     if (!issued.length) return [];
     const issuedRoutes = new Set(issued.map((module) => module.route));
     const current = currentAdminNavigationModule(currentPage, context, issued);
-    const seen = new Set();
-    return navigation.groups.map((group) => {
-      const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => {
-        if (!module || !issuedRoutes.has(module.route) || seen.has(module.route)) return false;
-        seen.add(module.route);
-        return true;
-      });
-      const groupCurrent = Boolean(current && modules.some((module) => module.route === current.route));
-      return {
+    const group = activeAdminNavigationGroup(currentPage, context, navigation);
+    if (!group) return [];
+    const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
+    return [{
         label: group.title,
-        defaultOpen: groupCurrent,
-        current: groupCurrent,
+        defaultOpen: true,
+        current: true,
         links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
-      };
-    }).filter((group) => group.links.length);
+      }].filter((entry) => entry.links.length);
+  }
+
+  function renderAdminAppSwitcher(page, context) {
+    const navigation = adminErpNavigation(context);
+    if (!navigation.groups.length) return "";
+    const activeGroup = activeAdminNavigationGroup(page, context, navigation);
+    const appsLabel = uiText("adminShell.apps", "Ứng dụng");
+    const modulesLabel = uiText("adminShell.modules", "phân hệ");
+    const currentAppLabel = uiText("adminShell.currentApp", "Ứng dụng hiện tại");
+    const apps = navigation.groups.map((group) => {
+      const firstModule = Array.isArray(group.modules) ? group.modules[0] : null;
+      if (!firstModule || !navigation.routes.has(firstModule.route)) return "";
+      const current = group === activeGroup;
+      return `<a class="portal-admin-app" href="${safeText(firstModule.route)}"${current ? ' aria-current="page"' : ""} aria-label="${safeText(current ? `${currentAppLabel}: ${group.title}` : group.title)}">
+        <span class="portal-admin-app-icon" aria-hidden="true">${portalIcon(firstModule.icon)}</span>
+        <span class="portal-admin-app-copy"><strong>${safeText(group.title)}</strong><small>${safeText(`${group.modules.length} ${modulesLabel}`)}</small></span>
+      </a>`;
+    }).filter(Boolean).join("");
+    return apps ? `<nav class="portal-admin-app-switcher" aria-label="${safeText(appsLabel)}"><span class="portal-admin-app-switcher-label">${safeText(appsLabel)}</span><div class="portal-admin-app-list">${apps}</div></nav>` : "";
   }
 
   function navGroups(context, currentPage) {
@@ -10351,16 +10378,17 @@
   function renderHeader(page, context) {
     const name = displayName(context);
     const adminSurface = isAdminPortalSurface(page);
+    const adminActiveGroup = adminSurface ? activeAdminNavigationGroup(page, context) : null;
     const commandSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbItems = (adminSurface
       ? ["TOAN AAS", localizedPageTitle(page, context)]
       : ["TOAN AAS", page.section, localizedPageTitle(page, context)])
-      .filter(Boolean)
-      .map((piece) => safeText(localizedNavigationLabel(piece)));
+      .filter(Boolean);
+    if (adminSurface && adminActiveGroup) crumbItems.splice(1, 0, adminActiveGroup.title);
     const crumbs = crumbItems
-      .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${piece}</span>`)
+      .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${safeText(localizedNavigationLabel(piece))}</span>`)
       .join("");
     const canOfferPwaInstall = Boolean(!adminSurface && context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
@@ -10377,11 +10405,11 @@
     const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe" } };
     const currentLocale = interfaceLocaleFor(context);
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
-    const adminLocaleForm = adminSurface
+    const adminHeaderLocaleForm = adminSurface
       ? `<form class="portal-admin-locale-form" data-portal-form data-portal-action="update-interface-locale" data-portal-route="/admin">
-          <label for="portal-admin-header-locale">${safeText(uiText("page.interfaceLocale.title", "Ngôn ngữ giao diện"))}</label>
-          <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("page.interfaceLocale.title", "Ngôn ngữ giao diện"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}${localeOption("zh", uiText("locale.zh", "中文"))}</select>
-          <button type="submit">${safeText(uiText("interfaceLocale.save", "Lưu"))}</button>
+          <label for="portal-admin-header-locale"><span aria-hidden="true">VI / EN</span><span class="portal-sr-only">${safeText(uiText("adminShell.language", "Ngôn ngữ"))}</span></label>
+          <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("adminShell.language", "Ngôn ngữ"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}</select>
+          <button type="submit">${safeText(uiText("adminShell.applyLanguage", "Áp dụng"))}</button>
         </form>`
       : "";
 
@@ -10466,7 +10494,6 @@
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
                 <div><strong>${safeText(uiText("account.security", "Bảo mật"))}</strong><small>${safeText(uiText("account.security_description", "Quản lý phương thức truy cập"))}</small></div>
               </a>
-              ${adminLocaleForm}
             </div>
             <div class="portal-user-dropdown-divider"></div>
             <div class="portal-user-dropdown-footer">
@@ -10484,15 +10511,19 @@
           ${avatarElement}<span class="portal-session-copy">${safeText(name)}</span>
         </a>`;
 
-    return `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
+    const headerPrimary = `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
       <nav class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</nav>
       <div class="portal-header-actions">
+        ${adminHeaderLocaleForm}
         ${renderThemeToggle()}
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
         <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
         ${pageStatusBadge(page, context)}
         ${userDropdown}
       </div>`;
+    return adminSurface
+      ? `<div class="portal-admin-global-header">${headerPrimary}</div>${renderAdminAppSwitcher(page, context)}`
+      : headerPrimary;
   }
 
   function renderFields(fields, enabled, context, fieldValues, idNamespace) {
@@ -10878,6 +10909,7 @@
     const routeKey = supportTicketHeroRouteKey(page);
     const source = page && typeof page.section === "string" ? page.section : "TOAN AAS";
     const fallback = localizedNavigationLabel(source);
+    if (adminDataViewRouteKey(page)) return adminDataViewRouteText(page, "section", fallback);
     return routeKey ? supportTicketText(`hero.${routeKey}.section`, fallback) : fallback;
   }
 
@@ -21732,7 +21764,17 @@
 
   function ticketStatusLabel(item) {
     const canonical = canonicalTicketStatus(item);
-    return TICKET_STATUS_LABELS[canonical] || "Trạng thái chưa được bot công bố";
+    const keys = {
+      new: "new", reviewing: "reviewing", waiting_user: "waitingUser",
+      waiting_provider: "waitingProvider", refund_pending: "refundPending",
+      resolved: "resolved", closed: "closed", unknown: "unknown"
+    };
+    const fallbacks = {
+      new: "Mới", reviewing: "Đang kiểm tra", waiting_user: "Chờ khách bổ sung",
+      waiting_provider: "Chờ nhà cung cấp", refund_pending: "Chờ kiểm tra hoàn Xu",
+      resolved: "Đã xử lý", closed: "Đã đóng", unknown: "Trạng thái chưa được công bố"
+    };
+    return adminDataViewText(`ticketStatus.${keys[canonical] || "unknown"}`, fallbacks[canonical] || fallbacks.unknown);
   }
 
   function ticketCategoryLabel(item) {
@@ -28613,6 +28655,57 @@
     return `<section class="portal-admin-work-queues" aria-labelledby="admin-work-queues-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminText("queues.kicker", "Hàng đợi của tôi"))}</span><h2 id="admin-work-queues-title">${safeText(adminText("queues.title", "Tác vụ cần xử lý"))}</h2><p>${safeText(adminText("queues.body", "Chỉ hiển thị phân hệ thuộc quyền máy chủ cấp cho phiên quản trị này."))}</p></div></div><div class="portal-admin-work-queue-grid">${cards.map(([route, title, detail, icon]) => `<a class="portal-admin-work-queue" href="${safeText(route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div></section>`;
   }
 
+  function adminDashboardNumber(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  function adminDashboardWorkloadRows(counts, adminText) {
+    const source = counts && typeof counts === "object" ? counts : {};
+    const rows = [
+      [adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminDashboardNumber(source.engine_jobs)],
+      [adminText("metrics.workerJobs", "Tác vụ xử lý"), adminDashboardNumber(source.worker_jobs)],
+      [adminText("metrics.payments", "Thanh toán"), adminDashboardNumber(source.payments)]
+    ];
+    const max = Math.max(...rows.map(([, value]) => value));
+    return {
+      hasData: max > 0,
+      rows: rows.map(([label, value]) => ({
+        label,
+        value,
+        width: max > 0 ? Number(((value / max) * 100).toFixed(2)) : 0
+      }))
+    };
+  }
+
+  function adminDashboardReadinessSnapshot(readiness) {
+    const entries = readiness && typeof readiness === "object" && !Array.isArray(readiness)
+      ? Object.values(readiness)
+      : [];
+    const total = entries.length;
+    const ready = entries.filter((item) => item && item.public_ready === true).length;
+    const guarded = total - ready;
+    const percent = total ? Math.round((ready / total) * 100) : null;
+    const angle = percent === null ? null : Number((Math.min(100, Math.max(0, percent)) * 3.6).toFixed(1));
+    return { total, ready, guarded, percent, angle };
+  }
+
+  function renderAdminDashboardAnalytics(data, adminText) {
+    const source = data && typeof data === "object" ? data : {};
+    const workload = adminDashboardWorkloadRows(source.counts, adminText);
+    const readiness = adminDashboardReadinessSnapshot(source.readiness);
+    const workloadMarkup = workload.hasData
+      ? `<ul class="portal-admin-workload-list" role="list">${workload.rows.map((row) => `<li class="portal-admin-workload-row"><div class="portal-admin-workload-meta"><span>${safeText(row.label)}</span><strong>${safeText(String(row.value))}</strong></div><div class="portal-admin-workload-bar" role="img" aria-label="${safeText(`${row.label}: ${row.value}`)}"><span class="portal-admin-workload-bar-fill" style="--portal-admin-bar-width: ${row.width}%;"></span></div></li>`).join("")}</ul>`
+      : `<p class="portal-admin-dashboard-empty" role="status">${safeText(adminText("workload.empty", "Chưa có số liệu vận hành"))}</p>`;
+    const readinessAria = readiness.total
+      ? adminText("readinessChart.aria", "Mức sẵn sàng: {ready} sẵn sàng, {guarded} cần kiểm tra trên tổng số {total}.", readiness)
+      : "";
+    const readinessMarkup = readiness.total
+      ? `<div class="portal-admin-readiness-body"><div class="portal-admin-readiness-donut" role="img" aria-label="${safeText(readinessAria)}" style="--portal-admin-ready-angle: ${readiness.angle}deg;"><span class="portal-admin-readiness-center"><strong>${safeText(`${readiness.percent}%`)}</strong></span></div><dl class="portal-admin-readiness-legend"><div><dt>${safeText(adminText("readinessChart.ready", "Sẵn sàng"))}</dt><dd>${safeText(String(readiness.ready))}</dd></div><div><dt>${safeText(adminText("readinessChart.guarded", "Cần kiểm tra"))}</dt><dd>${safeText(String(readiness.guarded))}</dd></div></dl></div>`
+      : `<p class="portal-admin-dashboard-empty" role="status">${safeText(adminText("readinessChart.empty", "Chưa có dữ liệu sẵn sàng"))}</p>`;
+    return `<section class="portal-admin-dashboard-analytics" aria-labelledby="admin-dashboard-analytics-title"><header class="portal-admin-dashboard-heading"><h2 id="admin-dashboard-analytics-title">${safeText(adminText("analytics.title", "Phân tích vận hành"))}</h2><p>${safeText(adminText("analytics.description", "Ảnh chụp hiện tại từ dữ liệu máy chủ; không phải xu hướng theo thời gian."))}</p></header><article class="portal-admin-dashboard-panel portal-admin-workload-chart"><header><h3>${safeText(adminText("workload.title", "Khối lượng vận hành"))}</h3><p>${safeText(adminText("workload.description", "So sánh ba số liệu trong ảnh chụp hiện tại."))}</p></header>${workloadMarkup}</article><article class="portal-admin-dashboard-panel portal-admin-readiness-chart"><header><h3>${safeText(adminText("readinessChart.title", "Mức sẵn sàng"))}</h3><p>${safeText(adminText("readinessChart.description", "Tỷ lệ trạng thái sẵn sàng trong ảnh chụp hiện tại."))}</p></header>${readinessMarkup}</article></section>`;
+  }
+
   function renderAdminOverview(page, context) {
     // Fixed chrome key: adminHome.title.
     const adminText = (key, fallback, params) => uiText(`adminHome.${key}`, fallback, params);
@@ -28637,11 +28730,12 @@
       [adminText("metrics.readiness", "Mức sẵn sàng"), readiness.length ? `${readyCount}/${readiness.length}` : "—", adminText("metrics.readinessNote", "Mức sẵn sàng công khai")]
     ];
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
-    const readinessRows = readiness.slice(0, 8);
+    const readinessRows = readiness.map(([key, item], index) => [index + 1, key, item]);
+    const analyticsSurface = renderAdminDashboardAnalytics(data, adminText);
     const authority = `<details class="portal-admin-authority"><summary>${safeText(adminText("authority.summary", "Quyền hạn và ranh giới quản trị"))}</summary>${renderSummary(page, context)}</details>`;
     const titleBar = `<header class="portal-admin-titlebar"><div><h1>${safeText(adminText("title", "Trung tâm điều hành"))}</h1><p>${safeText(adminText("description", "Theo dõi dữ liệu và công việc được máy chủ cấp cho phiên quản trị hiện tại."))}</p></div><div class="portal-admin-session-status" data-state="${serverAuthorized ? "ready" : "guarded"}" role="status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><small>${safeText(adminText("guard.kicker", "Trạng thái phiên"))}</small><strong>${safeText(statusTitle)}</strong><em>${safeText(statusBody)}</em></span></div></header>`;
-    const readinessSurface = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Mức sẵn sàng"))}</span><h2 class="portal-card-title">${safeText(adminText("readiness.title", "Trạng thái hệ thống"))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái đã ẩn dữ liệu nhạy cảm; không bật hoặc tắt nhà cung cấp từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Kết nối")], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, adminText("readiness.emptyTitle", "Chưa có trạng thái sẵn sàng được cấp"), adminText("readiness.emptyBody", "Máy chủ chỉ trả trạng thái khi phiên quản trị còn hiệu lực."))}</section>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
+    const readinessSurface = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Mức sẵn sàng"))}</span><h2 class="portal-card-title">${safeText(adminText("connectionDetails.title", adminText("readiness.title", "Trạng thái hệ thống")))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái đã ẩn dữ liệu nhạy cảm; không bật hoặc tắt nhà cung cấp từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.ordinal", "STT"), adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Kết nối")], readinessRows, ([ordinal, key, item]) => { const state = item && item.public_ready ? "ready" : "guarded"; const label = state === "ready" ? adminText("readinessChart.ready", "Sẵn sàng") : adminText("readinessChart.guarded", "Cần kiểm tra"); return `<td>${safeText(String(ordinal))}</td><td>${safeText(key)}</td><td><span class="portal-admin-data-status" data-status="${safeText(state)}">${safeText(label)}</span></td><td>${safeText(item && item.adapter || "—")}</td>`; }, adminText("readiness.emptyTitle", "Chưa có trạng thái sẵn sàng được cấp"), adminText("readiness.emptyBody", "Máy chủ chỉ trả trạng thái khi phiên quản trị còn hiệu lực."))}</section>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${analyticsSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
@@ -28995,6 +29089,164 @@
     return `${display}${suffix || ""}`;
   }
 
+  function adminDataViewText(key, fallback, params) {
+    return uiText(`adminDataView.${key}`, fallback, params);
+  }
+
+  const ADMIN_DATA_VIEW_ROUTE_KEYS = Object.freeze({
+    "/admin/users": "users",
+    "/admin/jobs": "jobs",
+    "/admin/payments": "payments",
+    "/admin/providers": "providers",
+    "/admin/tickets": "tickets"
+  });
+
+  function adminDataViewRouteKey(page) {
+    return ADMIN_DATA_VIEW_ROUTE_KEYS[normalizePath(page && (page.routePath || page.path))] || "";
+  }
+
+  function adminDataViewRouteText(page, field, fallback) {
+    const routeKey = adminDataViewRouteKey(page);
+    if (!routeKey) return fallback;
+    return field === "section"
+      ? adminDataViewText("section", fallback)
+      : adminDataViewText(`route.${routeKey}.${field}`, fallback);
+  }
+
+  function adminDataViewNotes(page) {
+    if (!adminDataViewRouteKey(page)) return page;
+    return {
+      ...page,
+      notes: [
+        adminDataViewText("notes.session", "Phiên quản trị đã được máy chủ xác minh."),
+        adminDataViewText("notes.safety", "Mọi thao tác ghi, thử lại, hoàn tiền và tạm dừng đều cần máy chủ xác nhận và ghi nhật ký.")
+      ]
+    };
+  }
+
+  function adminDataStatusCell(state) {
+    const normalized = ALLOWED_STATES.has(String(state || "")) ? String(state) : "guarded";
+    return badge(normalized) || `<span class="portal-admin-data-status" data-status="${safeText(normalized)}">${safeText(stateLabel(normalized))}</span>`;
+  }
+
+  function renderAdminDataViewControls(module, rowsGranted, count) {
+    if (!rowsGranted) return "";
+    const fieldId = `admin-data-${safeText(module)}`;
+    const total = String(Number.isFinite(Number(count)) ? Math.max(0, Number(count)) : 0);
+    return `<div class="portal-admin-data-view-controls" data-admin-data-view-controls><label for="${fieldId}-search"><span>${safeText(adminDataViewText("searchLabel", "Tìm trong bảng"))}</span><input id="${fieldId}-search" type="search" placeholder="${safeText(adminDataViewText("searchPlaceholder", "Tìm theo nội dung đang hiển thị"))}" autocomplete="off" data-admin-data-search></label><label for="${fieldId}-status"><span>${safeText(adminDataViewText("statusLabel", "Trạng thái"))}</span><select id="${fieldId}-status" data-admin-data-status data-admin-data-all-statuses="${safeText(adminDataViewText("allStatuses", "Tất cả trạng thái"))}"><option value="all">${safeText(adminDataViewText("allStatuses", "Tất cả trạng thái"))}</option></select></label><button class="portal-button portal-button--quiet" type="button" data-admin-data-clear disabled>${safeText(adminDataViewText("clearFilters", "Xóa bộ lọc"))}</button><output data-admin-data-filter-count aria-live="polite">${safeText(adminDataViewText("resultCount", "{visible}/{total} bản ghi", { visible: total, total }))}</output></div>`;
+  }
+
+  function normalizeAdminDataViewText(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function clearAdminDataViewSelection(surface) {
+    if (!surface) return;
+    surface.querySelectorAll("[data-admin-data-row]").forEach((row) => {
+      row.setAttribute("aria-selected", "false");
+      row.classList.remove("is-selected");
+    });
+    const inspector = surface.querySelector("[data-admin-data-inspector]");
+    const body = surface.querySelector("[data-admin-data-inspector-body]");
+    const announcement = surface.querySelector("[data-admin-data-selection-announcement]");
+    if (body) {
+      body.replaceChildren();
+      body.textContent = inspector ? inspector.getAttribute("data-admin-data-inspector-prompt") || "" : "";
+    }
+    if (announcement) announcement.textContent = "";
+  }
+
+  function applyAdminDataViewFilters(surface) {
+    if (!surface) return;
+    const search = surface.querySelector("[data-admin-data-search]");
+    const status = surface.querySelector("[data-admin-data-status]");
+    const clear = surface.querySelector("[data-admin-data-clear]");
+    const output = surface.querySelector("[data-admin-data-filter-count]");
+    const noResults = surface.querySelector("[data-admin-data-no-results]");
+    const query = normalizeAdminDataViewText(search && search.value);
+    const statusValue = String(status && status.value || "all");
+    const rows = Array.from(surface.querySelectorAll("[data-admin-data-row]"));
+    let visible = 0;
+    rows.forEach((row) => {
+      const badgeElement = row.querySelector("[data-status]");
+      const rowStatus = badgeElement ? String(badgeElement.getAttribute("data-status") || "") : "";
+      const matchesQuery = !query || normalizeAdminDataViewText(row.innerText).includes(query);
+      const matchesStatus = statusValue === "all" || rowStatus === statusValue;
+      row.hidden = !(matchesQuery && matchesStatus);
+      if (!row.hidden) visible += 1;
+      if (row.hidden && row.getAttribute("aria-selected") === "true") clearAdminDataViewSelection(surface);
+    });
+    if (output) output.textContent = adminDataViewText("resultCount", "{visible}/{total} bản ghi", { visible: String(visible), total: String(rows.length) });
+    if (clear) clear.disabled = !query && statusValue === "all";
+    if (noResults) noResults.hidden = visible !== 0;
+  }
+
+  function selectAdminDataViewRow(row) {
+    if (!row || row.hidden) return;
+    const surface = row.closest("[data-portal-admin-data-surface]");
+    const table = row.closest("table");
+    if (!surface || !table) return;
+    const body = surface.querySelector("[data-admin-data-inspector-body]");
+    if (!body) return;
+    surface.querySelectorAll("[data-admin-data-row]").forEach((candidate) => {
+      const selected = candidate === row;
+      candidate.setAttribute("aria-selected", String(selected));
+      candidate.classList[selected ? "add" : "remove"]("is-selected");
+    });
+    const headers = Array.from(table.querySelectorAll("thead th"));
+    const cells = Array.from(row.querySelectorAll("td"));
+    const dl = document.createElement("dl");
+    cells.forEach((cell, index) => {
+      const header = normalizeAdminDataViewText(headers[index] && headers[index].innerText).slice(0, 500);
+      let value = String(cell.innerText || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      if (cell.querySelector("a,button,input,select,textarea,[data-portal-action]")) {
+        const clone = cell.cloneNode(true);
+        clone.querySelectorAll("a,button,input,select,textarea,[data-portal-action]").forEach((action) => action.remove());
+        value = String(clone.innerText || clone.textContent || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      }
+      if (!header || !value) return;
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = String(headers[index].innerText || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      dd.textContent = value;
+      dl.append(dt, dd);
+    });
+    body.replaceChildren(dl);
+    const announcement = surface.querySelector("[data-admin-data-selection-announcement]");
+    if (announcement) announcement.textContent = adminDataViewText("selectedAnnouncement", "Đã chọn bản ghi");
+  }
+
+  function syncAdminDataViewRows(root) {
+    if (!root || typeof root.querySelectorAll !== "function") return;
+    root.querySelectorAll("[data-portal-admin-data-surface]").forEach((surface) => {
+      const rows = Array.from(surface.querySelectorAll("tbody tr")).filter((row) => !row.querySelector(".portal-empty-cell"));
+      rows.forEach((row) => {
+        row.setAttribute("data-admin-data-row", "");
+        row.setAttribute("tabindex", "0");
+        row.setAttribute("aria-selected", "false");
+      });
+      const select = surface.querySelector("[data-admin-data-status]");
+      if (select) {
+        const all = document.createElement("option");
+        all.value = "all";
+        all.textContent = select.getAttribute("data-admin-data-all-statuses") || adminDataViewText("allStatuses", "Tất cả trạng thái");
+        select.replaceChildren(all);
+        const seen = new Set();
+        rows.forEach((row) => {
+          const badgeElement = row.querySelector("[data-status]");
+          const status = badgeElement ? String(badgeElement.getAttribute("data-status") || "") : "";
+          if (!status || seen.has(status)) return;
+          seen.add(status);
+          const option = document.createElement("option");
+          option.value = status;
+          option.textContent = stateLabel(status);
+          select.append(option);
+        });
+      }
+      applyAdminDataViewFilters(surface);
+    });
+  }
+
   function renderAdminDataSurface(module, data, content) {
     // This is read-model chrome only. It describes the exact response already
     // granted by the server; it never treats a missing projection as an empty
@@ -29011,7 +29263,10 @@
       : (rowsGranted
         ? uiText("adminDataSurface.serverScope", "Chỉ dữ liệu đã qua role check và redaction")
         : uiText("adminDataSurface.unavailableScope", "Dữ liệu chưa thể xác minh trong phiên này"));
-    return `<section class="portal-admin-data-surface" data-portal-admin-data-surface data-admin-data-module="${safeText(module)}"><div class="portal-admin-data-toolbar"><div><span>${safeText(uiText("adminDataSurface.kicker", "Dữ liệu quản trị đã được cấp"))}</span><strong data-portal-admin-data-count>${safeText(countText)}</strong><small data-portal-admin-data-scope>${safeText(scopeText)}</small></div>${badge(state)}</div>${content}</section>`;
+    const controls = renderAdminDataViewControls(module, rowsGranted, count);
+    const prompt = adminDataViewText("inspectorPrompt", "Chọn một dòng để xem các trường đã được máy chủ cấp.");
+    const dataView = rowsGranted ? `${controls}<div class="portal-admin-data-layout"><div class="portal-admin-data-list" data-admin-data-list>${content}<div class="portal-admin-data-no-results" data-admin-data-no-results hidden><strong>${safeText(adminDataViewText("noResultsTitle", "Không có kết quả phù hợp"))}</strong><p>${safeText(adminDataViewText("noResultsBody", "Thử đổi từ khóa hoặc trạng thái."))}</p></div></div><aside class="portal-admin-data-inspector" data-admin-data-inspector data-admin-data-inspector-prompt="${safeText(prompt)}"><h3>${safeText(adminDataViewText("inspectorTitle", "Chi tiết bản ghi"))}</h3><div data-admin-data-inspector-body>${safeText(prompt)}</div><p class="portal-sr-only" data-admin-data-selection-announcement aria-live="polite"></p></aside></div>` : content;
+    return `<section class="portal-admin-data-surface" data-portal-admin-data-surface data-admin-data-module="${safeText(module)}"><div class="portal-admin-data-toolbar"><div><span>${safeText(uiText("adminDataSurface.kicker", "Dữ liệu quản trị đã được cấp"))}</span><strong data-portal-admin-data-count>${safeText(countText)}</strong><small data-portal-admin-data-scope>${safeText(scopeText)}</small></div>${badge(state)}</div>${dataView}</section>`;
   }
 
   function adminJobActions(item, context, route) {
@@ -29129,10 +29384,10 @@
       return surface(renderRowsTable([adminGenericText("jobs.column.job", "Job"), adminGenericText("jobs.column.feature", "Tính năng"), adminGenericText("jobs.column.status", "Trạng thái"), adminGenericText("jobs.column.canonicalCost", "Chi phí canonical"), adminGenericText("jobs.column.updatedAt", "Cập nhật"), adminGenericText("jobs.column.outputEngine", "Output engine"), adminGenericText("jobs.column.delivery", "Delivery"), adminGenericText("jobs.column.actions", "Thao tác canonical")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${assetDeliveryState(item)}</td><td>${adminJobActions(item, context, route)}</td>`, adminGenericText("jobs.emptyTitle", "Chưa có job vận hành được cấp"), adminGenericText("jobs.emptyBody", "Admin view vẫn không hiển thị URL provider, local path hay download không ký.")));
     }
     if (["providers", "provider-cost", "features", "freezes", "pricing", "promos"].includes(module)) {
-      return surface(renderRowsTable([adminGenericText("providerFeature.column.feature", "Tính năng"), adminGenericText("providerFeature.column.status", "Trạng thái"), adminGenericText("providerFeature.column.reason", "Lý do đã rút gọn"), adminGenericText("providerFeature.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, adminGenericText("providerFeature.emptyTitle", "Chờ trạng thái canonical"), adminGenericText("providerFeature.emptyBody", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.")));
+      return surface(renderRowsTable([adminGenericText("providerFeature.column.feature", "Tính năng"), adminGenericText("providerFeature.column.status", "Trạng thái"), adminGenericText("providerFeature.column.reason", "Lý do đã rút gọn"), adminGenericText("providerFeature.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${adminDataStatusCell(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, adminGenericText("providerFeature.emptyTitle", "Chờ trạng thái canonical"), adminGenericText("providerFeature.emptyBody", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.")));
     }
     if (["tickets", "support"].includes(module)) {
-      return surface(renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${ticketStatusCell(item)}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này."));
+      return surface(renderRowsTable([adminDataViewText("ticketColumn.ticket", "Phiếu hỗ trợ"), adminDataViewText("ticketColumn.type", "Loại"), adminDataViewText("ticketColumn.priority", "Ưu tiên"), adminDataViewText("ticketColumn.status", "Trạng thái"), adminDataViewText("ticketColumn.attachment", "Đính kèm"), adminDataViewText("ticketColumn.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${ticketStatusCell(item)}</td><td>${safeText(item.has_attachment ? adminDataViewText("yes", "Có") : adminDataViewText("no", "Không"))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, uiText("supportTicket.tickets.empty.all", "Chưa có phiếu hỗ trợ được cấp"), uiText("supportTicket.tickets.empty.allBody", "Máy chủ chỉ trả phiếu hỗ trợ thuộc phiên đã xác minh.")));
     }
     if (module === "audit") {
       return renderRowsTable([adminGenericText("audit.column.event", "Sự kiện"), adminGenericText("audit.column.action", "Hành động"), adminGenericText("audit.column.outcome", "Kết quả"), adminGenericText("audit.column.occurredAt", "Thời điểm")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, adminGenericText("audit.emptyTitle", "Chưa có audit event được cấp"), adminGenericText("audit.emptyBody", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng."));
@@ -29244,9 +29499,8 @@
     const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
     const compatibilityGuarded = data.compatibility_guarded === true;
     const module = adminModuleKey(page, context);
-    const pageClass = module === "audit"
-      ? " portal-admin-audit"
-      : (module === "runtime" ? " portal-admin-runtime" : "");
+    const pageClass = " portal-admin-data-page"
+      + (module === "audit" ? " portal-admin-audit" : (module === "runtime" ? " portal-admin-runtime" : ""));
     // Audit Explorer is Web-native and its endpoint performs the canonical
     // admin check itself. It must not be disabled just because the optional
     // Bot/Core Bridge read adapter is unavailable.
@@ -29256,28 +29510,33 @@
     const incidentReadOnly = module === "failed-jobs";
     const writeEnabled = !compatibilityGuarded && !incidentReadOnly && Boolean(context.capabilities && (context.capabilities["admin-retry"] || context.capabilities["admin-refund"] || context.capabilities["admin-freeze"]));
     const canonicalAdmin = hasLiveCanonicalAdmin(context);
-    const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("record.title", "Record được yêu cầu"))}</strong><p>${safeText(adminGenericText("record.body", "ID {recordId} không cấp quyền hay dữ liệu cho browser. Core Bridge phải kiểm tra permission trước khi trả chi tiết.", { recordId: String(page.recordId) }))}</p></div></div>` : "";
-    const adapterMessage = data.message ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("adapter.title", "Trạng thái adapter"))}</strong><p>${safeText(data.message)}</p></div></div>` : "";
+    const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("record.title", "Bản ghi được yêu cầu"))}</strong><p>${safeText(adminGenericText("record.body", "Mã {recordId} không tự cấp quyền hay dữ liệu. Máy chủ phải kiểm tra quyền trước khi trả chi tiết.", { recordId: String(page.recordId) }))}</p></div></div>` : "";
+    const adapterMessage = data.message ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>${safeText(adminGenericText("adapter.title", "Trạng thái kết nối"))}</strong><p>${safeText(data.message)}</p></div></div>` : "";
     const compatibilityNotice = compatibilityGuarded
-      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("compatibility.title", "Chờ adapter Web đã kiểm chứng"))}</strong><p>${safeText(adminGenericText("compatibility.body", "Route này được giữ để không mất parity điều hướng với Bot, nhưng Web không gọi một module Bot chưa công bố. Không có số liệu, action, provider, Xu hoặc payment nào được tạo thay thế."))}</p></div></div>`
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("compatibility.title", "Chờ bộ kết nối đã được kiểm chứng"))}</strong><p>${safeText(adminGenericText("compatibility.body", "Đường dẫn này được giữ để không mất điều hướng, nhưng máy chủ chưa công bố phân hệ tương ứng. Không tạo số liệu hoặc thao tác thay thế."))}</p></div></div>`
       : "";
     const refreshTitle = compatibilityGuarded
-      ? adminGenericText("refresh.guardedTitle", "Module này chưa có adapter Bot canonical để làm mới từ Web.")
-      : adminGenericText("refresh.readyTitle", "Làm mới dữ liệu quản trị đã được role-check.");
+      ? adminGenericText("refresh.guardedTitle", "Phân hệ này chưa có bộ kết nối để làm mới dữ liệu.")
+      : adminGenericText("refresh.readyTitle", "Làm mới dữ liệu quản trị đã được kiểm tra quyền.");
     const accessTitle = writeEnabled
-      ? adminGenericText("access.writeTitle", "Write adapter có kiểm soát")
+      ? adminGenericText("access.writeTitle", "Bộ kết nối ghi có kiểm soát")
       : adminGenericText("access.readOnlyTitle", "Chế độ chỉ đọc");
     const accessBody = compatibilityGuarded
-      ? adminGenericText("access.compatibilityBody", "Bot chưa công bố adapter; Web không dựng action thay thế.")
+      ? adminGenericText("access.compatibilityBody", "Máy chủ chưa công bố bộ kết nối; giao diện không tạo thao tác thay thế.")
       : (incidentReadOnly
-        ? adminGenericText("access.incidentReadOnlyBody", "Incident queue chỉ hỗ trợ triage bằng metadata canonical đã rút gọn; Bot giữ retry/refund/charge.")
+        ? adminGenericText("access.incidentReadOnlyBody", "Hàng đợi sự cố chỉ hỗ trợ phân loại bằng dữ liệu đã rút gọn; hệ thống giữ quyền thử lại, hoàn tiền và tính phí.")
         : (writeEnabled
-          ? adminGenericText("access.writeBody", "Mỗi write vẫn cần xác nhận Bot canonical và audit event.")
-          : adminGenericText("access.readOnlyBody", "Không bypass canonical business rules.")));
-    const moduleLabel = adminGenericModuleLabel(module);
-    return `<article class="portal-page${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalTitle", "Lớp quản trị canonical có kiểm soát") : adminGenericText("guard.requiredTitle", "Cần quyền quản trị được server xác minh"))}</h2><p>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalBody", "Dữ liệu hiển thị, write permission, CSRF, confirmation và audit vẫn do Core Bridge quyết định.") : adminGenericText("guard.requiredBody", "Không có dữ liệu PII, wallet hoặc payment được render cho client không có signed canonical authority."))}</p></div></div></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminGenericText("data.title", "{module} · dữ liệu vận hành", { module: moduleLabel }))}</h2><p class="portal-card-subtitle">${safeText(adminGenericText("data.body", "Hiển thị sau permission, redaction và ownership checks. Bộ lọc/write sẽ chỉ xuất hiện khi có adapter canonical riêng."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="${safeText(page.routePath || page.path)}" title="${safeText(refreshTitle)}"${refreshEnabled ? "" : " disabled"}>${safeText(adminGenericText("refresh.label", "Làm mới"))}</button></div>${compatibilityNotice}${adapterMessage}${renderAdminDataTable(page, context)}</section>
-        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(accessTitle)}</h2><p class="portal-card-subtitle">${safeText(accessBody)}</p></div>${badge(writeEnabled ? "awaiting_confirm" : (compatibilityGuarded ? "guarded" : "read_only"))}</div>${renderNotes(page)}</aside></div>${renderAdminFreezeControls(page, context)}${recordText}</article>`;
+          ? adminGenericText("access.writeBody", "Mọi thao tác ghi vẫn cần máy chủ xác nhận và ghi nhật ký.")
+          : adminGenericText("access.readOnlyBody", "Không thể bỏ qua quy tắc nghiệp vụ của hệ thống.")));
+    const moduleLabel = adminDataViewRouteText(page, "title", adminGenericModuleLabel(module));
+    const notePage = adminDataViewNotes(page);
+    const noteLabels = {
+      integrationTitle: adminDataViewText("notes.integrationTitle", "Trạng thái tích hợp"),
+      safetyTitle: adminDataViewText("notes.safetyTitle", "Nguyên tắc an toàn")
+    };
+    return `<article class="portal-page${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalTitle", "Lớp quản trị được kiểm soát") : adminGenericText("guard.requiredTitle", "Cần quyền quản trị được máy chủ xác minh"))}</h2><p>${safeText(canonicalAdmin ? adminGenericText("guard.canonicalBody", "Dữ liệu hiển thị, quyền ghi, xác nhận yêu cầu và nhật ký kiểm tra vẫn do máy chủ quyết định.") : adminGenericText("guard.requiredBody", "Không hiển thị dữ liệu nhạy cảm cho phiên chưa được máy chủ cấp quyền quản trị."))}</p></div></div></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminGenericText("data.title", "{module} · dữ liệu vận hành", { module: moduleLabel }))}</h2><p class="portal-card-subtitle">${safeText(adminGenericText("data.body", "Chỉ hiển thị sau khi kiểm tra quyền, ẩn thông tin nhạy cảm và xác minh quyền sở hữu."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="${safeText(page.routePath || page.path)}" title="${safeText(refreshTitle)}"${refreshEnabled ? "" : " disabled"}>${safeText(adminGenericText("refresh.label", "Làm mới"))}</button></div>${compatibilityNotice}${adapterMessage}${renderAdminDataTable(page, context)}</section>
+        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(accessTitle)}</h2><p class="portal-card-subtitle">${safeText(accessBody)}</p></div>${badge(writeEnabled ? "awaiting_confirm" : (compatibilityGuarded ? "guarded" : "read_only"))}</div>${renderNotes(notePage, noteLabels)}</aside></div>${renderAdminFreezeControls(page, context)}${recordText}</article>`;
   }
 
   const BOT_COMPANION_COMMAND_PATTERN = /^\/[a-z][a-z0-9_]{1,48}$/;
@@ -33275,6 +33534,22 @@
     if (interactionsBound) return;
     interactionsBound = true;
     document.addEventListener("click", (event) => {
+      const dataViewClear = event.target.closest("[data-admin-data-clear]");
+      if (dataViewClear) {
+        const surface = dataViewClear.closest("[data-portal-admin-data-surface]");
+        const search = surface && surface.querySelector("[data-admin-data-search]");
+        const status = surface && surface.querySelector("[data-admin-data-status]");
+        if (search) search.value = "";
+        if (status) status.value = "all";
+        applyAdminDataViewFilters(surface);
+        if (search) search.focus({ preventScroll: true });
+        return;
+      }
+      const dataViewRow = event.target.closest("[data-admin-data-row]");
+      if (dataViewRow && !event.target.closest("a,button,input,select,textarea,summary")) {
+        selectAdminDataViewRow(dataViewRow);
+        return;
+      }
       const installApp = event.target.closest("[data-portal-install-app]");
       if (installApp && !installApp.disabled) { requestPwaInstall(); return; }
       if (event.target.closest('[data-portal-action="pwa-install-prompt"]')) { requestPwaInstall(); return; }
@@ -33503,6 +33778,7 @@
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
+      if (event.target.matches && event.target.matches("[data-admin-data-search]")) applyAdminDataViewFilters(event.target.closest("[data-portal-admin-data-surface]"));
     });
     document.addEventListener("change", (event) => {
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
@@ -33580,8 +33856,15 @@
         }
         rememberTransientFormDraft(form);
       }
+      if (event.target.matches && event.target.matches("[data-admin-data-status]")) applyAdminDataViewFilters(event.target.closest("[data-portal-admin-data-surface]"));
     });
     window.addEventListener("keydown", (event) => {
+      const dataViewRow = event.target instanceof HTMLElement && event.target.matches("[data-admin-data-row]") ? event.target : null;
+      if (dataViewRow && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        selectAdminDataViewRow(dataViewRow);
+        return;
+      }
       const tableScrollRegion = event.target instanceof HTMLElement && event.target.matches("[data-portal-table-scroll]")
         ? event.target
         : null;
@@ -33821,6 +34104,7 @@
       setSidebarAccessibilityState(false);
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
+      syncAdminDataViewRows(main);
       consumeDeliveryReadReceipt(main);
       placeSfxCueSheetReceipt(main);
       bindVideoPreviewPlayer(main);

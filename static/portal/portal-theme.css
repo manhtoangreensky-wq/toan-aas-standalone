@@ -16156,20 +16156,9 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
 @media (prefers-reduced-motion: no-preference) {
   /* A regular tool/detail page gets one spatially continuous entrance. The
      two command centers instead sequence only their primary decision layers. */
-  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="customer"] .portal-page:not(.portal-dashboard-app),
-  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="admin"] .portal-page:not(.portal-admin-home),
-  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard,
-  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
+  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="customer"] .portal-page:not(.portal-dashboard-app) {
     animation: portal-app-surface-enter var(--portal-motion-base) var(--portal-motion-ease-emphasis) both;
     animation-delay: calc(var(--portal-app-motion-index, 0) * 34ms);
-  }
-
-  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-guard {
-    --portal-app-motion-index: 0;
-  }
-
-  .portal-shell[data-portal-app-kind="admin"] .portal-admin-home > .portal-admin-grid {
-    --portal-app-motion-index: 2;
   }
 
   /* Only navigation-like cards respond to fine-pointer hover. The selected
@@ -17985,5 +17974,703 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     opacity: 1;
     transform: none;
     animation: none;
+  }
+}
+
+/* Admin Detail Dashboard 002 ----------------------------------------- */
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-donut {
+  background: conic-gradient(var(--portal-action) 0 var(--portal-admin-ready-angle), var(--portal-border) var(--portal-admin-ready-angle) 360deg);
+}
+
+/* Admin VI/EN Shell 001 --------------------------------------------- */
+.portal-shell[data-portal-app-kind="admin"] {
+  overflow-x: hidden;
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-workspace {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.portal-shell[data-portal-app-kind="admin"]:not(.portal-shell--auth):not(.portal-shell--landing) .portal-header {
+  display: block;
+  height: auto;
+  min-height: 120px;
+  padding: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header {
+  display: flex;
+  min-height: 56px;
+  gap: var(--portal-space-3);
+  align-items: center;
+  padding-inline: var(--portal-space-4);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher {
+  display: flex;
+  min-width: 0;
+  min-height: 64px;
+  align-items: stretch;
+  border-block: 1px solid var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher-label {
+  display: flex;
+  min-width: 96px;
+  align-items: center;
+  padding-inline: var(--portal-space-4);
+  color: var(--portal-muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-list {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: stretch;
+  overflow-x: auto;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app {
+  display: flex;
+  min-width: 168px;
+  min-height: 62px;
+  flex: 0 0 auto;
+  gap: var(--portal-space-2);
+  align-items: center;
+  padding: var(--portal-space-2) var(--portal-space-3);
+  border-bottom: 3px solid transparent;
+  color: var(--portal-muted-strong);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app[aria-current="page"] {
+  border-bottom-color: var(--portal-action);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--portal-radius-sm);
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-copy,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-copy strong,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-copy small {
+  display: block;
+  min-width: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-copy small {
+  margin-top: var(--portal-space-1);
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form {
+  display: flex;
+  min-height: 44px;
+  gap: var(--portal-space-1);
+  align-items: center;
+  padding: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form label {
+  grid-column: auto;
+  color: var(--portal-muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form select,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form button {
+  min-height: 44px;
+  padding-inline: var(--portal-space-2);
+}
+
+@media (max-width: 980px) {
+  .portal-shell[data-portal-app-kind="admin"] {
+    display: block;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: var(--portal-space-2);
+    padding: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header .portal-menu-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header .portal-crumbs {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header .portal-header-actions {
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher {
+    min-height: 56px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher-label {
+    min-width: auto;
+    padding-inline: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-app {
+    min-width: 144px;
+    min-height: 56px;
+    padding: var(--portal-space-1) var(--portal-space-2);
+  }
+}
+
+/* Admin Data Views 003 ---------------------------------------------- */
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, .6fr) auto auto;
+  gap: var(--portal-space-2);
+  align-items: end;
+  padding: var(--portal-space-3);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls label {
+  display: grid;
+  min-width: 0;
+  gap: var(--portal-space-1);
+  color: var(--portal-muted-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls input {
+  min-height: 44px;
+  border-color: var(--portal-border);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls select {
+  min-height: 44px;
+  border-color: var(--portal-border);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls button {
+  min-height: 44px;
+  border-color: var(--portal-border);
+  border-radius: var(--portal-radius-sm);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls input {
+  width: 100%;
+  padding-inline: var(--portal-space-2);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls select {
+  width: 100%;
+  padding-inline: var(--portal-space-2);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls output {
+  min-height: 44px;
+  align-content: center;
+  color: var(--portal-muted-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-layout {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(560px, 1fr) minmax(280px, 340px);
+  gap: var(--portal-space-3);
+  align-items: start;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-data-page > .portal-work-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding-inline: var(--portal-space-2);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-sm);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-list {
+  min-width: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-list .portal-data-table-wrap {
+  overflow-x: auto;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector {
+  position: sticky;
+  top: var(--portal-space-3);
+  max-height: calc(100vh - 96px);
+  padding: var(--portal-space-3);
+  overflow: auto;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector dl {
+  margin: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector h3 {
+  margin: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector dl {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: var(--portal-space-2) var(--portal-space-3);
+  margin-top: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector dt {
+  color: var(--portal-muted-strong);
+  font-weight: 700;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-no-results {
+  margin-top: var(--portal-space-2);
+  padding: var(--portal-space-4);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted-strong);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-no-results p {
+  margin-bottom: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-surface [data-admin-data-row] {
+  cursor: pointer;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-surface [data-admin-data-row].is-selected > td {
+  border-left-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-surface [data-admin-data-row]:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls input:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls select:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls button:focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector {
+    position: static;
+    max-height: none;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .7fr) auto;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls output {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls input {
+    font-size: 16px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-view-controls select {
+    font-size: 16px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-inspector dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Admin Detail Dashboard 002 Layout ---------------------------------- */
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  gap: var(--portal-space-3);
+  color: var(--portal-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics > .portal-admin-dashboard-heading {
+  grid-column: 1 / -1;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-heading h2,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-heading p,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-panel h3,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-panel p,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-list,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-legend {
+  margin: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-heading p,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-panel header p,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-empty {
+  color: var(--portal-muted-strong);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-panel {
+  min-width: 0;
+  padding: var(--portal-space-3);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-panel > header {
+  display: grid;
+  gap: var(--portal-space-1);
+  margin-bottom: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-list {
+  display: grid;
+  gap: var(--portal-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-row,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-meta {
+  display: grid;
+  gap: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-meta {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-meta strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-bar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--portal-radius-sm);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-workload-bar-fill {
+  display: block;
+  width: var(--portal-admin-bar-width);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-body {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr);
+  gap: var(--portal-space-4);
+  align-items: center;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-donut {
+  display: grid;
+  width: 144px;
+  height: 144px;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-center {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-center strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-legend {
+  display: grid;
+  gap: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-legend > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--portal-space-2);
+  padding-block: var(--portal-space-2);
+  border-bottom: 1px solid var(--portal-border);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-legend dd {
+  margin: 0;
+  color: var(--portal-ink);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-dashboard-empty {
+  padding-block: var(--portal-space-4);
+}
+
+@media (max-width: 760px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-body {
+    grid-template-columns: 128px minmax(0, 1fr);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-donut {
+    width: 128px;
+    height: 128px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics .portal-admin-readiness-center {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+/* Admin VI/EN Shell Takeover 001 */
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header {
+  display: grid;
+  height: 56px;
+  min-height: 56px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--portal-space-2);
+  padding-inline: var(--portal-space-3);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-menu-button {
+  grid-column: 1;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-crumbs {
+  min-width: 0;
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-header-actions {
+  min-width: 0;
+  grid-column: 3;
+  flex-wrap: nowrap;
+  gap: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-theme-toggle-label,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-command-trigger-label,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-command-trigger kbd {
+  display: none;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-theme-toggle,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-command-trigger {
+  width: 44px;
+  min-width: 44px;
+  justify-content: center;
+  padding-inline: var(--portal-space-2);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form label,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form select,
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form button {
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form {
+  flex: 0 0 auto;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form select {
+  width: auto;
+  max-width: 112px;
+  min-width: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form button {
+  min-width: 68px;
+  line-height: 1;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher-label {
+  flex: 0 0 96px;
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-sidebar {
+    width: min(240px, calc(100vw - 42px));
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-session-chip .portal-session-copy,
+  .portal-shell[data-portal-app-kind="admin"] .portal-session-chip .portal-session-chevron {
+    display: none;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-sidebar-close {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header {
+    height: 104px;
+    min-height: 104px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px 44px;
+    grid-template-rows: 44px 44px;
+    gap: var(--portal-space-2);
+    padding: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-menu-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-crumbs {
+    grid-column: 2 / 4;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-global-header > .portal-header-actions {
+    display: contents;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / 3;
+    grid-row: 2;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-admin-locale-form select {
+    width: 100%;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-theme-toggle {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-command-trigger {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-user-dropdown-container {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header-actions .portal-session-chip {
+    width: 44px;
+    min-width: 44px;
+    padding: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-app-switcher-label {
+    flex: 0 0 72px;
+    min-width: 72px;
+    white-space: nowrap;
   }
 }

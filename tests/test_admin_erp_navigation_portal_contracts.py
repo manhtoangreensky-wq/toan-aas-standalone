@@ -150,7 +150,7 @@ def test_admin_portal_surfaces_skip_generic_enter_motion_before_replace() -> Non
         portal.index("function renderShell()")
     ]
 
-    assert 'main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";' in mount
+    assert 'main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";' in mount
 
 
 def test_full_admin_manifest_uses_a_shared_bounded_group_limit_not_a_ten_group_truncation() -> None:

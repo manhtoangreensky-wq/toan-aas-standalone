@@ -11,7 +11,6 @@ PORTAL_PATH = ROOT / "static" / "portal" / "portal.js"
 INTEGRATION_PATH = ROOT / "static" / "portal" / "integration.js"
 BASE_SHA = "896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972"
 PROTECTED_HASHES = {
-    "static/portal/portal-theme.css": "944b3dddeebe307f98b6d674191888b8d3c28424aa3ad84c8b7eba7255289f47",
     "static/portal/portal-motion.js": "9f03ff775c10a8a55781a655b48e4c6c68d2d53e63d50188fa351deac9d90d14",
     "static/portal/integration.js": "3d65506345bc36728284f8bd8bb0375aa43d2bbc5711cacbe6291386f91411a1",
     "static/portal/portal-auth.js": "1452263d258ff9f56ebf8b0a7f17192091a4635db2a80b7ca32120407a9b59d3",
