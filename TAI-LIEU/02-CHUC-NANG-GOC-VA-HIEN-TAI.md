@@ -16,7 +16,7 @@ Không tìm thấy một tài liệu gốc duy nhất liệt kê toàn bộ ch�
 | Trích nguyên văn nguồn (file:line) | Hiện tại + bằng chứng (file:line) | Trạng thái |
 |---|---|---|
 | “Swiss-modern productivity workspace with a compact, Odoo-like information hierarchy.” — `docs/UX_APP_FIRST_REDESIGN.md:16-17` | App switcher cấp 1 được dựng tại `static/portal/portal.js:9855` và gắn vào header tại `static/portal/portal.js:10525`. | ⚠️ Source đã triển khai; local rendered evidence đã tái sinh PASS; signed production vẫn NOT_TESTED |
-| “Desktop (>=981px) \| Persistent sidebar with progressive disclosure” — `docs/UX_APP_FIRST_REDESIGN.md:56-59` | Admin hiện chiếu sidebar theo group đang active, còn app switcher giữ các group server cấp: `static/portal/portal.js:9837-9875`; contract kiểm group hiện hành tại `tests/test_admin_vi_en_shell_001_contracts.py:68-100`. | ⚠️ IA đã đổi so với mô tả gốc |
+| “Desktop (>=981px) \| Persistent sidebar with progressive disclosure” — `docs/UX_APP_FIRST_REDESIGN.md:56-59` | Admin hiện chiếu đúng một group active, còn app switcher và command palette giữ các route server cấp: `static/portal/portal.js:9837-9875`; contract current-group-only tại `tests/test_portal_navigation_ux_contracts.py:208-243`, shell contract tại `tests/test_admin_vi_en_shell_001_contracts.py:68-100`. | ⚠️ IA đã đổi so với mô tả gốc |
 | “route, drawer, modal, toast and status feedback use the shared 140/220/420ms token family” — `docs/UX_APP_FIRST_REDESIGN.md:31-33` | Admin bị loại khỏi generic workspace enter tại `static/portal/portal.js:34158`; contract khóa hành vi tại `tests/test_motion_webapp_surfaces_001_contracts.py:142-147`. | ⚠️ Admin dùng ngoại lệ tĩnh; customer không thuộc thay đổi này |
 | “The generic Users, Payments and Jobs adapters do not publish a server-side search/filter contract.” và “this PR does not add a generic local search” — `docs/superpowers/specs/2026-08-02-aura-erp-data-surfaces-design.md:14-18` | Data View nay có control local trên response đã được server cấp tại `static/portal/portal.js:29132`; search không dấu/status/count được kiểm tại `tests/test_admin_data_views_003_contracts.py:93-140`. | ⚠️ Mở rộng presentation local, không thêm API search |
 | “It reports either the exact number of rows supplied in this response, or an explicit unavailable state when `items` is absent/malformed. It never treats missing data as zero.” — `docs/superpowers/specs/2026-08-02-aura-erp-data-surfaces-design.md:20-25` | Controls chỉ xuất hiện cho `items[]` server-granted và tách guarded/unavailable tại `tests/test_admin_data_views_003_contracts.py:56-90`; bảng readiness giữ đủ row tại `tests/test_admin_detail_dashboard_002_contracts.py:142-187`. | ✅ Còn dùng ở source contract |
@@ -26,7 +26,7 @@ Không tìm thấy một tài liệu gốc duy nhất liệt kê toàn bộ ch�
 
 ## Chỗ tài liệu cũ không còn đúng
 
-1. “Desktop (>=981px) | Persistent sidebar with progressive disclosure” — `docs/UX_APP_FIRST_REDESIGN.md:56-59` → hiện tại sidebar chỉ chiếu group active, app switcher giữ cấp app: `static/portal/portal.js:9837-9875`, `tests/test_admin_vi_en_shell_001_contracts.py:68-100`.
+1. “Desktop (>=981px) | Persistent sidebar with progressive disclosure” — `docs/UX_APP_FIRST_REDESIGN.md:56-59` → hiện tại sidebar chỉ chiếu đúng một group active, app switcher/palette vẫn giữ projection server-issued: `static/portal/portal.js:9837-9875`, `tests/test_portal_navigation_ux_contracts.py:208-243`, `tests/test_admin_vi_en_shell_001_contracts.py:68-100`.
 2. “route, drawer, modal, toast and status feedback use the shared 140/220/420ms token family” — `docs/UX_APP_FIRST_REDESIGN.md:31-33` → Admin không chạy generic enter: `static/portal/portal.js:34158`, `tests/test_motion_webapp_surfaces_001_contracts.py:142-147`.
 3. “this PR does not add a generic local search” — `docs/superpowers/specs/2026-08-02-aura-erp-data-surfaces-design.md:14-18` → năm Data View hiện có search/status/count local trên visible rows: `static/portal/portal.js:29132`, `tests/test_admin_data_views_003_contracts.py:93-140`.
 4. “`adminHome.readiness.table.feature`, `adminHome.readiness.table.status`, `adminHome.readiness.table.adapter`” — `docs/superpowers/plans/2026-07-29-admin-erp-i18n-chrome.md:80` → bảng Chi tiết kết nối đã bổ sung STT 1-based, bỏ truncation, giữ row thứ 10 và render status locale hóa thay vì shared badge rỗng: `static/portal/portal.js:28733-28737`, `tests/test_admin_detail_dashboard_002_contracts.py:142-213`. Local rendered evidence đã tái sinh PASS; signed production vẫn `NOT_TESTED`.
@@ -47,7 +47,7 @@ Không tìm thấy một tài liệu gốc duy nhất liệt kê toàn bộ ch�
 
 ### Không còn đúng, cần bỏ qua
 
-- All-groups sidebar trên desktop; hiện dùng active group: `tests/test_admin_vi_en_shell_001_contracts.py:68-100`.
+- All-groups sidebar trên desktop; hiện dùng đúng một active group, palette vẫn giữ toàn route server-issued: `tests/test_portal_navigation_ux_contracts.py:208-243`, `tests/test_admin_vi_en_shell_001_contracts.py:68-100`.
 - Generic enter motion trên Admin; hiện bị guard: `tests/test_motion_webapp_surfaces_001_contracts.py:142-147`.
 - Readiness ba cột/giới hạn cũ; hiện có STT, row thứ 10 và status locale hóa: `static/portal/portal.js:28737`, `tests/test_admin_detail_dashboard_002_contracts.py:142-213`; signed production vẫn `NOT_TESTED`.
 

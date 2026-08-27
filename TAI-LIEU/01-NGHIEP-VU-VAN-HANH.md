@@ -15,9 +15,9 @@
 ## 2. Phạm vi batch Admin này
 
 - `3` file runtime giao diện được sửa: `portal.js`, `portal-i18n.js`, `portal-theme.css`.
-- `7` file test/comparator được sửa hoặc tạo.
+- `8` file test/comparator được sửa hoặc tạo.
 - `4` file tài liệu/tester được sửa: hai tài liệu vận hành và hai file trong `KIEM-THU/`.
-- Tổng working tree trước commit: đúng `14` path.
+- Tổng working tree trước commit: đúng `15` path (`3` runtime + `8` test/comparator + `4` tài liệu/tester).
 - `0` file backend/Auth/API/DB/schema/ENV bị sửa.
 - Portal hiện có `48` đăng ký trang Admin: đếm `49` occurrence `adminPage(` rồi trừ `1` function declaration.
 - Repo hiện có `352` file khớp `tests/**/test_*.py`.
@@ -81,7 +81,8 @@ Năm surface đã có pattern list/filter/detail thật:
 - Node syntax `portal.js/i18n/integration`: `3/3` exit `0`.
 - Python compile: exit `0`.
 - `git diff --check`: exit `0`.
-- Dashboard R2 mới nhất và Data Views R1 đều `PASS`, `failureCount=0`, dirty scope `14/14`; Dashboard tại cả `4` viewport có status VI `Sẵn sàng/Sẵn sàng/Cần kiểm tra`, EN `Ready/Ready/Needs review`; whole-surface locale probe `5 route × 2 locale` có `failureCount=0`.
+- Dashboard R2 mới nhất và Data Views R1 đều `PASS`, `failureCount=0`, dirty scope `15/15`; Dashboard tại cả `4` viewport có status VI `Sẵn sàng/Sẵn sàng/Cần kiểm tra`, EN `Ready/Ready/Needs review`; whole-surface locale probe `5 route × 2 locale` có `failureCount=0`.
+- Comparator CI cũ đòi desktop sidebar đủ `13` group đã được sửa theo requirement mới: sidebar chỉ chiếu active group, còn command palette vẫn giữ toàn bộ route server-issued.
 - Signed Admin production vẫn `LIVE_PASS=NOT_TESTED` vì chưa có Browser output thật sau patch.
 
 ## 7. Bẫy vận hành và nguyên nhân gốc
