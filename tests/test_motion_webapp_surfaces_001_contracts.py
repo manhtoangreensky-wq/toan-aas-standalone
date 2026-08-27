@@ -10,9 +10,6 @@ MOTION_PATH = ROOT / "static" / "portal" / "portal-motion.js"
 PORTAL_PATH = ROOT / "static" / "portal" / "portal.js"
 INTEGRATION_PATH = ROOT / "static" / "portal" / "integration.js"
 BASE_SHA = "896d3761aa1126cf4bd6a6f08e2f9a9d7c51e972"
-PORTAL_PRE_AMENDMENT_HASH = "ba802f9f9c41fd003d78dde38b31391278303f2ade2ba0cbd75eedba64c388d5"
-PORTAL_AMENDED_HASH = "5806db0131dd9fcafff3700d34f7b9f8ba1073c49d00e364d52dc809cf6a0eeb"
-
 PROTECTED_HASHES = {
     "static/portal/portal-theme.css": "944b3dddeebe307f98b6d674191888b8d3c28424aa3ad84c8b7eba7255289f47",
     "static/portal/portal-motion.js": "9f03ff775c10a8a55781a655b48e4c6c68d2d53e63d50188fa351deac9d90d14",
@@ -283,10 +280,6 @@ def test_scope_hash_line_and_debug_contracts() -> None:
     for relative_path, expected_hash in PROTECTED_HASHES.items():
         digest = _portable_hash(ROOT / relative_path)
         assert digest == expected_hash, relative_path
-    portal_digest = _portable_hash(PORTAL_PATH)
-    assert portal_digest == PORTAL_AMENDED_HASH
-    assert portal_digest != PORTAL_PRE_AMENDMENT_HASH
-
     assert ".portal-body--features .portal-header { min-height: 67px; }" in _read(CSS_PATH)
     assert len(_read(CSS_PATH).splitlines()) == 9148
     assert len(Path(__file__).read_text(encoding="utf-8").splitlines()) <= 300

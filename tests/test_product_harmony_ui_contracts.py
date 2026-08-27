@@ -118,49 +118,48 @@ def test_product_harmony_defines_semantic_geometry_and_no_raw_paint() -> None:
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", harmony)
 
 
-def test_mobile_utility_ctas_are_mounted_in_a_stable_normal_flow_dock_not_body() -> None:
-    # 1. Dock logic in JS
-    assert "data-portal-utility-dock" in PORTAL
-    assert "portal-utility-dock" in PORTAL
-    get_dock = _section(PORTAL, "function getUtilityDock()", "function syncPwaInstallControl()")
-    assert "return document.body" not in get_dock
+def test_topup_display_fallback_keeps_six_packages_disabled_without_catalog() -> None:
+    form = _section(PORTAL, "function renderPaymentRequestForm(page, context)", "function renderPaymentLookup(context)")
+    fallback = _section(PORTAL, "const PAYMENT_DISPLAY_FALLBACK_PACKAGES", "function paymentWebCatalogReady")
 
-    # Check that Copilot does NOT append to body directly anymore
-    mount_ai = _section(PORTAL, "function mountPortalAiCopilot(context)", "window.TOANAASPortal")
-    assert "document.body.appendChild(container)" not in mount_ai
-    assert "appendChild" in mount_ai
+    assert "PAYMENT_DISPLAY_FALLBACK_PACKAGES" in form
+    assert "paymentWebCatalogReady(context)" in form
+    assert 'canCreate ? "" : " disabled aria-disabled=\\"true\\""' in form
+    for label, xu in (("10.000 đ", "100"), ("20.000 đ", "200"), ("50.000 đ", "500"), ("100.000 đ", "1_000"), ("200.000 đ", "2_000"), ("500.000 đ", "5_000")):
+        assert label in fallback and f"xu: {xu}" in fallback
+    assert 'xu: adminNumber(xu, " Xu")' in form
 
-    # 2. Dock normal-flow CSS
-    assert ".portal-utility-dock {" in PORTAL_CSS
-    dock_css = _declarations_after(PORTAL_CSS, ".portal-utility-dock", 0)
-    assert "position: fixed;" not in dock_css
-    assert "position: absolute;" not in dock_css
-    assert "position: sticky;" not in dock_css
 
-    # Check resting CTA is no longer fixed in CSS
+def test_app_and_copilot_mount_on_body_with_fixed_controls_not_utility_dock() -> None:
+    pwa = _section(PORTAL, "function syncSmartInstallBanner()", "function dismissSmartInstallBanner()")
+    copilot = _section(PORTAL, "function mountPortalAiCopilot(context)", "window.TOANAASPortal")
+
+    assert "getUtilityDock" not in PORTAL
+    assert "portal-utility-dock" not in PORTAL_CSS
+    assert pwa.count("document.body.appendChild") == 2
+    assert "document.body.appendChild(container)" in copilot
+    assert "position: fixed;" in _declarations_after(PORTAL_CSS, ".portal-pwa-fab-trigger", 0)
+    assert "position: fixed;" in _declarations_after(PORTAL, ".portal-copilot-btn", 0)
+
     pwa_media = PORTAL_CSS.index("@media (max-width: 640px)", PORTAL_CSS.index("/* Floating PWA Install Trigger"))
-    pwa_css = _declarations_after(PORTAL_CSS, ".portal-pwa-fab-trigger", pwa_media)
-    assert "position: fixed;" not in pwa_css
-    for token in ("width: 44px;", "min-width: 44px;", "height: 44px;"):
-        assert token in pwa_css
-    pwa_label = _declarations_after(PORTAL_CSS, ".portal-pwa-fab-label", pwa_media)
-    assert "display: none;" in pwa_label
+    pwa_mobile = _declarations_after(PORTAL_CSS, ".portal-pwa-fab-trigger", pwa_media)
+    for token in (
+        "bottom: calc(var(--portal-safe-bottom, 0px) + 80px);",
+        "left: 12px;", "width: 44px;", "min-width: 44px;", "height: 44px;",
+        "justify-content: center;", "gap: 0;", "padding: 0;", "border-radius: 50%;",
+    ):
+        assert token in pwa_mobile
+    assert "display: none;" in _declarations_after(PORTAL_CSS, ".portal-pwa-fab-label", pwa_media)
 
     copilot_media = PORTAL.index("@media (max-width: 640px)", PORTAL.index("function renderCopilotHtml"))
-    copilot_css = _declarations_after(PORTAL, ".portal-copilot-btn", copilot_media)
-    assert "position: fixed;" not in copilot_css
-    for token in ("width: 44px;", "min-width: 44px;", "height: 44px;"):
-        assert token in copilot_css
-    copilot_label = _declarations_after(PORTAL, ".portal-copilot-btn-label", copilot_media)
-    assert "display: none;" in copilot_label
-
-    # Check final cascade override for smart install banner
-    assert ".portal-utility-dock .portal-smart-install-banner {" in PORTAL_CSS
-    banner_override = _declarations_after(PORTAL_CSS, ".portal-utility-dock .portal-smart-install-banner", 0)
-    assert "position: static;" in banner_override or "position: relative;" in banner_override
-    for inset in ("top:", "right:", "bottom:", "left:"):
-        assert f"{inset} auto;" in banner_override
-
+    copilot_mobile = _declarations_after(PORTAL, ".portal-copilot-btn", copilot_media)
+    for token in (
+        "bottom: calc(var(--portal-safe-bottom, 0px) + 80px);",
+        "right: 12px;", "width: 44px;", "min-width: 44px;", "height: 44px;",
+        "justify-content: center;", "gap: 0;", "padding: 0;", "border-radius: 50%;",
+    ):
+        assert token in copilot_mobile
+    assert "display: none;" in _declarations_after(PORTAL, ".portal-copilot-btn-label", copilot_media)
     assert 'aria-label="Mở Trợ Lý AI AAS BOT"' in PORTAL
     assert '${portalIcon(ICONS.chat)}' in PORTAL
     assert '<span>🤖</span>' not in PORTAL
