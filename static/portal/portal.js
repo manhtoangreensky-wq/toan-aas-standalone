@@ -21193,6 +21193,15 @@
     return String(data.payment_id || data.order_code || data.id || "").trim();
   }
 
+  const PAYMENT_DISPLAY_FALLBACK_PACKAGES = Object.freeze([
+    { code: "topup_10k", label: "10.000 đ", amount_vnd: 10_000, xu: 100 },
+    { code: "topup_20k", label: "20.000 đ", amount_vnd: 20_000, xu: 200 },
+    { code: "topup_50k", label: "50.000 đ", amount_vnd: 50_000, xu: 500 },
+    { code: "topup_100k", label: "100.000 đ", amount_vnd: 100_000, xu: 1_000 },
+    { code: "topup_200k", label: "200.000 đ", amount_vnd: 200_000, xu: 2_000 },
+    { code: "topup_500k", label: "500.000 đ", amount_vnd: 500_000, xu: 5_000 }
+  ]);
+
   function paymentWebCatalogReady(context) {
     const payos = context && context.paymentOptions && context.paymentOptions.payos;
     return Boolean(payos && payos.request_enabled === true && payos.topup_catalog_available === true && context.capabilities && context.capabilities["payment-create"] === true);
@@ -21402,10 +21411,13 @@
 
   function renderPaymentRequestForm(page, context) {
     const canCreate = paymentWebCatalogReady(context);
-    const packages = [
+    const serverPackages = [
       ...(context && context.paymentOptions && context.paymentOptions.payos && Array.isArray(context.paymentOptions.payos.topup_packages)
         ? context.paymentOptions.payos.topup_packages
         : [])
+    ];
+    const packages = [
+      ...(serverPackages.length ? serverPackages : PAYMENT_DISPLAY_FALLBACK_PACKAGES)
     ].flatMap((item) => {
       if (!item || typeof item !== "object" || Array.isArray(item) || item.available === false) return [];
       const code = canonicalCatalogCode(item.code);
@@ -32802,20 +32814,6 @@
     return true;
   }
 
-  function getUtilityDock() {
-    const main = document.querySelector("[data-portal-main]");
-    if (!main) return null;
-    let dock = main.querySelector("[data-portal-utility-dock]");
-    if (!dock) {
-      dock = document.createElement("div");
-      dock.className = "portal-utility-dock";
-      dock.id = "portal-utility-dock";
-      dock.setAttribute("data-portal-utility-dock", "true");
-      main.appendChild(dock);
-    }
-    return dock;
-  }
-
   function syncPwaInstallControl() {
     const control = document.querySelector("[data-portal-install-app]");
     if (control) {
@@ -32864,14 +32862,6 @@
       }
     } catch (_) {}
 
-    const dock = getUtilityDock();
-    if (!dock) {
-      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
-      if (existingBanner) existingBanner.remove();
-      const existingFab = document.querySelector("[data-portal-pwa-fab]");
-      if (existingFab) existingFab.remove();
-      return;
-    }
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
     const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
@@ -32890,8 +32880,8 @@
         banner.setAttribute("data-portal-smart-install-banner", "true");
         banner.setAttribute("role", "complementary");
         banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
+        document.body.appendChild(banner);
       }
-      dock.appendChild(banner);
 
       banner.innerHTML = `
         <div class="portal-smart-install-inner">
@@ -32922,8 +32912,8 @@
         fab.setAttribute("data-portal-action", "pwa-toggle-banner");
         fab.setAttribute("title", "Tải & Cài đặt App TOAN AAS");
         fab.setAttribute("aria-label", "Tải & Cài đặt App TOAN AAS");
+        document.body.appendChild(fab);
       }
-      dock.appendChild(fab);
       fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">Tải App</span>`;
     }
   }
@@ -34543,16 +34533,11 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
       }
       return;
     }
-    const dock = getUtilityDock();
-    if (!dock) {
-      if (container) container.remove();
-      return;
-    }
     if (!container) {
       container = document.createElement("div");
       container.id = "portal-copilot-root";
+      document.body.appendChild(container);
     }
-    dock.appendChild(container);
     renderCopilotHtml(container, context);
   }
 
