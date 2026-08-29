@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 from contextlib import closing
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -13,15 +14,17 @@ import math
 import os
 import re
 import secrets
+import threading
+import time
 import uuid
 from io import BytesIO
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from urllib.parse import urlparse
 from zipfile import BadZipFile, ZipFile
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from copyfast_auth import (
     _record_audit,
@@ -34,7 +37,12 @@ from copyfast_auth import (
     require_admin_csrf,
     require_csrf,
 )
-from copyfast_bridge import bridge_configured, bridge_request
+from copyfast_bridge import (
+    bridge_configured,
+    bridge_request,
+    manual_admin_bridge_configured,
+    manual_admin_bridge_request,
+)
 from copyfast_capability_hub import capability_hub
 from copyfast_campaign_schedule import (
     MAX_ACTIVE_SCHEDULE_INTENTS_PER_ACCOUNT,
@@ -791,6 +799,40 @@ DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
     {"code": "topup_200k", "label": "200.000 đ", "amount_vnd": 200000, "xu": 2000, "available": True},
     {"code": "topup_500k", "label": "500.000 đ", "amount_vnd": 500000, "xu": 5000, "available": True},
 )
+
+MANUAL_TOPUP_METHODS: tuple[dict[str, str], ...] = (
+    {"id": "bank_acb", "label": "ACB bank transfer", "currency": "VND", "mode": "transfer"},
+    {"id": "bank_acb_vietqr", "label": "ACB VietQR", "currency": "VND", "mode": "transfer"},
+    {"id": "zalopay_personal", "label": "ZaloPay Personal", "currency": "VND", "mode": "transfer"},
+    {"id": "zalopay_merchant", "label": "ZaloPay Merchant", "currency": "VND", "mode": "transfer"},
+    {"id": "momo_tuithantai", "label": "MoMo Túi Thần Tài", "currency": "VND", "mode": "transfer"},
+    {"id": "usdt_trc20", "label": "USDT TRC20", "currency": "USD", "mode": "transfer"},
+)
+MANUAL_TOPUP_METHOD_IDS = frozenset(item["id"] for item in MANUAL_TOPUP_METHODS)
+MANUAL_TOPUP_REQUEST_ID_RE = re.compile(r"^MANUAL-[1-9][0-9]{0,18}$")
+MANUAL_TOPUP_STATUSES = frozenset({"pending_admin_review", "approved", "rejected"})
+MANUAL_ADMIN_LIST_FILTERS = frozenset({"pending", "approved", "rejected"})
+MANUAL_ADMIN_PUBLIC_STATUSES = frozenset({"pending_admin_review", "approved", "rejected"})
+MANUAL_ADMIN_PROJECTION_FIELDS = (
+    "request_id",
+    "telegram_user_id",
+    "display_name",
+    "amount_vnd",
+    "currency",
+    "method",
+    "transfer_content",
+    "reference",
+    "status",
+    "expected_xu",
+    "approved_xu",
+    "submitted_at",
+    "decision_at",
+    "decided_by_admin_id",
+    "admin_note",
+)
+MANUAL_ADMIN_RECEIPT_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,160}$")
+MANUAL_ADMIN_RECEIPT_TTL_SECONDS = 300
+MANUAL_ADMIN_RECEIPT_MAX_ITEMS = 256
 
 
 def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
@@ -1903,6 +1945,108 @@ class PaymentRequest(BaseModel):
     package_id: str = Field(default="", max_length=120)
     payment_type: str = Field(default="topup_xu", max_length=80)
     idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+class ManualTopupCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    amount_vnd: int = Field(strict=True, ge=1, le=9007199254740991)
+    method: str = Field(min_length=1, max_length=40)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+    reference: str = Field(default="", max_length=240)
+
+    @field_validator("method")
+    @classmethod
+    def validate_method(cls, value: str) -> str:
+        if type(value) is not str or value not in MANUAL_TOPUP_METHOD_IDS:
+            raise ValueError("Phương thức nạp thủ công không hợp lệ")
+        return value
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _require_key(value)
+
+    @field_validator("reference", mode="before")
+    @classmethod
+    def validate_reference(cls, value: Any) -> str:
+        if type(value) is not str:
+            raise ValueError("Tham chiếu giao dịch không hợp lệ")
+        cleaned = value.strip()
+        if len(cleaned) > 240 or "<" in cleaned or ">" in cleaned or any(ord(character) < 32 for character in cleaned):
+            raise ValueError("Tham chiếu giao dịch không hợp lệ")
+        return cleaned
+
+
+class ManualAdminDraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["approve_expected", "approve_custom", "reject"]
+    approved_xu: int | None = Field(default=None, strict=True, ge=1, le=9_007_199_254_740_991)
+    reason: str | None = Field(default=None, max_length=300)
+
+    @field_validator("reason", mode="before")
+    @classmethod
+    def normalize_reason(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        if type(value) is not str:
+            raise ValueError("Lý do quyết định không hợp lệ")
+        cleaned = value.strip()
+        if not 3 <= len(cleaned) <= 300 or any(ord(character) < 32 for character in cleaned):
+            raise ValueError("Lý do quyết định cần từ 3 đến 300 ký tự")
+        return cleaned
+
+    @model_validator(mode="after")
+    def validate_action_shape(self):
+        if self.action == "approve_expected":
+            if self.approved_xu is not None or self.reason is not None:
+                raise ValueError("Duyệt Xu dự kiến không nhận dữ liệu bổ sung")
+        elif self.action == "approve_custom":
+            if self.approved_xu is None or self.reason is None:
+                raise ValueError("Duyệt Xu tùy chỉnh cần số Xu và lý do")
+        elif self.approved_xu is not None or self.reason is None:
+            raise ValueError("Từ chối chỉ nhận lý do")
+        return self
+
+
+class ManualAdminConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    confirmation_receipt: str = Field(min_length=32, max_length=160)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("confirmation_receipt")
+    @classmethod
+    def validate_receipt(cls, value: str) -> str:
+        if MANUAL_ADMIN_RECEIPT_PATTERN.fullmatch(value) is None:
+            raise ValueError("Biên nhận xác nhận không hợp lệ")
+        return value
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_key(cls, value: str) -> str:
+        return _require_key(value)
+
+
+@dataclass
+class ManualAdminReceiptEntry:
+    account_id: str
+    session_id: str
+    admin_id: str
+    request_id: str
+    action: str
+    approved_xu: int
+    reason: str
+    expires_at: float
+    private_token: str
+    claimed_key_hash: str = ""
+    in_flight: bool = False
+    terminal_result: dict[str, Any] | None = None
+
+
+_manual_admin_receipt_vault: dict[str, ManualAdminReceiptEntry] = {}
+_manual_admin_receipt_lock = threading.RLock()
 
 
 class FreezeRequest(BaseModel):
@@ -3095,6 +3239,7 @@ async def core_status():
         "Trạng thái kết nối",
         data={
             "bridge_configured": bridge_configured(),
+            "manual_admin_bridge_configured": manual_admin_bridge_configured(),
             "flags": _flags(),
             "web_feature_execution_available": execution_ready,
             # Feature names are public registry metadata, not provider,
@@ -4126,6 +4271,7 @@ async def payment_options(account: dict = Depends(require_account)):
     cfg = _payos_config()
     direct_ready = bool(cfg["client_id"] and cfg["api_key"] and cfg["checksum"])
     payos_available = bool(_flags()["payment_enabled"] and (direct_ready or bridge_configured()) and topup_catalog_available)
+    manual_available = bridge_configured()
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
         True,
@@ -4142,19 +4288,483 @@ async def payment_options(account: dict = Depends(require_account)):
                 "checkout_owner": "canonical_bot",
             },
             "manual": {
-                "available": bool(bot_chat_url),
+                "available": manual_available,
                 "telegram_url": bot_chat_url,
                 "command": "/thucong",
                 "receipt_channel": "telegram_bot",
                 "payment_lookup_available": False,
                 "wallet_history_signal_available": True,
-                "history_in_web": False,
+                "history_in_web": manual_available,
                 "history_channel": "telegram_bot",
                 "history_command": "/thucong",
                 "history_menu_label": "Lịch sử nạp thủ công",
+                "methods": [dict(item) for item in MANUAL_TOPUP_METHODS] if manual_available else [],
             },
         },
     )
+
+
+def _manual_topup_request_id(value: Any) -> str | None:
+    request_id = str(value or "").strip()
+    if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None:
+        return None
+    return request_id
+
+
+def _manual_topup_public_record(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    request_id = str(value.get("request_id") or "").strip()
+    status_name = str(value.get("status") or "").strip()
+    if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None or status_name not in MANUAL_TOPUP_STATUSES:
+        return {}
+    result: dict[str, Any] = {"request_id": request_id, "status": status_name}
+    for field in ("amount_vnd", "expected_xu", "approved_xu"):
+        item = value.get(field)
+        if type(item) is int and item >= 0:
+            result[field] = item
+    method = str(value.get("method") or "")
+    if method in MANUAL_TOPUP_METHOD_IDS:
+        result["method"] = method
+    currency = str(value.get("currency") or "").strip().upper()
+    if re.fullmatch(r"[A-Z]{3,5}", currency):
+        result["currency"] = currency
+    for field in ("transfer_content", "reference", "submitted_at", "updated_at", "admin_note"):
+        item = _browser_scalar(value.get(field), maximum=240)
+        if isinstance(item, str):
+            result[field] = item
+    if type(value.get("idempotent_replay")) is bool:
+        result["idempotent_replay"] = value["idempotent_replay"]
+    return result
+
+
+def _manual_topup_public_response(response: Any, *, history: bool = False) -> dict:
+    source = response if isinstance(response, dict) else {}
+    status_name = str(source.get("status") or "guarded")
+    if status_name not in MANUAL_TOPUP_STATUSES | {"guarded", "failed"}:
+        status_name = "guarded"
+    raw_data = source.get("data")
+    if history:
+        raw_items = raw_data if isinstance(raw_data, list) else (raw_data.get("items") if isinstance(raw_data, dict) else [])
+        items = [_manual_topup_public_record(item) for item in (raw_items if isinstance(raw_items, list) else [])[:50]]
+        data: dict[str, Any] = {"items": [item for item in items if item]}
+    else:
+        data = _manual_topup_public_record(raw_data)
+    raw_error = str(source.get("error_code") or "")
+    if raw_error.endswith("NOT_FOUND"):
+        error_code = "MANUAL_TOPUP_NOT_FOUND"
+    elif raw_error in _PUBLIC_BRIDGE_ERROR_CODES:
+        error_code = raw_error
+    elif raw_error:
+        error_code = "CORE_BRIDGE_RESPONSE_GUARDED"
+    else:
+        error_code = None
+    messages = {
+        "pending_admin_review": "Yêu cầu nạp thủ công đang chờ Admin đối soát.",
+        "approved": "Yêu cầu nạp thủ công đã được duyệt.",
+        "rejected": "Yêu cầu nạp thủ công đã bị từ chối.",
+        "guarded": "Yêu cầu nạp thủ công đang được bảo vệ.",
+        "failed": "Chưa thể xử lý yêu cầu nạp thủ công.",
+    }
+    return envelope(bool(source.get("ok")), messages[status_name], data=data, status_name=status_name, error_code=error_code)
+
+
+async def _manual_topup_bridge(
+    method: str,
+    path: str,
+    *,
+    account: dict,
+    request: Request,
+    payload: dict | None = None,
+    params: dict | None = None,
+    history: bool = False,
+) -> dict:
+    if not _flags()["copyfast_enabled"]:
+        return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
+    owner_id = _linked(account)
+    response = await bridge_request(
+        method,
+        path,
+        payload=payload,
+        params=params,
+        request_id=_request_id(request),
+        actor_id=owner_id,
+        owner_id=owner_id,
+    )
+    return _manual_topup_public_response(response, history=history)
+
+
+def _manual_topup_http_response(result: dict):
+    if result.get("error_code") == "MANUAL_TOPUP_NOT_FOUND":
+        return JSONResponse(status_code=404, content=result)
+    return result
+
+
+def _manual_topup_not_found_response():
+    return JSONResponse(
+        status_code=404,
+        content=envelope(
+            False,
+            "Không tìm thấy yêu cầu nạp thủ công.",
+            status_name="guarded",
+            error_code="MANUAL_TOPUP_NOT_FOUND",
+        ),
+    )
+
+
+def _manual_admin_request_id(value: Any) -> str | None:
+    request_id = str(value or "").strip()
+    return request_id if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) else None
+
+
+def _manual_admin_public_record(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    request_id = _manual_admin_request_id(value.get("request_id"))
+    status_name = str(value.get("status") or "").strip()
+    if request_id is None or status_name not in MANUAL_ADMIN_PUBLIC_STATUSES:
+        return {}
+    record: dict[str, Any] = {"request_id": request_id, "status": status_name}
+    telegram_user_id = str(value.get("telegram_user_id") or "").strip()
+    if re.fullmatch(r"[1-9][0-9]{0,19}", telegram_user_id):
+        record["telegram_user_id"] = telegram_user_id
+    for field in ("amount_vnd", "expected_xu", "approved_xu"):
+        item = value.get(field)
+        if type(item) is int and 0 <= item <= 9_007_199_254_740_991:
+            record[field] = item
+    currency = str(value.get("currency") or "").strip().upper()
+    if re.fullmatch(r"[A-Z]{3,5}", currency):
+        record["currency"] = currency
+    method = str(value.get("method") or "").strip()
+    if re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,39}", method):
+        record["method"] = method
+    for field in (
+        "display_name", "transfer_content", "reference", "submitted_at",
+        "decision_at", "decided_by_admin_id", "admin_note",
+    ):
+        scalar = _browser_scalar(value.get(field), maximum=300)
+        if isinstance(scalar, str):
+            record[field] = scalar
+    return {field: record[field] for field in MANUAL_ADMIN_PROJECTION_FIELDS if field in record}
+
+
+def _manual_admin_public_response(response: Any, *, history: bool = False) -> dict:
+    source = response if isinstance(response, dict) else {}
+    raw_data = source.get("data")
+    if history:
+        raw_items = raw_data.get("items") if isinstance(raw_data, dict) else []
+        items = [_manual_admin_public_record(item) for item in (raw_items if isinstance(raw_items, list) else [])[:50]]
+        items = [item for item in items if item]
+        filter_name = str(raw_data.get("filter") or "pending") if isinstance(raw_data, dict) else "pending"
+        data: dict[str, Any] = {
+            "items": items,
+            "count": len(items),
+            "filter": filter_name if filter_name in MANUAL_ADMIN_LIST_FILTERS else "pending",
+        }
+    else:
+        data = _manual_admin_public_record(raw_data)
+        for field in ("action", "approved_xu_to_apply", "reason", "expires_at", "idempotent_replay"):
+            if not isinstance(raw_data, dict):
+                continue
+            value = raw_data.get(field)
+            if field == "action" and value in {"approve_expected", "approve_custom", "reject"}:
+                data[field] = value
+            elif field in {"approved_xu_to_apply", "expires_at"} and type(value) is int and value >= 0:
+                data[field] = value
+            elif field == "reason" and isinstance(value, str):
+                data[field] = value.strip()[:300]
+            elif field == "idempotent_replay" and type(value) is bool:
+                data[field] = value
+    status_name = str(source.get("status") or "guarded")
+    allowed = MANUAL_ADMIN_PUBLIC_STATUSES | {"completed", "awaiting_confirm", "guarded", "failed"}
+    if status_name not in allowed:
+        status_name = "guarded"
+    raw_error = str(source.get("error_code") or "")
+    error_code = "MANUAL_ADMIN_NOT_FOUND" if raw_error.endswith("NOT_FOUND") else (
+        raw_error if raw_error in _PUBLIC_BRIDGE_ERROR_CODES else ("CORE_BRIDGE_RESPONSE_GUARDED" if raw_error else None)
+    )
+    messages = {
+        "completed": "Đã đọc hàng đợi nạp thủ công.",
+        "awaiting_confirm": "Hãy xác nhận quyết định nạp thủ công.",
+        "pending_admin_review": "Yêu cầu đang chờ đối soát.",
+        "approved": "Yêu cầu nạp thủ công đã được duyệt.",
+        "rejected": "Yêu cầu nạp thủ công đã bị từ chối.",
+        "guarded": "Hàng đợi nạp thủ công đang được bảo vệ.",
+        "failed": "Chưa thể xử lý hàng đợi nạp thủ công.",
+    }
+    return envelope(bool(source.get("ok")), messages[status_name], data=data, status_name=status_name, error_code=error_code)
+
+
+def _manual_admin_http_response(result: dict):
+    if result.get("error_code") == "MANUAL_ADMIN_NOT_FOUND":
+        return JSONResponse(status_code=404, content=result)
+    return result
+
+
+def _manual_admin_guard(code: str, message: str, *, status_code: int = 200):
+    result = envelope(False, message, status_name="guarded", error_code=code)
+    return JSONResponse(status_code=status_code, content=result) if status_code != 200 else result
+
+
+def _manual_admin_session_id(request: Request, account: dict) -> str:
+    session = current_session(request)
+    if str(session.get("account", {}).get("id") or "") != str(account.get("id") or ""):
+        raise HTTPException(status_code=403, detail="Phiên Admin không khớp tài khoản")
+    return str(session.get("session_id") or "")
+
+
+def _manual_admin_clean_receipts(now: float) -> None:
+    for key in [key for key, entry in _manual_admin_receipt_vault.items() if entry.expires_at <= now]:
+        _manual_admin_receipt_vault.pop(key, None)
+
+
+def _manual_admin_issue_receipt(
+    *, account: dict, session_id: str, admin_id: str, request_id: str,
+    private_token: str, public_data: dict[str, Any],
+) -> str:
+    now = time.time()
+    bot_expiry = public_data.get("expires_at")
+    expiry = min(now + MANUAL_ADMIN_RECEIPT_TTL_SECONDS, float(bot_expiry)) if type(bot_expiry) is int else now + MANUAL_ADMIN_RECEIPT_TTL_SECONDS
+    if expiry <= now or not private_token:
+        raise ValueError("invalid_confirmation_token")
+    with _manual_admin_receipt_lock:
+        _manual_admin_clean_receipts(now)
+        if len(_manual_admin_receipt_vault) >= MANUAL_ADMIN_RECEIPT_MAX_ITEMS:
+            raise OverflowError("receipt_vault_full")
+        receipt = secrets.token_urlsafe(32)
+        receipt_hash = hashlib.sha256(receipt.encode("utf-8")).hexdigest()
+        _manual_admin_receipt_vault[receipt_hash] = ManualAdminReceiptEntry(
+            account_id=str(account.get("id") or ""),
+            session_id=session_id,
+            admin_id=admin_id,
+            request_id=request_id,
+            action=str(public_data.get("action") or ""),
+            approved_xu=int(public_data.get("approved_xu_to_apply") or 0),
+            reason=str(public_data.get("reason") or "")[:300],
+            expires_at=expiry,
+            private_token=private_token,
+        )
+        return receipt
+
+
+@router.get("/admin/payments/manual")
+async def manual_admin_list(
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+    status: str = Query(default="pending"),
+    limit: int = Query(default=20, ge=1, le=50),
+):
+    if not _flags()["admin_erp_enabled"] or not manual_admin_bridge_configured():
+        return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_BRIDGE_DISABLED", "Hàng đợi nạp thủ công chưa sẵn sàng.")
+    if status not in MANUAL_ADMIN_LIST_FILTERS:
+        raise HTTPException(status_code=422, detail="Bộ lọc nạp thủ công không hợp lệ")
+    if set(request.query_params.keys()) - {"status", "limit"} or len(request.query_params.getlist("status")) > 1 or len(request.query_params.getlist("limit")) > 1:
+        raise HTTPException(status_code=422, detail="Tham số hàng đợi nạp thủ công không hợp lệ")
+    admin_id = str(account.get("canonical_user_id") or "")
+    response, _ = await manual_admin_bridge_request(
+        "GET", "/internal/v1/admin/payments/manual", admin_id=admin_id,
+        params={"status": status, "limit": limit}, request_id=_request_id(request),
+    )
+    return _manual_admin_public_response(response, history=True)
+
+
+@router.get("/admin/payments/manual/{request_id}")
+async def manual_admin_detail(
+    request_id: str,
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    canonical_id = _manual_admin_request_id(request_id)
+    if canonical_id is None:
+        return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
+    if not _flags()["admin_erp_enabled"] or not manual_admin_bridge_configured():
+        return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_BRIDGE_DISABLED", "Hàng đợi nạp thủ công chưa sẵn sàng.")
+    response, _ = await manual_admin_bridge_request(
+        "GET", f"/internal/v1/admin/payments/manual/{canonical_id}",
+        admin_id=str(account.get("canonical_user_id") or ""), request_id=_request_id(request),
+    )
+    return _manual_admin_http_response(_manual_admin_public_response(response))
+
+
+@router.post("/admin/payments/manual/{request_id}/draft")
+async def manual_admin_draft(
+    request_id: str,
+    payload: ManualAdminDraftRequest,
+    request: Request,
+    account: dict = Depends(require_canonical_admin_csrf),
+):
+    canonical_id = _manual_admin_request_id(request_id)
+    if canonical_id is None:
+        return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
+    if not _flags()["admin_erp_enabled"] or not manual_admin_bridge_configured():
+        return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_BRIDGE_DISABLED", "Hàng đợi nạp thủ công chưa sẵn sàng.")
+    if not _flags()["admin_writes_enabled"]:
+        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Duyệt nạp thủ công trên Web chưa được bật.")
+    session_id = _manual_admin_session_id(request, account)
+    admin_id = str(account.get("canonical_user_id") or "")
+    body = payload.model_dump(exclude_none=True)
+    response, private_token = await manual_admin_bridge_request(
+        "POST", f"/internal/v1/admin/payments/manual/{canonical_id}/draft",
+        admin_id=admin_id, payload=body, request_id=_request_id(request),
+    )
+    public = _manual_admin_public_response(response)
+    if not public.get("ok") or public.get("status") != "awaiting_confirm" or not private_token:
+        _record_admin_write_audit(account, request, "admin.manual_topup.draft", canonical_id, public)
+        return public
+    try:
+        receipt = _manual_admin_issue_receipt(
+            account=account, session_id=session_id, admin_id=admin_id,
+            request_id=canonical_id, private_token=private_token,
+            public_data=public.get("data") or {},
+        )
+    except (ValueError, OverflowError):
+        result = _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE", "Chưa thể tạo biên nhận xác nhận an toàn.")
+        _record_admin_write_audit(account, request, "admin.manual_topup.draft", canonical_id, result)
+        return result
+    public["data"]["confirmation_receipt"] = receipt
+    _record_admin_write_audit(account, request, "admin.manual_topup.draft", canonical_id, public)
+    return public
+
+
+@router.post("/admin/payments/manual/{request_id}/confirm")
+async def manual_admin_confirm(
+    request_id: str,
+    payload: ManualAdminConfirmRequest,
+    request: Request,
+    account: dict = Depends(require_canonical_admin_csrf),
+):
+    canonical_id = _manual_admin_request_id(request_id)
+    if canonical_id is None:
+        return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
+    if not _flags()["admin_erp_enabled"] or not manual_admin_bridge_configured():
+        return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_BRIDGE_DISABLED", "Hàng đợi nạp thủ công chưa sẵn sàng.")
+    if not _flags()["admin_writes_enabled"]:
+        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Duyệt nạp thủ công trên Web chưa được bật.")
+    session_id = _manual_admin_session_id(request, account)
+    admin_id = str(account.get("canonical_user_id") or "")
+    receipt_hash = hashlib.sha256(payload.confirmation_receipt.encode("utf-8")).hexdigest()
+    key_hash = hashlib.sha256(payload.idempotency_key.encode("utf-8")).hexdigest()
+    with _manual_admin_receipt_lock:
+        now = time.time()
+        entry = _manual_admin_receipt_vault.get(receipt_hash)
+        if entry is None:
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Hãy tạo xác nhận mới trong phiên hiện tại.")
+        if entry.expires_at <= now:
+            _manual_admin_receipt_vault.pop(receipt_hash, None)
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_EXPIRED", "Xác nhận đã hết hạn; hãy tạo lại.")
+        if (
+            entry.account_id != str(account.get("id") or "")
+            or entry.session_id != session_id
+            or entry.admin_id != admin_id
+            or entry.request_id != canonical_id
+        ):
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Xác nhận không thuộc phiên Admin hiện tại.")
+        if entry.claimed_key_hash and not hmac.compare_digest(entry.claimed_key_hash, key_hash):
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_ALREADY_USED", "Xác nhận đã được dùng với một yêu cầu khác.")
+        if entry.terminal_result is not None:
+            return dict(entry.terminal_result)
+        if entry.in_flight:
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS", "Quyết định đang được xử lý.")
+        entry.claimed_key_hash = key_hash
+        entry.in_flight = True
+        private_token = entry.private_token
+
+    response, _ = await manual_admin_bridge_request(
+        "POST", f"/internal/v1/admin/payments/manual/{canonical_id}/confirm",
+        admin_id=admin_id, payload={"confirmation_token": private_token}, request_id=_request_id(request),
+    )
+    public = _manual_admin_public_response(response)
+    with _manual_admin_receipt_lock:
+        current = _manual_admin_receipt_vault.get(receipt_hash)
+        if current is not None:
+            current.in_flight = False
+            if public.get("ok") and public.get("status") in {"approved", "rejected"}:
+                current.terminal_result = dict(public)
+            elif str(public.get("error_code") or "") not in _RETRYABLE_BRIDGE_CODES:
+                current.claimed_key_hash = ""
+    _record_admin_write_audit(account, request, "admin.manual_topup.confirm", canonical_id, public)
+    return public
+
+
+@router.post("/payments/manual")
+async def manual_topup_create(
+    payload: ManualTopupCreateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    owner_id = _linked(account)
+    key = payload.idempotency_key
+    local_key = hashlib.sha256(f"{account['id']}:{owner_id}:{key}".encode("utf-8")).hexdigest()
+    body: dict[str, Any] = {
+        "amount_vnd": payload.amount_vnd,
+        "method": payload.method,
+        "idempotency_key": key,
+    }
+    if payload.reference:
+        body["txid"] = payload.reference
+    return await _run_transient_idempotent(
+        f"manual-topup:{account['id']}:{owner_id}",
+        local_key,
+        lambda: _manual_topup_bridge(
+            "POST",
+            "/internal/v1/payments/manual",
+            account=account,
+            request=request,
+            payload=body,
+        ),
+    )
+
+
+@router.get("/payments/manual")
+async def manual_topup_history(
+    request: Request,
+    account: dict = Depends(require_account),
+    limit: int = Query(default=20, ge=1, le=50),
+):
+    return await _manual_topup_bridge(
+        "GET",
+        "/internal/v1/payments/manual",
+        account=account,
+        request=request,
+        params={"limit": limit},
+        history=True,
+    )
+
+
+@router.get("/payments/manual/{request_id}")
+async def manual_topup_detail(
+    request_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    canonical_id = _manual_topup_request_id(request_id)
+    if canonical_id is None:
+        return _manual_topup_not_found_response()
+    result = await _manual_topup_bridge(
+        "GET",
+        f"/internal/v1/payments/manual/{canonical_id}",
+        account=account,
+        request=request,
+    )
+    return _manual_topup_http_response(result)
+
+
+@router.get("/payments/manual/{request_id}/status")
+async def manual_topup_status(
+    request_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    canonical_id = _manual_topup_request_id(request_id)
+    if canonical_id is None:
+        return _manual_topup_not_found_response()
+    result = await _manual_topup_bridge(
+        "GET",
+        f"/internal/v1/payments/manual/{canonical_id}/status",
+        account=account,
+        request=request,
+    )
+    return _manual_topup_http_response(result)
 
 
 def _payos_config() -> dict[str, str]:

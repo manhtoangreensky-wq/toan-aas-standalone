@@ -1,32 +1,113 @@
 name: Case kiểm thử TOAN AAS Web App
 description: Ghi kết quả một case từ KIEM-THU/DANH-SACH-CASE.md
 title: "[TEST] WA-XX — "
-labels: []
+labels: [case-test, chờ-test]
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Không dán token, mật khẩu, backup code, Admin ID, email đầy đủ, số điện thoại hoặc raw customer record
   - type: input
-    id: case
+    id: case_id
     attributes:
       label: Mã case
-      placeholder: WA-01
+      placeholder: WA-17
     validations:
       required: true
   - type: input
-    id: sha
+    id: spec_id
+    attributes:
+      label: SPEC_ID
+      placeholder: P0-05-MANUAL-TOPUP-INTEGRATION-TESTER-SHIP
+    validations:
+      required: true
+  - type: input
+    id: revision
     attributes:
       label: BASE / HEAD / runtime SHA
+      description: Ghi NOT_APPLICABLE cho SHA không thuộc môi trường đang test; không đoán.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Môi trường
+      options: [local-temp-only, local-render, CI, deployed, ship-gated, security-gated, live-money-gated, live]
+    validations:
+      required: true
+  - type: input
+    id: route
+    attributes:
+      label: Route
+      placeholder: /api/v1/payments/manual
+    validations:
+      required: true
+  - type: input
+    id: role
+    attributes:
+      label: Role
+      placeholder: signed customer
+    validations:
+      required: true
+  - type: input
+    id: viewport
+    attributes:
+      label: Viewport
+      placeholder: API hoặc 390x667
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước đã chạy
+      description: Ghi đúng thứ tự thao tác; không chép mô tả chung.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: PASS criteria
+      description: Chép tiêu chí từ file nguồn rồi ghi kết quả từng phần.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected / Actual
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
-      label: Kết quả và bằng chứng
-      description: Ghi route, role, viewport, output và link artifact.
+      label: Bằng chứng
+      description: Link screenshot, JSON, terminal output, console/network và SHA liên quan.
     validations:
       required: true
+  - type: textarea
+    id: counters
+    attributes:
+      label: Mutation / call counters
+      description: Ghi provider, wallet, production data, ENV và GitHub mutation theo case.
+    validations:
+      required: true
+  - type: checkboxes
+    id: redaction
+    attributes:
+      label: Redaction confirmation
+      options:
+        - label: Tôi đã che dữ liệu nhạy cảm và không đính kèm raw customer record.
+          required: true
   - type: dropdown
     id: verdict
     attributes:
-      label: Kết luận
+      label: Verdict
       options: [PASS, FAIL, BLOCKED]
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: [🔴 chặn-bán-hàng, 🟠 nặng, 🟡 vừa, 🟢 nhẹ]
     validations:
       required: true

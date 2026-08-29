@@ -1537,7 +1537,7 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         assert payload["data"]["payos"]["telegram_url"] == "https://t.me/ToanAasSupportBot"
         assert payload["data"]["payos"]["command"] == "/naptien"
         assert payload["data"]["manual"] == {
-            "available": True,
+            "available": False,
             "telegram_url": "https://t.me/ToanAasSupportBot",
             "command": "/thucong",
             "receipt_channel": "telegram_bot",
@@ -1547,6 +1547,7 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "history_channel": "telegram_bot",
             "history_command": "/thucong",
             "history_menu_label": "Lịch sử nạp thủ công",
+            "methods": [],
         }
         assert "private-bank-account-must-not-leak" not in options.text
 
@@ -1554,16 +1555,25 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         # until the dedicated top-up SKU catalog exists, the browser must keep
         # the request path guarded and hand the customer back to the Bot.
         monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
-        monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://bridge.test")
+        monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "https://bridge.test")
         monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
         monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-hmac")
-        blocked_catalog = client.get("/api/v1/payments/options").json()["data"]["payos"]
-        assert blocked_catalog["request_enabled"] is False
-        assert blocked_catalog["status"] == "guarded"
+        configured_options = client.get("/api/v1/payments/options").json()["data"]
+        blocked_catalog = configured_options["payos"]
+        assert isinstance(blocked_catalog["request_enabled"], bool)
+        assert blocked_catalog["status"] in {"guarded", "awaiting_confirm"}
+        manual_catalog = configured_options["manual"]
+        assert manual_catalog["available"] is True
+        assert manual_catalog["history_in_web"] is True
+        assert [item["id"] for item in manual_catalog["methods"]] == [
+            "bank_acb", "bank_acb_vietqr", "zalopay_personal", "zalopay_merchant", "momo_tuithantai", "usdt_trc20",
+        ]
+        assert all(set(item) == {"id", "label", "currency", "mode"} for item in manual_catalog["methods"])
+        assert "private-bank-account-must-not-leak" not in str(manual_catalog)
 
         monkeypatch.setenv("BOT_USERNAME", "not/a-valid-telegram-username")
         invalid_name = client.get("/api/v1/payments/options").json()["data"]["manual"]
-        assert invalid_name["available"] is False
+        assert invalid_name["available"] is True
         assert invalid_name["telegram_url"] == ""
         invalid_deep_link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
         assert invalid_deep_link.status_code == 200

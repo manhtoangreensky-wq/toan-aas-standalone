@@ -261,6 +261,10 @@
     return uiText(`billingCatalog.${key}`, fallback, params);
   }
 
+  function manualTopupText(key, fallback, params) {
+    return uiText(`manualTopup.${key}`, fallback, params);
+  }
+
   // Delivery Center translates only fixed Web chrome and lifecycle guidance.
   // Job/asset records, identifiers, costs, timestamps and signed delivery
   // data remain canonical projections and are escaped at their render sites.
@@ -1957,7 +1961,7 @@
   adminPage("/admin/users", "Người dùng", "Tìm kiếm và xem người dùng qua quyền canonical của bot.", ICONS.users);
   adminPage("/admin/wallet", "Ví & điều chỉnh Xu", "Chỉ review dữ liệu wallet; điều chỉnh cần permission, CSRF, idempotency và audit event.", ICONS.wallet);
   adminPage("/admin/payments", "Thanh toán", "Theo dõi payment từ canonical PayOS/wallet workflow, không có webhook thứ hai.", ICONS.payments);
-  adminPage("/admin/topups", "Nạp Xu", "Xem topup theo dữ liệu server; không cấp credit từ Web App.", ICONS.payments);
+  adminPage("/admin/topups", "Đối soát nạp thủ công", "Review hàng đợi canonical theo hai bước; Web không tự cộng Xu.", ICONS.payments, { layout: "admin-manual-topups" });
   adminPage("/admin/revenue", "Doanh thu", "Báo cáo doanh thu do nguồn canonical cung cấp.", ICONS.reports);
   adminPage("/admin/refunds", "Refund", "Review yêu cầu refund; thao tác cần confirmation, idempotency và audit.", ICONS.payments);
   adminPage("/admin/jobs", "Jobs", "Theo dõi toàn bộ job, trạng thái delivery và lỗi từ Core Bridge.", ICONS.jobs);
@@ -7873,6 +7877,35 @@
     return Object.freeze({ kind, route, requestEpoch });
   }
 
+  function normalizeAdminManualTopupRecord(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    const requestId = source ? String(source.request_id || "") : "";
+    const status = source ? String(source.status || "") : "";
+    if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !["pending_admin_review", "approved", "rejected"].includes(status)) return null;
+    const record = { request_id: requestId, status };
+    if (/^[1-9][0-9]{0,19}$/.test(String(source.telegram_user_id || ""))) record.telegram_user_id = String(source.telegram_user_id);
+    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => { if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field]; });
+    ["display_name", "currency", "method", "transfer_content", "reference", "submitted_at", "decision_at", "decided_by_admin_id", "admin_note"].forEach((field) => { if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field]; });
+    return record;
+  }
+
+  function normalizeAdminManualTopupState(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const items = Array.isArray(source.items) ? source.items.map(normalizeAdminManualTopupRecord).filter(Boolean).slice(0, 50) : [];
+    const selected = normalizeAdminManualTopupRecord(source.selected);
+    const rawDraft = source.draft && typeof source.draft === "object" && !Array.isArray(source.draft) ? source.draft : null;
+    const draftRecord = normalizeAdminManualTopupRecord(rawDraft);
+    const receipt = rawDraft && typeof rawDraft.confirmation_receipt === "string" && /^[A-Za-z0-9_-]{32,160}$/.test(rawDraft.confirmation_receipt) ? rawDraft.confirmation_receipt : "";
+    const action = rawDraft && ["approve_expected", "approve_custom", "reject"].includes(String(rawDraft.action || "")) ? String(rawDraft.action) : "";
+    const draft = draftRecord && receipt && action ? { ...draftRecord, action, confirmation_receipt: receipt, approved_xu_to_apply: Number.isSafeInteger(rawDraft.approved_xu_to_apply) && rawDraft.approved_xu_to_apply >= 0 ? rawDraft.approved_xu_to_apply : 0, reason: typeof rawDraft.reason === "string" ? rawDraft.reason.slice(0, 300) : "", expires_at: Number.isSafeInteger(rawDraft.expires_at) ? rawDraft.expires_at : 0 } : null;
+    return {
+      readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(source.readState || "")) ? String(source.readState) : "guarded",
+      filterStatus: ["pending", "approved", "rejected"].includes(String(source.filterStatus || "")) ? String(source.filterStatus) : "pending",
+      query: typeof source.query === "string" ? source.query.slice(0, 120) : "",
+      items, count: items.length, selected, draft,
+      error: typeof source.error === "string" ? source.error.slice(0, 500) : ""
+    };
+  }
   function normalizeBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const session = source.session && typeof source.session === "object" ? source.session : {};
@@ -8972,6 +9005,7 @@
       adminDocumentArchiveAdminSessionHint: source.adminDocumentArchiveAdminSessionHint === true,
       adminDocumentArchive: adminArchive,
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
+      adminManualTopupState: normalizeAdminManualTopupState(source.adminManualTopupState),
       // Do not let a normal render cycle discard the redacted Audit Explorer
       // projection that integration.js just hydrated. Both helpers above
       // re-project it rather than trusting a generic admin or bridge payload.
@@ -9020,6 +9054,9 @@
       mfaLoginFlow: normalizeMfaLoginFlowBootstrap(source.mfaLoginFlow),
       paymentOptions: source.paymentOptions && typeof source.paymentOptions === "object" ? source.paymentOptions : {},
       paymentFlow: source.paymentFlow && typeof source.paymentFlow === "object" ? source.paymentFlow : {},
+      manualTopupFlow: source.manualTopupFlow && typeof source.manualTopupFlow === "object" ? source.manualTopupFlow : {},
+      manualTopupHistory: Array.isArray(source.manualTopupHistory) ? source.manualTopupHistory.slice(0, 50) : [],
+      manualTopupReadState: ["loading", "ready", "empty", "failed", "guarded"].includes(source.manualTopupReadState) ? source.manualTopupReadState : "guarded",
       linkFlow: source.linkFlow && typeof source.linkFlow === "object" ? source.linkFlow : {},
       linkStatus: source.linkStatus && typeof source.linkStatus === "object" ? source.linkStatus : {},
       jobFilter: typeof source.jobFilter === "string" ? source.jobFilter : "all",
@@ -9574,6 +9611,7 @@
     if (path === "/studio") return mediaStudioText("page.title", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
+    if (path === "/admin/topups") return adminManualTopupText("page.title", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.title", fallback);
@@ -9636,6 +9674,7 @@
     if (path === "/studio") return mediaStudioText("page.description", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
+    if (path === "/admin/topups") return adminManualTopupText("page.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
     if (path === "/admin/automation") return adminAutomationMonitorText("route.description", fallback);
@@ -20834,7 +20873,7 @@
         </div>
 
         <div class="portal-form-footer">
-          <span class="portal-form-note">Nạp tiền tự động qua PayOS hoặc VietQR ACB (8899397968). Hệ thống tự động nâng hạng tức thì sau khi quét mã 5 giây.</span>
+          <span class="portal-form-note">Mở trang Ví để chọn PayOS hoặc tạo yêu cầu nạp thủ công. Mọi trạng thái và quyền lợi đều do hệ thống canonical xác minh.</span>
           <div class="portal-inline-actions">
             <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu lên hạng ngay</a>
             <a class="portal-button portal-button--quiet" href="/wallet/history">📜 Lịch sử nạp tiền</a>
@@ -21270,177 +21309,52 @@
     </div>`;
   }
 
-  function renderManualTopupGuide(context) {
-    const user = (context.profile && (context.profile.email || context.profile.name)) || (context.session && context.session.email) || "USER";
-    const userClean = String(user).replace(/[^a-zA-Z0-9]/g, "").slice(0, 15).toUpperCase();
-    const memo = `NAPXU ${userClean}`;
-    const routeGuide = `<div class="portal-manual-topup-routes" style="display:none;"><article class="portal-manual-topup-route"><span>₫</span><div><h3>ACB</h3></div></article><article class="portal-manual-topup-route"><span>🌸</span><div><h3>MoMo & ZaloPay</h3></div></article><article class="portal-manual-topup-route"><span>🪙</span><div><h3>Binance USDT</h3></div></article></div>`;
-    const stateGuide = `<div class="portal-manual-topup-status" style="display:none;"><span><code>pending</code><small>Đang xử lý</small></span><span><code>approved</code><small>Thành công</small></span></div>`;
-
-    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" style="border-top: 3px solid #00d26a; display:none;">
-      <div class="portal-card-header">
-        <div>
-          <span class="portal-section-kicker">🏦 Chuyển khoản & Nạp tiền trực tiếp 24/7</span>
-          <h2 class="portal-card-title">Kênh Nạp Tiền Thủ Công (ACB / MoMo / ZaloPay / Binance)</h2>
-          <p class="portal-card-subtitle">Chọn phương thức nạp bên dưới để xem thông tin tài khoản và quét mã QR chuyển khoản.</p>
-        </div>
-      </div>
-
-      <div class="portal-manual-subtabs" style="display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 24px;">
-        <button type="button" class="portal-button portal-manual-tab-btn is-active" data-portal-manual-tab="acb" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
-          🏦 Ngân Hàng ACB (VietQR)
-        </button>
-        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="momo" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
-          🌸 Ví MoMo (Túi Thần Tài)
-        </button>
-        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="zalopay" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
-          💚 Ví ZaloPay (QR Đa Năng)
-        </button>
-        <button type="button" class="portal-button portal-button--quiet portal-manual-tab-btn" data-portal-manual-tab="binance" style="padding:10px 18px; font-size:14px; font-weight:700; border-radius:8px;">
-          🪙 Binance USDT (TRC20)
-        </button>
-      </div>
-
-      <!-- Pane 1: ACB Bank -->
-      <div class="portal-manual-pane" data-portal-manual-pane="acb" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
-        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
-          <img src="/static/ACBBANK.jpg" alt="ACB VietQR" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#333; font-weight:800; margin-top:8px; display:block;">Quét mã bằng App Ngân Hàng bất kỳ</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng thụ hưởng:</span>
-            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">ACB (Ngân Hàng TMCP Á Châu)</div>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
-              <div style="font-size:22px; font-weight:800; color:#00f2fe; letter-spacing:1px;">8899397968</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="8899397968" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
-              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
-              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pane 2: MoMo Túi Thần Tài -->
-      <div class="portal-manual-pane" data-portal-manual-pane="momo" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
-        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
-          <img src="/static/momo_tuithantai.png" alt="MoMo Túi Thần Tài VPBank" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#d82d8b; font-weight:800; margin-top:8px; display:block;">Quét mã từ MoMo hoặc App Ngân Hàng</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Ngân hàng:</span>
-            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">VPBank (Túi Thần Tài MoMo - Napas 247)</div>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Số tài khoản:</span>
-              <div style="font-size:22px; font-weight:800; color:#d82d8b; letter-spacing:1px;">01MMTTT0053945533</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="01MMTTT0053945533" style="padding:6px 12px; font-size:12px;">📋 Sao chép STK</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tên người nhận:</span>
-              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">MOMO - TKTH NGUYEN MANH TOAN</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="MOMO - TKTH NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
-              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pane 3: ZaloPay -->
-      <div class="portal-manual-pane" data-portal-manual-pane="zalopay" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
-        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
-          <img src="/static/zalopay_danang.png" alt="ZaloPay QR Đa Năng" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#008fe5; font-weight:800; margin-top:8px; display:block;">ZaloPay QR Đa Năng (50+ Ngân Hàng)</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Đơn vị thụ hưởng:</span>
-            <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">Nguyen Manh Toan (Thu Ngân ZaloPay)</div>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Chủ tài khoản:</span>
-              <div style="font-size:16px; font-weight:700; color:var(--portal-text-primary, #fff);">NGUYEN MANH TOAN</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="NGUYEN MANH TOAN" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Nội dung chuyển khoản (bắt buộc):</span>
-              <div style="font-size:16px; font-weight:800; color:#00d26a;">${safeText(memo)}</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(memo)}" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-          <div style="padding:10px 14px; background:rgba(0, 143, 229, 0.1); border:1px solid #008fe5; border-radius:8px; font-size:13px; color:#fff;">
-            💡 Kênh phụ: <a href="/static/zalopay_canhan.png" target="_blank" style="color:#00f2fe; text-decoration:underline; font-weight:700;">Xem QR ZaloPay Cá Nhân</a>.
-          </div>
-        </div>
-      </div>
-
-      <!-- Pane 4: Binance USDT TRC20 -->
-      <div class="portal-manual-pane" data-portal-manual-pane="binance" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; align-items:center;">
-        <div style="text-align:center; padding:18px; background:#fff; border-radius:14px; max-width:280px; margin:0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
-          <img src="/static/binance_usdt.png" alt="Binance USDT TRC20" style="width:100%; height:auto; border-radius:8px; display:block;" />
-          <span style="font-size:12px; color:#f3ba2f; font-weight:800; margin-top:8px; display:block;">Nạp USDT vào Binance</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Mạng lưới (Network):</span>
-              <div style="font-size:16px; font-weight:800; color:#f3ba2f;">Tron (TRC20)</div>
-            </div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TRC20" style="padding:6px 12px; font-size:12px;">📋 Sao chép</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Địa chỉ Ví USDT (Wallet Address):</span>
-            <div style="font-size:15px; font-weight:800; color:#00f2fe; word-break:break-all; margin:6px 0;">TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5</div>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5" style="padding:6px 12px; font-size:12px;">📋 Sao chép địa chỉ ví</button>
-          </div>
-          <div style="padding:12px 16px; background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px;">
-            <span style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">Tỷ giá quy đổi:</span>
-            <div style="font-size:16px; font-weight:700; color:#00d26a;">1 USDT = 26.000 VNĐ = 260 Xu</div>
-          </div>
-          <div style="padding:10px 14px; background:rgba(243, 186, 47, 0.1); border:1px solid #f3ba2f; border-radius:8px; font-size:12px; color:#fff;">
-            ⚠️ <strong>Lưu ý:</strong> Chỉ gửi USDT qua mạng Tron (TRC20). Sau khi chuyển tiền, gửi hash TXID hoặc ảnh biên lai qua Telegram Admin để duyệt Xu ngay.
-          </div>
-        </div>
-      </div>
-
-      ${routeGuide}
-      ${stateGuide}
-
-      <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid var(--portal-border, #2a3b4c);">
-        <span class="portal-form-note">💬 Hỗ trợ / đối soát nạp Xu 24/7: Telegram Admin <a href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; font-weight:700;">@toanaasbot</a> hoặc Hotline/Zalo: <strong>0387532320</strong></span>
-        <a class="portal-button portal-button--quiet" href="https://t.me/toanaasbot" target="_blank" rel="noopener noreferrer" style="font-weight:700;">💬 Mở Telegram Hỗ trợ</a>
-      </div>
-    </section>`;
+  function manualTopupStatusLabel(status) {
+    return {
+      pending_admin_review: manualTopupText("pending", "Đang chờ Admin đối soát"),
+      approved: manualTopupText("approved", "Đã duyệt"),
+      rejected: manualTopupText("rejected", "Đã từ chối"),
+      guarded: manualTopupText("guarded", "Đang được bảo vệ"),
+      failed: manualTopupText("failed", "Chưa thể xử lý"),
+      form: manualTopupText("form", "Sẵn sàng tạo yêu cầu"),
+      loading: manualTopupText("loading", "Đang tải dữ liệu…"),
+      submitting: manualTopupText("submitting", "Đang gửi yêu cầu…")
+    }[String(status || "")] || manualTopupText("guarded", "Đang được bảo vệ");
   }
 
+  function renderManualTopupRecord(item) {
+    const status = String(item && item.status || "guarded");
+    const facts = [
+      [manualTopupText("requestId", "Mã yêu cầu"), item.request_id],
+      [manualTopupText("amount", "Số tiền"), Number.isSafeInteger(item.amount_vnd) ? adminNumber(item.amount_vnd, " đ") : ""],
+      [manualTopupText("method", "Phương thức"), item.method],
+      [manualTopupText("reference", "Tham chiếu"), item.reference],
+      [manualTopupText("transferContent", "Nội dung chuyển khoản"), item.transfer_content],
+      [manualTopupText("expectedXu", "Xu dự kiến"), Number.isSafeInteger(item.expected_xu) ? adminNumber(item.expected_xu, " Xu") : ""],
+      [manualTopupText("approvedXu", "Xu được duyệt"), Number.isSafeInteger(item.approved_xu) ? adminNumber(item.approved_xu, " Xu") : ""],
+      [manualTopupText("submittedAt", "Gửi lúc"), item.submitted_at],
+      [manualTopupText("updatedAt", "Cập nhật lúc"), item.updated_at]
+    ].filter((entry) => entry[1] !== undefined && entry[1] !== null && entry[1] !== "");
+    return `<article class="portal-manual-topup-record" data-status="${safeText(status)}"><div class="portal-manual-topup-record-head"><strong>${safeText(item.request_id || manualTopupText("requestId", "Mã yêu cầu"))}</strong><span>${safeText(manualTopupStatusLabel(status))}</span></div><dl>${facts.map(([label, value]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(value))}</dd></div>`).join("")}</dl></article>`;
+  }
+
+  function renderManualTopupGuide(context) {
+    const manual = context.paymentOptions && context.paymentOptions.manual && typeof context.paymentOptions.manual === "object" ? context.paymentOptions.manual : {};
+    const available = manual.available === true && manual.history_in_web === true;
+    const methods = available && Array.isArray(manual.methods) ? manual.methods.filter((item) => item && canonicalCatalogCode(item.id) && canonicalShortText(item.label, 120)).slice(0, 12) : [];
+    const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
+    const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
+    const readState = String(context.manualTopupReadState || "guarded");
+    const submitting = flow.status === "submitting";
+    if (!available || !methods.length) {
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:none"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Hãy liên kết Telegram và chờ Core Bridge sẵn sàng."))}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+    }
+    const selectedMethod = methods[0] ? methods[0].id : "";
+    const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData) : "";
+    const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map(renderManualTopupRecord).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:none"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div><span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === selectedMethod ? " selected" : ""}>${safeText(item.label)}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
+  }
   function renderPaymentRequestForm(page, context) {
     const canCreate = paymentWebCatalogReady(context);
     const serverPackages = [
@@ -21543,14 +21457,21 @@
   function renderWallet(page, context) {
     const topup = page.path === "/wallet/topup";
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const history = canonicalWalletHistoryProjection(context.walletHistory) || [];
+    const readState = walletReadState(context);
+    const walletProjection = canonicalWalletProjection(context.wallet);
+    const historyProjection = canonicalWalletHistoryProjection(context.walletHistory);
+    const walletReady = readState === "ready" && Boolean(walletProjection) && Array.isArray(historyProjection);
+    const wallet = walletReady ? walletProjection : { balance_xu: "", total_spent_xu: "", is_vip: false, plan: null };
+    const history = walletReady ? historyProjection : [];
+    const walletUnavailableCopy = readState === "loading"
+      ? "Không hiển thị dữ liệu cũ trong lúc chờ."
+      : "Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.";
     const plan = wallet && wallet.plan ? wallet.plan : {};
     const planName = plan.plan_name || plan.current_plan || "Gói Tiêu Chuẩn (Standard)";
     const planStatus = plan.plan_status || "Đang hoạt động";
     const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status">🔄 Làm mới số dư</button>`;
 
-    const overviewCard = `
+    const overviewCard = walletReady ? `
       <section class="portal-card portal-card-pad portal-wallet-overview" style="border-top: 3px solid #00f2fe;">
         <div class="portal-card-header">
           <div>
@@ -21588,13 +21509,13 @@
           </div>
         </div>
       </section>
-    `;
+    ` : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">Ví Xu canonical</span><h2 class="portal-card-title">Dữ liệu Ví đang được xác minh</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`;
 
     const topupFlow = topup
       ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
       : overviewCard;
 
-    const historyCard = `
+    const historyCard = walletReady ? `
       <section class="portal-card portal-card-pad" style="margin-top:20px;">
         <div class="portal-card-header">
           <div>
@@ -21607,7 +21528,7 @@
           : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>Chưa có giao dịch phát sinh. Bấm <strong>"Nạp Xu ngay"</strong> để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!</p></div>`
         }
       </section>
-    `;
+    ` : `<section class="portal-card portal-card-pad" style="margin-top:20px"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử biến động Xu chưa sẵn sàng</h2><p class="portal-card-subtitle">${safeText(walletUnavailableCopy)}</p></div></div></section>`;
     const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
 
     return `<article class="portal-page portal-wallet-page" style="grid-template-columns:minmax(0,1fr)">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
@@ -21653,10 +21574,10 @@
 
   function renderCatalog(page, context) {
     const billingNav = renderBillingWorkspaceNav(page.path);
-    const pricing = canonicalPricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
-    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
+    const pricing = canonicalPricingCatalog(context.pricingCatalog);
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog);
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
-    const packages = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
+    const packages = canonicalPackageCatalog(context.packageCatalog);
     const pricingPage = page.path === "/pricing";
     const publicSaleFamilyLabels = pricingPage ? {
       service: billingCatalogText("catalog.publicSale.family.service", "Dịch vụ"),
@@ -21680,11 +21601,11 @@
           })
         ]
         : []);
-    const catalogReady = true;
+    const catalogReady = pricingPage ? Boolean(publicSalePricing) : Boolean(packages);
     const hasCatalog = catalog.length > 0;
     const emptyTitle = pricingPage ? "Bảng giá dịch vụ" : "Gói dịch vụ";
-    const emptyText = "Danh mục đang được cập nhật.";
-    const missingPrice = "Liên hệ";
+    const emptyText = catalogReady ? "Danh mục đang được cập nhật." : "Giá chưa được Core Bridge cấp; không có dòng nào đủ dữ liệu để hiển thị.";
+    const missingPrice = "Giá chưa được Core Bridge cấp";
     const cardStatus = (item) => pricingPage ? "Giá hiện hành" : "Gói chính thức";
     const cards = hasCatalog
       ? catalog.map((item) => `<section class="portal-module-card portal-billing-catalog-card" data-billing-catalog-status="${safeText(item.status || "read_only")}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(pricingPage ? ICONS.pricing : ICONS.package)}</span>${badge("read_only")}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.title)}</h3><p>${safeText(item.description)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${cardStatus(item)}</span></span></section>`).join("")
@@ -29539,6 +29460,87 @@
         <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(accessTitle)}</h2><p class="portal-card-subtitle">${safeText(accessBody)}</p></div>${badge(writeEnabled ? "awaiting_confirm" : (compatibilityGuarded ? "guarded" : "read_only"))}</div>${renderNotes(notePage, noteLabels)}</aside></div>${renderAdminFreezeControls(page, context)}${recordText}</article>`;
   }
 
+  function adminManualTopupText(key, fallback, params) {
+    return uiText(`adminManualTopup.${key}`, fallback, params);
+  }
+
+  function adminManualTopupStatusBadge(status) {
+    const value = ["pending_admin_review", "approved", "rejected"].includes(String(status || "")) ? String(status) : "guarded";
+    const labels = { pending_admin_review: adminManualTopupText("status.pending", "Chờ duyệt"), approved: adminManualTopupText("status.approved", "Đã duyệt"), rejected: adminManualTopupText("status.rejected", "Đã từ chối"), guarded: adminManualTopupText("status.guarded", "Được bảo vệ") };
+    return `<span class="portal-badge" data-status="${safeText(value)}">${safeText(labels[value])}</span>`;
+  }
+
+  function adminManualTopupFacts(record) {
+    return [
+      ["field.requestId", "Mã yêu cầu", record.request_id],
+      ["field.customer", "Khách hàng", record.display_name || record.telegram_user_id],
+      ["field.telegramId", "Telegram ID", record.telegram_user_id],
+      ["field.amount", "Số tiền", adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`)],
+      ["field.method", "Phương thức", record.method],
+      ["field.reference", "Tham chiếu / TXID", record.reference],
+      ["field.transfer", "Nội dung chuyển", record.transfer_content],
+      ["field.expectedXu", "Xu dự kiến", adminNumber(record.expected_xu, " Xu")],
+      ["field.approvedXu", "Xu đã duyệt", adminNumber(record.approved_xu, " Xu")],
+      ["field.submittedAt", "Yêu cầu lúc", record.submitted_at],
+      ["field.decisionAt", "Quyết định lúc", record.decision_at],
+      ["field.approver", "Admin duyệt", record.decided_by_admin_id],
+      ["field.note", "Ghi chú", record.admin_note]
+    ].filter((entry) => entry[2] !== undefined && entry[2] !== null && entry[2] !== "");
+  }
+
+  function renderAdminManualTopupCard(record, selectedId) {
+    const selected = String(record.request_id || "") === String(selectedId || "");
+    return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}"><div class="portal-admin-manual-topup-card-head"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.telegram_user_id || "—")}</span></div>${adminManualTopupStatusBadge(record.status)}</div><dl><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.expectedXu", "Xu dự kiến"))}</dt><dd>${safeText(adminNumber(record.expected_xu, " Xu"))}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></article>`;
+  }
+
+  function renderAdminManualTopupActions(record, writeEnabled) {
+    if (record.status !== "pending_admin_review" || !writeEnabled) {
+      const body = record.status === "pending_admin_review"
+        ? adminManualTopupText("actions.permissionBody", "Phiên hiện tại chưa có capability ghi.")
+        : adminManualTopupText("actions.terminalBody", "Yêu cầu đã ở trạng thái cuối.");
+      return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminManualTopupText("actions.readOnlyTitle", "Không có thao tác ghi"))}</strong><p>${safeText(body)}</p></div></div>`;
+    }
+    return `<section class="portal-admin-manual-topup-actions"><div><h3>${safeText(adminManualTopupText("actions.title", "Tạo quyết định"))}</h3><p>${safeText(adminManualTopupText("actions.body", "Mọi lựa chọn đều tạo bản xác nhận trước; chưa cộng Xu ở bước này."))}</p></div><form data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="approve_expected"><button class="portal-button portal-button--primary" type="submit">${safeText(adminManualTopupText("action.approveExpected", "Duyệt Xu dự kiến"))}</button></form><form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="approve_custom"><label><span>${safeText(adminManualTopupText("field.customXu", "Xu tùy chỉnh"))}</span><input name="approved_xu" type="number" min="1" step="1" required></label><label><span>${safeText(adminManualTopupText("field.reason", "Lý do"))}</span><input name="reason" type="text" minlength="3" maxlength="300" required></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.approveCustom", "Tạo xác nhận Xu tùy chỉnh"))}</button></form><form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="reject"><label><span>${safeText(adminManualTopupText("field.rejectReason", "Lý do từ chối"))}</span><input name="reason" type="text" minlength="3" maxlength="300" required></label><button class="portal-button portal-button--danger" type="submit">${safeText(adminManualTopupText("action.reject", "Tạo xác nhận từ chối"))}</button></form></section>`;
+  }
+
+  function renderAdminManualTopupInspector(record, writeEnabled) {
+    if (!record) return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector">${renderEmpty(adminManualTopupText("inspector.emptyTitle", "Chọn một yêu cầu"), adminManualTopupText("inspector.emptyBody", "Chi tiết và thao tác chỉ xuất hiện từ record canonical đã chọn."), ICONS.payments)}</aside>`;
+    const facts = adminManualTopupFacts(record).map(([key, fallback, value]) => `<div><dt>${safeText(adminManualTopupText(key, fallback))}</dt><dd>${safeText(String(value))}</dd></div>`).join("");
+    return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("inspector.kicker", "Chi tiết canonical"))}</span><h2 class="portal-card-title">${safeText(record.request_id)}</h2></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="">${safeText(adminManualTopupText("action.close", "Đóng"))}</button></div><dl class="portal-admin-manual-topup-facts">${facts}</dl>${renderAdminManualTopupActions(record, writeEnabled)}</aside>`;
+  }
+
+  function adminManualTopupDecisionLabel(action) {
+    const key = action === "reject" ? "decision.reject" : action === "approve_custom" ? "decision.approveCustom" : "decision.approveExpected";
+    const fallback = action === "reject" ? "Từ chối" : action === "approve_custom" ? "Duyệt Xu tùy chỉnh" : "Duyệt Xu dự kiến";
+    return adminManualTopupText(key, fallback);
+  }
+
+  function renderAdminManualTopupConfirmation(draft) {
+    if (!draft || !draft.confirmation_receipt) return "";
+    const titleKey = draft.action === "reject" ? "confirm.reject" : draft.action === "approve_custom" ? "confirm.custom" : "confirm.expected";
+    return `<div class="portal-admin-manual-topup-modal" data-manual-admin-confirmation><div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups"></div><section class="portal-admin-manual-topup-dialog" role="dialog" aria-modal="true" aria-labelledby="manual-admin-confirm-title" tabindex="-1"><span class="portal-section-kicker">${safeText(adminManualTopupText("confirm.kicker", "Xác nhận lần hai"))}</span><h2 id="manual-admin-confirm-title">${safeText(adminManualTopupText(titleKey, "Xác nhận quyết định nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("confirm.body", "Kiểm tra chính xác trước khi gửi quyết định tới Bot canonical."))}</p><dl><div><dt>${safeText(adminManualTopupText("field.requestId", "Mã yêu cầu"))}</dt><dd>${safeText(draft.request_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.customer", "Khách hàng"))}</dt><dd>${safeText(draft.display_name || draft.telegram_user_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.telegramId", "Telegram ID"))}</dt><dd>${safeText(draft.telegram_user_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.action", "Quyết định"))}</dt><dd>${safeText(adminManualTopupDecisionLabel(draft.action))}</dd></div><div><dt>${safeText(adminManualTopupText("field.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(draft.amount_vnd, ` ${draft.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("field.approvedXu", "Xu sẽ duyệt"))}</dt><dd>${safeText(adminNumber(draft.approved_xu_to_apply, " Xu"))}</dd></div><div><dt>${safeText(adminManualTopupText("field.reason", "Lý do"))}</dt><dd>${safeText(draft.reason || "—")}</dd></div></dl><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.cancel", "Hủy"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="admin-manual-topup-confirm" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.confirm", "Xác nhận quyết định"))}</button></div></section></div>`;
+  }
+
+  function renderAdminManualTopups(page, context) {
+    const state = context.adminManualTopupState && typeof context.adminManualTopupState === "object" ? context.adminManualTopupState : {};
+    const items = Array.isArray(state.items) ? state.items : [];
+    const query = String(state.query || "").trim().toLocaleLowerCase();
+    const visible = query ? items.filter((item) => [item.request_id, item.display_name, item.telegram_user_id, item.reference, item.transfer_content].some((value) => String(value || "").toLocaleLowerCase().includes(query))) : items;
+    const visibleRows = visible.map((item, index) => ({ ...item, __ordinal: index + 1 }));
+    const viewEnabled = Boolean(context.capabilities && context.capabilities["admin-manual-topup-view"] === true);
+    const writeEnabled = Boolean(context.capabilities && context.capabilities["admin-manual-topup-write"] === true);
+    if (!viewEnabled) return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(adminManualTopupText("guarded.title", "Hàng đợi chưa sẵn sàng"), adminManualTopupText("guarded.body", "Cần signed canonical Admin session và Core Bridge Admin riêng."), ICONS.security)}</section></article>`;
+    const filters = ["pending", "approved", "rejected"].map((filter) => `<button class="portal-button portal-button--quiet${state.filterStatus === filter ? " is-active" : ""}" type="button" data-portal-action="admin-manual-topup-filter" data-portal-route="/admin/topups" data-manual-admin-status="${filter}" aria-pressed="${state.filterStatus === filter ? "true" : "false"}">${safeText(adminManualTopupText(`filter.${filter}`, filter))}</button>`).join("");
+    const table = renderRowsTable(
+      [adminManualTopupText("column.ordinal", "STT"), adminManualTopupText("column.request", "Mã yêu cầu"), adminManualTopupText("column.customer", "Khách hàng"), adminManualTopupText("column.amount", "Số tiền"), adminManualTopupText("column.method", "Phương thức"), adminManualTopupText("column.reference", "Tham chiếu"), adminManualTopupText("column.submittedAt", "Yêu cầu lúc"), adminManualTopupText("column.status", "Trạng thái"), adminManualTopupText("column.expectedXu", "Xu dự kiến"), adminManualTopupText("column.approvedXu", "Xu duyệt"), adminManualTopupText("column.approver", "Admin / thời gian"), adminManualTopupText("column.action", "Thao tác")],
+      visibleRows,
+      (item) => `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.telegram_user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status)}</td><td>${safeText(adminNumber(item.expected_xu, " Xu"))}</td><td>${safeText(adminNumber(item.approved_xu, " Xu"))}</td><td>${safeText([item.decided_by_admin_id, item.decision_at].filter(Boolean).join(" · ") || "—")}</td><td><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></td>`,
+      adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record hoặc số liệu thay thế khi queue trống.")
+    );
+    const mobile = visible.map((item) => renderAdminManualTopupCard(item, state.selected && state.selected.request_id)).join("") || renderEmpty(adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record giả."), ICONS.payments);
+    return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Finance operations"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Web chỉ điều phối; Bot canonical vẫn là writer duy nhất."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, khách hàng, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Chờ canonical Admin projection."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft)}</article>`;
+  }
+
   const BOT_COMPANION_COMMAND_PATTERN = /^\/[a-z][a-z0-9_]{1,48}$/;
 
   function safeBotCompanionCommand(value) {
@@ -31257,6 +31259,7 @@
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
+      case "admin-manual-topups": return renderAdminManualTopups(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
       case "admin-domain": return renderAdminDomain(page, context);
       case "admin": return renderAdmin(page, context);
@@ -32658,6 +32661,14 @@
     if (String(action || "").startsWith("admin-audit-")) {
       Object.assign(fields, { __adminAuditOffset: source.getAttribute("data-admin-audit-offset") || "" });
     }
+    if (String(action || "").startsWith("admin-manual-topup-")) {
+      Object.assign(fields, {
+        request_id: source.getAttribute("data-manual-admin-request-id") || "",
+        status: source.getAttribute("data-manual-admin-status") || "",
+        decision: source.getAttribute("data-manual-admin-decision") || ""
+      });
+      if (action === "admin-manual-topup-draft" && fields.request_id) adminManualTopupReturnRequestId = String(fields.request_id);
+    }
     if (String(action || "").startsWith("content-handoff-")) {
       Object.assign(fields, {
         __contentHandoffOffset: source.getAttribute("data-content-handoff-offset") || "",
@@ -32776,6 +32787,43 @@
 
   const PORTAL_MODAL_ARIA_HIDDEN = "data-portal-modal-aria-hidden";
   const PORTAL_MODAL_INERT = "data-portal-modal-inert";
+  let adminManualTopupReturnRequestId = "";
+
+  function adminManualTopupDialogFocusables(dialog) {
+    if (!dialog) return [];
+    return Array.from(dialog.querySelectorAll("button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href]"))
+      .filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+  }
+
+  function syncAdminManualTopupDialog(main) {
+    const dialog = main && main.querySelector("[data-manual-admin-confirmation] [role=dialog]");
+    if (dialog) {
+      window.requestAnimationFrame(() => {
+        const first = adminManualTopupDialogFocusables(dialog)[0] || dialog;
+        if (typeof first.focus === "function") first.focus({ preventScroll: true });
+      });
+      return;
+    }
+    if (!adminManualTopupReturnRequestId) return;
+    const readState = main && main.querySelector(".portal-admin-manual-topup")?.getAttribute("data-manual-admin-read-state");
+    if (readState === "loading") {
+      window.requestAnimationFrame(() => {
+        const fallback = main && main.querySelector('[data-portal-action="admin-manual-topup-filter"][aria-pressed="true"]');
+        if (fallback && typeof fallback.focus === "function") fallback.focus({ preventScroll: true });
+      });
+      return;
+    }
+    const requestId = adminManualTopupReturnRequestId;
+    adminManualTopupReturnRequestId = "";
+    window.requestAnimationFrame(() => {
+      const escaped = typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(requestId) : requestId.replace(/[^A-Za-z0-9_-]/g, "");
+      const controls = main ? Array.from(main.querySelectorAll(`button[data-manual-admin-request-id="${escaped}"]`)) : [];
+      const control = controls.find((element) => element.getClientRects().length > 0 && !element.hidden && element.getAttribute("aria-hidden") !== "true");
+      if (control && typeof control.focus === "function") { control.focus({ preventScroll: true }); return; }
+      const fallback = main && main.querySelector('[data-portal-action="admin-manual-topup-filter"][aria-pressed="true"]');
+      if (fallback && typeof fallback.focus === "function") fallback.focus({ preventScroll: true });
+    });
+  }
 
   function setPortalTargetInert(target, opened) {
     if (!target) return;
@@ -33884,6 +33932,23 @@
           }
         }
       }
+      const manualAdminDialog = document.querySelector("[data-manual-admin-confirmation] [role=dialog]");
+      if (manualAdminDialog && event.key === "Escape") {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent(ACTION_EVENT, {
+          detail: Object.freeze({ action: "admin-manual-topup-cancel-confirmation", route: "/admin/topups", fields: Object.freeze({}) })
+        }));
+        return;
+      }
+      if (manualAdminDialog && event.key === "Tab") {
+        const focusables = adminManualTopupDialogFocusables(manualAdminDialog);
+        if (!focusables.length) { event.preventDefault(); manualAdminDialog.focus(); return; }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !manualAdminDialog.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !manualAdminDialog.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+        return;
+      }
       const installModal = document.querySelector("[data-portal-install-modal]");
       const installModalOpen = Boolean(installModal);
       if (event.key === "Escape" && installModalOpen) { event.preventDefault(); closeInstallGuideModal(); return; }
@@ -34105,6 +34170,7 @@
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
       syncAdminDataViewRows(main);
+      syncAdminManualTopupDialog(main);
       consumeDeliveryReadReceipt(main);
       placeSfxCueSheetReceipt(main);
       bindVideoPreviewPlayer(main);
@@ -34231,7 +34297,7 @@
     else if (q.includes("nạp") || q.includes("mua xu") || q.includes("payos") || q.includes("vietqr") || q.includes("tiền") || q.includes("ngân hàng") || q.includes("acb") || q.includes("thanh toán")) {
       replyText = `💳 <strong>Cổng Nạp Xu Tự Động PayOS & VietQR 5s:</strong><br/>
 • Tỷ lệ quy đổi chuẩn: <strong>100 VNĐ = 1 Xu</strong>.<br/>
-• <strong>Tài khoản nhận:</strong> Ngân hàng ACB · Số TK: <code>8899397968</code> · Chủ TK: NGUYEN MANH TOAN.<br/>
+• Thông tin thanh toán chỉ xuất hiện trong checkout hoặc phản hồi canonical; Web không công bố tài khoản hay QR tĩnh.<br/>
 • <strong>Các gói nạp & Khuyến mãi:</strong><br/>
   - Gói <strong>10.000 đ</strong>: 100 Xu<br/>
   - Gói <strong>50.000 đ</strong>: 500 Xu<br/>

@@ -113,9 +113,12 @@ def test_wallet_renderer_never_coerces_missing_ledger_values_to_zero() -> None:
         'data-portal-action="wallet-refresh"',
         "Không hiển thị dữ liệu cũ trong lúc chờ.",
         "Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.",
+        "renderManualTopupGuide(context)",
         "renderBillingJourney()",
     ):
         assert token in wallet
+    assert "balance_xu: 100" not in wallet
+    assert "total_spent_xu: 0" not in wallet
 
 
 def test_billing_entrypoints_and_catalog_remain_canonical_and_honest() -> None:
@@ -126,13 +129,11 @@ def test_billing_entrypoints_and_catalog_remain_canonical_and_honest() -> None:
     for token in (
         'data-billing-entrypoint="payos"',
         'data-billing-entrypoint="manual"',
-        "Nạp thủ công có đối soát",
-        "Không gửi bill, số tài khoản, QR, OTP hay TXID vào Web App.",
-        "Bot tạo QR động và xác nhận PayOS canonical.",
+        'data-portal-topup-lane="payos"',
+        'data-portal-topup-lane="manual"',
     ):
         assert token in entrypoints
-    assert "<input" not in entrypoints
-    assert "<textarea" not in entrypoints
+    assert "payment-create" not in entrypoints
 
     catalog = PORTAL[PORTAL.index("function renderCatalog(page, context)"):PORTAL.index("const JOB_FILTERS")]
     for token in (
@@ -143,6 +144,8 @@ def test_billing_entrypoints_and_catalog_remain_canonical_and_honest() -> None:
         "portal-billing-catalog-card",
     ):
         assert token in catalog
+    assert "|| DEFAULT_CANONICAL_PRICING_CATALOG" not in catalog
+    assert "|| DEFAULT_CANONICAL_PACKAGES" not in catalog
     assert "context.catalog" not in catalog
     assert 'status: "completed"' not in catalog
 
