@@ -14503,6 +14503,64 @@ def verify_web_evidence(
     }
 
 
+def refresh_web_evidence(
+    web_root: Path,
+    report_dir: Path,
+    expected_sha: str,
+    docs_dir: Path | None = None,
+) -> dict[str, str]:
+    """Refresh only committed Web provenance; never read or rewrite Bot evidence."""
+
+    web_root = web_root.resolve()
+    report_dir = report_dir.resolve()
+    docs_dir = (docs_dir or web_root / "docs" / "migration").resolve()
+    expected = str(expected_sha or "").strip()
+    if not web_root.is_dir():
+        raise ValueError(f"Web root does not exist: {web_root}")
+    if not re.fullmatch(r"[0-9a-f]{40}", expected):
+        raise ValueError("Expected Web revision SHA is invalid")
+    excluded_roots = _web_inventory_excluded_roots(web_root, report_dir, docs_dir)
+    clean_context = _web_revision_context(
+        web_root,
+        "",
+        expected,
+        excluded_source_roots=excluded_roots,
+    )
+    if clean_context["checkout_sha"] != expected or clean_context["requested_relation"] != "exact":
+        raise ValueError("Web checkout does not match the expected revision")
+    if clean_context["working_tree_state"] != "clean":
+        raise ValueError("Eligible Web source worktree must be clean")
+
+    preflight_path = report_dir / "preflight.json"
+    inventory_path = report_dir / "web_inventory.json"
+    preflight = _read_json_object(preflight_path, "Migration preflight evidence")
+    web_inventory = _summarize_inventory(
+        "webapp",
+        web_root,
+        excluded_source_roots=excluded_roots,
+        source_root_label="repository-root",
+    )
+    webapp = preflight.get("webapp")
+    if not isinstance(webapp, dict):
+        raise ValueError("Migration preflight has no Web evidence object")
+    webapp["root"] = "repository-root"
+    webapp["entrypoint_present"] = (web_root / "app.py").is_file()
+    webapp["revision"] = _web_revision_context(
+        web_root,
+        str(web_inventory.get("source_fingerprint_sha256") or ""),
+        expected,
+        excluded_source_roots=excluded_roots,
+    )
+    _write_json(inventory_path, web_inventory)
+    _write_json(preflight_path, preflight)
+    return {
+        "expected_sha": expected,
+        "source_fingerprint_sha256": str(web_inventory["source_fingerprint_sha256"]),
+        "web_inventory_path": str(inventory_path),
+        "preflight_path": str(preflight_path),
+    }
+
+
 def _baseline_bridge_source_context(root: Path, baseline_sha: str) -> dict[str, Any]:
     """Report whether the requested Bot baseline contains bridge source.
 
@@ -14617,6 +14675,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Verify committed Web evidence using only local Git and generated JSON",
     )
+    parser.add_argument(
+        "--refresh-web-evidence",
+        action="store_true",
+        help="Refresh only Web inventory/preflight provenance; never inspect Bot source",
+    )
     return parser
 
 
@@ -14628,8 +14691,14 @@ def main(argv: list[str] | None = None) -> int:
             verification = verify_web_evidence(args.web_root, args.report_dir, args.web_revision, args.docs_dir)
             print(json.dumps({"ok": True, "verification": verification}, ensure_ascii=False))
             return 0
+        if args.refresh_web_evidence:
+            refreshed = refresh_web_evidence(args.web_root, args.report_dir, args.web_revision, args.docs_dir)
+            print(json.dumps({"ok": True, "refreshed": refreshed}, ensure_ascii=False))
+            return 0
         if args.bot_root is None or not args.bot_baseline_sha:
-            parser.error("--bot-root and --bot-baseline-sha are required unless --verify-web-evidence is used")
+            parser.error(
+                "--bot-root and --bot-baseline-sha are required unless a Web-only evidence mode is used"
+            )
         result = run_audit(
             args.bot_root,
             args.web_root,
