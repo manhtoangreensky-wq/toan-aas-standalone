@@ -5,6 +5,7 @@
 
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const ENTER_CLEAR_DELAY_MS = 500;
+  const CUSTOMER_ENTER_CLEAR_DELAY_MS = 760;
   // Scroll observers are an optional visual enhancement.  A missing observer
   // delivery must never leave a complete, interactive workspace transparent.
   const WORKSPACE_REVEAL_FALLBACK_MS = 900;
@@ -70,18 +71,36 @@
       return;
     }
     element.setAttribute("data-portal-motion", kind === "pop" ? "pop" : "enter");
-    const clear = () => clearMotion(element);
+    const clear = (event) => {
+      if (event && event.target && event.target !== element) return;
+      clearMotion(element);
+    };
+    const parentDataset = element.parentElement && element.parentElement.dataset;
+    const clearDelay = kind !== "pop" && parentDataset && parentDataset.portalAppKind === "customer"
+      ? CUSTOMER_ENTER_CLEAR_DELAY_MS
+      : ENTER_CLEAR_DELAY_MS;
     element.addEventListener("animationend", clear, { once: true });
-    window.setTimeout(clear, ENTER_CLEAR_DELAY_MS);
+    window.setTimeout(clear, clearDelay);
   }
 
   function replace(shell, main, render, options) {
     const apply = typeof render === "function" ? render : () => {};
     const opts = options || {};
     const isHydration = main && main.dataset && main.dataset.portalPresentationPhase === "settled";
+    const markerBeforeRender = main && typeof main.getAttribute === "function"
+      ? main.getAttribute("data-portal-motion")
+      : null;
+    const activeEntry = Boolean(
+      isHydration
+      && markerBeforeRender === "enter"
+    );
     if (opts.animate === false || isHydration) {
       apply();
-      if (main) main.removeAttribute("data-portal-motion");
+      if (opts.animate === false && !isHydration && main && markerBeforeRender
+          && main.getAttribute("data-portal-motion") === markerBeforeRender) {
+        main.removeAttribute("data-portal-motion");
+      }
+      if (isHydration && main && !activeEntry) main.removeAttribute("data-portal-motion");
       return Promise.resolve();
     }
     const skipEnter = Boolean(main && main.dataset && main.dataset.portalMotionSkipEnter === "true");
@@ -134,6 +153,8 @@
   function mountWorkspace(root) {
     unmountWorkspace();
     if (!root || typeof window !== "object" || prefersReducedMotion()) return;
+    const opts = arguments[1] || {};
+    const settleVisible = opts.settleVisible !== false;
 
     // Dashboard motion is deliberately limited to Web-owned decision layers.
     // Its summary and canonical read lane remain immediately readable because
@@ -215,29 +236,60 @@
 
     const generation = workspaceGeneration;
     const isCurrentMount = () => workspaceGeneration === generation;
+    function targetIsInReadableViewport(target) {
+      if (!target || typeof target.getBoundingClientRect !== "function") return false;
+      const rect = target.getBoundingClientRect();
+      const documentHeight = typeof document === "object" && document && document.documentElement
+        ? Number(document.documentElement.clientHeight) || 0
+        : 0;
+      const viewportHeight = Number(window.innerHeight) || documentHeight;
+      if (!viewportHeight || !Number.isFinite(Number(rect.top)) || !Number.isFinite(Number(rect.bottom))) return true;
+      return Number(rect.bottom) > 0 && Number(rect.top) < viewportHeight * .92;
+    }
     const focusHandlers = [];
     let observer = null;
     let revealFallbackTimer = 0;
+    let viewportFallbackFrame = 0;
     let removeReducedMotionListener = () => {};
+    let removeViewportFallbackListeners = () => {};
     const revealTarget = (target) => {
-      if (!isCurrentMount() || !target) return;
+      if (!isCurrentMount() || !target || !target.classList.contains("is-pending")) return;
       target.classList.remove("is-pending");
       target.classList.add("is-visible");
       if (observer) observer.unobserve(target);
     };
 
     targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty, itemSelector: selector }) => {
-      target.classList.add(targetClass, "is-pending");
-      Array.from(target.querySelectorAll(selector)).slice(0, 6).forEach((item, index) => {
-        item.classList.add(itemClass);
-        setStyleProperty(item, itemIndexProperty, index);
-      });
+      const pending = !(settleVisible && targetIsInReadableViewport(target));
+      if (pending) {
+        target.classList.add(targetClass, "is-pending");
+        Array.from(target.querySelectorAll(selector)).slice(0, 6).forEach((item, index) => {
+          item.classList.add(itemClass);
+          setStyleProperty(item, itemIndexProperty, index);
+        });
+      } else target.classList.add(targetClass);
       const onFocus = (event) => revealTarget(event.currentTarget);
       target.addEventListener("focusin", onFocus);
       focusHandlers.push({ target, onFocus });
     });
+    const pendingTargets = targets.filter((target) => target.classList.contains("is-pending"));
+    const revealReadablePendingTargets = () => {
+      pendingTargets.filter(targetIsInReadableViewport).forEach(revealTarget);
+    };
+    const scheduleViewportFallback = () => {
+      if (!isCurrentMount()) return;
+      if (typeof window.requestAnimationFrame !== "function") {
+        revealReadablePendingTargets();
+        return;
+      }
+      if (viewportFallbackFrame) return;
+      viewportFallbackFrame = window.requestAnimationFrame(() => {
+        viewportFallbackFrame = 0;
+        if (isCurrentMount()) revealReadablePendingTargets();
+      });
+    };
 
-    if (typeof window.IntersectionObserver === "function") {
+    if (pendingTargets.length && typeof window.IntersectionObserver === "function") {
       observer = new window.IntersectionObserver((entries) => {
         if (!isCurrentMount()) return;
         entries.forEach((entry) => {
@@ -247,7 +299,15 @@
       // higher ratio can leave the first visible part of a tall group blank,
       // which reads as unfinished content rather than a deliberate entrance.
       }, { rootMargin: "0px 0px -8%", threshold: 0 });
-      targets.forEach((target) => observer.observe(target));
+      pendingTargets.forEach((target) => observer.observe(target));
+      if (typeof window.addEventListener === "function" && typeof window.removeEventListener === "function") {
+        window.addEventListener("scroll", scheduleViewportFallback, { passive: true });
+        window.addEventListener("resize", scheduleViewportFallback);
+        removeViewportFallbackListeners = () => {
+          window.removeEventListener("scroll", scheduleViewportFallback);
+          window.removeEventListener("resize", scheduleViewportFallback);
+        };
+      }
     } else {
       targets.forEach(revealTarget);
     }
@@ -261,10 +321,10 @@
     const timerHost = typeof window.setTimeout === "function" && typeof window.clearTimeout === "function"
       ? window
       : null;
-    if (timerHost) {
+    if (pendingTargets.length && timerHost) {
       revealFallbackTimer = timerHost.setTimeout(() => {
         if (!isCurrentMount()) return;
-        targets.forEach(revealTarget);
+        revealReadablePendingTargets();
       }, WORKSPACE_REVEAL_FALLBACK_MS);
     } else {
       targets.forEach(revealTarget);
@@ -293,7 +353,9 @@
     workspaceCleanup = () => {
       if (observer) observer.disconnect();
       if (revealFallbackTimer && timerHost) timerHost.clearTimeout(revealFallbackTimer);
+      if (viewportFallbackFrame && typeof window.cancelAnimationFrame === "function") window.cancelAnimationFrame(viewportFallbackFrame);
       removeReducedMotionListener();
+      removeViewportFallbackListeners();
       focusHandlers.forEach(({ target, onFocus }) => target.removeEventListener("focusin", onFocus));
       targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty }) => {
         target.classList.remove(targetClass, "is-pending", "is-visible");
@@ -303,6 +365,10 @@
         });
       });
     };
+  }
+
+  function refreshWorkspace(root) {
+    return mountWorkspace(root, { settleVisible: true });
   }
 
   function mountLanding(root) {
@@ -739,6 +805,7 @@
     mountLanding,
     unmountLanding,
     mountWorkspace,
+    refreshWorkspace,
     unmountWorkspace
   });
 })();

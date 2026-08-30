@@ -47,9 +47,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_34_cases():
+def test_source_has_exact_sequential_36_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 35)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 37)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -105,6 +105,14 @@ def test_p0_05e_corrective_cases_keep_metadata_render_and_privacy_separate():
     assert "admin_note" in cases["WA-34"]["PASS bắt buộc"]
     assert {cases[case_id]["Môi trường"] for case_id in ("WA-32", "WA-34")} == {"local-temp-only"}
     assert cases["WA-33"]["Môi trường"] == "local-render"
+
+
+def test_motion_live_reopen_cases_keep_normal_and_reduced_motion_separate():
+    cases = {row["ID"]: row for row in sync.parse_cases(SOURCE)}
+    assert {cases[case_id]["Môi trường"] for case_id in ("WA-35", "WA-36")} == {"local-render"}
+    assert {cases[case_id]["SPEC_ID"] for case_id in ("WA-35", "WA-36")} == {"MOTION-WEBAPP-SURFACES-001"}
+    assert "680ms" in cases["WA-35"]["PASS bắt buộc"]
+    assert "Animation name `none`" in cases["WA-36"]["PASS bắt buộc"]
 
 
 def test_parser_supports_escaped_pipe(tmp_path: Path):
@@ -261,7 +269,7 @@ def test_issue_forms_use_exact_labels_fields_and_safe_redaction():
 def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
     guide = GUIDE.read_text(encoding="utf-8")
     assert len(guide.splitlines()) >= 45
-    for marker in ["WA-01..WA-34", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "NOT_QUERIED_AUTH_REQUIRED"]:
+    for marker in ["WA-01..WA-36", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
         assert marker in guide
     assert "python scripts/tester_case_sync.py --so=3 --json" in guide
     assert "--so=3 --that" not in guide
@@ -274,10 +282,10 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["schema_version"] == "p0-05d.v1"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 34
+    assert data["case_count"] == 36
     assert data["p0_case_count"] == 18
-    assert data["github_project"] == "NOT_QUERIED_AUTH_REQUIRED"
-    assert data["push_gate"] == "BLOCKED_GITHUB_PROJECT_AND_TRACKER_UPDATE"
+    assert data["github_project"] == "TOAN AAS Web App · Tester P0"
+    assert data["push_gate"] == "P0_05E_EXTERNAL_WRITES_COMPLETE_MOTION_PREPUSH_PENDING"
     assert data["labels_missing"] == []
     assert data["external_mutations"] == 0
     assert all(value == 0 for value in data["safety"].values())

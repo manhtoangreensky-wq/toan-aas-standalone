@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "spec_id": "MOTION-WEBAPP-SURFACES-001",
+  "base_sha": "eeb85107dd9ebf391db5a155243da8f45d8600cd",
+  "candidate": "working-tree-v2",
+  "generated_at": "2026-08-31T00:36:06+07:00",
+  "environment": "local signed test account; isolated SQLite; Chrome headless; no production/provider/payment calls",
+  "viewports": [
+    {"name": "desktop", "width": 1440, "height": 900},
+    {"name": "mobile", "width": 390, "height": 667}
+  ],
+  "routes": ["/dashboard", "/features", "/studio", "/wallet/topup"],
+  "normal_motion": {
+    "entrance_duration_ms": 680,
+    "state_duration_ms": 360,
+    "control_duration_ms": 180,
+    "stagger_ms": 80,
+    "stagger_item_cap": 6,
+    "start_opacity": 0.12,
+    "start_translate_y_px": 20,
+    "start_scale": 0.985
+  },
+  "aggregate": {
+    "cases": 16,
+    "content_visible": 16,
+    "overflow_x_failures": 0,
+    "cls_failures": 0,
+    "page_errors": 0,
+    "request_failures": 0,
+    "http_errors_recorded_by_runner": 0,
+    "foreign_requests": 0,
+    "features_long_tasks_over_200ms_after_containment": 0,
+    "dashboard_long_task_baseline_debt": "present in normal and reduced-motion; not caused by motion presentation"
+  },
+  "rows": [
+    {"config":"desktop-normal","route":"/dashboard","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"desktop-normal","route":"/features","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0,"long_tasks_over_200ms":0},
+    {"config":"desktop-normal","route":"/studio","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"desktop-normal","route":"/wallet/topup","normal_motion_observed":true,"scroll_reveal_observed":false,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-normal","route":"/dashboard","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-normal","route":"/features","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0,"long_tasks_over_200ms":0},
+    {"config":"mobile-normal","route":"/studio","normal_motion_observed":true,"scroll_reveal_observed":true,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-normal","route":"/wallet/topup","normal_motion_observed":true,"scroll_reveal_observed":false,"reduced_static":false,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"desktop-reduced","route":"/dashboard","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"desktop-reduced","route":"/features","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0,"long_tasks_over_200ms":0},
+    {"config":"desktop-reduced","route":"/studio","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"desktop-reduced","route":"/wallet/topup","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-reduced","route":"/dashboard","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-reduced","route":"/features","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0,"long_tasks_over_200ms":0},
+    {"config":"mobile-reduced","route":"/studio","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0},
+    {"config":"mobile-reduced","route":"/wallet/topup","normal_motion_observed":false,"scroll_reveal_observed":false,"reduced_static":true,"visible":true,"overflow_x":0,"cls":0}
+  ],
+  "external_artifacts": {
+    "full_matrix_summary_sha256": "3d8cdb732762e5ff445decb8f6c7209c1c3450f1564e0487ce9994f2771a5ebe",
+    "desktop_video_sha256": "f8a099a1a43f604e17d2e8584d19e1a7c081e273c2b169a4d26ed2999835ce7d",
+    "mobile_video_sha256": "45645ed63885a6221f9cd96b1ea340eab81512f6bd9025e057de40fc3628036f",
+    "features_final_summary_sha256": "e327b2f87cb2eac6724dd5ad2ded560c6d17e77175e8f644c48890a324fcf296"
+  }
+}

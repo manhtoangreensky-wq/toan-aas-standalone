@@ -12,7 +12,7 @@
   ],
   "tracker_body_lines": 57,
   "tracker_has_p0_05": false,
-  "tracker_body_update_required": true,
+  "tracker_body_update_required": false,
   "label_count": 21,
   "required_tester_labels_present": "12/12",
   "required_labels": [
@@ -30,11 +30,11 @@
     "🟢 nhẹ"
   ],
   "labels_missing": [],
-  "github_project": "NOT_QUERIED_AUTH_REQUIRED",
-  "push_gate": "BLOCKED_GITHUB_PROJECT_AND_TRACKER_UPDATE",
-  "verified_at": "2026-08-29",
+  "github_project": "TOAN AAS Web App · Tester P0",
+  "push_gate": "P0_05E_EXTERNAL_WRITES_COMPLETE_MOTION_PREPUSH_PENDING",
+  "verified_at": "2026-08-31",
   "external_mutations": 0,
-  "case_count": 34,
+  "case_count": 36,
   "p0_case_count": 18,
   "local_files": [
     {
@@ -51,15 +51,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 44,
-      "bytes": 14977,
-      "sha256": "7151998856a9adf5f347450e6f84b44513b6d962ca7ebde2beeed7c4898839ca"
+      "lines": 46,
+      "bytes": 16138,
+      "sha256": "f0b234ce32787fc5395ceb4e0c96ea1a7dabbd5d4e7f7a5bb419e39a8a29c12c"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 109,
-      "bytes": 6178,
-      "sha256": "88f4a5f3bf894ae158994d5a57da606cd09d1e729f3742236985a5d632ee4cf9"
+      "lines": 114,
+      "bytes": 6691,
+      "sha256": "ee37cacc91be2b0b04a6b73913c4d5fb958bad05a7f1df9b68e71a6ef84b189a"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -69,9 +69,9 @@
     },
     {
       "path": "tests/test_p0_05d_tester_workspace.py",
-      "lines": 290,
-      "bytes": 12547,
-      "sha256": "e4722091a847a2128bdc0818c8ad1a69f33318fff9ae3aa6ba76a3411ecaa83b"
+      "lines": 298,
+      "bytes": 13060,
+      "sha256": "ade7fd272da77f4732c4b1f2fe653c25bf9bf3d5eccaa6bad77dbcebe56908e7"
     }
   ],
   "safety": {

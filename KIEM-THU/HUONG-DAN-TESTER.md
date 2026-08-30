@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-34` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-36` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -36,6 +36,11 @@
 - WA-33 phải thao tác thật `manual → amount/method/reference → hydration/remount`, không dùng source grep thay cho DOM/rendered evidence.
 - WA-34 bơm sentinel `admin_note` vào single/history và giữ Admin projection làm control; customer JSON và customer JS state đều phải không có field này.
 - Mobile 390/360 phải đo overlap theo diện tích giữa nút gửi với PWA FAB, Copilot và bottom nav; cả ba bằng `0`.
+
+### MOTION-WEBAPP-SURFACES-001
+
+- WA-35 kiểm normal motion trên đủ bốn customer route; phải đo route/section entrance, scroll reveal, overflow, CLS, page/request error và foreign request thay vì chỉ đọc CSS.
+- WA-36 kiểm `prefers-reduced-motion: reduce`; content phải visible, animation/transform presentation phải tắt và không còn section pending ngoài viewport.
 
 ## 4. Auth và dữ liệu nhạy cảm
 
@@ -102,8 +107,8 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 
 ## 9. GitHub readiness
 
-59. Repo/issue/labels đã được kiểm read-only; tracker #412 hiện chưa có P0-05B/C/D trong body.
-60. GitHub Project hiện là `NOT_QUERIED_AUTH_REQUIRED`.
-61. Khi Project chưa được đọc/tạo có bằng chứng, push gate vẫn BLOCKED.
-62. Thao tác push sau này dùng signed Codex Web session theo chỉ thị Owner, không dùng VPS/Codex CLI.
-63. Không tự tạo/sửa tracker, label hoặc Project nếu chưa qua local acceptance và external gate.
+59. Repo/issue/labels đã được kiểm; P0-05E đã có comment/readback trên tracker #412.
+60. GitHub Project đích là `TOAN AAS Web App · Tester P0`; PR #417 đã được gắn và đọc lại thành công.
+61. Push gate P0-05E đã hoàn tất tại head `eeb8510`, CI run `33314113510` SUCCESS; PR #417 vẫn OPEN, chưa merge/deploy.
+62. Motion phải qua local acceptance rồi mở một stacked PR riêng trên branch của PR #417; không nối motion mù vào PR #417.
+63. Merge/deploy/live vẫn là cổng riêng; không suy từ local PASS, push, PR hoặc CI.

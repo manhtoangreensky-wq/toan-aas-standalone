@@ -17643,6 +17643,117 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   }
 }
 
+/* MOTION-WEBAPP-SURFACES-001 live-reopen -------------------------------
+   Customer motion remains a progressive presentation layer. The stable main
+   element owns the one route entrance across data hydration; only offscreen
+   replacement sections are armed again for a later scroll reveal. */
+.portal-shell[data-portal-app-kind="customer"],
+.portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+  --portal-customer-motion-control: 180ms;
+  --portal-customer-motion-state: 360ms;
+  --portal-customer-motion-entrance: 680ms;
+  --portal-customer-motion-stagger: 80ms;
+  --portal-customer-motion-distance: 20px;
+  --portal-motion-fast: var(--portal-customer-motion-control);
+}
+
+.portal-body--features .portal-feature-group {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 620px;
+}
+
+@keyframes portal-customer-observable-enter {
+  from {
+    opacity: .12;
+    transform: translateY(var(--portal-customer-motion-distance)) scale(.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes portal-customer-state-enter {
+  from {
+    opacity: .78;
+    transform: translateY(10px) scale(.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The stable main is the route surface. Disable the earlier child-page cue
+     so hydration cannot create a second, nested entrance. */
+  .portal-shell[data-portal-presentation-phase="entry"][data-portal-app-kind="customer"] .portal-page:not(.portal-dashboard-app) {
+    animation: none;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] [data-portal-main][data-portal-motion="enter"] {
+    animation: portal-customer-observable-enter var(--portal-customer-motion-entrance) var(--portal-motion-ease-emphasis) both;
+  }
+
+  .portal-body--features [data-portal-features-motion="enter"] {
+    animation: portal-customer-observable-enter var(--portal-customer-motion-entrance) var(--portal-motion-ease-emphasis) both;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-workspace-motion-target.is-pending,
+    .portal-dashboard-motion-target.is-pending
+  ) {
+    opacity: .12;
+    transform: translateY(var(--portal-customer-motion-distance)) scale(.985);
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    .portal-workspace-motion-target.is-visible,
+    .portal-dashboard-motion-target.is-visible
+  ) {
+    animation: portal-customer-observable-enter var(--portal-customer-motion-entrance) var(--portal-motion-ease-emphasis) both;
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace-motion-target.is-visible .portal-workspace-motion-item {
+    animation: portal-customer-observable-enter var(--portal-customer-motion-entrance) var(--portal-motion-ease-emphasis) backwards;
+    animation-delay: calc(var(--portal-workspace-motion-index, 0) * var(--portal-customer-motion-stagger));
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-dashboard-motion-target.is-visible .portal-dashboard-motion-item {
+    animation: portal-customer-observable-enter var(--portal-customer-motion-entrance) var(--portal-motion-ease-emphasis) backwards;
+    animation-delay: calc(var(--portal-dashboard-motion-index, 0) * var(--portal-customer-motion-stagger));
+  }
+
+  .portal-shell[data-portal-app-kind="customer"] .portal-sidebar,
+  .portal-shell[data-portal-app-kind="customer"] .portal-command-palette:not([hidden]) .portal-command-dialog,
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+    animation: portal-customer-state-enter var(--portal-customer-motion-state) var(--portal-motion-ease-emphasis) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-portal-app-kind="customer"] :is(
+    [data-portal-main][data-portal-motion="enter"],
+    [data-portal-features-motion="enter"],
+    .portal-workspace-motion-target,
+    .portal-workspace-motion-item,
+    .portal-dashboard-motion-target,
+    .portal-dashboard-motion-item,
+    .portal-sidebar,
+    .portal-command-palette:not([hidden]) .portal-command-dialog
+  ),
+  .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* MOTION-WEBAPP-SURFACES-001 live-reopen end */
+
 /* Admin ERP Professional VI 003 -------------------------------------- */
 .portal-shell[data-portal-app-kind="admin"]:not(.portal-shell--auth):not(.portal-shell--landing) {
   grid-template-columns: 240px minmax(0, 1fr);
