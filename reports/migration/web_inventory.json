@@ -64,13 +64,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2892,
+      "line": 2904,
       "target": "_native_job_compatibility_record"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 3010,
+      "line": 3022,
       "target": "_native_jobs_for_account"
     },
     {
@@ -148,19 +148,19 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 5258,
+      "line": 5272,
       "target": "admin_jobs"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 5335,
+      "line": 5349,
       "target": "admin_refund_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 5309,
+      "line": 5323,
       "target": "admin_retry_job"
     },
     {
@@ -190,13 +190,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 5004,
+      "line": 5018,
       "target": "job_detail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 4985,
+      "line": 4999,
       "target": "list_jobs"
     },
     {
@@ -261,7 +261,7 @@
     "commands": 0,
     "conversations": 0,
     "database_tables": 224,
-    "env_references": 263,
+    "env_references": 264,
     "providers": 12,
     "routes": 702,
     "ui_path_references": 47
@@ -695,7 +695,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4901,
+      "line": 4915,
       "operation": "INSERT INTO",
       "table": "payos_orders"
     },
@@ -1643,19 +1643,19 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 3750,
+      "line": 3762,
       "operation": "INSERT INTO",
       "table": "web_campaign_plans"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3820,
+      "line": 3832,
       "operation": "UPDATE",
       "table": "web_campaign_plans"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3904,
+      "line": 3916,
       "operation": "UPDATE",
       "table": "web_campaign_plans"
     },
@@ -1673,25 +1673,25 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 2225,
+      "line": 2237,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3463,
+      "line": 3475,
       "operation": "INSERT INTO",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3559,
+      "line": 3571,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_api.py",
-      "line": 3656,
+      "line": 3668,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
@@ -2549,37 +2549,37 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 989,
+      "line": 1001,
       "operation": "DELETE FROM",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 991,
+      "line": 1003,
       "operation": "INSERT INTO",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1021,
+      "line": 1033,
       "operation": "DELETE FROM",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1040,
+      "line": 1052,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1058,
+      "line": 1070,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1064,
+      "line": 1076,
       "operation": "UPDATE",
       "table": "web_feature_quote_receipts"
     },
@@ -2831,55 +2831,55 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 2327,
+      "line": 2339,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2356,
+      "line": 2368,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2702,
+      "line": 2714,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2713,
+      "line": 2725,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2718,
+      "line": 2730,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2727,
+      "line": 2739,
       "operation": "UPDATE",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2735,
+      "line": 2747,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2820,
+      "line": 2832,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 2822,
+      "line": 2834,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -5885,19 +5885,19 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4071,
+      "line": 4083,
       "operation": "INSERT INTO",
       "table": "web_workspace_drafts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 4127,
+      "line": 4139,
       "operation": "UPDATE",
       "table": "web_workspace_drafts"
     },
     {
       "file": "copyfast_api.py",
-      "line": 4176,
+      "line": 4188,
       "operation": "UPDATE",
       "table": "web_workspace_drafts"
     },
@@ -6377,7 +6377,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4772,
+      "line": 4786,
       "name": "PAYOS_API_KEY"
     },
     {
@@ -6387,7 +6387,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4773,
+      "line": 4787,
       "name": "PAYOS_CHECKSUM_KEY"
     },
     {
@@ -6397,7 +6397,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4771,
+      "line": 4785,
       "name": "PAYOS_CLIENT_ID"
     },
     {
@@ -6412,7 +6412,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4824,
+      "line": 4838,
       "name": "PUBLIC_BASE_URL"
     },
     {
@@ -6438,6 +6438,11 @@
     {
       "file": "billing.py",
       "line": 110,
+      "name": "SUPPORT_HOTLINE"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 795,
       "name": "SUPPORT_HOTLINE"
     },
     {
@@ -6557,7 +6562,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 1230,
+      "line": 1242,
       "name": "WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS"
     },
     {
@@ -6727,7 +6732,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 4824,
+      "line": 4838,
       "name": "WEBAPP_BASE_URL"
     },
     {
@@ -7312,12 +7317,12 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 1812,
+      "line": 1824,
       "name": "WEBAPP_UPLOAD_MAX_BYTES"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1813,
+      "line": 1825,
       "name": "WEBAPP_UPLOAD_MAX_MB"
     },
     {
@@ -7437,7 +7442,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 908,
+      "line": 920,
       "name": "WEB_FEATURE_QUOTE_HMAC_SECRET"
     },
     {
@@ -7452,7 +7457,7 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 908,
+      "line": 920,
       "name": "WEB_SESSION_SECRET"
     },
     {
@@ -7614,7 +7619,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 779,
+      "occurrences": 786,
       "provider": "PayOS"
     },
     {
@@ -7749,7 +7754,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_projects.py"
       ],
-      "occurrences": 1724,
+      "occurrences": 1728,
       "provider": "Telegram"
     }
   ],
@@ -7757,7 +7762,7 @@
     {
       "endpoint": "account_activity",
       "file": "copyfast_api.py",
-      "line": 4213,
+      "line": 4225,
       "methods": [
         "GET"
       ],
@@ -7892,7 +7897,7 @@
     {
       "endpoint": "admin_freeze_feature",
       "file": "copyfast_api.py",
-      "line": 5358,
+      "line": 5372,
       "methods": [
         "POST"
       ],
@@ -7901,7 +7906,7 @@
     {
       "endpoint": "admin_jobs",
       "file": "copyfast_api.py",
-      "line": 5258,
+      "line": 5272,
       "methods": [
         "GET"
       ],
@@ -7910,7 +7915,7 @@
     {
       "endpoint": "admin_refund_job",
       "file": "copyfast_api.py",
-      "line": 5335,
+      "line": 5349,
       "methods": [
         "POST"
       ],
@@ -7919,7 +7924,7 @@
     {
       "endpoint": "admin_retry_job",
       "file": "copyfast_api.py",
-      "line": 5309,
+      "line": 5323,
       "methods": [
         "POST"
       ],
@@ -7937,7 +7942,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 5279,
+      "line": 5293,
       "methods": [
         "GET"
       ],
@@ -7946,7 +7951,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 5279,
+      "line": 5293,
       "methods": [
         "GET"
       ],
@@ -7955,7 +7960,7 @@
     {
       "endpoint": "admin_module",
       "file": "copyfast_api.py",
-      "line": 5292,
+      "line": 5306,
       "methods": [
         "GET"
       ],
@@ -7964,7 +7969,7 @@
     {
       "endpoint": "admin_payments",
       "file": "copyfast_api.py",
-      "line": 5263,
+      "line": 5277,
       "methods": [
         "GET"
       ],
@@ -7973,7 +7978,7 @@
     {
       "endpoint": "manual_admin_list",
       "file": "copyfast_api.py",
-      "line": 4551,
+      "line": 4565,
       "methods": [
         "GET"
       ],
@@ -7982,7 +7987,7 @@
     {
       "endpoint": "manual_admin_detail",
       "file": "copyfast_api.py",
-      "line": 4572,
+      "line": 4586,
       "methods": [
         "GET"
       ],
@@ -7991,7 +7996,7 @@
     {
       "endpoint": "manual_admin_confirm",
       "file": "copyfast_api.py",
-      "line": 4630,
+      "line": 4644,
       "methods": [
         "POST"
       ],
@@ -8000,7 +8005,7 @@
     {
       "endpoint": "manual_admin_draft",
       "file": "copyfast_api.py",
-      "line": 4590,
+      "line": 4604,
       "methods": [
         "POST"
       ],
@@ -8009,7 +8014,7 @@
     {
       "endpoint": "admin_providers",
       "file": "copyfast_api.py",
-      "line": 5268,
+      "line": 5282,
       "methods": [
         "GET"
       ],
@@ -8036,7 +8041,7 @@
     {
       "endpoint": "admin_summary",
       "file": "copyfast_api.py",
-      "line": 5248,
+      "line": 5262,
       "methods": [
         "GET"
       ],
@@ -8054,7 +8059,7 @@
     {
       "endpoint": "admin_tickets",
       "file": "copyfast_api.py",
-      "line": 5273,
+      "line": 5287,
       "methods": [
         "GET"
       ],
@@ -8063,7 +8068,7 @@
     {
       "endpoint": "admin_users",
       "file": "copyfast_api.py",
-      "line": 5253,
+      "line": 5267,
       "methods": [
         "GET"
       ],
@@ -8513,7 +8518,7 @@
     {
       "endpoint": "assets",
       "file": "copyfast_api.py",
-      "line": 5044,
+      "line": 5058,
       "methods": [
         "GET"
       ],
@@ -8558,7 +8563,7 @@
     {
       "endpoint": "asset_download",
       "file": "copyfast_api.py",
-      "line": 5060,
+      "line": 5074,
       "methods": [
         "GET"
       ],
@@ -8864,7 +8869,7 @@
     {
       "endpoint": "campaign_calendar_window",
       "file": "copyfast_api.py",
-      "line": 3282,
+      "line": 3294,
       "methods": [
         "GET"
       ],
@@ -8873,7 +8878,7 @@
     {
       "endpoint": "list_campaign_plans",
       "file": "copyfast_api.py",
-      "line": 3254,
+      "line": 3266,
       "methods": [
         "GET"
       ],
@@ -8882,7 +8887,7 @@
     {
       "endpoint": "create_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3726,
+      "line": 3738,
       "methods": [
         "POST"
       ],
@@ -8891,7 +8896,7 @@
     {
       "endpoint": "get_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3690,
+      "line": 3702,
       "methods": [
         "GET"
       ],
@@ -8900,7 +8905,7 @@
     {
       "endpoint": "update_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 3792,
+      "line": 3804,
       "methods": [
         "PATCH"
       ],
@@ -8909,7 +8914,7 @@
     {
       "endpoint": "list_campaign_schedule_intents",
       "file": "copyfast_api.py",
-      "line": 3359,
+      "line": 3371,
       "methods": [
         "GET"
       ],
@@ -8918,7 +8923,7 @@
     {
       "endpoint": "create_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3393,
+      "line": 3405,
       "methods": [
         "POST"
       ],
@@ -8927,7 +8932,7 @@
     {
       "endpoint": "cancel_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3516,
+      "line": 3528,
       "methods": [
         "POST"
       ],
@@ -8936,7 +8941,7 @@
     {
       "endpoint": "reconfirm_campaign_schedule_intent",
       "file": "copyfast_api.py",
-      "line": 3590,
+      "line": 3602,
       "methods": [
         "POST"
       ],
@@ -8945,7 +8950,7 @@
     {
       "endpoint": "update_campaign_plan_status",
       "file": "copyfast_api.py",
-      "line": 3866,
+      "line": 3878,
       "methods": [
         "POST"
       ],
@@ -9035,7 +9040,7 @@
     {
       "endpoint": "feature_catalog",
       "file": "copyfast_api.py",
-      "line": 3187,
+      "line": 3199,
       "methods": [
         "GET"
       ],
@@ -9305,7 +9310,7 @@
     {
       "endpoint": "core_me",
       "file": "copyfast_api.py",
-      "line": 4201,
+      "line": 4213,
       "methods": [
         "GET"
       ],
@@ -9314,7 +9319,7 @@
     {
       "endpoint": "core_status",
       "file": "copyfast_api.py",
-      "line": 3235,
+      "line": 3247,
       "methods": [
         "GET"
       ],
@@ -9908,7 +9913,7 @@
     {
       "endpoint": "feature_status",
       "file": "copyfast_api.py",
-      "line": 5148,
+      "line": 5162,
       "methods": [
         "GET"
       ],
@@ -9917,7 +9922,7 @@
     {
       "endpoint": "feature_confirm",
       "file": "copyfast_api.py",
-      "line": 5243,
+      "line": 5257,
       "methods": [
         "POST"
       ],
@@ -9926,7 +9931,7 @@
     {
       "endpoint": "feature_draft",
       "file": "copyfast_api.py",
-      "line": 5233,
+      "line": 5247,
       "methods": [
         "POST"
       ],
@@ -9935,7 +9940,7 @@
     {
       "endpoint": "feature_estimate",
       "file": "copyfast_api.py",
-      "line": 5238,
+      "line": 5252,
       "methods": [
         "POST"
       ],
@@ -10277,7 +10282,7 @@
     {
       "endpoint": "list_jobs",
       "file": "copyfast_api.py",
-      "line": 4985,
+      "line": 4999,
       "methods": [
         "GET"
       ],
@@ -10286,7 +10291,7 @@
     {
       "endpoint": "job_detail",
       "file": "copyfast_api.py",
-      "line": 5004,
+      "line": 5018,
       "methods": [
         "GET"
       ],
@@ -10709,7 +10714,7 @@
     {
       "endpoint": "packages",
       "file": "copyfast_api.py",
-      "line": 4261,
+      "line": 4273,
       "methods": [
         "GET"
       ],
@@ -10745,7 +10750,7 @@
     {
       "endpoint": "create_payment",
       "file": "copyfast_api.py",
-      "line": 4805,
+      "line": 4819,
       "methods": [
         "POST"
       ],
@@ -10754,7 +10759,7 @@
     {
       "endpoint": "manual_topup_create",
       "file": "copyfast_api.py",
-      "line": 4690,
+      "line": 4704,
       "methods": [
         "POST"
       ],
@@ -10763,7 +10768,7 @@
     {
       "endpoint": "manual_topup_history",
       "file": "copyfast_api.py",
-      "line": 4719,
+      "line": 4733,
       "methods": [
         "GET"
       ],
@@ -10772,7 +10777,7 @@
     {
       "endpoint": "manual_topup_detail",
       "file": "copyfast_api.py",
-      "line": 4735,
+      "line": 4749,
       "methods": [
         "GET"
       ],
@@ -10781,7 +10786,7 @@
     {
       "endpoint": "manual_topup_status",
       "file": "copyfast_api.py",
-      "line": 4753,
+      "line": 4767,
       "methods": [
         "GET"
       ],
@@ -10790,7 +10795,7 @@
     {
       "endpoint": "payment_options",
       "file": "copyfast_api.py",
-      "line": 4266,
+      "line": 4278,
       "methods": [
         "GET"
       ],
@@ -10799,7 +10804,7 @@
     {
       "endpoint": "payment_status",
       "file": "copyfast_api.py",
-      "line": 4939,
+      "line": 4953,
       "methods": [
         "GET"
       ],
@@ -11213,7 +11218,7 @@
     {
       "endpoint": "pricing",
       "file": "copyfast_api.py",
-      "line": 4251,
+      "line": 4263,
       "methods": [
         "GET"
       ],
@@ -12482,7 +12487,7 @@
     {
       "endpoint": "support_tickets",
       "file": "copyfast_api.py",
-      "line": 5125,
+      "line": 5139,
       "methods": [
         "GET"
       ],
@@ -12491,7 +12496,7 @@
     {
       "endpoint": "create_support_ticket",
       "file": "copyfast_api.py",
-      "line": 5130,
+      "line": 5144,
       "methods": [
         "POST"
       ],
@@ -13139,7 +13144,7 @@
     {
       "endpoint": "upload_to_canonical_staging",
       "file": "copyfast_api.py",
-      "line": 5087,
+      "line": 5101,
       "methods": [
         "POST"
       ],
@@ -13346,7 +13351,7 @@
     {
       "endpoint": "voice_profiles",
       "file": "copyfast_api.py",
-      "line": 5082,
+      "line": 5096,
       "methods": [
         "GET"
       ],
@@ -13355,7 +13360,7 @@
     {
       "endpoint": "wallet",
       "file": "copyfast_api.py",
-      "line": 4240,
+      "line": 4252,
       "methods": [
         "GET"
       ],
@@ -13373,7 +13378,7 @@
     {
       "endpoint": "wallet_history",
       "file": "copyfast_api.py",
-      "line": 4245,
+      "line": 4257,
       "methods": [
         "GET"
       ],
@@ -13418,7 +13423,7 @@
     {
       "endpoint": "list_workspace_drafts",
       "file": "copyfast_api.py",
-      "line": 3940,
+      "line": 3952,
       "methods": [
         "GET"
       ],
@@ -13427,7 +13432,7 @@
     {
       "endpoint": "create_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 4040,
+      "line": 4052,
       "methods": [
         "POST"
       ],
@@ -13436,7 +13441,7 @@
     {
       "endpoint": "get_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 4013,
+      "line": 4025,
       "methods": [
         "GET"
       ],
@@ -13445,7 +13450,7 @@
     {
       "endpoint": "update_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 4098,
+      "line": 4110,
       "methods": [
         "PATCH"
       ],
@@ -13454,7 +13459,7 @@
     {
       "endpoint": "archive_workspace_draft",
       "file": "copyfast_api.py",
-      "line": 4152,
+      "line": 4164,
       "methods": [
         "POST"
       ],
@@ -14074,10 +14079,10 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 166,
-  "source_files_scanned": 166,
-  "source_fingerprint_sha256": "87a55dbfb66c2aa407c091b8154e35cc78ee63b062e361b521e5f5e581eeb9fb",
-  "source_root": "webapp-root",
+  "source_files_discovered": 167,
+  "source_files_scanned": 167,
+  "source_fingerprint_sha256": "59aa2b82d82895f0120f9df754be510934af9d68cbcbfd7bf449ccbb78620b06",
+  "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
@@ -14296,7 +14301,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30078,
+      "line": 30097,
       "path": "/features"
     },
     {
