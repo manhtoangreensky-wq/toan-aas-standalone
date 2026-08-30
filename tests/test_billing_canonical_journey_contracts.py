@@ -1,5 +1,10 @@
 from pathlib import Path
 
+import pytest
+
+from billing import get_bank_info
+from copyfast_api import payment_options
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
@@ -175,3 +180,38 @@ def test_billing_contract_records_the_authority_and_recovery_boundaries() -> Non
         "không có endpoint tạo payment-link hay webhook browser",
     ):
         assert token in CONTRACT
+
+@pytest.mark.anyio
+async def test_billing_hotline_fallback_and_payment_options_metadata(monkeypatch):
+    monkeypatch.delenv("SUPPORT_HOTLINE", raising=False)
+    monkeypatch.delenv("BANK_ACCOUNT_NO", raising=False)
+
+    info = await get_bank_info()
+    assert info["hotline"] == "0898360858"
+    assert info["account_no"] == "0387532320"
+
+    monkeypatch.setenv("SUPPORT_HOTLINE", "0999999999")
+    monkeypatch.setenv("BANK_ACCOUNT_NO", "0888888888")
+
+    info2 = await get_bank_info()
+    assert info2["hotline"] == "0999999999"
+    assert info2["account_no"] == "0888888888"
+
+    from copyfast_api import _manual_payment_code, _support_hotline
+    for invalid_hotline in ("   ", "", "\t", "abc", "0123456", "0" * 16, "0123\n0456", "0898360858a"):
+        monkeypatch.setenv("SUPPORT_HOTLINE", invalid_hotline)
+        assert _support_hotline() == "0898360858"
+    monkeypatch.setenv("SUPPORT_HOTLINE", "0999999999")
+
+    for invalid_code in ("", "0", " 123456", "123456 ", "telegram-123", "١٢٣٤٥٦", "1" * 21):
+        assert _manual_payment_code(invalid_code) == ""
+    assert _manual_payment_code("123456") == "123456"
+
+    account = {"session_id": "test", "account_id": "acc", "canonical_user_id": "123456"}
+    res = await payment_options(account=account)
+    manual = res["data"]["manual"]
+    assert manual.get("support_hotline") == "0999999999"
+    assert manual.get("payment_code") == "123456"
+
+    for forbidden in ("account_no", "account_name", "bank_name", "qr", "wallet_address"):
+        assert forbidden not in manual

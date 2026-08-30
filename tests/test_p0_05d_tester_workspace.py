@@ -4,7 +4,6 @@ import importlib.util
 import json
 import os
 import stat
-import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -48,9 +47,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_31_cases():
+def test_source_has_exact_sequential_34_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 32)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 35)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -71,6 +70,9 @@ def test_all_p0_cases_have_real_specs_environments_and_evidence():
         "WA-29": "security-gated",
         "WA-30": "ship-gated",
         "WA-31": "live-money-gated",
+        "WA-32": "local-temp-only",
+        "WA-33": "local-render",
+        "WA-34": "local-temp-only",
     }
     for case_id, environment in expected_env.items():
         row = cases[case_id]
@@ -82,7 +84,7 @@ def test_all_p0_cases_have_real_specs_environments_and_evidence():
 
 def test_critical_p0_cases_have_red_severity_and_regression_warning():
     cases = {row["ID"]: row for row in sync.parse_cases(SOURCE)}
-    critical = [f"WA-{number:02d}" for number in range(17, 27)] + ["WA-29", "WA-31"]
+    critical = [f"WA-{number:02d}" for number in range(17, 27)] + ["WA-29", "WA-31", "WA-32", "WA-33", "WA-34"]
     for case_id in critical:
         assert cases[case_id]["Mức"] == "🔴 chặn-bán-hàng"
         assert cases[case_id]["Canh lỗi cũ"]
@@ -94,6 +96,15 @@ def test_customer_and_admin_p0_routes_are_not_conflated():
     assert "signed owner" in cases["WA-17"]["Route / role / viewport"]
     assert "/api/v1/admin/payments/manual" in cases["WA-19"]["Route / role / viewport"]
     assert "canonical Admin" in cases["WA-19"]["Route / role / viewport"]
+
+
+def test_p0_05e_corrective_cases_keep_metadata_render_and_privacy_separate():
+    cases = {row["ID"]: row for row in sync.parse_cases(SOURCE)}
+    assert "payment_code" in cases["WA-32"]["PASS bắt buộc"]
+    assert "hydration/remount" in cases["WA-33"]["PASS bắt buộc"]
+    assert "admin_note" in cases["WA-34"]["PASS bắt buộc"]
+    assert {cases[case_id]["Môi trường"] for case_id in ("WA-32", "WA-34")} == {"local-temp-only"}
+    assert cases["WA-33"]["Môi trường"] == "local-render"
 
 
 def test_parser_supports_escaped_pipe(tmp_path: Path):
@@ -250,7 +261,7 @@ def test_issue_forms_use_exact_labels_fields_and_safe_redaction():
 def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
     guide = GUIDE.read_text(encoding="utf-8")
     assert len(guide.splitlines()) >= 45
-    for marker in ["WA-01..WA-31", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "NOT_QUERIED_AUTH_REQUIRED"]:
+    for marker in ["WA-01..WA-34", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "NOT_QUERIED_AUTH_REQUIRED"]:
         assert marker in guide
     assert "python scripts/tester_case_sync.py --so=3 --json" in guide
     assert "--so=3 --that" not in guide
@@ -263,8 +274,8 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["schema_version"] == "p0-05d.v1"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 31
-    assert data["p0_case_count"] == 15
+    assert data["case_count"] == 34
+    assert data["p0_case_count"] == 18
     assert data["github_project"] == "NOT_QUERIED_AUTH_REQUIRED"
     assert data["push_gate"] == "BLOCKED_GITHUB_PROJECT_AND_TRACKER_UPDATE"
     assert data["labels_missing"] == []

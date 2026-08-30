@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-31` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-34` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -30,6 +30,13 @@
 20. Chạy idempotency/replay/concurrent case bằng fixture; không lặp trên production.
 21. Kiểm owner đọc terminal status sau quyết định.
 
+### P0-05E corrective
+
+- WA-32 kiểm số hỗ trợ và mã nạp đều do signed server metadata cấp; số tài khoản ngân hàng là comparator riêng, không được nhầm với Hotline/Zalo.
+- WA-33 phải thao tác thật `manual → amount/method/reference → hydration/remount`, không dùng source grep thay cho DOM/rendered evidence.
+- WA-34 bơm sentinel `admin_note` vào single/history và giữ Admin projection làm control; customer JSON và customer JS state đều phải không có field này.
+- Mobile 390/360 phải đo overlap theo diện tích giữa nút gửi với PWA FAB, Copilot và bottom nav; cả ba bằng `0`.
+
 ## 4. Auth và dữ liệu nhạy cảm
 
 22. Kiểm signed session, role, ownership và CSRF theo đúng case.
@@ -49,7 +56,7 @@
 33. Không gọi provider trả phí.
 34. Cấm quét QR, thanh toán hoặc cộng Xu trong case PayOS chỉ kiểm checkout.
 35. `LIVE_MONEY_FLOW=NOT_TESTED` cho tới khi Owner cấp quyền cụ thể.
-36. Không có Owner gate thì WA-31 phải là BLOCKED, không phải FAIL hoặc PASS.
+36. Không có Owner gate thì WA-31 phải là BLOCKED, không phải FAIL hoặc PASS. WA-32..34 vẫn chạy local/temp/render không tiền thật.
 
 ## 6. Evidence bắt buộc
 
@@ -86,6 +93,12 @@ python scripts/tester_case_sync.py --so=3 --json
 56. Chỉ thêm `--that` sau khi đã xác minh repo, đăng nhập, Owner gate và một preview thật.
 57. `--that` là external mutation; không dùng trong pytest/local dry-run.
 58. Nếu `gh` trả lỗi, script phải trả nonzero; không báo thành công.
+
+Xem riêng ba case P0-05E mới mà không ghi GitHub:
+
+```text
+python scripts/tester_case_sync.py --bo=31 --so=3 --json
+```
 
 ## 9. GitHub readiness
 

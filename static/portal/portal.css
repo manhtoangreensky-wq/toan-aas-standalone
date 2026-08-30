@@ -9497,6 +9497,20 @@ button, a, input, select, textarea { touch-action: manipulation; }
   min-height: 48px;
 }
 
+@media (max-width: 640px) {
+  .portal-manual-topup-form > .portal-form-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 52px;
+  }
+
+  .portal-manual-topup-form > .portal-form-footer .portal-button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
 .portal-manual-topup-form input,
 .portal-manual-topup-form select {
   width: 100%;

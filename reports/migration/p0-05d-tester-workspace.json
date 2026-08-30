@@ -34,44 +34,44 @@
   "push_gate": "BLOCKED_GITHUB_PROJECT_AND_TRACKER_UPDATE",
   "verified_at": "2026-08-29",
   "external_mutations": 0,
-  "case_count": 31,
-  "p0_case_count": 15,
+  "case_count": 34,
+  "p0_case_count": 18,
   "local_files": [
     {
       "path": ".github/ISSUE_TEMPLATE/01-case-test.yml",
       "lines": 113,
-      "bytes": 3098,
-      "sha256": "7e327aa36a26763198a6e092cbfc87491fa7fa160bbd861c38d8aaece2824508"
+      "bytes": 3211,
+      "sha256": "4b1d455d9cb60aebe33a50eecb918a74aa17a40df063e354f2c52270c6f58d82"
     },
     {
       "path": ".github/ISSUE_TEMPLATE/02-bao-loi.yml",
       "lines": 100,
-      "bytes": 2557,
-      "sha256": "212f9ce4b6b4459b5a1041ff70ac855fbdae110417e3dddd09d6d898c75841a4"
+      "bytes": 2657,
+      "sha256": "d07c37d3a9abecdbb8a6414a2fea856706e9c907e2d9bd6ccaf4071f667b6c74"
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 41,
-      "bytes": 13044,
-      "sha256": "ad6df0767971357931ac54dc900a90964bd7fdb300beeebf0861c2630c4edd87"
+      "lines": 44,
+      "bytes": 14977,
+      "sha256": "7151998856a9adf5f347450e6f84b44513b6d962ca7ebde2beeed7c4898839ca"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 96,
-      "bytes": 5244,
-      "sha256": "5f6b77a21a349e2c99c244032cae197c8fa12582bc9f934fc5c1154fe6650100"
+      "lines": 109,
+      "bytes": 6178,
+      "sha256": "88f4a5f3bf894ae158994d5a57da606cd09d1e729f3742236985a5d632ee4cf9"
     },
     {
       "path": "scripts/tester_case_sync.py",
       "lines": 212,
-      "bytes": 8601,
-      "sha256": "7f621362e137ee6d2db3518da0ca8ad84c8e368c792b25faec8d6450a42f43c6"
+      "bytes": 8813,
+      "sha256": "b08a712111794f85307026adb7aadb9c0461d15e05856b773f73fa391a6f7ed4"
     },
     {
       "path": "tests/test_p0_05d_tester_workspace.py",
-      "lines": 279,
-      "bytes": 11654,
-      "sha256": "8bb6880951470e569ed52fbafbc4adf98bd5d2536d5aa4534104b6ab68f7a256"
+      "lines": 290,
+      "bytes": 12547,
+      "sha256": "e4722091a847a2128bdc0818c8ad1a69f33318fff9ae3aa6ba76a3411ecaa83b"
     }
   ],
   "safety": {

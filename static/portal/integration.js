@@ -15953,7 +15953,7 @@
     ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => {
       if (Number.isSafeInteger(value[field]) && value[field] >= 0) record[field] = value[field];
     });
-    ["method", "currency", "transfer_content", "reference", "submitted_at", "updated_at", "admin_note"].forEach((field) => {
+    ["method", "currency", "transfer_content", "reference", "submitted_at", "updated_at"].forEach((field) => {
       if (typeof value[field] === "string" && value[field].length <= 240) record[field] = value[field];
     });
     return record;

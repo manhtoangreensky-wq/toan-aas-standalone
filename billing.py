@@ -107,7 +107,7 @@ async def get_bank_info():
         "bank_id": os.environ.get("BANK_ID", "mbbank"),
         "account_no": os.environ.get("BANK_ACCOUNT_NO", "0387532320"),
         "account_name": os.environ.get("BANK_ACCOUNT_NAME", "NGUYEN MANH TOAN"),
-        "hotline": os.environ.get("SUPPORT_HOTLINE", "0387532320"),
+        "hotline": os.environ.get("SUPPORT_HOTLINE", "0898360858"),
         "telegram_bot": os.environ.get("TELEGRAM_BOT_USERNAME", "toanaasbot"),
         "conversion_rate": "100 VND = 1 Xu"
     }

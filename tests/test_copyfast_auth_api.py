@@ -1510,6 +1510,7 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
     monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
     monkeypatch.setenv("MANUAL_BANK_ACCOUNT", "private-bank-account-must-not-leak")
     monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "false")
+    monkeypatch.delenv("SUPPORT_HOTLINE", raising=False)
     with make_client(tmp_path, monkeypatch) as client:
         denied = client.get("/api/v1/payments/options")
         assert denied.status_code == 401
@@ -1525,7 +1526,7 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         assert unlinked.status_code == 409
 
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
-        assert confirm_link(client, code).json()["ok"] is True
+        assert confirm_link(client, code, canonical_user_id="123456789").json()["ok"] is True
         assert complete_link(client, csrf).json()["ok"] is True
         options = client.get("/api/v1/payments/options")
         assert options.status_code == 200
@@ -1548,6 +1549,8 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "history_command": "/thucong",
             "history_menu_label": "Lịch sử nạp thủ công",
             "methods": [],
+            "payment_code": "123456789",
+            "support_hotline": "0898360858",
         }
         assert "private-bank-account-must-not-leak" not in options.text
 
@@ -1569,6 +1572,8 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "bank_acb", "bank_acb_vietqr", "zalopay_personal", "zalopay_merchant", "momo_tuithantai", "usdt_trc20",
         ]
         assert all(set(item) == {"id", "label", "currency", "mode"} for item in manual_catalog["methods"])
+        assert manual_catalog["payment_code"] == "123456789"
+        assert manual_catalog["support_hotline"] == "0898360858"
         assert "private-bank-account-must-not-leak" not in str(manual_catalog)
 
         monkeypatch.setenv("BOT_USERNAME", "not/a-valid-telegram-username")

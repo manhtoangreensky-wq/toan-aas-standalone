@@ -1,5 +1,7 @@
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import anyio
@@ -350,6 +352,9 @@ def test_manual_topup_locale_keysets_and_responsive_controls_are_complete():
     assert "min-height: 44px" in PORTAL_CSS
     assert "@media (max-width: 480px)" in PORTAL_CSS
     assert "@media (prefers-reduced-motion: reduce)" in PORTAL_CSS
+    assert ".portal-manual-topup-form > .portal-form-footer" in PORTAL_CSS
+    assert "padding-inline: 52px" in PORTAL_CSS
+    assert ".portal-manual-topup-form > .portal-form-footer .portal-button" in PORTAL_CSS
 
 
 def test_manual_topup_routes_and_payos_implementation_stay_isolated():
@@ -425,3 +430,242 @@ async def test_manual_topup_detail_uses_owner_header_and_preserves_not_found_sta
         "params": None,
         "owner_id": OWNER,
     }]
+
+@pytest.mark.anyio
+async def test_manual_topup_confidentiality_and_payment_code(monkeypatch):
+    from copyfast_api import (
+        _manual_topup_public_response,
+        _manual_admin_public_record,
+        ManualTopupCreateRequest,
+    )
+
+    # 1. admin_note sentinel
+    sample_data = {
+        "request_id": "MANUAL-123456",
+        "telegram_user_id": "987654321",
+        "display_name": "Test User",
+        "status": "pending_admin_review",
+        "amount_vnd": 100000,
+        "method": "bank_acb",
+        "admin_note": "SECRET_NOTE_123"
+    }
+
+    # Customer single
+    customer_res = _manual_topup_public_response({"ok": True, "status": "pending_admin_review", "data": sample_data})
+    assert "admin_note" not in customer_res["data"], "admin_note leaked to customer"
+    assert "telegram_user_id" not in customer_res["data"], "telegram_user_id leaked to customer"
+
+    # Customer history
+    customer_hist_res = _manual_topup_public_response({"ok": True, "status": "pending_admin_review", "data": {"items": [sample_data]}}, history=True)
+    assert "admin_note" not in customer_hist_res["data"]["items"][0], "admin_note leaked in customer history"
+    assert "telegram_user_id" not in customer_hist_res["data"]["items"][0], "telegram_user_id leaked in customer history"
+
+    # Admin canonical
+    admin_res = _manual_admin_public_record(sample_data)
+    assert admin_res.get("admin_note") == "SECRET_NOTE_123", "admin_note stripped from admin record"
+    assert admin_res.get("request_id") == "MANUAL-123456"
+    assert admin_res.get("telegram_user_id") == "987654321"
+    assert admin_res.get("display_name") == "Test User"
+    assert admin_res.get("amount_vnd") == 100000
+    assert admin_res.get("method") == "bank_acb"
+
+    # 2. ManualTopupCreateRequest schema control
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        ManualTopupCreateRequest(amount_vnd=100000, method="bank_acb", idempotency_key="1234567890123", payment_code="123")
+
+def test_manual_topup_metadata_and_lane_persistence():
+    # 1. Renderer reads manual.payment_code and manual.support_hotline, validates exact numeric strings, and renders escaped read-only labels
+    assert "manual.payment_code" in PORTAL
+    assert "manual.support_hotline" in PORTAL
+    assert "/^[1-9][0-9]{0,19}$/.test(" in PORTAL
+    assert "/^[0-9]{8,15}$/.test(" in PORTAL
+    assert "safeText(paymentCode)" in PORTAL
+    assert "safeText(hotline)" in PORTAL
+
+    # 2. No literal 0898360858 or 0387532320 occurs in portal.js/integration.js
+    assert "0898360858" not in PORTAL
+    assert "0898360858" not in INTEGRATION
+    assert "0387532320" not in PORTAL
+    assert "0387532320" not in INTEGRATION
+
+    # 3. Guarded and ready manual panes use the same selected-lane display expression
+    display_expr = 'style="display:${displayStyle}"'
+    assert PORTAL.count(display_expr) >= 2
+
+    # 4. Manual form contains <input type="hidden" name="topup_lane" value="manual">
+    assert '<input type="hidden" name="topup_lane" value="manual">' in PORTAL
+
+    # 5. Lane click accepts only payos|manual and persists selected lane
+    assert "if (![\"payos\", \"manual\"].includes" in PORTAL
+    assert "currentTransient.topup_lane =" in PORTAL
+
+
+def test_manual_lane_and_fields_survive_data_hydration_remount_in_real_portal():
+    node = shutil.which("node")
+    assert node, "Node.js is required for the Portal behavior contract"
+    script = r'''
+const fs = require("node:fs"), vm = require("node:vm");
+const portalSource = fs.readFileSync(__PORTAL__, "utf8");
+const i18nSource = fs.readFileSync(__I18N__, "utf8");
+
+function classList() {
+  const values = new Set();
+  return {
+    add: (...items) => items.forEach((item) => values.add(String(item))),
+    remove: (...items) => items.forEach((item) => values.delete(String(item))),
+    contains: (item) => values.has(String(item)),
+    toggle: (item, force) => {
+      const enabled = force === undefined ? !values.has(String(item)) : Boolean(force);
+      if (enabled) values.add(String(item)); else values.delete(String(item));
+      return enabled;
+    }
+  };
+}
+
+function element(id = "") {
+  const attrs = Object.create(null);
+  return {
+    id, hidden: false, disabled: false, innerHTML: "", textContent: "", value: "",
+    dataset: {}, style: {}, classList: classList(), children: [],
+    setAttribute(name, value) { attrs[name] = String(value); },
+    getAttribute(name) { return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : ""; },
+    removeAttribute(name) { delete attrs[name]; },
+    hasAttribute(name) { return Object.prototype.hasOwnProperty.call(attrs, name); },
+    querySelector() { return null; }, querySelectorAll() { return []; },
+    addEventListener() {}, removeEventListener() {},
+    appendChild(child) { this.children.push(child); return child; },
+    prepend(child) { this.children.unshift(child); return child; },
+    remove() {}, focus() {}, matches() { return false; }, closest() { return null; },
+    contains() { return false; }
+  };
+}
+
+const listeners = Object.create(null), windowListeners = Object.create(null);
+const sidebar = element("sidebar"), header = element("header"), main = element("main");
+const shell = element("shell"), mobileNav = element("mobile"), palette = element("palette");
+const skip = element("skip"), body = element("body"), docEl = element("html");
+const copilot = element("portal-copilot-root");
+const document = {
+  body, documentElement: docEl, title: "", readyState: "loading", activeElement: null,
+  createElement: () => element(),
+  addEventListener(type, handler) { (listeners[type] ||= []).push(handler); },
+  removeEventListener() {}, querySelectorAll() { return []; },
+  querySelector(selector) {
+    if (selector.includes("data-portal-sidebar")) return sidebar;
+    if (selector.includes("data-portal-header")) return header;
+    if (selector.includes("data-portal-main")) return main;
+    if (selector.includes("data-portal-shell")) return shell;
+    if (selector.includes("data-portal-mobile-nav")) return mobileNav;
+    if (selector.includes("data-portal-command-palette")) return palette;
+    if (selector === ".skip-link") return skip;
+    return null;
+  },
+  getElementById(id) { return id === "portal-copilot-root" ? copilot : null; }
+};
+const storage = () => ({ getItem: () => null, setItem() {}, removeItem() {} });
+const window = {
+  __TOAN_AAS_PORTAL__: {},
+  location: { pathname: "/wallet/topup", search: "", href: "http://test/wallet/topup" },
+  history: { pushState() {}, replaceState() {} }, innerWidth: 1440,
+  addEventListener(type, handler) { (windowListeners[type] ||= []).push(handler); },
+  removeEventListener() {}, dispatchEvent() { return true; },
+  matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+  setTimeout: () => 1, clearTimeout() {},
+  requestAnimationFrame: (callback) => { callback(); return 1; }, cancelAnimationFrame() {},
+  scrollTo() {}, localStorage: storage(), sessionStorage: storage(),
+  TOANAASPortalMotion: { replace(_shell, _main, render) { render(); } }
+};
+const navigator = { standalone: false, userAgent: "node", clipboard: { writeText: async () => {} } };
+const context = {
+  console, process, window, document, navigator, URL, URLSearchParams, Intl,
+  setTimeout: window.setTimeout, clearTimeout: window.clearTimeout,
+  requestAnimationFrame: window.requestAnimationFrame, cancelAnimationFrame: window.cancelAnimationFrame,
+  CustomEvent: function CustomEvent(type, init) { this.type = type; this.detail = init && init.detail; },
+  Event: function Event(type) { this.type = type; },
+  CSS: { escape: (value) => String(value) }
+};
+context.globalThis = context;
+vm.createContext(context);
+vm.runInContext(i18nSource + "\n" + portalSource, context, { filename: "portal-bundle.js" });
+
+const paymentOptions = {
+  payos: { request_enabled: false, topup_catalog_available: false, topup_packages: [], status: "guarded" },
+  manual: {
+    available: true, history_in_web: true,
+    payment_code: "123456789", support_hotline: "0898360858",
+    methods: [{ id: "bank_acb", label: "ACB" }, { id: "momo_tuithantai", label: "MoMo" }]
+  }
+};
+function state(locale = "vi", manual = paymentOptions.manual) {
+  return {
+    path: "/wallet/topup", interfaceLocale: locale,
+    session: { authenticated: true, account: { id: "web-account" } },
+    paymentOptions: { ...paymentOptions, manual },
+    manualTopupFlow: { status: "form", data: {} }, manualTopupHistory: [],
+    manualTopupReadState: manual.available ? "ready" : "guarded",
+    wallet: { balance_xu: 0 }, capabilities: {}
+  };
+}
+window.TOANAASPortal.mount(state(), { reason: "entry" });
+const click = (listeners.click || [])[0], inputHandler = (listeners.input || [])[0];
+if (typeof click !== "function" || typeof inputHandler !== "function") throw new Error("delegated handlers missing");
+
+const payosButton = element("payos"), manualButton = element("manual");
+payosButton.setAttribute("data-portal-topup-lane", "payos");
+manualButton.setAttribute("data-portal-topup-lane", "manual");
+const payosPane = element("payos-pane"), manualPane = element("manual-pane"), page = element("page");
+payosPane.setAttribute("data-portal-topup-pane", "payos");
+manualPane.setAttribute("data-portal-topup-pane", "manual");
+page.querySelectorAll = (selector) => selector === "[data-portal-topup-lane]"
+  ? [payosButton, manualButton]
+  : selector === "[data-portal-topup-pane]" ? [payosPane, manualPane] : [];
+function targetFor(button) {
+  return {
+    id: "", value: "", matches: () => false,
+    closest(selector) {
+      if (selector === "[data-portal-topup-lane]") return button;
+      if (selector === ".portal-wallet-page, .portal-page") return page;
+      return null;
+    }
+  };
+}
+click({ target: targetFor(manualButton) });
+
+const fields = [
+  { name: "topup_lane", type: "hidden", value: "manual" },
+  { name: "amount_vnd", type: "number", value: "125000" },
+  { name: "method", type: "select-one", value: "bank_acb" },
+  { name: "reference", type: "text", value: "TX-125" }
+];
+const form = element("manual-form");
+form.setAttribute("data-portal-action", "manual-topup-create");
+form.setAttribute("data-portal-route", "/wallet/topup");
+form.querySelectorAll = (selector) => selector === "input, textarea, select" ? fields : [];
+inputHandler({ target: { id: "", value: "125000", matches: () => false,
+  closest: (selector) => selector === "[data-portal-form]" ? form : null } });
+
+const invalidButton = element("invalid");
+invalidButton.setAttribute("data-portal-topup-lane", "invalid");
+click({ target: targetFor(invalidButton) });
+window.TOANAASPortal.mount(state(), { reason: "data-hydration" });
+const readyHtml = main.innerHTML;
+for (const marker of [
+  'data-portal-topup-lane="manual"', 'data-portal-topup-pane="manual"', 'display:block',
+  'name="topup_lane" value="manual"', 'name="amount_vnd"', 'value="125000"',
+  'value="bank_acb" selected', 'value="TX-125"', '123456789', '0898360858'
+]) if (!readyHtml.includes(marker)) throw new Error("ready remount missing: " + marker);
+
+const guardedManual = { ...paymentOptions.manual, available: false, history_in_web: false, methods: [] };
+window.TOANAASPortal.mount(state("vi", guardedManual), { reason: "data-hydration" });
+const guardedHtml = main.innerHTML;
+for (const marker of ['data-portal-topup-pane="manual"', 'display:block', '123456789', '0898360858']) {
+  if (!guardedHtml.includes(marker)) throw new Error("guarded remount missing: " + marker);
+}
+process.stdout.write(JSON.stringify({ ok: true, readyLength: readyHtml.length, guardedLength: guardedHtml.length }));
+''';
+    script = script.replace("__PORTAL__", json.dumps(str(ROOT / "static" / "portal" / "portal.js")))
+    script = script.replace("__I18N__", json.dumps(str(ROOT / "static" / "portal" / "portal-i18n.js")))
+    result = subprocess.run([node, "-e", script], cwd=ROOT, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, f"Node failed ({result.returncode}):\nSTDOUT={result.stdout}\nSTDERR={result.stderr}"
+    assert json.loads(result.stdout)["ok"] is True

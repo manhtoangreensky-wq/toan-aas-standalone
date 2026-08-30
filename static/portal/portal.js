@@ -21291,13 +21291,16 @@
   }
 
   function renderPaymentEntryPoints(context) {
+    const lane = String((transientFormValues("/wallet/topup") || {}).topup_lane || "payos");
+    const payosActive = lane !== "manual";
+    const manualActive = lane === "manual";
     return `<div class="portal-billing-entrypoints" style="margin-bottom:20px;">
       <div class="portal-topup-lane-switch" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
-        <button type="button" class="portal-button portal-button--primary portal-topup-tab-btn is-active" data-portal-topup-lane="payos" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+        <button type="button" class="portal-button ${payosActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${payosActive ? "is-active" : ""}" data-portal-topup-lane="payos" aria-selected="${payosActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">⚡</span>
           <span>Cổng Nạp Tự Động PayOS (5-30s)</span>
         </button>
-        <button type="button" class="portal-button portal-button--quiet portal-topup-tab-btn" data-portal-topup-lane="manual" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
+        <button type="button" class="portal-button ${manualActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${manualActive ? "is-active" : ""}" data-portal-topup-lane="manual" aria-selected="${manualActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">🏦</span>
           <span>Nạp Thủ Công (ACB / MoMo / ZaloPay / Binance)</span>
         </button>
@@ -21339,23 +21342,39 @@
   }
 
   function renderManualTopupGuide(context) {
+    const transient = transientFormValues("/wallet/topup") || {};
+    const lane = String(transient.topup_lane || "payos");
+    const isHidden = lane !== "manual";
     const manual = context.paymentOptions && context.paymentOptions.manual && typeof context.paymentOptions.manual === "object" ? context.paymentOptions.manual : {};
+    const paymentCodeValue = String(manual.payment_code || "");
+    const hotlineValue = String(manual.support_hotline || "");
+    const paymentCode = /^[1-9][0-9]{0,19}$/.test(paymentCodeValue) ? paymentCodeValue : "";
+    const hotline = /^[0-9]{8,15}$/.test(hotlineValue) ? hotlineValue : "";
+    const displayStyle = isHidden ? "none" : "block";
+    const infoMarkup = `<dl class="portal-manual-topup-info"><div><dt>${safeText(manualTopupText("paymentCode", "Mã nạp tiền"))}</dt><dd>${safeText(paymentCode)}</dd></div><div><dt>${safeText(manualTopupText("supportHotline", "Hotline/Zalo"))}</dt><dd>${safeText(hotline)}</dd></div></dl>`;
+
     const available = manual.available === true && manual.history_in_web === true;
     const methods = available && Array.isArray(manual.methods) ? manual.methods.filter((item) => item && canonicalCatalogCode(item.id) && canonicalShortText(item.label, 120)).slice(0, 12) : [];
     const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
     const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
     const readState = String(context.manualTopupReadState || "guarded");
     const submitting = flow.status === "submitting";
+
     if (!available || !methods.length) {
-      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:none"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Hãy liên kết Telegram và chờ Core Bridge sẵn sàng."))}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Hãy liên kết Telegram và chờ Core Bridge sẵn sàng."))}</p></div></div>${infoMarkup}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
     }
-    const selectedMethod = methods[0] ? methods[0].id : "";
+    const selectedMethod = String(transient.method || (methods[0] ? methods[0].id : ""));
+    const validatedMethod = methods.find(m => m.id === selectedMethod) ? selectedMethod : (methods[0] ? methods[0].id : "");
+    const amountVnd = String(transient.amount_vnd || "");
+    const reference = String(transient.reference || "");
     const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
     const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData) : "";
     const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map(renderManualTopupRecord).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
-    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:none"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div><span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === selectedMethod ? " selected" : ""}>${safeText(item.label)}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}" value="${safeText(amountVnd)}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === validatedMethod ? " selected" : ""}>${safeText(item.label)}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
   }
   function renderPaymentRequestForm(page, context) {
+    const lane = String((transientFormValues("/wallet/topup") || {}).topup_lane || "payos");
+    const isHidden = lane === "manual";
     const canCreate = paymentWebCatalogReady(context);
     const serverPackages = [
       ...(context && context.paymentOptions && context.paymentOptions.payos && Array.isArray(context.paymentOptions.payos.topup_packages)
@@ -21395,7 +21414,7 @@
     `).join("") : `<p class="portal-form-note">Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng.</p>`;
 
     return `
-      <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe;">
+      <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe; display:${isHidden ? "none" : "block"};">
         <div class="portal-card-header">
           <div>
             <span class="portal-section-kicker">⚡ Cổng nạp tự động VietQR 24/7</span>
@@ -33628,6 +33647,10 @@
       const topupLaneBtn = event.target.closest("[data-portal-topup-lane]");
       if (topupLaneBtn) {
         const targetLane = topupLaneBtn.getAttribute("data-portal-topup-lane");
+        if (!["payos", "manual"].includes(targetLane)) return;
+        const currentTransient = transientFormValues("/wallet/topup") || {};
+        currentTransient.topup_lane = targetLane;
+        transientFormDrafts.set("/wallet/topup", currentTransient);
         const pageContainer = event.target.closest(".portal-wallet-page, .portal-page") || document;
         pageContainer.querySelectorAll("[data-portal-topup-lane]").forEach((btn) => {
           const active = btn.getAttribute("data-portal-topup-lane") === targetLane;

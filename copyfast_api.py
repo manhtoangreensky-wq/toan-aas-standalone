@@ -791,6 +791,18 @@ def _telegram_bot_chat_url() -> str:
     return f"https://t.me/{username}"
 
 
+def _support_hotline() -> str:
+    hotline = os.environ.get("SUPPORT_HOTLINE", "").strip()
+    if hotline and re.fullmatch(r"^[0-9]{8,15}$", hotline):
+        return hotline
+    return "0898360858"
+
+
+def _manual_payment_code(value: Any) -> str:
+    payment_code = str(value or "")
+    return payment_code if re.fullmatch(r"[1-9][0-9]{0,19}", payment_code) else ""
+
+
 DEFAULT_TOPUP_PACKAGES: tuple[dict[str, Any], ...] = (
     {"code": "topup_10k", "label": "10.000 đ", "amount_vnd": 10000, "xu": 100, "available": True},
     {"code": "topup_20k", "label": "20.000 đ", "amount_vnd": 20000, "xu": 200, "available": True},
@@ -4265,7 +4277,7 @@ async def packages(request: Request, account: dict = Depends(require_account)):
 @router.get("/payments/options")
 async def payment_options(account: dict = Depends(require_account)):
     """Publish payment-entry metadata for the signed account."""
-    _linked(account)
+    linked_id = _linked(account)
     topup_packages = _payment_topup_packages()
     topup_catalog_available = _payment_topup_catalog_available()
     cfg = _payos_config()
@@ -4299,6 +4311,8 @@ async def payment_options(account: dict = Depends(require_account)):
                 "history_command": "/thucong",
                 "history_menu_label": "Lịch sử nạp thủ công",
                 "methods": [dict(item) for item in MANUAL_TOPUP_METHODS] if manual_available else [],
+                "payment_code": _manual_payment_code(linked_id) or None,
+                "support_hotline": _support_hotline(),
             },
         },
     )
@@ -4329,7 +4343,7 @@ def _manual_topup_public_record(value: Any) -> dict[str, Any]:
     currency = str(value.get("currency") or "").strip().upper()
     if re.fullmatch(r"[A-Z]{3,5}", currency):
         result["currency"] = currency
-    for field in ("transfer_content", "reference", "submitted_at", "updated_at", "admin_note"):
+    for field in ("transfer_content", "reference", "submitted_at", "updated_at"):
         item = _browser_scalar(value.get(field), maximum=240)
         if isinstance(item, str):
             result[field] = item

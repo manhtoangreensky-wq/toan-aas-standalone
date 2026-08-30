@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái P0 manual top-up: local accepted, NOT DEPLOYED, `LIVE_PASS=NOT_TESTED`.
+> Trạng thái P0 manual top-up: PR #417 đã tồn tại; corrective P0-05E đang local verify, chưa push/merge/deploy, `LIVE_PASS=NOT_TESTED`.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -49,6 +49,10 @@ Inventory đã được nghiệm thu tại P0-05B.
 | Owner/Admin bearer phải tách | Owner bearer bị deny ở 4 Admin route; equal/missing Admin secret fail closed. | ⚠️ Đã kiểm temp-only; ENV production chưa rotate/configure. | `tests/test_p0_manual_topup_cross_repo_integration.py:597-637` |
 | Confirm phải idempotent | Hai client confirm đồng thời chỉ tạo một canonical mutation; replay không double-credit. | ⚠️ Concurrency proof là 2 client trong fixture, không phải load benchmark. | `tests/test_p0_manual_topup_cross_repo_integration.py:481-505` |
 | Safe owner/Admin projection | Owner output không lộ Admin/token/raw fields; Admin output theo allow-list; foreign owner nhận safe response. | ⚠️ Source/test local accepted. | `tests/test_p0_manual_topup_cross_repo_integration.py:380-420`; `tests/test_p0_manual_topup_cross_repo_integration.py:510-589` |
+| Manual amount + payment code trên Web | Khách nhập amount; payment code là canonical numeric linked ID do signed server metadata suy ra và browser không thể override. | ⚠️ P0-05E local verified; chưa push/deploy/live. | `copyfast_api.py`; `tests/test_p0_manual_topup_customer_flow.py` |
+| Hotline tách biệt số tài khoản | Support fallback `0898360858`; bank account fallback `0387532320`; Portal/integration không hardcode phone/account. | ⚠️ Local test/render đạt; production chưa deploy. | `billing.py`; `copyfast_api.py`; `tests/test_billing_canonical_journey_contracts.py` |
+| Role-specific note confidentiality | Customer response và customer JS state bỏ `admin_note`; authorized Admin projection vẫn giữ note. | ⚠️ Security reviewer local kết luận fixed; live chưa kiểm. | `copyfast_api.py`; `static/portal/integration.js`; `tests/test_p0_manual_topup_customer_flow.py` |
+| Manual interaction sống qua hydration | Selected lane và amount/method/reference còn nguyên sau same-route data remount; invalid lane bị bỏ qua. | ⚠️ Node behavior + rendered local matrix `10/10` đạt; chưa push/deploy/live. | `static/portal/portal.js`; `tests/test_p0_manual_topup_customer_flow.py`; `evidence/p0-05e-primary-manager-verified-20260830.md` |
 | Admin navigation là server-authorized directory | Browser role/query không tạo module; unavailable endpoint phải fail closed. | ✅ Contract hiện hành, độc lập với P0 manual write. | `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:3-30`; `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:57-63` |
 | Guarded capability không được trông như ready | Portal phải hiển thị guarded/unavailable; static navigation không phải runtime engine claim. | ✅ Product/UI boundary hiện hành. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `docs/migration/FEATURE_PARITY_MATRIX.md:1-3` |
 | PWA chỉ cache public shell | Wallet/payment/Admin/API/download/private workspace vẫn network-only và ownership-checked. | ✅ Cache boundary hiện hành. | `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:3-8`; `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61` |
@@ -107,9 +111,9 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 ## 8. Chưa triển khai hoặc chưa live
 
 - P0-05A rotate/revoke và loại credential-like tracked paths: chưa làm.
-- P0-05D Tester case/template/project completion: chưa làm.
-- Consolidated Bot/Web Git branches: chưa tạo commit cuối.
-- Commit/push/PR/merge: chưa làm.
+- P0-05D local Tester source/template đã có; P0-05E bổ sung WA-32..34, nhưng tracker/Project external readback chưa đóng.
+- Corrective commit/push vào PR #417 chưa làm; PR #417 đã tồn tại, không được ghi “chưa có PR”.
+- Merge/deploy của PR #417 chưa được Owner mở.
 - ENV/secret rotation: chưa làm.
 - Deploy P0 source lên VPS: chưa làm.
 - Signed production customer/Admin manual routes: chưa test.
@@ -137,4 +141,4 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Deployed không đồng nghĩa live outcome.
 - HTTP 200 không đồng nghĩa quyết định tiền hợp lệ.
 - Mọi claim provider/output/payment phải có bằng chứng output cuối tương ứng.
-- P0 manual top-up hiện dừng ở source/test local accepted và pre-push documentation.
+- P0 manual top-up hiện dừng ở P0-05E local verification/pre-push; không suy merged/deployed/live từ test pass.

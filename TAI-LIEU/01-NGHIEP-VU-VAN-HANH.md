@@ -5,12 +5,13 @@
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web BASE/HEAD: `b9ebe053cb000095254909e4789c1f579cbd5dd2`.
+- Web production/main comparator: `b9ebe053cb000095254909e4789c1f579cbd5dd2`.
+- PR #417 previous HEAD: `15c00151b97c1dd3324b3d8bdb990721e0ad1c0e`; P0-05E corrective hiện là local candidate chưa push, merge hoặc deploy.
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
-- Trạng thái batch manual top-up: `ACCEPTED_LOCAL`.
-- Source P0-01 đến P0-05B chưa được hợp nhất vào nhánh Git cuối.
+- Trạng thái batch manual top-up trước corrective: `ACCEPTED_LOCAL`; P0-05E đã hoàn tất local code/security/rendered matrix `10/10` và còn chờ Independent Tester reverify P2 cùng bốn GitHub writes đã được Owner duyệt.
+- PR #417 đã tồn tại; không được ghi “chưa tạo PR”. Corrective commit/push, PR body, issue #412 comment và Tester Project attachment là bốn write riêng; merge/deploy chưa được mở.
 - Batch này chưa được deploy lên VPS.
 - Batch này chưa được kiểm thử luồng tiền thật.
 - `MERGED != DEPLOYED != LIVE`.
@@ -51,6 +52,16 @@
 14. Bot thực thi đúng một quyết định canonical: approve hoặc reject.
 15. Owner đọc lại status/history từ canonical bridge.
 16. Luồng thật đã được kiểm bằng temp-only Web↔Bot ASGI fixture tại `tests/test_p0_manual_topup_cross_repo_integration.py:380-505`.
+
+### 3.1 Corrective P0-05E — số tiền, mã nạp và quyền riêng tư
+
+- Khách nhập `amount_vnd`, chọn phương thức server cấp và có thể nhập tham chiếu/TXID; browser create body không được nhận owner ID, Admin ID hoặc `payment_code`.
+- Signed `/api/v1/payments/options` suy ra `manual.payment_code` từ canonical numeric account/Telegram ID đã liên kết. Giá trị chỉ hợp lệ khi khớp exact ASCII `[1-9][0-9]{0,19}`; không trim/reinterpret chuỗi có khoảng trắng hoặc chữ.
+- `manual.support_hotline` dùng ENV hợp lệ 8–15 chữ số hoặc fallback `0898360858`. Fallback số tài khoản ngân hàng là comparator độc lập `0387532320`; Portal không hardcode hai số này.
+- Lựa chọn manual, amount, method và reference được giữ trong transient route state qua same-route data hydration/remount. Hidden `topup_lane` chỉ giữ UI state; integration create body vẫn là `amount_vnd`, `method`, `reference`, `idempotency_key`.
+- Customer single/history/detail/status không chứa `admin_note`; customer JS normalizer cũng không giữ field này. Admin projection riêng vẫn giữ request ID, Telegram ID, display name, amount, method và Admin note theo quyền.
+- Browser behavior contract chạy Portal thật qua Node `vm`: chọn manual → `125000/bank_acb/TX-125` → invalid-lane attempt → hydration remount vẫn giữ đúng lane và dữ liệu.
+- Local security reviewer độc lập kết luận finding “Customer manual-topup API exposes private Admin notes” là `fixed`; production/runtime/live money vẫn chưa được tuyên bố.
 
 ## 4. Các route Web dành cho khách
 
@@ -212,11 +223,11 @@
 ## 18. Việc còn mở
 
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
-- `P0-05D`: hoàn thiện case list, hướng dẫn Tester, issue templates và trạng thái project/labels có bằng chứng.
-- Hợp nhất accepted Bot/Web source vào nhánh Git thật vẫn chưa thực hiện.
-- Pre-push review toàn batch vẫn chưa hoàn tất.
+- `P0-05D`: local Tester workspace hiện có 34 case sau amendment P0-05E; tracker/Project readback vẫn là external gate.
+- Corrective P0-05E chưa commit/push vào head branch PR #417; local docs/Tester/rendered matrix đã đóng và còn chờ GitHub/CI/Project readback bên ngoài.
+- Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
-- Commit, push, PR, merge và deploy đều chưa thực hiện.
+- Corrective commit/push, merge và deploy chưa thực hiện. PR #417 đã tồn tại từ batch trước.
 - Signed production customer/Admin routes chưa được kiểm cho batch này.
 - Live money flow không được chạy khi chưa có Owner money gate.
 
@@ -228,4 +239,5 @@
 - P0-04 Admin Web queue: `evidence/p0-04-primary-manager-accepted-20260829.md`.
 - P0-05 local cross-repo integration: `evidence/p0-05-local-integration-accepted-20260829.md`.
 - P0-05B static inventory: `evidence/p0-05b-static-inventory-accepted-20260829.md`.
+- P0-05E corrective: `evidence/p0-05e-primary-manager-verified-20260830.md` sau khi Manager closeout; trước khi file này tồn tại, trạng thái vẫn chưa ACCEPTED.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.
