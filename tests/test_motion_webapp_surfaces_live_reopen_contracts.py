@@ -11,9 +11,11 @@ THEME = (ROOT / "static/portal/portal-theme.css").read_text(encoding="utf-8")
 MOTION = (ROOT / "static/portal/portal-motion.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static/portal/portal.js").read_text(encoding="utf-8")
 FEATURES = (ROOT / "static/portal/portal-features.js").read_text(encoding="utf-8")
+WORKFLOW = (ROOT / ".github/workflows/webapp-quality.yml").read_text(encoding="utf-8")
 MARKER = "/* MOTION-WEBAPP-SURFACES-001 live-reopen"
 END_MARKER = "/* MOTION-WEBAPP-SURFACES-001 live-reopen end */"
 ALLOWED = {
+    ".github/workflows/webapp-quality.yml",
     "KIEM-THU/DANH-SACH-CASE.md", "KIEM-THU/HUONG-DAN-TESTER.md",
     "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md", "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
     "evidence/motion-webapp-surfaces-live-reopen-v2-20260831.md",
@@ -107,6 +109,16 @@ m.enter(main,"enter");main.dataset.portalPresentationPhase="settled";m.replace(n
 '''
     result = subprocess.run(["node", "-e", harness, str(ROOT / "static/portal/portal-motion.js")], cwd=ROOT, check=True, text=True, capture_output=True)
     assert json.loads(result.stdout) == {"delay": 760, "afterHydrate": "enter", "afterChild": "enter", "afterEnd": None, "visiblePending": False, "offPending": True, "observed": True, "visibleItems": 0, "offItems": 6}
+
+
+def test_pr_quality_gate_executes_changed_motion_runtime_and_contracts() -> None:
+    for token in (
+        "node --check static/portal/portal-features.js",
+        "node --check static/portal/portal-motion.js",
+        "tests/test_motion_webapp_surfaces_live_reopen_contracts.py",
+        "tests/test_p0_05d_tester_workspace.py",
+    ):
+        assert token in WORKFLOW
 
 
 def test_scope_and_size_are_exact() -> None:

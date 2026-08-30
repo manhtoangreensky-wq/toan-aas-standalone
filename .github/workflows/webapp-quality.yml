@@ -73,6 +73,8 @@ jobs:
 
       - name: Check portal JavaScript syntax
         run: |
+          node --check static/portal/portal-features.js
+          node --check static/portal/portal-motion.js
           node --check static/portal/portal.js
           node --check static/portal/portal-theme.js
           node --check static/portal/integration.js
@@ -117,7 +119,9 @@ jobs:
             tests/test_migration_audit.py::test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog \
             tests/test_migration_audit.py::test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only \
             tests/test_migration_audit.py::test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs \
-            tests/test_auth_login_brand_viewport_001_contracts.py
+            tests/test_auth_login_brand_viewport_001_contracts.py \
+            tests/test_motion_webapp_surfaces_live_reopen_contracts.py \
+            tests/test_p0_05d_tester_workspace.py
 
       - name: Check diff whitespace
         run: git diff --check HEAD^ HEAD

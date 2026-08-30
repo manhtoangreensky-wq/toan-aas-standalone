@@ -10,7 +10,7 @@ Customer Web motion is observable on the real Portal routes without changing Adm
 - Base: `eeb85107dd9ebf391db5a155243da8f45d8600cd`.
 - Accepted candidate worktree: `manager/motion-webapp-surfaces-live-reopen-v2-20260830`.
 - Exact runtime paths: `static/portal/portal-features.js`, `portal-motion.js`, `portal-theme.css`, exact `mountWorkspaceMotion()` hunk in `portal.js`; one new test file.
-- Runtime numstat: feature entry `+71/-0`, motion helper `+80/-13`, theme `+111/-0`, Portal monolith `+10/-0`; final pre-push contract test is `+115/-0` after the exact 13-path scope allowlist was added.
+- Runtime numstat: feature entry `+71/-0`, motion helper `+80/-13`, theme `+111/-0`, Portal monolith `+10/-0`; final contract test includes the exact 14-path pre-commit task allowlist and a dedicated PR-workflow coverage assertion.
 - A previous Primary worktree was rejected before commit because a Windows patch operation truncated `portal.js`; none of its code or test claims were used for acceptance. v2 was rebuilt from the exact base, and the final patch applied on Linux with `portal.js +10/-0`.
 
 ## Root causes proven
@@ -64,6 +64,13 @@ Large artifacts are outside Git. Full matrix summary SHA-256: `3d8cdb732762e5ff4
 - Canonical source contains exactly `WA-01..WA-36`; P0 case count remains `18`; WA-35/36 are both `local-render` under `MOTION-WEBAPP-SURFACES-001`.
 - Windows raw Tester suite: `27 passed / 1 failed`; the only failure is the unchanged POSIX `0600` mode assertion reporting `0o666` on Windows. The functional run with that exact platform-only assertion deselected is `27 passed / 1 deselected`.
 - `tester_case_sync.py --bo=34 --so=2 --json` emitted exactly WA-35 and WA-36, both `dry_run=true`; GitHub mutation count `0`.
+
+### PR quality gate coverage
+
+- `.github/workflows/webapp-quality.yml` now syntax-checks both changed split/shared motion runtimes: `portal-features.js` and `portal-motion.js`.
+- The bounded PR suite runs `test_motion_webapp_surfaces_live_reopen_contracts.py` and the complete `test_p0_05d_tester_workspace.py`; Linux CI is therefore the canonical `0600` permission gate.
+- Final Manager focused gate after this CI seam contains `52` passing tests; the earlier Independent Tester receipt remains `51 passed` because it predates the new workflow-coverage assertion.
+- The deploy workflow remains push-to-`main` only. Opening a stacked PR runs quality checks and does not deploy.
 
 ## Security review truth
 
