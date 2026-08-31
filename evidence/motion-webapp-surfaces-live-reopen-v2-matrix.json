@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "spec_id": "MOTION-WEBAPP-SURFACES-001",
-  "base_sha": "eeb85107dd9ebf391db5a155243da8f45d8600cd",
-  "candidate": "working-tree-v2",
+  "base_sha": "0dd8ffa3503436cb7431a98a882ff99cc25588d8",
+  "candidate": "rebased-on-production-main",
   "generated_at": "2026-08-31T00:36:06+07:00",
   "environment": "local signed test account; isolated SQLite; Chrome headless; no production/provider/payment calls",
   "viewports": [

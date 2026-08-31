@@ -7,7 +7,7 @@ import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE_SHA = "eeb85107dd9ebf391db5a155243da8f45d8600cd"
+BASE_SHA = "0dd8ffa3503436cb7431a98a882ff99cc25588d8"
 THEME = (ROOT / "static/portal/portal-theme.css").read_text(encoding="utf-8")
 MOTION = (ROOT / "static/portal/portal-motion.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static/portal/portal.js").read_text(encoding="utf-8")

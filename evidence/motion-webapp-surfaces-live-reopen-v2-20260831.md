@@ -7,7 +7,8 @@ Customer Web motion is observable on the real Portal routes without changing Adm
 ## Source identity and integrity
 
 - Repository: `manhtoangreensky-wq/toan-aas-standalone`.
-- Base: `eeb85107dd9ebf391db5a155243da8f45d8600cd`.
+- Current rebased base: `0dd8ffa3503436cb7431a98a882ff99cc25588d8`.
+- Original stacked base before PR #417/#419 merged: `eeb85107dd9ebf391db5a155243da8f45d8600cd`.
 - Accepted candidate worktree: `manager/motion-webapp-surfaces-live-reopen-v2-20260830`.
 - Exact runtime paths: `static/portal/portal-features.js`, `portal-motion.js`, `portal-theme.css`, exact `mountWorkspaceMotion()` hunk in `portal.js`; one new test file.
 - Runtime numstat: feature entry `+71/-0`, motion helper `+80/-13`, theme `+111/-0`, Portal monolith `+10/-0`; final contract test asserts the exact 16-path committed stacked-PR diff and dedicated PR-workflow coverage.
