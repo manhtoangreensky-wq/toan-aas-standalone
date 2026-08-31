@@ -758,7 +758,8 @@ def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
     assert "function safePayosCheckout(value)" in PORTAL
     assert 'url.hostname === "pay.payos.vn"' in PORTAL
     assert "!url.username && !url.password && !url.port && !url.hash" in PORTAL
-    assert "Yêu cầu thanh toán canonical" in PORTAL
+    assert "function renderPaymentFlow(context)" in PORTAL
+    assert "Thanh toán PayOS" in PORTAL
     assert 'data-portal-action="refresh-payment"' in PORTAL
     assert 'api(`/payments/${encodeURIComponent(paymentId)}`)' in INTEGRATION
     assert "paymentFlow" in INTEGRATION
@@ -766,71 +767,51 @@ def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
     assert 'queued: "Chờ thanh toán"' in PORTAL
 
 
-def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_only_the_web_api() -> None:
+def test_payment_entry_ux_keeps_manual_and_payos_as_isolated_web_actions() -> None:
     assert "function renderPaymentEntryPoints(context)" in PORTAL
-    assert 'manual.command === "/thucong"' in PORTAL
-    assert 'payos.command === "/naptien"' in PORTAL
-    assert 'data-portal-action="copy-payment-command"' in PORTAL
+    assert 'data-portal-topup-lane="payos"' in PORTAL
     assert "function renderPaymentRequestForm(page, context)" in PORTAL
-    assert "Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu." in PORTAL
     assert "function paymentWebCatalogReady(context)" in PORTAL
     assert "payos.topup_catalog_available === true" in PORTAL
-    assert "Web không suy đoán QR luôn sẵn sàng." in PORTAL
+    assert "PAYMENT_DISPLAY_FALLBACK_PACKAGES" in PORTAL
     api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
     assert "def _payment_topup_packages()" in api
     assert '"topup_packages": topup_packages' in api
     assert "PAYMENT_PACKAGE_NOT_IN_CATALOG" in api
     assert 'optionsFrom: "topupPackages"' in PORTAL
     assert 'field.optionsFrom === "topupPackages"' in PORTAL
-    assert "Không nhập ảnh bill, số tài khoản, OTP, TXID hay thông tin thẻ vào Web App." in PORTAL
+    assert 'data-portal-action="manual-topup-create"' in PORTAL
     assert "function renderPaymentLookup(context)" in PORTAL
     assert 'data-portal-action="payment-lookup"' in PORTAL
     assert "const PAYMENT_POLL_INTERVAL_MS = 10000;" in INTEGRATION
     assert "function schedulePaymentPolling" in INTEGRATION
     assert "function copyPaymentBotCommand(value)" in INTEGRATION
-    assert '["/naptien", "/thucong"].includes(command)' in INTEGRATION
-    assert 'data-portal-action="refresh-wallet-after-bot"' in PORTAL
-    assert '"refresh-wallet-after-bot": Boolean(bridgeAvailable)' in INTEGRATION
-    assert 'if (action === "refresh-wallet-after-bot")' in INTEGRATION
-    assert "Chỉ đơn PayOS canonical" in PORTAL
-    assert "Nạp thủ công không xuất hiện ở Web" in PORTAL
+    assert 'data-portal-action="manual-topup-refresh"' in PORTAL
+    assert 'if (action === "manual-topup-refresh")' in INTEGRATION
     assert "TICKET_MANUAL_PAYMENT_PROOF_PATTERN" in (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
     assert "SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN" in INTEGRATION
     assert 'api("/payments/options")' in INTEGRATION
-    assert 'if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
+    assert 'if (account && telegramLinked && currentPath === "/wallet/topup") {' in INTEGRATION
+    assert "await hydratePaymentOptions();" in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL
     assert "/api/v1/billing/create-payment-link" not in INTEGRATION
 
 
-def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system() -> None:
+def test_manual_topup_guide_is_server_driven_and_not_a_second_ledger() -> None:
     assert "function renderManualTopupGuide(context)" in PORTAL
-    assert "Nạp thủ công: tiếp tục trong Telegram" in PORTAL
-    assert "Nạp VND: gửi ảnh bill trong Bot." in PORTAL
-    assert "Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot." in PORTAL
-    assert "const routeGuide =" in PORTAL
-    assert "Không có QR tĩnh" in PORTAL
-    assert "Không dán TXID vào Web" in PORTAL
-    assert "const stateGuide =" in PORTAL
-    assert "pending</code> hoặc <code>pending_admin_review" in PORTAL
+    assert 'data-portal-action="manual-topup-create"' in PORTAL
+    assert 'data-portal-action="manual-topup-refresh"' in PORTAL
     assert "pending_admin_review" in PORTAL
     assert "approved" in PORTAL
     assert "rejected" in PORTAL
-    assert "wallet_history_signal_available" in PORTAL
-    assert "history_in_web === false" in PORTAL
-    assert "Lịch sử nạp thủ công" in PORTAL
-    assert 'Sao chép ${safeText(historyCommand)}' in PORTAL
-    assert '>Mở Bot</a>' in PORTAL
-    assert "Mở Bot để xem lịch sử" not in PORTAL
-    assert "const manualActions = manualAvailable" in PORTAL
-    assert "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công." in PORTAL
-    assert "Kiểm tra đơn PayOS" in PORTAL
-    assert "mã được bot tạo cho luồng thủ công" not in PORTAL
+    assert "manual.methods" in PORTAL
+    assert "context.manualTopupHistory" in PORTAL
     assert "pending_deposits" not in PORTAL
     assert "pending_deposits" not in INTEGRATION
-    assert "manual-topup" not in INTEGRATION
+    assert "function scheduleManualTopupPolling" in INTEGRATION
     guide = PORTAL[PORTAL.index("function renderManualTopupGuide(context)"):PORTAL.index("function renderPaymentRequestForm(page, context)")]
-    assert "<input" not in guide
-    assert "<textarea" not in guide
+    assert "<input" in guide
+    assert "<select" in guide
     assert "data-portal-action=\"payment-create\"" not in guide
     assert ".portal-manual-topup-routes" in PORTAL_CSS
     assert ".portal-manual-topup-status" in PORTAL_CSS

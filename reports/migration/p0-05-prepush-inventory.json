@@ -1,0 +1,496 @@
+{
+  "schema_version": "p0-05b.v1",
+  "generated_at": "2026-08-29T20:03:20+07:00",
+  "mode": "STATIC_SOURCE_ONLY_NO_IMPORT",
+  "source_identity": {
+    "accepted_web": {
+      "path": "/srv/toanaas-agent-work/web-p0-manual-topup-integration-sol-b9ebe",
+      "branch": "feature/p0-manual-topup-integration-sol",
+      "base_sha": "b9ebe053cb000095254909e4789c1f579cbd5dd2",
+      "head_sha": "b9ebe053cb000095254909e4789c1f579cbd5dd2",
+      "dirty_count": 12,
+      "dirty_paths": [
+        "copyfast_api.py",
+        "copyfast_bridge.py",
+        "static/portal/integration.js",
+        "static/portal/portal-i18n.js",
+        "static/portal/portal.css",
+        "static/portal/portal.js",
+        "tests/test_billing_canonical_journey_contracts.py",
+        "tests/test_copyfast_auth_api.py",
+        "tests/test_p0_manual_topup_admin_queue.py",
+        "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "tests/test_p0_manual_topup_customer_flow.py",
+        "tests/test_portal_safety_contracts.py"
+      ]
+    },
+    "build_worktree": {
+      "path": "/srv/toanaas-agent-work/web-p0-prepush-inventory-sol-b9ebe",
+      "branch": "feature/p0-05b-prepush-inventory-sol",
+      "base_sha": "b9ebe053cb000095254909e4789c1f579cbd5dd2",
+      "head_sha": "b9ebe053cb000095254909e4789c1f579cbd5dd2",
+      "initial_dirty_count": 12,
+      "final_dirty_count": 13,
+      "output_path": "reports/migration/p0-05-prepush-inventory.json"
+    },
+    "bot_comparator": {
+      "path": "/srv/toanaas-agent-work/bot-p0-manual-topup-reconciled-v2-6476",
+      "branch": "feature/p0-manual-topup-bot-contracts-reconciled",
+      "base_sha": "6476f20bdd9f8728a5db0b1d62a245b0d612aea8",
+      "head_sha": "6476f20bdd9f8728a5db0b1d62a245b0d612aea8",
+      "dirty_count": 3,
+      "dirty_paths": [
+        "bot.py",
+        "tests/test_p0_manual_topup_admin_bridge.py",
+        "tests/test_p0_manual_topup_request_bridge.py"
+      ]
+    }
+  },
+  "measured_repository": {
+    "tracked_files": {
+      "value": 1033,
+      "definition": "Mọi path do git ls-files trả về trong Web worktree.",
+      "source_command_kind": "git ls-files"
+    },
+    "production_python_files": {
+      "value": 100,
+      "definition": "Tracked *.py sau khi loại exact prefix và generated/cache component đã liệt kê.",
+      "excluded_prefixes": [
+        ".agents/",
+        "docs/",
+        "reports/",
+        "scripts/",
+        "tests/"
+      ],
+      "source_command_kind": "static tracked-path filter"
+    },
+    "fastapi_route_decorators": {
+      "value": 702,
+      "definition": "Standard-library AST count trên production Python set; terminal decorator thuộc get/post/put/patch/delete/options/head/websocket.",
+      "source_command_kind": "python ast"
+    },
+    "test_files": {
+      "value": 352,
+      "definition": "Tracked paths dưới tests/ có basename test_*.py.",
+      "source_command_kind": "static tracked-path filter"
+    },
+    "migration_markdown_files": {
+      "value": 208,
+      "definition": "Tracked recursive Markdown paths dưới docs/migration/.",
+      "source_command_kind": "static tracked-path filter"
+    }
+  },
+  "manual_topup_contract": {
+    "web_customer_routes": [
+      {
+        "route": "GET /api/v1/payments/manual",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4718
+      },
+      {
+        "route": "GET /api/v1/payments/manual/{request_id}",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4734
+      },
+      {
+        "route": "GET /api/v1/payments/manual/{request_id}/status",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4752
+      },
+      {
+        "route": "POST /api/v1/payments/manual",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4689
+      }
+    ],
+    "web_admin_routes": [
+      {
+        "route": "GET /api/v1/admin/payments/manual",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4550
+      },
+      {
+        "route": "GET /api/v1/admin/payments/manual/{request_id}",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4571
+      },
+      {
+        "route": "POST /api/v1/admin/payments/manual/{request_id}/confirm",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4629
+      },
+      {
+        "route": "POST /api/v1/admin/payments/manual/{request_id}/draft",
+        "repo": "web",
+        "path": "copyfast_api.py",
+        "line": 4589
+      }
+    ],
+    "bot_owner_routes": [
+      {
+        "route": "GET /internal/v1/payments/manual",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 274652
+      },
+      {
+        "route": "GET /internal/v1/payments/manual/{deposit_id}",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 274700
+      },
+      {
+        "route": "GET /internal/v1/payments/manual/{deposit_id}/status",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 274732
+      },
+      {
+        "route": "POST /internal/v1/payments/manual",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 274555
+      }
+    ],
+    "bot_admin_routes": [
+      {
+        "route": "GET /internal/v1/admin/payments/manual",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 274983
+      },
+      {
+        "route": "GET /internal/v1/admin/payments/manual/{deposit_id}",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 275029
+      },
+      {
+        "route": "POST /internal/v1/admin/payments/manual/{deposit_id}/confirm",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 275109
+      },
+      {
+        "route": "POST /internal/v1/admin/payments/manual/{deposit_id}/draft",
+        "repo": "bot",
+        "path": "bot.py",
+        "line": 275051
+      }
+    ],
+    "canonical_status": [
+      "approved",
+      "awaiting_confirm",
+      "pending_admin_review",
+      "rejected"
+    ],
+    "safety_facts": [
+      {
+        "fact": "canonical_admin_id",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "160-169;545-561"
+      },
+      {
+        "fact": "csrf",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "510-589"
+      },
+      {
+        "fact": "distinct_owner_admin_bearer",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "597-637"
+      },
+      {
+        "fact": "idempotency",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "481-505"
+      },
+      {
+        "fact": "payos_isolation",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "665-698"
+      },
+      {
+        "fact": "safe_projection",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "380-420"
+      },
+      {
+        "fact": "signed_session",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "245-275"
+      },
+      {
+        "fact": "temp_only_cross_repo_proof",
+        "value": true,
+        "repo": "web",
+        "path": "tests/test_p0_manual_topup_cross_repo_integration.py",
+        "line_range": "665-698"
+      }
+    ]
+  },
+  "protected_hashes": [
+    [
+      "bot",
+      "bot.py",
+      "64f6c14afa5e6715583c15b1260b1ccd378f58f186bd7c9ea220775012af8442"
+    ],
+    [
+      "bot",
+      "tests/test_p0_manual_topup_admin_bridge.py",
+      "900918c91acec8de3ae3c006f80a2e9bec57a16155d2ac75d739ec0ee2c5912e"
+    ],
+    [
+      "bot",
+      "tests/test_p0_manual_topup_request_bridge.py",
+      "6dc809029978ff1269180f1e869f472748438513f894d413508b789ba488a747"
+    ],
+    [
+      "web",
+      "copyfast_api.py",
+      "da316026cc8949358343613507f8f73aa69991c6d591de6822020a920eb1dec9"
+    ],
+    [
+      "web",
+      "copyfast_bridge.py",
+      "b46877b1ce48d9824dd3d59b31d25059e9c1b6bf8d1d20dd4dca9e646b78916a"
+    ],
+    [
+      "web",
+      "static/portal/integration.js",
+      "ebff50e0285dd73708ea89010f3c572a3605ca2f33cc475a2c297fd45d148b95"
+    ],
+    [
+      "web",
+      "static/portal/portal-i18n.js",
+      "622fcb13f547a445cae2e76d67d6a42129c2b582ac9293b8aa910c455603d900"
+    ],
+    [
+      "web",
+      "static/portal/portal.css",
+      "346b2249a52565c54b6357cedad9ab22d4eca39f20055d01510220a99352b866"
+    ],
+    [
+      "web",
+      "static/portal/portal.js",
+      "5336663d9bd39dac303c9bb09949e5d28407e12b30097d2990f23379acc0c18b"
+    ],
+    [
+      "web",
+      "tests/test_billing_canonical_journey_contracts.py",
+      "e018daf6ecd23c5560f60aa038da9d286165fb44947ffb5e24a98abb26318c2a"
+    ],
+    [
+      "web",
+      "tests/test_copyfast_auth_api.py",
+      "b0b20f9b18193d124b47f3fa95136231c531a97f0530e130ec74dde59787b079"
+    ],
+    [
+      "web",
+      "tests/test_p0_manual_topup_admin_queue.py",
+      "29e4bf8095a46b2dbd67c96e4dcb5f14f50e757733f94827a91fd24cb3d01deb"
+    ],
+    [
+      "web",
+      "tests/test_p0_manual_topup_cross_repo_integration.py",
+      "4cd1840b4e466b0eaa6e2dd1ded86fbb7d85012e26fa289555859a8c07428fd2"
+    ],
+    [
+      "web",
+      "tests/test_p0_manual_topup_customer_flow.py",
+      "f548ff3b11279202af56c78fcfe9b86101ef59b6edafca8cae187124658c02c5"
+    ],
+    [
+      "web",
+      "tests/test_portal_safety_contracts.py",
+      "c34927e822212f99372aa3f24d475969713f94e99e4d3fca375fee9611a1157a"
+    ]
+  ],
+  "current_docs": {
+    "files": [
+      {
+        "path": ".github/ISSUE_TEMPLATE/01-case-test.yml",
+        "lines": 32,
+        "bytes": 766,
+        "sha256": "3ed063657780c63e20c4b3f65e1a83af10aa6275a5179baa39baea4cf807af62",
+        "stale_for_p0_05": false,
+        "factual_gaps": [
+          "Thiếu trường đếm mutation và acceptance P0-05."
+        ]
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/02-bao-loi.yml",
+        "lines": 31,
+        "bytes": 782,
+        "sha256": "dfd3f8506c6be0594ba2616092e09d88793302a4846b5dbbc9f704fae4bedd34",
+        "stale_for_p0_05": false,
+        "factual_gaps": [
+          "Thiếu trường hồi quy idempotency và security P0-05."
+        ]
+      },
+      {
+        "path": "KIEM-THU/DANH-SACH-CASE.md",
+        "lines": 24,
+        "bytes": 2503,
+        "sha256": "f09ac18e595d7752f165cbf16fdce4f1e59a714256e9520621df1b73d863f9ed",
+        "stale_for_p0_05": false,
+        "factual_gaps": [
+          "Chưa có case P0-05 request, Admin, idempotency và security."
+        ]
+      },
+      {
+        "path": "KIEM-THU/HUONG-DAN-TESTER.md",
+        "lines": 16,
+        "bytes": 1599,
+        "sha256": "679284a9650e4532f4838976b52d78ecea04fb4f595b4170b41043836cf279f3",
+        "stale_for_p0_05": false,
+        "factual_gaps": [
+          "Chưa có hướng dẫn P0-05 temp-only và manual security."
+        ]
+      },
+      {
+        "path": "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
+        "lines": 104,
+        "bytes": 7815,
+        "sha256": "5057d772d1071c29cc3ce637c7ade724adee028289594cf47ef0a9791d4b384a",
+        "stale_for_p0_05": true,
+        "factual_gaps": [
+          "Đang mô tả batch Admin 27/08, chưa mô tả P0-05 accepted."
+        ]
+      },
+      {
+        "path": "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
+        "lines": 59,
+        "bytes": 8785,
+        "sha256": "d9dc3c2ba28d1723a4b0b79be180b78c4f39bedb8778dca6fcf684ed73f6e983",
+        "stale_for_p0_05": true,
+        "factual_gaps": [
+          "Đang đối chiếu Admin 27/08, chưa đối chiếu manual top-up P0-05."
+        ]
+      }
+    ]
+  },
+  "initial_feature_sources": {
+    "status": "INITIAL_FEATURE_DOC_NOT_FOUND",
+    "search_scope": [
+      "README.md",
+      "docs/UX_APP_FIRST_REDESIGN.md",
+      "docs/migration/BOT_TO_WEB_INVENTORY.md",
+      "docs/migration/FEATURE_PARITY_MATRIX.md",
+      "docs/migration/README.md",
+      "docs/superpowers/plans/",
+      "docs/superpowers/specs/"
+    ],
+    "found_sources": [
+      {
+        "path": "README.md",
+        "lines": 337,
+        "bytes": 22798,
+        "sha256": "34aa3071cb5103fac01080249a121057118798a4ae9ea7b444588bb5c57b13c5"
+      },
+      {
+        "path": "docs/UX_APP_FIRST_REDESIGN.md",
+        "lines": 90,
+        "bytes": 5006,
+        "sha256": "437da48c04b97b1867ca01a66bb062449babf59edfc0531019f9a90af2c29a5c"
+      },
+      {
+        "path": "docs/migration/BOT_TO_WEB_INVENTORY.md",
+        "lines": 12,
+        "bytes": 518,
+        "sha256": "7cc29afe085bd1bfdb8c482d071d947b62d12b74346389d566111235ca7ac231"
+      },
+      {
+        "path": "docs/migration/FEATURE_PARITY_MATRIX.md",
+        "lines": 220,
+        "bytes": 15923,
+        "sha256": "aa3a56d50055181d14cf247b759c4c73f213446d63d70daf61690509c87105da"
+      },
+      {
+        "path": "docs/migration/README.md",
+        "lines": 111,
+        "bytes": 21093,
+        "sha256": "9ec2c1134aef60b2b58fa2d930283dfa1db39233fde7cf3ac556cada35fa188a"
+      },
+      {
+        "path": "docs/superpowers/plans/",
+        "markdown_count": 123
+      },
+      {
+        "path": "docs/superpowers/specs/",
+        "markdown_count": 139
+      }
+    ]
+  },
+  "tester_workspace": {
+    "case_count": 16,
+    "case_ids": [
+      "WA-01",
+      "WA-02",
+      "WA-03",
+      "WA-04",
+      "WA-05",
+      "WA-06",
+      "WA-07",
+      "WA-08",
+      "WA-09",
+      "WA-10",
+      "WA-11",
+      "WA-12",
+      "WA-13",
+      "WA-14",
+      "WA-15",
+      "WA-16"
+    ],
+    "issue_template_count": 2,
+    "tracker_reference": 412,
+    "tracker_provenance_paths": [
+      "KIEM-THU/DANH-SACH-CASE.md",
+      "KIEM-THU/HUONG-DAN-TESTER.md",
+      "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md"
+    ],
+    "github_live_labels": "NOT_QUERIED",
+    "github_project": "NOT_QUERIED"
+  },
+  "production_data": {
+    "record_counts": "NOT_MEASURED",
+    "reason": "Production databases and user data are outside this static Builder gate."
+  },
+  "safety": {
+    "provider_calls": 0,
+    "payos_live_calls": 0,
+    "telegram_live_calls": 0,
+    "external_http_calls": 0,
+    "production_wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "git_mutations": 0,
+    "commit": "NO",
+    "push": "NO",
+    "pr": "NO",
+    "merge": "NO",
+    "deploy": "NO",
+    "live": "NO"
+  }
+}

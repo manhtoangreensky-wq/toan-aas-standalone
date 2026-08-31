@@ -810,6 +810,56 @@ def evidence():
         audit.verify_web_evidence(web_root, report_dir, changed_sha)
 
 
+def test_refresh_web_evidence_updates_only_web_provenance(tmp_path: Path) -> None:
+    """A Web-only refresh never needs or rewrites Bot evidence or generated docs."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    report_dir = web_root / "reports" / "migration"
+    docs_dir = web_root / "docs" / "migration"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text("BOT_TOKEN = 'masked'\n", encoding="utf-8")
+    app_source = web_root / "app.py"
+    app_source.write_text("from fastapi import FastAPI\napp = FastAPI()\n", encoding="utf-8")
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(["git", *args], cwd=web_root, check=True, text=True, capture_output=True)
+
+    git("init")
+    git("add", "app.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "initial")
+    initial_sha = git("rev-parse", "HEAD").stdout.strip()
+    audit.run_audit(
+        bot_root=bot_root,
+        web_root=web_root,
+        bot_baseline_sha="baseline",
+        report_dir=report_dir,
+        docs_dir=docs_dir,
+        web_revision_sha=initial_sha,
+    )
+    protected_paths = [report_dir / "bot_inventory.json", report_dir / "parity_gap.json", *docs_dir.glob("*.md")]
+    protected_before = {path: path.read_bytes() for path in protected_paths}
+
+    app_source.write_text(
+        "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/fresh')\ndef fresh(): return {'ok': True}\n",
+        encoding="utf-8",
+    )
+    git("add", "app.py", "reports/migration", "docs/migration")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "fresh source")
+    fresh_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    refreshed = audit.refresh_web_evidence(web_root, report_dir, fresh_sha, docs_dir)
+    assert refreshed["expected_sha"] == fresh_sha
+    assert audit.verify_web_evidence(web_root, report_dir, fresh_sha, docs_dir)["expected_sha"] == fresh_sha
+    preflight = json.loads((report_dir / "preflight.json").read_text(encoding="utf-8"))
+    inventory = json.loads((report_dir / "web_inventory.json").read_text(encoding="utf-8"))
+    assert preflight["webapp"]["revision"]["checkout_sha"] == fresh_sha
+    assert preflight["webapp"]["revision"]["source_fingerprint_sha256"] == inventory["source_fingerprint_sha256"]
+    assert {path: path.read_bytes() for path in protected_paths} == protected_before
+
+
 def test_verify_web_evidence_accepts_matching_source_after_squash_merge(tmp_path: Path) -> None:
     """A squash-equivalent commit keeps valid evidence when eligible source is identical."""
 

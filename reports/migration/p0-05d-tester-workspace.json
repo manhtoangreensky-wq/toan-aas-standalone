@@ -1,0 +1,84 @@
+{
+  "schema_version": "p0-05d.v1",
+  "repo": "manhtoangreensky-wq/toan-aas-standalone",
+  "visibility": "public",
+  "default_branch": "main",
+  "tracker_issue": 412,
+  "tracker_state": "open",
+  "tracker_title": "[TRACKING] Web App: từng spec → evidence → một PR → deploy/live loop",
+  "tracker_labels": [
+    "case-test",
+    "chờ-test"
+  ],
+  "tracker_body_lines": 57,
+  "tracker_has_p0_05": false,
+  "tracker_body_update_required": true,
+  "label_count": 21,
+  "required_tester_labels_present": "12/12",
+  "required_labels": [
+    "case-test",
+    "chờ-sửa",
+    "chờ-test",
+    "chờ-test-lại",
+    "có-lỗi",
+    "lỗi",
+    "đang-test",
+    "đạt",
+    "🔴 chặn-bán-hàng",
+    "🟠 nặng",
+    "🟡 vừa",
+    "🟢 nhẹ"
+  ],
+  "labels_missing": [],
+  "github_project": "NOT_QUERIED_AUTH_REQUIRED",
+  "push_gate": "BLOCKED_GITHUB_PROJECT_AND_TRACKER_UPDATE",
+  "verified_at": "2026-08-29",
+  "external_mutations": 0,
+  "case_count": 34,
+  "p0_case_count": 18,
+  "local_files": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/01-case-test.yml",
+      "lines": 113,
+      "bytes": 3211,
+      "sha256": "4b1d455d9cb60aebe33a50eecb918a74aa17a40df063e354f2c52270c6f58d82"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/02-bao-loi.yml",
+      "lines": 100,
+      "bytes": 2657,
+      "sha256": "d07c37d3a9abecdbb8a6414a2fea856706e9c907e2d9bd6ccaf4071f667b6c74"
+    },
+    {
+      "path": "KIEM-THU/DANH-SACH-CASE.md",
+      "lines": 44,
+      "bytes": 14977,
+      "sha256": "7151998856a9adf5f347450e6f84b44513b6d962ca7ebde2beeed7c4898839ca"
+    },
+    {
+      "path": "KIEM-THU/HUONG-DAN-TESTER.md",
+      "lines": 109,
+      "bytes": 6178,
+      "sha256": "88f4a5f3bf894ae158994d5a57da606cd09d1e729f3742236985a5d632ee4cf9"
+    },
+    {
+      "path": "scripts/tester_case_sync.py",
+      "lines": 212,
+      "bytes": 8813,
+      "sha256": "b08a712111794f85307026adb7aadb9c0461d15e05856b773f73fa391a6f7ed4"
+    },
+    {
+      "path": "tests/test_p0_05d_tester_workspace.py",
+      "lines": 290,
+      "bytes": 12547,
+      "sha256": "e4722091a847a2128bdc0818c8ad1a69f33318fff9ae3aa6ba76a3411ecaa83b"
+    }
+  ],
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "github_mutations": 0
+  }
+}

@@ -95,6 +95,9 @@
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
   const PAYMENT_POLL_MAX_BACKOFF_MS = 60000;
+  const MANUAL_TOPUP_POLL_INTERVAL_MS = 10000;
+  const MANUAL_TOPUP_POLL_MAX_ATTEMPTS = 30;
+  const MANUAL_TOPUP_RECEIPT_PATTERN = /^[A-Za-z0-9_-]{32,160}$/;
   // Telegram verification is asynchronous because the customer leaves the
   // Portal to confirm identity in the Bot. Poll only the same signed browser
   // session for the short one-time challenge lifetime; never poll a raw
@@ -162,6 +165,10 @@
   let jobPollEpoch = 0;
   let paymentPollTimer = 0;
   let paymentPollFailures = 0;
+  let manualTopupPollTimer = 0;
+  let manualTopupPollAttempts = 0;
+  let manualTopupPollRequestId = "";
+  let manualTopupPollSessionEpoch = 0;
   let telegramLoginPollTimer = 0;
   let telegramLoginPollFailures = 0;
   let telegramLoginPollDeadline = 0;
@@ -180,6 +187,10 @@
   let canonicalSessionEpoch = 0;
   let canonicalHydrationEpoch = 0;
   let canonicalAdminDataHydrationEpoch = 0;
+  let adminManualTopupHydrationEpoch = 0;
+  let adminManualTopupDetailEpoch = 0;
+  let adminManualTopupWriteEpoch = 0;
+  let adminManualTopupState = emptyAdminManualTopupState("guarded");
   // Incremented at every authenticated bootstrap. A delayed role-navigation
   // response can never replace the manifest for a newer signed session.
   let adminErpNavigationEpoch = 0;
@@ -550,6 +561,7 @@
   let telegramLinkStatusHydrationEpoch = 0;
   let paymentOptionsSessionEpoch = 0;
   let paymentOptionsHydrationEpoch = 0;
+  let manualTopupHistoryHydrationEpoch = 0;
   const submissions = new Map();
   // `merge()` remounts the Portal. Keep this DOM-only route marker so a
   // concurrent save/error remount cannot recreate an editable compose form
@@ -811,6 +823,49 @@
     return (base().path || window.location.pathname || "/").split("?")[0];
   }
 
+  function adminManualTopupText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const translated = i18n.t(`adminManualTopup.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
+  function emptyAdminManualTopupState(readState, filterStatus) {
+    return {
+      readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(readState || "")) ? String(readState) : "guarded",
+      filterStatus: ["pending", "approved", "rejected"].includes(String(filterStatus || "")) ? String(filterStatus) : "pending",
+      query: "",
+      items: [],
+      count: 0,
+      selected: null,
+      draft: null,
+      error: ""
+    };
+  }
+
+  function adminManualTopupRecord(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!source || !/^MANUAL-[1-9][0-9]{0,18}$/.test(String(source.request_id || ""))) return null;
+    const status = String(source.status || "");
+    if (!["pending_admin_review", "approved", "rejected"].includes(status)) return null;
+    const record = { request_id: String(source.request_id), status };
+    if (/^[1-9][0-9]{0,19}$/.test(String(source.telegram_user_id || ""))) record.telegram_user_id = String(source.telegram_user_id);
+    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => {
+      if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field];
+    });
+    ["display_name", "currency", "method", "transfer_content", "reference", "submitted_at", "decision_at", "decided_by_admin_id", "admin_note"].forEach((field) => {
+      if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field];
+    });
+    return record;
+  }
+
+  function adminManualTopupListProjection(result, filterStatus) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : {};
+    const items = Array.isArray(data.items) ? data.items.map(adminManualTopupRecord).filter(Boolean).slice(0, 50) : [];
+    const filter = ["pending", "approved", "rejected"].includes(String(data.filter || "")) ? String(data.filter) : filterStatus;
+    return { items, count: items.length, filterStatus: filter };
+  }
+
   function loginChallengeRoute() {
     return ["/login", "/register"].includes(currentPortalPath());
   }
@@ -952,6 +1007,13 @@
     const i18n = window.TOANAASI18n;
     if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
     const translated = i18n.t(`access.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
+  function manualTopupText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function" || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(`manualTopup.${key}`, params);
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
@@ -12716,6 +12778,10 @@
     ++canonicalHydrationEpoch;
     invalidateDeliveryReadRefreshState();
     ++canonicalAdminDataHydrationEpoch;
+    ++adminManualTopupHydrationEpoch;
+    ++adminManualTopupDetailEpoch;
+    ++adminManualTopupWriteEpoch;
+    adminManualTopupState = emptyAdminManualTopupState("guarded");
     ++adminErpNavigationEpoch;
     ++adminAuditSessionEpoch;
     ++memorySessionEpoch;
@@ -12830,6 +12896,12 @@
     ++workspaceDraftSessionEpoch;
     ++telegramLinkStatusSessionEpoch;
     ++paymentOptionsSessionEpoch;
+    ++manualTopupPollSessionEpoch;
+    ++manualTopupHistoryHydrationEpoch;
+    if (manualTopupPollTimer) window.clearTimeout(manualTopupPollTimer);
+    manualTopupPollTimer = 0;
+    manualTopupPollAttempts = 0;
+    manualTopupPollRequestId = "";
     // Every signed bootstrap starts from blank route-local authoring values.
     // OCR source selections and an unsent SFX brief remain only in the active
     // form interaction, never across a server-derived account projection.
@@ -13794,6 +13866,8 @@
       "refresh-wallet-after-bot": Boolean(bridgeAvailable),
       "payment-lookup": true,
       "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
+      "admin-manual-topup-view": Boolean(status.manual_admin_bridge_configured === true && status.flags && status.flags.admin_erp_enabled === true && account && account.role === "admin"),
+      "admin-manual-topup-write": Boolean(status.manual_admin_bridge_configured === true && adminWriteEnabled),
       "admin-retry": adminWriteEnabled,
       "admin-refund": adminWriteEnabled,
       "admin-freeze": adminWriteEnabled,
@@ -13962,6 +14036,7 @@
       // Canonical ERP data is staff-private. Clear it alongside the route
       // manifest so a role/session transition cannot retain a prior view.
       adminData: {},
+      adminManualTopupState,
       // Audit Explorer stores only a server-redacted event projection, but it
       // is still staff-private and is cleared for every signed bootstrap.
       adminAudit: { events: [], summary: {}, source: "", boundaries: [] },
@@ -13978,6 +14053,9 @@
       } : {},
       linkStatus: { linked: telegramLinked },
       paymentOptions: {},
+      manualTopupFlow: {},
+      manualTopupHistory: [],
+      manualTopupReadState: account && telegramLinked && initialPortalPath === "/wallet/topup" ? "loading" : "guarded",
       session: {
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: accountDisplayName, email: account ? account.email : ""
@@ -15502,7 +15580,10 @@
     // Manual top-up remains in the linked Telegram bot and does not require a
     // provider call from the Web App, so expose its safe entry point even when
     // a private bridge data read is temporarily unavailable.
-    if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();
+    if (account && telegramLinked && currentPath === "/wallet/topup") {
+      await hydratePaymentOptions();
+      await hydrateManualTopupHistory();
+    }
     // Native Support Desk routes have their own narrow API boundary.  Even if
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
@@ -15861,6 +15942,82 @@
       && currentPortalPath() === expectedPath
       && expectedPath === "/wallet/topup"
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function manualTopupRecord(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const requestId = String(value.request_id || "").trim();
+    const status = String(value.status || "").trim();
+    if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !["pending_admin_review", "approved", "rejected"].includes(status)) return null;
+    const record = { request_id: requestId, status };
+    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => {
+      if (Number.isSafeInteger(value[field]) && value[field] >= 0) record[field] = value[field];
+    });
+    ["method", "currency", "transfer_content", "reference", "submitted_at", "updated_at"].forEach((field) => {
+      if (typeof value[field] === "string" && value[field].length <= 240) record[field] = value[field];
+    });
+    return record;
+  }
+
+  function manualTopupPollingCanContinue(requestId, sessionEpoch) {
+    return currentPortalPath() === "/wallet/topup"
+      && sessionEpoch === manualTopupPollSessionEpoch
+      && Boolean(base().session && base().session.authenticated === true)
+      && requestId === manualTopupPollRequestId
+      && manualTopupPollAttempts < MANUAL_TOPUP_POLL_MAX_ATTEMPTS;
+  }
+
+  function stopManualTopupPolling() {
+    if (manualTopupPollTimer) window.clearTimeout(manualTopupPollTimer);
+    manualTopupPollTimer = 0;
+    manualTopupPollAttempts = 0;
+    manualTopupPollRequestId = "";
+  }
+
+  function scheduleManualTopupPolling(requestId, delayMs) {
+    const normalized = /^MANUAL-[1-9][0-9]{0,18}$/.test(String(requestId || "")) ? String(requestId) : "";
+    if (!normalized) return;
+    if (manualTopupPollRequestId !== normalized) {
+      stopManualTopupPolling();
+      manualTopupPollRequestId = normalized;
+    }
+    const sessionEpoch = manualTopupPollSessionEpoch;
+    if (!manualTopupPollingCanContinue(normalized, sessionEpoch) || manualTopupPollTimer) return;
+    manualTopupPollTimer = window.setTimeout(async () => {
+      manualTopupPollTimer = 0;
+      if (!manualTopupPollingCanContinue(normalized, sessionEpoch)) return;
+      manualTopupPollAttempts += 1;
+      try {
+        const result = await api(`/payments/manual/${encodeURIComponent(normalized)}/status`);
+        if (!manualTopupPollingCanContinue(normalized, sessionEpoch)) return;
+        const record = manualTopupRecord(result.data || {});
+        const status = record ? record.status : String(result.status || "guarded");
+        merge({ manualTopupFlow: { status, message: result.message || "", data: record || {} } });
+        if (status === "pending_admin_review") scheduleManualTopupPolling(normalized, MANUAL_TOPUP_POLL_INTERVAL_MS);
+        else stopManualTopupPolling();
+      } catch (_) {
+        if (manualTopupPollingCanContinue(normalized, sessionEpoch)) scheduleManualTopupPolling(normalized, MANUAL_TOPUP_POLL_INTERVAL_MS);
+      }
+    }, Number.isFinite(Number(delayMs)) ? Math.max(0, Number(delayMs)) : MANUAL_TOPUP_POLL_INTERVAL_MS);
+  }
+
+  async function hydrateManualTopupHistory() {
+    const requestEpoch = ++manualTopupHistoryHydrationEpoch;
+    const sessionEpoch = manualTopupPollSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (expectedPath !== "/wallet/topup" || !(base().session && base().session.authenticated === true)) return null;
+    merge({ manualTopupReadState: "loading" });
+    try {
+      const result = await api("/payments/manual?limit=20");
+      if (requestEpoch !== manualTopupHistoryHydrationEpoch || sessionEpoch !== manualTopupPollSessionEpoch || currentPortalPath() !== expectedPath) return null;
+      const items = result.data && Array.isArray(result.data.items) ? result.data.items.map(manualTopupRecord).filter(Boolean).slice(0, 50) : [];
+      merge({ manualTopupHistory: items, manualTopupReadState: items.length ? "ready" : "empty" });
+      return items;
+    } catch (_) {
+      if (requestEpoch !== manualTopupHistoryHydrationEpoch || sessionEpoch !== manualTopupPollSessionEpoch || currentPortalPath() !== expectedPath) return null;
+      merge({ manualTopupHistory: [], manualTopupReadState: "failed" });
+      return null;
+    }
   }
 
   async function hydrateLinkStatus() {
@@ -25686,7 +25843,7 @@
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminCustomerDirectoryPath(expectedPath) || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminFinancePlanningPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || expectedPath === "/admin/topups" || isNativeAdminCustomerDirectoryPath(expectedPath) || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminFinancePlanningPath(expectedPath) || isNativeAdminPostbackReadinessPath(expectedPath) || isNativeAdminJobRecoveryGuidePath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -25709,6 +25866,79 @@
         pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
       });
       throw error;
+    }
+  }
+
+  function adminManualTopupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === adminManualTopupHydrationEpoch
+      && sessionEpoch === canonicalSessionEpoch
+      && currentPortalPath() === expectedPath
+      && expectedPath === "/admin/topups"
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, receipt) {
+    if (
+      writeEpoch !== adminManualTopupWriteEpoch
+      || sessionEpoch !== canonicalSessionEpoch
+      || currentPortalPath() !== expectedPath
+      || expectedPath !== "/admin/topups"
+      || !(base().session && base().session.authenticated === true)
+    ) return false;
+    if (requestId && String(adminManualTopupState.selected && adminManualTopupState.selected.request_id || "") !== requestId) return false;
+    if (receipt && String(adminManualTopupState.draft && adminManualTopupState.draft.confirmation_receipt || "") !== receipt) return false;
+    return true;
+  }
+
+  async function hydrateAdminManualTopups(filterStatus, query) {
+    const expectedPath = currentPortalPath();
+    const filter = ["pending", "approved", "rejected"].includes(String(filterStatus || "")) ? String(filterStatus) : "pending";
+    if (expectedPath !== "/admin/topups") return null;
+    const requestEpoch = ++adminManualTopupHydrationEpoch;
+    const sessionEpoch = canonicalSessionEpoch;
+    adminManualTopupState = { ...emptyAdminManualTopupState("loading", filter), query: String(query || adminManualTopupState.query || "").slice(0, 120) };
+    merge({ adminManualTopupState });
+    try {
+      const result = await api(`/admin/payments/manual?status=${encodeURIComponent(filter)}&limit=20`);
+      if (!adminManualTopupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const projected = adminManualTopupListProjection(result, filter);
+      adminManualTopupState = {
+        ...adminManualTopupState,
+        readState: projected.items.length ? "ready" : "empty",
+        filterStatus: projected.filterStatus,
+        items: projected.items,
+        count: projected.count,
+        error: ""
+      };
+      merge({ adminManualTopupState, pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" } });
+      return adminManualTopupState;
+    } catch (error) {
+      if (!adminManualTopupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      adminManualTopupState = { ...emptyAdminManualTopupState("failed", filter), query: adminManualTopupState.query, error: String(error && error.message || adminManualTopupText("error.generic", "Chưa thể tải hàng đợi.")) };
+      merge({ adminManualTopupState, pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" } });
+      return null;
+    }
+  }
+
+  async function hydrateAdminManualTopupDetail(requestId) {
+    const expectedPath = currentPortalPath();
+    const normalized = /^MANUAL-[1-9][0-9]{0,18}$/.test(String(requestId || "")) ? String(requestId) : "";
+    if (!normalized || expectedPath !== "/admin/topups") return null;
+    const requestEpoch = ++adminManualTopupDetailEpoch;
+    const sessionEpoch = canonicalSessionEpoch;
+    try {
+      const result = await api(`/admin/payments/manual/${encodeURIComponent(normalized)}`);
+      if (requestEpoch !== adminManualTopupDetailEpoch || sessionEpoch !== canonicalSessionEpoch || currentPortalPath() !== expectedPath) return null;
+      const record = adminManualTopupRecord(result.data);
+      if (!record) throw new Error(adminManualTopupText("error.detail", "Chi tiết yêu cầu không đúng schema."));
+      adminManualTopupState = { ...adminManualTopupState, selected: record, draft: null, error: "" };
+      merge({ adminManualTopupState });
+      return record;
+    } catch (error) {
+      if (requestEpoch !== adminManualTopupDetailEpoch || sessionEpoch !== canonicalSessionEpoch || currentPortalPath() !== expectedPath) return null;
+      adminManualTopupState = { ...adminManualTopupState, selected: null, draft: null, error: String(error && error.message || adminManualTopupText("error.detail", "Chưa thể tải chi tiết.")) };
+      merge({ adminManualTopupState });
+      return null;
     }
   }
 
@@ -26021,6 +26251,9 @@
         // Web-native aggregate or navigation manifest. Never attempt a
         // generic bridge fallback here.
         return null;
+      } else if (path === "/admin/topups") {
+        await hydrateAdminManualTopups("pending", "");
+        if (!isCurrent()) return null;
       } else if (path.startsWith("/admin")) {
         await hydrateCanonicalAdminData(path);
         if (!isCurrent()) return null;
@@ -26746,6 +26979,158 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (String(action || "").startsWith("admin-manual-topup-")) {
+        if (route !== "/admin/topups" || currentPortalPath() !== "/admin/topups") throw new Error(adminManualTopupText("error.route", "Chỉ thao tác trong hàng đợi đang mở."));
+        if (!(base().capabilities && base().capabilities["admin-manual-topup-view"] === true)) throw new Error(adminManualTopupText("error.permission", "Cần quyền Admin canonical để xem hàng đợi."));
+        if (action === "admin-manual-topup-refresh") {
+          await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
+          return;
+        }
+        if (action === "admin-manual-topup-filter") {
+          await hydrateAdminManualTopups(String(fields.status || ""), adminManualTopupState.query);
+          return;
+        }
+        if (action === "admin-manual-topup-search") {
+          adminManualTopupState = { ...adminManualTopupState, query: String(fields.q || "").trim().slice(0, 120) };
+          merge({ adminManualTopupState });
+          return;
+        }
+        if (action === "admin-manual-topup-select") {
+          const requestId = String(fields.request_id || "");
+          if (!requestId) {
+            ++adminManualTopupDetailEpoch;
+            adminManualTopupState = { ...adminManualTopupState, selected: null, draft: null, error: "" };
+            merge({ adminManualTopupState });
+            return;
+          }
+          await hydrateAdminManualTopupDetail(requestId);
+          return;
+        }
+        if (action === "admin-manual-topup-cancel-confirmation") {
+          ++adminManualTopupWriteEpoch;
+          adminManualTopupState = { ...adminManualTopupState, draft: null };
+          merge({ adminManualTopupState });
+          return;
+        }
+        if (!(base().capabilities && base().capabilities["admin-manual-topup-write"] === true)) throw new Error(adminManualTopupText("error.writePermission", "Quyền quyết định nạp thủ công chưa được bật."));
+        if (action === "admin-manual-topup-draft") {
+          const requestId = String(fields.request_id || "");
+          const draftAction = String(fields.decision || "");
+          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !["approve_expected", "approve_custom", "reject"].includes(draftAction)) throw new Error(adminManualTopupText("error.decision", "Quyết định không hợp lệ."));
+          const body = { action: draftAction };
+          if (draftAction === "approve_custom") {
+            const approvedXu = Number(fields.approved_xu);
+            if (!Number.isSafeInteger(approvedXu) || approvedXu <= 0) throw new Error(adminManualTopupText("error.customXu", "Số Xu tùy chỉnh phải là số nguyên dương."));
+            body.approved_xu = approvedXu;
+            body.reason = String(fields.reason || "").trim();
+          } else if (draftAction === "reject") body.reason = String(fields.reason || "").trim();
+          if (["approve_custom", "reject"].includes(draftAction) && (body.reason.length < 3 || body.reason.length > 300)) throw new Error(adminManualTopupText("error.reason", "Lý do cần từ 3 đến 300 ký tự."));
+          const expectedPath = currentPortalPath();
+          const sessionEpoch = canonicalSessionEpoch;
+          const writeEpoch = ++adminManualTopupWriteEpoch;
+          setActionBusy(action, route, true);
+          try {
+            const result = await api(`/admin/payments/manual/${encodeURIComponent(requestId)}/draft`, {
+              method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+            });
+            if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, "")) return;
+            const draftData = result.data && typeof result.data === "object" ? result.data : {};
+            if (!MANUAL_TOPUP_RECEIPT_PATTERN.test(String(draftData.confirmation_receipt || ""))) throw new Error(adminManualTopupText("error.receipt", "Máy chủ chưa trả biên nhận xác nhận hợp lệ."));
+            adminManualTopupState = { ...adminManualTopupState, draft: draftData, error: "" };
+            merge({ adminManualTopupState });
+          } finally { setActionBusy(action, route, false); }
+          return;
+        }
+        if (action === "admin-manual-topup-confirm") {
+          const draft = adminManualTopupState.draft && typeof adminManualTopupState.draft === "object" ? adminManualTopupState.draft : {};
+          const requestId = String(draft.request_id || "");
+          const receipt = String(draft.confirmation_receipt || "");
+          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !MANUAL_TOPUP_RECEIPT_PATTERN.test(receipt)) throw new Error(adminManualTopupText("error.receipt", "Hãy tạo xác nhận mới."));
+          const scope = `manual-admin-confirm:${requestId}`;
+          const submission = acquireSubmission(scope, receipt);
+          if (!submission) throw new Error(adminManualTopupText("error.inProgress", "Quyết định đang được xử lý."));
+          let terminal = false;
+          const expectedPath = currentPortalPath();
+          const sessionEpoch = canonicalSessionEpoch;
+          const writeEpoch = ++adminManualTopupWriteEpoch;
+          setActionBusy(action, route, true);
+          try {
+            const result = await api(`/admin/payments/manual/${encodeURIComponent(requestId)}/confirm`, {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ confirmation_receipt: receipt, idempotency_key: submission.key })
+            });
+            if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, receipt)) return;
+            terminal = ["approved", "rejected"].includes(String(result.status || ""));
+            if (terminal) {
+              adminManualTopupState = { ...adminManualTopupState, readState: "loading", draft: null, selected: adminManualTopupRecord(result.data), error: "" };
+              merge({ adminManualTopupState });
+              await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
+              toast(result.message || adminManualTopupText("success.confirm", "Đã ghi nhận quyết định canonical."));
+            }
+          } finally {
+            releaseSubmission(submission);
+            if (terminal) discardSubmission(scope, submission);
+            setActionBusy(action, route, false);
+          }
+          return;
+        }
+      }
+      if (action === "manual-topup-refresh") {
+        if (route !== "/wallet/topup" || currentPortalPath() !== "/wallet/topup") throw new Error(manualTopupText("failed", "Chưa thể xử lý"));
+        setActionBusy(action, route, true);
+        try {
+          await hydrateManualTopupHistory();
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "manual-topup-create") {
+        if (route !== "/wallet/topup" || currentPortalPath() !== "/wallet/topup") throw new Error(manualTopupText("failed", "Chưa thể xử lý"));
+        const amount = Number(fields.amount_vnd);
+        if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error(manualTopupText("invalidAmount", "Số tiền phải là số nguyên dương."));
+        const methods = base().paymentOptions && base().paymentOptions.manual && Array.isArray(base().paymentOptions.manual.methods)
+          ? base().paymentOptions.manual.methods.map((item) => String(item && item.id || ""))
+          : [];
+        const method = String(fields.method || "");
+        if (!methods.includes(method)) throw new Error(manualTopupText("invalidMethod", "Hãy chọn phương thức do máy chủ cung cấp."));
+        const reference = String(fields.reference || "").trim();
+        if (reference.length > 240 || /[<>\u0000-\u001f]/.test(reference)) throw new Error(manualTopupText("invalidReference", "Tham chiếu không hợp lệ."));
+        const fingerprint = JSON.stringify({ amount_vnd: amount, method, reference });
+        const submission = acquireSubmission("manual-topup", fingerprint);
+        if (!submission) {
+          toast(manualTopupText("inProgress", "Yêu cầu này đang được gửi. Vui lòng chờ phản hồi."), "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        merge({ manualTopupFlow: { status: "submitting", message: manualTopupText("submitting", "Đang gửi yêu cầu…"), data: {} } });
+        try {
+          const result = await api("/payments/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount_vnd: amount, method, reference, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const record = manualTopupRecord(result.data || {});
+          const status = record ? record.status : String(result.status || "guarded");
+          merge({ manualTopupFlow: { status, message: result.message || "", data: record || {} } });
+          toast(result.message || manualTopupText("pending", "Đang chờ Admin đối soát"));
+          await hydrateManualTopupHistory();
+          if (record && record.status === "pending_admin_review") scheduleManualTopupPolling(record.request_id, MANUAL_TOPUP_POLL_INTERVAL_MS);
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          const payload = error && error.payload && typeof error.payload === "object" ? error.payload : {};
+          merge({ manualTopupFlow: { status: String(payload.status || "failed"), message: String(payload.message || manualTopupText("failed", "Chưa thể xử lý")), data: {} } });
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          // Keep the same key for an unchanged retry. The Bot owns durable
+          // idempotency; changing amount/method/reference creates a new fingerprint.
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "finance-planning-view") {
         if (route !== FINANCE_PLANNING_ROUTE || currentPortalPath() !== FINANCE_PLANNING_ROUTE) throw new Error("Chỉ có thể đổi kỳ tại Finance Operations Planning đang mở.");
         if (!(base().capabilities && base().capabilities["finance-planning-view"] === true)) throw new Error("Cần signed Web-admin session để xem Finance Operations Planning.");
@@ -36151,6 +36536,11 @@
       }
       if (action === "auth-logout") {
         clearSessionScopedTransientDrafts();
+        ++canonicalSessionEpoch;
+        ++adminManualTopupHydrationEpoch;
+        ++adminManualTopupDetailEpoch;
+        ++adminManualTopupWriteEpoch;
+        adminManualTopupState = emptyAdminManualTopupState("guarded");
         // A navigation can wait for the logout response while a private
         // Music/SFX list is still in flight. Invalidate it immediately so it
         // cannot paint a signed owner's cards during that transition.

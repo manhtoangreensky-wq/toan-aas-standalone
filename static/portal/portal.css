@@ -7257,6 +7257,322 @@ button, a, input, select, textarea { touch-action: manipulation; }
   }
 }
 
+/* P0-04 — signed Admin manual top-up reconciliation workspace. */
+.portal-admin-manual-topup {
+  min-width: 0;
+}
+
+.portal-admin-manual-topup-toolbar {
+  display: grid;
+  gap: 18px;
+}
+
+.portal-admin-manual-topup-toolbar > div:first-child {
+  display: grid;
+  gap: 7px;
+}
+
+.portal-admin-manual-topup-toolbar h2,
+.portal-admin-manual-topup-toolbar p {
+  margin: 0;
+}
+
+.portal-admin-manual-topup-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-admin-manual-topup-metrics > span {
+  display: grid;
+  gap: 4px;
+  min-height: 76px;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-subtle);
+  color: var(--portal-text-secondary);
+}
+
+.portal-admin-manual-topup-metrics strong {
+  color: var(--portal-text-primary);
+  font-size: 1.45rem;
+}
+
+.portal-admin-manual-topup-controls,
+.portal-admin-manual-topup-controls > div,
+.portal-admin-manual-topup-controls form,
+.portal-admin-manual-topup-dialog .portal-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-admin-manual-topup-controls form {
+  flex: 1 1 280px;
+}
+
+.portal-admin-manual-topup-controls input {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.portal-admin-manual-topup-controls :is(button, input),
+.portal-admin-manual-topup-inspector :is(button, input),
+.portal-admin-manual-topup-dialog button {
+  min-height: 44px;
+}
+
+.portal-admin-manual-topup-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, .65fr);
+  align-items: start;
+  gap: 18px;
+  min-width: 0;
+}
+
+.portal-admin-manual-topup-table,
+.portal-admin-manual-topup-inspector {
+  min-width: 0;
+}
+
+.portal-admin-manual-topup-table .portal-data-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.portal-admin-manual-topup-mobile {
+  display: none;
+}
+
+.portal-admin-manual-topup-card {
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--portal-border);
+  border-radius: 13px;
+  background: var(--portal-surface-card);
+}
+
+.portal-admin-manual-topup-card.is-selected {
+  border-color: var(--portal-accent);
+}
+
+.portal-admin-manual-topup-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.portal-admin-manual-topup-card-head > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.portal-admin-manual-topup-card-head :is(strong, span),
+.portal-admin-manual-topup-card dd,
+.portal-admin-manual-topup-facts dd,
+.portal-admin-manual-topup-dialog dd {
+  overflow-wrap: anywhere;
+}
+
+.portal-admin-manual-topup-card dl,
+.portal-admin-manual-topup-facts,
+.portal-admin-manual-topup-dialog dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px 16px;
+  margin: 0;
+}
+
+.portal-admin-manual-topup-card dl > div,
+.portal-admin-manual-topup-facts > div,
+.portal-admin-manual-topup-dialog dl > div {
+  min-width: 0;
+}
+
+.portal-admin-manual-topup-card dt,
+.portal-admin-manual-topup-facts dt,
+.portal-admin-manual-topup-dialog dt {
+  color: var(--portal-text-secondary);
+  font-size: .75rem;
+}
+
+.portal-admin-manual-topup-card dd,
+.portal-admin-manual-topup-facts dd,
+.portal-admin-manual-topup-dialog dd {
+  margin: 3px 0 0;
+  color: var(--portal-text-primary);
+  font-weight: 700;
+}
+
+.portal-admin-manual-topup-inspector {
+  position: sticky;
+  top: 84px;
+  display: grid;
+  gap: 18px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+.portal-admin-manual-topup-actions {
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-admin-manual-topup-actions h3,
+.portal-admin-manual-topup-actions p {
+  margin: 0;
+}
+
+.portal-admin-manual-topup-decision-form {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-subtle);
+}
+
+.portal-admin-manual-topup-decision-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--portal-text-secondary);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.portal-admin-manual-topup-decision-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  background: var(--portal-surface-card);
+  color: var(--portal-text-primary);
+  font: inherit;
+}
+
+.portal-button--danger {
+  border-color: color-mix(in srgb, #ef4444 55%, var(--portal-border));
+  background: color-mix(in srgb, #ef4444 14%, var(--portal-surface-card));
+  color: color-mix(in srgb, #ef4444 72%, white);
+}
+
+.portal-admin-manual-topup-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.portal-admin-manual-topup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 10, 18, .7);
+  backdrop-filter: blur(4px);
+}
+
+.portal-admin-manual-topup-dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+  width: min(520px, 100%);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid var(--portal-border);
+  border-radius: 16px;
+  background: var(--portal-surface-card);
+  color: var(--portal-text-primary);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
+}
+
+.portal-admin-manual-topup-dialog :is(h2, p) {
+  margin: 0;
+}
+
+.portal-admin-manual-topup-dialog .portal-inline-actions {
+  justify-content: flex-end;
+}
+
+.portal-admin-manual-topup :is(button, input):focus-visible,
+.portal-admin-manual-topup-dialog :is(button, input):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--portal-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .portal-admin-manual-topup-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-admin-manual-topup-inspector {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-admin-manual-topup-table > .portal-data-table-wrap {
+    display: none;
+  }
+
+  .portal-admin-manual-topup-mobile {
+    display: grid;
+    gap: 12px;
+  }
+
+  .portal-admin-manual-topup-metrics,
+  .portal-admin-manual-topup-card dl,
+  .portal-admin-manual-topup-facts,
+  .portal-admin-manual-topup-dialog dl {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-admin-manual-topup-controls,
+  .portal-admin-manual-topup-controls > div,
+  .portal-admin-manual-topup-controls form,
+  .portal-admin-manual-topup-dialog .portal-inline-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portal-admin-manual-topup-controls :is(button, input),
+  .portal-admin-manual-topup-dialog button {
+    width: 100%;
+  }
+
+  .portal-admin-manual-topup-modal {
+    align-items: end;
+    padding: 0;
+  }
+
+  .portal-admin-manual-topup-dialog {
+    width: 100%;
+    max-height: min(86dvh, 760px);
+    border-radius: 18px 18px 0 0;
+    padding-bottom: calc(22px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-admin-manual-topup *,
+  .portal-admin-manual-topup *::before,
+  .portal-admin-manual-topup *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
 @media (max-width: 700px) {
   .portal-filter-button { min-height: 44px; padding: 9px 13px; font-size: 12px; }
   .portal-filter-result { margin-top: -4px; font-size: 12px; }
@@ -9146,3 +9462,163 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 
 .portal-body--features .portal-header { min-height: 67px; } @media (min-width: 701px) { .portal-body--dashboard-stable .portal-header { min-height: 67px; } }
+
+/* Manual top-up is a signed, server-driven request workspace. */
+.portal-manual-topup-route[hidden],
+.portal-manual-topup-status[hidden] {
+  display: none !important;
+}
+
+.portal-manual-topup-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.portal-manual-topup-form label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.portal-manual-topup-form label > span {
+  color: var(--portal-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.portal-manual-topup-form input,
+.portal-manual-topup-form select {
+  min-height: 44px;
+}
+
+.portal-page.portal-wallet-page .portal-manual-topup-card .portal-manual-topup-form button.portal-button,
+.portal-page.portal-wallet-page .portal-manual-topup-card .portal-manual-topup-history button.portal-button {
+  min-height: 48px;
+}
+
+@media (max-width: 640px) {
+  .portal-manual-topup-form > .portal-form-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 52px;
+  }
+
+  .portal-manual-topup-form > .portal-form-footer .portal-button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+.portal-manual-topup-form input,
+.portal-manual-topup-form select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  background: var(--portal-surface-card);
+  color: var(--portal-text-primary);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.portal-manual-topup-form input:focus-visible,
+.portal-manual-topup-form select:focus-visible,
+.portal-manual-topup-history button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--portal-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.portal-manual-topup-warning,
+.portal-manual-topup-current,
+.portal-manual-topup-empty {
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  background: var(--portal-surface-subtle);
+  color: var(--portal-text-secondary);
+  padding: 12px 14px;
+}
+
+.portal-manual-topup-history {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-manual-topup-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.portal-manual-topup-record {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-card);
+  padding: 14px;
+}
+
+.portal-manual-topup-record-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.portal-manual-topup-record-head strong,
+.portal-manual-topup-record-head span,
+.portal-manual-topup-record dd {
+  overflow-wrap: anywhere;
+}
+
+.portal-manual-topup-record dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.portal-manual-topup-record dl > div {
+  min-width: 0;
+}
+
+.portal-manual-topup-record dt {
+  color: var(--portal-text-secondary);
+  font-size: 0.75rem;
+}
+
+.portal-manual-topup-record dd {
+  margin: 3px 0 0;
+  color: var(--portal-text-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .portal-manual-topup-card {
+    padding: 16px;
+  }
+
+  .portal-manual-topup-record dl {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-manual-topup-record-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-manual-topup-card *,
+  .portal-manual-topup-card *::before,
+  .portal-manual-topup-card *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

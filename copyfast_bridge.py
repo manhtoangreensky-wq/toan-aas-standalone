@@ -26,6 +26,11 @@ _MAX_SAFE_DATA_DEPTH = 6
 _MAX_SAFE_DATA_ITEMS = 80
 _MAX_SAFE_STRING_LENGTH = 4_000
 _ASSET_DELIVERY_ROUTE_RE = re.compile(r"^/internal/v1/assets/[^/]+/download$")
+_TELEGRAM_OWNER_ID_RE = re.compile(r"^[1-9][0-9]{0,19}$")
+_MANUAL_ADMIN_PATH_RE = re.compile(
+    r"^/internal/v1/admin/payments/manual"
+    r"(?:/MANUAL-[1-9][0-9]{0,18}(?:/(?:draft|confirm))?)?$"
+)
 _SENSITIVE_KEY_PARTS = frozenset({
     "token", "secret", "apikey", "authorization", "signature", "traceback", "stack",
     "outputpath", "filesystempath", "providertask", "rawresponse", "privatekey",
@@ -34,8 +39,8 @@ _SENSITIVE_KEY_PARTS = frozenset({
 _REQUIRED_BRIDGE_TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
-def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
-    return {"ok": ok, "status": status_name, "message": message, "data": data or {}, "error_code": error_code}
+def envelope(ok: bool, message: str, *, data: Any = None, status_name: str = "completed", error_code: str | None = None) -> dict:
+    return {"ok": ok, "status": status_name, "message": message, "data": {} if data is None else data, "error_code": error_code}
 
 
 def _base_url() -> str:
@@ -131,7 +136,7 @@ class CoreBridgeClient:
     def configuration_error(self) -> str | None:
         return _configuration_error(self.base_url, self.token, self.hmac_secret)
 
-    def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "") -> dict[str, str]:
+    def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "", owner_id: str = "") -> dict[str, str]:
         timestamp = str(int(time.time()))
         digest = hashlib.sha256(body).hexdigest()
         message = f"{timestamp}.{request_id}.{method.upper()}.{path}.{digest}".encode("utf-8")
@@ -145,14 +150,18 @@ class CoreBridgeClient:
         }
         if actor_id:
             headers["X-TOAN-AAS-Actor-ID"] = actor_id[:128]
+        if owner_id:
+            headers["X-TOAN-AAS-Telegram-User-ID"] = owner_id
         if body:
             headers["Content-Type"] = "application/json"
         return headers
 
-    async def request(self, method: str, path: str, *, payload: dict | None = None, params: dict | None = None, request_id: str | None = None, actor_id: str = "") -> dict:
+    async def request(self, method: str, path: str, *, payload: dict | None = None, params: dict | None = None, request_id: str | None = None, actor_id: str = "", owner_id: str = "") -> dict:
         configuration_error = self.configuration_error
         if configuration_error:
             return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code=configuration_error)
+        if owner_id and _TELEGRAM_OWNER_ID_RE.fullmatch(owner_id) is None:
+            return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_OWNER_INVALID")
         normalized_path = "/" + path.lstrip("/")
         # ``request_id`` is a public Web correlation value.  The bot treats
         # X-TOAN-AAS-Request-ID as an HMAC nonce, so reusing a browser-supplied
@@ -183,6 +192,7 @@ class CoreBridgeClient:
                     body,
                     request_id=bridge_request_id,
                     actor_id=actor_id,
+                    owner_id=owner_id,
                 )
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(12.0, connect=4.0), transport=self.transport) as client:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)
@@ -252,12 +262,14 @@ def _sanitize_data(value: Any, *, depth: int = 0) -> Any:
 
 def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict:
     """Keep bridge contract while preventing raw/debug keys from escaping."""
-    raw_data = value.get("data") if isinstance(value.get("data"), dict) else {}
+    raw_data = value.get("data")
+    if not isinstance(raw_data, (dict, list)):
+        raw_data = {}
     safe_data = _sanitize_data(raw_data)
-    if not isinstance(safe_data, dict):
+    if not isinstance(safe_data, (dict, list)):
         safe_data = {}
     status_name = str(value.get("status") or "failed")
-    allowed_statuses = {"draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "guarded", "cancelled", "refunded", "read_only"}
+    allowed_statuses = {"draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "guarded", "cancelled", "refunded", "read_only", "pending_admin_review", "approved", "rejected"}
     if status_name not in allowed_statuses:
         status_name = "failed"
     return envelope(
@@ -269,5 +281,147 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
     )
 
 
-async def bridge_request(method: str, path: str, *, payload: dict | None = None, params: dict | None = None, request_id: str | None = None, actor_id: str = "") -> dict:
-    return await CoreBridgeClient().request(method, path, payload=payload, params=params, request_id=request_id, actor_id=actor_id)
+async def bridge_request(method: str, path: str, *, payload: dict | None = None, params: dict | None = None, request_id: str | None = None, actor_id: str = "", owner_id: str = "") -> dict:
+    return await CoreBridgeClient().request(method, path, payload=payload, params=params, request_id=request_id, actor_id=actor_id, owner_id=owner_id)
+
+
+def _manual_admin_token() -> str:
+    return os.environ.get("INTERNAL_MANUAL_ADMIN_TOKEN", "").strip()
+
+
+def _bridge_header_token(value: str) -> bytes | None:
+    """Return one bounded printable ASCII bearer value, otherwise fail closed."""
+
+    if not isinstance(value, str) or not 12 <= len(value) <= 4_096 or not value.isascii():
+        return None
+    if any(character.isspace() or ord(character) < 33 or ord(character) > 126 for character in value):
+        return None
+    return value.encode("ascii")
+
+
+def manual_admin_bridge_configured() -> bool:
+    """Check the Admin-scoped capability without exposing a configuration reason."""
+
+    admin_token = _manual_admin_token()
+    owner_token = _token()
+    admin_bytes = _bridge_header_token(admin_token)
+    owner_bytes = _bridge_header_token(owner_token) if owner_token else None
+    if admin_bytes is None:
+        return False
+    if owner_bytes is not None and hmac.compare_digest(admin_bytes, owner_bytes):
+        return False
+    return _configuration_error(_base_url(), admin_token, _hmac_secret()) is None
+
+
+def _manual_admin_bridge_route_allowed(method: str, path: str) -> bool:
+    if _MANUAL_ADMIN_PATH_RE.fullmatch(path) is None:
+        return False
+    upper = method.upper()
+    if upper == "GET":
+        return not path.endswith(("/draft", "/confirm"))
+    if upper == "POST":
+        return path.endswith(("/draft", "/confirm"))
+    return False
+
+
+async def manual_admin_bridge_request(
+    method: str,
+    path: str,
+    *,
+    admin_id: str,
+    payload: dict | None = None,
+    params: dict | None = None,
+    request_id: str | None = None,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> tuple[dict, str]:
+    """Call the private manual-payment Admin bridge with a separate credential.
+
+    The second tuple item is populated only for a valid draft response.  It is
+    consumed by the server-side Web receipt vault and must never cross into a
+    browser envelope.
+    """
+
+    if not manual_admin_bridge_configured():
+        return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_ADMIN_NOT_CONFIGURED"), ""
+    if _TELEGRAM_OWNER_ID_RE.fullmatch(str(admin_id or "")) is None:
+        return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_ADMIN_INVALID"), ""
+    normalized_path = "/" + str(path or "").lstrip("/")
+    if not _manual_admin_bridge_route_allowed(method, normalized_path):
+        return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_ADMIN_ROUTE_INVALID"), ""
+
+    try:
+        body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8") if payload is not None else b""
+    except (TypeError, ValueError):
+        return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_INVALID_PAYLOAD"), ""
+
+    admin_token = _manual_admin_token()
+    hmac_secret = _hmac_secret()
+    base_url = _base_url()
+    response: httpx.Response | None = None
+    # All four operations are safe to retry with identical input: GET and
+    # draft are read-only; confirm is idempotent by its signed Bot token.
+    for attempt in range(2):
+        bridge_request_id = str(uuid.uuid4())
+        timestamp = str(int(time.time()))
+        digest = hashlib.sha256(body).hexdigest()
+        material = f"{timestamp}.{bridge_request_id}.{method.upper()}.{normalized_path}.{digest}".encode("utf-8")
+        signature = hmac.new(hmac_secret.encode("utf-8"), material, hashlib.sha256).hexdigest()
+        headers = {
+            "Authorization": f"Bearer {admin_token}",
+            "X-TOAN-AAS-Timestamp": timestamp,
+            "X-TOAN-AAS-Request-ID": bridge_request_id,
+            "X-TOAN-AAS-Signature": signature,
+            "X-TOAN-AAS-Admin-ID": str(admin_id),
+            "Accept": "application/json",
+        }
+        if body:
+            headers["Content-Type"] = "application/json"
+        try:
+            async with httpx.AsyncClient(
+                base_url=base_url,
+                timeout=httpx.Timeout(12.0, connect=4.0),
+                transport=transport,
+            ) as client:
+                response = await client.request(
+                    method.upper(), normalized_path, content=body or None, params=params, headers=headers
+                )
+        except (httpx.HTTPError, httpx.InvalidURL, ValueError):
+            if attempt == 0:
+                await anyio.sleep(0.05)
+                continue
+            return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_UNAVAILABLE"), ""
+        if response.status_code in {502, 503, 504} and attempt == 0:
+            await anyio.sleep(0.05)
+            continue
+        break
+
+    if response is None:
+        return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_UNAVAILABLE"), ""
+    try:
+        source: Any = response.json()
+    except ValueError:
+        source = None
+    if not isinstance(source, dict):
+        return envelope(False, PUBLIC_GUARD, status_name="failed", error_code="CORE_BRIDGE_INVALID_RESPONSE"), ""
+
+    private_token = ""
+    public_source = dict(source)
+    raw_data = source.get("data")
+    if isinstance(raw_data, dict):
+        public_data = dict(raw_data)
+        candidate = public_data.pop("confirmation_token", "")
+        public_source["data"] = public_data
+        if normalized_path.endswith("/draft") and source.get("ok") is True and source.get("status") == "awaiting_confirm":
+            if (
+                isinstance(candidate, str)
+                and 32 <= len(candidate) <= 4_096
+                and candidate.count(".") == 1
+                and candidate.isascii()
+            ):
+                private_token = candidate
+
+    sanitized = _sanitize_envelope(
+        public_source,
+        fallback_code=_safe_error_code(response.status_code) if response.status_code >= 400 else None,
+    )
+    return sanitized, private_token
