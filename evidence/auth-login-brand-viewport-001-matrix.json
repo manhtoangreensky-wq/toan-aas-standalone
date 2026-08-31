@@ -1,0 +1,31 @@
+{
+  "schema_version": "auth-login-brand-viewport-001.v1",
+  "spec_id": "AUTH-LOGIN-BRAND-VIEWPORT-001",
+  "base_sha": "978554130a1b329dd367ee5cf7c5918606770ccc",
+  "candidate": "working-tree",
+  "generated_at": "2026-08-31T15:00:32.8437759+07:00",
+  "environment": "local Web App; isolated SQLite; public login; Codex in-app Browser",
+  "cases": [
+    {"viewport":"1056x763","theme":"dark","header_width":620,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":626.7,"card_viewport_gap":136.3,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":763},
+    {"viewport":"1056x763","theme":"light","header_width":620,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":626.7,"card_viewport_gap":136.3,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":763},
+    {"viewport":"844x610","theme":"dark","header_width":620,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":567.9,"card_viewport_gap":42.1,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":640},
+    {"viewport":"844x610","theme":"light","header_width":620,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":567.9,"card_viewport_gap":42.1,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":640},
+    {"viewport":"390x667","theme":"light","header_width":358.4,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":569,"card_viewport_gap":98,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":667},
+    {"viewport":"390x667","theme":"dark","header_width":358.4,"mark_width":36,"mark_height":36,"image_inside_mark":true,"card_bottom":569,"card_viewport_gap":98,"min_control_height":44,"horizontal_overflow":0,"console_errors":0,"scroll_height":667}
+  ],
+  "screenshots": [
+    {"path":"review/auth-login-brand-viewport-001/1056x763-dark.png","bytes":31576,"sha256":"3a300ff7ee31815e9b8948165ffed520c8dc5fd5c8cfa38ae8cfd375e40039ae"},
+    {"path":"review/auth-login-brand-viewport-001/1056x763-light.png","bytes":33876,"sha256":"1e29b697c7d63ac47b5f4603f4786529f1b8f68f17577b13f1556da12e17b4af"},
+    {"path":"review/auth-login-brand-viewport-001/844x610-dark.png","bytes":31657,"sha256":"509abfd20cc70f9062b097d30d293cc5d3ec4bd59091876f11ec451e1622ed38"},
+    {"path":"review/auth-login-brand-viewport-001/844x610-light.png","bytes":33150,"sha256":"05a7ee00f1eee11f00ec19e970207fd8eafbdcb245f2ce3e98cd7303697b780d"},
+    {"path":"review/auth-login-brand-viewport-001/390x667-light.png","bytes":22857,"sha256":"e34aff4bf05d5e7730946564caa7a5d6d0f0b84fe64c8cdb33c915120219c5b3"},
+    {"path":"review/auth-login-brand-viewport-001/390x667-dark.png","bytes":22033,"sha256":"2c376f85bb358ddc5d190a6c373694fd168e877e563944523c95d32c8c10dfa3"}
+  ],
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "external_form_submissions": 0
+  }
+}

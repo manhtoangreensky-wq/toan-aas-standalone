@@ -1,18 +1,17 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: source Web/Bot đã nghiệm thu local ngày 29/08/2026.
+> Phạm vi đo: source Web đã nghiệm thu đến ngày 31/08/2026; tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main comparator: `b9ebe053cb000095254909e4789c1f579cbd5dd2`.
-- PR #417 previous HEAD: `15c00151b97c1dd3324b3d8bdb990721e0ad1c0e`; P0-05E corrective hiện là local candidate chưa push, merge hoặc deploy.
+- Web production/main: `978554130a1b329dd367ee5cf7c5918606770ccc` (PR #417).
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
-- Trạng thái batch manual top-up trước corrective: `ACCEPTED_LOCAL`; P0-05E đã hoàn tất local code/security/rendered matrix `10/10` và còn chờ Independent Tester reverify P2 cùng bốn GitHub writes đã được Owner duyệt.
-- PR #417 đã tồn tại; không được ghi “chưa tạo PR”. Corrective commit/push, PR body, issue #412 comment và Tester Project attachment là bốn write riêng; merge/deploy chưa được mở.
-- Batch này chưa được deploy lên VPS.
+- PR #417 đã merge; quality run `33354445985` và deploy run `33354446011` đều `SUCCESS`.
+- VPS readback: exact HEAD `9785541`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
+- Live assets có đúng một `amount_vnd` field/action, Admin queue route/render và Hotline source `0898360858`; signed production create/approve/reject chưa được chạy.
 - Batch này chưa được kiểm thử luồng tiền thật.
 - `MERGED != DEPLOYED != LIVE`.
 - `HTTP 200` chỉ chứng minh request HTTP được xử lý; nó không chứng minh quyết định tài chính cuối hợp lệ.
@@ -144,6 +143,13 @@
 - Bằng chứng đầy đủ nằm tại `tests/test_p0_manual_topup_cross_repo_integration.py:510-589`.
 - Raw Telegram ID trong browser không phải authentication; xem `docs/migration/TELEGRAM_WEB_CONNECTION.md:3-18`.
 
+### Auth brand và viewport — candidate hotfix
+
+- Candidate local: Auth header desktop/tablet có rail độc lập `620px`; card giữ `480px`.
+- Brand mark không được flex-shrink và giữ `36×36px`; ảnh logo nằm trọn content box, không dùng translate/scale.
+- Ba viewport `1056×763`, `844×610`, `390×667` được đo ở light/dark: `6/6` không horizontal overflow, control nhỏ nhất `44px`, card còn lề đáy tối thiểu `42.1px`.
+- Đây là presentation-only behavior; không thay Auth API/session/form/routing.
+
 ## 11. Safe projection
 
 - Safe projection là projection response theo owner/role, không phải màn hình xem trước giá.
@@ -223,11 +229,10 @@
 ## 18. Việc còn mở
 
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
-- `P0-05D`: local Tester workspace hiện có 34 case sau amendment P0-05E; tracker/Project readback vẫn là external gate.
-- Corrective P0-05E chưa commit/push vào head branch PR #417; local docs/Tester/rendered matrix đã đóng và còn chờ GitHub/CI/Project readback bên ngoài.
+- Tester workspace hiện có 34 case trên main; PR motion riêng giữ WA-35/36 và không được nhập trùng vào hotfix Auth.
+- Auth login brand/viewport hotfix đã local-render `6/6`; chưa commit/push/PR/merge/deploy tại thời điểm bằng chứng này.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
-- Corrective commit/push, merge và deploy chưa thực hiện. PR #417 đã tồn tại từ batch trước.
 - Signed production customer/Admin routes chưa được kiểm cho batch này.
 - Live money flow không được chạy khi chưa có Owner money gate.
 
@@ -240,4 +245,5 @@
 - P0-05 local cross-repo integration: `evidence/p0-05-local-integration-accepted-20260829.md`.
 - P0-05B static inventory: `evidence/p0-05b-static-inventory-accepted-20260829.md`.
 - P0-05E corrective: `evidence/p0-05e-primary-manager-verified-20260830.md` sau khi Manager closeout; trước khi file này tồn tại, trạng thái vẫn chưa ACCEPTED.
+- Auth login brand/viewport: `evidence/auth-login-brand-viewport-001-20260831.md` và matrix JSON cùng tên.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.
