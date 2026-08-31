@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái P0 manual top-up: PR #417 đã tồn tại; corrective P0-05E đang local verify, chưa push/merge/deploy, `LIVE_PASS=NOT_TESTED`.
+> Trạng thái P0 manual top-up: PR #417 đã merge/deploy tại `9785541`; signed production money flow vẫn `LIVE_PASS=NOT_TESTED`.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -37,26 +37,27 @@ Inventory đã được nghiệm thu tại P0-05B.
 
 | Yêu cầu/đoạn nguồn | Hành vi source hiện tại | Trạng thái | Bằng chứng |
 |---|---|---|---|
-| “signed workspace and operations application” | Web dùng signed session; integration fixture đăng ký/link/login các owner/Admin session thật. | ⚠️ Local accepted; batch chưa deploy/live. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `tests/test_p0_manual_topup_cross_repo_integration.py:245-275` |
+| “signed workspace and operations application” | Web dùng signed session; integration fixture đăng ký/link/login các owner/Admin session thật. | ✅ Source đã deploy tại `9785541`; signed money flow chưa test. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `tests/test_p0_manual_topup_cross_repo_integration.py:245-275` |
 | Browser raw Telegram ID không phải auth | Telegram identity phải qua OIDC hoặc one-time Bot proof; Email/OAuth account không bắt buộc link ngay cho mọi Web-only surface. | ✅ Boundary hiện hành. | `docs/migration/TELEGRAM_WEB_CONNECTION.md:3-18`; `docs/migration/TELEGRAM_WEB_CONNECTION.md:31-39` |
 | One-time link gắn cùng browser session | Link/account challenge dùng callback ký và CSRF; raw ID không được render thành quyền. | ✅ Source contract. | `docs/migration/TELEGRAM_WEB_CONNECTION.md:65-75`; `tests/test_p0_manual_topup_cross_repo_integration.py:245-275` |
-| Bot là authority cho Xu/PayOS/provider/job | Web manual routes proxy tới Bot writer; Web không tự credit Xu hoặc tạo ledger thứ hai. | ⚠️ P0 bridge local accepted, production configuration chưa ship. | `README.md:236-263`; `tests/test_p0_manual_topup_cross_repo_integration.py:665-698` |
+| Bot là authority cho Xu/PayOS/provider/job | Web manual routes proxy tới Bot writer; Web không tự credit Xu hoặc tạo ledger thứ hai. | ⚠️ Web source đã ship; production bridge configuration/signed outcome chưa test. | `README.md:236-263`; `tests/test_p0_manual_topup_cross_repo_integration.py:665-698` |
 | Bot manual callbacks là `TELEGRAM_ONLY` | Web không replay callback/UID/bill state; P0 thêm API signed-session riêng thay vì chuyển callback sang browser. | ⚠️ Cách triển khai Web-native mới, không phải callback parity. | `docs/migration/MANUAL_PAYMENT_CALLBACK_CONTRACT.md:3-11`; `copyfast_api.py:4689-4763` |
-| Customer manual create/history/detail/status | Web có bốn route owner-scoped với projection và canonical Bot bridge. | ⚠️ `ACCEPTED_LOCAL`, NOT DEPLOYED. | `copyfast_api.py:4689-4763`; `tests/test_p0_manual_topup_cross_repo_integration.py:380-420` |
+| Customer manual create/history/detail/status | Web có bốn route owner-scoped với projection và canonical Bot bridge. | ⚠️ Source deployed; signed production route chưa test. | `copyfast_api.py:4689-4763`; `tests/test_p0_manual_topup_cross_repo_integration.py:380-420` |
 | Admin manual list/detail | Web có hai read route cần canonical Admin authority. | ⚠️ `ACCEPTED_LOCAL`, signed production chưa kiểm. | `copyfast_api.py:4550-4586`; `tests/test_p0_manual_topup_cross_repo_integration.py:392-400` |
 | Admin manual draft/confirm | Web dùng two-step confirmation receipt; draft không cộng Xu. | ⚠️ `ACCEPTED_LOCAL`, live money flow chưa chạy. | `copyfast_api.py:4589-4675`; `tests/test_p0_manual_topup_cross_repo_integration.py:401-415` |
 | “No browser-supplied ... admin_id ... is trusted” | Forged query/body/header không thay canonical Admin ID từ session; denial không mutate ledger. | ⚠️ Đã kiểm temp-only, chưa live. | `README.md:238-244`; `tests/test_p0_manual_topup_cross_repo_integration.py:510-589` |
 | Owner/Admin bearer phải tách | Owner bearer bị deny ở 4 Admin route; equal/missing Admin secret fail closed. | ⚠️ Đã kiểm temp-only; ENV production chưa rotate/configure. | `tests/test_p0_manual_topup_cross_repo_integration.py:597-637` |
 | Confirm phải idempotent | Hai client confirm đồng thời chỉ tạo một canonical mutation; replay không double-credit. | ⚠️ Concurrency proof là 2 client trong fixture, không phải load benchmark. | `tests/test_p0_manual_topup_cross_repo_integration.py:481-505` |
 | Safe owner/Admin projection | Owner output không lộ Admin/token/raw fields; Admin output theo allow-list; foreign owner nhận safe response. | ⚠️ Source/test local accepted. | `tests/test_p0_manual_topup_cross_repo_integration.py:380-420`; `tests/test_p0_manual_topup_cross_repo_integration.py:510-589` |
-| Manual amount + payment code trên Web | Khách nhập amount; payment code là canonical numeric linked ID do signed server metadata suy ra và browser không thể override. | ⚠️ P0-05E local verified; chưa push/deploy/live. | `copyfast_api.py`; `tests/test_p0_manual_topup_customer_flow.py` |
-| Hotline tách biệt số tài khoản | Support fallback `0898360858`; bank account fallback `0387532320`; Portal/integration không hardcode phone/account. | ⚠️ Local test/render đạt; production chưa deploy. | `billing.py`; `copyfast_api.py`; `tests/test_billing_canonical_journey_contracts.py` |
+| Manual amount + payment code trên Web | Khách nhập amount; payment code là canonical numeric linked ID do signed server metadata suy ra và browser không thể override. | ⚠️ Live asset/source verified; signed submission chưa test. | `copyfast_api.py`; `tests/test_p0_manual_topup_customer_flow.py` |
+| Hotline tách biệt số tài khoản | Support fallback `0898360858`; bank account fallback `0387532320`; Portal/integration không hardcode phone/account. | ✅ Source deployed; live source marker verified. | `billing.py`; `copyfast_api.py`; `tests/test_billing_canonical_journey_contracts.py` |
 | Role-specific note confidentiality | Customer response và customer JS state bỏ `admin_note`; authorized Admin projection vẫn giữ note. | ⚠️ Security reviewer local kết luận fixed; live chưa kiểm. | `copyfast_api.py`; `static/portal/integration.js`; `tests/test_p0_manual_topup_customer_flow.py` |
-| Manual interaction sống qua hydration | Selected lane và amount/method/reference còn nguyên sau same-route data remount; invalid lane bị bỏ qua. | ⚠️ Node behavior + rendered local matrix `10/10` đạt; chưa push/deploy/live. | `static/portal/portal.js`; `tests/test_p0_manual_topup_customer_flow.py`; `evidence/p0-05e-primary-manager-verified-20260830.md` |
+| Manual interaction sống qua hydration | Selected lane và amount/method/reference còn nguyên sau same-route data remount; invalid lane bị bỏ qua. | ⚠️ Source deployed; Node/rendered matrix `10/10` đạt, signed production interaction chưa test. | `static/portal/portal.js`; `tests/test_p0_manual_topup_customer_flow.py`; `evidence/p0-05e-primary-manager-verified-20260830.md` |
 | Admin navigation là server-authorized directory | Browser role/query không tạo module; unavailable endpoint phải fail closed. | ✅ Contract hiện hành, độc lập với P0 manual write. | `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:3-30`; `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:57-63` |
 | Guarded capability không được trông như ready | Portal phải hiển thị guarded/unavailable; static navigation không phải runtime engine claim. | ✅ Product/UI boundary hiện hành. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `docs/migration/FEATURE_PARITY_MATRIX.md:1-3` |
 | PWA chỉ cache public shell | Wallet/payment/Admin/API/download/private workspace vẫn network-only và ownership-checked. | ✅ Cache boundary hiện hành. | `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:3-8`; `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61` |
-| Production runtime là VPS | Runtime truth là GitHub main → Actions → Ubuntu VPS; Railway không phải runtime production. | ✅ Hạ tầng hiện hành; P0 source vẫn chưa ship. | `README.md:5-12` |
+| Production runtime là VPS | Runtime truth là GitHub main → Actions → Ubuntu VPS; Railway không phải runtime production. | ✅ Runtime `9785541`, Web/nginx active, health valid. | `README.md:5-12` |
+| Auth logo và low-height card | Logo không co/crop; card/form giữ trong initial viewport và control tối thiểu 44px. | ⚠️ Local rendered `6/6`; chưa ship tại thời điểm evidence. | `evidence/auth-login-brand-viewport-001-20260831.md` |
 
 ## 5. Chỗ tài liệu cũ không còn đúng
 
@@ -106,16 +107,16 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - P0 Admin two-step receipt/confirm và scoped bearer separation được bổ sung để Web không giữ Bot token ở browser.
 - Cross-repo temp-only test kết nối actual Web app với actual Bot ASGI app là bằng chứng mới của P0-05.
 - P0-05B static inventory chuẩn hóa source identities, route placeholders, hashes, docs và Tester workspace.
-- Những bổ sung này vẫn là source local cho tới khi qua pre-push, Git, deploy, runtime và live gates riêng.
+- Auth brand/low-height viewport hotfix là bổ sung sau tài liệu gốc; không thay authentication behavior.
+- P0 manual source đã qua Git/deploy; từng signed/runtime/money outcome vẫn cần cổng bằng chứng riêng. Auth viewport hotfix trong batch này còn local tại thời điểm capture.
 
 ## 8. Chưa triển khai hoặc chưa live
 
 - P0-05A rotate/revoke và loại credential-like tracked paths: chưa làm.
-- P0-05D local Tester source/template đã có; P0-05E bổ sung WA-32..34, nhưng tracker/Project external readback chưa đóng.
-- Corrective commit/push vào PR #417 chưa làm; PR #417 đã tồn tại, không được ghi “chưa có PR”.
-- Merge/deploy của PR #417 chưa được Owner mở.
+- Tester source trên main có WA-01..34; PR motion quản lý WA-35/36 riêng, nên Auth hotfix không tạo ID trùng.
+- PR #417 đã merge/deploy; signed customer/Admin manual route vẫn chưa smoke bằng account thật.
+- Auth login brand/viewport hotfix đang local-rendered, chưa push/merge/deploy.
 - ENV/secret rotation: chưa làm.
-- Deploy P0 source lên VPS: chưa làm.
 - Signed production customer/Admin manual routes: chưa test.
 - Provider/PayOS/Telegram live call: không chạy trong local acceptance.
 - Live money flow: `LIVE_PASS=NOT_TESTED` và `LIVE_MONEY_FLOW=NOT_TESTED`.
@@ -141,4 +142,4 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Deployed không đồng nghĩa live outcome.
 - HTTP 200 không đồng nghĩa quyết định tiền hợp lệ.
 - Mọi claim provider/output/payment phải có bằng chứng output cuối tương ứng.
-- P0 manual top-up hiện dừng ở P0-05E local verification/pre-push; không suy merged/deployed/live từ test pass.
+- P0 manual source đã deploy tại `9785541`; không suy signed/money LIVE từ deploy. Auth layout hotfix vẫn local-only tại thời điểm evidence.
