@@ -116,7 +116,8 @@ jobs:
             tests/test_migration_audit.py::test_static_audit_preserves_finance_planning_authority_and_redacts_secret_literals \
             tests/test_migration_audit.py::test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog \
             tests/test_migration_audit.py::test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only \
-            tests/test_migration_audit.py::test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs
+            tests/test_migration_audit.py::test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs \
+            tests/test_auth_login_brand_viewport_001_contracts.py
 
       - name: Check diff whitespace
         run: git diff --check HEAD^ HEAD

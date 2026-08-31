@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 THEME = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
+WORKFLOW = (ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
 MARKER = "/* AUTH-LOGIN-BRAND-VIEWPORT-001 */"
 
 
@@ -60,3 +61,7 @@ def test_auth_brand_and_card_keep_measured_geometry_without_touching_behavior() 
         ".portal-auth-page--access .portal-auth-switch a {\n"
         "  min-height: 44px;"
     ) in hotfix
+
+
+def test_pull_request_quality_gate_executes_the_hotfix_contract() -> None:
+    assert "tests/test_auth_login_brand_viewport_001_contracts.py" in WORKFLOW

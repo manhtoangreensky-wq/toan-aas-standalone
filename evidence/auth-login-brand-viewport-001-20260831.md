@@ -27,13 +27,14 @@ The approved bounded hotfix keeps the official TOAN AAS mark fully visible and k
 - Initial RED: marker count `0`; expected failure because the hotfix block did not exist.
 - First GREEN: `1 passed`.
 - Rendered feedback strengthened the contract for viewport-relative header width, image transform reset and `44px` controls; each strengthened contract was observed RED before its minimal CSS change.
-- Raw Auth comparator: `22 passed / 3 failed`.
+- Raw Auth comparator after CI coverage: `23 passed / 3 failed`.
 - Clean-base comparator before the hotfix: `21 passed / 3 failed`.
 - Exact three failure IDs are unchanged and all belong to stale `test_login_app_ux_contracts.py` copy/Admin-breakpoint assertions:
   1. `test_access_screen_uses_one_compact_app_entry_without_repeating_the_brand`
   2. `test_access_screen_uses_a_balanced_desktop_rail_and_single_column_mobile_fallback`
   3. `test_public_access_uses_reviewed_locale_links_and_translated_field_copy`
-- Applicable focused gate: `22 passed / 3 deselected`; `NEW_FAILURES=0`.
+- Applicable focused gate: `23 passed / 3 deselected`; `NEW_FAILURES=0`.
+- The PR quality workflow executes `tests/test_auth_login_brand_viewport_001_contracts.py`; the workflow-coverage assertion was RED before that target was added and GREEN afterward.
 
 ## Rendered matrix
 
