@@ -50,7 +50,7 @@ Customer Web motion is observable on the real Portal routes without changing Adm
 ### Rendered signed local matrix
 
 - Four real routes × desktop/mobile × normal/reduced = `16` cases using an isolated SQLite database and local signed test account.
-- Repository matrix candidate: `59` lines / `4546` bytes / SHA-256 `a52a3002e87e1bf7e5ea93deb7414fb7d0fe862cb444ecf92eefa5f9e8679ae2`.
+- Repository matrix candidate: `76` lines / `5576` bytes / SHA-256 `6e34cf471a45b68048100bd97e446edc909e7d0febb292f5ee302351eb5a4399`.
 - Normal routes have `portal-customer-observable-enter` at `0.68s`; routes with offscreen groups have scroll reveal at `0.68s`.
 - Reduced routes show animation `none`, opacity `1`, transform `none` and full content.
 - `16/16` content visible; overflow X `0`; CLS `0`; page errors `0`; request failures `0`; recorded HTTP errors `0`; foreign requests `0`.
@@ -58,7 +58,17 @@ Customer Web motion is observable on the real Portal routes without changing Adm
 - Dashboard has one long task in both normal and reduced runs; Long Animation Frame attributes it to pre-existing Portal/integration render/layout. It is not a motion regression and remains a Customer Final performance debt.
 - Desktop console reports only the local fixture `/favicon.ico` 404; the same baseline run has it, and `requestfailed/httpErrors` tracked by the runner remain `0`.
 
-Large artifacts are outside Git. Full matrix summary SHA-256: `3d8cdb732762e5ff445decb8f6c7209c1c3450f1564e0487ce9994f2771a5ebe`; desktop MP4 `f8a099a1a43f604e17d2e8584d19e1a7c081e273c2b169a4d26ed2999835ce7d`; mobile MP4 `45645ed63885a6221f9cd96b1ea340eab81512f6bd9025e057de40fc3628036f`.
+### Fresh post-rebase rendered closeout
+
+- Runtime source `f8caa78a6d48f7cfa58573ec64eaf74df322bb1e` was rendered from the clean rebased worktree at evidence parent `7151fb09969fba5ab73876805685da5a3c4b9775`; the test server used isolated `app.db`/`sessions.db` files under the workspace.
+- The Codex in-app Browser was the primary interactive surface. Signed navigation reached `/dashboard`, `/features`, `/studio` and `/wallet/topup`; page title/DOM were non-blank, framework overlay count was `0`, console error/warning count was `0`, and horizontal overflow was `0` at `1440x900` and `390x667`.
+- A real `/features` scroll changed pending targets `11→10` and visible targets `0→1`; the revealed target computed `portal-customer-observable-enter` at `0.68s`. This is the interaction proof, not a source-only assertion.
+- The in-app Browser does not expose reduced-motion emulation, so the existing bounded Chrome-headless runner was used only for the responsive/reduced-motion matrix. The fresh run retained `16/16` visible routes, `8/8` reduced-motion static routes, overflow `0`, page errors `0`, failed requests `0`, recorded HTTP errors `0` and foreign requests `0`.
+- A full-run `t80` sample can arrive after an entrance when screenshot capture or a busy main thread delays observation. The screencast frames still record the customer main moving from the `.12` entrance frame to opacity `1`; a quiet focused `/features` rerun then recorded desktop/mobile entrance or hydration markers, both scroll reveals at `0.68s`, CLS `0`, and long tasks over `200ms` equal to `0`. The focused result is used instead of treating that sampling delay as a product failure.
+- The fake local account intentionally had no canonical link and the fixture intentionally had no Bot bridge, so the manual-topup pane remained guarded. No form was submitted. This is not a motion regression; the protected manual-topup source remained unchanged and the unlinked-account/customer-native requirement is carried to Customer Final rather than mixed into this motion branch.
+- Fresh focused contracts after the evidence refresh: `56 passed, 1 deselected`. The three-file stale-contract comparator was executed on both exact `origin/main` (`0dd8ffa`) and the candidate: both returned `22 passed, 5 failed` with the same five test IDs, including the old Landing `portalMotionSkipEnter` string assertion; therefore `NEW_FAILURES=0`. The earlier four-failure comparator remains accurate for its original two-file scope.
+
+Large artifacts are outside Git. Fresh full matrix summary SHA-256: `c3e58b388aa055ad81809e4cb379af144a5e42414c0440b3dcdfe4bdcf478d0a`; desktop MP4 `f5205a40f95c9587ff963acbfe99935a4d205fe96138a248ce66a8ad148f33fc`; mobile MP4 `16c27020781513a790e7ac56fca7d1bbd8118bfb5b4ee3005d6935dd30fab0a2`; focused `/features` summary `102af64754d6871abf808d5bcb5069f6c731a7ab421efb177320eef7ac69ca74`.
 
 ### Final Tester workspace closeout
 
