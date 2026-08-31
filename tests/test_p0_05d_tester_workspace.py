@@ -31,6 +31,10 @@ def load_sync():
 sync = load_sync()
 
 
+def portable_text_bytes(path: Path) -> bytes:
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
 def small_table(rows: list[str]) -> str:
     return "\n".join(
         [
@@ -277,9 +281,18 @@ def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
         assert marker.casefold() in guide.casefold()
 
 
+def test_portable_text_bytes_normalizes_crlf_without_changing_content(tmp_path: Path):
+    lf = tmp_path / "lf.txt"
+    crlf = tmp_path / "crlf.txt"
+    lf.write_bytes("dòng một\ndòng hai\n".encode("utf-8"))
+    crlf.write_bytes("dòng một\r\ndòng hai\r\n".encode("utf-8"))
+    assert portable_text_bytes(lf) == portable_text_bytes(crlf) == lf.read_bytes()
+
+
 def test_readiness_json_has_explicit_truth_and_file_metadata():
     data = json.loads(READINESS.read_text(encoding="utf-8"))
-    assert data["schema_version"] == "p0-05d.v1"
+    assert data["schema_version"] == "p0-05d.v2"
+    assert data["metadata_encoding"] == "utf-8-lf-portable"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
     assert data["case_count"] == 36
@@ -292,7 +305,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     paths = [row["path"] for row in data["local_files"]]
     assert paths == sorted(paths)
     for row in data["local_files"]:
-        raw = (ROOT / row["path"]).read_bytes()
+        raw = portable_text_bytes(ROOT / row["path"])
         assert row["lines"] == len(raw.splitlines())
         assert row["bytes"] == len(raw)
         assert row["sha256"] == __import__("hashlib").sha256(raw).hexdigest()

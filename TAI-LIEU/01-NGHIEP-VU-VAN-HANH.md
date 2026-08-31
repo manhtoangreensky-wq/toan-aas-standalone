@@ -242,6 +242,7 @@
 - Tester workspace candidate có `36` case tuần tự; WA-35/36 thuộc đúng `MOTION-WEBAPP-SURFACES-001`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
 - `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `53 passed`, comparator `29 passed/4 baseline failures`, `NEW_FAILURES=0`; PR #418 đang được đồng bộ lại với main hiện tại, chưa merge/deploy.
+- Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
 - Signed production customer/Admin routes chưa được kiểm cho batch này.

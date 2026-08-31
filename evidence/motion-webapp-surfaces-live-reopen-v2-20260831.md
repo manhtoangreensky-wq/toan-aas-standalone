@@ -62,7 +62,7 @@ Large artifacts are outside Git. Full matrix summary SHA-256: `3d8cdb732762e5ff4
 ### Final Tester workspace closeout
 
 - Canonical source contains exactly `WA-01..WA-36`; P0 case count remains `18`; WA-35/36 are both `local-render` under `MOTION-WEBAPP-SURFACES-001`.
-- Windows raw Tester suite: `27 passed / 1 failed`; the only failure is the unchanged POSIX `0600` mode assertion reporting `0o666` on Windows. The functional run with that exact platform-only assertion deselected is `27 passed / 1 deselected`.
+- Windows raw Tester suite: `28 passed / 1 failed`; the only failure is the unchanged POSIX `0600` mode assertion reporting `0o666` on Windows. The functional run with that exact platform-only assertion deselected is `28 passed / 1 deselected`.
 - `tester_case_sync.py --bo=34 --so=2 --json` emitted exactly WA-35 and WA-36, both `dry_run=true`; GitHub mutation count `0`.
 
 ### PR quality gate coverage
@@ -72,7 +72,9 @@ Large artifacts are outside Git. Full matrix summary SHA-256: `3d8cdb732762e5ff4
 - Final Manager focused gate after the CI artifact regression test contains `53` passing tests; the earlier Independent Tester receipt remains `51 passed` because it predates the workflow-coverage and artifact-isolation assertions.
 - Initial PR #418 run `33331043771` reached `248 passed` before failing: earlier API tests created untracked `toandaas_system.db`, while the scope assertion incorrectly inspected runtime `git status`. Root-cause fix reads `git diff --name-only eeb8510...HEAD` instead, so generated runtime artifacts cannot masquerade as committed source scope.
 - TDD receipt: the new artifact-isolation test first failed with `NameError: committed_paths_since_base is not defined`, then passed `2/2` after the minimal Git-history helper was added; the fixture removed its DB file.
-- Exact 35-target bounded workflow after the fix: `277 passed, 1 deselected, 1 warning` on Windows. The only deselection is the already documented POSIX `0600` assertion; Linux CI executes it.
+- Second PR #418 run `33352316673` passed the artifact scope and reached `277 passed`, then exposed a separate portability defect: readiness stored raw Windows CRLF byte/hash (`3211`) while Linux LF checkout measured `3098`.
+- Portable metadata TDD: LF/CRLF equivalence first failed with `NameError: portable_text_bytes is not defined`; after adding the minimal newline normalizer, the helper test passed and the old readiness data failed exactly `3211 != 3098`. Schema `p0-05d.v2` now declares `metadata_encoding=utf-8-lf-portable` and all six file records were remeasured.
+- Exact 35-target bounded workflow after both fixes: `278 passed, 1 deselected, 1 warning` on Windows. Tester functional gate is `28 passed, 1 deselected`; the only deselection is the already documented POSIX `0600` assertion, which Linux CI executes.
 - The deploy workflow remains push-to-`main` only. Opening a stacked PR runs quality checks and does not deploy.
 
 ## Security review truth

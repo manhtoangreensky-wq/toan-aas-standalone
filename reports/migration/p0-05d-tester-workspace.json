@@ -1,5 +1,6 @@
 {
-  "schema_version": "p0-05d.v1",
+  "schema_version": "p0-05d.v2",
+  "metadata_encoding": "utf-8-lf-portable",
   "repo": "manhtoangreensky-wq/toan-aas-standalone",
   "visibility": "public",
   "default_branch": "main",
@@ -40,38 +41,38 @@
     {
       "path": ".github/ISSUE_TEMPLATE/01-case-test.yml",
       "lines": 113,
-      "bytes": 3211,
-      "sha256": "4b1d455d9cb60aebe33a50eecb918a74aa17a40df063e354f2c52270c6f58d82"
+      "bytes": 3098,
+      "sha256": "7e327aa36a26763198a6e092cbfc87491fa7fa160bbd861c38d8aaece2824508"
     },
     {
       "path": ".github/ISSUE_TEMPLATE/02-bao-loi.yml",
       "lines": 100,
-      "bytes": 2657,
-      "sha256": "d07c37d3a9abecdbb8a6414a2fea856706e9c907e2d9bd6ccaf4071f667b6c74"
+      "bytes": 2557,
+      "sha256": "212f9ce4b6b4459b5a1041ff70ac855fbdae110417e3dddd09d6d898c75841a4"
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 46,
-      "bytes": 16138,
-      "sha256": "f0b234ce32787fc5395ceb4e0c96ea1a7dabbd5d4e7f7a5bb419e39a8a29c12c"
+      "bytes": 16095,
+      "sha256": "b11eed30b0d90f2d7cc00825b02aa1181a69abed5c177d7faec1d31acda51853"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
       "lines": 114,
-      "bytes": 6691,
-      "sha256": "ee37cacc91be2b0b04a6b73913c4d5fb958bad05a7f1df9b68e71a6ef84b189a"
+      "bytes": 6590,
+      "sha256": "e61ecd5e936394e21bf718987458ec94c4acc2ca7920611a464db114844a487d"
     },
     {
       "path": "scripts/tester_case_sync.py",
       "lines": 212,
-      "bytes": 8813,
-      "sha256": "b08a712111794f85307026adb7aadb9c0461d15e05856b773f73fa391a6f7ed4"
+      "bytes": 8601,
+      "sha256": "7f621362e137ee6d2db3518da0ca8ad84c8e368c792b25faec8d6450a42f43c6"
     },
     {
       "path": "tests/test_p0_05d_tester_workspace.py",
-      "lines": 298,
-      "bytes": 13060,
-      "sha256": "ade7fd272da77f4732c4b1f2fe653c25bf9bf3d5eccaa6bad77dbcebe56908e7"
+      "lines": 311,
+      "bytes": 13319,
+      "sha256": "1beb89bfdf6bef5930107410dc7d5a016f9a3dbcf1437a987ff4b6c3343cf589"
     }
   ],
   "safety": {
