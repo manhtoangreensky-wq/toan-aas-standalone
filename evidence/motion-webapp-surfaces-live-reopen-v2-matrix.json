@@ -67,10 +67,29 @@
     "in_app_browser_interaction": "features pending 11->10 and visible 0->1 after scroll; portal-customer-observable-enter 0.68s; console errors 0",
     "sampling_note": "The full-run t80 sampler can miss an entrance when screenshot or a busy main thread delays the observation; screencast frames and the focused rerun are the motion source of truth."
   },
+  "post_review_verification": {
+    "lifecycle_regression_tests": 2,
+    "focused_passed": 57,
+    "windows_posix_mode_deselected": 1,
+    "customer_fast_ms": 180,
+    "customer_entrance_ms": 680,
+    "landing_fast_ms": 140,
+    "landing_customer_entrance_token": "",
+    "auth_fast_ms": 140,
+    "auth_customer_entrance_token": "",
+    "full_cases": 16,
+    "content_visible": 16,
+    "reduced_static": 8,
+    "overflow_x_failures": 0,
+    "page_errors": 0,
+    "request_failures": 0,
+    "http_errors": 0,
+    "foreign_requests": 0
+  },
   "external_artifacts": {
-    "full_matrix_summary_sha256": "c3e58b388aa055ad81809e4cb379af144a5e42414c0440b3dcdfe4bdcf478d0a",
-    "desktop_video_sha256": "f5205a40f95c9587ff963acbfe99935a4d205fe96138a248ce66a8ad148f33fc",
-    "mobile_video_sha256": "16c27020781513a790e7ac56fca7d1bbd8118bfb5b4ee3005d6935dd30fab0a2",
+    "full_matrix_summary_sha256": "ea40a657afa23103cfc9b77be8056eaede2b694434ed4c19a46331a158da864a",
+    "desktop_video_sha256": "5da238ce48cc7def41f946dab87cdef6f314ca2000a7f563b5d0a61c48ceb18f",
+    "mobile_video_sha256": "76e19c90b696542010c5b780f7c8af69c96a2806e583fa7990fb8fafd70d62a3",
     "features_focused_summary_sha256": "102af64754d6871abf808d5bcb5069f6c731a7ab421efb177320eef7ac69ca74"
   }
 }

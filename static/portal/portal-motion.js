@@ -28,6 +28,8 @@
   let landingGeneration = 0;
   let workspaceCleanup = null;
   let workspaceGeneration = 0;
+  const entryLifecycles = new WeakMap();
+  let entryGeneration = 0;
 
   function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, Number(value) || 0));
@@ -65,22 +67,41 @@
     if (element) element.removeAttribute("data-portal-motion");
   }
 
+  function cancelEntry(element) {
+    const active = element && entryLifecycles.get(element);
+    if (!active) return;
+    element.removeEventListener("animationend", active.onEnd);
+    window.clearTimeout(active.timer);
+    entryLifecycles.delete(element);
+  }
+
   function enter(element, kind) {
-    if (!element || prefersReducedMotion()) {
+    if (!element) return;
+    cancelEntry(element);
+    if (prefersReducedMotion()) {
       clearMotion(element);
       return;
     }
     element.setAttribute("data-portal-motion", kind === "pop" ? "pop" : "enter");
-    const clear = (event) => {
-      if (event && event.target && event.target !== element) return;
+    const lifecycle = { generation: ++entryGeneration, onEnd: null, timer: 0 };
+    const finish = () => {
+      if (entryLifecycles.get(element) !== lifecycle) return;
+      element.removeEventListener("animationend", lifecycle.onEnd);
+      window.clearTimeout(lifecycle.timer);
+      entryLifecycles.delete(element);
       clearMotion(element);
+    };
+    lifecycle.onEnd = (event) => {
+      if (event && event.target && event.target !== element) return;
+      finish();
     };
     const parentDataset = element.parentElement && element.parentElement.dataset;
     const clearDelay = kind !== "pop" && parentDataset && parentDataset.portalAppKind === "customer"
       ? CUSTOMER_ENTER_CLEAR_DELAY_MS
       : ENTER_CLEAR_DELAY_MS;
-    element.addEventListener("animationend", clear, { once: true });
-    window.setTimeout(clear, clearDelay);
+    entryLifecycles.set(element, lifecycle);
+    element.addEventListener("animationend", lifecycle.onEnd);
+    lifecycle.timer = window.setTimeout(finish, clearDelay);
   }
 
   function replace(shell, main, render, options) {

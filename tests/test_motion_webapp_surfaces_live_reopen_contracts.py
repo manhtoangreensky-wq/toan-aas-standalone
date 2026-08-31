@@ -73,6 +73,8 @@ def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
     assert THEME.index(containment) < THEME.index('[data-landing-motion="cinematic-mini"]')
     for forbidden in ('data-portal-app-kind="admin"', ".portal-auth", ".portal-landing", "blur(", "infinite"):
         assert forbidden not in block
+    assert '[data-portal-surface="customer"]' in block
+    assert 'data-portal-app-kind="customer"' not in block
     assert re.search(r"(?:transition|animation)[^;]*(?:width|height|top|left)", block) is None
     for shared in ("--portal-motion-fast: 140ms;", "--portal-motion-base: 220ms;", "--portal-motion-distance: 10px;"):
         assert shared in THEME[: THEME.index(MARKER)]
@@ -129,6 +131,19 @@ m.enter(main,"enter");main.dataset.portalPresentationPhase="settled";m.replace(n
 '''
     result = subprocess.run(["node", "-e", harness, str(ROOT / "static/portal/portal-motion.js")], cwd=ROOT, check=True, text=True, capture_output=True)
     assert json.loads(result.stdout) == {"delay": 760, "afterHydrate": "enter", "afterChild": "enter", "afterEnd": None, "visiblePending": False, "offPending": True, "observed": True, "visibleItems": 0, "offItems": 6}
+
+
+def test_route_entry_ignores_bubbled_events_and_stale_callbacks() -> None:
+    harness = r'''
+const fs=require("fs"),vm=require("vm"),source=fs.readFileSync(process.argv[1],"utf8");
+const listeners=new Map(),attrs={},timers=[];let nextTimer=0;
+const main={parentElement:{dataset:{portalAppKind:"customer"}},setAttribute(n,v){attrs[n]=String(v)},removeAttribute(n){delete attrs[n]},getAttribute(n){return attrs[n]??null},addEventListener(n,f,o){const rows=listeners.get(n)||[];rows.push({f,once:Boolean(o&&o.once)});listeners.set(n,rows)},removeEventListener(n,f){listeners.set(n,(listeners.get(n)||[]).filter(x=>x.f!==f))},dispatch(n,target){const rows=[...(listeners.get(n)||[])];rows.forEach(row=>{if(row.once)this.removeEventListener(n,row.f);row.f({target})})}};
+const window={matchMedia(){return {matches:false}},setTimeout(f,d){const id=++nextTimer;timers.push({id,f,d,cleared:false});return id},clearTimeout(id){const row=timers.find(x=>x.id===id);if(row)row.cleared=true}};
+vm.runInNewContext(source,{window,document:{},console});const motion=window.TOANAASPortalMotion;
+motion.enter(main,"enter");const firstTimer=timers[0];motion.enter(main,"enter");const afterSecond=main.getAttribute("data-portal-motion");firstTimer.f();const afterStale=main.getAttribute("data-portal-motion");main.dispatch("animationend",{});const afterChild=main.getAttribute("data-portal-motion");main.dispatch("animationend",main);process.stdout.write(JSON.stringify({afterSecond,afterStale,afterChild,afterEnd:main.getAttribute("data-portal-motion"),firstTimerCleared:firstTimer.cleared,activeListeners:(listeners.get("animationend")||[]).length}));
+'''
+    result = subprocess.run(["node", "-e", harness, str(ROOT / "static/portal/portal-motion.js")], cwd=ROOT, check=True, text=True, capture_output=True)
+    assert json.loads(result.stdout) == {"afterSecond": "enter", "afterStale": "enter", "afterChild": "enter", "afterEnd": None, "firstTimerCleared": True, "activeListeners": 0}
 
 
 def test_pr_quality_gate_executes_changed_motion_runtime_and_contracts() -> None:
