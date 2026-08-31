@@ -10,7 +10,7 @@ Customer Web motion is observable on the real Portal routes without changing Adm
 - Base: `eeb85107dd9ebf391db5a155243da8f45d8600cd`.
 - Accepted candidate worktree: `manager/motion-webapp-surfaces-live-reopen-v2-20260830`.
 - Exact runtime paths: `static/portal/portal-features.js`, `portal-motion.js`, `portal-theme.css`, exact `mountWorkspaceMotion()` hunk in `portal.js`; one new test file.
-- Runtime numstat: feature entry `+71/-0`, motion helper `+80/-13`, theme `+111/-0`, Portal monolith `+10/-0`; final contract test includes the exact 14-path pre-commit task allowlist and a dedicated PR-workflow coverage assertion.
+- Runtime numstat: feature entry `+71/-0`, motion helper `+80/-13`, theme `+111/-0`, Portal monolith `+10/-0`; final contract test asserts the exact 16-path committed stacked-PR diff and dedicated PR-workflow coverage.
 - A previous Primary worktree was rejected before commit because a Windows patch operation truncated `portal.js`; none of its code or test claims were used for acceptance. v2 was rebuilt from the exact base, and the final patch applied on Linux with `portal.js +10/-0`.
 
 ## Root causes proven
@@ -69,7 +69,10 @@ Large artifacts are outside Git. Full matrix summary SHA-256: `3d8cdb732762e5ff4
 
 - `.github/workflows/webapp-quality.yml` now syntax-checks both changed split/shared motion runtimes: `portal-features.js` and `portal-motion.js`.
 - The bounded PR suite runs `test_motion_webapp_surfaces_live_reopen_contracts.py` and the complete `test_p0_05d_tester_workspace.py`; Linux CI is therefore the canonical `0600` permission gate.
-- Final Manager focused gate after this CI seam contains `52` passing tests; the earlier Independent Tester receipt remains `51 passed` because it predates the new workflow-coverage assertion.
+- Final Manager focused gate after the CI artifact regression test contains `53` passing tests; the earlier Independent Tester receipt remains `51 passed` because it predates the workflow-coverage and artifact-isolation assertions.
+- Initial PR #418 run `33331043771` reached `248 passed` before failing: earlier API tests created untracked `toandaas_system.db`, while the scope assertion incorrectly inspected runtime `git status`. Root-cause fix reads `git diff --name-only eeb8510...HEAD` instead, so generated runtime artifacts cannot masquerade as committed source scope.
+- TDD receipt: the new artifact-isolation test first failed with `NameError: committed_paths_since_base is not defined`, then passed `2/2` after the minimal Git-history helper was added; the fixture removed its DB file.
+- Exact 35-target bounded workflow after the fix: `277 passed, 1 deselected, 1 warning` on Windows. The only deselection is the already documented POSIX `0600` assertion; Linux CI executes it.
 - The deploy workflow remains push-to-`main` only. Opening a stacked PR runs quality checks and does not deploy.
 
 ## Security review truth

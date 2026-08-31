@@ -7,6 +7,7 @@ import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
+BASE_SHA = "eeb85107dd9ebf391db5a155243da8f45d8600cd"
 THEME = (ROOT / "static/portal/portal-theme.css").read_text(encoding="utf-8")
 MOTION = (ROOT / "static/portal/portal-motion.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static/portal/portal.js").read_text(encoding="utf-8")
@@ -21,6 +22,7 @@ ALLOWED = {
     "evidence/motion-webapp-surfaces-live-reopen-v2-20260831.md",
     "evidence/motion-webapp-surfaces-live-reopen-v2-matrix.json",
     "reports/migration/p0-05d-tester-workspace.json",
+    "reports/migration/preflight.json", "reports/migration/web_inventory.json",
     "static/portal/portal-theme.css", "static/portal/portal-motion.js",
     "static/portal/portal.js", "static/portal/portal-features.js",
     "tests/test_motion_webapp_surfaces_live_reopen_contracts.py",
@@ -32,6 +34,18 @@ def live_css() -> str:
     assert THEME.count(MARKER) == 2
     start = THEME.index(MARKER)
     return THEME[start : THEME.index(END_MARKER, start) + len(END_MARKER)]
+
+
+def committed_paths_since_base() -> set[str]:
+    subprocess.run(["git", "merge-base", "--is-ancestor", BASE_SHA, "HEAD"], cwd=ROOT, check=True)
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{BASE_SHA}...HEAD"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 
 def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
@@ -121,7 +135,22 @@ def test_pr_quality_gate_executes_changed_motion_runtime_and_contracts() -> None
         assert token in WORKFLOW
 
 
+def test_scope_ignores_runtime_artifacts_and_reads_committed_diff() -> None:
+    artifact = ROOT / "toandaas_system.db"
+    created = not artifact.exists()
+    if created:
+        artifact.write_bytes(b"runtime-only test artifact")
+    try:
+        paths = committed_paths_since_base()
+        assert artifact.name not in paths
+        assert ".github/workflows/webapp-quality.yml" in paths
+        assert "reports/migration/preflight.json" in paths
+        assert "reports/migration/web_inventory.json" in paths
+    finally:
+        if created:
+            artifact.unlink()
+
+
 def test_scope_and_size_are_exact() -> None:
-    status = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True, text=True, capture_output=True).stdout.splitlines()
-    assert {line[3:] for line in status if len(line) > 3} <= ALLOWED
+    assert committed_paths_since_base() == ALLOWED
     assert len(Path(__file__).read_text(encoding="utf-8").splitlines()) <= 300

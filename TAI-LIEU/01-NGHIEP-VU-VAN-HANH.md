@@ -241,7 +241,7 @@
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
 - Tester workspace candidate có `36` case tuần tự; WA-35/36 thuộc đúng `MOTION-WEBAPP-SURFACES-001`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
-- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `53 passed`, comparator `29 passed/4 baseline failures`, `NEW_FAILURES=0`; chưa merge/deploy trên main hiện tại.
+- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `53 passed`, comparator `29 passed/4 baseline failures`, `NEW_FAILURES=0`; PR #418 đang được đồng bộ lại với main hiện tại, chưa merge/deploy.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
 - Signed production customer/Admin routes chưa được kiểm cho batch này.
