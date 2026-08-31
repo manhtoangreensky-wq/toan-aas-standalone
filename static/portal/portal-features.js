@@ -242,8 +242,8 @@
   function mountFeatureMotion(main) {
     featureMotionCleanup(); featureMotionCleanup = () => {};
     const shell = document.getElementById("portal-shell"), body = document.body;
-    if (shell) { set(shell, "data-portal-app-kind", "customer"); set(shell, "data-portal-presentation-phase", "entry"); }
-    if (body) set(body, "data-portal-app-kind", "customer");
+    if (shell) { set(shell, "data-portal-app-kind", "customer"); set(shell, "data-portal-surface", "customer"); set(shell, "data-portal-presentation-phase", "entry"); }
+    if (body) { set(body, "data-portal-app-kind", "customer"); set(body, "data-portal-surface", "customer"); }
     set(main, "data-portal-presentation-phase", featureMotionReduced() ? "settled" : "entry");
     if (featureMotionReduced()) return;
 

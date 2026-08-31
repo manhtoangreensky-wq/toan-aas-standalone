@@ -106,6 +106,8 @@ def test_shared_lifecycle_survives_hydration_and_rearms_only_offscreen() -> None
 def test_split_features_owns_small_motion_without_loading_full_bundle() -> None:
     for token in (
         "function mountFeatureMotion(main)", 'set(shell, "data-portal-app-kind", "customer")',
+        'set(shell, "data-portal-surface", "customer")',
+        'set(body, "data-portal-surface", "customer")',
         'set(entrance, "data-portal-features-motion", "enter")',
         'target.classList.add("portal-workspace-motion-target")',
         'else entry.target.classList.add("is-pending");',
