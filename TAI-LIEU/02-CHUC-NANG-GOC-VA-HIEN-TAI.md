@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái P0 manual top-up: PR #417 đã merge/deploy tại `9785541`; signed production money flow vẫn `LIVE_PASS=NOT_TESTED`.
+> Trạng thái production: manual top-up PR #417 đã deploy tại `9785541`; Auth hotfix PR #419 đã deploy tại `0dd8ffa`; signed money flow vẫn `LIVE_PASS=NOT_TESTED`.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -56,8 +56,8 @@ Inventory đã được nghiệm thu tại P0-05B.
 | Admin navigation là server-authorized directory | Browser role/query không tạo module; unavailable endpoint phải fail closed. | ✅ Contract hiện hành, độc lập với P0 manual write. | `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:3-30`; `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:57-63` |
 | Guarded capability không được trông như ready | Portal phải hiển thị guarded/unavailable; static navigation không phải runtime engine claim. | ✅ Product/UI boundary hiện hành. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `docs/migration/FEATURE_PARITY_MATRIX.md:1-3` |
 | PWA chỉ cache public shell | Wallet/payment/Admin/API/download/private workspace vẫn network-only và ownership-checked. | ✅ Cache boundary hiện hành. | `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:3-8`; `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61` |
-| Production runtime là VPS | Runtime truth là GitHub main → Actions → Ubuntu VPS; Railway không phải runtime production. | ✅ Runtime `9785541`, Web/nginx active, health valid. | `README.md:5-12` |
-| Auth logo và low-height card | Logo không co/crop; card/form giữ trong initial viewport và control tối thiểu 44px. | ⚠️ Local rendered `6/6`; chưa ship tại thời điểm evidence. | `evidence/auth-login-brand-viewport-001-20260831.md` |
+| Production runtime là VPS | Runtime truth là GitHub main → Actions → Ubuntu VPS; Railway không phải runtime production. | ✅ Runtime `0dd8ffa`, Web/nginx active, health valid. | `README.md:5-12` |
+| Auth logo và low-height card | Logo không co/crop; card/form giữ trong initial viewport và control tối thiểu 44px. | ✅ Đã deploy/live tại `0dd8ffa`; local rendered `6/6` là receipt trước ship. | `evidence/auth-login-brand-viewport-001-20260831.md` |
 
 ## 5. Chỗ tài liệu cũ không còn đúng
 
@@ -98,7 +98,7 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Guarded route là trạng thái đúng khi adapter hoặc ENV chưa sẵn sàng.
 - Production database record count chưa đo trong static gate.
 - Credential-like tracked paths của Bot còn chặn ship và được tách thành P0-05A.
-- GitHub live labels/project chưa được query trong P0-05B; trạng thái hiện là `NOT_QUERIED`.
+- P0-05B ban đầu chưa query GitHub Project; P0-05E sau đó đã gắn PR #417 vào `TOAN AAS Web App · Tester P0` và readback thành công.
 
 ## 7. Không có trong tài liệu gốc
 
@@ -108,14 +108,15 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Cross-repo temp-only test kết nối actual Web app với actual Bot ASGI app là bằng chứng mới của P0-05.
 - P0-05B static inventory chuẩn hóa source identities, route placeholders, hashes, docs và Tester workspace.
 - Auth brand/low-height viewport hotfix là bổ sung sau tài liệu gốc; không thay authentication behavior.
-- P0 manual source đã qua Git/deploy; từng signed/runtime/money outcome vẫn cần cổng bằng chứng riêng. Auth viewport hotfix trong batch này còn local tại thời điểm capture.
+- Customer motion live-reopen bổ sung vocabulary quan sát được `180/360/680ms`, scroll reveal/stagger bounded, hydration không replay và reduced-motion fail-visible. `/features` vẫn giữ bundle split riêng, không quay lại full Portal bundle.
+- P0 manual/Auth source đã qua Git/deploy; từng signed/money outcome vẫn cần cổng bằng chứng riêng. Motion còn local tại thời điểm capture.
 
 ## 8. Chưa triển khai hoặc chưa live
 
 - P0-05A rotate/revoke và loại credential-like tracked paths: chưa làm.
-- Tester source trên main có WA-01..34; PR motion quản lý WA-35/36 riêng, nên Auth hotfix không tạo ID trùng.
-- PR #417 đã merge/deploy; signed customer/Admin manual route vẫn chưa smoke bằng account thật.
-- Auth login brand/viewport hotfix đang local-rendered, chưa push/merge/deploy.
+- Tester source candidate có WA-01..36; WA-35/36 thuộc motion.
+- PR #417 manual và PR #419 Auth đã merge/deploy; signed customer/Admin manual route vẫn chưa smoke bằng account thật.
+- Customer motion live-reopen v2 đã local-render/Tester PASS; chưa merge/deploy trên main hiện tại và chưa có signed production acceptance.
 - ENV/secret rotation: chưa làm.
 - Signed production customer/Admin manual routes: chưa test.
 - Provider/PayOS/Telegram live call: không chạy trong local acceptance.
@@ -132,6 +133,7 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Muốn biết PayOS/wallet authority: đọc `README.md:236-263` và `docs/migration/PAYOS_WALLET_JOB_MAP.md:1-20`.
 - Muốn biết Admin navigation authority: đọc `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md`.
 - Muốn biết PWA private-data boundary: đọc `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61`.
+- Muốn biết customer motion v2: đọc `evidence/motion-webapp-surfaces-live-reopen-v2-20260831.md` và matrix JSON cùng tên.
 - Muốn biết trạng thái ship: đọc checklist P0-05; không suy từ một file route hay HTTP 200.
 
 ## 10. Chân lý báo cáo
@@ -142,4 +144,4 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Deployed không đồng nghĩa live outcome.
 - HTTP 200 không đồng nghĩa quyết định tiền hợp lệ.
 - Mọi claim provider/output/payment phải có bằng chứng output cuối tương ứng.
-- P0 manual source đã deploy tại `9785541`; không suy signed/money LIVE từ deploy. Auth layout hotfix vẫn local-only tại thời điểm evidence.
+- P0 manual source đã deploy tại `9785541`, Auth layout tại `0dd8ffa`; không suy signed/money LIVE từ deploy. Customer motion v2 mới local-verified, chưa ship.

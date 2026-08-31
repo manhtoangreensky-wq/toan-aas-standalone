@@ -5,13 +5,14 @@
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main: `978554130a1b329dd367ee5cf7c5918606770ccc` (PR #417).
+- Web production/main: `0dd8ffa3503436cb7431a98a882ff99cc25588d8` (PR #419).
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
 - PR #417 đã merge; quality run `33354445985` và deploy run `33354446011` đều `SUCCESS`.
-- VPS readback: exact HEAD `9785541`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
+- VPS readback sau PR #419: exact HEAD `0dd8ffa`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
 - Live assets có đúng một `amount_vnd` field/action, Admin queue route/render và Hotline source `0898360858`; signed production create/approve/reject chưa được chạy.
+- PR #419 Auth hotfix đã merge; quality run `33373616782` và deploy run `33373616654` đều `SUCCESS`; live logo/card đã đo tại `844×610` và `390×667`.
 - Batch này chưa được kiểm thử luồng tiền thật.
 - `MERGED != DEPLOYED != LIVE`.
 - `HTTP 200` chỉ chứng minh request HTTP được xử lý; nó không chứng minh quyết định tài chính cuối hợp lệ.
@@ -226,11 +227,22 @@
 - UI direction cấm làm Bot-owned record hoặc provider unavailable trông như ready; xem `docs/UX_APP_FIRST_REDESIGN.md:5-12`.
 - `availability` trong Admin navigation là metadata, không phải engine/payment live claim; xem `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:43-55`.
 
+### Motion khách hàng sau live-reopen
+
+- Customer Web dùng nhịp presentation riêng: control `180ms`, state/navigation `360ms`, route/section entrance `680ms`, stagger `80ms` cho tối đa 6 item; token chung của Admin/Auth/Landing không bị tăng.
+- Route entrance chạy trên container ổn định và sống qua cùng-route hydration; hydration không khởi chạy route entrance lần hai. Section đã ở trong viewport được settle ngay; section ngoài viewport chỉ reveal khi cuộn/focus tới.
+- `/features` giữ bundle split `portal-features.js`, không tải lại full `portal.js`, `integration.js` hoặc `portal-motion.js`; motion split chỉ dùng DOM class, `IntersectionObserver`, RAF và cleanup.
+- `prefers-reduced-motion: reduce` giữ toàn bộ content visible với opacity `1`, animation/transition/transform presentation bị tắt.
+- Catalogue dài dùng `content-visibility:auto` và intrinsic block size để giữ 135 workflow trong DOM/search nhưng không layout toàn bộ nhóm ngoài viewport ở first paint.
+- Local signed route matrix đã đo `/dashboard`, `/features`, `/studio`, `/wallet/topup` tại `1440×900` và `390×667`, normal/reduced: `16/16` content visible, overflow/CLS/page error/request failure/foreign request đều `0`. Dashboard long-task xuất hiện cả normal và reduced nên là baseline render debt, không phải motion regression; chuyển vào Customer Final thay vì sửa ké.
+
 ## 18. Việc còn mở
 
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
-- Tester workspace hiện có 34 case trên main; PR motion riêng giữ WA-35/36 và không được nhập trùng vào hotfix Auth.
-- Auth login brand/viewport hotfix đã local-render `6/6`; chưa commit/push/PR/merge/deploy tại thời điểm bằng chứng này.
+- Tester workspace candidate có `36` case tuần tự; WA-35/36 thuộc đúng `MOTION-WEBAPP-SURFACES-001`.
+- Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
+- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `56 passed/1 Windows-only deselected`; comparator cùng ba file trên exact main và candidate đều `22 passed/5 baseline failures`, `NEW_FAILURES=0`. PR #418 đã rebase local lên `0dd8ffa`, chưa push lại/merge/deploy tại thời điểm ghi.
+- Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
 - Signed production customer/Admin routes chưa được kiểm cho batch này.
@@ -246,4 +258,5 @@
 - P0-05B static inventory: `evidence/p0-05b-static-inventory-accepted-20260829.md`.
 - P0-05E corrective: `evidence/p0-05e-primary-manager-verified-20260830.md` sau khi Manager closeout; trước khi file này tồn tại, trạng thái vẫn chưa ACCEPTED.
 - Auth login brand/viewport: `evidence/auth-login-brand-viewport-001-20260831.md` và matrix JSON cùng tên.
+- Customer motion live-reopen: `evidence/motion-webapp-surfaces-live-reopen-v2-20260831.md` + `evidence/motion-webapp-surfaces-live-reopen-v2-matrix.json`; video/frames nặng được giữ ngoài repo với SHA-256 ghi trong report.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.

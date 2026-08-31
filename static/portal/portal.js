@@ -34244,8 +34244,18 @@
       if (landingMotionEnabled && typeof motion.mountLanding === "function") motion.mountLanding(main);
     }
     function mountWorkspaceMotion() {
+      if (isHydration && !minimalShell && !isAdminPortalSurface(page) && typeof motion.refreshWorkspace === "function") {
+        motion.refreshWorkspace(main);
+        return;
+      }
       if (isHydration || minimalShell || isAdminPortalSurface(page) || typeof motion.mountWorkspace !== "function") return;
       motion.mountWorkspace(main);
+      if ((dashboardMotionRoute || featureCatalogRoute) && typeof motion.enter === "function") {
+        const activateCustomerEntry = () => motion.enter(main, "enter");
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(() => window.requestAnimationFrame(activateCustomerEntry));
+        } else activateCustomerEntry();
+      }
     }
     const replaceResult = featureCatalogRoute
       ? motion.replace(shell, main, renderShell, { animate: false })

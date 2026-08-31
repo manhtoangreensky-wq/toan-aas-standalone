@@ -235,6 +235,76 @@
     filter(); add(page, hero, catalog); main.replaceChildren(page); set(main, "data-portal-features-state", "ready");
   }
 
+  let featureMotionCleanup = () => {};
+  function featureMotionReduced() {
+    return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+  function mountFeatureMotion(main) {
+    featureMotionCleanup(); featureMotionCleanup = () => {};
+    const shell = document.getElementById("portal-shell"), body = document.body;
+    if (shell) { set(shell, "data-portal-app-kind", "customer"); set(shell, "data-portal-surface", "customer"); set(shell, "data-portal-presentation-phase", "entry"); }
+    if (body) { set(body, "data-portal-app-kind", "customer"); set(body, "data-portal-surface", "customer"); }
+    set(main, "data-portal-presentation-phase", featureMotionReduced() ? "settled" : "entry");
+    if (featureMotionReduced()) return;
+
+    const entrance = main.querySelector(".portal-hero") || main;
+    const targets = Array.from(main.querySelectorAll(".portal-feature-group"));
+    const armItems = (target) => {
+      Array.from(target.querySelectorAll(".portal-catalog-item")).slice(0, 6).forEach((item, index) => {
+        item.classList.add("portal-workspace-motion-item");
+        item.style.setProperty("--portal-workspace-motion-index", String(index));
+      });
+    };
+    const reveal = (target) => {
+      if (!target || !target.classList.contains("is-pending")) return;
+      target.classList.remove("is-pending"); target.classList.add("is-visible");
+      if (observer) observer.unobserve(target);
+    };
+    targets.forEach((target) => {
+      target.classList.add("portal-workspace-motion-target");
+      target.addEventListener("focusin", () => { armItems(target); reveal(target); }, { once: true });
+    });
+
+    let observer = null;
+    const revealQueued = new WeakSet();
+    const scheduleReveal = (target) => {
+      if (revealQueued.has(target)) return;
+      revealQueued.add(target);
+      armItems(target);
+      if (typeof window.requestAnimationFrame !== "function") return reveal(target);
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => reveal(target)));
+    };
+    if (typeof window.IntersectionObserver === "function") {
+      observer = new window.IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target.classList.contains("is-pending")) scheduleReveal(entry.target);
+            else observer.unobserve(entry.target);
+          } else entry.target.classList.add("is-pending");
+        });
+      }, { rootMargin: "0px 0px -8%", threshold: 0 });
+      targets.forEach((target) => observer.observe(target));
+    }
+
+    const clearEntrance = (event) => {
+      if (event && event.target !== entrance) return;
+      entrance.removeAttribute("data-portal-features-motion");
+      set(main, "data-portal-presentation-phase", "settled");
+      if (shell) set(shell, "data-portal-presentation-phase", "settled");
+    };
+    const activate = () => { set(entrance, "data-portal-features-motion", "enter"); };
+    entrance.addEventListener("animationend", clearEntrance);
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(activate));
+    } else activate();
+    const clearTimer = window.setTimeout(clearEntrance, 760);
+    featureMotionCleanup = () => {
+      if (observer) observer.disconnect();
+      window.clearTimeout(clearTimer);
+      entrance.removeEventListener("animationend", clearEntrance);
+    };
+  }
+
   function renderShell(features, account, locale, ready) {
     if (!document || typeof document.getElementById !== "function") return;
     const main = document.getElementById("portal-main") || document.getElementById("portal-root");
@@ -243,6 +313,7 @@
     renderHeader(document.querySelector ? document.querySelector("[data-portal-header]") : null, account || { displayName: "", email: "" }, copy);
     const mobile = document.querySelector ? document.querySelector("[data-portal-mobile-nav]") : null;
     if (ready) { renderMobile(mobile, copy); renderCatalogue(main, features, copy); } else renderGuarded(main, copy);
+    mountFeatureMotion(main);
     if (window.TOANAASPortalTheme && typeof window.TOANAASPortalTheme.syncControls === "function") window.TOANAASPortalTheme.syncControls();
   }
 
