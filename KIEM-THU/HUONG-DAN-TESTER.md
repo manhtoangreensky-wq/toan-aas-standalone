@@ -109,6 +109,6 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 
 59. Repo/issue/labels đã được kiểm; P0-05E đã có comment/readback trên tracker #412.
 60. GitHub Project đích là `TOAN AAS Web App · Tester P0`; PR #417 đã được gắn và đọc lại thành công.
-61. Push gate P0-05E đã hoàn tất tại head `eeb8510`, CI run `33314113510` SUCCESS; PR #417 vẫn OPEN, chưa merge/deploy.
-62. Motion phải qua local acceptance rồi mở một stacked PR riêng trên branch của PR #417; không nối motion mù vào PR #417.
+61. PR #417 đã merge/deploy tại runtime `9785541`; PR #419 Auth đã merge/deploy tại runtime `0dd8ffa`.
+62. Motion đã qua local acceptance và tiếp tục trong PR riêng #418; sau rebase, base đúng là `main` tại `0dd8ffa`, không còn stacked trên branch PR #417.
 63. Merge/deploy/live vẫn là cổng riêng; không suy từ local PASS, push, PR hoặc CI.

@@ -10,7 +10,7 @@
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
 - PR #417 đã merge; quality run `33354445985` và deploy run `33354446011` đều `SUCCESS`.
-- VPS readback: exact HEAD `9785541`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
+- VPS readback sau PR #419: exact HEAD `0dd8ffa`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
 - Live assets có đúng một `amount_vnd` field/action, Admin queue route/render và Hotline source `0898360858`; signed production create/approve/reject chưa được chạy.
 - PR #419 Auth hotfix đã merge; quality run `33373616782` và deploy run `33373616654` đều `SUCCESS`; live logo/card đã đo tại `844×610` và `390×667`.
 - Batch này chưa được kiểm thử luồng tiền thật.
@@ -241,7 +241,7 @@
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
 - Tester workspace candidate có `36` case tuần tự; WA-35/36 thuộc đúng `MOTION-WEBAPP-SURFACES-001`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
-- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `53 passed`, comparator `29 passed/4 baseline failures`, `NEW_FAILURES=0`; PR #418 đang được đồng bộ lại với main hiện tại, chưa merge/deploy.
+- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `56 passed/1 Windows-only deselected`; comparator cùng ba file trên exact main và candidate đều `22 passed/5 baseline failures`, `NEW_FAILURES=0`. PR #418 đã rebase local lên `0dd8ffa`, chưa push lại/merge/deploy tại thời điểm ghi.
 - Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
