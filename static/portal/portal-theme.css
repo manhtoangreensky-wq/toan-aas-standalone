@@ -15668,6 +15668,11 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   }
 }
 
+.portal-body--features .portal-feature-group {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 620px;
+}
+
 /* Cinematic Mini is scoped to the public landing lifecycle. It reuses the
    existing semantic preview rather than adding generated imagery, and only
    animates composited properties once after the shell is complete. */
@@ -17655,11 +17660,6 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   --portal-customer-motion-stagger: 80ms;
   --portal-customer-motion-distance: 20px;
   --portal-motion-fast: var(--portal-customer-motion-control);
-}
-
-.portal-body--features .portal-feature-group {
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto 620px;
 }
 
 @keyframes portal-customer-observable-enter {

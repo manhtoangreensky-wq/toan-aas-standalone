@@ -57,14 +57,20 @@ def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
         "--portal-customer-motion-stagger: 80ms;",
         "--portal-customer-motion-distance: 20px;",
         "opacity: .12;", "scale(.985)",
-        ".portal-body--features .portal-feature-group",
-        "content-visibility: auto;", "contain-intrinsic-block-size: auto 620px;",
         '[data-portal-main][data-portal-motion="enter"]',
         '[data-portal-features-motion="enter"]',
         "opacity: 1 !important;", "animation: none !important;",
         "transition: none !important;", "transform: none !important;",
     ):
         assert token in block
+    containment = (
+        ".portal-body--features .portal-feature-group {\n"
+        "  content-visibility: auto;\n"
+        "  contain-intrinsic-block-size: auto 620px;\n"
+        "}"
+    )
+    assert THEME.count(containment) == 1
+    assert THEME.index(containment) < THEME.index('[data-landing-motion="cinematic-mini"]')
     for forbidden in ('data-portal-app-kind="admin"', ".portal-auth", ".portal-landing", "blur(", "infinite"):
         assert forbidden not in block
     assert re.search(r"(?:transition|animation)[^;]*(?:width|height|top|left)", block) is None
