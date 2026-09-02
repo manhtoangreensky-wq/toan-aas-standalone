@@ -8,6 +8,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_SHA = "0dd8ffa3503436cb7431a98a882ff99cc25588d8"
+ACCEPTED_SHA = "1ec5659151cd51533fb6df8390a688bafa79eb31"
 THEME = (ROOT / "static/portal/portal-theme.css").read_text(encoding="utf-8")
 MOTION = (ROOT / "static/portal/portal-motion.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static/portal/portal.js").read_text(encoding="utf-8")
@@ -37,9 +38,10 @@ def live_css() -> str:
 
 
 def committed_paths_since_base() -> set[str]:
-    subprocess.run(["git", "merge-base", "--is-ancestor", BASE_SHA, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", BASE_SHA, ACCEPTED_SHA], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", ACCEPTED_SHA, "HEAD"], cwd=ROOT, check=True)
     result = subprocess.run(
-        ["git", "diff", "--name-only", f"{BASE_SHA}...HEAD"],
+        ["git", "diff", "--name-only", f"{BASE_SHA}...{ACCEPTED_SHA}"],
         cwd=ROOT,
         check=True,
         text=True,

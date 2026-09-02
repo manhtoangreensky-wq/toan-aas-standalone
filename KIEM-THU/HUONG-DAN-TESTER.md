@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-36` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-38` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
