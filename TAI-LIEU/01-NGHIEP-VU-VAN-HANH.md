@@ -20,12 +20,12 @@
 ## 2. Kiến trúc quyền sở hữu
 
 - Web App là sản phẩm độc lập có signed session, CSRF, tài khoản và nhiều module Web-native.
-- Riêng lane manual top-up, Web không phải nguồn ghi số dư Xu hay sổ tài chính canonical.
+- Lane manual top-up hiện là Web-local và không yêu cầu liên kết Telegram/Core Bridge: Web sở hữu mã nạp 8 số, cấu hình/QR private, pending request/history và Admin reconciliation queue.
+- Web vẫn không phải nguồn ghi số dư Xu hay sổ tài chính canonical.
 - Browser gửi yêu cầu qua signed Web session và CSRF.
 - Web API kiểm tra owner hoặc Admin bằng authority server-side.
-- Web backend gọi private Bot bridge bằng credential chỉ có ở server.
-- Bot bridge kiểm tra bearer riêng cho owner và Admin.
-- Bot writer thực hiện thay đổi canonical khi Admin confirm hợp lệ.
+- Customer create/history/detail/status và Admin list/detail/reject hiện đọc/ghi Web DB theo signed account/role; không gọi Bot bridge.
+- Admin Web-local hiện chỉ có two-step reject. Approve/cộng Xu/ledger thuộc gate G0/G3 riêng và chưa được mở trong batch này.
 - Browser không được tự gửi Telegram ID để nhận quyền sở hữu.
 - Browser không được tự gửi `admin_id` để nhận quyền Admin.
 - Web không cộng Xu trực tiếp.
@@ -36,36 +36,42 @@
 
 ## 3. Luồng dữ liệu manual top-up
 
-1. Owner đăng nhập Web và có signed session.
-2. Owner gửi form manual top-up kèm CSRF và idempotency key.
-3. Web lấy canonical owner identity từ session; không lấy từ query/body/header của browser.
-4. Web proxy gửi request qua owner bridge tới Bot.
-5. Bot tạo một pending deposit và finance invoice ở trạng thái chờ duyệt.
-6. Trước quyết định Admin, credit và các positive-credit/usage/revenue event vẫn không tăng.
-7. Owner chỉ thấy projection đã loại trường Admin, token và raw bridge data.
-8. Admin đăng nhập bằng signed session có role phù hợp.
-9. Web kiểm tra canonical Admin identity trước khi gọi Admin bridge.
-10. Admin xem list/detail đã được projection và redaction.
-11. Admin tạo draft quyết định; bước draft không cộng Xu.
-12. Web lưu confirmation receipt ngắn hạn, ràng buộc với đúng Admin session.
-13. Admin confirm bằng CSRF, receipt và idempotency key.
-14. Bot thực thi đúng một quyết định canonical: approve hoặc reject.
-15. Owner đọc lại status/history từ canonical bridge.
-16. Luồng thật đã được kiểm bằng temp-only Web↔Bot ASGI fixture tại `tests/test_p0_manual_topup_cross_repo_integration.py:380-505`.
+1. Khách đăng nhập Web bằng signed session; liên kết Telegram là tùy chọn và không mở/khóa lane manual.
+2. Signed `GET /api/v1/payments/options` trả mã nạp 8 số, hotline và projection phương thức từ cấu hình/asset private của Web; response luôn `no-store, private`.
+3. QR chỉ đi qua signed same-origin endpoint; path private không xuất hiện trong JSON/HTML và repo public không chứa QR binary/config.
+4. Client chỉ đưa VND method có `request_enabled=true` vào selector; method thiếu config vẫn hiện card `Chưa được cấu hình`, USDT/Binance chỉ informational.
+5. Khách nhập `amount_vnd`, chọn method, tùy chọn reference và submit bằng CSRF + idempotency key.
+6. Trong một `BEGIN IMMEDIATE`, Web xử lý đúng thứ tự: replay/conflict đã có → admission method → quota pending → insert một `pending_admin_review`.
+7. Request/history/detail/status chỉ dùng account ID từ signed session và projection owner-safe.
+8. Admin Web-local xem list/detail có account, email, amount, method, payment code và request ID.
+9. G2 hiện chỉ cho draft/confirm reject với receipt ràng buộc Admin/session/request; reject không cộng Xu.
+10. Approve/cộng Xu/ledger vẫn khóa; source hiện tại không tạo positive-credit/usage/revenue event.
+11. Bằng chứng local: `tests/test_cust_web_manual_topup_visible_qr_001.py`, G1/G2 tests và protected matrix `70 passed, 79 deselected` ngày 02/09/2026.
 
 ### 3.1 Corrective P0-05E — số tiền, mã nạp và quyền riêng tư
 
 - Khách nhập `amount_vnd`, chọn phương thức server cấp và có thể nhập tham chiếu/TXID; browser create body không được nhận owner ID, Admin ID hoặc `payment_code`.
-- Signed `/api/v1/payments/options` suy ra `manual.payment_code` từ canonical numeric account/Telegram ID đã liên kết. Giá trị chỉ hợp lệ khi khớp exact ASCII `[1-9][0-9]{0,19}`; không trim/reinterpret chuỗi có khoảng trắng hoặc chữ.
+- Signed `/api/v1/payments/options` lấy `manual.payment_code` từ mã 8 chữ số ASCII bền vững của Web account (`[1-9][0-9]{7}`); browser và Telegram ID không được dùng để override.
 - `manual.support_hotline` dùng ENV hợp lệ 8–15 chữ số hoặc fallback `0898360858`. Fallback số tài khoản ngân hàng là comparator độc lập `0387532320`; Portal không hardcode hai số này.
 - Lựa chọn manual, amount, method và reference được giữ trong transient route state qua same-route data hydration/remount. Hidden `topup_lane` chỉ giữ UI state; integration create body vẫn là `amount_vnd`, `method`, `reference`, `idempotency_key`.
 - Customer single/history/detail/status không chứa `admin_note`; customer JS normalizer cũng không giữ field này. Admin projection riêng vẫn giữ request ID, Telegram ID, display name, amount, method và Admin note theo quyền.
 - Browser behavior contract chạy Portal thật qua Node `vm`: chọn manual → `125000/bank_acb/TX-125` → invalid-lane attempt → hydration remount vẫn giữ đúng lane và dữ liệu.
 - Local security reviewer độc lập kết luận finding “Customer manual-topup API exposes private Admin notes” là `fixed`; production/runtime/live money vẫn chưa được tuyên bố.
 
+### 3.2 Payment destination và QR private — candidate 02/09/2026
+
+- Backend công bố `manual.methods[]` bốn field tương thích và `manual.payment_destinations` keyed bằng method ID canonical.
+- ACB VietQR chỉ `request_enabled=true` khi vừa có destination đủ bank code/name/account/owner, vừa có QR giải mã hợp lệ. MoMo/ZaloPay cần QR canonical; USDT TRC20 không vào selector VND.
+- Nguồn runtime mặc định là `/opt/toanaas/webapp-private/manual-payment`: 5 ảnh private và `config.json` root-owned tối đa 16 KiB. ENV, nếu có, chỉ override. Không asset/config nào được commit vào repo public.
+- QR được giới hạn 5 MiB, 4096 px mỗi cạnh, 16 MP; Pillow full verify/decode, decompression bomb và malformed file fail closed. Response có `Cache-Control`, `Cross-Origin-Resource-Policy: same-origin`, `nosniff`.
+- Cache decode tối đa 12 entry theo resolved path + device/inode/size/mtime/ctime; file thay đổi phải revalidate, signed request lặp không decode lại ảnh ổn định.
+- Independent Tester final `0 Critical / 0 Important / 0 Minor`; final immutable security discovery phủ 6/6 production file và candidate count `0`. `LIVE_PASS` vẫn `NOT_TESTED` trước deploy.
+
 ## 4. Các route Web dành cho khách
 
 - `POST /api/v1/payments/manual` — tạo yêu cầu manual top-up.
+- `GET /api/v1/payments/options` — metadata signed, Web-local, `no-store`.
+- `GET /api/v1/payments/options/manual-methods/{method_id}/qr` — QR private signed, fail closed.
 - `GET /api/v1/payments/manual` — lịch sử owner-scoped.
 - `GET /api/v1/payments/manual/{request_id}` — chi tiết owner-scoped.
 - `GET /api/v1/payments/manual/{request_id}/status` — trạng thái rút gọn.

@@ -1610,12 +1610,12 @@
     layout: "wallet", action: "none", status: "guarded",
     notes: ["Web App không giữ ledger Xu và không tự cộng/trừ số dư.", "Dữ liệu wallet cần Core Bridge kiểm tra signed session và ownership."]
   });
-  customerPage("/wallet/topup", "Nạp Xu", "Chọn entrypoint canonical: bot tạo PayOS QR động hoặc xử lý đối soát thủ công; Web không tạo link hay webhook.", ICONS.wallet, {
+  customerPage("/wallet/topup", "Nạp Xu", "Chọn cổng PayOS khi tài khoản đủ điều kiện, hoặc tạo yêu cầu đối soát thủ công trực tiếp trên Web. Xu chỉ được cộng sau khi xác nhận thanh toán.", ICONS.wallet, {
     layout: "wallet", action: "payment-create", actionLabel: "Tạo yêu cầu thanh toán", status: "guarded",
     fields: [
       { name: "package", label: "Mệnh giá nạp", control: "select", optionsFrom: "topupPackages", emptyLabel: "Chọn mệnh giá từ catalog nạp canonical", help: "Danh mục nạp phải được bot cấp riêng. Web không dùng combo/gói tháng để tạo PayOS webhook.", required: true }
     ],
-    notes: ["Payment, amount, signature và webhook chỉ do bot/Core Bridge xử lý.", "Shell chỉ mở bot theo thao tác của bạn hoặc hiển thị checkout bridge đã ký; không finalize và không ghi Xu."]
+    notes: ["Số tiền, chữ ký, checkout và webhook PayOS chỉ được xử lý ở máy chủ; trình duyệt không tự tạo hoặc xác nhận thanh toán.", "Yêu cầu đối soát thủ công và lịch sử thuộc tài khoản Web đã đăng nhập; cả hai luồng chỉ cập nhật Xu sau khi thanh toán được xác nhận."]
   });
   customerPage("/packages", "Gói dịch vụ", "Catalog, giá và quyền lợi chỉ được render từ gói đã được server phê duyệt.", ICONS.pricing, {
     layout: "catalog", action: "none", status: "guarded"
@@ -1961,7 +1961,7 @@
   adminPage("/admin/users", "Người dùng", "Tìm kiếm và xem người dùng qua quyền canonical của bot.", ICONS.users);
   adminPage("/admin/wallet", "Ví & điều chỉnh Xu", "Chỉ review dữ liệu wallet; điều chỉnh cần permission, CSRF, idempotency và audit event.", ICONS.wallet);
   adminPage("/admin/payments", "Thanh toán", "Theo dõi payment từ canonical PayOS/wallet workflow, không có webhook thứ hai.", ICONS.payments);
-  adminPage("/admin/topups", "Đối soát nạp thủ công", "Review hàng đợi canonical theo hai bước; Web không tự cộng Xu.", ICONS.payments, { layout: "admin-manual-topups" });
+  adminPage("/admin/topups", "Đối soát nạp thủ công", "Kiểm tra yêu cầu theo hai bước; chỉ ghi nhận từ chối và không tự cộng Xu.", ICONS.payments, { layout: "admin-manual-topups" });
   adminPage("/admin/revenue", "Doanh thu", "Báo cáo doanh thu do nguồn canonical cung cấp.", ICONS.reports);
   adminPage("/admin/refunds", "Refund", "Review yêu cầu refund; thao tác cần confirmation, idempotency và audit.", ICONS.payments);
   adminPage("/admin/jobs", "Jobs", "Theo dõi toàn bộ job, trạng thái delivery và lỗi từ Core Bridge.", ICONS.jobs);
@@ -7883,9 +7883,8 @@
     const status = source ? String(source.status || "") : "";
     if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !["pending_admin_review", "approved", "rejected"].includes(status)) return null;
     const record = { request_id: requestId, status };
-    if (/^[1-9][0-9]{0,19}$/.test(String(source.telegram_user_id || ""))) record.telegram_user_id = String(source.telegram_user_id);
-    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => { if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field]; });
-    ["display_name", "currency", "method", "transfer_content", "reference", "submitted_at", "decision_at", "decided_by_admin_id", "admin_note"].forEach((field) => { if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field]; });
+    ["amount_vnd"].forEach((field) => { if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field]; });
+    ["display_name", "email", "currency", "method", "payment_code", "reference", "submitted_at", "updated_at", "decision_at", "decision_reason"].forEach((field) => { if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field]; });
     return record;
   }
 
@@ -7896,8 +7895,10 @@
     const rawDraft = source.draft && typeof source.draft === "object" && !Array.isArray(source.draft) ? source.draft : null;
     const draftRecord = normalizeAdminManualTopupRecord(rawDraft);
     const receipt = rawDraft && typeof rawDraft.confirmation_receipt === "string" && /^[A-Za-z0-9_-]{32,160}$/.test(rawDraft.confirmation_receipt) ? rawDraft.confirmation_receipt : "";
-    const action = rawDraft && ["approve_expected", "approve_custom", "reject"].includes(String(rawDraft.action || "")) ? String(rawDraft.action) : "";
-    const draft = draftRecord && receipt && action ? { ...draftRecord, action, confirmation_receipt: receipt, approved_xu_to_apply: Number.isSafeInteger(rawDraft.approved_xu_to_apply) && rawDraft.approved_xu_to_apply >= 0 ? rawDraft.approved_xu_to_apply : 0, reason: typeof rawDraft.reason === "string" ? rawDraft.reason.slice(0, 300) : "", expires_at: Number.isSafeInteger(rawDraft.expires_at) ? rawDraft.expires_at : 0 } : null;
+    const action = rawDraft && String(rawDraft.action || "") === "reject" ? "reject" : "";
+    const reason = rawDraft && typeof rawDraft.reason === "string" && rawDraft.reason.length <= 300 ? rawDraft.reason : "";
+    const expiresAt = rawDraft && typeof rawDraft.expires_at === "string" && rawDraft.expires_at.length <= 64 ? rawDraft.expires_at : "";
+    const draft = draftRecord && receipt && action && reason && expiresAt ? { ...draftRecord, action, confirmation_receipt: receipt, reason, expires_at: expiresAt } : null;
     return {
       readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(source.readState || "")) ? String(source.readState) : "guarded",
       filterStatus: ["pending", "approved", "rejected"].includes(String(source.filterStatus || "")) ? String(source.filterStatus) : "pending",
@@ -8084,8 +8085,14 @@
       walletHistory: Array.isArray(source.walletHistory) ? source.walletHistory : [],
       jobAssets: Array.isArray(source.jobAssets) ? source.jobAssets : [],
       jobs: Array.isArray(source.jobs) ? source.jobs : [],
+      jobsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.jobsReadState || ""))
+        ? String(source.jobsReadState)
+        : "guarded",
       jobDetail: source.jobDetail && typeof source.jobDetail === "object" ? source.jobDetail : {},
       assets: Array.isArray(source.assets) ? source.assets : [],
+      assetsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.assetsReadState || ""))
+        ? String(source.assetsReadState)
+        : "guarded",
       // This is a bounded, presentation-only receipt emitted by a validated
       // Delivery Center refresh. It carries neither record IDs nor delivery
       // truth and is consumed immediately after the mounted acknowledgement.
@@ -9466,6 +9473,7 @@
   }
 
   const NAVIGATION_I18N_KEYS = Object.freeze({
+    "Khách hàng": "customerTopup.section.customer",
     "Workspace": "nav.workspace",
     "Tổng quan": "nav.dashboard",
     "Chuyển workspace": "nav.workspaceMenu",
@@ -9611,6 +9619,7 @@
     if (path === "/studio") return mediaStudioText("page.title", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
+    if (path === "/wallet/topup") return uiText("customerTopup.page.title", fallback);
     if (path === "/admin/topups") return adminManualTopupText("page.title", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
@@ -9674,6 +9683,7 @@
     if (path === "/studio") return mediaStudioText("page.description", fallback);
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
+    if (path === "/wallet/topup") return uiText("customerTopup.page.description", fallback);
     if (path === "/admin/topups") return adminManualTopupText("page.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
@@ -11426,6 +11436,11 @@
   }
 
   function renderWorkspaceDrafts(page, context) {
+    const readState = workspaceDraftReadState(context);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["workspace-drafts-refresh"] === true);
+    if (readState !== "ready") {
+      return `<article class="portal-page portal-workspace-drafts" data-workspace-draft-read-state="${safeText(readState)}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderCollectionReadState("workspace", readState, canRefresh)}</section></article>`;
+    }
     const drafts = workspaceDraftItems(context);
     const listing = workspaceDraftListing(context);
     const filter = listing.filters;
@@ -11435,7 +11450,6 @@
     const canArchive = Boolean(context.capabilities && context.capabilities["workspace-draft-archive"] === true);
     const canResume = Boolean(context.capabilities && context.capabilities["workspace-draft-resume"] === true);
     const canAttach = Boolean(context.capabilities && context.capabilities["workspace-draft-attach"] === true);
-    const canRefresh = Boolean(context.capabilities && context.capabilities["workspace-drafts-refresh"] === true);
     const attachProjects = (Array.isArray(context.projects) ? context.projects : [])
       .filter((project) => project && typeof project === "object" && validProjectId(project.id) && String(project.state || "active") === "active")
       .slice(0, 100);
@@ -11459,7 +11473,7 @@
         ? renderEmpty(workspaceDraftText("empty.filteredTitle", "Không có bản nháp phù hợp"), workspaceDraftText("empty.filteredBody", "Điều chỉnh tên, workflow hoặc trạng thái để xem lịch sử Web-owned khác của signed account."), "⌕")
         : renderEmpty(workspaceDraftText("empty.title", "Chưa có bản nháp Web"), workspaceDraftText("empty.body", "Mở một workflow rồi chọn Lưu bản nháp Web. Bạn có thể lưu brief trước khi kết nối sẵn sàng; không có request nào được gửi sang Bot."), "✦"));
     const filterForm = `<form class="portal-workspace-draft-filter" data-portal-form data-portal-no-transient data-portal-action="workspace-drafts-filter" data-portal-route="/workspace" novalidate>${renderFields(workspaceDraftFilterFields(context), canRefresh, context, filter, "workspace-drafts-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(workspaceDraftText("filter.note", "Bộ lọc chỉ gọi lại API owner-scoped trong phiên trang hiện tại. Không lưu vào URL, Telegram hay browser storage; nội dung brief không nằm trong danh sách hoặc tìm kiếm."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-drafts-filter-clear" data-portal-route="/workspace"${canRefresh ? "" : " disabled"}>${safeText(workspaceDraftText("filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit"${canRefresh ? "" : " disabled"}>${safeText(workspaceDraftText("filter.submit", "Tìm bản nháp"))}</button></div></div></form>`;
-    return `<article class="portal-page portal-workspace-drafts">${renderHero(page, context)}
+    return `<article class="portal-page portal-workspace-drafts" data-workspace-draft-read-state="ready">${renderHero(page, context)}
       <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(workspaceDraftText("boundary.title", "Bản nháp Web, không phải job"))}</h2><p>${safeText(workspaceDraftText("boundary.body", "Thư viện này chỉ lưu brief và lựa chọn scalar thuộc signed account. Nó không lưu file, upload ID, Voice Vault profile, quote receipt, provider, payment, Xu, job hay output."))}</p><div class="portal-state-meta"><span>${safeText(workspaceDraftText("boundary.activeCount", "{count} đang hoạt động", { count: String(activeCount) }))}</span><span>${safeText(workspaceDraftText("boundary.archivedCount", "{count} đã lưu trữ", { count: String(archivedCount) }))}</span><span>${safeText(workspaceDraftText("boundary.capacity", "Tối đa 100 bản đang hoạt động"))}</span></div></div></div></section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(workspaceDraftText("library.title", "Thư viện bản nháp"))}</h2><p class="portal-card-subtitle">${safeText(workspaceDraftText("library.body", "Resume chỉ đưa brief hợp lệ trở lại đúng form. Tệp và lựa chọn canonical nhạy cảm luôn phải được chọn và kiểm tra lại trong workflow."))}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-drafts-refresh" data-portal-route="/workspace"${canRefresh ? "" : " disabled"}>${safeText(workspaceDraftText("library.refresh", "Làm mới"))}</button><a class="portal-button portal-button--primary" href="/features">${safeText(workspaceDraftText("library.openWorkflow", "Mở workflow"))}</a></div></div>${filterForm}${cards}${renderWorkspaceDraftPagination(listing)}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(workspaceDraftText("safety.title", "Ranh giới an toàn"))}</strong><p>${safeText(workspaceDraftText("safety.body", "Mỗi lần tiếp tục vẫn phải qua validation form, staging upload, estimate, confirmation và authority canonical. Bản nháp không chứng minh quyền sở hữu file, không giữ giá hoặc Xu và không tạo kết quả."))}</p></div></div></section>
@@ -20094,6 +20108,31 @@
     return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
   }
 
+  function deliveryListReadState(context, kind) {
+    const key = kind === "jobs" ? "jobsReadState" : (kind === "assets" ? "assetsReadState" : "");
+    const candidate = key ? String(context && context[key] || "guarded") : "guarded";
+    return ["loading", "ready", "failed", "guarded"].includes(candidate) ? candidate : "guarded";
+  }
+
+  function renderCollectionReadState(kind, state, canRefresh) {
+    if (state === "ready") return "";
+    const spec = kind === "workspace"
+      ? { key: "workspaceDrafts.state", action: "workspace-drafts-refresh", route: "/workspace" }
+      : (kind === "jobs"
+        ? { key: "deliveryCenter.jobs.state", action: "refresh-jobs", route: "/jobs" }
+        : { key: "deliveryCenter.assets.state", action: "refresh-assets", route: "/assets" });
+    const title = uiText(`${spec.key}.${state}Title`, "");
+    const body = uiText(`${spec.key}.${state}Body`, "");
+    const actionLabel = uiText(`${spec.key}.${state}Action`, "");
+    const presentationState = state === "loading" ? "processing" : state;
+    const action = state === "failed" && canRefresh
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(spec.action)}" data-portal-route="${safeText(spec.route)}">${safeText(actionLabel)}</button>`
+      : (state === "guarded"
+        ? `<a class="portal-button portal-button--primary" href="/account">${safeText(actionLabel)}</a>`
+        : "");
+    return `<div class="portal-state" data-state="${safeText(presentationState)}"><span class="portal-state-icon" aria-hidden="true">${portalStatusIcon(presentationState)}</span><div${state === "loading" ? ' role="status" aria-live="polite"' : ""}><h2>${safeText(title)}</h2><p>${safeText(body)}</p>${action ? `<div class="portal-inline-actions">${action}</div>` : ""}</div>${badge(presentationState)}</div>`;
+  }
+
   function dashboardWebWorkReadState(context) {
     const projectState = projectCenterReadState(context);
     const draftState = workspaceDraftReadState(context);
@@ -21283,7 +21322,7 @@
     const items = [
       { path: "/wallet", label: uiText("nav.wallet", "Ví Xu") },
       { path: "/wallet/topup", label: uiText("shellNav.topupCredit", "Nạp Xu") },
-      { path: "/membership", label: "👑 Hạng hội viên & VIP" },
+      { path: "/membership", label: uiText("customerTopup.membership.nav", "👑 Hạng hội viên & VIP") },
       { path: "/packages", label: uiText("workspaceMenu.card.packages.title", "Gói dịch vụ") },
       { path: "/pricing", label: uiText("nav.pricing", "Bảng giá") }
     ];
@@ -21298,11 +21337,11 @@
       <div class="portal-topup-lane-switch" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
         <button type="button" class="portal-button ${payosActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${payosActive ? "is-active" : ""}" data-portal-topup-lane="payos" aria-selected="${payosActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">⚡</span>
-          <span>Cổng Nạp Tự Động PayOS (5-30s)</span>
+          <span>${safeText(uiText("customerTopup.lane.payos", "Cổng Nạp Tự Động PayOS (5-30s)"))}</span>
         </button>
         <button type="button" class="portal-button ${manualActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${manualActive ? "is-active" : ""}" data-portal-topup-lane="manual" aria-selected="${manualActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">🏦</span>
-          <span>Nạp Thủ Công (ACB / MoMo / ZaloPay / Binance)</span>
+          <span>${safeText(uiText("customerTopup.lane.manual", "Nạp Thủ Công (ACB / MoMo / ZaloPay)"))}</span>
         </button>
       </div>
       <div class="portal-payment-entry-grid" style="display:none;">
@@ -21330,7 +21369,7 @@
     const facts = [
       [manualTopupText("requestId", "Mã yêu cầu"), item.request_id],
       [manualTopupText("amount", "Số tiền"), Number.isSafeInteger(item.amount_vnd) ? adminNumber(item.amount_vnd, " đ") : ""],
-      [manualTopupText("method", "Phương thức"), item.method],
+      [manualTopupText("method", "Phương thức"), item.method ? manualTopupText(`method.${item.method}`, item.method) : ""],
       [manualTopupText("reference", "Tham chiếu"), item.reference],
       [manualTopupText("transferContent", "Nội dung chuyển khoản"), item.transfer_content],
       [manualTopupText("expectedXu", "Xu dự kiến"), Number.isSafeInteger(item.expected_xu) ? adminNumber(item.expected_xu, " Xu") : ""],
@@ -21353,15 +21392,45 @@
     const displayStyle = isHidden ? "none" : "block";
     const infoMarkup = `<dl class="portal-manual-topup-info"><div><dt>${safeText(manualTopupText("paymentCode", "Mã nạp tiền"))}</dt><dd>${safeText(paymentCode)}</dd></div><div><dt>${safeText(manualTopupText("supportHotline", "Hotline/Zalo"))}</dt><dd>${safeText(hotline)}</dd></div></dl>`;
 
-    const available = manual.available === true && manual.history_in_web === true;
-    const methods = available && Array.isArray(manual.methods) ? manual.methods.filter((item) => item && canonicalCatalogCode(item.id) && canonicalShortText(item.label, 120)).slice(0, 12) : [];
+    const hasDestinationContract = Object.prototype.hasOwnProperty.call(manual, "payment_destinations");
+    const paymentDestinations = manual.payment_destinations && typeof manual.payment_destinations === "object" && !Array.isArray(manual.payment_destinations)
+      ? manual.payment_destinations
+      : {};
+    const rawMethods = Array.isArray(manual.methods) ? manual.methods.filter((item) => item && canonicalCatalogCode(item.id) && canonicalShortText(item.label, 120)).slice(0, 12) : [];
+    const methods = rawMethods.filter((item) => !hasDestinationContract || Boolean(paymentDestinations[item.id] && paymentDestinations[item.id].request_enabled === true));
+    const methodDestinations = Object.keys(paymentDestinations).flatMap((id) => {
+      const item = paymentDestinations[id];
+      if (!canonicalCatalogCode(id) || !item || typeof item !== "object") return [];
+      const destination = item.destination && typeof item.destination === "object" && !Array.isArray(item.destination) ? item.destination : {};
+      const qrUrl = String(item.qr_url || "");
+      if (qrUrl && qrUrl !== `/api/v1/payments/options/manual-methods/${id}/qr`) return [];
+      return [{ id, item, destination, qrUrl }];
+    }).slice(0, 12);
+    const paymentMethodCards = methodDestinations.length ? `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("methodsTitle", "Phương thức thanh toán"))}</h3><div class="portal-manual-payment-method-grid">${methodDestinations.map(({ id, item, destination, qrUrl }) => {
+      const label = manualTopupText(`method.${id}`, canonicalShortText(item.label, 120) || id);
+      const bankLabel = [destination.bank_code, destination.bank_name].filter(Boolean).join(" · ");
+      const facts = [
+        [manualTopupText("bank", "Ngân hàng"), bankLabel],
+        [manualTopupText("accountNumber", "Số tài khoản"), destination.account_number],
+        [manualTopupText("accountOwner", "Chủ tài khoản"), destination.account_owner],
+        [manualTopupText("walletAddress", "Địa chỉ ví"), destination.wallet_address],
+        [manualTopupText("network", "Mạng lưới"), destination.network]
+      ].filter((entry) => entry[1]);
+      const statusText = item.display_ready !== true
+        ? manualTopupText("unavailable", "Chưa được cấu hình")
+        : item.request_enabled === true
+          ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
+          : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
+      return `<article class="portal-manual-payment-method${item.display_ready === true ? "" : " is-unavailable"}" data-manual-payment-method="${safeText(id)}" data-manual-payment-ready="${item.display_ready === true ? "true" : "false"}"><div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "")}</span><h4>${safeText(label)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div>${qrUrl ? `<figure><img src="${safeText(qrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${label}`)}" width="220" height="220" loading="lazy" decoding="async"><figcaption>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</figcaption></figure>` : ""}</article>`;
+    }).join("")}</div></section>` : "";
+    const available = manual.available === true && manual.history_in_web === true && methods.length > 0;
     const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
     const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
     const readState = String(context.manualTopupReadState || "guarded");
     const submitting = flow.status === "submitting";
 
     if (!available || !methods.length) {
-      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Hãy liên kết Telegram và chờ Core Bridge sẵn sàng."))}</p></div></div>${infoMarkup}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Phiên Web chưa tải được phương thức nạp thủ công. Hãy tải lại trang hoặc thử lại sau."))}</p></div></div>${infoMarkup}${paymentMethodCards}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
     }
     const selectedMethod = String(transient.method || (methods[0] ? methods[0].id : ""));
     const validatedMethod = methods.find(m => m.id === selectedMethod) ? selectedMethod : (methods[0] ? methods[0].id : "");
@@ -21370,7 +21439,7 @@
     const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
     const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData) : "";
     const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map(renderManualTopupRecord).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
-    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}" value="${safeText(amountVnd)}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === validatedMethod ? " selected" : ""}>${safeText(item.label)}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${paymentMethodCards}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}" value="${safeText(amountVnd)}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === validatedMethod ? " selected" : ""}>${safeText(manualTopupText(`method.${item.id}`, item.label))}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
   }
   function renderPaymentRequestForm(page, context) {
     const lane = String((transientFormValues("/wallet/topup") || {}).topup_lane || "payos");
@@ -21393,12 +21462,18 @@
         code,
         label: canonicalShortText(item.label, 120) || adminNumber(amount, " đ"),
         xu: adminNumber(xu, " Xu"),
-        note: `Tỷ lệ canonical: ${adminNumber(amount, " đ")} = ${adminNumber(xu, " Xu")}`
+        note: uiText("customerTopup.package.rate", "Tỷ lệ canonical: {amount} = {xu}", {
+          amount: adminNumber(amount, " đ"), xu: adminNumber(xu, " Xu")
+        })
       }];
     });
     const route = "/wallet/topup";
     const rememberedPkg = String((transientFormValues(route) || {}).package || "");
     const selectedPkg = packages.some((pkg) => pkg.code === rememberedPkg) ? rememberedPkg : (packages[0] ? packages[0].code : "");
+    const manualLaneLabel = uiText("customerTopup.lane.manual", "Nạp Thủ Công (ACB / MoMo / ZaloPay)");
+    const limitNotice = uiText("customerTopup.payos.limitNotice", "Cổng tự động PayOS áp dụng mức nạp tối đa {limit} mỗi giao dịch. Nếu cần nạp nhiều hơn, hãy chuyển sang {manualLane} để được hỗ trợ đối soát.", {
+      limit: "500.000 đ", manualLane: manualLaneLabel
+    });
 
     const packageOptions = packages.length ? packages.map((pkg) => `
       <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; min-width:0; width:100%; gap:12px; transition:all .2s ease;">
@@ -21411,15 +21486,15 @@
           <input type="radio" name="package" value="${safeText(pkg.code)}"${selectedPkg === pkg.code ? " checked" : ""}${canCreate ? "" : " disabled aria-disabled=\"true\""} style="accent-color:#00f2fe; width:18px; height:18px; cursor:pointer; margin:0;">
         </div>
       </label>
-    `).join("") : `<p class="portal-form-note">Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng.</p>`;
+    `).join("") : `<p class="portal-form-note">${safeText(uiText("customerTopup.payos.unavailable", "Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng."))}</p>`;
 
     return `
       <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe; display:${isHidden ? "none" : "block"};">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">⚡ Cổng nạp tự động VietQR 24/7</span>
-            <h2 class="portal-card-title">Nạp Xu Tự Động Trực Tuyến Qua PayOS</h2>
-            <p class="portal-card-subtitle">Tỷ lệ quy đổi: <strong>100 VNĐ = 1 Xu</strong>. Chọn mệnh giá nạp và nhấn nút để mở cổng thanh toán quét mã VietQR tự động khớp tiền trong <strong>5-30 giây</strong>.</p>
+            <span class="portal-section-kicker">⚡ ${safeText(uiText("customerTopup.payos.kicker", "Cổng nạp tự động VietQR 24/7"))}</span>
+            <h2 class="portal-card-title">${safeText(uiText("customerTopup.payos.title", "Nạp Xu tự động trực tuyến qua PayOS"))}</h2>
+            <p class="portal-card-subtitle">${safeText(uiText("customerTopup.payos.ratioPrefix", "Tỷ lệ quy đổi"))}: <strong>100 VNĐ = 1 Xu</strong>. ${safeText(uiText("customerTopup.payos.ratioInstruction", "Chọn mệnh giá nạp và mở cổng thanh toán. VietQR sẽ tự động đối soát trong 5–30 giây."))}</p>
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
@@ -21428,16 +21503,16 @@
           </div>
 
           <div style="margin-bottom:16px; padding:12px 16px; background:rgba(0, 242, 254, 0.06); border:1px solid rgba(0, 242, 254, 0.25); border-radius:10px; font-size:13px; color:var(--portal-text-secondary, #8fa3b7); line-height:1.6;">
-            ⚠️ <strong>Lưu ý:</strong> Cổng tự động PayOS áp dụng mức nạp tối đa <strong>500.000 đ / giao dịch</strong>. Nếu quý khách có nhu cầu nạp số lượng lớn hơn, vui lòng chuyển sang tab <strong>"Nạp Thủ Công"</strong> (ACB / MoMo / ZaloPay / Binance) để được phục vụ chu đáo.
+            ⚠️ <strong>${safeText(uiText("customerTopup.payos.noteTitle", "Lưu ý:"))}</strong> ${safeText(limitNotice)}
           </div>
           <div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <span class="portal-form-note">💳 Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay, ViettelPay.</span>
-            <button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled aria-disabled=\"true\""} style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px; cursor:pointer;">🚀 Nạp ngay (Mở cổng PayOS)</button>
+            <span class="portal-form-note">💳 ${safeText(uiText("customerTopup.supportedBanks", "Hỗ trợ tất cả ngân hàng Việt Nam, MoMo, ZaloPay và ViettelPay."))}</span>
+            <button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled aria-disabled=\"true\""} style="font-size:16px; font-weight:800; padding:14px 28px; border-radius:10px; cursor:pointer;">🚀 ${safeText(uiText("customerTopup.submit", "Nạp ngay (Mở cổng PayOS)"))}</button>
           </div>
         </form>
         ${renderPaymentFlow(context)}
         <details class="portal-wallet-secondary" style="margin-top:20px;">
-          <summary>Tra cứu trạng thái đơn hàng PayOS</summary>
+          <summary>${safeText(uiText("customerTopup.lookup.summary", "Tra cứu trạng thái đơn hàng PayOS"))}</summary>
           ${renderPaymentLookup(context)}
         </details>
       </section>
@@ -21446,12 +21521,12 @@
 
   function renderPaymentLookup(context) {
     const fields = [{
-      name: "payment_id", label: "Mã đơn PayOS / order code", type: "text", placeholder: "Ví dụ: 12345678",
+      name: "payment_id", label: uiText("customerTopup.lookup.fieldLabel", "Mã đơn PayOS / order code"), type: "text", placeholder: uiText("customerTopup.lookup.fieldPlaceholder", "Ví dụ: 12345678"),
       autocomplete: "off", required: true, minLength: 1, maxLength: 120, pattern: "[A-Za-z0-9._:-]+",
-      help: "Nhập mã đơn hàng PayOS để kiểm tra trạng thái thanh toán."
+      help: uiText("customerTopup.lookup.fieldHelp", "Nhập mã đơn hàng PayOS để kiểm tra trạng thái thanh toán.")
     }];
     const route = "/wallet/topup/payment-lookup";
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kiểm tra đơn PayOS</h2><p class="portal-card-subtitle">Tra cứu trạng thái nạp tiền theo mã đơn hàng.</p></div></div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, true, context, transientFormValues(route))}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">🔍 Kiểm tra đơn PayOS</button></div></form></section>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("customerTopup.lookup.title", "Kiểm tra đơn PayOS"))}</h2><p class="portal-card-subtitle">${safeText(uiText("customerTopup.lookup.body", "Tra cứu trạng thái nạp tiền theo mã đơn hàng."))}</p></div></div><form class="portal-form" data-portal-form data-portal-action="payment-lookup" data-portal-route="${route}" novalidate>${renderFields(fields, true, context, transientFormValues(route))}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">🔍 ${safeText(uiText("customerTopup.lookup.submit", "Kiểm tra đơn PayOS"))}</button></div></form></section>`;
   }
 
   function renderPaymentFlow(context) {
@@ -21461,16 +21536,22 @@
     const orderId = paymentOrderId(flow);
     const status = paymentStatus({ status: data.status || flow.status });
     const checkout = safePayosCheckout(data.checkout_url || data.payment_url || data.url || "");
-    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">Thanh toán PayOS</span><h2 class="portal-card-title">Trạng thái yêu cầu nạp Xu</h2><p class="portal-card-subtitle">Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất.</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(PAYMENT_STATUS_LABELS[status] || STATE_LABELS[status] || (status === 'ready' ? 'Đã thanh toán thành công' : 'Đang chờ chuyển khoản'))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mã đơn</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Số tiền</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">Xu nhận được</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(flow.message || "Đang chờ quét mã thanh toán...")}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ Mở lại trang thanh toán PayOS</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 Kiểm tra trạng thái</button>` : ""}</div></section>`;
+    const statusLabel = status === "ready" || status === "completed"
+      ? uiText("customerTopup.paymentFlow.paid", "Đã thanh toán thành công")
+      : status === "queued"
+        ? uiText("customerTopup.paymentFlow.pending", "Đang chờ chuyển khoản")
+        : stateLabel(status);
+    const localMessage = flow.message || uiText("customerTopup.paymentFlow.waiting", "Đang chờ quét mã thanh toán...");
+    return `<section class="portal-card portal-card-pad" style="border-top: 3px solid #00f2fe; margin-top:20px;"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerTopup.paymentFlow.kicker", "Thanh toán PayOS"))}</span><h2 class="portal-card-title">${safeText(uiText("customerTopup.paymentFlow.title", "Trạng thái yêu cầu nạp Xu"))}</h2><p class="portal-card-subtitle">${safeText(uiText("customerTopup.paymentFlow.body", "Quét mã VietQR hoặc mở trang thanh toán PayOS để hoàn tất."))}</p></div></div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("customerTopup.paymentFlow.statusLabel", "Trạng thái"))}</span><span class="portal-summary-value" style="font-weight:700; color:${status === 'ready' ? '#00d26a' : '#00f2fe'};">${safeText(statusLabel)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("customerTopup.paymentFlow.orderLabel", "Mã đơn"))}</span><span class="portal-summary-value">${safeText(orderId || "PayOS Order")}</span></div>${data.amount_vnd !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("customerTopup.paymentFlow.amountLabel", "Số tiền"))}</span><span class="portal-summary-value" style="font-weight:700;">${safeText(adminNumber(data.amount_vnd, " đ"))}</span></div>` : ""}${data.xu !== undefined ? `<div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("customerTopup.paymentFlow.xuReceivedLabel", "Xu nhận được"))}</span><span class="portal-summary-value" style="font-weight:700; color:#00f2fe;">${safeText(adminNumber(data.xu, " Xu"))}</span></div>` : ""}</div><div class="portal-form-footer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;"><span class="portal-form-note">${safeText(localMessage)}</span>${checkout ? `<a class="portal-button portal-button--primary" href="${safeText(checkout)}" target="_blank" rel="noopener noreferrer" style="font-size:15px; font-weight:700; padding:10px 20px;">⚡ ${safeText(uiText("customerTopup.paymentFlow.open", "Mở lại trang thanh toán PayOS"))}</a>` : ""}${orderId ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-payment" data-payment-id="${safeText(orderId)}">🔄 ${safeText(uiText("customerTopup.paymentFlow.refresh", "Kiểm tra trạng thái"))}</button>` : ""}</div></section>`;
   }
 
   function renderBillingJourney() {
     const lanes = [
-      { number: "01", title: "Chọn gói nạp", text: "Chọn mệnh giá hoặc gói Xu phù hợp nhu cầu." },
-      { number: "02", title: "Thanh toán QR 24/7", text: "Quét mã VietQR hoặc cổng PayOS bảo mật." },
-      { number: "03", title: "Nhận Xu tức thì", text: "Số dư tự động cập nhật trong 5-30 giây." }
+      { number: "01", title: uiText("customerTopup.journey.step1.title", "Chọn gói nạp"), text: uiText("customerTopup.journey.step1.text", "Chọn mệnh giá hoặc gói Xu phù hợp nhu cầu.") },
+      { number: "02", title: uiText("customerTopup.journey.step2.title", "Thanh toán QR 24/7"), text: uiText("customerTopup.journey.step2.text", "Quét mã VietQR hoặc cổng PayOS bảo mật.") },
+      { number: "03", title: uiText("customerTopup.journey.step3.title", "Nhận Xu tức thì"), text: uiText("customerTopup.journey.step3.text", "Số dư tự động cập nhật trong 5-30 giây.") }
     ];
-    return `<section class="portal-billing-journey" aria-label="Quy trình nạp Xu canonical"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">Billing flow</span><h2>Quy trình nạp Xu tức thì</h2><p>Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử Việt Nam.</p></div></div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
+    return `<section class="portal-billing-journey" aria-label="${safeText(uiText("customerTopup.journey.aria", "Quy trình nạp Xu"))}"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">${safeText(uiText("customerTopup.journey.kicker", "Quy trình nạp tiền"))}</span><h2>${safeText(uiText("customerTopup.journey.title", "Quy trình nạp Xu tức thì"))}</h2><p>${safeText(uiText("customerTopup.journey.description", "Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử Việt Nam."))}</p></div></div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
   }
 
   function renderWallet(page, context) {
@@ -21484,7 +21565,7 @@
     const history = walletReady ? historyProjection : [];
     const walletUnavailableCopy = readState === "loading"
       ? "Không hiển thị dữ liệu cũ trong lúc chờ."
-      : "Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.";
+      : uiText("customerTopup.wallet.unavailableBody", "Web không thay thế ledger bằng activity, payment receipt hay giá trị 0.");
     const plan = wallet && wallet.plan ? wallet.plan : {};
     const planName = plan.plan_name || plan.current_plan || "Gói Tiêu Chuẩn (Standard)";
     const planStatus = plan.plan_status || "Đang hoạt động";
@@ -21547,7 +21628,7 @@
           : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>Chưa có giao dịch phát sinh. Bấm <strong>"Nạp Xu ngay"</strong> để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!</p></div>`
         }
       </section>
-    ` : `<section class="portal-card portal-card-pad" style="margin-top:20px"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử biến động Xu chưa sẵn sàng</h2><p class="portal-card-subtitle">${safeText(walletUnavailableCopy)}</p></div></div></section>`;
+    ` : `<section class="portal-card portal-card-pad" style="margin-top:20px"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("customerTopup.history.unavailable", "Lịch sử biến động Xu chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(walletUnavailableCopy)}</p></div></div></section>`;
     const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
 
     return `<article class="portal-page portal-wallet-page" style="grid-template-columns:minmax(0,1fr)">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
@@ -22080,11 +22161,15 @@
   }
 
   function renderJobs(page, context) {
+    const readState = deliveryListReadState(context, "jobs");
     const deliveryNav = renderDeliveryWorkspaceNav(page.path);
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-jobs"] === true;
+    if (readState !== "ready") {
+      return `<article class="portal-page portal-delivery-page" data-delivery-read-state="${safeText(readState)}">${renderHero(page, context)}${deliveryNav}<section class="portal-card portal-card-pad">${renderCollectionReadState("jobs", readState, refreshEnabled)}</section></article>`;
+    }
     const allJobs = Array.isArray(context.jobs) ? context.jobs : [];
     const selected = JOB_FILTERS.some(([value]) => value === context.jobFilter) ? context.jobFilter : "all";
     const jobs = selected === "all" ? allJobs : allJobs.filter((item) => jobStatus(item) === selected);
-    const refreshEnabled = context.capabilities && context.capabilities["refresh-jobs"] === true;
     const refreshBusy = deliveryReadRefreshBusy(context, "jobs");
     const receiptAttribute = deliveryReadReceiptAttribute(context, "jobs");
     const counts = Object.fromEntries(JOB_FILTERS.map(([status]) => [status, status === "all" ? allJobs.length : allJobs.filter((item) => jobStatus(item) === status).length]));
@@ -22093,7 +22178,7 @@
       : "";
     const filters = filterBar(localizedDeliveryFilters("jobs", JOB_FILTERS), selected, "filter-jobs", "data-job-filter", deliveryCenterText("filter.jobs", "Lọc job"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstJobActions;
     const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
-    return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page portal-delivery-page" data-delivery-read-state="ready">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderDeliveryReceiptSurface(renderJobDeliverySummary(allJobs), receiptAttribute)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("jobs.section.title", "Job gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobs.section.subtitle", "Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.")}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("jobs.refresh", "Làm mới")}</button><a class="portal-button portal-button--quiet" href="/assets">${deliveryCenterText("jobs.openAssets", "Mở tài sản →")}</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">${deliveryCenterText("jobs.readStatus", "Danh sách chỉ có metadata canonical thuộc signed session.")}</p>${filters}${records}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${deliveryCenterText("jobs.notice.title", "Delivery được tách riêng khỏi engine")}</strong><p>${deliveryCenterText("jobs.notice.body", "Job completed hoặc metadata output không tạo preview/download. Cần một signed delivery contract, ownership check và validation artifact trước khi Web mở file.")}</p></div></div></section></article>`;
@@ -22115,7 +22200,12 @@
   }
 
   function renderAssets(page, context) {
+    const readState = deliveryListReadState(context, "assets");
     const deliveryNav = renderDeliveryWorkspaceNav(page.path);
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
+    if (readState !== "ready") {
+      return `<article class="portal-page portal-delivery-page" data-delivery-read-state="${safeText(readState)}">${renderHero(page, context)}${deliveryNav}<section class="portal-card portal-card-pad">${renderCollectionReadState("assets", readState, refreshEnabled)}</section></article>`;
+    }
     const allAssets = Array.isArray(context.assets) ? context.assets : [];
     const selected = ASSET_FILTERS.some(([value]) => value === context.assetFilter) ? context.assetFilter : "all";
     const isSelected = (item, value) => {
@@ -22133,7 +22223,6 @@
       ? `<div class="portal-form-footer portal-empty-route-actions"><span class="portal-form-note">${deliveryCenterText("assets.first.note", "Chưa có tài sản Bot có delivery contract. Bạn có thể lưu tệp riêng trong Asset Vault hoặc bắt đầu workflow; Web không dựng placeholder thành file hoàn tất.")}</span><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/asset-vault">${deliveryCenterText("assets.first.vault", "Mở Asset Vault")}</a><a class="portal-button portal-button--quiet" href="/features">${deliveryCenterText("assets.first.workflow", "Chọn workflow")}</a></div></div>`
       : "";
     const filters = filterBar(localizedDeliveryFilters("assets", ASSET_FILTERS), selected, "filter-assets", "data-asset-filter", deliveryCenterText("filter.assets", "Lọc tài sản"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstAssetActions;
-    const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
     const refreshBusy = deliveryReadRefreshBusy(context, "assets");
     const receiptAttribute = deliveryReadReceiptAttribute(context, "assets");
     const emptyTitle = selected === "all" ? deliveryCenterText("assets.empty.allTitle", "Chưa có tài sản có thể mở") : (selected === "web_vault" ? deliveryCenterText("assets.empty.vaultTitle", "Chưa có tệp riêng Web") : deliveryCenterText("assets.empty.filterTitle", "Không có tài sản ở bộ lọc này"));
@@ -22141,7 +22230,7 @@
       ? deliveryCenterText("assets.empty.allBody", "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge.")
       : (selected === "web_vault" ? deliveryCenterText("assets.empty.vaultBody", "Tệp Web riêng chỉ xuất hiện sau khi bạn lưu vào Asset Vault; chúng không phải output hay delivery.") : deliveryCenterText("assets.empty.filterBody", "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery."));
     const records = renderDeliveryRecords("assets", [deliveryCenterText("assets.table.asset", "Tài sản"), deliveryCenterText("assets.table.feature", "Tính năng"), deliveryCenterText("assets.table.status", "Trạng thái"), deliveryCenterText("assets.table.created", "Tạo lúc"), deliveryCenterText("assets.table.delivery", "Delivery")], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(assetRecordStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, renderAssetMobileCard, emptyTitle, emptyText, receiptAttribute);
-    return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page portal-delivery-page" data-delivery-read-state="ready">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderDeliveryReceiptSurface(renderAssetDeliverySummary(allAssets), receiptAttribute)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("assets.section.title", "Tài sản gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("assets.section.subtitle", "Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.")}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets" data-delivery-refresh-control="assets" aria-controls="delivery-assets-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("assets.refresh", "Làm mới")}</button></div><p class="portal-delivery-read-status" data-delivery-read-status="/assets" role="status" aria-live="polite">${deliveryCenterText("assets.readStatus", "Nguồn và delivery được kiểm tra riêng cho từng record.")}</p>${filters}${records}</section></article>`;
   }
@@ -29492,72 +29581,67 @@
   function adminManualTopupFacts(record) {
     return [
       ["field.requestId", "Mã yêu cầu", record.request_id],
-      ["field.customer", "Khách hàng", record.display_name || record.telegram_user_id],
-      ["field.telegramId", "Telegram ID", record.telegram_user_id],
+      ["field.customer", "Khách hàng", record.display_name || record.email],
+      ["field.email", "Email", record.email],
       ["field.amount", "Số tiền", adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`)],
       ["field.method", "Phương thức", record.method],
-      ["field.reference", "Tham chiếu / TXID", record.reference],
-      ["field.transfer", "Nội dung chuyển", record.transfer_content],
-      ["field.expectedXu", "Xu dự kiến", adminNumber(record.expected_xu, " Xu")],
-      ["field.approvedXu", "Xu đã duyệt", adminNumber(record.approved_xu, " Xu")],
+      ["field.reference", "Mã giao dịch / tham chiếu", record.reference],
+      ["field.paymentCode", "Mã nạp tiền", record.payment_code],
       ["field.submittedAt", "Yêu cầu lúc", record.submitted_at],
+      ["field.updatedAt", "Cập nhật lúc", record.updated_at],
       ["field.decisionAt", "Quyết định lúc", record.decision_at],
-      ["field.approver", "Admin duyệt", record.decided_by_admin_id],
-      ["field.note", "Ghi chú", record.admin_note]
+      ["field.reason", "Lý do", record.decision_reason]
     ].filter((entry) => entry[2] !== undefined && entry[2] !== null && entry[2] !== "");
   }
 
   function renderAdminManualTopupCard(record, selectedId) {
     const selected = String(record.request_id || "") === String(selectedId || "");
-    return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}"><div class="portal-admin-manual-topup-card-head"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.telegram_user_id || "—")}</span></div>${adminManualTopupStatusBadge(record.status)}</div><dl><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.expectedXu", "Xu dự kiến"))}</dt><dd>${safeText(adminNumber(record.expected_xu, " Xu"))}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></article>`;
+    return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}"><div class="portal-admin-manual-topup-card-head"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.email || "—")}</span><small>${safeText(record.email || "—")}</small></div>${adminManualTopupStatusBadge(record.status)}</div><dl><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.paymentCode", "Mã nạp tiền"))}</dt><dd>${safeText(record.payment_code || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></article>`;
   }
 
   function renderAdminManualTopupActions(record, writeEnabled) {
     if (record.status !== "pending_admin_review" || !writeEnabled) {
       const body = record.status === "pending_admin_review"
-        ? adminManualTopupText("actions.permissionBody", "Phiên hiện tại chưa có capability ghi.")
+        ? adminManualTopupText("actions.permissionBody", "Phiên hiện tại chưa được phép ghi nhận từ chối.")
         : adminManualTopupText("actions.terminalBody", "Yêu cầu đã ở trạng thái cuối.");
       return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminManualTopupText("actions.readOnlyTitle", "Không có thao tác ghi"))}</strong><p>${safeText(body)}</p></div></div>`;
     }
-    return `<section class="portal-admin-manual-topup-actions"><div><h3>${safeText(adminManualTopupText("actions.title", "Tạo quyết định"))}</h3><p>${safeText(adminManualTopupText("actions.body", "Mọi lựa chọn đều tạo bản xác nhận trước; chưa cộng Xu ở bước này."))}</p></div><form data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="approve_expected"><button class="portal-button portal-button--primary" type="submit">${safeText(adminManualTopupText("action.approveExpected", "Duyệt Xu dự kiến"))}</button></form><form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="approve_custom"><label><span>${safeText(adminManualTopupText("field.customXu", "Xu tùy chỉnh"))}</span><input name="approved_xu" type="number" min="1" step="1" required></label><label><span>${safeText(adminManualTopupText("field.reason", "Lý do"))}</span><input name="reason" type="text" minlength="3" maxlength="300" required></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.approveCustom", "Tạo xác nhận Xu tùy chỉnh"))}</button></form><form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="reject"><label><span>${safeText(adminManualTopupText("field.rejectReason", "Lý do từ chối"))}</span><input name="reason" type="text" minlength="3" maxlength="300" required></label><button class="portal-button portal-button--danger" type="submit">${safeText(adminManualTopupText("action.reject", "Tạo xác nhận từ chối"))}</button></form></section>`;
+    return `<section class="portal-admin-manual-topup-actions"><div><h3>${safeText(adminManualTopupText("actions.title", "Tạo xác nhận từ chối"))}</h3><p>${safeText(adminManualTopupText("actions.body", "Chỉ có thể từ chối sau bước xác nhận cuối; hệ thống không tính hoặc cộng Xu."))}</p></div><form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="reject"><label><span>${safeText(adminManualTopupText("field.rejectReason", "Lý do từ chối"))}</span><input name="reason" type="text" minlength="3" maxlength="300" required></label><button class="portal-button portal-button--danger" type="submit">${safeText(adminManualTopupText("action.reject", "Tạo xác nhận từ chối"))}</button></form></section>`;
   }
 
   function renderAdminManualTopupInspector(record, writeEnabled) {
-    if (!record) return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector">${renderEmpty(adminManualTopupText("inspector.emptyTitle", "Chọn một yêu cầu"), adminManualTopupText("inspector.emptyBody", "Chi tiết và thao tác chỉ xuất hiện từ record canonical đã chọn."), ICONS.payments)}</aside>`;
+    if (!record) return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector">${renderEmpty(adminManualTopupText("inspector.emptyTitle", "Chọn một yêu cầu"), adminManualTopupText("inspector.emptyBody", "Chi tiết và thao tác chỉ xuất hiện sau khi chọn một yêu cầu."), ICONS.payments)}</aside>`;
     const facts = adminManualTopupFacts(record).map(([key, fallback, value]) => `<div><dt>${safeText(adminManualTopupText(key, fallback))}</dt><dd>${safeText(String(value))}</dd></div>`).join("");
-    return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("inspector.kicker", "Chi tiết canonical"))}</span><h2 class="portal-card-title">${safeText(record.request_id)}</h2></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="">${safeText(adminManualTopupText("action.close", "Đóng"))}</button></div><dl class="portal-admin-manual-topup-facts">${facts}</dl>${renderAdminManualTopupActions(record, writeEnabled)}</aside>`;
+    return `<aside class="portal-card portal-card-pad portal-admin-manual-topup-inspector"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("inspector.kicker", "Chi tiết yêu cầu"))}</span><h2 class="portal-card-title">${safeText(record.request_id)}</h2></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="">${safeText(adminManualTopupText("action.close", "Đóng"))}</button></div><dl class="portal-admin-manual-topup-facts">${facts}</dl>${renderAdminManualTopupActions(record, writeEnabled)}</aside>`;
   }
 
   function adminManualTopupDecisionLabel(action) {
-    const key = action === "reject" ? "decision.reject" : action === "approve_custom" ? "decision.approveCustom" : "decision.approveExpected";
-    const fallback = action === "reject" ? "Từ chối" : action === "approve_custom" ? "Duyệt Xu tùy chỉnh" : "Duyệt Xu dự kiến";
-    return adminManualTopupText(key, fallback);
+    return action === "reject" ? adminManualTopupText("decision.reject", "Từ chối") : adminManualTopupText("error.decision", "Quyết định không hợp lệ");
   }
 
   function renderAdminManualTopupConfirmation(draft) {
     if (!draft || !draft.confirmation_receipt) return "";
-    const titleKey = draft.action === "reject" ? "confirm.reject" : draft.action === "approve_custom" ? "confirm.custom" : "confirm.expected";
-    return `<div class="portal-admin-manual-topup-modal" data-manual-admin-confirmation><div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups"></div><section class="portal-admin-manual-topup-dialog" role="dialog" aria-modal="true" aria-labelledby="manual-admin-confirm-title" tabindex="-1"><span class="portal-section-kicker">${safeText(adminManualTopupText("confirm.kicker", "Xác nhận lần hai"))}</span><h2 id="manual-admin-confirm-title">${safeText(adminManualTopupText(titleKey, "Xác nhận quyết định nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("confirm.body", "Kiểm tra chính xác trước khi gửi quyết định tới Bot canonical."))}</p><dl><div><dt>${safeText(adminManualTopupText("field.requestId", "Mã yêu cầu"))}</dt><dd>${safeText(draft.request_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.customer", "Khách hàng"))}</dt><dd>${safeText(draft.display_name || draft.telegram_user_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.telegramId", "Telegram ID"))}</dt><dd>${safeText(draft.telegram_user_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.action", "Quyết định"))}</dt><dd>${safeText(adminManualTopupDecisionLabel(draft.action))}</dd></div><div><dt>${safeText(adminManualTopupText("field.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(draft.amount_vnd, ` ${draft.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("field.approvedXu", "Xu sẽ duyệt"))}</dt><dd>${safeText(adminNumber(draft.approved_xu_to_apply, " Xu"))}</dd></div><div><dt>${safeText(adminManualTopupText("field.reason", "Lý do"))}</dt><dd>${safeText(draft.reason || "—")}</dd></div></dl><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.cancel", "Hủy"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="admin-manual-topup-confirm" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.confirm", "Xác nhận quyết định"))}</button></div></section></div>`;
+    return `<div class="portal-admin-manual-topup-modal" data-manual-admin-confirmation><div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups"></div><section class="portal-admin-manual-topup-dialog" role="dialog" aria-modal="true" aria-labelledby="manual-admin-confirm-title" tabindex="-1"><span class="portal-section-kicker">${safeText(adminManualTopupText("confirm.kicker", "Xác nhận lần cuối"))}</span><h2 id="manual-admin-confirm-title">${safeText(adminManualTopupText("confirm.reject", "Xác nhận từ chối"))}</h2><p>${safeText(adminManualTopupText("confirm.body", "Kiểm tra lại thông tin trước khi ghi nhận từ chối."))}</p><dl><div><dt>${safeText(adminManualTopupText("field.requestId", "Mã yêu cầu"))}</dt><dd>${safeText(draft.request_id || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.customer", "Khách hàng"))}</dt><dd>${safeText(draft.display_name || draft.email || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.email", "Email"))}</dt><dd>${safeText(draft.email || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.action", "Quyết định"))}</dt><dd>${safeText(adminManualTopupDecisionLabel(draft.action))}</dd></div><div><dt>${safeText(adminManualTopupText("field.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(draft.amount_vnd, ` ${draft.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("field.reason", "Lý do"))}</dt><dd>${safeText(draft.reason || "—")}</dd></div></dl><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-cancel-confirmation" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.cancel", "Hủy"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="admin-manual-topup-confirm" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.confirm", "Xác nhận từ chối"))}</button></div></section></div>`;
   }
 
   function renderAdminManualTopups(page, context) {
     const state = context.adminManualTopupState && typeof context.adminManualTopupState === "object" ? context.adminManualTopupState : {};
     const items = Array.isArray(state.items) ? state.items : [];
     const query = String(state.query || "").trim().toLocaleLowerCase();
-    const visible = query ? items.filter((item) => [item.request_id, item.display_name, item.telegram_user_id, item.reference, item.transfer_content].some((value) => String(value || "").toLocaleLowerCase().includes(query))) : items;
+    const visible = query ? items.filter((item) => [item.request_id, item.display_name, item.email, item.reference, item.payment_code].some((value) => String(value || "").toLocaleLowerCase().includes(query))) : items;
     const visibleRows = visible.map((item, index) => ({ ...item, __ordinal: index + 1 }));
     const viewEnabled = Boolean(context.capabilities && context.capabilities["admin-manual-topup-view"] === true);
     const writeEnabled = Boolean(context.capabilities && context.capabilities["admin-manual-topup-write"] === true);
-    if (!viewEnabled) return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(adminManualTopupText("guarded.title", "Hàng đợi chưa sẵn sàng"), adminManualTopupText("guarded.body", "Cần signed canonical Admin session và Core Bridge Admin riêng."), ICONS.security)}</section></article>`;
+    if (!viewEnabled) return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(adminManualTopupText("guarded.title", "Hàng đợi chưa sẵn sàng"), adminManualTopupText("guarded.body", "Cần phiên quản trị hợp lệ để mở hàng đợi."), ICONS.security)}</section></article>`;
     const filters = ["pending", "approved", "rejected"].map((filter) => `<button class="portal-button portal-button--quiet${state.filterStatus === filter ? " is-active" : ""}" type="button" data-portal-action="admin-manual-topup-filter" data-portal-route="/admin/topups" data-manual-admin-status="${filter}" aria-pressed="${state.filterStatus === filter ? "true" : "false"}">${safeText(adminManualTopupText(`filter.${filter}`, filter))}</button>`).join("");
     const table = renderRowsTable(
-      [adminManualTopupText("column.ordinal", "STT"), adminManualTopupText("column.request", "Mã yêu cầu"), adminManualTopupText("column.customer", "Khách hàng"), adminManualTopupText("column.amount", "Số tiền"), adminManualTopupText("column.method", "Phương thức"), adminManualTopupText("column.reference", "Tham chiếu"), adminManualTopupText("column.submittedAt", "Yêu cầu lúc"), adminManualTopupText("column.status", "Trạng thái"), adminManualTopupText("column.expectedXu", "Xu dự kiến"), adminManualTopupText("column.approvedXu", "Xu duyệt"), adminManualTopupText("column.approver", "Admin / thời gian"), adminManualTopupText("column.action", "Thao tác")],
+      [adminManualTopupText("column.ordinal", "STT"), adminManualTopupText("column.request", "Mã yêu cầu"), adminManualTopupText("column.customer", "Khách hàng"), adminManualTopupText("field.email", "Email"), adminManualTopupText("column.amount", "Số tiền"), adminManualTopupText("column.method", "Phương thức"), adminManualTopupText("column.reference", "Tham chiếu"), adminManualTopupText("field.paymentCode", "Mã nạp tiền"), adminManualTopupText("column.submittedAt", "Yêu cầu lúc"), adminManualTopupText("column.status", "Trạng thái"), adminManualTopupText("column.action", "Thao tác")],
       visibleRows,
-      (item) => `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.telegram_user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status)}</td><td>${safeText(adminNumber(item.expected_xu, " Xu"))}</td><td>${safeText(adminNumber(item.approved_xu, " Xu"))}</td><td>${safeText([item.decided_by_admin_id, item.decision_at].filter(Boolean).join(" · ") || "—")}</td><td><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></td>`,
+      (item) => `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.email || "—")}</td><td>${safeText(item.email || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.payment_code || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status)}</td><td><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></td>`,
       adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record hoặc số liệu thay thế khi queue trống.")
     );
     const mobile = visible.map((item) => renderAdminManualTopupCard(item, state.selected && state.selected.request_id)).join("") || renderEmpty(adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record giả."), ICONS.payments);
-    return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Finance operations"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Web chỉ điều phối; Bot canonical vẫn là writer duy nhất."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, khách hàng, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Chờ canonical Admin projection."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft)}</article>`;
+    return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Vận hành tài chính"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Quản trị viên kiểm tra yêu cầu nạp tiền và chỉ ghi nhận từ chối sau bước xác nhận cuối."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, email, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Đang đọc yêu cầu nạp thủ công."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft)}</article>`;
   }
 
   const BOT_COMPANION_COMMAND_PATTERN = /^\/[a-z][a-z0-9_]{1,48}$/;
@@ -33236,11 +33320,11 @@
         fab.className = "portal-pwa-fab-trigger";
         fab.setAttribute("data-portal-pwa-fab", "true");
         fab.setAttribute("data-portal-action", "pwa-toggle-banner");
-        fab.setAttribute("title", "Tải & Cài đặt App TOAN AAS");
-        fab.setAttribute("aria-label", "Tải & Cài đặt App TOAN AAS");
         document.body.appendChild(fab);
       }
-      fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">Tải App</span>`;
+      fab.setAttribute("title", uiText("customerTopup.installAppAria", "Cài đặt ứng dụng TOAN AAS"));
+      fab.setAttribute("aria-label", uiText("customerTopup.installAppAria", "Cài đặt ứng dụng TOAN AAS"));
+      fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">${safeText(uiText("customerTopup.installApp", "Cài đặt ứng dụng"))}</span>`;
     }
   }
 
@@ -33657,6 +33741,7 @@
           btn.classList.toggle("is-active", active);
           btn.classList.toggle("portal-button--primary", active);
           btn.classList.toggle("portal-button--quiet", !active);
+          btn.setAttribute("aria-selected", String(active));
         });
         pageContainer.querySelectorAll("[data-portal-topup-pane]").forEach((pane) => {
           const active = pane.getAttribute("data-portal-topup-pane") === targetLane;
@@ -34155,6 +34240,7 @@
     setSidebarAccessibilityState(false);
     const skipLink = document.querySelector(".skip-link");
     if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
+    sidebar.setAttribute("aria-label", uiText("chrome.main_navigation", "Điều hướng chính"));
     if (mobileNav) {
       mobileNav.setAttribute("aria-label", uiText("chrome.quick_navigation", "Điều hướng nhanh"));
       const mobileNavMarkup = showMobileNav
@@ -34842,9 +34928,9 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
         }
       </style>
 
-      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="Mở Trợ Lý AI AAS BOT">
+      <button type="button" class="portal-copilot-btn" id="portal-copilot-toggle-btn" aria-label="${safeText(uiText("customerTopup.assistant.openAria", "Mở Trợ lý AI AAS BOT"))}">
         <span class="portal-copilot-btn-icon" aria-hidden="true">${portalIcon(ICONS.chat)}</span>
-        <span class="portal-copilot-btn-label">Trợ lý AI AAS BOT</span>
+        <span class="portal-copilot-btn-label">${safeText(uiText("customerTopup.assistant.label", "Trợ lý AI AAS BOT"))}</span>
       </button>
 
       <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">

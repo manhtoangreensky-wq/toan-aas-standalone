@@ -6384,12 +6384,17 @@ def test_light_delivery_center_final_surface_keeps_canonical_states_clear() -> N
     """Jobs and Assets stay readable without blurring delivery truth or ownership."""
 
     portal_source = PORTAL_CLIENT
-    root_markup = '<article class="portal-page portal-delivery-page">'
+    root_markup = re.compile(
+        r'<article class="portal-page portal-delivery-page"(?:\s[^>]*)?>'
+    )
     for renderer in ("renderJobs", "renderJobDetail", "renderAssets"):
         start = portal_source.index(f"  function {renderer}(")
         next_renderer = portal_source.find("\n  function ", start + 1)
         renderer_source = portal_source[start : next_renderer if next_renderer >= 0 else None]
-        assert root_markup in renderer_source
+        assert root_markup.search(renderer_source)
+        if renderer in {"renderJobs", "renderAssets"}:
+            assert 'data-delivery-read-state="${safeText(readState)}"' in renderer_source
+            assert 'data-delivery-read-state="ready"' in renderer_source
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(

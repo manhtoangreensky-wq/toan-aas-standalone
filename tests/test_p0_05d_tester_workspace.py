@@ -51,9 +51,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_36_cases():
+def test_source_has_exact_sequential_38_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 37)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 39)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -117,6 +117,20 @@ def test_motion_live_reopen_cases_keep_normal_and_reduced_motion_separate():
     assert {cases[case_id]["SPEC_ID"] for case_id in ("WA-35", "WA-36")} == {"MOTION-WEBAPP-SURFACES-001"}
     assert "680ms" in cases["WA-35"]["PASS bắt buộc"]
     assert "Animation name `none`" in cases["WA-36"]["PASS bắt buộc"]
+
+
+def test_manual_visible_qr_cases_keep_render_and_atomic_security_separate():
+    cases = {row["ID"]: row for row in sync.parse_cases(SOURCE)}
+    assert {cases[case_id]["SPEC_ID"] for case_id in ("WA-37", "WA-38")} == {
+        "CUST-WEB-MANUAL-TOPUP-VISIBLE-QR-001"
+    }
+    assert cases["WA-37"]["Môi trường"] == "local-render"
+    assert cases["WA-38"]["Môi trường"] == "local-temp-only"
+    assert {cases[case_id]["Mức"] for case_id in ("WA-37", "WA-38")} == {"🔴 chặn-bán-hàng"}
+    assert cases["WA-37"]["Case"] == "5 QR + form Web độc lập"
+    assert "signed private endpoint" in cases["WA-37"]["PASS bắt buộc"]
+    assert "Same-key concurrent create" in cases["WA-38"]["PASS bắt buộc"]
+    assert "malformed/bomb QR 404" in cases["WA-38"]["PASS bắt buộc"]
 
 
 def test_parser_supports_escaped_pipe(tmp_path: Path):
@@ -273,7 +287,7 @@ def test_issue_forms_use_exact_labels_fields_and_safe_redaction():
 def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
     guide = GUIDE.read_text(encoding="utf-8")
     assert len(guide.splitlines()) >= 45
-    for marker in ["WA-01..WA-36", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
+    for marker in ["WA-01..WA-38", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
         assert marker in guide
     assert "python scripts/tester_case_sync.py --so=3 --json" in guide
     assert "--so=3 --that" not in guide
@@ -295,10 +309,10 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["metadata_encoding"] == "utf-8-lf-portable"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 36
+    assert data["case_count"] == 38
     assert data["p0_case_count"] == 18
     assert data["github_project"] == "TOAN AAS Web App · Tester P0"
-    assert data["push_gate"] == "P0_05E_EXTERNAL_WRITES_COMPLETE_MOTION_PREPUSH_PENDING"
+    assert data["push_gate"] == "CUST_WEB_MANUAL_TOPUP_PR_420_CI_PENDING"
     assert data["labels_missing"] == []
     assert data["external_mutations"] == 0
     assert all(value == 0 for value in data["safety"].values())

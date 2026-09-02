@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import pytest
+from starlette.responses import Response
 
 from billing import get_bank_info
+import copyfast_api as api
 from copyfast_api import payment_options
 
 
@@ -207,11 +209,12 @@ async def test_billing_hotline_fallback_and_payment_options_metadata(monkeypatch
         assert _manual_payment_code(invalid_code) == ""
     assert _manual_payment_code("123456") == "123456"
 
-    account = {"session_id": "test", "account_id": "acc", "canonical_user_id": "123456"}
-    res = await payment_options(account=account)
+    monkeypatch.setattr(api, "get_or_create_web_topup_code", lambda _account_id: "10000000")
+    account = {"id": "acc", "canonical_user_id": "123456"}
+    res = await payment_options(Response(), account=account)
     manual = res["data"]["manual"]
     assert manual.get("support_hotline") == "0999999999"
-    assert manual.get("payment_code") == "123456"
+    assert manual.get("payment_code") == "10000000"
 
     for forbidden in ("account_no", "account_name", "bank_name", "qr", "wallet_address"):
         assert forbidden not in manual

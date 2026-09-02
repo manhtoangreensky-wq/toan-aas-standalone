@@ -849,11 +849,10 @@
     const status = String(source.status || "");
     if (!["pending_admin_review", "approved", "rejected"].includes(status)) return null;
     const record = { request_id: String(source.request_id), status };
-    if (/^[1-9][0-9]{0,19}$/.test(String(source.telegram_user_id || ""))) record.telegram_user_id = String(source.telegram_user_id);
-    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => {
+    ["amount_vnd"].forEach((field) => {
       if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field];
     });
-    ["display_name", "currency", "method", "transfer_content", "reference", "submitted_at", "decision_at", "decided_by_admin_id", "admin_note"].forEach((field) => {
+    ["display_name", "email", "currency", "method", "payment_code", "reference", "submitted_at", "updated_at", "decision_at", "decision_reason"].forEach((field) => {
       if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field];
     });
     return record;
@@ -899,7 +898,7 @@
   function validateSupportIntake(subject, detail) {
     const sensitiveKind = supportSensitiveContentKind(subject, detail);
     if (sensitiveKind === "manual-payment") {
-      return "Nạp thủ công không nhận bill, TXID, số tài khoản hoặc QR trong Web App. Hãy mở Bot đã liên kết và dùng /thucong để đối soát an toàn.";
+      return "Ticket hỗ trợ không nhận bill, TXID, số tài khoản hoặc QR thanh toán. Hãy mở trang Nạp Xu, chọn Nạp thủ công và nhập mã giao dịch vào đúng trường tham chiếu.";
     }
     if (sensitiveKind) {
       return "Ticket không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ. Hãy xóa dữ liệu nhạy cảm trước khi gửi.";
@@ -1217,6 +1216,53 @@
     if (!items || items.length > 100 || !items.every(isSafeDeliveryReadRecord)) {
       throw new Error(`Phản hồi ${String(label || "Delivery Center")} không hợp lệ.`);
     }
+    return items;
+  }
+
+  function mergeDeliveryReadSuccess(kind, currentPath, items, receipt) {
+    const readStateKey = kind === "jobs" ? "jobsReadState" : (kind === "assets" ? "assetsReadState" : "");
+    if (!readStateKey || !Array.isArray(items)) return false;
+    merge({
+      [kind]: items,
+      [readStateKey]: "ready",
+      deliveryReadReceipt: receipt || null,
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "read_only" }
+    });
+    return true;
+  }
+
+  async function hydrateDeliveryList(kind, currentPath, label, isCurrent) {
+    const jobs = kind === "jobs";
+    if (!jobs && kind !== "assets") throw new Error("Loại danh sách giao nhận không hợp lệ.");
+    if (typeof isCurrent !== "function" || !isCurrent()) return null;
+    const endpoint = jobs ? "/jobs" : "/assets";
+    const readStateKey = jobs ? "jobsReadState" : "assetsReadState";
+    merge({
+      [kind]: [],
+      [readStateKey]: "loading",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "loading" }
+    });
+    let items;
+    try {
+      const result = await api(endpoint);
+      if (!isCurrent()) return null;
+      items = deliveryReadItemsOrThrow(result, label);
+    } catch (_) {
+      if (!isCurrent()) return null;
+      merge({
+        [kind]: [],
+        [readStateKey]: "failed",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+      return null;
+    }
+    if (!isCurrent()) return null;
+    merge({
+      [kind]: items,
+      [readStateKey]: "ready",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "read_only" }
+    });
+    if (jobs) scheduleJobPolling(currentPath, items);
     return items;
   }
 
@@ -3024,7 +3070,7 @@
         } else {
           const result = await api("/jobs");
           if (!isCurrent()) return;
-          const items = result.data && result.data.items ? result.data.items : [];
+          const items = deliveryReadItemsOrThrow(result, "Job Center");
           merge({ jobs: items });
           jobPollFailures = 0;
           scheduleJobPolling(path, items);
@@ -13319,6 +13365,15 @@
       && status.flags.admin_writes_enabled === true
       && account && account.role === "admin" && me.csrf_token && bridgeAvailable
     );
+    const localManualAdminViewEnabled = Boolean(
+      status.flags && status.flags.admin_erp_enabled === true
+      && account && account.role === "admin"
+    );
+    const localManualAdminWriteEnabled = Boolean(
+      localManualAdminViewEnabled
+      && status.flags.admin_writes_enabled === true
+      && me.csrf_token
+    );
     const capabilities = {
       "auth-login": true,
       // Password-first TOTP is deliberately available before a signed
@@ -13866,8 +13921,8 @@
       "refresh-wallet-after-bot": Boolean(bridgeAvailable),
       "payment-lookup": true,
       "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
-      "admin-manual-topup-view": Boolean(status.manual_admin_bridge_configured === true && status.flags && status.flags.admin_erp_enabled === true && account && account.role === "admin"),
-      "admin-manual-topup-write": Boolean(status.manual_admin_bridge_configured === true && adminWriteEnabled),
+      "admin-manual-topup-view": localManualAdminViewEnabled,
+      "admin-manual-topup-write": localManualAdminWriteEnabled,
       "admin-retry": adminWriteEnabled,
       "admin-refund": adminWriteEnabled,
       "admin-freeze": adminWriteEnabled,
@@ -14055,7 +14110,7 @@
       paymentOptions: {},
       manualTopupFlow: {},
       manualTopupHistory: [],
-      manualTopupReadState: account && telegramLinked && initialPortalPath === "/wallet/topup" ? "loading" : "guarded",
+      manualTopupReadState: account && initialPortalPath === "/wallet/topup" ? "loading" : "guarded",
       session: {
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: accountDisplayName, email: account ? account.email : ""
@@ -14081,8 +14136,10 @@
       walletReadState: "guarded",
       jobAssets: [],
       jobs: [],
+      jobsReadState: account && bridgeAvailable ? "loading" : "guarded",
       jobDetail: {},
       assets: [],
+      assetsReadState: account && bridgeAvailable ? "loading" : "guarded",
       tickets: [],
       readiness: {},
       dashboardReadState: account && bridgeAvailable ? "loading" : "guarded",
@@ -15577,18 +15634,21 @@
     if (!account && loginChallengeRoute()) await resumeTelegramLoginChallenge();
     if (!account) scheduleTelegramLoginPolling();
     if (account && !telegramLinked) scheduleTelegramLinkPolling();
-    // Manual top-up remains in the linked Telegram bot and does not require a
-    // provider call from the Web App, so expose its safe entry point even when
-    // a private bridge data read is temporarily unavailable.
-    if (account && telegramLinked && currentPath === "/wallet/topup") {
+    // Manual reconciliation is owned by the signed standalone Web account.
+    // Load only its Web-local metadata/history here; PayOS and the canonical
+    // wallet remain independently guarded by their existing bridge checks.
+    if (account && currentPath === "/wallet/topup") {
       await hydratePaymentOptions();
       await hydrateManualTopupHistory();
+    }
+    if (account && account.role === "admin" && currentPath === "/admin/topups") {
+      await hydrateAdminManualTopups("pending", "");
     }
     // Native Support Desk routes have their own narrow API boundary.  Even if
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeCommunityTrustPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativePartnerReadinessPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && currentPath !== "/admin/topups" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeCommunityTrustPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminFinancePlanningPath(currentPath) && !isNativeAdminPostbackReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativePartnerReadinessPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -16037,6 +16097,94 @@
     }
   }
 
+  const MANUAL_PAYMENT_METHOD_CURRENCIES = Object.freeze({
+    bank_acb: "VND",
+    bank_acb_vietqr: "VND",
+    zalopay_personal: "VND",
+    zalopay_merchant: "VND",
+    momo_tuithantai: "VND",
+    usdt_trc20: "USD"
+  });
+
+  function manualPaymentSafeText(value, maximum) {
+    const text = String(value || "").trim();
+    return text && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function safeManualPaymentOptions(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const methods = Array.isArray(source.methods) ? source.methods.flatMap((item) => {
+      const method = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const id = String(method.id || "");
+      const expectedCurrency = MANUAL_PAYMENT_METHOD_CURRENCIES[id];
+      const label = manualPaymentSafeText(method.label, 120);
+      if (!expectedCurrency || !label || method.currency !== expectedCurrency || method.mode !== "transfer") return [];
+      return [{ id, label, currency: expectedCurrency, mode: "transfer" }];
+    }).slice(0, 12) : [];
+
+    const rawDestinations = source.payment_destinations && typeof source.payment_destinations === "object" && !Array.isArray(source.payment_destinations)
+      ? source.payment_destinations
+      : {};
+    const paymentDestinations = {};
+    Object.keys(MANUAL_PAYMENT_METHOD_CURRENCIES).forEach((id) => {
+      const raw = rawDestinations[id];
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return;
+      const label = manualPaymentSafeText(raw.label, 120);
+      const currency = MANUAL_PAYMENT_METHOD_CURRENCIES[id];
+      if (!label || raw.currency !== currency || raw.mode !== "transfer") return;
+      const destinationSource = raw.destination && typeof raw.destination === "object" && !Array.isArray(raw.destination) ? raw.destination : {};
+      const destination = {};
+      const bankCode = manualPaymentSafeText(destinationSource.bank_code, 20);
+      const bankName = manualPaymentSafeText(destinationSource.bank_name, 120);
+      const accountNumber = manualPaymentSafeText(destinationSource.account_number, 24);
+      const accountOwner = manualPaymentSafeText(destinationSource.account_owner, 120);
+      const walletAddress = manualPaymentSafeText(destinationSource.wallet_address, 64);
+      const network = manualPaymentSafeText(destinationSource.network, 20);
+      if (/^[A-Za-z0-9]{2,20}$/.test(bankCode)) destination.bank_code = bankCode;
+      if (bankName) destination.bank_name = bankName;
+      if (/^[0-9]{6,24}$/.test(accountNumber)) destination.account_number = accountNumber;
+      if (accountOwner) destination.account_owner = accountOwner;
+      if (/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(walletAddress)) destination.wallet_address = walletAddress;
+      if (network === "TRC20") destination.network = network;
+      const expectedQrUrl = `/api/v1/payments/options/manual-methods/${id}/qr`;
+      const qrUrl = String(raw.qr_url || "") === expectedQrUrl ? expectedQrUrl : "";
+      const completeBankDestination = Boolean(
+        destination.bank_code && destination.bank_name && destination.account_number && destination.account_owner
+      );
+      const completeUsdtDestination = Boolean(destination.wallet_address && destination.network === "TRC20");
+      const displayReady = Boolean(raw.display_ready === true && (
+        id === "bank_acb" ? completeBankDestination
+          : id === "bank_acb_vietqr" ? (completeBankDestination && qrUrl)
+            : ["zalopay_personal", "zalopay_merchant", "momo_tuithantai"].includes(id) ? qrUrl
+              : id === "usdt_trc20" ? (qrUrl || completeUsdtDestination)
+                : false
+      ));
+      paymentDestinations[id] = {
+        label,
+        currency,
+        mode: "transfer",
+        display_ready: displayReady,
+        request_enabled: Boolean(displayReady && currency === "VND" && raw.request_enabled === true),
+        ...(Object.keys(destination).length ? { destination } : {}),
+        ...(qrUrl ? { qr_url: qrUrl } : {})
+      };
+    });
+
+    const paymentCode = String(source.payment_code || "");
+    const hotline = String(source.support_hotline || "");
+    return {
+      available: source.available === true,
+      payment_lookup_available: source.payment_lookup_available === true,
+      wallet_history_signal_available: source.wallet_history_signal_available === true,
+      history_in_web: source.history_in_web === true,
+      history_menu_label: manualPaymentSafeText(source.history_menu_label, 120),
+      methods,
+      payment_destinations: paymentDestinations,
+      payment_code: /^[1-9][0-9]{7}$/.test(paymentCode) ? paymentCode : "",
+      support_hotline: /^[0-9]{8,15}$/.test(hotline) ? hotline : ""
+    };
+  }
+
   async function hydratePaymentOptions() {
     const requestEpoch = ++paymentOptionsHydrationEpoch;
     const sessionEpoch = paymentOptionsSessionEpoch;
@@ -16044,7 +16192,8 @@
     try {
       const options = await api("/payments/options");
       if (!paymentOptionsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
-      merge({ paymentOptions: options.data || {} });
+      const data = options.data && typeof options.data === "object" && !Array.isArray(options.data) ? options.data : {};
+      merge({ paymentOptions: { ...data, manual: safeManualPaymentOptions(data.manual) } });
       return options;
     } catch (_) {
       // This local/read-only metadata is optional presentation.  Do not infer
@@ -26149,11 +26298,7 @@
           pageStates: { ...(base().pageStates || {}), [path]: "read_only" }
         });
       } else if (path === "/jobs") {
-        const jobs = await api("/jobs");
-        if (!isCurrent()) return null;
-        const items = jobs.data && jobs.data.items ? jobs.data.items : [];
-        merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
-        scheduleJobPolling(path, items);
+        await hydrateDeliveryList("jobs", path, "Job Center", isCurrent);
       } else if (path.startsWith("/jobs/")) {
         const jobId = jobIdFromPath(path);
         if (!jobId) return;
@@ -26205,9 +26350,7 @@
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures) }
         });
       } else if (path === "/assets" || ["/image/assets", "/video/export", "/subtitle/formats"].includes(path)) {
-        const assets = await api("/assets");
-        if (!isCurrent()) return null;
-        merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
+        await hydrateDeliveryList("assets", path, "Assets", isCurrent);
       } else if (path === "/video/progress") {
         const jobs = await api("/jobs");
         if (!isCurrent()) return null;
@@ -26981,7 +27124,7 @@
     try {
       if (String(action || "").startsWith("admin-manual-topup-")) {
         if (route !== "/admin/topups" || currentPortalPath() !== "/admin/topups") throw new Error(adminManualTopupText("error.route", "Chỉ thao tác trong hàng đợi đang mở."));
-        if (!(base().capabilities && base().capabilities["admin-manual-topup-view"] === true)) throw new Error(adminManualTopupText("error.permission", "Cần quyền Admin canonical để xem hàng đợi."));
+        if (!(base().capabilities && base().capabilities["admin-manual-topup-view"] === true)) throw new Error(adminManualTopupText("error.permission", "Cần quyền quản trị để xem hàng đợi."));
         if (action === "admin-manual-topup-refresh") {
           await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
           return;
@@ -27016,15 +27159,9 @@
         if (action === "admin-manual-topup-draft") {
           const requestId = String(fields.request_id || "");
           const draftAction = String(fields.decision || "");
-          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || !["approve_expected", "approve_custom", "reject"].includes(draftAction)) throw new Error(adminManualTopupText("error.decision", "Quyết định không hợp lệ."));
-          const body = { action: draftAction };
-          if (draftAction === "approve_custom") {
-            const approvedXu = Number(fields.approved_xu);
-            if (!Number.isSafeInteger(approvedXu) || approvedXu <= 0) throw new Error(adminManualTopupText("error.customXu", "Số Xu tùy chỉnh phải là số nguyên dương."));
-            body.approved_xu = approvedXu;
-            body.reason = String(fields.reason || "").trim();
-          } else if (draftAction === "reject") body.reason = String(fields.reason || "").trim();
-          if (["approve_custom", "reject"].includes(draftAction) && (body.reason.length < 3 || body.reason.length > 300)) throw new Error(adminManualTopupText("error.reason", "Lý do cần từ 3 đến 300 ký tự."));
+          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || draftAction !== "reject") throw new Error(adminManualTopupText("error.decision", "Chỉ cho phép tạo xác nhận từ chối."));
+          const body = { action: "reject", reason: String(fields.reason || "").trim() };
+          if (body.reason.length < 3 || body.reason.length > 300 || /[\u0000-\u001f]/.test(body.reason)) throw new Error(adminManualTopupText("error.reason", "Lý do cần từ 3 đến 300 ký tự hợp lệ."));
           const expectedPath = currentPortalPath();
           const sessionEpoch = canonicalSessionEpoch;
           const writeEpoch = ++adminManualTopupWriteEpoch;
@@ -27060,12 +27197,12 @@
               body: JSON.stringify({ confirmation_receipt: receipt, idempotency_key: submission.key })
             });
             if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, receipt)) return;
-            terminal = ["approved", "rejected"].includes(String(result.status || ""));
+            terminal = String(result.status || "") === "rejected";
             if (terminal) {
               adminManualTopupState = { ...adminManualTopupState, readState: "loading", draft: null, selected: adminManualTopupRecord(result.data), error: "" };
               merge({ adminManualTopupState });
               await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
-              toast(result.message || adminManualTopupText("success.confirm", "Đã ghi nhận quyết định canonical."));
+              toast(result.message || adminManualTopupText("success.confirm", "Đã ghi nhận từ chối trên Web."));
             }
           } finally {
             releaseSubmission(submission);
@@ -27089,8 +27226,17 @@
         if (route !== "/wallet/topup" || currentPortalPath() !== "/wallet/topup") throw new Error(manualTopupText("failed", "Chưa thể xử lý"));
         const amount = Number(fields.amount_vnd);
         if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error(manualTopupText("invalidAmount", "Số tiền phải là số nguyên dương."));
-        const methods = base().paymentOptions && base().paymentOptions.manual && Array.isArray(base().paymentOptions.manual.methods)
-          ? base().paymentOptions.manual.methods.map((item) => String(item && item.id || ""))
+        const manualOptions = base().paymentOptions && base().paymentOptions.manual && typeof base().paymentOptions.manual === "object"
+          ? base().paymentOptions.manual
+          : {};
+        const destinationContract = manualOptions.payment_destinations && typeof manualOptions.payment_destinations === "object"
+          ? manualOptions.payment_destinations
+          : null;
+        const methods = Array.isArray(manualOptions.methods)
+          ? manualOptions.methods.flatMap((item) => {
+              const id = String(item && item.id || "");
+              return !destinationContract || Boolean(destinationContract[id] && destinationContract[id].request_enabled === true) ? [id] : [];
+            })
           : [];
         const method = String(fields.method || "");
         if (!methods.includes(method)) throw new Error(manualTopupText("invalidMethod", "Hãy chọn phương thức do máy chủ cung cấp."));
@@ -27125,8 +27271,8 @@
           throw error;
         } finally {
           releaseSubmission(submission);
-          // Keep the same key for an unchanged retry. The Bot owns durable
-          // idempotency; changing amount/method/reference creates a new fingerprint.
+          // Keep the same key for an unchanged retry. The Web request store
+          // owns durable idempotency; changing the form creates a new fingerprint.
           setActionBusy(action, route, false);
         }
         return;
@@ -36508,7 +36654,11 @@
         // Hydration still owns all account/profile state and remounts the UI.
         applyConfirmedProfileInterfaceLocale(confirmedInterfaceLocaleReceipt(result));
         await hydrate();
-        toast(result.message);
+        const i18n = window.TOANAASI18n;
+        const message = i18n && typeof i18n.t === "function"
+          ? i18n.t("interfaceLocale.updated")
+          : (result.message || "Đã cập nhật ngôn ngữ giao diện.");
+        toast(message || result.message || "Đã cập nhật ngôn ngữ giao diện.");
         return;
       }
       if (action === "upgrade-telegram-account") {
@@ -37405,7 +37555,7 @@
           if (!isCurrent()) return;
           const items = deliveryReadItemsOrThrow(result, "Job Center");
           const receipt = deliveryReadReceiptPresentation("jobs", items);
-          merge({ jobs: items, deliveryReadReceipt: receipt });
+          mergeDeliveryReadSuccess("jobs", route, items, receipt);
           clearDeliveryReadReceiptPresentation(receipt);
           scheduleJobPolling("/jobs", items);
           setDeliveryReadStatus("/jobs", `Đã nhận ${items.length} job canonical trong cửa sổ hiện tại.`);
@@ -37440,7 +37590,7 @@
           if (!isCurrent()) return;
           const items = deliveryReadItemsOrThrow(result, "Assets");
           const receipt = deliveryReadReceiptPresentation("assets", items);
-          merge({ assets: items, deliveryReadReceipt: receipt });
+          mergeDeliveryReadSuccess("assets", route, items, receipt);
           clearDeliveryReadReceiptPresentation(receipt);
           setDeliveryReadStatus("/assets", `Đã nhận ${items.length} record tài sản trong cửa sổ hiện tại.`);
           toast(result.message || "Đã làm mới metadata tài sản.");

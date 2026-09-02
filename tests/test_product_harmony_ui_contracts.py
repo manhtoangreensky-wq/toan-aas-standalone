@@ -160,7 +160,7 @@ def test_app_and_copilot_mount_on_body_with_fixed_controls_not_utility_dock() ->
     ):
         assert token in copilot_mobile
     assert "display: none;" in _declarations_after(PORTAL, ".portal-copilot-btn-label", copilot_media)
-    assert 'aria-label="Mở Trợ Lý AI AAS BOT"' in PORTAL
+    assert 'uiText("customerTopup.assistant.openAria"' in PORTAL
     assert '${portalIcon(ICONS.chat)}' in PORTAL
     assert '<span>🤖</span>' not in PORTAL
 

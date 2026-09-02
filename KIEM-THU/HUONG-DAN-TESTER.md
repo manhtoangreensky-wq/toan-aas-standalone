@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-36` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-38` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -36,6 +36,8 @@
 - WA-33 phải thao tác thật `manual → amount/method/reference → hydration/remount`, không dùng source grep thay cho DOM/rendered evidence.
 - WA-34 bơm sentinel `admin_note` vào single/history và giữ Admin projection làm control; customer JSON và customer JS state đều phải không có field này.
 - Mobile 390/360 phải đo overlap theo diện tích giữa nút gửi với PWA FAB, Copilot và bottom nav; cả ba bằng `0`.
+- WA-37 phải dùng account Web chưa liên kết Telegram: mở manual, xác nhận đủ 5 method card/QR; nhập amount/method/reference; submit ra `pending_admin_review`. Không quét hoặc thanh toán QR trong test UI.
+- WA-38 phải dùng temp DB/private fixture: method unavailable và partial ACB không tạo row; malformed/decompression-bomb QR trả 404 có đủ security headers; concurrent same-key chỉ một request; Admin list/detail đọc đúng account/amount/code.
 
 ### MOTION-WEBAPP-SURFACES-001
 

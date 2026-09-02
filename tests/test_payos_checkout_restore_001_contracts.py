@@ -5,13 +5,12 @@ import random
 import sys
 import types
 from pathlib import Path
-
 import anyio
 import pytest
 from starlette.requests import Request
+from starlette.responses import Response
 import copyfast_api as api
 from copyfast_api import PaymentRequest
-
 
 ROOT = Path(__file__).resolve().parents[1]
 API_SOURCE = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
@@ -111,8 +110,9 @@ async def test_payment_options_uses_one_direct_or_bridge_readiness_contract(
     monkeypatch.setattr(api, "_payment_topup_packages", lambda: [dict(PACKAGE)])
     monkeypatch.setattr(api, "_payos_config", lambda: direct_config)
     monkeypatch.setattr(api, "bridge_configured", lambda: bridge_ready)
+    monkeypatch.setattr(api, "get_or_create_web_topup_code", lambda _account_id: "10000000")
 
-    result = await api.payment_options(ACCOUNT)
+    result = await api.payment_options(Response(), ACCOUNT)
 
     assert result["data"]["payos"]["request_enabled"] is expected
 
