@@ -18875,3 +18875,124 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     padding-block: 8px;
   }
 }
+
+/* ADMIN-LOGIN-RESPONSIVE-001 */
+.portal-shell--auth[data-portal-app-kind="admin"] .portal-main {
+  width: min(1200px, calc(100vw - 48px));
+  max-width: 1200px;
+}
+
+@media (min-width: 841px) {
+  .portal-shell--auth[data-portal-app-kind="admin"] .portal-main {
+    padding-inline: 16px;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "shell";
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-header {
+    grid-area: header;
+    width: 100%;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-shell {
+    display: grid;
+    grid-area: shell;
+    grid-template-columns: minmax(280px, .9fr) minmax(420px, 1.1fr);
+    grid-template-areas: "intro card";
+    gap: clamp(24px, 3vw, 48px);
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-intro {
+    grid-area: intro;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-card {
+    grid-area: card;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 840px) {
+  .portal-shell--auth[data-portal-app-kind="admin"] .portal-main {
+    width: min(100%, calc(100vw - 32px));
+    max-width: 680px;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "shell";
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-shell {
+    display: grid;
+    grid-area: shell;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "card";
+    gap: 20px;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-intro {
+    grid-area: intro;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-card {
+    grid-area: card;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+}
+
+@media (max-width: 600px) {
+  .portal-auth-page--access.portal-auth-page--admin .portal-form {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-input {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin input {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin button {
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+  }
+
+  .portal-auth-page--access.portal-auth-page--admin .portal-auth-card a {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    align-items: center;
+  }
+}
