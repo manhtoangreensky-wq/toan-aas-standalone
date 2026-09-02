@@ -1,21 +1,32 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: source Web đã nghiệm thu đến ngày 31/08/2026; tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
+> Phạm vi đo: production Web đến SHA `94dbd2825889f4ff71d201465870c182075a0282` ngày 02/09/2026 và candidate `/admin/login` local ngày 03/09/2026; tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main: `0dd8ffa3503436cb7431a98a882ff99cc25588d8` (PR #419).
+- Web production/main: `94dbd2825889f4ff71d201465870c182075a0282` (PR #420); Web/nginx active, tracked diff `0` tại readback.
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
 - PR #417 đã merge; quality run `33354445985` và deploy run `33354446011` đều `SUCCESS`.
 - VPS readback sau PR #419: exact HEAD `0dd8ffa`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
-- Live assets có đúng một `amount_vnd` field/action, Admin queue route/render và Hotline source `0898360858`; signed production create/approve/reject chưa được chạy.
+- Manual top-up `ACCEPTED_LIVE`: signed QR `6/6`, năm ảnh canonical unique `5/5`, năm viewport `5/5`, hotline `0898360858`; đúng một `MANUAL-1` đang `pending_admin_review`.
 - PR #419 Auth hotfix đã merge; quality run `33373616782` và deploy run `33373616654` đều `SUCCESS`; live logo/card đã đo tại `844×610` và `390×667`.
-- Batch này chưa được kiểm thử luồng tiền thật.
+- Production QA chỉ tạo một pending `10000 VND`; approve/reject/draft/confirm, `approved_xu`, ledger, provider, PayOS và Telegram call đều `0`. Đây không phải giao dịch đã thanh toán hay cộng Xu.
 - `MERGED != DEPLOYED != LIVE`.
 - `HTTP 200` chỉ chứng minh request HTTP được xử lý; nó không chứng minh quyết định tài chính cuối hợp lệ.
+
+### 1.1 Candidate `/admin/login` — local verified, chưa production
+
+- BASE: `94dbd2825889f4ff71d201465870c182075a0282`; branch `fix/admin-login-responsive-001`.
+- Source runtime thay đổi đúng một CSS file; regression test mới là file thứ hai. Các tài liệu/case trong commit là ship evidence, không phải runtime.
+- Root cause cũ: `.portal-main` bị giới hạn `560px`, trong khi Admin article không có route-scoped desktop override; selector R1 từng đảo ancestor/descendant và không thể match.
+- Candidate dùng exact ancestor `.portal-shell--auth[data-portal-app-kind="admin"] .portal-main`; mọi selector trong block đều có Admin marker.
+- Fresh protected gate: `11 passed`, `1` warning deprecation; Node/diff exit `0`; artifact/secret match `0`.
+- Browser local sau corrective: `1920/1440/1024` hai cột; `768/390/360` một cột; boundary `769/804/806/822/840` một cột và Browser-rounded `842` hai cột. Tất cả overflow/outside `0`; candidate khóa `≤840` stacked và `≥841` two-column.
+- Light/dark giữ nguyên geometry; theme cuối được khôi phục `system`. `/login` và `/register` tại `390px` có Admin marker `false`, overflow/outside `0`.
+- Candidate chưa commit/push/merge/deploy; không được gọi là LIVE cho tới khi GitHub CI, deploy, runtime SHA và live Browser cùng đạt.
 
 ## 2. Kiến trúc quyền sở hữu
 

@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái production: manual top-up PR #417 đã deploy tại `9785541`; Auth hotfix PR #419 đã deploy tại `0dd8ffa`; signed money flow vẫn `LIVE_PASS=NOT_TESTED`.
+> Trạng thái production: manual top-up PR #420 đã deploy tại `94dbd2825889f4ff71d201465870c182075a0282`; đúng một QA request `MANUAL-1` đang chờ Admin, quyết định/Xu/ledger `0`. `/admin/login` responsive mới chỉ local verified trên branch candidate, chưa production.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -59,6 +59,13 @@ Inventory đã được nghiệm thu tại P0-05B.
 | PWA chỉ cache public shell | Wallet/payment/Admin/API/download/private workspace vẫn network-only và ownership-checked. | ✅ Cache boundary hiện hành. | `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:3-8`; `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61` |
 | Production runtime là VPS | Runtime truth là GitHub main → Actions → Ubuntu VPS; Railway không phải runtime production. | ✅ Runtime `0dd8ffa`, Web/nginx active, health valid. | `README.md:5-12` |
 | Auth logo và low-height card | Logo không co/crop; card/form giữ trong initial viewport và control tối thiểu 44px. | ✅ Đã deploy/live tại `0dd8ffa`; local rendered `6/6` là receipt trước ship. | `evidence/auth-login-brand-viewport-001-20260831.md` |
+| Admin login desktop/mobile responsive | Candidate dùng Admin app-kind marker để nới đúng ancestor main; `≥841px` hai cột, `≤840px` một cột; public login/register không nhận rule. | ⚠️ Static corrective verified `12P`; Browser boundary `769/804/806/822/840/842` overflow/outside `0` (backend làm tròn odd width lên even); chưa commit/deploy/live. | `tests/test_admin_login_responsive_001_contracts.py`; `reports/prepush/ADMIN-LOGIN-RESPONSIVE-001.md` |
+
+## 4.1 Chỗ tài liệu cũ vừa được sửa — Admin login
+
+- Tài liệu trước đây chỉ có Auth hotfix tại SHA `0dd8ffa` và không mô tả lỗi `/admin/login` bị giữ trong main `560px`.
+- Hiện tại production vẫn là SHA `94dbd282…`; candidate mới tách `/admin/login` bằng marker server-derived, không sửa Auth authority hay public `/login`/`/register`.
+- Không suy `local Browser PASS` thành `LIVE`: PR/CI/merge/deploy/runtime/live vẫn là các cổng riêng.
 
 ## 5. Chỗ tài liệu cũ không còn đúng
 
