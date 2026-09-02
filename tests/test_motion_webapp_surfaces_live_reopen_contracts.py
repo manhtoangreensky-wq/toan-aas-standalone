@@ -80,6 +80,55 @@ def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
         assert shared in THEME[: THEME.index(MARKER)]
 
 
+def test_customer_sidebar_drawer_transform_is_not_owned_by_state_motion() -> None:
+    block = THEME[THEME.index(MARKER):THEME.index(END_MARKER)]
+    no_pref_block = block.split("@media (prefers-reduced-motion: no-preference) {")[1].split("@media (prefers-reduced-motion: reduce) {")[0]
+    assert '.portal-shell[data-portal-surface="customer"] .portal-sidebar,' not in no_pref_block
+    assert "@media (prefers-reduced-motion: no-preference) and (min-width: 981px)" in block
+    reduced_block = block.split("@media (prefers-reduced-motion: reduce) {")[1]
+    generic_reduced = reduced_block.split("transform: none !important;")[0]
+    assert ".portal-sidebar" not in generic_reduced
+    assert re.search(r'\.portal-shell\[data-portal-surface="customer"\] \.portal-sidebar\s*\{[^}]*opacity:\s*1\s*!important;[^}]*\}', reduced_block)
+    assert not re.search(r'\.portal-shell\[data-portal-surface="customer"\] \.portal-sidebar\s*\{[^}]*transform:\s*none\s*!important;[^}]*\}', reduced_block)
+
+    violations = set()
+    for match in re.finditer(r"([^{}]+)\{([^{}]+)\}", THEME):
+        selector = match.group(1).strip()
+        declarations = match.group(2)
+        customer_sidebar = re.search(r"\.portal-sidebar(?![-\w])", selector) and (
+            'data-portal-app-kind="customer"' in selector or 'data-portal-surface="customer"' in selector
+        )
+        if not customer_sidebar:
+            continue
+        if "transform: none !important;" in declarations:
+            violations.add("reduced-transform-ownership-conflict")
+        for selector_part in selector.split(","):
+            if selector_part.strip() == '.portal-shell[data-portal-surface="customer"] .portal-sidebar' and "animation:" in declarations and "none" not in declarations:
+                violations.add("focus-mode-animation-ownership-conflict")
+
+    assert not violations, f"Violations found: {sorted(violations)}"
+    guarded_desktop = re.search(
+        r'\.portal-shell\[data-portal-surface="customer"\]:not\(\.portal-shell--focus\) \.portal-sidebar\s*\{([^}]*)\}',
+        block,
+    )
+    assert guarded_desktop
+    assert "animation: portal-customer-state-enter var(--portal-customer-motion-state) var(--portal-motion-ease-emphasis) both;" in guarded_desktop.group(1)
+
+    reduced_sidebar = re.search(
+        r'\.portal-shell\[data-portal-surface="customer"\] \.portal-sidebar\s*\{([^}]*)\}',
+        reduced_block,
+    )
+    assert reduced_sidebar
+    reduced_sidebar_body = reduced_sidebar.group(1)
+    for declaration in (
+        "opacity: 1 !important;",
+        "animation: none !important;",
+        "transition: none !important;",
+    ):
+        assert declaration in reduced_sidebar_body
+    assert "transform:" not in reduced_sidebar_body
+
+
 def test_shared_lifecycle_survives_hydration_and_rearms_only_offscreen() -> None:
     for token in (
         "const CUSTOMER_ENTER_CLEAR_DELAY_MS = 760;",

@@ -125,128 +125,107 @@ def test_manual_create_schema_rejects_browser_authority_and_unsafe_values():
 
 
 @pytest.mark.anyio
-async def test_manual_proxy_uses_dedicated_owner_header_without_browser_identity(tmp_path, monkeypatch):
-    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "manual-proxy.db"))
-    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+async def test_manual_web_local_flow_uses_signed_owner_without_bridge_identity(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "manual-web-local.db"))
+    monkeypatch.setenv("MANUAL_BANK_CODE", "ACB")
+    monkeypatch.setenv("MANUAL_BANK_NAME", "Asia Commercial Bank")
+    monkeypatch.setenv("MANUAL_BANK_ACCOUNT", "0387532320")
+    monkeypatch.setenv("MANUAL_BANK_OWNER", "TOAN AAS")
     ensure_copyfast_schema()
-    calls = []
+    with transaction() as conn:
+        conn.execute(
+            """INSERT INTO web_accounts
+               (id, email, password_hash, display_name, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (ACCOUNT["id"], "manual-direct@example.com", "hash", "Manual direct", "2026-08-31T00:00:00+00:00", "2026-08-31T00:00:00+00:00"),
+        )
 
-    async def fake_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
-        calls.append({
-            "method": method,
-            "path": path,
-            "payload": payload,
-            "params": params,
-            "request_id": request_id,
-            "actor_id": actor_id,
-            "owner_id": owner_id,
-        })
-        if method == "POST":
-            await anyio.sleep(0.03)
-            return {
-                "ok": True,
-                "status": "pending_admin_review",
-                "message": "canonical",
-                "data": {
-                    "request_id": "MANUAL-9",
-                    "amount_vnd": 10_000,
-                    "method": "bank_acb",
-                    "status": "pending_admin_review",
-                    "transfer_content": "AAS 9",
-                    "raw_response": "drop",
-                    "user_id": OWNER,
-                },
-                "error_code": None,
-            }
-        if path.endswith("/status"):
-            return {
-                "ok": True,
-                "status": "approved",
-                "message": "canonical",
-                "data": {"request_id": "MANUAL-9", "status": "approved", "admin_id": "drop"},
-                "error_code": None,
-            }
-        if path.endswith("/manual"):
-            return {
-                "ok": True,
-                "status": "pending_admin_review",
-                "message": "canonical",
-                "data": [{"request_id": "MANUAL-9", "status": "pending_admin_review", "raw_response": "drop"}],
-                "error_code": None,
-            }
-        return {
-            "ok": False,
-            "status": "guarded",
-            "message": "canonical private message",
-            "data": {},
-            "error_code": "WEB_MANUAL_TOPUP_NOT_FOUND",
-        }
+    def forbidden_call(*_args, **_kwargs):
+        raise AssertionError("customer manual top-up must not call a Bot or provider authority")
 
-    monkeypatch.setattr(copyfast_api, "bridge_request", fake_bridge)
+    monkeypatch.setattr(copyfast_api, "bridge_request", forbidden_call)
+    monkeypatch.setattr(copyfast_api, "_manual_topup_bridge", forbidden_call)
+    monkeypatch.setattr(copyfast_api, "manual_admin_bridge_request", forbidden_call)
     payload = copyfast_api.ManualTopupCreateRequest(
         amount_vnd=10_000,
         method="bank_acb",
-        idempotency_key="manual-concurrent-0001",
+        idempotency_key="manual-web-local-0001",
         reference=" tx-safe ",
     )
-    results = []
+    created = await copyfast_api.manual_topup_create(
+        payload,
+        _request("POST", "/api/v1/payments/manual"),
+        ACCOUNT,
+    )
+    assert created["status"] == "pending_admin_review"
+    record = created["data"]
+    assert record["request_id"].startswith("MANUAL-")
+    assert record["transfer_content"].isascii() and record["transfer_content"].isdigit()
+    assert "account_id" not in record
+    assert "expected_xu" not in record
+    assert "approved_xu" not in record
 
-    async def submit() -> None:
-        results.append(await copyfast_api.manual_topup_create(payload, _request("POST", "/api/v1/payments/manual"), ACCOUNT))
+    replay = await copyfast_api.manual_topup_create(
+        payload,
+        _request("POST", "/api/v1/payments/manual"),
+        ACCOUNT,
+    )
+    assert replay["data"]["request_id"] == record["request_id"]
+    assert replay["data"]["idempotent_replay"] is True
 
-    async with anyio.create_task_group() as group:
-        group.start_soon(submit)
-        group.start_soon(submit)
-    assert len([call for call in calls if call["method"] == "POST"]) == 1
-    assert {result.get("error_code") for result in results} == {None, "IDEMPOTENCY_IN_PROGRESS"}
-    post = next(call for call in calls if call["method"] == "POST")
-    assert post["path"] == "/internal/v1/payments/manual"
-    assert post["owner_id"] == OWNER
-    assert post["actor_id"] == OWNER
-    assert post["payload"] == {
-        "amount_vnd": 10_000,
-        "method": "bank_acb",
-        "idempotency_key": "manual-concurrent-0001",
-        "txid": "tx-safe",
+    history = await copyfast_api.manual_topup_history(
+        _request("GET", "/api/v1/payments/manual"), ACCOUNT, limit=20
+    )
+    assert history["data"] == {"items": [record]}
+    detail = await copyfast_api.manual_topup_detail(
+        record["request_id"],
+        _request("GET", f"/api/v1/payments/manual/{record['request_id']}"),
+        ACCOUNT,
+    )
+    assert detail["data"] == record
+    status_result = await copyfast_api.manual_topup_status(
+        record["request_id"],
+        _request("GET", f"/api/v1/payments/manual/{record['request_id']}/status"),
+        ACCOUNT,
+    )
+    assert status_result["data"] == {
+        "request_id": record["request_id"],
+        "status": "pending_admin_review",
     }
-    assert "user_id" not in post["payload"]
-    assert "user_id" not in str(results)
-    assert "raw_response" not in str(results)
-    with transaction() as conn:
-        assert conn.execute("SELECT response_json FROM web_idempotency WHERE scope LIKE 'manual-topup:%'").fetchall() == []
 
-    replay = await copyfast_api.manual_topup_create(payload, _request("POST", "/api/v1/payments/manual"), ACCOUNT)
-    assert replay["ok"] is True
-    assert len([call for call in calls if call["method"] == "POST"]) == 2
-
-    history = await copyfast_api.manual_topup_history(_request("GET", "/api/v1/payments/manual"), ACCOUNT, limit=20)
-    assert history["data"] == {"items": [{"request_id": "MANUAL-9", "status": "pending_admin_review"}]}
-    assert calls[-1]["params"] == {"limit": 20}
-    assert calls[-1]["owner_id"] == OWNER
-
-    status_result = await copyfast_api.manual_topup_status("MANUAL-9", _request("GET", "/api/v1/payments/manual/MANUAL-9/status"), ACCOUNT)
-    assert status_result["status"] == "approved"
-    assert status_result["data"] == {"request_id": "MANUAL-9", "status": "approved"}
-
-    missing = await copyfast_api.manual_topup_detail("MANUAL-404", _request("GET", "/api/v1/payments/manual/MANUAL-404"), ACCOUNT)
+    foreign = {"id": "foreign-web-account", "canonical_user_id": None}
+    missing = await copyfast_api.manual_topup_detail(
+        record["request_id"],
+        _request("GET", f"/api/v1/payments/manual/{record['request_id']}"),
+        foreign,
+    )
     assert isinstance(missing, JSONResponse)
     assert missing.status_code == 404
-    missing_payload = json.loads(missing.body)
-    assert missing_payload["error_code"] == "MANUAL_TOPUP_NOT_FOUND"
-    assert "canonical private" not in missing.body.decode("utf-8")
-
-    before = len(calls)
-    for invalid in ("1", "MANUAL-0", "MANUAL--1", "MANUAL-abc", "../MANUAL-1", "MANUAL-" + "1" * 20):
-        invalid_result = await copyfast_api.manual_topup_detail(invalid, _request("GET", "/api/v1/payments/manual/invalid"), ACCOUNT)
-        assert isinstance(invalid_result, JSONResponse)
-        assert invalid_result.status_code == 404
-    assert len(calls) == before
+    assert json.loads(missing.body)["error_code"] == "MANUAL_TOPUP_NOT_FOUND"
 
 
 def test_manual_portal_has_full_state_lifecycle_and_never_enters_payos_flow():
     guide = _section(PORTAL, "function renderManualTopupGuide(context)", "function renderPaymentRequestForm(page, context)")
     handler = _section(INTEGRATION, 'if (action === "manual-topup-create")', 'if (action === "finance-planning-view")')
     lifecycle = _section(INTEGRATION, "function manualTopupRecord", "async function hydratePaymentOptions")
+    support_intake = _section(INTEGRATION, "function validateSupportIntake", "function validateWebSupportText")
+
+    assert "(ACB / MoMo / ZaloPay / Binance)" not in PORTAL
+    assert "Chọn entrypoint canonical: bot tạo PayOS" not in PORTAL
+    assert "Hãy liên kết Telegram và chờ Core Bridge sẵn sàng." not in guide
+    assert "Nạp Thủ Công (ACB / MoMo / ZaloPay)" in PORTAL
+    assert "tạo yêu cầu đối soát thủ công trực tiếp trên Web" in PORTAL
+    assert "Phiên Web chưa tải được phương thức nạp thủ công" in guide
+    assert "The Bot owns durable" not in handler
+    assert "The Web request store" in handler
+    assert 'manualTopupReadState: account && initialPortalPath === "/wallet/topup" ? "loading" : "guarded"' in INTEGRATION
+    assert 'manualTopupReadState: account && telegramLinked' not in INTEGRATION
+    assert "/thucong" not in support_intake
+    assert "Bot đã liên kết" not in support_intake
+    assert "trang Nạp Xu" in support_intake
+    wallet_page = _section(PORTAL, 'customerPage("/wallet/topup"', 'customerPage("/packages"')
+    assert "Yêu cầu đối soát thủ công" in wallet_page
+    assert "Shell chỉ mở bot" not in wallet_page
 
     for marker in (
         'data-portal-action="manual-topup-create"',
@@ -339,6 +318,12 @@ def test_manual_topup_locale_keysets_and_responsive_controls_are_complete():
     assert re.search(r"[À-ỹ]", vi_values)
     assert not re.search(r"[一-鿿]", en_values)
     assert re.search(r"[一-鿿]", zh_values)
+    for catalog in (vi_values, en_values, zh_values):
+        assert "Telegram" not in catalog
+        assert "Core Bridge" not in catalog
+    assert "Phiên Web chưa tải được phương thức nạp thủ công" in vi_values
+    assert "The Web session could not load manual top-up methods" in en_values
+    assert "Web 会话尚未加载人工充值方式" in zh_values
 
     for selector in (
         ".portal-manual-topup-form",
@@ -359,7 +344,7 @@ def test_manual_topup_locale_keysets_and_responsive_controls_are_complete():
 
 def test_manual_topup_routes_and_payos_implementation_stay_isolated():
     source = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
-    start = source.index('def _manual_topup_request_id')
+    start = source.index('@router.post("/payments/manual")')
     end = source.index('def _payos_config()', start)
     manual_api = source[start:end]
     for forbidden in (
@@ -369,24 +354,33 @@ def test_manual_topup_routes_and_payos_implementation_stay_isolated():
         "db_connect",
         "UPDATE users",
         "credit_events",
+        "_manual_topup_bridge",
+        "bridge_request",
+        "manual_admin_bridge_request",
     ):
         assert forbidden not in manual_api
-    assert 'lambda: _manual_topup_bridge(' in manual_api
-    assert 'owner_id=owner_id' in manual_api
-    assert 'enriched["user_id"]' not in manual_api
+    assert "create_web_manual_topup_request" in manual_api
+    assert "list_web_manual_topup_requests" in manual_api
+    assert "get_web_manual_topup_request" in manual_api
 
-    routes = {
-        (method, route.path)
+    routes = [
+        (method, route.path, route.endpoint)
         for route in copyfast_api.router.routes
         if getattr(route, "path", "").startswith("/api/v1/payments/manual")
         for method in getattr(route, "methods", set())
-    }
-    assert routes == {
+    ]
+    assert [(method, path) for method, path, _endpoint in routes] == [
         ("POST", "/api/v1/payments/manual"),
         ("GET", "/api/v1/payments/manual"),
         ("GET", "/api/v1/payments/manual/{request_id}"),
         ("GET", "/api/v1/payments/manual/{request_id}/status"),
-    }
+    ]
+    assert [endpoint for _method, _path, endpoint in routes] == [
+        copyfast_api.manual_topup_create,
+        copyfast_api.manual_topup_history,
+        copyfast_api.manual_topup_detail,
+        copyfast_api.manual_topup_status,
+    ]
 
     payos_handler = _section(INTEGRATION, 'if (action === "payment-create")', 'if (action === "payment-lookup")')
     for marker in ("window.open", 'api("/payments/create"', "safePayosCheckout", "schedulePaymentPolling"):
@@ -394,20 +388,15 @@ def test_manual_topup_routes_and_payos_implementation_stay_isolated():
 
 
 @pytest.mark.anyio
-async def test_manual_topup_detail_uses_owner_header_and_preserves_not_found_status(monkeypatch):
-    calls = []
+async def test_manual_topup_detail_is_owner_scoped_and_preserves_safe_not_found_status(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "manual-missing.db"))
+    ensure_copyfast_schema()
 
-    async def fake_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
-        calls.append({"method": method, "path": path, "payload": payload, "params": params, "owner_id": owner_id})
-        return {
-            "ok": False,
-            "status": "guarded",
-            "message": "private bridge detail",
-            "data": {"user_id": OWNER, "raw_response": "drop"},
-            "error_code": "WEB_MANUAL_TOPUP_NOT_FOUND",
-        }
+    def forbidden_call(*_args, **_kwargs):
+        raise AssertionError("Web-local customer read must not call the bridge")
 
-    monkeypatch.setattr(copyfast_api, "bridge_request", fake_bridge)
+    monkeypatch.setattr(copyfast_api, "bridge_request", forbidden_call)
+    monkeypatch.setattr(copyfast_api, "_manual_topup_bridge", forbidden_call)
     result = await copyfast_api.manual_topup_status(
         "MANUAL-77",
         _request("GET", "/api/v1/payments/manual/MANUAL-77/status"),
@@ -419,17 +408,19 @@ async def test_manual_topup_detail_uses_owner_header_and_preserves_not_found_sta
     assert body == {
         "ok": False,
         "status": "guarded",
-        "message": "Yêu cầu nạp thủ công đang được bảo vệ.",
+        "message": "Không tìm thấy yêu cầu nạp thủ công.",
         "data": {},
         "error_code": "MANUAL_TOPUP_NOT_FOUND",
     }
-    assert calls == [{
-        "method": "GET",
-        "path": "/internal/v1/payments/manual/MANUAL-77/status",
-        "payload": None,
-        "params": None,
-        "owner_id": OWNER,
-    }]
+    for invalid in ("1", "MANUAL-0", "MANUAL--1", "MANUAL-abc", "../MANUAL-1", "MANUAL-" + "1" * 20):
+        invalid_result = await copyfast_api.manual_topup_detail(
+            invalid,
+            _request("GET", f"/api/v1/payments/manual/{invalid}"),
+            ACCOUNT,
+        )
+        assert isinstance(invalid_result, JSONResponse)
+        assert invalid_result.status_code == 404
+        assert json.loads(invalid_result.body)["error_code"] == "MANUAL_TOPUP_NOT_FOUND"
 
 @pytest.mark.anyio
 async def test_manual_topup_confidentiality_and_payment_code(monkeypatch):

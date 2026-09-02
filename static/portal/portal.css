@@ -4064,6 +4064,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
   backdrop-filter: none;
 }
 .portal-brand { gap: 10px; margin: 0 8px 20px; }
+.portal-brand-home {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+  align-items: center;
+  color: inherit;
+}
 .portal-brand-mark {
   width: 40px;
   height: 40px;
@@ -4080,6 +4087,19 @@ button, a, input, select, textarea { touch-action: manipulation; }
   max-width: none;
   object-fit: contain;
   transform: translate(-8px, -4px);
+}
+/* CUST-WEB-NAVIGATION-INTERACTION-001: preserve the complete official mark in signed Customer drawers. */
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-brand-mark-image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  transform: none;
+}
+.portal-shell[data-portal-app-kind="customer"] .portal-menu-button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .portal-brand-name { font-size: 14px; letter-spacing: .035em; }
 .portal-brand-caption { color: #95a9bb; font-size: 11px; }
@@ -7372,11 +7392,16 @@ button, a, input, select, textarea { touch-action: manipulation; }
   min-width: 0;
 }
 
-.portal-admin-manual-topup-card-head :is(strong, span),
+.portal-admin-manual-topup-card-head :is(strong, span, small),
 .portal-admin-manual-topup-card dd,
 .portal-admin-manual-topup-facts dd,
 .portal-admin-manual-topup-dialog dd {
   overflow-wrap: anywhere;
+}
+
+.portal-admin-manual-topup-card-head small {
+  color: var(--portal-text-secondary);
+  font-size: .75rem;
 }
 
 .portal-admin-manual-topup-card dl,
@@ -7519,6 +7544,15 @@ button, a, input, select, textarea { touch-action: manipulation; }
     position: static;
     max-height: none;
   }
+
+  .portal-admin-manual-topup-table > .portal-data-table-wrap {
+    display: none;
+  }
+
+  .portal-admin-manual-topup-mobile {
+    display: grid;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 700px) {
@@ -7544,6 +7578,11 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-admin-manual-topup-dialog .portal-inline-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .portal-admin-manual-topup-controls form {
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .portal-admin-manual-topup-controls :is(button, input),
@@ -9379,12 +9418,28 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-account-security .portal-settings-nav,
   .portal-account-activity .portal-settings-nav,
   .portal-account-data-controls .portal-settings-nav,
-  .portal-interface-locale-navigator .portal-settings-nav { width: 100%; }
+  .portal-interface-locale-navigator .portal-settings-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: visible;
+    overscroll-behavior-x: auto;
+    scroll-snap-type: none;
+  }
   .portal-account-page .portal-settings-nav a,
   .portal-account-security .portal-settings-nav a,
   .portal-account-activity .portal-settings-nav a,
   .portal-account-data-controls .portal-settings-nav a,
-  .portal-interface-locale-navigator .portal-settings-nav a { flex: 0 0 auto; min-height: 44px; text-align: left; }
+  .portal-interface-locale-navigator .portal-settings-nav a {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    scroll-snap-align: none;
+  }
   .portal-account-page .portal-account-command { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
   .portal-account-page .portal-account-command-facts { grid-column: auto; grid-template-columns: 1fr; }
   .portal-account-page .portal-summary-item { display: grid; grid-template-columns: 1fr; gap: 4px; align-items: start; }
@@ -9467,6 +9522,104 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-manual-topup-route[hidden],
 .portal-manual-topup-status[hidden] {
   display: none !important;
+}
+
+.portal-manual-payment-methods {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.portal-manual-payment-methods > h3 {
+  margin: 0;
+  color: var(--portal-text-primary);
+  font-size: 1rem;
+}
+
+.portal-manual-payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-manual-payment-method {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 180px);
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-subtle);
+}
+
+.portal-manual-payment-method.is-unavailable {
+  border-style: dashed;
+  opacity: 0.78;
+}
+
+.portal-manual-payment-method-copy {
+  min-width: 0;
+}
+
+.portal-manual-payment-method-copy > span {
+  color: var(--portal-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.portal-manual-payment-method h4 {
+  margin: 5px 0 12px;
+  color: var(--portal-text-primary);
+  font-size: 1rem;
+}
+
+.portal-manual-payment-method dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.portal-manual-payment-method dl > div {
+  min-width: 0;
+}
+
+.portal-manual-payment-method dt {
+  color: var(--portal-text-secondary);
+  font-size: 0.72rem;
+}
+
+.portal-manual-payment-method dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--portal-text-primary);
+  font-weight: 700;
+}
+
+.portal-manual-payment-method p,
+.portal-manual-payment-method figcaption {
+  color: var(--portal-text-secondary);
+  font-size: 0.75rem;
+}
+
+.portal-manual-payment-method figure {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+.portal-manual-payment-method img {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
 }
 
 .portal-manual-topup-form {
@@ -9611,6 +9764,22 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-manual-topup-record-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-manual-payment-method-grid,
+  .portal-manual-payment-method {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-manual-payment-method figure {
+    justify-self: stretch;
+  }
+
+  .portal-manual-payment-method img {
+    width: min(100%, 220px);
+    justify-self: center;
   }
 }
 

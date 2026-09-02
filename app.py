@@ -1670,6 +1670,13 @@ async def security_headers(request: Request, call_next):
         request.method == "GET"
         and request.url.path.startswith("/api/v1/admin/finance-planning/")
     )
+    # Manual top-up creates durable shared queue rows. Keep one exact route
+    # family bucket before session/CSRF/SQLite work; trailing slashes share the
+    # same key and arbitrary suffixes never allocate their own family key.
+    manual_topup_create_write = (
+        request.method == "POST"
+        and request.url.path.rstrip("/") == "/api/v1/payments/manual"
+    )
     # Internal Document Archive is an independent Web-local admin service. Its
     # file writes have a distinctly tighter bucket than metadata transitions;
     # every route still repeats signed-session, CSRF, revision, confirmation,
@@ -1911,6 +1918,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if finance_planning_read:
         rate_limit = 120
+    if manual_topup_create_write:
+        rate_limit = 12
     if admin_document_archive_write:
         rate_limit = 30
     if admin_document_archive_upload:
@@ -1968,7 +1977,8 @@ async def security_headers(request: Request, call_next):
         # family bucket prevents arbitrary 404/405 suffixes from bypassing
         # the gate or allocating one in-memory key per requested path.
         rate_scope = (
-            "support-resolution-feedback-write" if support_resolution_feedback_write
+            "manual-topup-create-write" if manual_topup_create_write
+            else "support-resolution-feedback-write" if support_resolution_feedback_write
             else "image-operation-asset-export" if image_operation_asset_export
             else "document-operation-asset-export" if document_operation_asset_export
             else "audio-asset-operation-asset-export" if audio_asset_operation_asset_export
@@ -2138,7 +2148,11 @@ async def security_headers(request: Request, call_next):
                         else copyfast_document_workspace._boundary() if is_document_workspace_request else None
                     ),
                     status_name="guarded",
-                    error_code="AUTH_RATE_LIMITED",
+                    error_code=(
+                        "MANUAL_TOPUP_RATE_LIMITED"
+                        if manual_topup_create_write
+                        else "AUTH_RATE_LIMITED"
+                    ),
                 ),
                 status_code=429,
                 headers={
@@ -2764,6 +2778,8 @@ async def page(page_path: str, request: Request):
     } or normalized.startswith("/admin/customers/") or normalized.startswith("/admin/internal-documents") or normalized.startswith("/admin/governance"):
         copyfast_auth.require_admin(request)
     elif normalized == "/admin":
+        copyfast_auth.require_admin(request)
+    elif normalized == "/admin/topups":
         copyfast_auth.require_admin(request)
     elif normalized.startswith("/admin/") and normalized != "/admin/login":
         await require_canonical_admin(request)

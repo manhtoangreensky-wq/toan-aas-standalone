@@ -10,9 +10,12 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hmac
 import os
 from pathlib import Path
 import sqlite3
+from typing import Callable
+import uuid
 
 
 def utc_now() -> str:
@@ -1630,6 +1633,103 @@ def ensure_copyfast_schema() -> None:
                 created_at TEXT NOT NULL,
                 last_seen_at TEXT NOT NULL,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # A standalone Web account owns its manual-deposit identity and
+        # pending requests.  This is intentionally not a wallet or Xu
+        # ledger: G1 records reconciliation intake only, while approval
+        # and credit remain fail-closed behind later Owner gates.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_account_topup_codes (
+                account_id TEXT PRIMARY KEY,
+                payment_code TEXT NOT NULL UNIQUE
+                    CHECK(
+                        length(payment_code) = 8
+                        AND payment_code NOT GLOB '*[^0-9]*'
+                        AND substr(payment_code, 1, 1) != '0'
+                    ),
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_manual_topup_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id TEXT NOT NULL,
+                amount_vnd INTEGER NOT NULL CHECK(amount_vnd > 0),
+                currency TEXT NOT NULL CHECK(currency = 'VND'),
+                method TEXT NOT NULL CHECK(method IN (
+                    'bank_acb', 'bank_acb_vietqr', 'zalopay_personal',
+                    'zalopay_merchant', 'momo_tuithantai'
+                )),
+                reference TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'pending_admin_review'
+                    CHECK(status IN ('pending_admin_review', 'approved', 'rejected')),
+                idempotency_key_hash TEXT NOT NULL
+                    CHECK(
+                        length(idempotency_key_hash) = 64
+                        AND idempotency_key_hash NOT GLOB '*[^0-9a-f]*'
+                    ),
+                request_fingerprint TEXT NOT NULL
+                    CHECK(
+                        length(request_fingerprint) = 64
+                        AND request_fingerprint NOT GLOB '*[^0-9a-f]*'
+                    ),
+                submitted_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                decided_by_account_id TEXT,
+                decision_at TEXT,
+                decision_reason TEXT,
+                approved_xu INTEGER,
+                ledger_event_id TEXT,
+                UNIQUE(account_id, idempotency_key_hash),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(decided_by_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """CREATE INDEX IF NOT EXISTS idx_web_manual_topup_owner_submitted
+               ON web_manual_topup_requests(account_id, submitted_at DESC, id DESC)"""
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_manual_topup_decision_receipts (
+                receipt_hash TEXT PRIMARY KEY
+                    CHECK(
+                        length(receipt_hash) = 64
+                        AND receipt_hash NOT GLOB '*[^0-9a-f]*'
+                    ),
+                manual_topup_id INTEGER NOT NULL,
+                admin_account_id TEXT NOT NULL,
+                session_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK(action = 'reject'),
+                reason TEXT NOT NULL
+                    CHECK(
+                        reason = trim(reason)
+                        AND length(reason) BETWEEN 3 AND 300
+                        AND instr(reason, char(0)) = 0
+                        AND reason NOT GLOB ('*[' || char(1) || '-' || char(31) || ']*')
+                    ),
+                expires_at TEXT NOT NULL,
+                claimed_idempotency_hash TEXT
+                    CHECK(
+                        claimed_idempotency_hash IS NULL
+                        OR (
+                            length(claimed_idempotency_hash) = 64
+                            AND claimed_idempotency_hash NOT GLOB '*[^0-9a-f]*'
+                        )
+                    ),
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                UNIQUE(manual_topup_id, admin_account_id, session_id, action),
+                FOREIGN KEY(manual_topup_id) REFERENCES web_manual_topup_requests(id),
+                FOREIGN KEY(admin_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(session_id) REFERENCES web_sessions(id)
             )
             """
         )
@@ -6154,3 +6254,441 @@ def as_row(row: sqlite3.Row | tuple | None, columns: tuple[str, ...]) -> dict | 
     if row is None:
         return None
     return dict(zip(columns, row))
+
+
+class WebManualTopupIdempotencyConflict(Exception):
+    """The same account/key was already bound to a different request body."""
+
+
+class WebManualTopupPendingLimit(Exception):
+    """The account already owns the maximum number of pending requests."""
+
+
+class WebManualTopupMethodUnavailable(Exception):
+    """A new request failed its server-owned payment-method admission check."""
+
+
+WEB_MANUAL_TOPUP_MAX_PENDING_PER_ACCOUNT = 3
+
+
+def _allocate_web_topup_code(conn: sqlite3.Connection, account_id: str) -> str:
+    row = conn.execute(
+        "SELECT payment_code FROM web_account_topup_codes WHERE account_id=?",
+        (account_id,),
+    ).fetchone()
+    if row is not None:
+        return str(row[0])
+    highest = conn.execute(
+        "SELECT MAX(CAST(payment_code AS INTEGER)) FROM web_account_topup_codes"
+    ).fetchone()
+    next_code = max(9_999_999, int((highest or (None,))[0] or 0)) + 1
+    if next_code > 99_999_999:
+        raise RuntimeError("Web manual top-up payment-code space is exhausted")
+    payment_code = f"{next_code:08d}"
+    conn.execute(
+        """INSERT INTO web_account_topup_codes
+           (account_id, payment_code, created_at) VALUES (?, ?, ?)""",
+        (account_id, payment_code, utc_now()),
+    )
+    return payment_code
+
+
+def get_or_create_web_topup_code(account_id: str) -> str:
+    """Return one durable numeric transfer code for a signed Web account."""
+
+    with transaction() as conn:
+        return _allocate_web_topup_code(conn, str(account_id or ""))
+
+
+def _web_manual_topup_public_row(
+    row: tuple,
+    *,
+    idempotent_replay: bool = False,
+) -> dict:
+    record = {
+        "request_id": f"MANUAL-{int(row[0])}",
+        "amount_vnd": int(row[1]),
+        "currency": str(row[2]),
+        "method": str(row[3]),
+        "reference": str(row[4] or ""),
+        "transfer_content": str(row[8]),
+        "status": str(row[5]),
+        "submitted_at": str(row[6]),
+        "updated_at": str(row[7]),
+    }
+    if idempotent_replay:
+        record["idempotent_replay"] = True
+    return record
+
+
+def create_web_manual_topup_request(
+    *,
+    account_id: str,
+    amount_vnd: int,
+    method: str,
+    reference: str,
+    idempotency_key_hash: str,
+    request_fingerprint: str,
+    admission_check: Callable[[], bool] | None = None,
+) -> dict:
+    """Create/replay one pending request without touching a wallet or bridge."""
+
+    owner = str(account_id or "")
+    with transaction() as conn:
+        existing = conn.execute(
+            """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
+                      r.status, r.submitted_at, r.updated_at, c.payment_code,
+                      r.request_fingerprint
+               FROM web_manual_topup_requests AS r
+               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
+               WHERE r.account_id=? AND r.idempotency_key_hash=?""",
+            (owner, idempotency_key_hash),
+        ).fetchone()
+        if existing is not None:
+            if not hmac.compare_digest(str(existing[9]), str(request_fingerprint)):
+                raise WebManualTopupIdempotencyConflict
+            return _web_manual_topup_public_row(
+                existing, idempotent_replay=True
+            )
+        if admission_check is not None and admission_check() is not True:
+            raise WebManualTopupMethodUnavailable
+        pending_count = int(conn.execute(
+            """SELECT COUNT(*) FROM web_manual_topup_requests
+               WHERE account_id=? AND status='pending_admin_review'""",
+            (owner,),
+        ).fetchone()[0])
+        if pending_count >= WEB_MANUAL_TOPUP_MAX_PENDING_PER_ACCOUNT:
+            raise WebManualTopupPendingLimit
+        payment_code = _allocate_web_topup_code(conn, owner)
+        now = utc_now()
+        cursor = conn.execute(
+            """INSERT INTO web_manual_topup_requests
+               (account_id, amount_vnd, currency, method, reference, status,
+                idempotency_key_hash, request_fingerprint, submitted_at, updated_at)
+               VALUES (?, ?, 'VND', ?, ?, 'pending_admin_review', ?, ?, ?, ?)""",
+            (
+                owner,
+                amount_vnd,
+                method,
+                reference,
+                idempotency_key_hash,
+                request_fingerprint,
+                now,
+                now,
+            ),
+        )
+        created = (
+            int(cursor.lastrowid),
+            amount_vnd,
+            "VND",
+            method,
+            reference,
+            "pending_admin_review",
+            now,
+            now,
+            payment_code,
+        )
+        return _web_manual_topup_public_row(created)
+
+
+def list_web_manual_topup_requests(account_id: str, *, limit: int) -> list[dict]:
+    """Read owner-scoped request history without allocating or mutating data."""
+
+    bounded_limit = min(50, max(1, int(limit)))
+    with read_transaction() as conn:
+        rows = conn.execute(
+            """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
+                      r.status, r.submitted_at, r.updated_at, c.payment_code
+               FROM web_manual_topup_requests AS r
+               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
+               WHERE r.account_id=?
+               ORDER BY r.submitted_at DESC, r.id DESC LIMIT ?""",
+            (str(account_id or ""), bounded_limit),
+        ).fetchall()
+    return [_web_manual_topup_public_row(row) for row in rows]
+
+
+def get_web_manual_topup_request(account_id: str, request_number: int) -> dict | None:
+    """Read one request through its signed Web owner; missing code fails closed."""
+
+    with read_transaction() as conn:
+        row = conn.execute(
+            """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
+                      r.status, r.submitted_at, r.updated_at, c.payment_code
+               FROM web_manual_topup_requests AS r
+               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
+               WHERE r.account_id=? AND r.id=?""",
+            (str(account_id or ""), int(request_number)),
+        ).fetchone()
+    return _web_manual_topup_public_row(row) if row is not None else None
+
+
+class WebManualTopupAdminGuard(Exception):
+    """A Web-local Admin reject request failed a closed authority check."""
+
+    def __init__(self, code: str):
+        super().__init__(code)
+        self.code = code
+
+
+_WEB_MANUAL_ADMIN_SELECT = """
+    SELECT r.id, a.display_name, a.email, r.amount_vnd, r.currency,
+           r.method, r.reference, c.payment_code, r.status,
+           r.submitted_at, r.updated_at, r.decision_at, r.decision_reason
+    FROM web_manual_topup_requests AS r
+    JOIN web_accounts AS a ON a.id = r.account_id
+    JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
+"""
+
+
+def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
+    if row is None:
+        return None
+    result = {
+        "request_id": f"MANUAL-{int(row[0])}",
+        "display_name": str(row[1] or ""),
+        "email": str(row[2] or ""),
+        "amount_vnd": int(row[3]),
+        "currency": str(row[4]),
+        "method": str(row[5]),
+        "reference": str(row[6] or ""),
+        "payment_code": str(row[7]),
+        "status": str(row[8]),
+        "submitted_at": str(row[9]),
+        "updated_at": str(row[10]),
+    }
+    if row[11]:
+        result["decision_at"] = str(row[11])
+    if row[12]:
+        result["decision_reason"] = str(row[12])
+    return result
+
+
+def _web_timestamp(value: str) -> datetime:
+    parsed = datetime.fromisoformat(str(value))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _require_web_admin_session(
+    conn: sqlite3.Connection,
+    *,
+    admin_account_id: str,
+    session_id: str,
+    now: str,
+) -> None:
+    row = conn.execute(
+        """SELECT s.expires_at, a.role_cache, a.is_active
+           FROM web_sessions AS s
+           JOIN web_accounts AS a ON a.id=s.account_id
+           WHERE s.id=? AND s.account_id=? AND s.revoked_at IS NULL""",
+        (session_id, admin_account_id),
+    ).fetchone()
+    if (
+        row is None
+        or str(row[1]) != "admin"
+        or not bool(row[2])
+        or _web_timestamp(str(row[0])) <= _web_timestamp(now)
+    ):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_REQUIRED")
+
+
+def list_web_manual_topups_for_admin(status: str, *, limit: int) -> list[dict]:
+    status_map = {
+        "pending": "pending_admin_review",
+        "approved": "approved",
+        "rejected": "rejected",
+    }
+    selected = status_map.get(str(status))
+    if selected is None:
+        raise ValueError("invalid manual top-up Admin filter")
+    bounded_limit = min(50, max(1, int(limit)))
+    with read_transaction() as conn:
+        rows = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT
+            + " WHERE r.status=? ORDER BY r.submitted_at ASC, r.id ASC LIMIT ?",
+            (selected, bounded_limit),
+        ).fetchall()
+    return [_web_manual_admin_public_row(row) for row in rows]
+
+
+def get_web_manual_topup_for_admin(request_number: int) -> dict | None:
+    with read_transaction() as conn:
+        row = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+    return _web_manual_admin_public_row(row)
+
+
+def create_web_manual_topup_reject_receipt(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    session_id: str,
+    receipt_hash: str,
+    reason: str,
+    now: str,
+    expires_at: str,
+) -> dict:
+    cleaned_reason = str(reason).strip()
+    if not 3 <= len(cleaned_reason) <= 300 or any(ord(char) < 32 for char in cleaned_reason):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_REASON_INVALID")
+    if (
+        len(receipt_hash) != 64
+        or any(char not in "0123456789abcdef" for char in receipt_hash)
+        or _web_timestamp(expires_at) <= _web_timestamp(now)
+    ):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE")
+    with transaction() as conn:
+        _require_web_admin_session(
+            conn,
+            admin_account_id=admin_account_id,
+            session_id=session_id,
+            now=now,
+        )
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+        if str(record[8]) != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+        existing = conn.execute(
+            """SELECT receipt_hash, expires_at, consumed_at
+               FROM web_manual_topup_decision_receipts
+               WHERE manual_topup_id=? AND admin_account_id=?
+                 AND session_id=? AND action='reject'""",
+            (int(request_number), admin_account_id, session_id),
+        ).fetchone()
+        if existing is not None:
+            if existing[2] is not None:
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+            conn.execute(
+                "DELETE FROM web_manual_topup_decision_receipts WHERE receipt_hash=?",
+                (str(existing[0]),),
+            )
+        conn.execute(
+            """INSERT INTO web_manual_topup_decision_receipts
+               (receipt_hash, manual_topup_id, admin_account_id, session_id,
+                action, reason, expires_at, claimed_idempotency_hash,
+                consumed_at, created_at)
+               VALUES (?, ?, ?, ?, 'reject', ?, ?, NULL, NULL, ?)""",
+            (
+                receipt_hash,
+                int(request_number),
+                admin_account_id,
+                session_id,
+                cleaned_reason,
+                expires_at,
+                now,
+            ),
+        )
+    projected = _web_manual_admin_public_row(record)
+    assert projected is not None
+    return projected
+
+
+def confirm_web_manual_topup_reject(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    session_id: str,
+    receipt_hash: str,
+    idempotency_key_hash: str,
+    audit_request_id: str,
+    now: str | None = None,
+) -> dict:
+    current_time = str(now or utc_now())
+    if len(idempotency_key_hash) != 64 or any(
+        char not in "0123456789abcdef" for char in idempotency_key_hash
+    ):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+    with transaction() as conn:
+        _require_web_admin_session(
+            conn,
+            admin_account_id=admin_account_id,
+            session_id=session_id,
+            now=current_time,
+        )
+        receipt = conn.execute(
+            """SELECT expires_at, claimed_idempotency_hash, consumed_at, reason
+               FROM web_manual_topup_decision_receipts
+               WHERE receipt_hash=? AND manual_topup_id=?
+                 AND admin_account_id=? AND session_id=? AND action='reject'""",
+            (receipt_hash, int(request_number), admin_account_id, session_id),
+        ).fetchone()
+        if receipt is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_REQUIRED")
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+        if receipt[2] is not None:
+            if not hmac.compare_digest(str(receipt[1] or ""), idempotency_key_hash):
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+            if str(record[8]) != "rejected":
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+            replay = _web_manual_admin_public_row(record)
+            assert replay is not None
+            replay["idempotent_replay"] = True
+            return replay
+        if _web_timestamp(str(receipt[0])) <= _web_timestamp(current_time):
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_EXPIRED")
+        if str(record[8]) != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+        receipt_update = conn.execute(
+            """UPDATE web_manual_topup_decision_receipts
+               SET claimed_idempotency_hash=?, consumed_at=?
+               WHERE receipt_hash=? AND consumed_at IS NULL""",
+            (idempotency_key_hash, current_time, receipt_hash),
+        )
+        request_update = conn.execute(
+            """UPDATE web_manual_topup_requests
+               SET status='rejected', decided_by_account_id=?, decision_at=?,
+                   decision_reason=?, updated_at=?
+               WHERE id=? AND status='pending_admin_review'""",
+            (
+                admin_account_id,
+                current_time,
+                str(receipt[3]),
+                current_time,
+                int(request_number),
+            ),
+        )
+        if receipt_update.rowcount != 1 or request_update.rowcount != 1:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS")
+        conn.execute(
+            """INSERT INTO web_audit_events
+               (id, account_id, canonical_user_id, action, request_id,
+                target, outcome, detail, created_at)
+               VALUES (?, ?, NULL, 'admin.manual_topup.reject', ?, ?,
+                       'rejected', 'web_local_reject_only', ?)""",
+            (
+                str(uuid.uuid4()),
+                admin_account_id,
+                _web_manual_audit_request_id(audit_request_id),
+                f"MANUAL-{int(request_number)}",
+                current_time,
+            ),
+        )
+        updated = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+    projected = _web_manual_admin_public_row(updated)
+    assert projected is not None
+    return projected
+
+
+def _web_manual_audit_request_id(value: str) -> str:
+    """Normalize internal audit correlation to UUID or generate a safe one."""
+
+    try:
+        return str(uuid.UUID(str(value or "").strip()))
+    except (AttributeError, TypeError, ValueError):
+        return str(uuid.uuid4())

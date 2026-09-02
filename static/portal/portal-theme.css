@@ -4056,7 +4056,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .portal-shell[data-portal-app-kind="customer"] :is(
-    .portal-sidebar,
     .portal-nav-summary,
     .portal-nav-link,
     .portal-sidebar-search,
@@ -17726,9 +17725,14 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     animation-delay: calc(var(--portal-dashboard-motion-index, 0) * var(--portal-customer-motion-stagger));
   }
 
-  .portal-shell[data-portal-surface="customer"] .portal-sidebar,
   .portal-shell[data-portal-surface="customer"] .portal-command-palette:not([hidden]) .portal-command-dialog,
   .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
+    animation: portal-customer-state-enter var(--portal-customer-motion-state) var(--portal-motion-ease-emphasis) both;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 981px) {
+  .portal-shell[data-portal-surface="customer"]:not(.portal-shell--focus) .portal-sidebar {
     animation: portal-customer-state-enter var(--portal-customer-motion-state) var(--portal-motion-ease-emphasis) both;
   }
 }
@@ -17741,7 +17745,6 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     .portal-workspace-motion-item,
     .portal-dashboard-motion-target,
     .portal-dashboard-motion-item,
-    .portal-sidebar,
     .portal-command-palette:not([hidden]) .portal-command-dialog
   ),
   .portal-mobile-nav[data-portal-mobile-nav-kind="customer"] {
@@ -17749,6 +17752,12 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+
+  .portal-shell[data-portal-surface="customer"] .portal-sidebar {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -18857,5 +18866,12 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
 
   .portal-auth-page--access .portal-auth-header {
     width: 100%;
+  }
+
+  .portal-auth-page--access .portal-auth-forgot-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-block: 8px;
   }
 }

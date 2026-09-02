@@ -230,7 +230,6 @@ def canonical_groups() -> list[dict[str, Any]]:
             modules=[
                 _canonical_module("wallet", "Ví & Xu", "/admin/wallet"),
                 _canonical_module("payments", "Thanh toán", "/admin/payments"),
-                _canonical_module("topups", "Nạp Xu", "/admin/topups"),
                 _canonical_module("revenue", "Doanh thu", "/admin/revenue"),
                 _canonical_module("refunds", "Hoàn tiền", "/admin/refunds"),
                 _canonical_module("pricing", "Giá & gói", "/admin/pricing"),
@@ -439,6 +438,15 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=finance_planning_state,
                     capability="web_owned_budget_cost_plan_revision_audit_without_ledger_or_payment",
+                ),
+                _module(
+                    "manual_topups",
+                    "Đối soát nạp thủ công",
+                    "/admin/topups",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability="web_native",
+                    capability="manual_topup_reject_only",
                 ),
             ],
         ),

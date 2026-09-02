@@ -24,7 +24,9 @@
   const COPY = Object.freeze({
     vi: {
       caption: "Không gian làm việc", nav: "Điều hướng chính", dashboard: "Tổng quan",
-      features: "Danh mục", workspace: "Không gian", account: "Tài khoản", pageKicker: "Danh mục workflow",
+      features: "Danh mục", mobileHome: "Trang chủ", mobileCreate: "Tạo",
+      workspace: "Không gian", work: "Công việc", library: "Thư viện", account: "Tài khoản",
+      openNav: "Mở điều hướng", closeNav: "Đóng điều hướng", pageKicker: "Danh mục workflow",
       title: "Chọn công cụ phù hợp", body: "Tìm theo mục tiêu và mở đúng không gian làm việc của bạn.",
       search: "Tìm công cụ", placeholder: "Ví dụ: OCR, video, tài liệu…", clear: "Xóa",
       result: "workflow đang hiển thị", open: "Mở workflow", guardedTitle: "Chưa thể tải danh mục",
@@ -36,7 +38,9 @@
     },
     en: {
       caption: "Workspace", nav: "Main navigation", dashboard: "Overview", features: "Catalogue",
-      workspace: "Workspaces", account: "Account", pageKicker: "Workflow catalogue", title: "Choose the right tool",
+      workspace: "Workspaces", mobileHome: "Home", mobileCreate: "Create", work: "Work", library: "Library",
+      account: "Account", openNav: "Open navigation",
+      closeNav: "Close navigation", pageKicker: "Workflow catalogue", title: "Choose the right tool",
       body: "Search by goal and open the workspace that fits your task.", search: "Search tools",
       placeholder: "For example: OCR, video, documents…", clear: "Clear", result: "workflows visible",
       open: "Open workflow", guardedTitle: "Catalogue unavailable", guardedBody: "The session or catalogue data could not be verified. Reload this page.",
@@ -46,8 +50,10 @@
       readiness: ["Available", "Planning", "Local execution", "Canonical read", "Guarded", "Disabled"]
     },
     zh: {
-      caption: "工作空间", nav: "主导航", dashboard: "总览", features: "功能目录", workspace: "工作空间",
-      account: "账户", pageKicker: "工作流目录", title: "选择合适的工具", body: "按目标搜索并打开适合当前任务的工作空间。",
+      caption: "工作空间", nav: "主导航", dashboard: "总览", features: "功能目录",
+      workspace: "工作空间", mobileHome: "首页", mobileCreate: "创建", work: "工作", library: "资源库",
+      account: "账户", openNav: "打开导航", closeNav: "关闭导航",
+      pageKicker: "工作流目录", title: "选择合适的工具", body: "按目标搜索并打开适合当前任务的工作空间。",
       search: "搜索工具", placeholder: "例如：OCR、视频、文档…", clear: "清除", result: "个工作流可见",
       open: "打开工作流", guardedTitle: "无法加载目录", guardedBody: "无法验证会话或目录数据，请重新加载页面。",
       fallback: "此工作流暂时没有详细说明。", theme: "界面", signed: "会话已验证",
@@ -135,6 +141,13 @@
   function set(item, name, value) { item.setAttribute(name, String(value)); return item; }
   function add(parent, ...children) { children.filter(Boolean).forEach((child) => parent.appendChild(child)); return parent; }
 
+  function officialBrandMark() {
+    const mark = set(make("span", "portal-brand-mark"), "aria-hidden", "true");
+    const image = make("img", "portal-brand-mark-image");
+    for (const [name, value] of Object.entries({ src: "/static/logo_ch%C3%ADnh_th%E1%BB%A9c.png", alt: "", width: "56", height: "56", decoding: "async" })) set(image, name, value);
+    return add(mark, image);
+  }
+
   function link(route, label, icon, current, mobile) {
     const item = set(make("a", mobile ? "portal-mobile-nav-link" : "portal-nav-link"), "href", route);
     if (current) set(item, "aria-current", "page");
@@ -144,9 +157,12 @@
 
   function renderSidebar(sidebar, copy) {
     if (!sidebar) return;
-    const brand = set(make("a", "portal-brand"), "href", "/dashboard"), brandCopy = make("span", "portal-brand-copy");
+    const brand = make("div", "portal-brand"), brandHome = set(make("a", "portal-brand-home"), "href", "/dashboard");
+    const brandCopy = make("span", "portal-brand-copy");
     add(brandCopy, make("strong", "portal-brand-name", "TOAN AAS"), make("small", "portal-brand-caption", copy.caption));
-    add(brand, make("span", "portal-brand-mark", "TA"), brandCopy);
+    const close = set(make("button", "portal-sidebar-close"), "type", "button");
+    set(close, "aria-label", copy.closeNav); set(close, "data-portal-close-menu", ""); close.textContent = "×";
+    add(brandHome, officialBrandMark(), brandCopy); add(brand, brandHome, close);
     const nav = set(make("nav", "portal-nav"), "aria-label", copy.nav), links = make("div", "portal-nav-links");
     add(links, link("/dashboard", copy.dashboard, "⌂", false, false), link("/features", copy.features, "◇", true, false),
       link("/workspace-menu", copy.workspace, "▦", false, false), link("/account", copy.account, "○", false, false));
@@ -164,17 +180,105 @@
     if (!header) return;
     const crumbs = make("div", "portal-crumbs"), actions = make("div", "portal-header-actions");
     add(crumbs, make("span", "", "TOAN AAS"), make("span", "", copy.features));
+    const menu = set(make("button", "portal-menu-button", "☰"), "type", "button");
+    set(menu, "aria-label", copy.openNav); set(menu, "aria-controls", "portal-sidebar");
+    set(menu, "aria-expanded", "false"); set(menu, "data-portal-menu", "");
     const session = make("span", "portal-session-chip"); set(session, "title", account.email || account.displayName);
     add(session, make("span", "portal-session-avatar", (account.displayName || "T").slice(0, 1).toUpperCase()),
       make("span", "portal-session-copy", account.displayName));
-    add(actions, themeButton(copy), session); header.replaceChildren(crumbs, actions);
+    add(actions, themeButton(copy), session); header.replaceChildren(menu, crumbs, actions);
   }
 
   function renderMobile(mobileNav, copy) {
     if (!mobileNav) return;
-    add(mobileNav, link("/dashboard", copy.dashboard, "⌂", false, true), link("/features", copy.features, "◇", true, true),
-      link("/workspace-menu", copy.workspace, "▦", false, true), link("/account", copy.account, "○", false, true));
+    mobileNav.replaceChildren(
+      link("/dashboard", copy.mobileHome, "⌂", false, true),
+      link("/features", copy.mobileCreate, "◇", true, true),
+      link("/jobs", copy.work, "⌛", false, true),
+      link("/assets", copy.library, "▣", false, true),
+      link("/account", copy.account, "○", false, true)
+    );
     mobileNav.hidden = false;
+  }
+
+  let featureNavigationCleanup = () => {};
+  const FEATURE_TABINDEX_SNAPSHOT = "data-features-tabindex";
+  function bindFeatureNavigation(copy) {
+    featureNavigationCleanup();
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    const backdrop = document.querySelector("[data-portal-backdrop]");
+    const menu = document.querySelector("[data-portal-menu]");
+    const close = sidebar && sidebar.querySelector("[data-portal-close-menu]");
+    if (!sidebar || !backdrop || !menu || !close || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(max-width: 980px)");
+    let returnFocus = null;
+    const controls = () => Array.from(sidebar.querySelectorAll(
+      "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary"
+    ));
+    const setTabStops = (disabled) => controls().forEach((control) => {
+      if (disabled) {
+        if (!control.hasAttribute(FEATURE_TABINDEX_SNAPSHOT)) {
+          set(control, FEATURE_TABINDEX_SNAPSHOT, control.hasAttribute("tabindex") ? (control.getAttribute("tabindex") || "") : "__absent__");
+        }
+        set(control, "tabindex", "-1");
+        return;
+      }
+      const previous = control.getAttribute(FEATURE_TABINDEX_SNAPSHOT);
+      if (previous === null) return;
+      if (previous === "__absent__") control.removeAttribute("tabindex"); else set(control, "tabindex", previous);
+      control.removeAttribute(FEATURE_TABINDEX_SNAPSHOT);
+    });
+    const setClosed = (restoreFocus) => {
+      const wasOpen = sidebar.classList.contains("is-open");
+      sidebar.classList.remove("is-open"); backdrop.hidden = true;
+      sidebar.removeAttribute("role"); sidebar.removeAttribute("aria-modal");
+      set(menu, "aria-expanded", "false"); set(menu, "aria-label", copy.openNav);
+      if (media.matches) {
+        set(sidebar, "aria-hidden", "true"); if ("inert" in sidebar) sidebar.inert = true; setTabStops(true);
+      } else {
+        sidebar.removeAttribute("aria-hidden"); if ("inert" in sidebar) sidebar.inert = false; setTabStops(false);
+      }
+      if (restoreFocus && wasOpen && returnFocus && typeof returnFocus.focus === "function") returnFocus.focus();
+      returnFocus = null;
+    };
+    const open = () => {
+      if (!media.matches) return;
+      returnFocus = menu;
+      sidebar.classList.add("is-open"); set(sidebar, "role", "dialog"); set(sidebar, "aria-modal", "true");
+      sidebar.removeAttribute("aria-hidden"); if ("inert" in sidebar) sidebar.inert = false; setTabStops(false);
+      backdrop.hidden = false; set(menu, "aria-expanded", "true"); set(menu, "aria-label", copy.closeNav);
+      window.requestAnimationFrame(() => close.focus());
+    };
+    const keydown = (event) => {
+      if (!sidebar.classList.contains("is-open")) return;
+      if (event.key === "Escape") { event.preventDefault(); setClosed(true); return; }
+      if (event.key !== "Tab") return;
+      const items = controls(), first = items[0], last = items[items.length - 1], activeInside = sidebar.contains(document.activeElement);
+      if (!items.length) return;
+      if (event.shiftKey && (document.activeElement === first || !activeInside)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !activeInside)) { event.preventDefault(); first.focus(); }
+    };
+    const toggle = () => sidebar.classList.contains("is-open") ? setClosed(true) : open();
+    const dismiss = () => setClosed(true);
+    const sync = () => {
+      const active = document.activeElement;
+      setClosed(false);
+      if (media.matches && sidebar.contains(active)) {
+        menu.focus();
+      } else if (!media.matches && (active === menu || active === close)) {
+        const destination = controls().find((control) => control.tagName === "A");
+        if (destination && typeof destination.focus === "function") destination.focus();
+      }
+    };
+    menu.addEventListener("click", toggle); close.addEventListener("click", dismiss);
+    backdrop.addEventListener("click", dismiss); document.addEventListener("keydown", keydown);
+    if (media.addEventListener) media.addEventListener("change", sync); else media.addListener(sync);
+    sync();
+    featureNavigationCleanup = () => {
+      menu.removeEventListener("click", toggle); close.removeEventListener("click", dismiss);
+      backdrop.removeEventListener("click", dismiss); document.removeEventListener("keydown", keydown);
+      if (media.removeEventListener) media.removeEventListener("change", sync); else media.removeListener(sync);
+    };
   }
 
   function signal(className, attribute, value, label) { return set(make("span", className, label), attribute, value); }
@@ -314,6 +418,7 @@
     const mobile = document.querySelector ? document.querySelector("[data-portal-mobile-nav]") : null;
     if (ready) { renderMobile(mobile, copy); renderCatalogue(main, features, copy); } else renderGuarded(main, copy);
     mountFeatureMotion(main);
+    bindFeatureNavigation(copy);
     if (window.TOANAASPortalTheme && typeof window.TOANAASPortalTheme.syncControls === "function") window.TOANAASPortalTheme.syncControls();
   }
 

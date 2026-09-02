@@ -306,6 +306,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "security_posture",
         "access_posture",
         "customer_directory",
+        "manual_topups",
     }
     assert "tax_readiness" not in _module_ids(body)
     assert "job_recovery_guide" not in _module_ids(body)

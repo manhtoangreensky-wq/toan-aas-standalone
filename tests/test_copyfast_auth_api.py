@@ -1506,7 +1506,7 @@ def test_login_response_uses_link_boolean_not_raw_telegram_identity(tmp_path, mo
         assert "telegram-123" not in login.text
 
 
-def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_bank_data(tmp_path, monkeypatch):
+def test_payment_entry_options_keep_payos_linked_but_manual_web_native_and_private(tmp_path, monkeypatch):
     monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
     monkeypatch.setenv("MANUAL_BANK_ACCOUNT", "private-bank-account-must-not-leak")
     monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "false")
@@ -1523,7 +1523,19 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         login = client.post("/api/v1/auth/login", json={"email": "payment-options@example.com", "password": "correct-horse-battery-staple"})
         csrf = login.json()["data"]["csrf_token"]
         unlinked = client.get("/api/v1/payments/options")
-        assert unlinked.status_code == 409
+        assert unlinked.status_code == 200
+        unlinked_data = unlinked.json()["data"]
+        assert unlinked_data["payos"]["request_enabled"] is False
+        manual_code = unlinked_data["manual"]["payment_code"]
+        assert manual_code.isascii() and manual_code.isdigit() and len(manual_code) == 8
+        assert unlinked_data["manual"]["available"] is True
+        assert unlinked_data["manual"]["history_in_web"] is True
+        assert [item["id"] for item in unlinked_data["manual"]["methods"]] == [
+            "bank_acb", "bank_acb_vietqr", "zalopay_personal", "zalopay_merchant", "momo_tuithantai",
+        ]
+        assert {item["currency"] for item in unlinked_data["manual"]["methods"]} == {"VND"}
+        for forbidden in ("telegram_url", "command", "receipt_channel", "history_command"):
+            assert forbidden not in unlinked_data["manual"]
 
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
         assert confirm_link(client, code, canonical_user_id="123456789").json()["ok"] is True
@@ -1537,21 +1549,10 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         assert payload["data"]["payos"]["topup_packages"] == []
         assert payload["data"]["payos"]["telegram_url"] == "https://t.me/ToanAasSupportBot"
         assert payload["data"]["payos"]["command"] == "/naptien"
-        assert payload["data"]["manual"] == {
-            "available": False,
-            "telegram_url": "https://t.me/ToanAasSupportBot",
-            "command": "/thucong",
-            "receipt_channel": "telegram_bot",
-            "payment_lookup_available": False,
-            "wallet_history_signal_available": True,
-            "history_in_web": False,
-            "history_channel": "telegram_bot",
-            "history_command": "/thucong",
-            "history_menu_label": "Lịch sử nạp thủ công",
-            "methods": [],
-            "payment_code": "123456789",
-            "support_hotline": "0898360858",
-        }
+        assert payload["data"]["manual"]["payment_code"] == manual_code
+        assert payload["data"]["manual"]["available"] is True
+        assert payload["data"]["manual"]["history_in_web"] is True
+        assert payload["data"]["manual"]["support_hotline"] == "0898360858"
         assert "private-bank-account-must-not-leak" not in options.text
 
         # An enabled Web-payment flag and configured bridge are not enough:
@@ -1569,17 +1570,18 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         assert manual_catalog["available"] is True
         assert manual_catalog["history_in_web"] is True
         assert [item["id"] for item in manual_catalog["methods"]] == [
-            "bank_acb", "bank_acb_vietqr", "zalopay_personal", "zalopay_merchant", "momo_tuithantai", "usdt_trc20",
+            "bank_acb", "bank_acb_vietqr", "zalopay_personal", "zalopay_merchant", "momo_tuithantai",
         ]
         assert all(set(item) == {"id", "label", "currency", "mode"} for item in manual_catalog["methods"])
-        assert manual_catalog["payment_code"] == "123456789"
+        assert manual_catalog["payment_code"] == manual_code
         assert manual_catalog["support_hotline"] == "0898360858"
         assert "private-bank-account-must-not-leak" not in str(manual_catalog)
 
         monkeypatch.setenv("BOT_USERNAME", "not/a-valid-telegram-username")
-        invalid_name = client.get("/api/v1/payments/options").json()["data"]["manual"]
-        assert invalid_name["available"] is True
-        assert invalid_name["telegram_url"] == ""
+        invalid_name = client.get("/api/v1/payments/options").json()["data"]
+        assert invalid_name["manual"]["available"] is True
+        assert "telegram_url" not in invalid_name["manual"]
+        assert invalid_name["payos"]["telegram_url"] == ""
         invalid_deep_link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
         assert invalid_deep_link.status_code == 200
         # A linked account cannot mint another code just to probe a deep link:
