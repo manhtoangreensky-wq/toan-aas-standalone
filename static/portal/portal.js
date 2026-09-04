@@ -34032,23 +34032,21 @@
         return;
       }
       const action = event.target.closest("[data-portal-action]");
-      if (action && !action.disabled) {
+      if (action && action.tagName !== "FORM" && !action.disabled) {
         const actionName = action.getAttribute("data-portal-action");
-        if (action.tagName !== "FORM") {
-          if (actionName === "manual-topup-confirm-selection") {
-            if (event && event.preventDefault) event.preventDefault();
-            handleManualTopupConfirmSelection(action);
-            return;
-          }
-          if (actionName === "manual-topup-change-selection") {
-            if (event && event.preventDefault) event.preventDefault();
-            handleManualTopupChangeSelection(action);
-            return;
-          }
-          if (action.tagName === "BUTTON" && action.type === "submit") return;
-          dispatchAction(action, getBootstrap());
+        if (actionName === "manual-topup-confirm-selection") {
+          if (event && event.preventDefault) event.preventDefault();
+          handleManualTopupConfirmSelection(action);
           return;
         }
+        if (actionName === "manual-topup-change-selection") {
+          if (event && event.preventDefault) event.preventDefault();
+          handleManualTopupChangeSelection(action);
+          return;
+        }
+        if (action.tagName === "BUTTON" && action.type === "submit") return;
+        dispatchAction(action, getBootstrap());
+        return;
       }
       const link = event.target.closest(".portal-nav-link");
       if (link) closeSidebar({ restoreFocus: false });
