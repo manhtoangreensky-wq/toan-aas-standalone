@@ -7707,7 +7707,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 866,
+      "occurrences": 871,
       "provider": "PayOS"
     },
     {
@@ -7842,7 +7842,7 @@
         "copyfast_partner_crm.py",
         "copyfast_partner_readiness.py"
       ],
-      "occurrences": 1725,
+      "occurrences": 1726,
       "provider": "Telegram"
     }
   ],
@@ -14176,9 +14176,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 172,
-  "source_files_scanned": 172,
-  "source_fingerprint_sha256": "a27ab93130f5527aa7416147f7c9d13de70d04cf91df0fb607455ed78434376f",
+  "source_files_discovered": 174,
+  "source_files_scanned": 174,
+  "source_fingerprint_sha256": "81f898050f6b941d5515e751612908fba97bf8c96d5b04b935d2868e113b4168",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14398,7 +14398,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30181,
+      "line": 30320,
       "path": "/features"
     },
     {
