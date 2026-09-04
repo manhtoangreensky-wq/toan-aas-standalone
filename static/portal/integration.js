@@ -742,6 +742,7 @@
       window.TOANAASPortal.clearTransientFormDraft(SFX_CUE_SHEET_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(CAMPAIGN_CREATE_ROUTE);
       window.TOANAASPortal.clearTransientFormDraft(PROJECT_CREATE_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft("/wallet/topup");
     }
   }
 

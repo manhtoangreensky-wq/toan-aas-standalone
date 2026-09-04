@@ -21364,20 +21364,127 @@
     }[String(status || "")] || manualTopupText("guarded", "Đang được bảo vệ");
   }
 
-  function renderManualTopupRecord(item) {
+  function renderManualTopupRecord(item, options = {}) {
     const status = String(item && item.status || "guarded");
+    const revealTransferDetails = options && options.revealTransferDetails === true;
     const facts = [
       [manualTopupText("requestId", "Mã yêu cầu"), item.request_id],
       [manualTopupText("amount", "Số tiền"), Number.isSafeInteger(item.amount_vnd) ? adminNumber(item.amount_vnd, " đ") : ""],
       [manualTopupText("method", "Phương thức"), item.method ? manualTopupText(`method.${item.method}`, item.method) : ""],
-      [manualTopupText("reference", "Tham chiếu"), item.reference],
-      [manualTopupText("transferContent", "Nội dung chuyển khoản"), item.transfer_content],
+      ...(revealTransferDetails ? [
+        [manualTopupText("reference", "Tham chiếu"), item.reference],
+        [manualTopupText("transferContent", "Nội dung chuyển khoản"), item.transfer_content]
+      ] : []),
       [manualTopupText("expectedXu", "Xu dự kiến"), Number.isSafeInteger(item.expected_xu) ? adminNumber(item.expected_xu, " Xu") : ""],
       [manualTopupText("approvedXu", "Xu được duyệt"), Number.isSafeInteger(item.approved_xu) ? adminNumber(item.approved_xu, " Xu") : ""],
       [manualTopupText("submittedAt", "Gửi lúc"), item.submitted_at],
       [manualTopupText("updatedAt", "Cập nhật lúc"), item.updated_at]
     ].filter((entry) => entry[1] !== undefined && entry[1] !== null && entry[1] !== "");
     return `<article class="portal-manual-topup-record" data-status="${safeText(status)}"><div class="portal-manual-topup-record-head"><strong>${safeText(item.request_id || manualTopupText("requestId", "Mã yêu cầu"))}</strong><span>${safeText(manualTopupStatusLabel(status))}</span></div><dl>${facts.map(([label, value]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(value))}</dd></div>`).join("")}</dl></article>`;
+  }
+
+  function manualTopupMethodHasCanonicalQr(method, destination) {
+    const methodId = method && canonicalCatalogCode(method.id);
+    return Boolean(
+      methodId &&
+      String(method.currency || "").toUpperCase() === "VND" &&
+      destination && typeof destination === "object" && !Array.isArray(destination) &&
+      destination.request_enabled === true &&
+      String(destination.qr_url || "") === `/api/v1/payments/options/manual-methods/${methodId}/qr`
+    );
+  }
+
+  function handleManualTopupConfirmSelection(triggerEl) {
+    const form = (triggerEl && triggerEl.matches && triggerEl.matches("form"))
+      ? triggerEl
+      : ((triggerEl && triggerEl.closest) ? triggerEl.closest("form") : null) || (triggerEl && triggerEl.form) || null;
+    const route = "/wallet/topup";
+    const currentTransient = transientFormValues(route) || {};
+
+    let amountVal = "";
+    let methodVal = "";
+    if (form) {
+      const amountInput = form.querySelector ? form.querySelector('input[name="amount_vnd"]') : null;
+      const methodInput = form.querySelector ? form.querySelector('select[name="method"]') : null;
+      if (amountInput) amountVal = String(amountInput.value || "").trim();
+      if (methodInput) methodVal = String(methodInput.value || "").trim();
+    }
+    if (!amountVal && currentTransient.amount_vnd !== undefined) amountVal = String(currentTransient.amount_vnd).trim();
+    if (!methodVal && currentTransient.method !== undefined) methodVal = String(currentTransient.method).trim();
+
+    const parsedAmount = Number(amountVal);
+    if (!Number.isInteger(parsedAmount) || parsedAmount <= 0 || parsedAmount >= 9007199254740992) {
+      showToast(manualTopupText("invalidAmount", "Số tiền phải là số nguyên dương."), "warning");
+      if (form && form.querySelector) {
+        const el = form.querySelector('input[name="amount_vnd"]');
+        if (el && el.focus) el.focus();
+      }
+      return;
+    }
+
+    const bootstrap = getBootstrap();
+    const manual = bootstrap && bootstrap.paymentOptions && bootstrap.paymentOptions.manual;
+    const methods = manual && Array.isArray(manual.methods) ? manual.methods : [];
+    const selectedMethod = methods.find((m) => m && m.id === methodVal);
+
+    const hasDestinationContract = Object.prototype.hasOwnProperty.call(manual, "payment_destinations");
+    const paymentDestinations = manual.payment_destinations && typeof manual.payment_destinations === "object" ? manual.payment_destinations : {};
+    const dest = paymentDestinations[methodVal];
+    const isEnabled = Boolean(hasDestinationContract && manualTopupMethodHasCanonicalQr(selectedMethod, dest));
+
+    if (!methodVal || !selectedMethod || !isEnabled) {
+      showToast(manualTopupText("selectMethodRequired", "Vui lòng chọn một phương thức thanh toán."), "warning");
+      if (form && form.querySelector) {
+        const el = form.querySelector('select[name="method"]');
+        if (el && el.focus) el.focus();
+      }
+      return;
+    }
+
+    currentTransient.topup_lane = "manual";
+    currentTransient.amount_vnd = String(parsedAmount);
+    currentTransient.method = methodVal;
+    currentTransient.manual_selection_confirmed = true;
+    currentTransient.confirmed_amount_vnd = String(parsedAmount);
+    currentTransient.confirmed_method = methodVal;
+
+    transientFormDrafts.set(route, currentTransient);
+
+    mountPortal(bootstrap, { reason: "manual-selection-confirmed" });
+
+    const focusConfirmedInstructions = () => {
+      const heading = document.getElementById("manual-payment-methods-title") || document.querySelector(".portal-manual-payment-methods h3, .portal-manual-topup-current");
+      if (heading && heading.focus) {
+        if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+        heading.focus({ preventScroll: true });
+        if (typeof heading.scrollIntoView === "function") {
+          heading.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
+        }
+      }
+    };
+    if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(() => window.requestAnimationFrame(focusConfirmedInstructions));
+    else focusConfirmedInstructions();
+  }
+
+  function handleManualTopupChangeSelection(_triggerEl) {
+    const route = "/wallet/topup";
+    const currentTransient = transientFormValues(route) || {};
+
+    delete currentTransient.manual_selection_confirmed;
+    delete currentTransient.confirmed_amount_vnd;
+    delete currentTransient.confirmed_method;
+    delete currentTransient.reference;
+
+    currentTransient.topup_lane = "manual";
+    transientFormDrafts.set(route, currentTransient);
+
+    const bootstrap = getBootstrap();
+    mountPortal(bootstrap, { reason: "manual-selection-change" });
+
+    const input = document.querySelector('.portal-manual-topup-form select[name="method"], .portal-manual-topup-form input[name="amount_vnd"]');
+    if (input && input.focus) {
+      input.focus();
+    }
   }
 
   function renderManualTopupGuide(context) {
@@ -21397,49 +21504,81 @@
       ? manual.payment_destinations
       : {};
     const rawMethods = Array.isArray(manual.methods) ? manual.methods.filter((item) => item && canonicalCatalogCode(item.id) && canonicalShortText(item.label, 120)).slice(0, 12) : [];
-    const methods = rawMethods.filter((item) => !hasDestinationContract || Boolean(paymentDestinations[item.id] && paymentDestinations[item.id].request_enabled === true));
-    const methodDestinations = Object.keys(paymentDestinations).flatMap((id) => {
+    const rawMethodIds = new Set(rawMethods.map((item) => item.id));
+    const destinationOnlyMethods = ["usdt_trc20"].flatMap((id) => {
       const item = paymentDestinations[id];
-      if (!canonicalCatalogCode(id) || !item || typeof item !== "object") return [];
-      const destination = item.destination && typeof item.destination === "object" && !Array.isArray(item.destination) ? item.destination : {};
-      const qrUrl = String(item.qr_url || "");
-      if (qrUrl && qrUrl !== `/api/v1/payments/options/manual-methods/${id}/qr`) return [];
-      return [{ id, item, destination, qrUrl }];
-    }).slice(0, 12);
-    const paymentMethodCards = methodDestinations.length ? `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("methodsTitle", "Phương thức thanh toán"))}</h3><div class="portal-manual-payment-method-grid">${methodDestinations.map(({ id, item, destination, qrUrl }) => {
-      const label = manualTopupText(`method.${id}`, canonicalShortText(item.label, 120) || id);
-      const bankLabel = [destination.bank_code, destination.bank_name].filter(Boolean).join(" · ");
-      const facts = [
-        [manualTopupText("bank", "Ngân hàng"), bankLabel],
-        [manualTopupText("accountNumber", "Số tài khoản"), destination.account_number],
-        [manualTopupText("accountOwner", "Chủ tài khoản"), destination.account_owner],
-        [manualTopupText("walletAddress", "Địa chỉ ví"), destination.wallet_address],
-        [manualTopupText("network", "Mạng lưới"), destination.network]
-      ].filter((entry) => entry[1]);
-      const statusText = item.display_ready !== true
-        ? manualTopupText("unavailable", "Chưa được cấu hình")
-        : item.request_enabled === true
-          ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
-          : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
-      return `<article class="portal-manual-payment-method${item.display_ready === true ? "" : " is-unavailable"}" data-manual-payment-method="${safeText(id)}" data-manual-payment-ready="${item.display_ready === true ? "true" : "false"}"><div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "")}</span><h4>${safeText(label)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div>${qrUrl ? `<figure><img src="${safeText(qrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${label}`)}" width="220" height="220" loading="lazy" decoding="async"><figcaption>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</figcaption></figure>` : ""}</article>`;
-    }).join("")}</div></section>` : "";
-    const available = manual.available === true && manual.history_in_web === true && methods.length > 0;
+      const label = item && typeof item === "object" && !Array.isArray(item)
+        ? canonicalShortText(item.label, 120)
+        : "";
+      return !rawMethodIds.has(id) && label ? [{ id, label, destination_only: true }] : [];
+    });
+    const selectorMethods = [...rawMethods, ...destinationOnlyMethods].slice(0, 12);
+    const enabledMethods = rawMethods.filter((item) => hasDestinationContract && manualTopupMethodHasCanonicalQr(item, paymentDestinations[item.id]));
+    const available = manual.available === true && manual.history_in_web === true && enabledMethods.length > 0;
     const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
     const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
     const readState = String(context.manualTopupReadState || "guarded");
     const submitting = flow.status === "submitting";
 
-    if (!available || !methods.length) {
-      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Phiên Web chưa tải được phương thức nạp thủ công. Hãy tải lại trang hoặc thử lại sau."))}</p></div></div>${infoMarkup}${paymentMethodCards}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+    if (!available || !enabledMethods.length) {
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Phiên Web chưa tải được phương thức nạp thủ công. Hãy tải lại trang hoặc thử lại sau."))}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
     }
-    const selectedMethod = String(transient.method || (methods[0] ? methods[0].id : ""));
-    const validatedMethod = methods.find(m => m.id === selectedMethod) ? selectedMethod : (methods[0] ? methods[0].id : "");
-    const amountVnd = String(transient.amount_vnd || "");
-    const reference = String(transient.reference || "");
+
     const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
-    const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData) : "";
-    const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map(renderManualTopupRecord).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
-    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${paymentMethodCards}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}" value="${safeText(amountVnd)}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${methods.map((item) => `<option value="${safeText(item.id)}"${item.id === validatedMethod ? " selected" : ""}>${safeText(manualTopupText(`method.${item.id}`, item.label))}</option>`).join("")}</select></label><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
+    const confirmedFlag = transient.manual_selection_confirmed === true || transient.manual_selection_confirmed === "true";
+    const rawConfirmedAmount = Number(transient.confirmed_amount_vnd || transient.amount_vnd);
+    const isPositiveIntAmount = Number.isInteger(rawConfirmedAmount) && rawConfirmedAmount > 0 && rawConfirmedAmount < 9007199254740992;
+    const confirmedMethodId = String(transient.confirmed_method || transient.method || "");
+    const confirmedMethodDest = paymentDestinations[confirmedMethodId];
+    const isConfirmedMethodValid = Boolean(
+      confirmedMethodId &&
+      rawMethods.some((m) => m.id === confirmedMethodId && manualTopupMethodHasCanonicalQr(m, confirmedMethodDest))
+    );
+    const isSelectionConfirmed = confirmedFlag && isPositiveIntAmount && isConfirmedMethodValid;
+    const recordOptions = { revealTransferDetails: isSelectionConfirmed };
+    const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData, recordOptions) : "";
+    const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map((item) => renderManualTopupRecord(item, recordOptions)).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
+
+    if (!isSelectionConfirmed) {
+      const currentSelectedMethod = String(transient.method || "");
+      const amountVnd = String(transient.amount_vnd || "");
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div><span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-confirm-selection" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><label><span>${safeText(manualTopupText("amountLabel", "Số tiền (VND)"))}</span><input name="amount_vnd" type="number" min="1" step="1" inputmode="numeric" required placeholder="${safeText(manualTopupText("amountPlaceholder", "Nhập số tiền đã chuyển"))}" value="${safeText(amountVnd)}"${submitting ? " disabled" : ""}></label><label><span>${safeText(manualTopupText("methodLabel", "Phương thức"))}</span><select name="method" required${submitting ? " disabled" : ""}><option value="">${safeText(manualTopupText("methodPlaceholder", "Chọn phương thức"))}</option>${selectorMethods.map((item) => {
+        const dest = paymentDestinations[item.id];
+        const isEnabled = item.destination_only !== true && hasDestinationContract && manualTopupMethodHasCanonicalQr(item, dest);
+        const isSelected = item.id === currentSelectedMethod;
+        const disabledAttr = isEnabled ? "" : " disabled";
+        const disabledReason = item.id === "usdt_trc20" && dest && dest.display_ready === true
+          ? manualTopupText("vndReconciliationUnavailable", "Chưa hỗ trợ đối soát VND")
+          : manualTopupText("unavailable", "Chưa được cấu hình");
+        const labelSuffix = isEnabled ? "" : ` (${disabledReason})`;
+        return `<option value="${safeText(item.id)}"${isSelected ? " selected" : ""}${disabledAttr}>${safeText(manualTopupText(`method.${item.id}`, item.label))}${safeText(labelSuffix)}</option>`;
+      }).join("")}</select></label><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="manual-topup-confirm-selection" data-portal-route="/wallet/topup"${submitting ? " disabled" : ""}>${safeText(manualTopupText("confirmSelection", "Xác nhận phương thức"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
+    }
+
+    const item = confirmedMethodDest || {};
+    const destination = item.destination && typeof item.destination === "object" && !Array.isArray(item.destination) ? item.destination : {};
+    const qrUrl = String(item.qr_url || "");
+    const safeQrUrl = (qrUrl === `/api/v1/payments/options/manual-methods/${confirmedMethodId}/qr`) ? qrUrl : "";
+    const methodLabel = manualTopupText(`method.${confirmedMethodId}`, canonicalShortText(item.label, 120) || confirmedMethodId);
+    const bankLabel = [destination.bank_code, destination.bank_name].filter(Boolean).join(" · ");
+    const facts = [
+      [manualTopupText("confirmedAmount", "Số tiền xác nhận"), adminNumber(rawConfirmedAmount, " đ")],
+      [manualTopupText("bank", "Ngân hàng"), bankLabel],
+      [manualTopupText("accountNumber", "Số tài khoản"), destination.account_number],
+      [manualTopupText("accountOwner", "Chủ tài khoản"), destination.account_owner],
+      [manualTopupText("walletAddress", "Địa chỉ ví"), destination.wallet_address],
+      [manualTopupText("network", "Mạng lưới"), destination.network]
+    ].filter((entry) => entry[1]);
+    const statusText = item.display_ready !== true
+      ? manualTopupText("unavailable", "Chưa được cấu hình")
+      : item.request_enabled === true
+        ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
+        : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
+
+    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true"><div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div>${safeQrUrl ? `<figure><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="220" height="220" loading="lazy" decoding="async"><figcaption>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</figcaption></figure>` : ""}</article></div></section>`;
+
+    const reference = String(transient.reference || "");
+    return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${singleMethodCard}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><input type="hidden" name="manual_selection_confirmed" value="true"><input type="hidden" name="amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="method" value="${safeText(confirmedMethodId)}"><input type="hidden" name="confirmed_amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="confirmed_method" value="${safeText(confirmedMethodId)}"><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-change-selection" data-portal-route="/wallet/topup"${submitting ? " disabled" : ""}>${safeText(manualTopupText("changeSelection", "Chọn lại phương thức"))}</button><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
   }
   function renderPaymentRequestForm(page, context) {
     const lane = String((transientFormValues("/wallet/topup") || {}).topup_lane || "payos");
@@ -33734,6 +33873,15 @@
         if (!["payos", "manual"].includes(targetLane)) return;
         const currentTransient = transientFormValues("/wallet/topup") || {};
         currentTransient.topup_lane = targetLane;
+        if (targetLane !== "manual" && currentTransient.manual_selection_confirmed) {
+          delete currentTransient.manual_selection_confirmed;
+          delete currentTransient.confirmed_amount_vnd;
+          delete currentTransient.confirmed_method;
+          delete currentTransient.reference;
+          transientFormDrafts.set("/wallet/topup", currentTransient);
+          mountPortal(getBootstrap(), { reason: "manual-lane-reset" });
+          return;
+        }
         transientFormDrafts.set("/wallet/topup", currentTransient);
         const pageContainer = event.target.closest(".portal-wallet-page, .portal-page") || document;
         pageContainer.querySelectorAll("[data-portal-topup-lane]").forEach((btn) => {
@@ -33884,10 +34032,23 @@
         return;
       }
       const action = event.target.closest("[data-portal-action]");
-      if (action && action.tagName !== "FORM" && !action.disabled) {
-        if (action.tagName === "BUTTON" && action.type === "submit") return;
-        dispatchAction(action, getBootstrap());
-        return;
+      if (action && !action.disabled) {
+        const actionName = action.getAttribute("data-portal-action");
+        if (action.tagName !== "FORM") {
+          if (actionName === "manual-topup-confirm-selection") {
+            if (event && event.preventDefault) event.preventDefault();
+            handleManualTopupConfirmSelection(action);
+            return;
+          }
+          if (actionName === "manual-topup-change-selection") {
+            if (event && event.preventDefault) event.preventDefault();
+            handleManualTopupChangeSelection(action);
+            return;
+          }
+          if (action.tagName === "BUTTON" && action.type === "submit") return;
+          dispatchAction(action, getBootstrap());
+          return;
+        }
       }
       const link = event.target.closest(".portal-nav-link");
       if (link) closeSidebar({ restoreFocus: false });
@@ -33895,6 +34056,11 @@
     document.addEventListener("submit", (event) => {
       if (event.target.matches("[data-portal-form]")) {
         event.preventDefault();
+        const actionName = event.target.getAttribute("data-portal-action");
+        if (actionName === "manual-topup-confirm-selection") {
+          handleManualTopupConfirmSelection(event.target);
+          return;
+        }
         dispatchAction(event.target, getBootstrap());
       }
     });
@@ -33907,6 +34073,18 @@
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
+      if (form && form.getAttribute("data-portal-route") === "/wallet/topup") {
+        const cur = transientFormValues("/wallet/topup") || {};
+        if (cur.manual_selection_confirmed) {
+          if ((event.target.name === "amount_vnd" && String(event.target.value) !== String(cur.confirmed_amount_vnd)) ||
+              (event.target.name === "method" && String(event.target.value) !== String(cur.confirmed_method))) {
+            delete cur.manual_selection_confirmed;
+            delete cur.confirmed_amount_vnd;
+            delete cur.confirmed_method;
+            transientFormDrafts.set("/wallet/topup", cur);
+          }
+        }
+      }
       if (form && form.getAttribute("data-portal-action") === "consultation-crm-preview") {
         markConsultationCrmDraftEdited(form);
       }
@@ -33942,6 +34120,18 @@
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
+        if (form.getAttribute("data-portal-route") === "/wallet/topup") {
+          const cur = transientFormValues("/wallet/topup") || {};
+          if (cur.manual_selection_confirmed) {
+            if ((event.target.name === "amount_vnd" && String(event.target.value) !== String(cur.confirmed_amount_vnd)) ||
+                (event.target.name === "method" && String(event.target.value) !== String(cur.confirmed_method))) {
+              delete cur.manual_selection_confirmed;
+              delete cur.confirmed_amount_vnd;
+              delete cur.confirmed_method;
+              transientFormDrafts.set("/wallet/topup", cur);
+            }
+          }
+        }
         if (form.getAttribute("data-portal-action") === "consultation-crm-preview") {
           markConsultationCrmDraftEdited(form);
         }

@@ -251,11 +251,33 @@ const fs = require("fs"), vm = require("vm");
 const portal = fs.readFileSync(__PORTAL__, "utf8");
 const i18n = fs.readFileSync(__I18N__, "utf8");
 const cls=()=>({add(){},remove(){},toggle(){return false;},contains(){return false;}});
-const el=(id="")=>({id,innerHTML:"",textContent:"",dataset:{},style:{},classList:cls(),children:[],hidden:false,disabled:false,setAttribute(){},getAttribute(){return "";},removeAttribute(){},hasAttribute(){return false;},querySelector(){return null;},querySelectorAll(){return[];},addEventListener(){},removeEventListener(){},appendChild(x){this.children.push(x);return x;},prepend(x){this.children.unshift(x);return x;},remove(){},focus(){},contains(){return false;}});
+const el=(id="",tag="DIV")=>{
+  const attrs = Object.create(null);
+  const node = {
+    id,tagName:tag.toUpperCase(),innerHTML:"",textContent:"",value:"",dataset:{},style:{},classList:cls(),children:[],hidden:false,disabled:false,parentElement:null,
+    setAttribute(k,v){attrs[k]=String(v);},getAttribute(k){return attrs[k]||"";},removeAttribute(k){delete attrs[k];},hasAttribute(k){return k in attrs;},
+    querySelector(){return null;},querySelectorAll(){return[];},addEventListener(){},removeEventListener(){},
+    appendChild(x){x.parentElement=this;this.children.push(x);return x;},prepend(x){x.parentElement=this;this.children.unshift(x);return x;},
+    remove(){},focus(){},contains(){return false;},
+    matches(s){
+      if(s==="form"||s==="FORM")return this.tagName==="FORM";
+      if(s==="[data-portal-form]")return this.hasAttribute("data-portal-form");
+      if(s==="[data-portal-action]")return this.hasAttribute("data-portal-action");
+      return false;
+    },
+    closest(s){
+      let cur=this;
+      while(cur){if(cur.matches&&cur.matches(s))return cur;cur=cur.parentElement;}
+      return null;
+    }
+  };
+  return node;
+};
+const listeners = {};
 const sidebar=el("sidebar"),header=el("header"),main=el("main"),shell=el("shell"),mobile=el("mobile"),palette=el("palette"),body=el("body"),docEl=el("html");
 const document = {
-  readyState:"loading", body, documentElement:docEl, activeElement:null, createElement:()=>el(),
-  addEventListener(){}, removeEventListener(){}, querySelectorAll(){return[];},
+  readyState:"loading", body, documentElement:docEl, activeElement:null, createElement:(t="div")=>el("", t),
+  addEventListener(t,h){ (listeners[t]||=[]).push(h); }, removeEventListener(){}, querySelectorAll(){return[];},
   querySelector(selector){ if(selector.includes("data-portal-sidebar"))return sidebar; if(selector.includes("data-portal-header"))return header; if(selector.includes("data-portal-main"))return main; if(selector.includes("data-portal-shell"))return shell; if(selector.includes("data-portal-mobile-nav"))return mobile; if(selector.includes("data-portal-command-palette"))return palette; return null; },
   getElementById(){return null;}
 };
@@ -270,10 +292,46 @@ const method=(id,label)=>({id,label,currency:"VND",mode:"transfer"});
 window.TOANAASPortal.mount({path:"/wallet/topup",interfaceLocale:"vi",session:{authenticated:true,account:{id:"web-account"}},capabilities:{},wallet:null,
  paymentOptions:{payos:{request_enabled:false,topup_catalog_available:false,topup_packages:[]},manual:{available:true,history_in_web:true,payment_code:"10000000",support_hotline:"0898360858",methods:[method("bank_acb_vietqr","ACB VietQR"),method("momo_tuithantai","MoMo")],payment_destinations:{bank_acb_vietqr:{label:"ACB VietQR",currency:"VND",mode:"transfer",display_ready:true,request_enabled:true,qr_url:"/api/v1/payments/options/manual-methods/bank_acb_vietqr/qr"},momo_tuithantai:{label:"MoMo",currency:"VND",mode:"transfer",display_ready:false,request_enabled:false}}}},
  manualTopupFlow:{status:"form",data:{}},manualTopupHistory:[],manualTopupReadState:"ready"},{reason:"entry"});
-const html=main.innerHTML;
-for(const marker of ['data-manual-payment-method="bank_acb_vietqr"','data-manual-payment-ready="true"','data-manual-payment-method="momo_tuithantai"','data-manual-payment-ready="false"','name="amount_vnd"','10000000','0898360858','Chưa được cấu hình']) if(!html.includes(marker)) throw new Error("missing:"+marker+" html:"+html.slice(0,1600));
-if(html.includes("Telegram")||html.includes("Core Bridge")) throw new Error("bridge copy leaked");
-process.stdout.write(JSON.stringify({ok:true,length:html.length}));
+
+// Initial view: amount input, confirm button, and unavailable method option marked disabled/unavailable
+const initialHtml = main.innerHTML;
+for(const marker of ['name="amount_vnd"','manual-topup-confirm-selection','momo_tuithantai','Chưa được cấu hình']) {
+  if(!initialHtml.includes(marker)) throw new Error("missing in initial:"+marker);
+}
+for(const leak of ['data-manual-payment-method','10000000','0898360858']) {
+  if(initialHtml.includes(leak)) throw new Error("leaked in initial:"+leak);
+}
+
+// Confirm method selection
+const clickHandler = (listeners.click || [])[0];
+const form = el("confirm-form", "FORM");
+form.setAttribute("data-portal-form", "");
+form.setAttribute("data-portal-route", "/wallet/topup");
+const amountInput = el("amount", "INPUT");
+amountInput.setAttribute("name", "amount_vnd");
+amountInput.value = "100000";
+const methodInput = el("method", "SELECT");
+methodInput.setAttribute("name", "method");
+methodInput.value = "bank_acb_vietqr";
+form.appendChild(amountInput);
+form.appendChild(methodInput);
+form.elements = [amountInput, methodInput];
+form.querySelectorAll = () => [amountInput, methodInput];
+form.querySelector = (sel) => sel.includes("amount_vnd") ? amountInput : sel.includes("method") ? methodInput : null;
+const btn = el("confirm-btn", "BUTTON");
+btn.setAttribute("type", "button");
+btn.setAttribute("data-portal-action", "manual-topup-confirm-selection");
+btn.setAttribute("data-portal-route", "/wallet/topup");
+form.appendChild(btn);
+
+clickHandler({ target: btn, preventDefault(){} });
+const confirmedHtml = main.innerHTML;
+for(const marker of ['data-manual-payment-method="bank_acb_vietqr"','data-manual-payment-ready="true"','10000000','0898360858','/api/v1/payments/options/manual-methods/bank_acb_vietqr/qr']) {
+  if(!confirmedHtml.includes(marker)) throw new Error("missing in confirmed:"+marker);
+}
+if(confirmedHtml.includes('data-manual-payment-method="momo_tuithantai"')) throw new Error("unselected method card leaked in confirmed");
+if(initialHtml.includes("Telegram")||initialHtml.includes("Core Bridge")||confirmedHtml.includes("Telegram")||confirmedHtml.includes("Core Bridge")) throw new Error("bridge copy leaked");
+process.stdout.write(JSON.stringify({ok:true,initialLength:initialHtml.length,confirmedLength:confirmedHtml.length}));
 '''.replace("__PORTAL__", json.dumps(str(ROOT / "static" / "portal" / "portal.js"))).replace("__I18N__", json.dumps(str(ROOT / "static" / "portal" / "portal-i18n.js")));
     result = subprocess.run([node, "-e", script], cwd=ROOT, capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
