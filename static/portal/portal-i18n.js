@@ -11221,7 +11221,13 @@
     "manualTopup.invalidAmount": "Số tiền phải là số nguyên dương.",
     "manualTopup.invalidMethod": "Hãy chọn phương thức do máy chủ cung cấp.",
     "manualTopup.invalidReference": "Tham chiếu tối đa 240 ký tự và không chứa ký tự điều khiển.",
-    "manualTopup.inProgress": "Yêu cầu này đang được gửi. Vui lòng chờ phản hồi."
+    "manualTopup.inProgress": "Yêu cầu này đang được gửi. Vui lòng chờ phản hồi.",
+    "manualTopup.confirmSelection": "Xác nhận phương thức",
+    "manualTopup.changeSelection": "Chọn lại phương thức",
+    "manualTopup.instructionTitle": "Hướng dẫn chuyển tiền",
+    "manualTopup.selectMethodRequired": "Vui lòng chọn một phương thức thanh toán.",
+    "manualTopup.confirmedAmount": "Số tiền xác nhận",
+    "manualTopup.vndReconciliationUnavailable": "Chưa hỗ trợ đối soát VND"
   });
 
   Object.assign(MANUAL_TOPUP_MESSAGES.en, {
@@ -11278,7 +11284,13 @@
     "manualTopup.invalidAmount": "The amount must be a positive integer.",
     "manualTopup.invalidMethod": "Select a method supplied by the server.",
     "manualTopup.invalidReference": "The reference is limited to 240 characters and cannot contain control characters.",
-    "manualTopup.inProgress": "This request is already being submitted. Please wait for the response."
+    "manualTopup.inProgress": "This request is already being submitted. Please wait for the response.",
+    "manualTopup.confirmSelection": "Confirm payment method",
+    "manualTopup.changeSelection": "Change payment method",
+    "manualTopup.instructionTitle": "Transfer instructions",
+    "manualTopup.selectMethodRequired": "Please select a payment method.",
+    "manualTopup.confirmedAmount": "Confirmed amount",
+    "manualTopup.vndReconciliationUnavailable": "VND reconciliation unavailable"
   });
 
   Object.assign(MANUAL_TOPUP_MESSAGES.zh, {
@@ -11335,7 +11347,13 @@
     "manualTopup.invalidAmount": "金额必须为正整数。",
     "manualTopup.invalidMethod": "请选择服务器提供的方式。",
     "manualTopup.invalidReference": "参考信息最多 240 个字符，且不能包含控制字符。",
-    "manualTopup.inProgress": "该请求正在提交，请等待响应。"
+    "manualTopup.inProgress": "该请求正在提交，请等待响应。",
+    "manualTopup.confirmSelection": "确认付款方式",
+    "manualTopup.changeSelection": "重新选择付款方式",
+    "manualTopup.instructionTitle": "转账指引",
+    "manualTopup.selectMethodRequired": "请选择一种付款方式。",
+    "manualTopup.confirmedAmount": "确认金额",
+    "manualTopup.vndReconciliationUnavailable": "暂不支持 VND 对账"
   });
 
   Object.keys(MESSAGES).forEach((locale) => Object.assign(

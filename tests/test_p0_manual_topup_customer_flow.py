@@ -265,13 +265,8 @@ def test_manual_portal_has_full_state_lifecycle_and_never_enters_payos_flow():
     assert 'discardSubmission("manual-topup"' not in handler
 
     forbidden = (
-        "payment-create",
-        "/payments/create",
-        "window.open",
-        "schedulePaymentPolling",
-        "safePayosCheckout",
-        "checkout_url",
-        "window.location",
+        "payment-create", "/payments/create", "window.open", "schedulePaymentPolling",
+        "safePayosCheckout", "checkout_url", "window.location",
     )
     for marker in forbidden:
         assert marker not in guide
@@ -279,13 +274,9 @@ def test_manual_portal_has_full_state_lifecycle_and_never_enters_payos_flow():
         assert marker not in lifecycle
 
     for leaked in (
-        "/static/ACBBANK.jpg",
-        "/static/momo.jpg",
-        "/static/binance_usdt.png",
-        "TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5",
-        "0387532320",
-        "NAPXU ${userClean}",
-        "1 USDT = 26.000",
+        "/static/ACBBANK.jpg", "/static/momo.jpg", "/static/binance_usdt.png",
+        "TUqyVeoRhBtFvJmQzaKkqrTVRa1ULNj6o5", "0387532320",
+        "NAPXU ${userClean}", "1 USDT = 26.000",
     ):
         assert leaked not in guide
 
@@ -293,6 +284,127 @@ def test_manual_portal_has_full_state_lifecycle_and_never_enters_payos_flow():
     for protected in ("window.open", 'api("/payments/create"', "safePayosCheckout", "schedulePaymentPolling"):
         assert protected in payos
 
+
+def test_manual_topup_event_reaches_real_integration_post_once_with_csrf_and_idempotency():
+    """Execute the real Integration action; only browser transport is stubbed."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is required to execute the real Portal Integration handler")
+    script = r'''
+const fs = require("node:fs"), vm = require("node:vm");
+let source = fs.readFileSync(__INTEGRATION__, "utf8");
+const closing = "}());";
+const position = source.lastIndexOf(closing);
+if (position < 0) throw new Error("Integration closure not found");
+source = source.slice(0, position)
+  + "\nglobalThis.__manualTopupHarness = { handleAction, state: base };\n"
+  + source.slice(position);
+
+const noop = () => {};
+const document = {
+  readyState: "loading", visibilityState: "visible",
+  addEventListener: noop, removeEventListener: noop,
+  querySelector: () => null, querySelectorAll: () => [],
+  getElementById: () => null,
+  createElement: () => ({ style: {}, dataset: {}, setAttribute: noop, removeAttribute: noop, appendChild: noop, remove: noop }),
+  body: { appendChild: noop }, documentElement: { dataset: {} }
+};
+const windowListeners = {};
+const mounts = [];
+const opened = [];
+const window = {
+  __TOAN_AAS_PORTAL__: {
+    path: "/wallet/topup",
+    session: { authenticated: true, csrfToken: "csrf-manual-test" },
+    paymentOptions: { manual: {
+      methods: [{ id: "bank_acb_vietqr", currency: "VND" }],
+      payment_destinations: { bank_acb_vietqr: {
+        request_enabled: true,
+        qr_url: "/api/v1/payments/options/manual-methods/bank_acb_vietqr/qr"
+      } }
+    } },
+    manualTopupFlow: { status: "form", data: {} }, manualTopupHistory: []
+  },
+  TOANAASPortal: { mount: (state) => mounts.push(state), clearTransientFormDraft: noop },
+  location: { pathname: "/wallet/topup", search: "", assign: (url) => opened.push(url) },
+  history: { pushState: noop, replaceState: noop },
+  addEventListener: (type, handler) => { windowListeners[type] = handler; },
+  removeEventListener: noop, dispatchEvent: noop,
+  setTimeout: () => 1, clearTimeout: noop, setInterval: () => 1, clearInterval: noop,
+  crypto: { getRandomValues: (bytes) => { for (let i = 0; i < bytes.length; i++) bytes[i] = i + 1; return bytes; } },
+  caches: null, isSecureContext: true
+};
+class Element {}
+class HTMLInputElement extends Element {}
+class HTMLSelectElement extends Element {}
+class HTMLButtonElement extends Element {}
+class HTMLFormElement extends Element {}
+const calls = [];
+const response = (status, payload) => ({ ok: status >= 200 && status < 300, status, json: async () => payload });
+const fetch = async (url, options = {}) => {
+  const headers = Object.fromEntries(options.headers.entries());
+  calls.push({ url: String(url), method: String(options.method || "GET"), headers, body: String(options.body || "") });
+  if (url === "/api/v1/payments/manual" && options.method === "POST") {
+    return response(200, { ok: true, status: "pending_admin_review", message: "pending", error_code: null, data: {
+      request_id: "MANUAL-900", status: "pending_admin_review", amount_vnd: 125000,
+      method: "bank_acb_vietqr", reference: "TX-125"
+    } });
+  }
+  if (url === "/api/v1/payments/manual?limit=20" && !options.method) {
+    return response(200, { ok: true, status: "ready", message: "", error_code: null, data: { items: [] } });
+  }
+  throw new Error("unexpected transport " + String(options.method || "GET") + " " + url);
+};
+const context = {
+  window, document, console, process, fetch, Headers, URL, URLSearchParams, Intl,
+  crypto: window.crypto, navigator: { clipboard: null, serviceWorker: null },
+  Blob, File: class File {}, FormData: class FormData {},
+  HTMLElement: Element, HTMLInputElement, HTMLSelectElement, HTMLButtonElement, HTMLFormElement,
+  Event: class Event {}, CustomEvent: class CustomEvent {}, TextEncoder, TextDecoder,
+  setTimeout: window.setTimeout, clearTimeout: window.clearTimeout,
+  setInterval: window.setInterval, clearInterval: window.clearInterval
+};
+context.globalThis = context;
+vm.createContext(context);
+vm.runInContext(source, context, { filename: "integration.js" });
+
+(async () => {
+  const listener = windowListeners["toanaas:portal-action"];
+  if (typeof listener !== "function") throw new Error("real portal action listener not registered");
+  await listener({ detail: { action: "manual-topup-create", route: "/wallet/topup", fields: {
+    amount_vnd: "125000", method: "bank_acb_vietqr", reference: "TX-125"
+  } } });
+  const post = calls.filter((call) => call.url === "/api/v1/payments/manual" && call.method === "POST");
+  const payload = post.length === 1 ? JSON.parse(post[0].body) : {};
+  process.stdout.write(JSON.stringify({
+    calls, postCount: post.length, payload,
+    csrf: post.length ? post[0].headers["x-csrf-token"] : "",
+    requestId: post.length ? post[0].headers["x-request-id"] : "",
+    state: context.__manualTopupHarness.state().manualTopupFlow,
+    opened, mounts: mounts.length
+  }));
+})().catch((error) => { console.error(error); process.exitCode = 1; });
+'''.replace("__INTEGRATION__", json.dumps(str(ROOT / "static" / "portal" / "integration.js")))
+    result = subprocess.run([node, "-e", script], cwd=ROOT, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    evidence = json.loads(result.stdout)
+    assert evidence["postCount"] == 1
+    assert evidence["csrf"] == "csrf-manual-test"
+    assert re.fullmatch(r"web-[0-9a-f]{32}", evidence["requestId"])
+    assert evidence["payload"] == {
+        "amount_vnd": 125000,
+        "method": "bank_acb_vietqr",
+        "reference": "TX-125",
+        "idempotency_key": evidence["payload"]["idempotency_key"],
+    }
+    assert re.fullmatch(r"manual-topup-[0-9a-f]{32}", evidence["payload"]["idempotency_key"])
+    assert [(call["method"], call["url"]) for call in evidence["calls"]] == [
+        ("POST", "/api/v1/payments/manual"),
+        ("GET", "/api/v1/payments/manual?limit=20"),
+    ]
+    assert evidence["state"]["status"] == "pending_admin_review"
+    assert evidence["state"]["data"]["request_id"] == "MANUAL-900"
+    assert evidence["opened"] == []
 
 def test_manual_topup_locale_keysets_and_responsive_controls_are_complete():
     keysets = {}
@@ -585,7 +697,15 @@ const paymentOptions = {
   manual: {
     available: true, history_in_web: true,
     payment_code: "123456789", support_hotline: "0898360858",
-    methods: [{ id: "bank_acb", label: "ACB" }, { id: "momo_tuithantai", label: "MoMo" }]
+    methods: [{ id: "bank_acb_vietqr", label: "ACB VietQR", currency: "VND" }, { id: "momo_tuithantai", label: "MoMo", currency: "VND" }],
+    payment_destinations: {
+      bank_acb_vietqr: {
+        label: "ACB VietQR", currency: "VND", display_ready: true, request_enabled: true,
+        qr_url: "/api/v1/payments/options/manual-methods/bank_acb_vietqr/qr",
+        destination: { bank_code: "ACB", account_number: "123456789", account_owner: "TOAN AAS" }
+      },
+      momo_tuithantai: { label: "MoMo", currency: "VND", display_ready: false, request_enabled: false }
+    }
   }
 };
 function state(locale = "vi", manual = paymentOptions.manual) {
@@ -626,7 +746,7 @@ click({ target: targetFor(manualButton) });
 const fields = [
   { name: "topup_lane", type: "hidden", value: "manual" },
   { name: "amount_vnd", type: "number", value: "125000" },
-  { name: "method", type: "select-one", value: "bank_acb" },
+  { name: "method", type: "select-one", value: "bank_acb_vietqr" },
   { name: "reference", type: "text", value: "TX-125" }
 ];
 const form = element("manual-form");
@@ -644,16 +764,28 @@ const readyHtml = main.innerHTML;
 for (const marker of [
   'data-portal-topup-lane="manual"', 'data-portal-topup-pane="manual"', 'display:block',
   'name="topup_lane" value="manual"', 'name="amount_vnd"', 'value="125000"',
-  'value="bank_acb" selected', 'value="TX-125"', '123456789', '0898360858'
+  'value="bank_acb_vietqr" selected', 'manual-topup-confirm-selection'
 ]) if (!readyHtml.includes(marker)) throw new Error("ready remount missing: " + marker);
+
+// Step 2: Confirm selection to verify that confirmed instruction, codes, and reconciliation appear
+const confirmBtn = element("confirm-btn");
+confirmBtn.setAttribute("data-portal-action", "manual-topup-confirm-selection");
+confirmBtn.setAttribute("data-portal-route", "/wallet/topup");
+click({ target: { id: "", value: "", matches: () => false,
+  closest: (selector) => selector === "[data-portal-action]" ? confirmBtn : selector === "[data-portal-form]" ? form : null }, preventDefault() {} });
+const confirmedHtml = main.innerHTML;
+for (const marker of [
+  'data-portal-topup-lane="manual"', 'data-portal-topup-pane="manual"', 'display:block',
+  'value="125000"', 'value="bank_acb_vietqr"', 'value="TX-125"', '123456789', '0898360858'
+]) if (!confirmedHtml.includes(marker)) throw new Error("confirmed remount missing: " + marker);
 
 const guardedManual = { ...paymentOptions.manual, available: false, history_in_web: false, methods: [] };
 window.TOANAASPortal.mount(state("vi", guardedManual), { reason: "data-hydration" });
 const guardedHtml = main.innerHTML;
-for (const marker of ['data-portal-topup-pane="manual"', 'display:block', '123456789', '0898360858']) {
+for (const marker of ['data-portal-topup-pane="manual"', 'display:block', 'data-manual-topup-state="guarded"']) {
   if (!guardedHtml.includes(marker)) throw new Error("guarded remount missing: " + marker);
 }
-process.stdout.write(JSON.stringify({ ok: true, readyLength: readyHtml.length, guardedLength: guardedHtml.length }));
+process.stdout.write(JSON.stringify({ ok: true, readyLength: readyHtml.length, confirmedLength: confirmedHtml.length, guardedLength: guardedHtml.length }));
 ''';
     script = script.replace("__PORTAL__", json.dumps(str(ROOT / "static" / "portal" / "portal.js")))
     script = script.replace("__I18N__", json.dumps(str(ROOT / "static" / "portal" / "portal-i18n.js")))

@@ -1,0 +1,200 @@
+{
+  "schema_version": "cust-web-manual-topup-progressive-disclosure-002.rendered.v1",
+  "spec_id": "CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002",
+  "verified_at": "2026-09-04",
+  "environment": "local-temporary-signed-browser",
+  "base_urls": [
+    "http://127.0.0.1:18769",
+    "http://127.0.0.1:18770"
+  ],
+  "source_fingerprint": {
+    "base_sha": "b657cea98ecc0c2f6f962bf82f1044333dfe427e",
+    "runtime_diff_sha256": "69c377594db629d22f31548168f9e86480867e47273666c4324688fba240ced6",
+    "git_blobs": {
+      "static/portal/portal.js": "cd11aab9c307165b4dcc461d091b433cdb81f748",
+      "static/portal/portal.css": "c9b2f4bcdde2eb1cd96f9dc141f9f4df6031b198",
+      "static/portal/portal-i18n.js": "08208564bdadfd2da8c71e041b20351a007b66a8",
+      "static/portal/integration.js": "d2b7c3a29525d71803d7dac1d2656b1c98395258"
+    }
+  },
+  "production_data_mutations": 0,
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "manual_topup_posts": 0,
+  "final_submit_clicked": false,
+  "initial_state": {
+    "qr": 0,
+    "payment_information": 0,
+    "reference_input": 0,
+    "final_submit": 0,
+    "history_sensitive_labels": 0,
+    "usdt_binance_disabled": true,
+    "usdt_binance_reason_vi": "Chưa hỗ trợ đối soát VND"
+  },
+  "enabled_vnd_method_matrix": [
+    {
+      "method": "bank_acb",
+      "instruction_cards": 1,
+      "matching_qr": 1,
+      "other_method_cards": 0,
+      "qr_loaded": true,
+      "reference_input": 1,
+      "final_submit": 1
+    },
+    {
+      "method": "bank_acb_vietqr",
+      "instruction_cards": 1,
+      "matching_qr": 1,
+      "other_method_cards": 0,
+      "qr_loaded": true,
+      "reference_input": 1,
+      "final_submit": 1
+    },
+    {
+      "method": "zalopay_personal",
+      "instruction_cards": 1,
+      "matching_qr": 1,
+      "other_method_cards": 0,
+      "qr_loaded": true,
+      "reference_input": 1,
+      "final_submit": 1
+    },
+    {
+      "method": "zalopay_merchant",
+      "instruction_cards": 1,
+      "matching_qr": 1,
+      "other_method_cards": 0,
+      "qr_loaded": true,
+      "reference_input": 1,
+      "final_submit": 1
+    },
+    {
+      "method": "momo_tuithantai",
+      "instruction_cards": 1,
+      "matching_qr": 1,
+      "other_method_cards": 0,
+      "qr_loaded": true,
+      "reference_input": 1,
+      "final_submit": 1
+    }
+  ],
+  "reset_matrix": {
+    "change_selection": {
+      "qr": 0,
+      "payment_information": 0,
+      "reference_input": 0,
+      "final_submit": 0,
+      "unconfirmed_amount_and_method_retained": true
+    },
+    "manual_to_payos_to_manual": {
+      "qr": 0,
+      "payment_information": 0,
+      "reference_input": 0,
+      "final_submit": 0,
+      "unconfirmed_amount_and_method_retained": true
+    },
+    "logout_and_same_account_login": {
+      "qr": 0,
+      "payment_information": 0,
+      "reference_input": 0,
+      "final_submit": 0,
+      "amount": "",
+      "method": ""
+    }
+  },
+  "responsive_matrix": [
+    {"viewport": "1440x900", "initial_qr": 0, "confirmed_qr": 1, "confirmed_qr_loaded": true, "horizontal_overflow": 0},
+    {"viewport": "1024x768", "initial_qr": 0, "confirmed_qr": 1, "confirmed_qr_loaded": true, "horizontal_overflow": 0},
+    {"viewport": "768x900", "initial_qr": 0, "confirmed_qr": 1, "confirmed_qr_loaded": true, "horizontal_overflow": 0},
+    {"viewport": "390x667", "initial_qr": 0, "confirmed_qr": 1, "confirmed_qr_loaded": true, "horizontal_overflow": 0},
+    {"viewport": "360x640", "initial_qr": 0, "confirmed_qr": 1, "confirmed_qr_loaded": true, "horizontal_overflow": 0}
+  ],
+  "locale_theme_matrix": {
+    "passed": 9,
+    "total": 9,
+    "locales": ["vi", "en", "zh-CN"],
+    "preferences": ["light", "dark", "system"],
+    "confirmed_qr_each_case": 1,
+    "final_submit_each_case": 1,
+    "horizontal_overflow_each_case": 0,
+    "restored_locale": "vi"
+  },
+  "localized_copy": {
+    "vi": ["Số tiền (VND)", "Phương thức", "Xác nhận phương thức", "Hướng dẫn chuyển tiền", "Gửi yêu cầu đối soát"],
+    "en": ["Amount (VND)", "Method", "Confirm payment method", "Transfer instructions", "Submit reconciliation request"],
+    "zh-CN": ["金额（VND）", "方式", "确认付款方式", "转账指引", "提交对账请求"]
+  },
+  "contrast": {
+    "light": {
+      "small_label_ratio": 5.282,
+      "input_text_ratio": 12.352,
+      "input_border_ratio": 5.797
+    },
+    "dark": {
+      "small_label_ratio": 9.701,
+      "input_text_ratio": 15.172,
+      "input_border_ratio": 9.053
+    },
+    "disabled_option": {
+      "light_color": "rgb(69, 107, 119)",
+      "light_background": "rgb(237, 246, 247)",
+      "light_ratio": 5.28,
+      "dark_color": "rgb(185, 203, 215)",
+      "dark_background": "rgb(21, 32, 57)",
+      "dark_ratio": 9.7,
+      "opacity": 1
+    },
+    "minimum_text_ratio": 4.5,
+    "minimum_control_boundary_ratio": 3.0
+  },
+  "focus_and_clip": {
+    "mobile_390x667": {
+      "active_element_id": "manual-payment-methods-title",
+      "active_element_tag": "H3",
+      "heading_tabindex": "-1",
+      "heading_top_px": 80.537,
+      "heading_bottom_px": 104.537,
+      "sticky_header_bottom_px": 64.8,
+      "clearance_px": 15.737,
+      "above_sticky_header": true,
+      "inside_viewport": true
+    },
+    "desktop_1280x720": {
+      "active_element_id": "manual-payment-methods-title",
+      "heading_top_px": 132.313,
+      "heading_bottom_px": 156.313,
+      "sticky_header_bottom_px": 66.8,
+      "clearance_px": 65.512,
+      "above_sticky_header": true,
+      "inside_viewport": true
+    }
+  },
+  "confirm_request_ledger": {
+    "selected_qr_gets": 1,
+    "selected_qr_http_status": 200,
+    "other_method_qr_gets": 0,
+    "manual_topup_posts": 0,
+    "failed_requests": 0,
+    "http_5xx": 0
+  },
+  "browser": {
+    "framework_overlay": 0,
+    "console_errors_or_warnings": 0,
+    "page_errors": 0,
+    "clipped_focus_target": 0
+  },
+  "ephemeral_screenshot": {
+    "bytes": 73879,
+    "sha256": "2940e7633a634ccf1f4b7786dfb8aa0e727dfa9488a49cc0a25318e3091fbac6",
+    "persisted_in_repository": false,
+    "reason": "Confirmed-state capture contains temporary payment fixture details; only its content hash is retained."
+  },
+  "cleanup": {
+    "local_server_listener_18768": 0,
+    "local_server_listener_18769": 0,
+    "local_server_listener_18770": 0,
+    "temporary_viewport_reset": true,
+    "agent_created_browser_tab_closed": true
+  },
+  "rendered_pass": true
+}

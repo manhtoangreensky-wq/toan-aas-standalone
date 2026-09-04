@@ -1,11 +1,11 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: production Web đến SHA `94dbd2825889f4ff71d201465870c182075a0282` ngày 02/09/2026 và candidate `/admin/login` local ngày 03/09/2026; tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
+> Phạm vi đo: `origin/main` và production Web đến SHA `b657cea98ecc0c2f6f962bf82f1044333dfe427e` ngày 03/09/2026; candidate progressive-disclosure manual top-up trên cùng BASE được đo local ngày 04/09/2026. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main: `94dbd2825889f4ff71d201465870c182075a0282` (PR #420); Web/nginx active, tracked diff `0` tại readback.
+- Web production/main: `b657cea98ecc0c2f6f962bf82f1044333dfe427e` (PR #421); Web/nginx active, tracked diff `0` tại readback.
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
@@ -13,20 +13,22 @@
 - VPS readback sau PR #419: exact HEAD `0dd8ffa`; `toanaas-web.service=active`; `nginx.service=active`; `/health` trả `ok=true`, app `TOAN AAS Web App`, entrypoint `app.py`.
 - Manual top-up `ACCEPTED_LIVE`: signed QR `6/6`, năm ảnh canonical unique `5/5`, năm viewport `5/5`, hotline `0898360858`; đúng một `MANUAL-1` đang `pending_admin_review`.
 - PR #419 Auth hotfix đã merge; quality run `33373616782` và deploy run `33373616654` đều `SUCCESS`; live logo/card đã đo tại `844×610` và `390×667`.
+- PR #421 Admin-login responsive đã merge/deploy; runtime `b657cea…` được live-test tại desktop/tablet/mobile và public `/login`/`/register` giữ nguyên comparator.
+- Motion customer trên runtime `b657cea…` đã nghiệm thu lại: route entrance `8/8`, scroll reveal `6/6`, hydration no-replay `2/2`, reduced-motion `8/8`; overflow/framework/relevant-console/page error `0`.
 - Production QA chỉ tạo một pending `10000 VND`; approve/reject/draft/confirm, `approved_xu`, ledger, provider, PayOS và Telegram call đều `0`. Đây không phải giao dịch đã thanh toán hay cộng Xu.
 - `MERGED != DEPLOYED != LIVE`.
 - `HTTP 200` chỉ chứng minh request HTTP được xử lý; nó không chứng minh quyết định tài chính cuối hợp lệ.
 
-### 1.1 Candidate `/admin/login` — local verified, chưa production
+### 1.1 `/admin/login` responsive — đã accepted live
 
-- BASE: `94dbd2825889f4ff71d201465870c182075a0282`; branch `fix/admin-login-responsive-001`.
+- BASE trước ship: `94dbd2825889f4ff71d201465870c182075a0282`; PR #421; runtime sau ship `b657cea98ecc0c2f6f962bf82f1044333dfe427e`.
 - Source runtime thay đổi đúng một CSS file; regression test mới là file thứ hai. Các tài liệu/case trong commit là ship evidence, không phải runtime.
 - Root cause cũ: `.portal-main` bị giới hạn `560px`, trong khi Admin article không có route-scoped desktop override; selector R1 từng đảo ancestor/descendant và không thể match.
 - Candidate dùng exact ancestor `.portal-shell--auth[data-portal-app-kind="admin"] .portal-main`; mọi selector trong block đều có Admin marker.
 - Fresh protected gate: `11 passed`, `1` warning deprecation; Node/diff exit `0`; artifact/secret match `0`.
 - Browser local sau corrective: `1920/1440/1024` hai cột; `768/390/360` một cột; boundary `769/804/806/822/840` một cột và Browser-rounded `842` hai cột. Tất cả overflow/outside `0`; candidate khóa `≤840` stacked và `≥841` two-column.
 - Light/dark giữ nguyên geometry; theme cuối được khôi phục `system`. `/login` và `/register` tại `390px` có Admin marker `false`, overflow/outside `0`.
-- Candidate chưa commit/push/merge/deploy; không được gọi là LIVE cho tới khi GitHub CI, deploy, runtime SHA và live Browser cùng đạt.
+- GitHub merge, deploy, runtime SHA và live Browser đã có bằng chứng riêng; phần này được khóa làm protected comparator cho M03B.
 
 ## 2. Kiến trúc quyền sở hữu
 
@@ -50,8 +52,8 @@
 1. Khách đăng nhập Web bằng signed session; liên kết Telegram là tùy chọn và không mở/khóa lane manual.
 2. Signed `GET /api/v1/payments/options` trả mã nạp 8 số, hotline và projection phương thức từ cấu hình/asset private của Web; response luôn `no-store, private`.
 3. QR chỉ đi qua signed same-origin endpoint; path private không xuất hiện trong JSON/HTML và repo public không chứa QR binary/config.
-4. Client chỉ đưa VND method có `request_enabled=true` vào selector; method thiếu config vẫn hiện card `Chưa được cấu hình`, USDT/Binance chỉ informational.
-5. Khách nhập `amount_vnd`, chọn method, tùy chọn reference và submit bằng CSRF + idempotency key.
+4. Selector hiển thị các method VND server cấp; method chưa sẵn sàng vẫn visible-disabled. USDT/Binance configured được hiển thị disabled với lý do chưa hỗ trợ đối soát VND, không phải “chưa cấu hình”. Initial không render method card/QR/code.
+5. Khách nhập `amount_vnd`, chọn method và xác nhận local để mở đúng một instruction/QR. Sau khi chuyển tiền, khách có thể nhập reference rồi submit bằng CSRF + idempotency key.
 6. Trong một `BEGIN IMMEDIATE`, Web xử lý đúng thứ tự: replay/conflict đã có → admission method → quota pending → insert một `pending_admin_review`.
 7. Request/history/detail/status chỉ dùng account ID từ signed session và projection owner-safe.
 8. Admin Web-local xem list/detail có account, email, amount, method, payment code và request ID.
@@ -72,11 +74,24 @@
 ### 3.2 Payment destination và QR private — candidate 02/09/2026
 
 - Backend công bố `manual.methods[]` bốn field tương thích và `manual.payment_destinations` keyed bằng method ID canonical.
-- ACB VietQR chỉ `request_enabled=true` khi vừa có destination đủ bank code/name/account/owner, vừa có QR giải mã hợp lệ. MoMo/ZaloPay cần QR canonical; USDT TRC20 không vào selector VND.
+- ACB VietQR chỉ `request_enabled=true` khi vừa có destination đủ bank code/name/account/owner, vừa có QR giải mã hợp lệ. MoMo/ZaloPay cần QR canonical; USDT TRC20 xuất hiện discoverable nhưng disabled, không vào VND admission.
 - Nguồn runtime mặc định là `/opt/toanaas/webapp-private/manual-payment`: 5 ảnh private và `config.json` root-owned tối đa 16 KiB. ENV, nếu có, chỉ override. Không asset/config nào được commit vào repo public.
 - QR được giới hạn 5 MiB, 4096 px mỗi cạnh, 16 MP; Pillow full verify/decode, decompression bomb và malformed file fail closed. Response có `Cache-Control`, `Cross-Origin-Resource-Policy: same-origin`, `nosniff`.
 - Cache decode tối đa 12 entry theo resolved path + device/inode/size/mtime/ctime; file thay đổi phải revalidate, signed request lặp không decode lại ảnh ổn định.
 - Independent Tester final `0 Critical / 0 Important / 0 Minor`; final immutable security discovery phủ 6/6 production file và candidate count `0`. `LIVE_PASS` vẫn `NOT_TESTED` trước deploy.
+
+### 3.3 Progressive disclosure manual top-up — candidate M03B ngày 04/09/2026
+
+- SPEC `CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002`, BASE `b657cea98ecc0c2f6f962bf82f1044333dfe427e`, branch `fix/cust-web-manual-topup-progressive-disclosure-002`.
+- Initial state chỉ có số tiền, selector phương thức và CTA xác nhận; destination, mã nạp, hotline, QR, reference và CTA đối soát đều vắng khỏi DOM. History/current record ở choose-state cũng không render `reference` hoặc `transfer_content`; explicit confirm mới mở chi tiết. Input/select click không tự xác nhận và không chặn native picker.
+- Explicit local confirm kiểm số nguyên dương và fail closed trừ khi method thuộc projection VND, `request_enabled=true` **và** có đúng canonical same-origin QR route của chính method đó. Confirm không phát `ACTION_EVENT`, không POST API và chỉ hiển thị đúng một instruction/QR.
+- `USDT TRC20 / Binance` được hiển thị discoverable nhưng disabled với copy “chưa hỗ trợ đối soát VND”; destination metadata không tạo authority VND. Back/change hoặc manual→PayOS→manual xóa confirmation, instruction, QR và reference cũ, nhưng giữ amount/method chưa xác nhận để khách không nhập lại. Logout, bootstrap signed account mới hoặc account switch xóa toàn bộ draft `/wallet/topup`, gồm cả amount/method.
+- Light dùng chữ tối trên nền sáng; dark dùng chữ sáng trên nền tối. Placeholder/disabled control dùng semantic token có opacity `1`; mobile input tối thiểu `16px`, target tối thiểu `44px`.
+- Final local rendered receipt: enabled VND method `5/5`, mỗi method đúng `1` instruction card + `1` matching signed QR, other-method card `0`, QR decode/load `5/5`; VI/EN/ZH × light/dark/system `9/9`; viewport `1440/1024/768/390/360` `5/5`; initial/back/lane-reset/relogin đều `QR=0`, final submit `0`, horizontal overflow `0`, relevant console error/warning `0`. Locale cuối được khôi phục VI.
+- Contrast đo trên computed style: light small-label `5.282:1`, input text `12.352:1`, border `5.797:1`; dark tương ứng `9.701:1`, `15.172:1`, `9.053:1`. Receipt đã redaction, không chứa payment identifier/QR bytes: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json`.
+- Một final-submit duy nhất trên DB tạm tạo đúng `1` request `125000 VND`, method `bank_acb_vietqr`, status `pending_admin_review`; decision receipt, wallet/ledger table và provider call `0`. Không final-submit production và không chạm production `MANUAL-1`.
+- Final focused suite phải được chạy lại ngay trước commit; browser receipt nêu trên không thay test/CI. Integration chỉ đổi đúng one-line `/wallet/topup` session cleanup; final `manual-topup-create` handler phải tiếp tục byte-identical với BASE theo hunk comparator.
+- Codex Security artifact đã review 6 dirty file và giữ report, nhưng workbench kết thúc `failed` do lỗi timestamp completion của plugin. Không gọi scan đó là PASS; ship chỉ mở khi independent fallback review trên exact frozen diff trả `0 Critical / 0 Important`.
 
 ## 4. Các route Web dành cho khách
 
@@ -256,13 +271,15 @@
 ## 18. Việc còn mở
 
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
-- Tester workspace candidate có `36` case tuần tự; WA-35/36 thuộc đúng `MOTION-WEBAPP-SURFACES-001`.
+- Tester workspace source có `40` case tuần tự; WA-40 thuộc đúng `CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
-- `MOTION-WEBAPP-SURFACES-001` đã local-render/Tester PASS: focused `56 passed/1 Windows-only deselected`; comparator cùng ba file trên exact main và candidate đều `22 passed/5 baseline failures`, `NEW_FAILURES=0`. PR #418 đã rebase local lên `0dd8ffa`, chưa push lại/merge/deploy tại thời điểm ghi.
+- `MOTION-WEBAPP-SURFACES-001` đã accepted live trên runtime `b657cea…`; normal route/scroll/hydration và reduced-motion đều có matrix riêng.
+- M03B progressive disclosure đã local-build/render/temp-DB verified; merge/deploy/live vẫn phải được xác minh độc lập trước khi đổi sang `ACCEPTED_LIVE`. Security workbench terminal `failed` do lỗi công cụ completion timestamp; không che blocker bằng report artifact.
+- GitHub CLI đã revalidate issue #412 OPEN, required labels `12/12` và local templates `2/2` ngày 04/09. Tester Project đã được xác minh tồn tại ngày 03/09; token hiện thiếu `read:project` nên chưa đọc lại Project ngày 04/09 và không tự mở rộng OAuth scope.
 - Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
 - ENV/secret rotation chưa được thực hiện.
-- Signed production customer/Admin routes chưa được kiểm cho batch này.
+- Underlying PR #420 signed customer create/read + Admin list/detail đã live-smoke trên đúng `MANUAL-1 pending_admin_review`; riêng M03B progressive UI chưa live trước deploy, và không chạy approve/reject/cộng Xu.
 - Live money flow không được chạy khi chưa có Owner money gate.
 
 ## 19. Bản đồ bằng chứng
@@ -276,4 +293,6 @@
 - P0-05E corrective: `evidence/p0-05e-primary-manager-verified-20260830.md` sau khi Manager closeout; trước khi file này tồn tại, trạng thái vẫn chưa ACCEPTED.
 - Auth login brand/viewport: `evidence/auth-login-brand-viewport-001-20260831.md` và matrix JSON cùng tên.
 - Customer motion live-reopen: `evidence/motion-webapp-surfaces-live-reopen-v2-20260831.md` + `evidence/motion-webapp-surfaces-live-reopen-v2-matrix.json`; video/frames nặng được giữ ngoài repo với SHA-256 ghi trong report.
+- Current-main motion live retest: `evidence/motion-live-retest-b657/`.
+- M03B pre-fix rendered/temp DB ngoài repo chỉ là historical diagnostic. Final redacted browser receipt: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json`; pre-push review: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002.md`.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.

@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-39` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-40` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -36,9 +36,10 @@
 - WA-33 phải thao tác thật `manual → amount/method/reference → hydration/remount`, không dùng source grep thay cho DOM/rendered evidence.
 - WA-34 bơm sentinel `admin_note` vào single/history và giữ Admin projection làm control; customer JSON và customer JS state đều phải không có field này.
 - Mobile 390/360 phải đo overlap theo diện tích giữa nút gửi với PWA FAB, Copilot và bottom nav; cả ba bằng `0`.
-- WA-37 phải dùng account Web chưa liên kết Telegram: mở manual, xác nhận đủ 5 method card/QR; nhập amount/method/reference; submit ra `pending_admin_review`. Không quét hoặc thanh toán QR trong test UI.
+- WA-37 phải dùng account Web chưa liên kết Telegram: initial chỉ amount/method/confirm, không có QR/code/destination/reference/final submit. Xác nhận từng VND method enabled riêng lẻ và mỗi lượt chỉ có 1 signed QR/instruction; back hoặc chuyển PayOS→Manual phải purge và buộc xác nhận lại. USDT/Binance configured vẫn disabled vì chưa hỗ trợ đối soát VND. Không submit, quét hoặc thanh toán QR trong test UI.
 - WA-38 phải dùng temp DB/private fixture: method unavailable và partial ACB không tạo row; malformed/decompression-bomb QR trả 404 có đủ security headers; concurrent same-key chỉ một request; Admin list/detail đọc đúng account/amount/code.
 - WA-39 kiểm `/admin/login` tại `1920/1440/1024/841/840/821/805/804/769/768/390/360`: từ 841 trở lên hai cột, từ 840 trở xuống một cột; light/dark/system, focus, input/touch target, overflow/outside/console; `/login` và `/register` là protected comparator. Local PASS chưa phải live PASS.
+- WA-40 kiểm đúng ba pha `choose → instructions → reconciliation`: initial không có QR/destination/code/history-transfer/reference/final submit hoặc QR request; click input/select không confirm; từng method VND chỉ được enable khi có canonical same-origin QR và explicit confirm chỉ hiện đúng một matching QR, không POST; back/lane-switch purge confirmation, logout/account-switch purge toàn draft; USDT/Binance hiện disabled với đúng lý do không hỗ trợ đối soát VND. Final submit chỉ chạy trên DB tạm để chứng minh một pending và zero decision/Xu/ledger/provider. Sau deploy chỉ live-test read-only tới bước confirm, không tạo pending production nếu chưa có Owner data-mutation gate mới.
 
 ### MOTION-WEBAPP-SURFACES-001
 
