@@ -1,6 +1,6 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: `origin/main` và production Web đến SHA `b657cea98ecc0c2f6f962bf82f1044333dfe427e` ngày 03/09/2026; candidate progressive-disclosure manual top-up trên cùng BASE được đo local ngày 04/09/2026. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
+> Phạm vi đo: `origin/main` và production Web đến SHA `d096bac7b5d7c75b7950fb3f92e8c32c5df20e08` ngày 05/09/2026; A09 Auth/Admin shell được đo local trên đúng BASE này. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 
 ## 1. Trạng thái và định danh nguồn
@@ -271,10 +271,10 @@
 ## 18. Việc còn mở
 
 - `P0-05A`: rotate/revoke và loại ba credential-like tracked paths khỏi Bot HEAD theo security spec riêng.
-- Tester workspace source có `40` case tuần tự; WA-40 thuộc đúng `CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002`.
+- Tester workspace source có `43` case tuần tự; WA-41..43 thuộc đúng `A09-AUTH-ADMIN-SHELL-VERTICAL-RESPONSIVE-LOCALE`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
 - `MOTION-WEBAPP-SURFACES-001` đã accepted live trên runtime `b657cea…`; normal route/scroll/hydration và reduced-motion đều có matrix riêng.
-- M03B progressive disclosure đã local-build/render/temp-DB verified; merge/deploy/live vẫn phải được xác minh độc lập trước khi đổi sang `ACCEPTED_LIVE`. Security workbench terminal `failed` do lỗi công cụ completion timestamp; không che blocker bằng report artifact.
+- M03B progressive disclosure đã `ACCEPTED_LIVE` qua PR #422 tại main/runtime `d096bac…`; A09 là candidate local tiếp theo và chưa được suy merged/deployed/live.
 - GitHub CLI đã revalidate issue #412 OPEN, required labels `12/12` và local templates `2/2` ngày 04/09. Tester Project đã được xác minh tồn tại ngày 03/09; token hiện thiếu `read:project` nên chưa đọc lại Project ngày 04/09 và không tự mở rộng OAuth scope.
 - Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
@@ -296,3 +296,18 @@
 - Current-main motion live retest: `evidence/motion-live-retest-b657/`.
 - M03B pre-fix rendered/temp DB ngoài repo chỉ là historical diagnostic. Final redacted browser receipt: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json`; pre-push review: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002.md`.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.
+
+## 20. A09 Auth + Admin shell — trạng thái vận hành candidate 05/09/2026
+
+- A09 là thay đổi presentation-only: không thay API, session, MFA, CSRF, role, schema, payment, wallet, provider hoặc Internal App.
+- Admin sidebar dựng toàn bộ nhóm/module do `adminErpNavigation` server cấp theo dạng dọc. Browser không thêm route; nhóm hiện hành mở mặc định, các nhóm khác đóng nhưng vẫn discoverable.
+- Horizontal app rail cũ đã bị loại khỏi renderer và CSS. Bảng dữ liệu vẫn có wrapper cuộn ngang cục bộ khi cần; toàn trang không cuộn ngang.
+- Dashboard chỉ nhận bốn count key `users`, `engine_jobs`, `worker_jobs`, `payments`. Key phải là own-property, số hữu hạn và không âm; số `0` là dữ liệu thật. Missing/unrelated key không tạo card dấu gạch.
+- Workload chỉ hiện khi có ít nhất một trong ba nguồn job/payment thật; readiness chỉ hiện khi có entry readiness thật. Khi mọi nguồn vắng, giao diện hiện đúng một empty state và không tạo KPI/chart giả.
+- Danh sách route giao nhau với server grant được gọi đúng là `Truy cập nhanh / Quick access`; đây không phải task inbox.
+- Public Auth và Admin-login có catalogue VI/EN/ZH đối xứng cho tên ngôn ngữ, theme fallback và fixed chrome; Admin header VI không còn nhãn cứng `VI / EN`.
+- Desktop `>=981px` dùng sidebar `256px` và workspace `minmax(0,1fr)`; drawer sở hữu `<=980px`. Dưới `768px`, KPI/work list/content là một cột và giữ safe-area variables.
+- Logo Admin dùng ảnh chính thức với `width/height/max-width=100%`, `object-fit:contain`, `transform:none`; tỷ lệ render đo được `1.00` ở 20 trạng thái Admin.
+- Local evidence: focused `50P`; protected BASE/candidate `68P/2F`; expanded BASE/candidate `130P/3F`; exact failure IDs bằng nhau và `NEW_FAILURES=0`. Browser Admin `20` trạng thái + Auth comparator `24` trạng thái, aggregate `22/22`, relevant console event `0`.
+- Codex Security inventory đã review `5/5` production paths và artifact sealed có findings `0`, nhưng workbench terminal `FAILED_INFRA` do sandbox parent-path. Đây là limitation, không phải security PASS.
+- Candidate chưa merge/deploy/live. Chỉ sau PR, CI, runtime SHA, service health và signed production matrix mới đổi A09 sang `ACCEPTED_LIVE`.

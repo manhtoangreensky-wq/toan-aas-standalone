@@ -51,9 +51,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_40_cases():
+def test_source_has_exact_sequential_43_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 41)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 44)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -160,6 +160,20 @@ def test_manual_progressive_disclosure_case_preserves_local_confirm_and_money_bo
     assert "temp final submit tạo `1 pending_admin_review`" in case["PASS bắt buộc"]
     assert "decision/Xu/ledger/provider `0`" in case["PASS bắt buộc"]
     assert "form click từng chặn native select" in case["Canh lỗi cũ"]
+
+
+def test_a09_cases_keep_vertical_data_truth_and_auth_accessibility_separate():
+    cases = {row["ID"]: row for row in sync.parse_cases(SOURCE)}
+    assert {cases[case_id]["SPEC_ID"] for case_id in ("WA-41", "WA-42", "WA-43")} == {
+        "A09-AUTH-ADMIN-SHELL-VERTICAL-RESPONSIVE-LOCALE"
+    }
+    assert {cases[case_id]["Mức"] for case_id in ("WA-41", "WA-42")} == {"🔴 chặn-bán-hàng"}
+    assert cases["WA-43"]["Mức"] == "🟠 nặng"
+    assert "sidebar `256px`" in cases["WA-41"]["PASS bắt buộc"]
+    assert "metric/chart `0`, empty state `1`" in cases["WA-42"]["PASS bắt buộc"]
+    assert "logo contain ratio `1.00`" in cases["WA-43"]["PASS bắt buộc"]
+    assert all("live-after-deploy" in cases[case_id]["Môi trường"] for case_id in ("WA-41", "WA-42", "WA-43"))
+    assert all(cases[case_id]["Canh lỗi cũ"] for case_id in ("WA-41", "WA-42", "WA-43"))
 
 
 def test_parser_supports_escaped_pipe(tmp_path: Path):
@@ -316,7 +330,7 @@ def test_issue_forms_use_exact_labels_fields_and_safe_redaction():
 def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
     guide = GUIDE.read_text(encoding="utf-8")
     assert len(guide.splitlines()) >= 45
-    for marker in ["WA-01..WA-40", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
+    for marker in ["WA-01..WA-43", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
         assert marker in guide
     assert "python scripts/tester_case_sync.py --so=3 --json" in guide
     assert "--so=3 --that" not in guide
@@ -338,10 +352,10 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["metadata_encoding"] == "utf-8-lf-portable"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 40
+    assert data["case_count"] == 43
     assert data["p0_case_count"] == 18
     assert data["github_project"] == "TOAN AAS Web App · Tester P0"
-    assert data["local_metadata_updated_at"] == "2026-09-04"
+    assert data["local_metadata_updated_at"] == "2026-09-05"
     assert data["remote_verified_at"] == "2026-09-03"
     assert data["partial_remote_revalidated_at"] == "2026-09-04"
     assert data["remote_revalidation"] == {
@@ -350,7 +364,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
         "issue_templates": "verified_local_2_of_2",
         "github_project": "not_revalidated_missing_read_project_scope",
     }
-    assert data["push_gate"] == "CUST_WEB_MANUAL_TOPUP_PROGRESSIVE_002_LOCAL_VERIFIED_PUSH_BLOCKED"
+    assert data["push_gate"] == "A09_PR_423_CI_RETEST_PENDING"
     assert data["labels_missing"] == []
     assert data["external_mutations"] == 0
     assert all(value == 0 for value in data["safety"].values())

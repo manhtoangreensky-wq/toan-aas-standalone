@@ -64,7 +64,7 @@ const context = { navigation };
     return json.loads(result.stdout)
 
 
-def test_sidebar_renders_only_route_active_server_group_with_admin_fallback() -> None:
+def test_sidebar_renders_all_authorized_groups_with_active_group_open() -> None:
     result = _run_node(
         r'''
 const support = adminDesktopNavGroups(context, { path: "/admin/support" });
@@ -73,30 +73,21 @@ process.stdout.write(JSON.stringify({ support, root }));
 '''
     )
 
-    assert [group["label"] for group in result["support"]] == ["Hỗ trợ"]
-    assert result["support"][0]["links"] == [["/admin/support", "Phiếu hỗ trợ", "support", True]]
-    assert [group["label"] for group in result["root"]] == ["Hệ thống"]
+    assert [group["label"] for group in result["support"]] == ["Tài chính", "Hệ thống", "Hỗ trợ"]
+    assert [group.get("current") for group in result["support"]] == [False, False, True]
+    assert [group.get("defaultOpen") for group in result["support"]] == [False, False, True]
+    assert result["support"][2]["links"] == [["/admin/support", "Phiếu hỗ trợ", "support", True]]
+    assert [group["label"] for group in result["root"]] == ["Tài chính", "Hệ thống", "Hỗ trợ"]
+    assert [group.get("current") for group in result["root"]] == [False, True, False]
+    assert [group.get("defaultOpen") for group in result["root"]] == [False, True, False]
 
 
-def test_app_switcher_uses_every_server_group_and_first_module_route() -> None:
-    result = _run_node(
-        r'''
-const html = renderAdminAppSwitcher({ path: "/admin/support" }, context);
-process.stdout.write(JSON.stringify({
-  appCount: (html.match(/class="portal-admin-app"/g) || []).length,
-  routes: Array.from(html.matchAll(/href="([^"]+)"/g), (match) => match[1]),
-  activeCount: (html.match(/aria-current="page"/g) || []).length,
-  hasTitles: navigation.groups.every((group) => html.includes(group.title))
-}));
-'''
-    )
-
-    assert result == {
-        "appCount": 3,
-        "routes": ["/admin/payments", "/admin", "/admin/support"],
-        "activeCount": 1,
-        "hasTitles": True,
-    }
+def test_admin_global_header_is_single_header_and_vertical_catalog_in_sidebar() -> None:
+    header = _between(PORTAL, "function renderHeader(page, context)", "function renderFields(")
+    assert "portal-admin-global-header" in header
+    assert "portal-admin-app-switcher" not in header
+    assert "renderAdminAppSwitcher" not in header
+    assert "adminDesktopNavGroups" in PORTAL
 
 
 def test_admin_locale_form_is_direct_header_action_and_only_offers_vi_en() -> None:
@@ -113,6 +104,8 @@ def test_admin_locale_form_is_direct_header_action_and_only_offers_vi_en() -> No
     assert 'localeOption("vi",' in form
     assert 'localeOption("en",' in form
     assert 'localeOption("zh",' not in form
+    assert "VI / EN" not in form
+    assert 'uiText("adminShell.language", "Ngôn ngữ")' in form
 
 
 def test_admin_shell_new_copy_has_exact_vi_en_keys() -> None:
@@ -155,8 +148,9 @@ def test_admin_takeover_css_locks_compact_header_locale_label_and_drawer() -> No
     corrective = THEME[THEME.index(marker) :] if marker in THEME else ""
 
     assert "white-space: nowrap;" in corrective
-    assert ".portal-admin-app-switcher-label" in corrective
-    assert "flex: 0 0 72px;" in corrective
+    assert ".portal-admin-app-switcher" not in THEME
+    assert ".portal-admin-app-list" not in THEME
+    assert ".portal-admin-app-copy" not in THEME
     assert "width: min(240px, calc(100vw - 42px));" in corrective
     assert "grid-template-columns: 44px minmax(0, 1fr) 44px 44px;" in corrective
     assert "grid-template-rows: 44px 44px;" in corrective
@@ -174,18 +168,17 @@ def test_admin_breadcrumb_inserts_active_app_between_brand_and_page() -> None:
 
 def test_admin_shell_css_is_scoped_tokenized_and_mobile_safe() -> None:
     shell = THEME[THEME.index(THEME_MARKER) :]
+    a09 = THEME[THEME.index("/* A09 Admin Vertical Shell */") :]
 
     for contract in (
-        'grid-template-columns: 240px minmax(0, 1fr);',
         "min-height: 64px;",
         "min-height: 56px;",
         "min-height: 44px;",
-        "overflow-x: auto;",
         "overflow-x: hidden;",
-        "border-bottom: 3px solid transparent;",
         "@media (max-width: 700px)",
     ):
         assert contract in shell
+    assert 'grid-template-columns: 256px minmax(0, 1fr);' in a09
     assert "gradient" not in shell
     assert "glow" not in shell
     assert "!important" not in shell

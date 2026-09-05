@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-40` cho mỗi lượt test.
+2. Chọn đúng một ID trong `WA-01..WA-43` cho mỗi lượt test.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -116,3 +116,15 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 61. PR #417 đã merge/deploy tại runtime `9785541`; PR #419 Auth đã merge/deploy tại runtime `0dd8ffa`.
 62. Motion đã qua local acceptance và tiếp tục trong PR riêng #418; sau rebase, base đúng là `main` tại `0dd8ffa`, không còn stacked trên branch PR #417.
 63. Merge/deploy/live vẫn là cổng riêng; không suy từ local PASS, push, PR hoặc CI.
+
+## 10. Thứ tự test A09 Auth/Admin shell
+
+64. Chạy WA-41 trước: đăng nhập Admin, kiểm đủ nhóm server cấp ở sidebar dọc và rail ngang bằng `0` trên 1440/1024/768/390/360.
+65. Ở 1024, đo cạnh phải sidebar và cạnh trái workspace; overlap và gap đều phải bằng `0`.
+66. Chạy WA-42 với missing, partial, explicit-zero và real fixtures; không dùng card/chart giả để làm giao diện trông đầy.
+67. Xác nhận “Truy cập nhanh” chỉ có route server cấp; không gọi route shortlist là task inbox.
+68. Chạy WA-43 cho VI/EN ở light/dark; ZH key symmetry kiểm bằng contract. Fixed chrome không trộn ngôn ngữ ngoài tên riêng/ID/technical data.
+69. Ở 390/360, mở drawer bằng menu: role dialog, aria-modal, focus nằm trong drawer; Escape đóng và trả focus về menu.
+70. Đo logo cả VI và EN; tỷ lệ width/height phải `1.00`, ảnh không translate/crop.
+71. Ghi riêng bounded table scroller được phép; mọi app rail hoặc page-level horizontal scroller đều FAIL.
+72. Security artifact A09 có thể được tham khảo nhưng workbench `FAILED_INFRA` không được ghi thành plugin PASS.

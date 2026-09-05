@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái production/main: `b657cea98ecc0c2f6f962bf82f1044333dfe427e`; manual top-up PR #420 và `/admin/login` responsive PR #421 đã accepted live. Candidate M03B progressive disclosure đang local-only; production `MANUAL-1` vẫn pending và không được sửa/duyệt/cộng Xu trong candidate này.
+> Trạng thái production/main: `d096bac7b5d7c75b7950fb3f92e8c32c5df20e08`; manual top-up PR #420, `/admin/login` PR #421 và progressive disclosure PR #422 đã accepted live. Candidate A09 Auth/Admin shell đang local-only; production `MANUAL-1` vẫn pending và không được sửa/duyệt/cộng Xu.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -54,8 +54,8 @@ Inventory đã được nghiệm thu tại P0-05B.
 | Hotline tách biệt số tài khoản | Support fallback `0898360858`; bank account fallback `0387532320`; Portal/integration không hardcode phone/account. | ✅ Source deployed; live source marker verified. | `billing.py`; `copyfast_api.py`; `tests/test_billing_canonical_journey_contracts.py` |
 | Role-specific note confidentiality | Customer response và customer JS state bỏ `admin_note`; authorized Admin projection vẫn giữ note. | ⚠️ Security reviewer local kết luận fixed; live chưa kiểm. | `copyfast_api.py`; `static/portal/integration.js`; `tests/test_p0_manual_topup_customer_flow.py` |
 | Manual interaction sống qua hydration | Selected lane và amount/method/reference còn nguyên sau same-route data remount; invalid lane bị bỏ qua. | ⚠️ Source deployed; Node/rendered matrix `10/10` đạt, signed production interaction chưa test. | `static/portal/portal.js`; `tests/test_p0_manual_topup_customer_flow.py`; `evidence/p0-05e-primary-manager-verified-20260830.md` |
-| Manual progressive disclosure | Initial chỉ amount + method + confirm; explicit confirm mới hiện đúng một destination/QR/code, reference và CTA đối soát. Confirm local không POST và fail closed nếu thiếu canonical same-origin QR. Back/lane-switch purge instruction; account switch/logout purge toàn draft. | ⚠️ Candidate đã final local render: `5/5` enabled method, `9/9` locale-theme và `5/5` responsive; chỉ được đổi thành live sau merge/deploy/runtime/read-only production verification. | `static/portal/portal.js`; `static/portal/portal.css`; `static/portal/integration.js`; `tests/test_cust_web_manual_topup_progressive_disclosure_002.py`; `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json` |
-| USDT/Binance trong selector VND | `usdt_trc20` hiện dưới tên `USDT TRC20 / Binance` nhưng disabled/readable với lý do “chưa hỗ trợ đối soát VND”; không confirm, không QR, không final submit và không tạo authority VND. | ⚠️ Local negative-control và browser projection thật đã đạt; production chỉ đọc sau deploy. | `static/portal/portal.js`; `tests/test_cust_web_manual_topup_progressive_disclosure_002.py` |
+| Manual progressive disclosure | Initial chỉ amount + method + confirm; explicit confirm mới hiện đúng một destination/QR/code, reference và CTA đối soát. Confirm local không POST và fail closed nếu thiếu canonical same-origin QR. Back/lane-switch purge instruction; account switch/logout purge toàn draft. | ✅ PR #422 accepted live tại main/runtime `d096bac…`; `5/5` enabled method, `9/9` locale-theme và `5/5` responsive. | `static/portal/portal.js`; `static/portal/portal.css`; `static/portal/integration.js`; `tests/test_cust_web_manual_topup_progressive_disclosure_002.py`; `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json` |
+| USDT/Binance trong selector VND | `usdt_trc20` hiện dưới tên `USDT TRC20 / Binance` nhưng disabled/readable với lý do “chưa hỗ trợ đối soát VND”; không confirm, không QR, không final submit và không tạo authority VND. | ✅ Negative-control và signed production read-only projection đạt trên runtime `d096bac…`. | `static/portal/portal.js`; `tests/test_cust_web_manual_topup_progressive_disclosure_002.py` |
 | Admin navigation là server-authorized directory | Browser role/query không tạo module; unavailable endpoint phải fail closed. | ✅ Contract hiện hành, độc lập với P0 manual write. | `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:3-30`; `docs/migration/ADMIN_ERP_NAVIGATION_CONTRACT.md:57-63` |
 | Guarded capability không được trông như ready | Portal phải hiển thị guarded/unavailable; static navigation không phải runtime engine claim. | ✅ Product/UI boundary hiện hành. | `docs/UX_APP_FIRST_REDESIGN.md:5-12`; `docs/migration/FEATURE_PARITY_MATRIX.md:1-3` |
 | PWA chỉ cache public shell | Wallet/payment/Admin/API/download/private workspace vẫn network-only và ownership-checked. | ✅ Cache boundary hiện hành. | `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:3-8`; `docs/migration/PWA_ROLLOUT_VERSIONING_CONTRACT.md:51-61` |
@@ -82,7 +82,7 @@ Tài liệu vận hành phải trỏ tới Web API/Bot internal route mới, kh�
 
 README cũ từng nói Web không có manual-topup inbox và manual reconciliation vẫn qua `/thucong` tại `README.md:258-263`.
 PR #420 đã đưa owner/Admin Web-local route, private QR và một pending QA lên production; tài liệu vận hành hiện phải dùng runtime `b657cea…` làm mốc.
-M03B chỉ thay progressive disclosure/contrast/session cleanup ở client; trạng thái merge/deploy/live không được suy từ local receipt và phải ghi riêng sau pipeline.
+M03B chỉ thay progressive disclosure/contrast/session cleanup ở client; trạng thái live hiện được chứng minh riêng qua PR #422, runtime `d096bac…` và signed read-only receipt, không suy từ local receipt.
 
 ### 5.3 Số đo audit cũ không dùng cho source hiện tại
 
@@ -124,12 +124,12 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 ## 8. Chưa triển khai hoặc chưa live
 
 - P0-05A rotate/revoke và loại credential-like tracked paths: chưa làm.
-- Tester source có WA-01..WA-40; WA-40 thuộc M03B progressive disclosure.
+- Tester source có WA-01..WA-43; WA-41..43 thuộc A09 Auth/Admin shell.
 - PR #420 manual và PR #421 Admin login đã merge/deploy; signed customer create/read và Admin list/detail của `MANUAL-1 pending_admin_review` đã smoke bằng account thật, không có decision/Xu/ledger mutation.
 - Customer motion live-reopen v2 đã accepted live trên runtime `b657cea…`.
-- M03B progressive disclosure đã final local rendered/temp-DB verified; trạng thái commit/PR/merge/deploy/live phải lấy từ pipeline/runtime receipt, không từ tài liệu này. Security workbench scan terminal `failed` vì completion timestamp mismatch dù artifact được giữ; không tính là security PASS.
+- M03B progressive disclosure đã `ACCEPTED_LIVE` trên runtime `d096bac…`; A09 Auth/Admin shell là candidate local chưa ship.
 - ENV/secret rotation: chưa làm.
-- Signed production manual route nền của PR #420 đã smoke customer/Admin; M03B progressive presentation vẫn local-only cho tới deploy/read-only verify. Live approve/reject/money decision chưa test.
+- Signed production manual route nền và M03B progressive presentation đã smoke; live approve/reject/money decision chưa test.
 - Provider/PayOS/Telegram live call: không chạy trong local acceptance.
 - Live money flow: `LIVE_PASS=NOT_TESTED` và `LIVE_MONEY_FLOW=NOT_TESTED`.
 - Production record counts: `NOT_MEASURED`.
@@ -155,4 +155,17 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Deployed không đồng nghĩa live outcome.
 - HTTP 200 không đồng nghĩa quyết định tiền hợp lệ.
 - Mọi claim provider/output/payment phải có bằng chứng output cuối tương ứng.
-- P0 manual, Auth layout, Admin-login responsive và customer motion đã có runtime evidence tới `b657cea…`; không suy signed/money LIVE từ deploy. M03B có local redacted receipt nhưng chỉ là `ACCEPTED_LIVE` khi runtime SHA và signed read-only flow đều được đo sau deploy.
+- P0 manual, Auth layout, Admin-login responsive, customer motion và M03B đã có runtime evidence tới `d096bac…`; không suy signed/money LIVE từ deploy. A09 chỉ được gọi live sau runtime SHA và signed production matrix.
+
+## 11. Đối chiếu bổ sung A09 Auth/Admin shell
+
+| Chức năng/tuyên bố cũ | Hiện tại trong candidate A09 | Trạng thái | Bằng chứng |
+|---|---|---|---|
+| Admin app switcher nằm ngang để mở các nhóm | Toàn bộ nhóm server cấp nằm trong sidebar dọc; rail/header switcher bị bỏ. | ⚠️ Candidate local, chưa live | `static/portal/portal.js`; `tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py` |
+| Sidebar chỉ chiếu nhóm hiện hành | Sidebar chiếu mọi nhóm server-permitted; chỉ nhóm hiện hành mở mặc định. Không cấp route mới từ browser. | ⚠️ Candidate local, chưa live | `adminDesktopNavGroups`; protected navigation comparator |
+| Dashboard luôn có 5 KPI và 2 analytics panel | Chỉ nguồn count/readiness hợp lệ mới render; all-missing thành một empty state, explicit `0` vẫn là dữ liệu thật. | ⚠️ Candidate local, chưa live | focused data-truth tests; Browser 22/22 |
+| Route shortlist là “Tác vụ cần xử lý” | Đổi thành “Truy cập nhanh”; task inbox thật vẫn source-missing và không được giả. | ⚠️ Candidate local, chưa live | `renderAdminWorkQueues`; server route intersection tests |
+| Auth/Admin fixed chrome có thể trộn endonym/VI | Public Auth, Admin-login và theme fallback dùng catalogue VI/EN/ZH; Admin header dùng `Ngôn ngữ/Language`. | ⚠️ Candidate local, chưa live | locale keyset tests; 24 Auth Browser states |
+| Logo Admin dùng kích thước/translate kế thừa | Admin override giữ ảnh chính thức contain, transform none, flex fixed; ratio đo `1.00`. | ⚠️ Candidate local, chưa live | CSS A09; 20 Admin Browser states |
+
+Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả rail ngang, five-dash KPI, empty chart frames hoặc route shortlist như task inbox phải được xem là historical. Candidate A09 chưa được gọi deployed/live cho tới khi có merge SHA, deploy run và signed production evidence.
