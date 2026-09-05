@@ -205,8 +205,10 @@ if (!isAdminMobileSurface({ routePath: "/admin/jobs" }) || isAdminMobileSurface(
 if (!markup.includes('href="/admin/support"') || !markup.includes("Support &amp; &lt;Ops&gt;")) {
   throw new Error(`server-issued route/title were not safely rendered: ${markup}`);
 }
-if (desktopGroups.length !== 1 || !desktopGroups[0].current || !desktopGroups[0].defaultOpen || desktopLinks.map((link) => link[0]).join(",") !== "/admin/jobs,/admin/providers" || desktopLinks.some((link) => link[0] === "/dashboard" || link[0] === "/features")) {
-  throw new Error(`desktop ERP sidebar did not keep only the current server-issued group: ${JSON.stringify(desktopGroups)}`);
+const currentDesktopGroups = desktopGroups.filter((group) => group.current === true);
+const openDesktopGroups = desktopGroups.filter((group) => group.defaultOpen === true);
+if (desktopGroups.length !== 13 || currentDesktopGroups.length !== 1 || openDesktopGroups.length !== 1 || !currentDesktopGroups[0].links.some((link) => link[0] === "/admin/jobs") || desktopLinks.some((link) => link[0] === "/dashboard" || link[0] === "/features")) {
+  throw new Error(`desktop ERP sidebar did not keep all server-issued groups with active group open: ${JSON.stringify(desktopGroups)}`);
 }
 if (desktopLinks.filter((link) => link[3] === true).map((link) => link[0]).join(",") !== "/admin/jobs") {
   throw new Error(`desktop ERP sidebar did not announce exactly the current issued job route: ${JSON.stringify(desktopLinks)}`);
@@ -240,7 +242,26 @@ def test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_i
     result = _run_admin_mobile_nav_harness(ROOT / "static" / "portal" / "portal.js")
 
     assert result["jobRoutes"] == ["/admin/jobs", "/admin", "/admin/support", "/admin/users", "/admin/content-handoffs"]
-    assert result["desktopRoutes"] == ["/admin/jobs", "/admin/providers"]
+    assert result["desktopRoutes"] == [
+        "/admin/support",
+        "/admin/users",
+        "/admin/content-handoffs",
+        "/admin/crm/leads",
+        "/admin/finance/planning",
+        "/admin/governance",
+        "/admin/internal-documents",
+        "/admin/automation",
+        "/admin/system-stewardship",
+        "/admin/security",
+        "/admin/access",
+        "/admin",
+        "/admin/tickets",
+        "/admin/payments",
+        "/admin/jobs",
+        "/admin/providers",
+        "/admin/campaigns",
+        "/admin/backups",
+    ]
     assert {"/admin/content-handoffs", "/admin/crm/leads"} <= set(result["paletteRoutes"])
     assert 'aria-current="page"' in result["supportMarkup"]
 

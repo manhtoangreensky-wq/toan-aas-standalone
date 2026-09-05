@@ -21,6 +21,32 @@
     sun: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2.5v2M12 19.5v2M4.5 4.5l1.4 1.4M18.1 18.1l1.4 1.4M2.5 12h2M19.5 12h2M4.5 19.5l1.4-1.4M18.1 5.9l1.4-1.4"></path></svg>',
     moon: '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.2 15.6A7.8 7.8 0 0 1 8.4 4.8 8.5 8.5 0 1 0 19.2 15.6Z"></path></svg>'
   });
+  const THEME_FALLBACK_LABELS = Object.freeze({
+    vi: Object.freeze({ label: "Giao diện", light: "Sáng", dark: "Tối", system: "Theo hệ thống", toLight: "Chuyển sang giao diện sáng", toDark: "Chuyển sang giao diện tối", toSystem: "Dùng giao diện theo hệ thống" }),
+    en: Object.freeze({ label: "Theme", light: "Light", dark: "Dark", system: "System", toLight: "Switch to light theme", toDark: "Switch to dark theme", toSystem: "Use system theme" }),
+    zh: Object.freeze({ label: "主题", light: "浅色", dark: "深色", system: "跟随系统", toLight: "切换到浅色主题", toDark: "切换到深色主题", toSystem: "使用系统主题" })
+  });
+
+  function normalizedInterfaceLocale(value) {
+    const source = typeof value === "string" ? value.trim().toLowerCase() : "";
+    if (source === "vi" || source.startsWith("vi-")) return "vi";
+    if (source === "en" || source.startsWith("en-")) return "en";
+    if (source === "zh" || source.startsWith("zh-")) return "zh";
+    return "";
+  }
+
+  function interfaceLocale() {
+    let queryLocale = "";
+    try {
+      queryLocale = new URLSearchParams(global.location && global.location.search || "").get("lang") || "";
+    } catch (_) { queryLocale = ""; }
+    const root = global.document && global.document.documentElement;
+    const documentLocale = root && (
+      root.getAttribute && (root.getAttribute("data-portal-locale") || root.getAttribute("lang"))
+      || root.lang
+    );
+    return normalizedInterfaceLocale(queryLocale) || normalizedInterfaceLocale(documentLocale) || "vi";
+  }
 
   function valid(value) {
     return THEMES.includes(value) ? value : null;
@@ -88,6 +114,7 @@
 
   function labels() {
     const i18n = global.TOANAASI18n;
+    const fallback = THEME_FALLBACK_LABELS[interfaceLocale()] || THEME_FALLBACK_LABELS.vi;
     const t = (key, fallback) => {
       try {
         const value = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
@@ -97,13 +124,13 @@
       }
     };
     return {
-      label: t("chrome.theme_label", "Giao diện"),
-      light: t("chrome.theme_light", "Sáng"),
-      dark: t("chrome.theme_dark", "Tối"),
-      system: t("chrome.theme_system", "Theo hệ thống"),
-      toLight: t("chrome.theme_switch_to_light", "Chuyển sang giao diện sáng"),
-      toDark: t("chrome.theme_switch_to_dark", "Chuyển sang giao diện tối"),
-      toSystem: t("chrome.theme_switch_to_system", "Dùng giao diện theo hệ thống")
+      label: t("chrome.theme_label", fallback.label),
+      light: t("chrome.theme_light", fallback.light),
+      dark: t("chrome.theme_dark", fallback.dark),
+      system: t("chrome.theme_system", fallback.system),
+      toLight: t("chrome.theme_switch_to_light", fallback.toLight),
+      toDark: t("chrome.theme_switch_to_dark", fallback.toDark),
+      toSystem: t("chrome.theme_switch_to_system", fallback.toSystem)
     };
   }
 
@@ -118,13 +145,16 @@
     const modeLabel = preference === "system" ? copy.system : (preference === "dark" ? copy.dark : copy.light);
     const next = nextPreference();
     const nextLabel = next === "system" ? copy.toSystem : (next === "dark" ? copy.toDark : copy.toLight);
+    const locale = interfaceLocale();
+    const modeCopy = locale === "zh" ? `${copy.label}：${modeLabel}` : `${copy.label}: ${modeLabel}`;
+    const actionCopy = locale === "zh" ? `${modeCopy}。${nextLabel}` : `${modeCopy}. ${nextLabel}`;
     global.document.querySelectorAll("[data-portal-theme-toggle]").forEach((control) => {
       const icon = control.querySelector("[data-portal-theme-icon]");
       const label = control.querySelector("[data-portal-theme-label]");
       if (icon) icon.innerHTML = resolved === "dark" ? SVG.sun : SVG.moon;
-      if (label) label.textContent = `${copy.label}: ${modeLabel}`;
-      control.setAttribute("aria-label", `${copy.label}: ${modeLabel}. ${nextLabel}`);
-      control.setAttribute("title", `${copy.label}: ${modeLabel}. ${nextLabel}`);
+      if (label) label.textContent = modeCopy;
+      control.setAttribute("aria-label", actionCopy);
+      control.setAttribute("title", actionCopy);
       control.dataset.portalThemePreference = preference;
       control.dataset.portalThemeResolved = resolved;
     });

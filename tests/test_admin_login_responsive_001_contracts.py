@@ -49,7 +49,10 @@ def _brace_bodies(source: str, token: str) -> list[str]:
 
 def _takeover_block() -> str:
     assert THEME.count(MARKER) == 1, "Takeover marker must exist exactly once"
-    return THEME.split(MARKER, 1)[1]
+    start = THEME.index(MARKER) + len(MARKER)
+    end_marker = "/* A09 Admin Vertical Shell */"
+    end = THEME.index(end_marker, start) if end_marker in THEME[start:] else len(THEME)
+    return THEME[start:end]
 
 
 def _assert_declarations(body: str, *declarations: str) -> None:

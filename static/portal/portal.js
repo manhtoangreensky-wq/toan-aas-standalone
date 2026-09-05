@@ -9620,6 +9620,7 @@
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "title") || fallback;
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/wallet/topup") return uiText("customerTopup.page.title", fallback);
+    if (path === "/admin/login") return uiText("access.admin.heading", fallback);
     if (path === "/admin/topups") return adminManualTopupText("page.title", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.title", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.title", fallback);
@@ -9684,6 +9685,7 @@
     if (featureFamily) return featureCatalogGroupCopy(featureFamily, "description") || fallback;
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/wallet/topup") return uiText("customerTopup.page.description", fallback);
+    if (path === "/admin/login") return uiText("access.admin.intro", fallback);
     if (path === "/admin/topups") return adminManualTopupText("page.description", fallback);
     if (path === "/admin/finance") return adminFinanceText("hero.finance.description", fallback);
     if (path === "/admin/finance/tax-readiness") return adminFinanceText("hero.taxReadiness.description", fallback);
@@ -9890,34 +9892,18 @@
     if (!issued.length) return [];
     const issuedRoutes = new Set(issued.map((module) => module.route));
     const current = currentAdminNavigationModule(currentPage, context, issued);
-    const group = activeAdminNavigationGroup(currentPage, context, navigation);
-    if (!group) return [];
-    const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
-    return [{
+    const activeGroup = activeAdminNavigationGroup(currentPage, context, navigation);
+    return navigation.groups.map((group) => {
+      const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
+      if (!modules.length) return null;
+      const isCurrent = Boolean(activeGroup && (group === activeGroup || group.id === activeGroup.id));
+      return {
         label: group.title,
-        defaultOpen: true,
-        current: true,
+        defaultOpen: isCurrent,
+        current: isCurrent,
         links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
-      }].filter((entry) => entry.links.length);
-  }
-
-  function renderAdminAppSwitcher(page, context) {
-    const navigation = adminErpNavigation(context);
-    if (!navigation.groups.length) return "";
-    const activeGroup = activeAdminNavigationGroup(page, context, navigation);
-    const appsLabel = uiText("adminShell.apps", "Ứng dụng");
-    const modulesLabel = uiText("adminShell.modules", "phân hệ");
-    const currentAppLabel = uiText("adminShell.currentApp", "Ứng dụng hiện tại");
-    const apps = navigation.groups.map((group) => {
-      const firstModule = Array.isArray(group.modules) ? group.modules[0] : null;
-      if (!firstModule || !navigation.routes.has(firstModule.route)) return "";
-      const current = group === activeGroup;
-      return `<a class="portal-admin-app" href="${safeText(firstModule.route)}"${current ? ' aria-current="page"' : ""} aria-label="${safeText(current ? `${currentAppLabel}: ${group.title}` : group.title)}">
-        <span class="portal-admin-app-icon" aria-hidden="true">${portalIcon(firstModule.icon)}</span>
-        <span class="portal-admin-app-copy"><strong>${safeText(group.title)}</strong><small>${safeText(`${group.modules.length} ${modulesLabel}`)}</small></span>
-      </a>`;
-    }).filter(Boolean).join("");
-    return apps ? `<nav class="portal-admin-app-switcher" aria-label="${safeText(appsLabel)}"><span class="portal-admin-app-switcher-label">${safeText(appsLabel)}</span><div class="portal-admin-app-list">${apps}</div></nav>` : "";
+      };
+    }).filter(Boolean);
   }
 
   function navGroups(context, currentPage) {
@@ -10456,7 +10442,7 @@
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
     const adminHeaderLocaleForm = adminSurface
       ? `<form class="portal-admin-locale-form" data-portal-form data-portal-action="update-interface-locale" data-portal-route="/admin">
-          <label for="portal-admin-header-locale"><span aria-hidden="true">VI / EN</span><span class="portal-sr-only">${safeText(uiText("adminShell.language", "Ngôn ngữ"))}</span></label>
+          <label for="portal-admin-header-locale">${safeText(uiText("adminShell.language", "Ngôn ngữ"))}</label>
           <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("adminShell.language", "Ngôn ngữ"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}</select>
           <button type="submit">${safeText(uiText("adminShell.applyLanguage", "Áp dụng"))}</button>
         </form>`
@@ -10571,7 +10557,7 @@
         ${userDropdown}
       </div>`;
     return adminSurface
-      ? `<div class="portal-admin-global-header">${headerPrimary}</div>${renderAdminAppSwitcher(page, context)}`
+      ? `<div class="portal-admin-global-header">${headerPrimary}</div>`
       : headerPrimary;
   }
 
@@ -27967,7 +27953,7 @@
     const alternative = isLogin
       ? ["/register", accessText("alternative.register", "Tạo tài khoản")]
       : ["/login", accessText("alternative.signIn", "Đăng nhập")];
-    const actionLabel = isAdminLogin ? "Đăng nhập Quản trị viên" : (page.actionLabelKey ? uiText(page.actionLabelKey, page.actionLabel) : page.actionLabel);
+    const actionLabel = isAdminLogin ? accessText("admin.action", "Đăng nhập quản trị") : (page.actionLabelKey ? uiText(page.actionLabelKey, page.actionLabel) : page.actionLabel);
     const requestedLocale = reviewedInterfaceLocale(context && context.interfaceLocale) || "vi";
     const localeHref = (code) => {
       const params = new URLSearchParams(window.location.search || "");
@@ -28014,7 +28000,7 @@
       && mfaChallengeMinutes >= 1
       && mfaChallengeMinutes <= 10;
     const adminLinkFooter = isAdminLogin
-      ? `<div style="margin-top:14px; text-align:center;"><a href="/login" style="font-size:12px; color:var(--portal-text-secondary); text-decoration:none;">← Quay lại trang đăng nhập Khách hàng</a></div>`
+      ? `<div class="portal-auth-admin-return"><a href="/login">${safeText(accessText("admin.backCustomer", "Quay lại đăng nhập khách hàng"))}</a></div>`
       : "";
     const primaryForm = mfaLoginPending
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>Mật khẩu đã được xác minh</strong><p>Nhập mã 6 số từ ứng dụng xác thực, hoặc một mã khôi phục. Challenge này chỉ tồn tại trong tab hiện tại và hết hạn sau tối đa ${safeText(String(mfaChallengeMinutes))} phút.</p></div></div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login" data-portal-route="${safeText(page.path)}" novalidate><div class="portal-fields"><label class="portal-field"><span>Mã xác thực hoặc mã khôi phục</span><input class="portal-input" data-account-security-mfa-secret type="text" name="code" inputmode="text" autocomplete="one-time-code" maxlength="16" pattern="(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})" placeholder="123456 hoặc ABCD-EFGH" required></label></div><div class="portal-form-footer"><span class="portal-form-note">Không dán password vào đây. Mã khôi phục dùng một lần và có dạng ABCD-EFGH.</span><button class="portal-button portal-button--primary" type="submit">Xác thực & đăng nhập</button></div></form><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="auth-mfa-login-cancel" data-portal-route="${safeText(page.path)}"><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="submit">Hủy và đăng nhập lại</button></div></form>`
@@ -28028,10 +28014,10 @@
       telegramFlow.errorCode || telegramData.code || telegramData.recovered === true || telegramData.ready === true
     );
     const authHeading = isAdminLogin
-      ? "Đăng nhập Quản trị viên"
+      ? accessText("admin.heading", "Đăng nhập quản trị")
       : (page.path === "/login" ? accessText("heading.login", "Chào mừng trở lại") : (isRegister ? accessText("heading.register", "Tạo không gian làm việc của bạn") : (isRecovery ? accessText("heading.recovery", "Khôi phục mật khẩu") : safeText(displayPageTitle(page, context)))));
     const authIntroDescription = isAdminLogin
-      ? "Cổng đăng nhập an toàn & bảo mật dành riêng cho Quản trị viên và Đội ngũ Vận hành hệ thống TOAN AAS."
+      ? accessText("admin.intro", "Cổng truy cập bảo mật dành cho quản trị viên và đội ngũ vận hành TOAN AAS.")
       : (page.path === "/login"
         ? accessText("intro.login", "Đăng nhập để tiếp tục vào không gian làm việc.")
         : (isRegister
@@ -28044,16 +28030,16 @@
 
     // Sleek glass highlight box on left
     const authContext = isAdminLogin
-      ? `<aside class="portal-auth-context portal-auth-context--admin" aria-label="TOAN AAS Admin Portal">
+      ? `<aside class="portal-auth-context portal-auth-context--admin" aria-label="${safeText(accessText("admin.contextLabel", "Trung tâm quản trị TOAN AAS"))}">
         <div class="portal-auth-context-head">
           <span class="portal-auth-context-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span>
-          <strong class="portal-auth-context-kicker">TOAN AAS Admin & Operations ERP</strong>
+          <strong class="portal-auth-context-kicker">${safeText(accessText("admin.contextKicker", "Quản trị và vận hành"))}</strong>
         </div>
-        <p class="portal-auth-context-title">Cổng điều hành & Quản trị hệ thống.</p>
+        <p class="portal-auth-context-title">${safeText(accessText("admin.contextTitle", "Điều hành hệ thống trong phạm vi quyền được máy chủ cấp."))}</p>
         <ul class="portal-auth-context-list">
-          <li><span class="portal-auth-feat-check">✓</span><span>Quản lý vận hành toàn diện, phê duyệt lệnh và theo dõi hệ thống.</span></li>
-          <li><span class="portal-auth-feat-check">✓</span><span>Kiểm soát đối soát dòng tiền VietQR PayOS và giao dịch Xu.</span></li>
-          <li><span class="portal-auth-feat-check">✓</span><span>Xác thực signed session cấp quản trị, chống giả mạo quyền hạn.</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("admin.pointOne", "Theo dõi vận hành và xử lý công việc theo quyền."))}</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("admin.pointTwo", "Kiểm soát đối soát và giao dịch Xu bằng dữ liệu máy chủ."))}</span></li>
+          <li><span class="portal-auth-feat-check">✓</span><span>${safeText(accessText("admin.pointThree", "Phiên quản trị được xác minh và ghi nhật ký đầy đủ."))}</span></li>
         </ul>
       </aside>`
       : `<aside class="portal-auth-context" aria-label="${safeText(accessText("context.label", "Lợi ích của không gian làm việc"))}">
@@ -28076,7 +28062,7 @@
       </aside>`;
 
     const authSwitch = isAdminLogin
-      ? `<div style="text-align:center; padding: 6px 12px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; font-weight: 700; font-size: 13px; color: #60a5fa; letter-spacing: 0.5px;">🛡️ CỔNG QUẢN TRỊ VIÊN & VẬN HÀNH</div>`
+      ? `<div class="portal-auth-admin-gate"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><span>${safeText(accessText("admin.switchLabel", "Cổng quản trị và vận hành"))}</span></div>`
       : `<nav class="portal-auth-switch" aria-label="${safeText(accessText("switch.label", "Chọn phương thức truy cập"))}"><a href="/login?lang=${safeText(requestedLocale)}"${page.path === "/login" ? ' aria-current="page"' : ""}>${safeText(accessText("switch.signIn", "Đăng nhập"))}</a><a href="/register?lang=${safeText(requestedLocale)}"${isRegister ? ' aria-current="page"' : ""}>${safeText(accessText("switch.register", "Tạo tài khoản"))}</a></nav>`;
 
     const googleEnabled = context.oauthProviders && context.oauthProviders.google && context.oauthProviders.google.enabled === true;
@@ -28114,7 +28100,7 @@
 
     const authFooter = `<footer class="portal-auth-footer" hidden><div class="portal-auth-footer-grid">${alternativeMethods}${authAssurance}${operationalNotes}</div></footer>`;
 
-    return `<article class="portal-auth-page portal-auth-page--access${isAdminLogin ? " portal-auth-page--admin" : ""}"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${isAdminLogin ? "Admin Portal" : safeText(accessText("brand.subtitle", "Không gian AI"))}</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${directSocialLogin}</section></div>${authFooter}</article>`;
+    return `<article class="portal-auth-page portal-auth-page--access${isAdminLogin ? " portal-auth-page--admin" : ""}"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${isAdminLogin ? safeText(accessText("admin.brandSubtitle", "Trung tâm quản trị")) : safeText(accessText("brand.subtitle", "Không gian AI"))}</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safeText(accessText("locale.label", "Ngôn ngữ giao diện"))}">${localeMarkup}</nav><div class="portal-auth-header-actions">${renderThemeToggle()}<a class="portal-auth-back" href="/welcome?lang=${safeText(requestedLocale)}" aria-label="${safeText(accessText("nav.backWelcome", "Giới thiệu"))}"><span class="portal-auth-back-label">${safeText(accessText("nav.backWelcome", "Giới thiệu"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safeText(authHeading)}</h1><p class="portal-description">${safeText(authIntroDescription)}</p>${authContext}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-primary">${recoveryGuidance}${primaryForm}</div>${directSocialLogin}</section></div>${authFooter}</article>`;
   }
 
   const RESULT_LABELS = Object.freeze({
@@ -28820,7 +28806,7 @@
     ];
     const cards = candidates.filter(([route]) => authorized.routes.has(route)).slice(0, 4);
     if (!cards.length) return "";
-    return `<section class="portal-admin-work-queues" aria-labelledby="admin-work-queues-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminText("queues.kicker", "Hàng đợi của tôi"))}</span><h2 id="admin-work-queues-title">${safeText(adminText("queues.title", "Tác vụ cần xử lý"))}</h2><p>${safeText(adminText("queues.body", "Chỉ hiển thị phân hệ thuộc quyền máy chủ cấp cho phiên quản trị này."))}</p></div></div><div class="portal-admin-work-queue-grid">${cards.map(([route, title, detail, icon]) => `<a class="portal-admin-work-queue" href="${safeText(route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div></section>`;
+    return `<section class="portal-admin-work-queues" aria-labelledby="admin-work-queues-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(adminText("quickAccess.kicker", adminText("queues.kicker", "Điều hướng theo quyền")))}</span><h2 id="admin-work-queues-title">${safeText(adminText("quickAccess.title", adminText("queues.title", "Truy cập nhanh")))}</h2><p>${safeText(adminText("quickAccess.body", adminText("queues.body", "Mở các phân hệ được máy chủ cấp cho phiên quản trị này.")))}</p></div></div><div class="portal-admin-work-queue-grid">${cards.map(([route, title, detail, icon]) => `<a class="portal-admin-work-queue" href="${safeText(route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(detail)}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div></section>`;
   }
 
   function adminDashboardNumber(value) {
@@ -28828,16 +28814,20 @@
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
   }
 
-  function adminDashboardWorkloadRows(counts, adminText) {
+  function adminDashboardWorkloadRows(counts, adminText, options) {
     const source = counts && typeof counts === "object" ? counts : {};
-    const rows = [
-      [adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminDashboardNumber(source.engine_jobs)],
-      [adminText("metrics.workerJobs", "Tác vụ xử lý"), adminDashboardNumber(source.worker_jobs)],
-      [adminText("metrics.payments", "Thanh toán"), adminDashboardNumber(source.payments)]
+    const sourceAware = Boolean(options && options.sourceAware === true);
+    const descriptors = [
+      ["engine_jobs", adminText("metrics.engineJobs", "Tác vụ hệ thống")],
+      ["worker_jobs", adminText("metrics.workerJobs", "Tác vụ xử lý")],
+      ["payments", adminText("metrics.payments", "Thanh toán")]
     ];
-    const max = Math.max(...rows.map(([, value]) => value));
+    const rows = descriptors
+      .filter(([key]) => !sourceAware || (Object.prototype.hasOwnProperty.call(source, key) && isSourcePresentCount(source[key])))
+      .map(([key, label]) => [label, adminDashboardNumber(source[key])]);
+    const max = Math.max(0, ...rows.map(([, value]) => value));
     return {
-      hasData: max > 0,
+      hasData: sourceAware ? rows.length > 0 : max > 0,
       rows: rows.map(([label, value]) => ({
         label,
         value,
@@ -28858,9 +28848,26 @@
     return { total, ready, guarded, percent, angle };
   }
 
-  function renderAdminDashboardAnalytics(data, adminText) {
+  function isSourcePresentCount(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  }
+
+  function adminDashboardMetricRows(counts, readiness, descriptors, readinessDescriptor) {
+    const source = counts && typeof counts === "object" && !Array.isArray(counts) ? counts : {};
+    const rows = (Array.isArray(descriptors) ? descriptors : [])
+      .filter(([key]) => Object.prototype.hasOwnProperty.call(source, key) && isSourcePresentCount(source[key]))
+      .map(([key, label, note]) => [label, source[key], note]);
+    const readinessSnapshot = adminDashboardReadinessSnapshot(readiness);
+    if (readinessSnapshot.total && Array.isArray(readinessDescriptor)) {
+      rows.push([readinessDescriptor[0], `${readinessSnapshot.ready}/${readinessSnapshot.total}`, readinessDescriptor[1]]);
+    }
+    return rows;
+  }
+
+  function renderAdminDashboardAnalytics(data, adminText, options) {
     const source = data && typeof data === "object" ? data : {};
-    const workload = adminDashboardWorkloadRows(source.counts, adminText);
+    const sourceAware = Boolean(options && options.sourceAware === true);
+    const workload = adminDashboardWorkloadRows(source.counts, adminText, { sourceAware });
     const readiness = adminDashboardReadinessSnapshot(source.readiness);
     const workloadMarkup = workload.hasData
       ? `<ul class="portal-admin-workload-list" role="list">${workload.rows.map((row) => `<li class="portal-admin-workload-row"><div class="portal-admin-workload-meta"><span>${safeText(row.label)}</span><strong>${safeText(String(row.value))}</strong></div><div class="portal-admin-workload-bar" role="img" aria-label="${safeText(`${row.label}: ${row.value}`)}"><span class="portal-admin-workload-bar-fill" style="--portal-admin-bar-width: ${row.width}%;"></span></div></li>`).join("")}</ul>`
@@ -28871,7 +28878,10 @@
     const readinessMarkup = readiness.total
       ? `<div class="portal-admin-readiness-body"><div class="portal-admin-readiness-donut" role="img" aria-label="${safeText(readinessAria)}" style="--portal-admin-ready-angle: ${readiness.angle}deg;"><span class="portal-admin-readiness-center"><strong>${safeText(`${readiness.percent}%`)}</strong></span></div><dl class="portal-admin-readiness-legend"><div><dt>${safeText(adminText("readinessChart.ready", "Sẵn sàng"))}</dt><dd>${safeText(String(readiness.ready))}</dd></div><div><dt>${safeText(adminText("readinessChart.guarded", "Cần kiểm tra"))}</dt><dd>${safeText(String(readiness.guarded))}</dd></div></dl></div>`
       : `<p class="portal-admin-dashboard-empty" role="status">${safeText(adminText("readinessChart.empty", "Chưa có dữ liệu sẵn sàng"))}</p>`;
-    return `<section class="portal-admin-dashboard-analytics" aria-labelledby="admin-dashboard-analytics-title"><header class="portal-admin-dashboard-heading"><h2 id="admin-dashboard-analytics-title">${safeText(adminText("analytics.title", "Phân tích vận hành"))}</h2><p>${safeText(adminText("analytics.description", "Ảnh chụp hiện tại từ dữ liệu máy chủ; không phải xu hướng theo thời gian."))}</p></header><article class="portal-admin-dashboard-panel portal-admin-workload-chart"><header><h3>${safeText(adminText("workload.title", "Khối lượng vận hành"))}</h3><p>${safeText(adminText("workload.description", "So sánh ba số liệu trong ảnh chụp hiện tại."))}</p></header>${workloadMarkup}</article><article class="portal-admin-dashboard-panel portal-admin-readiness-chart"><header><h3>${safeText(adminText("readinessChart.title", "Mức sẵn sàng"))}</h3><p>${safeText(adminText("readinessChart.description", "Tỷ lệ trạng thái sẵn sàng trong ảnh chụp hiện tại."))}</p></header>${readinessMarkup}</article></section>`;
+    const workloadPanel = sourceAware && !workload.hasData ? "" : `<article class="portal-admin-dashboard-panel portal-admin-workload-chart"><header><h3>${safeText(adminText("workload.title", "Khối lượng vận hành"))}</h3><p>${safeText(adminText("workload.description", "So sánh ba số liệu trong ảnh chụp hiện tại."))}</p></header>${workloadMarkup}</article>`;
+    const readinessPanel = sourceAware && !readiness.total ? "" : `<article class="portal-admin-dashboard-panel portal-admin-readiness-chart"><header><h3>${safeText(adminText("readinessChart.title", "Mức sẵn sàng"))}</h3><p>${safeText(adminText("readinessChart.description", "Tỷ lệ trạng thái sẵn sàng trong ảnh chụp hiện tại."))}</p></header>${readinessMarkup}</article>`;
+    if (!workloadPanel && !readinessPanel) return "";
+    return `<section class="portal-admin-dashboard-analytics" aria-labelledby="admin-dashboard-analytics-title"><header class="portal-admin-dashboard-heading"><h2 id="admin-dashboard-analytics-title">${safeText(adminText("analytics.title", "Phân tích vận hành"))}</h2><p>${safeText(adminText("analytics.description", "Ảnh chụp hiện tại từ dữ liệu máy chủ; không phải xu hướng theo thời gian."))}</p></header>${workloadPanel}${readinessPanel}</section>`;
   }
 
   function renderAdminOverview(page, context) {
@@ -28888,22 +28898,27 @@
       : adminText("guard.pendingBody", "Máy chủ phải xác minh phiên đăng nhập và quyền quản trị trước khi hiển thị dữ liệu.");
     const counts = data.counts || {};
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
-    const readyCount = readiness.filter(([, item]) => item && item.public_ready).length;
-    const metricValue = (value) => value === undefined || value === null ? "—" : String(value);
-    const metrics = [
-      [adminText("metrics.users", "Người dùng"), metricValue(counts.users), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
-      [adminText("metrics.engineJobs", "Tác vụ hệ thống"), metricValue(counts.engine_jobs), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
-      [adminText("metrics.workerJobs", "Tác vụ xử lý"), metricValue(counts.worker_jobs), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
-      [adminText("metrics.payments", "Thanh toán"), metricValue(counts.payments), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")],
-      [adminText("metrics.readiness", "Mức sẵn sàng"), readiness.length ? `${readyCount}/${readiness.length}` : "—", adminText("metrics.readinessNote", "Mức sẵn sàng công khai")]
+    const metricValue = (value) => String(value);
+    const metricDescriptors = [
+      ["users", adminText("metrics.users", "Người dùng"), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
+      ["engine_jobs", adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
+      ["worker_jobs", adminText("metrics.workerJobs", "Tác vụ xử lý"), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
+      ["payments", adminText("metrics.payments", "Thanh toán"), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")]
     ];
+    const readinessDescriptor = [adminText("metrics.readiness", "Mức sẵn sàng"), adminText("metrics.readinessNote", "Mức sẵn sàng công khai")];
+    const metrics = adminDashboardMetricRows(counts, Object.fromEntries(readiness), metricDescriptors, readinessDescriptor)
+      .map(([label, value, note]) => [label, metricValue(value), note]);
+    const hasSourceData = metrics.length > 0;
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
     const readinessRows = readiness.map(([key, item], index) => [index + 1, key, item]);
-    const analyticsSurface = renderAdminDashboardAnalytics(data, adminText);
+    const analyticsSurface = renderAdminDashboardAnalytics(data, adminText, { sourceAware: true });
     const authority = `<details class="portal-admin-authority"><summary>${safeText(adminText("authority.summary", "Quyền hạn và ranh giới quản trị"))}</summary>${renderSummary(page, context)}</details>`;
     const titleBar = `<header class="portal-admin-titlebar"><div><h1>${safeText(adminText("title", "Trung tâm điều hành"))}</h1><p>${safeText(adminText("description", "Theo dõi dữ liệu và công việc được máy chủ cấp cho phiên quản trị hiện tại."))}</p></div><div class="portal-admin-session-status" data-state="${serverAuthorized ? "ready" : "guarded"}" role="status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><small>${safeText(adminText("guard.kicker", "Trạng thái phiên"))}</small><strong>${safeText(statusTitle)}</strong><em>${safeText(statusBody)}</em></span></div></header>`;
     const readinessSurface = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("readiness.kicker", "Mức sẵn sàng"))}</span><h2 class="portal-card-title">${safeText(adminText("connectionDetails.title", adminText("readiness.title", "Trạng thái hệ thống")))}</h2><p class="portal-card-subtitle">${safeText(adminText("readiness.body", "Chỉ xem trạng thái đã ẩn dữ liệu nhạy cảm; không bật hoặc tắt nhà cung cấp từ trình duyệt."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>${safeText(adminText("readiness.refresh", "Làm mới"))}</button></div>${renderRowsTable([adminText("readiness.table.ordinal", "STT"), adminText("readiness.table.feature", "Tính năng"), adminText("readiness.table.status", "Trạng thái"), adminText("readiness.table.adapter", "Kết nối")], readinessRows, ([ordinal, key, item]) => { const state = item && item.public_ready ? "ready" : "guarded"; const label = state === "ready" ? adminText("readinessChart.ready", "Sẵn sàng") : adminText("readinessChart.guarded", "Cần kiểm tra"); return `<td>${safeText(String(ordinal))}</td><td>${safeText(key)}</td><td><span class="portal-admin-data-status" data-status="${safeText(state)}">${safeText(label)}</span></td><td>${safeText(item && item.adapter || "—")}</td>`; }, adminText("readiness.emptyTitle", "Chưa có trạng thái sẵn sàng được cấp"), adminText("readiness.emptyBody", "Máy chủ chỉ trả trạng thái khi phiên quản trị còn hiệu lực."))}</section>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${analyticsSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
+    const operationalSurface = hasSourceData
+      ? `<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${analyticsSurface}`
+      : `<section class="portal-card portal-card-pad portal-admin-dashboard-source-empty" role="status"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminText("sourceEmpty.title", "Chưa có số liệu vận hành"))}</h2><p class="portal-card-subtitle">${safeText(adminText("sourceEmpty.body", "Dữ liệu sẽ xuất hiện khi máy chủ cung cấp nguồn đo hợp lệ."))}</p></div>${refreshEnabled ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin">${safeText(adminText("sourceEmpty.action", "Làm mới dữ liệu"))}</button>` : ""}</div></section>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${operationalSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
@@ -33105,7 +33120,7 @@
   function setSidebarMenuState(button, opened) {
     if (!button) return;
     button.setAttribute("aria-expanded", String(opened));
-    button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng");
+    button.setAttribute("aria-label", opened ? uiText("chrome.closeNavigation", "Đóng điều hướng") : uiText("chrome.openNavigation", "Mở điều hướng"));
   }
 
   function mobileSidebarDialogSupported() {

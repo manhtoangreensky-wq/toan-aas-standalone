@@ -34,6 +34,7 @@
       password: "Mật khẩu", passwordPlaceholder: "Nhập mật khẩu", passwordMin: "Tối thiểu 12 ký tự",
       confirm: "Xác nhận mật khẩu", confirmPlaceholder: "Nhập lại mật khẩu", show: "Hiện", hide: "Ẩn",
       forgot: "Quên mật khẩu?", theme: "Giao diện", switchLabel: "Chọn phương thức truy cập", required: "Bắt buộc",
+      googleTitle: "Đăng nhập bằng Google", appleTitle: "Đăng nhập bằng Apple ID",
       install: "Tải & Cài đặt App TOAN AAS", pwaFallback: "Hãy dùng menu trình duyệt để cài ứng dụng.",
       registeredTitle: "Tiếp tục bằng đăng nhập",
       registeredBody: "Nếu email chưa có tài khoản, hồ sơ đã được tạo. Hãy đăng nhập để tiếp tục; bạn có thể liên kết Telegram sau.",
@@ -61,6 +62,7 @@
       email: "Email (Gmail is supported)", password: "Password", passwordPlaceholder: "Enter password", passwordMin: "At least 12 characters",
       confirm: "Confirm password", confirmPlaceholder: "Re-enter password", show: "Show", hide: "Hide", forgot: "Forgot password?",
       theme: "Theme", switchLabel: "Choose an access method", required: "Required", install: "Install TOAN AAS App",
+      googleTitle: "Sign in with Google", appleTitle: "Sign in with Apple ID",
       pwaFallback: "Use your browser menu to install the app.", registeredTitle: "Continue by signing in",
       registeredBody: "If the email you just submitted did not yet have an account, a profile has been created. Sign in to start a signed session and use the Web Workspace; you can link Telegram later if Bot synchronization is needed.",
       oauthCancelled: "You cancelled verification with the provider.",
@@ -85,6 +87,7 @@
       name: "显示名称", namePlaceholder: "您想使用的名称", email: "邮箱（支持 Gmail）", password: "密码", passwordPlaceholder: "输入密码",
       passwordMin: "至少 12 个字符", confirm: "确认密码", confirmPlaceholder: "再次输入密码", show: "显示", hide: "隐藏",
       forgot: "忘记密码？", theme: "主题", switchLabel: "选择访问方式", required: "必填", install: "安装 TOAN AAS App",
+      googleTitle: "使用 Google 登录", appleTitle: "使用 Apple ID 登录",
       pwaFallback: "请使用浏览器菜单安装应用。", registeredTitle: "请继续登录",
       registeredBody: "如果您刚提交的邮箱尚未拥有账户，系统已创建资料。请登录以创建已签名会话并使用 Web 工作空间；如需同步 Bot，您可以稍后链接 Telegram。",
       oauthCancelled: "您已取消在提供方处的验证。",
@@ -105,6 +108,16 @@
 
   function safe(value) {
     return typeof value === "string" ? value.replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])) : "";
+  }
+
+  const AUTH_LOCALE_LABELS = Object.freeze({
+    vi: Object.freeze([["vi", "Tiếng Việt"], ["en", "Tiếng Anh"], ["zh", "Tiếng Trung"]]),
+    en: Object.freeze([["vi", "Vietnamese"], ["en", "English"], ["zh", "Chinese"]]),
+    zh: Object.freeze([["vi", "越南语"], ["en", "英语"], ["zh", "中文"]])
+  });
+
+  function authLocaleLabels(value) {
+    return AUTH_LOCALE_LABELS[value] || AUTH_LOCALE_LABELS.vi;
   }
 
   function randomKey() {
@@ -197,12 +210,12 @@
     const googleEnabled = state.providers.google && state.providers.google.enabled === true;
     const appleEnabled = state.providers.apple && state.providers.apple.enabled === true;
     const google = googleEnabled ? `
-          <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="Đăng nhập bằng Google">
+          <a class="portal-btn-direct-social google" href="/api/v1/auth/oauth/google/start?next=/dashboard" title="${safe(text.googleTitle)}">
             <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
             <span>Google</span>
           </a>` : "";
     const apple = appleEnabled ? `
-          <a class="portal-btn-direct-social apple" href="/api/v1/auth/oauth/apple/start?next=/dashboard" title="Đăng nhập bằng Apple ID">
+          <a class="portal-btn-direct-social apple" href="/api/v1/auth/oauth/apple/start?next=/dashboard" title="${safe(text.appleTitle)}">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.88-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.76 1 .08 2.03-.49 2.65-1.23"/></svg>
             <span>Apple</span>
           </a>` : "";
@@ -266,7 +279,7 @@
     if (mobile) mobile.hidden = true;
     main.dataset.portalMotionSkipEnter = "true";
     const isLogin = path === "/login";
-    const localeMarkup = [["vi", "Tiếng Việt"], ["en", "English"], ["zh", "中文"]].map(([code, label]) => `<a class="portal-auth-locale-link" href="${safe(localeHref(code))}"${locale === code ? ' aria-current="true"' : ""}>${label}</a>`).join("");
+    const localeMarkup = authLocaleLabels(locale).map(([code, label]) => `<a class="portal-auth-locale-link" href="${safe(localeHref(code))}"${locale === code ? ' aria-current="true"' : ""}>${safe(label)}</a>`).join("");
     const contextMarkup = `<aside class="portal-auth-context" aria-label="${safe(text.contextLabel)}"><div class="portal-auth-context-head"><span class="portal-auth-context-icon" aria-hidden="true">${icon('<path d="M12 3.5 19 6v5.8c0 4.4-2.9 7.6-7 8.7-4.1-1.1-7-4.3-7-8.7V6z"/><path d="m9 12 2 2 4-4"/>')}</span><strong class="portal-auth-context-kicker">${safe(text.context)}</strong></div><p class="portal-auth-context-title">${safe(isLogin ? text.loginContext : text.registerContext)}</p><ul class="portal-auth-context-list"><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointOne)}</span></li><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointTwo)}</span></li><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointThree)}</span></li></ul><div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);"><button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;"><span>📲</span><span>${safe(text.install)}</span></button></div></aside>`;
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safe(text.switchLabel)}"><a href="/login?lang=${locale}"${isLogin ? ' aria-current="page"' : ""}>${safe(text.login)}</a><a href="/register?lang=${locale}"${!isLogin ? ' aria-current="page"' : ""}>${safe(text.register)}</a></nav>`;
     main.innerHTML = `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${brandMark()}</span><span><strong>TOAN AAS</strong><small>${safe(text.brand)}</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safe(text.language)}">${localeMarkup}</nav><div class="portal-auth-header-actions">${themeToggle()}<a class="portal-auth-back" href="/welcome?lang=${locale}" aria-label="${safe(text.back)}"><span class="portal-auth-back-label">${safe(text.back)}</span><span aria-hidden="true">${icon('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safe(isLogin ? text.loginHeading : text.registerHeading)}</h1><p class="portal-description">${safe(isLogin ? text.loginIntro : text.registerIntro)}</p>${contextMarkup}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${queryNotice()}<div class="portal-auth-primary">${primaryForm()}</div>${state.mfa ? "" : socialLogin()}</section></div><footer class="portal-auth-footer" hidden><div class="portal-auth-footer-grid"></div></footer></article>`;

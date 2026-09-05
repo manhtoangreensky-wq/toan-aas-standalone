@@ -54,25 +54,30 @@ def test_tablet_header_keeps_brand_and_back_copy_from_wrapping() -> None:
     ) in mobile
 
 
-def test_mobile_header_uses_two_deliberate_rows_without_wrapping_locale_copy() -> None:
-    start = THEME.index("@media (max-width: 600px) {")
-    mobile = THEME[start:THEME.index("@media (max-width: 700px) {", start)]
+def test_auth_header_uses_three_normal_flow_rows_at_nine_hundred() -> None:
+    marker = "/* A09 Admin Vertical Shell */"
+    assert marker in THEME
+    layer = THEME[THEME.index(marker):]
+    start = layer.index("@media (max-width: 900px) {")
+    mobile = layer[start:]
 
     assert "grid-template-areas:" in mobile
-    assert '"brand actions"' in mobile
-    assert '"locale locale"' in mobile
-    assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in mobile
+    assert '"brand"' in mobile
+    assert '"locale"' in mobile
+    assert '"actions"' in mobile
+    assert '"brand actions"' not in mobile
+    assert "grid-template-columns: minmax(0, 1fr);" in mobile
+    assert "position: absolute" not in mobile
+    assert "position: fixed" not in mobile
+    assert "transform: scale" not in mobile
+    assert "zoom:" not in mobile
     assert "white-space: nowrap;" in mobile
     assert (
         ".portal-auth-page--access {\n"
         "    width: 100%;\n"
         "    row-gap: 8px;"
     ) in mobile
-    assert (
-        ".portal-auth-page--access .portal-auth-intro {\n"
-        "    display: none;\n"
-        "  }"
-    ) in mobile
+    assert ".portal-auth-page--access .portal-auth-intro" not in mobile
 
 
 def test_narrow_header_keeps_the_toan_aas_name_visible() -> None:
