@@ -7707,7 +7707,7 @@
         "copyfast_quick_image_planner.py",
         "copyfast_registry.py"
       ],
-      "occurrences": 871,
+      "occurrences": 870,
       "provider": "PayOS"
     },
     {
@@ -14178,7 +14178,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 174,
   "source_files_scanned": 174,
-  "source_fingerprint_sha256": "3718ecc15de31b634043bb238a8cb0f6a6a5afcf4949b2223a9d7aa25c03c2a6",
+  "source_fingerprint_sha256": "eba137aeb95dc8b790ee8c3451a540f5eeab3805ad477d25066291c1f99d4ad6",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14398,7 +14398,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30320,
+      "line": 30335,
       "path": "/features"
     },
     {
