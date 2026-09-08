@@ -311,3 +311,13 @@
 - Local evidence: focused `50P`; protected BASE/candidate `68P/2F`; expanded BASE/candidate `130P/3F`; exact failure IDs bằng nhau và `NEW_FAILURES=0`. Browser Admin `20` trạng thái + Auth comparator `24` trạng thái, aggregate `22/22`, relevant console event `0`.
 - Codex Security inventory đã review `5/5` production paths và artifact sealed có findings `0`, nhưng workbench terminal `FAILED_INFRA` do sandbox parent-path. Đây là limitation, không phải security PASS.
 - Candidate chưa merge/deploy/live. Chỉ sau PR, CI, runtime SHA, service health và signed production matrix mới đổi A09 sang `ACCEPTED_LIVE`.
+
+### A09 mở lại — ngôn ngữ quản trị hỗ trợ, 08/09/2026
+
+PR #423 đã đưa phần khung quản trị lên main tại `6298057…`, nhưng trang `/admin/support` vẫn có câu Việt xen Anh. Bản sửa đang nằm trên nhánh `fix/a09-admin-locale-purity-reopen`, chưa triển khai.
+
+- Nội dung cố định của danh sách/chi tiết hỗ trợ dùng danh mục dịch VI/EN/ZH; tên riêng, ID, nội dung khách hàng và mã nghiệp vụ không bị dịch.
+- Ngày giờ dùng ngôn ngữ đang chọn; bản Việt không được rơi về tên tháng tiếng Anh.
+- Kiểm thử mới nhất: `78 passed, 2 warnings`; trình duyệt QA có 40 trạng thái list/detail × VI/EN × sáng/tối × 5 kích thước. Kiểm tra ngôn ngữ và tràn/cắt nội dung đạt trong phạm vi đó.
+- Báo cáo trình duyệt gốc vẫn giữ `consoleHealth=false`: 13 sự kiện thông tin cài ứng dụng và 1 phản hồi 401 trước đăng nhập cần phân loại theo giai đoạn. Không dùng báo cáo này để khẳng định production hoàn tất.
+- Nguyên nhân cần tránh: dịch thanh điều hướng không đồng nghĩa dịch toàn bộ trang; mọi nhãn, mô tả, xác nhận, trạng thái rỗng và nhánh chi tiết đều phải được kiểm tra.

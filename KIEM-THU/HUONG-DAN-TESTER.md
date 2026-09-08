@@ -128,3 +128,13 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 70. Đo logo cả VI và EN; tỷ lệ width/height phải `1.00`, ảnh không translate/crop.
 71. Ghi riêng bounded table scroller được phép; mọi app rail hoặc page-level horizontal scroller đều FAIL.
 72. Security artifact A09 có thể được tham khảo nhưng workbench `FAILED_INFRA` không được ghi thành plugin PASS.
+
+## 11. A09 mở lại: không trộn ngôn ngữ ở trang hỗ trợ
+
+73. Tiếp tục WA-43 trên `/admin/support` và một yêu cầu thử nghiệm có sẵn; không tạo yêu cầu production để lấy ảnh.
+74. Chọn Tiếng Việt, áp dụng và tải lại. Kiểm tra tiêu đề tab, đường dẫn điều hướng, bộ lọc, ô chọn, mô tả, phân trang, nhãn trạng thái, ngày giờ và trang chi tiết. Không chấp nhận Manager, Operator, case, revision hoặc triage xen vào câu Việt.
+75. Chọn English, áp dụng và tải lại. Toàn bộ nội dung cố định phải là tiếng Anh; nội dung yêu cầu và tên do người dùng nhập giữ nguyên, không được tự dịch.
+76. Với mỗi ngôn ngữ, kiểm tra sáng/tối tại 1440/1024/768/390/360; danh sách và chi tiết tạo thành 40 trạng thái. Chụp cả phần dưới trang chứa phân công, chuyển cấp, biểu mẫu và nhật ký; ảnh đầu trang không chứng minh phần dưới đã đúng.
+77. Không gửi phản hồi, đổi phân công, chuyển cấp hay trạng thái trên production. Nhánh ghi và thông báo xác nhận phải được kiểm tra bằng dữ liệu QA riêng.
+78. Lưu log thô. Phân biệt 401 trước đăng nhập, thông báo mức info và lỗi sau khi đăng nhập; không loại toàn bộ 401/404 khỏi kết quả. `/favicon.ico` 404 hiện là lỗi nền được ghi riêng, không phải bằng chứng console hoàn toàn sạch.
+79. Ghi rõ SHA mã thử, SHA triển khai và môi trường. 40 trạng thái local không thay thế bằng chứng production.

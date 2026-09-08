@@ -738,6 +738,17 @@ if (start < 0) throw new Error("renderSupportReplyReceipt is missing");
 const end = source.indexOf("\n  function ", start + 1);
 if (end < 0) throw new Error("renderSupportReplyReceipt end is missing");
 function safeText(value) { return String(value === undefined || value === null ? "" : value).replace(/[&<>\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]); }
+function adminSupportText(key, fallback, params) {
+  const messages = {
+    "receipt.title": "Support reply confirmed",
+    "receipt.body": "Revision {revision} was recorded. Visibility: {scope}. It is shown on the Web only.",
+    "receipt.scope.public": "Public",
+    "receipt.scope.internal": "Internal"
+  };
+  let value = messages[key] || fallback || "";
+  Object.entries(params || {}).forEach(([name, replacement]) => { value = value.replaceAll(`{${name}}`, String(replacement)); });
+  return value;
+}
 eval(source.slice(start, end));
 process.stdout.write(JSON.stringify({ html: renderSupportReplyReceipt(JSON.parse(process.argv[2]), JSON.parse(process.argv[3]), process.argv[4] === "true") }));
 '''
