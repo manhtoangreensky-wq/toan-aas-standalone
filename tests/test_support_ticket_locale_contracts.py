@@ -269,7 +269,7 @@ def test_customer_support_badges_and_hero_chrome_are_route_scoped_and_localized(
         ("badge falls back to the global state label", "label || stateLabel(normalized)" in badge_helper),
         ("support states have a support-only badge helper", "function supportCaseBadge" in support_helpers),
         ("support badge uses the local state catalogue", "return badge(state, supportCaseStateLabel(state));" in support_helpers),
-        ("customer cards use the local status badge", "admin ? badge(state) : supportCaseBadge(state)" in case_cards),
+        ("customer and admin cards use the locale-aware status badge", "const stateBadge = supportCaseBadge(state);" in case_cards),
         ("customer detail uses the local status badge", "${supportCaseBadge(state)}" in detail),
         ("terminal triage badge uses the local SLA label", '${badge(operationsDisplayState(sla, "sla"), slaText)}' in triage),
     )

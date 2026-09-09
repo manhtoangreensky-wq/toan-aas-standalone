@@ -169,3 +169,9 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 | Logo Admin dùng kích thước/translate kế thừa | Admin override giữ ảnh chính thức contain, transform none, flex fixed; ratio đo `1.00`. | ⚠️ Candidate local, chưa live | CSS A09; 20 Admin Browser states |
 
 Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả rail ngang, five-dash KPI, empty chart frames hoặc route shortlist như task inbox phải được xem là historical. Candidate A09 chưa được gọi deployed/live cho tới khi có merge SHA, deploy run và signed production evidence.
+
+### Đính chính sau PR #423 và vòng locale mở lại
+
+Khung A09 đã merge trong PR #423 tại `6298057…`. Trạng thái “candidate chưa merge” phía trên là lịch sử trước PR, không phải trạng thái hiện hành của khung. Tuy nhiên, việc dịch thanh điều hướng không chứng minh nội dung từng phân hệ đã thuần ngôn ngữ: production `/admin/support` vẫn có câu Việt xen Anh.
+
+Bản sửa locale đang chờ ship dùng danh mục dịch riêng cho danh sách/chi tiết hỗ trợ, phân công, chuyển cấp và thông báo cố định; giữ nguyên nội dung người dùng và dữ liệu nghiệp vụ. Kiểm thử hiện có: 78 bài đạt và 40 trạng thái Browser QA đạt kiểm tra locale/layout; chưa nghiệm thu production và chưa khẳng định mọi trang Admin đã hoàn thiện.

@@ -113,7 +113,8 @@ def test_manager_quality_summary_is_role_gated_redacted_and_not_cached() -> None
     assert "renderSupportResolutionFeedbackSummary" in admin
     quality = between(PORTAL, "function renderSupportResolutionFeedbackSummary", "function renderSupportAdminBase")
     summary = between(PORTAL, "function supportResolutionFeedbackSummary", "function renderSupportResolutionFeedbackSummary")
-    assert "Customer Care Quality" in quality
+    assert 'copy("quality.title"' in quality
+    assert 'copy("quality.description"' in quality
     for required in ("total_responses", "average_rating", "comments_count", "rating_counts"):
         assert required in summary
     for forbidden in ("case_id", "account_id", "customer_email", "comment_text", "comment_body"):

@@ -66,8 +66,8 @@ def test_portal_renders_erp_board_controls_and_redacted_activity_only_for_live_s
     portal = _read("static/portal/portal.js")
 
     assert "function renderSupportCareQueueBoard(context)" in portal
-    assert "Customer Care Board" in portal
-    assert "Kanban hàng đợi theo team, SLA và escalation" in portal
+    assert 'copy("board.title"' in portal
+    assert 'copy("board.description"' in portal
     assert "function renderSupportCareControls(page, context)" in portal
     assert 'data-portal-action="support-admin-care-triage"' in portal
     assert 'data-portal-action="support-admin-care-escalation"' in portal
@@ -76,7 +76,7 @@ def test_portal_renders_erp_board_controls_and_redacted_activity_only_for_live_s
     assert "function renderSupportAdminCaseDetailBase(page, context)" in portal
     assert "function renderSupportAdminCaseDetail(page, context)" in portal
     assert "hasLiveStaffRole" in portal
-    assert "không hiển thị account ID, email, raw audit target hay payload ngoài Web" in portal
+    assert 'copy("care.activity.description"' in portal
     assert "PayOS" in portal
     assert "provider" in portal
 
@@ -123,8 +123,8 @@ def test_customer_care_queue_filters_are_fixed_enums_with_no_account_id_selector
         'name="care_sla_status"',
         'name="escalation_state"',
         "supportCareFilterOptions",
-        "Trạng thái SLA là mốc tiếp nhận nội bộ do máy chủ tính",
-        "browser không gửi account ID, giờ hệ thống hoặc external state",
+        'copy("filter.note"',
+        '"care.slaStatus"',
         "data-portal-no-transient",
         'data-portal-action="support-admin-cases-filter-clear"',
     ):
