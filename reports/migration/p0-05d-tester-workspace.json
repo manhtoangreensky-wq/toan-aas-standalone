@@ -66,9 +66,9 @@
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 130,
-      "bytes": 9623,
-      "sha256": "435cf445fbf9cb2b8875c60f93395e9a06c94872393b2b7f2acba1684ba34455"
+      "lines": 141,
+      "bytes": 11639,
+      "sha256": "7cd7982fa81f0357900ab6221053ded8841920adeab00cd96838c2bdae89b647"
     },
     {
       "path": "scripts/tester_case_sync.py",
