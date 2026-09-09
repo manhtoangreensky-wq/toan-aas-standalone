@@ -41,6 +41,15 @@ VI_FORBIDDEN_FIXED_COPY = frozenset({
     "Activity", "Timeline", "Triage", "Internal", "server", "signed", "account",
     "redaction", "metadata", "Roster", "active", "write", "raw", "payload",
 })
+VI_FIXED_ASCII_TOKEN_SNAPSHOT = frozenset({
+    "aas", "api", "app", "b", "bao", "bot", "cam", "cao", "che", "chi", "cho",
+    "chung", "csrf", "cung", "danh", "do", "dung", "duy", "email", "erp", "ghi",
+    "gian", "giao", "hay", "i", "id", "khai", "khi", "kho", "minh", "odoo",
+    "otp/cvv", "payos", "pdf", "qr", "qua", "quay", "quy", "ra", "ranh", "sau",
+    "sla", "suy", "telegram", "thanh", "thao", "thay", "theo", "thg", "tin",
+    "toan", "tra", "trang", "trao", "trong", "trung", "txid", "url", "vai",
+    "vi", "video", "web", "xem", "xong", "xu",
+})
 
 
 class _RenderedCopyParser(HTMLParser):
@@ -232,6 +241,8 @@ const operatorDetail = {
 };
 const guarded = { ...base, supportAdminReadState: "guarded", supportAdminSummary: {} };
 const loading = { ...base, supportAdminReadState: "loading", supportAdminSummary: {} };
+const guardedDetail = { ...base, supportAdminReadState: "guarded", supportAdminSummary: {}, supportAdminCaseDetail: {} };
+const loadingDetail = { ...base, supportAdminReadState: "loading", supportAdminSummary: {}, supportAdminCaseDetail: {} };
 const closedDetail = {
   ...detail,
   supportAdminCaseDetail: {
@@ -253,6 +264,8 @@ process.stdout.write(JSON.stringify({
   operatorDetail: api.renderSupportAdminCaseDetail(detailPage, operatorDetail),
   guardedList: api.renderSupportAdmin(listPage, guarded),
   loadingList: api.renderSupportAdmin(listPage, loading),
+  guardedDetail: api.renderSupportAdminCaseDetail(detailPage, guardedDetail),
+  loadingDetail: api.renderSupportAdminCaseDetail(detailPage, loadingDetail),
   closedDetail: api.renderSupportAdminCaseDetail(detailPage, closedDetail),
   listTitle: api.localizedPageTitle(listPage, base),
   listDescription: api.localizedPageDescription(listPage),
@@ -261,6 +274,8 @@ process.stdout.write(JSON.stringify({
   detailDescription: api.localizedPageDescription(detailPage),
   detailSection: api.supportTicketHeroSection(detailPage),
   dynamicSubject,
+  dynamicCaseId: caseId,
+  dynamicContentType: "text/plain",
   adminKeys: Object.keys(context.TOANAASI18n.messages[locale]).filter((key) => key.startsWith("adminSupport.")).sort()
 }));
 '''
@@ -275,8 +290,7 @@ process.stdout.write(JSON.stringify({
     return json.loads(result.stdout)
 
 
-def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None:
-    rendered = _render_admin_support("vi")
+def _admin_support_vi_fixed_copy(rendered: dict[str, object]) -> str:
     copy = _visible_copy(
         rendered["list"],
         rendered["detail"],
@@ -285,6 +299,8 @@ def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None
         rendered["operatorDetail"],
         rendered["guardedList"],
         rendered["loadingList"],
+        rendered["guardedDetail"],
+        rendered["loadingDetail"],
         rendered["closedDetail"],
         rendered["listTitle"],
         rendered["listDescription"],
@@ -293,8 +309,26 @@ def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None
         rendered["detailDescription"],
         rendered["detailSection"],
     )
+    return (
+        copy
+        .replace(str(rendered["dynamicSubject"]), " ")
+        .replace(str(rendered["dynamicCaseId"])[:8], " ")
+        .replace(str(rendered["dynamicContentType"]), " ")
+    )
 
-    assert rendered["dynamicSubject"] in copy, "Server/user record text must remain unchanged"
+
+def _ascii_tokens(copy: str) -> frozenset[str]:
+    return frozenset(
+        token.casefold()
+        for token in re.findall(r"(?<!\w)[A-Za-z][A-Za-z0-9]*(?:/[A-Za-z0-9]+)?(?!\w)", copy)
+    )
+
+
+def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None:
+    rendered = _render_admin_support("vi")
+    assert str(rendered["dynamicSubject"]) in str(rendered["detail"])
+    assert str(rendered["dynamicSubject"]) in str(rendered["populatedList"])
+    copy = _admin_support_vi_fixed_copy(rendered)
     reviewed_terms = VI_ALLOWED_ENGLISH_NOUNS | VI_ALLOWED_TECHNICAL_IDENTIFIERS | VI_FORBIDDEN_FIXED_COPY
     present_terms = {
         term for term in reviewed_terms
@@ -312,6 +346,9 @@ def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None
         f"Vietnamese timestamps must use the active Vietnamese locale: {copy}"
     )
     assert "thg" in copy.lower(), "The Vietnamese timestamp fixture must exercise localized month output"
+    assert _ascii_tokens(copy) == VI_FIXED_ASCII_TOKEN_SNAPSHOT
+    assert _ascii_tokens(copy + " Dashboard") != VI_FIXED_ASCII_TOKEN_SNAPSHOT
+    assert not {"dynamic", "subject", "text", "plain", "a0d55e2"} & _ascii_tokens(copy)
 
 
 def test_admin_support_en_fixed_copy_contains_no_vietnamese() -> None:
@@ -324,6 +361,8 @@ def test_admin_support_en_fixed_copy_contains_no_vietnamese() -> None:
         rendered["operatorDetail"],
         rendered["guardedList"],
         rendered["loadingList"],
+        rendered["guardedDetail"],
+        rendered["loadingDetail"],
         rendered["closedDetail"],
         rendered["listTitle"],
         rendered["listDescription"],
@@ -351,6 +390,20 @@ def test_admin_support_en_fixed_copy_contains_no_vietnamese() -> None:
 def test_existing_request_without_subject_is_not_described_as_empty_queue(locale, expected):
     rendered = _render_admin_support(locale)
     assert f"<h2>{expected}</h2>" in rendered["untitledDetail"]
+
+
+@pytest.mark.parametrize(
+    "locale, guarded_title, loading_title",
+    [
+        ("vi", "Yêu cầu không khả dụng", "Đang nạp yêu cầu vận hành"),
+        ("en", "Request unavailable", "Loading operational request"),
+        ("zh", "请求不可用", "正在加载运营请求"),
+    ],
+)
+def test_admin_support_detail_guarded_and_loading_states_are_localized(locale, guarded_title, loading_title):
+    rendered = _render_admin_support(locale)
+    assert f"<h2>{guarded_title}</h2>" in rendered["guardedDetail"]
+    assert f"<h2>{loading_title}</h2>" in rendered["loadingDetail"]
 
 
 def test_admin_support_catalogue_has_symmetric_keys_and_locale_specific_anchors() -> None:
