@@ -138,3 +138,4 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 77. Không gửi phản hồi, đổi phân công, chuyển cấp hay trạng thái trên production. Nhánh ghi và thông báo xác nhận phải được kiểm tra bằng dữ liệu QA riêng.
 78. Lưu log thô. Phân biệt 401 trước đăng nhập, thông báo mức info và lỗi sau khi đăng nhập; không loại toàn bộ 401/404 khỏi kết quả. `/favicon.ico` 404 hiện là lỗi nền được ghi riêng, không phải bằng chứng console hoàn toàn sạch.
 79. Ghi rõ SHA mã thử, SHA triển khai và môi trường. 40 trạng thái local không thay thế bằng chứng production.
+80. Ở bản Việt, danh từ tiếng Anh và mã kỹ thuật được giữ theo allowlist hữu hạn: TOAN AAS, Web, Telegram, PayOS, Odoo, Bot, Email, App, ERP, CSRF, SLA, API, ID, PDF, QR, OTP/CVV, TXID, URL, PNG, JPEG, WebP, TXT, MB, Xu. Mọi từ tiếng Anh khác trong câu cố định là lỗi cho đến khi Owner duyệt thêm ngoại lệ.

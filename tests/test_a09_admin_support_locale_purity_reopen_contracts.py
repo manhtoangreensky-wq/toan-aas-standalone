@@ -21,6 +21,27 @@ ROOT = Path(__file__).resolve().parents[1]
 I18N = ROOT / "static" / "portal" / "portal-i18n.js"
 PORTAL = ROOT / "static" / "portal" / "portal.js"
 
+# Owner rule: Vietnamese fixed copy may retain English nouns and technical
+# identifiers when translating them would make the product less clear. Keep
+# this finite and reviewed; an omitted UI term must be translated or added here
+# deliberately rather than disappearing from the forbidden-term scan.
+VI_ALLOWED_ENGLISH_NOUNS = frozenset({
+    "TOAN AAS", "Web", "Telegram", "PayOS", "Odoo", "Bot", "Email", "App",
+})
+VI_ALLOWED_TECHNICAL_IDENTIFIERS = frozenset({
+    "ERP", "CSRF", "SLA", "API", "ID", "PDF", "QR", "OTP/CVV", "TXID",
+    "URL", "PNG", "JPEG", "WebP", "TXT", "MB", "Xu",
+})
+VI_FORBIDDEN_FIXED_COPY = frozenset({
+    "Admin ERP", "Support Desk", "Web-native", "Manager", "Operator", "Web-only",
+    "case", "revision", "confirmation", "idempotency", "audit", "resolved", "closed",
+    "public", "reply", "policy", "Customer Care", "Quality", "Escalation", "query",
+    "browser", "external", "wallet", "refund", "ledger", "job", "provider",
+    "file delivery", "staff", "lane", "notification", "Critical", "Assignee",
+    "Activity", "Timeline", "Triage", "Internal", "server", "signed", "account",
+    "redaction", "metadata", "Roster", "active", "write", "raw", "payload",
+})
+
 
 class _RenderedCopyParser(HTMLParser):
     """Collect user-visible text plus accessibility and form guidance copy."""
@@ -274,17 +295,19 @@ def test_admin_support_vi_fixed_copy_is_vietnamese_except_finite_terms() -> None
     )
 
     assert rendered["dynamicSubject"] in copy, "Server/user record text must remain unchanged"
-    forbidden = (
-        "Admin ERP", "Support Desk", "Web-native", "Manager", "Operator", "Web-only",
-        "case", "revision", "confirmation", "idempotency", "audit", "resolved", "closed",
-        "public", "reply", "policy", "Customer Care", "Quality", "Escalation", "query",
-        "browser", "external", "wallet", "refund", "ledger", "job", "provider",
-        "file delivery", "staff", "lane", "notification", "Critical", "Assignee",
-        "Activity", "Timeline", "Triage", "Internal", "server", "signed", "account",
-        "redaction", "metadata", "Roster", "active", "write", "raw", "payload",
-    )
-    violations = [term for term in forbidden if re.search(rf"(?<![\w-]){re.escape(term)}(?![\w-])", copy, re.IGNORECASE)]
+    reviewed_terms = VI_ALLOWED_ENGLISH_NOUNS | VI_ALLOWED_TECHNICAL_IDENTIFIERS | VI_FORBIDDEN_FIXED_COPY
+    present_terms = {
+        term for term in reviewed_terms
+        if re.search(rf"(?<![\w-]){re.escape(term)}(?![\w-])", copy, re.IGNORECASE)
+    }
+    violations = sorted(present_terms & VI_FORBIDDEN_FIXED_COPY, key=str.casefold)
     assert violations == [], f"Vietnamese Admin Support contains foreign fixed copy: {violations}\n{copy}"
+    expected_reviewed_exceptions = {
+        "TOAN AAS", "Web", "Telegram", "PayOS", "Odoo", "Bot", "Email", "App",
+        "ERP", "CSRF", "SLA", "API", "ID", "PDF", "QR", "OTP/CVV", "TXID", "URL", "Xu",
+    }
+    assert expected_reviewed_exceptions <= present_terms
+    assert expected_reviewed_exceptions <= (VI_ALLOWED_ENGLISH_NOUNS | VI_ALLOWED_TECHNICAL_IDENTIFIERS)
     assert not re.search(r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b", copy), (
         f"Vietnamese timestamps must use the active Vietnamese locale: {copy}"
     )
