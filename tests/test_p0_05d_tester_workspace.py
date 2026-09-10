@@ -51,9 +51,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_43_cases():
+def test_source_has_exact_sequential_44_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 44)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 45)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -352,7 +352,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["metadata_encoding"] == "utf-8-lf-portable"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 43
+    assert data["case_count"] == 44
     assert data["p0_case_count"] == 18
     assert data["github_project"] == "TOAN AAS Web App · Tester P0"
     assert data["local_metadata_updated_at"] == "2026-09-10"
