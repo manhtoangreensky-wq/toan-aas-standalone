@@ -1430,7 +1430,14 @@
     // before `/auth/me` hydration cannot revert to the prior locale. We never
     // merge an account, identity, role or workflow field from this response.
     const current = base();
-    window.__TOAN_AAS_PORTAL__ = { ...current, interfaceLocale: locale };
+    const currentProfile = current.profile && typeof current.profile === "object"
+      ? current.profile
+      : {};
+    window.__TOAN_AAS_PORTAL__ = {
+      ...current,
+      interfaceLocale: locale,
+      profile: { ...currentProfile, locale }
+    };
     const i18n = window.TOANAASI18n;
     if (i18n && typeof i18n.setLocale === "function") i18n.setLocale(locale, { emit: false });
   }

@@ -139,3 +139,13 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 78. Lưu log thô. Phân biệt 401 trước đăng nhập, thông báo mức info và lỗi sau khi đăng nhập; không loại toàn bộ 401/404 khỏi kết quả. `/favicon.ico` 404 hiện là lỗi nền được ghi riêng, không phải bằng chứng console hoàn toàn sạch.
 79. Ghi rõ SHA mã thử, SHA triển khai và môi trường. 40 trạng thái local không thay thế bằng chứng production.
 80. Ở bản Việt, danh từ tiếng Anh và mã kỹ thuật được giữ theo allowlist hữu hạn: TOAN AAS, Web, Telegram, PayOS, Odoo, Bot, Email, App, ERP, CSRF, SLA, API, ID, PDF, QR, OTP/CVV, TXID, URL, PNG, JPEG, WebP, TXT, MB, Xu. Mọi từ tiếng Anh khác trong câu cố định là lỗi cho đến khi Owner duyệt thêm ngoại lệ.
+
+## 12. A09 mở lại: Điều hành tự động
+
+81. Tiếp tục WA-43 trên `/admin/operations`; dùng tài khoản QA có quyền sẵn, không tự nâng role và không tạo bản ghi production để làm đầy giao diện.
+82. Kiểm guarded/loading/Manager/Operator/partial/empty/populated bằng contract executable. ID, mã tác vụ và mã máy giữ nguyên; mọi tiêu đề, mô tả, phân trang, xác nhận và nhãn trạng thái phải theo locale.
+83. Chạy VI/EN × sáng/tối × `1440/1024/768/390/360`. Desktop có bốn metric và hai grid hai cột; `<=980px` grid chính một cột; `<=700px` metric, thẻ và nút một cột. Page overflow, clipping và high-level horizontal scroller đều bằng `0`.
+84. Đo contrast chữ chính/phụ tối thiểu `4.5:1`, hành động cao tối thiểu `44px`, focus visible. Empty state dùng surface teal-soft, không mảng xám tối hoặc số/biểu đồ giả.
+85. Đổi VI→EN→VI qua header và chờ hydrate hoàn tất; DOM không được quay về locale cũ. ZH kiểm bằng renderer contract cho đến khi header Admin chính thức mở lựa chọn ZH.
+86. Không bấm duyệt/từ chối trong production. Browser receipt phải ghi request ghi Operations `0`; action forms và expected revision được chứng minh trong local contract.
+87. Bằng chứng local hiện hành nằm tại `evidence/a09-admin-operations-locale-20260910/browser/`: `20` trạng thái, `14/14` assertions, relevant event `0` và submit `0`. Sau deploy vẫn cần signed production read-only riêng.

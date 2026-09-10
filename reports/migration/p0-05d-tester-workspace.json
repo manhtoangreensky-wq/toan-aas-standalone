@@ -32,8 +32,8 @@
   ],
   "labels_missing": [],
   "github_project": "TOAN AAS Web App · Tester P0",
-  "push_gate": "A09_PR_423_CI_RETEST_PENDING",
-  "local_metadata_updated_at": "2026-09-05",
+  "push_gate": "A09_ADMIN_OPERATIONS_PR_PENDING",
+  "local_metadata_updated_at": "2026-09-10",
   "remote_verified_at": "2026-09-03",
   "partial_remote_revalidated_at": "2026-09-04",
   "remote_revalidation": {
@@ -61,14 +61,14 @@
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 53,
-      "bytes": 21499,
-      "sha256": "586c9710dee5882507ea68348d1d409d969fe7e59f830823bb3c9f9e59fddfa7"
+      "bytes": 21718,
+      "sha256": "b8b9ede44b03d8a640ddfa22815955342eb49eedb5169f48177963a56f0a68fd"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 141,
-      "bytes": 11639,
-      "sha256": "7cd7982fa81f0357900ab6221053ded8841920adeab00cd96838c2bdae89b647"
+      "lines": 151,
+      "bytes": 13228,
+      "sha256": "1e9205e9b49cdb0d02a17531fc654c3558c911125fcee076704b8f5b0a2cc28c"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -79,8 +79,8 @@
     {
       "path": "tests/test_p0_05d_tester_workspace.py",
       "lines": 377,
-      "bytes": 17303,
-      "sha256": "7f9965ac986435db8cd6763a8fc735bb8eb934bc8da74651155a6fa92e7fd2dc"
+      "bytes": 17306,
+      "sha256": "491ebc90b2ae55606c42d187944d4641c8afaaae876cc2a4976b8c25c4957971"
     }
   ],
   "safety": {
