@@ -11111,6 +11111,10 @@
   // identifiers, action codes and authorization decisions remain unchanged.
   const ADMIN_OPERATIONS_MESSAGES = { vi: {}, en: {}, zh: {} };
   const ADMIN_OPERATIONS_COPY = Object.freeze([
+    ["disabled.title", "Điều hành tự động chưa được bật", "Operations is not enabled", "自动化运营尚未启用"],
+    ["disabled.body", "Phân hệ này đang tắt theo cấu hình máy chủ. Đây không phải thông báo tài khoản thiếu quyền. Không có tác vụ nào được thực hiện.", "This module is disabled in server configuration. This does not indicate missing account permission. No action has been executed.", "此模块在服务器配置中已关闭，并不表示账户缺少权限。未执行任何操作。"],
+    ["unavailable.title", "Chưa xác minh được dữ liệu điều hành", "Operations data is not verified", "运营数据尚未验证"],
+    ["unavailable.body", "Máy chủ chưa cung cấp dữ liệu điều hành hợp lệ cho phiên hiện tại. Chưa thể kết luận nguyên nhân là quyền truy cập hay kết nối. Không có tác vụ nào được thực hiện.", "The server has not provided valid Operations data for this session. The cause may involve access or connectivity and is not yet confirmed. No action has been executed.", "服务器尚未为当前会话提供有效的运营数据。访问权限或连接原因尚未确认。未执行任何操作。"],
     ["page.title", "Điều hành tự động", "Operations Autopilot", "自动化运营"],
     ["page.description", "Giám sát lần quét, sự cố và đề xuất chờ quyết định trong phạm vi quyền do máy chủ xác minh.", "Monitor runs, incidents, and approval proposals within server-verified permissions.", "在服务器验证的权限范围内监控运行、事件和待审批提案。"],
     ["hero.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],

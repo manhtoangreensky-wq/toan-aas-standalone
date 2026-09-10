@@ -43,7 +43,7 @@
     "github_project": "not_revalidated_missing_read_project_scope"
   },
   "external_mutations": 0,
-  "case_count": 43,
+  "case_count": 44,
   "p0_case_count": 18,
   "local_files": [
     {
@@ -60,15 +60,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 53,
-      "bytes": 21718,
-      "sha256": "b8b9ede44b03d8a640ddfa22815955342eb49eedb5169f48177963a56f0a68fd"
+      "lines": 64,
+      "bytes": 23435,
+      "sha256": "3b2b3f1b95321764f5cf2ea8a296525808bac321158ff377ac899a822b30fb2a"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
       "lines": 151,
-      "bytes": 13228,
-      "sha256": "1e9205e9b49cdb0d02a17531fc654c3558c911125fcee076704b8f5b0a2cc28c"
+      "bytes": 13295,
+      "sha256": "072f81605ad81e64cc8e791408c84e18a10c445b8746e05b1b40f29920c0f7d5"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -80,7 +80,7 @@
       "path": "tests/test_p0_05d_tester_workspace.py",
       "lines": 377,
       "bytes": 17306,
-      "sha256": "491ebc90b2ae55606c42d187944d4641c8afaaae876cc2a4976b8c25c4957971"
+      "sha256": "72dcb8017434517096a946e2c49653fa9e0d7b033584cce09d7dbd904f4884cd"
     }
   ],
   "safety": {

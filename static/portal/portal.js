@@ -8837,6 +8837,7 @@
       // boundary.  These small projections must never be substituted by a
       // Bot/bridge status, a browser timer, or data from a previous account.
       autopilotEnabled: source.autopilotEnabled === true,
+      operationsConfigurationState: ["enabled", "disabled"].includes(source.operationsConfigurationState) ? source.operationsConfigurationState : "unknown",
       autopilotSafeRemediationEnabled: source.autopilotSafeRemediationEnabled === true,
       operationsStatus: source.operationsStatus && typeof source.operationsStatus === "object" ? source.operationsStatus : {},
       operationsPolicy: source.operationsPolicy && typeof source.operationsPolicy === "object" ? source.operationsPolicy : {},
@@ -25699,7 +25700,8 @@
     const allowed = context.operationsAdminReadState === "ready" && ["operator", "manager"].includes(role);
     const loading = context.operationsAdminReadState === "loading";
     if (!allowed) {
-      return `<article class="portal-page portal-operations-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${safeText(loading ? copy("loading.title", "Đang xác minh quyền điều hành") : copy("guard.title", "Quyền điều hành chưa được cấp"))}</h2><p>${safeText(loading ? copy("loading.body", "Máy chủ đang kiểm tra phiên đăng nhập, vai trò hỗ trợ và ranh giới điều hành.") : copy("guard.body", "Chỉ quản trị viên, quản lý hỗ trợ hoặc nhân viên vận hành hỗ trợ do máy chủ xác minh mới được xem dữ liệu điều hành. Trình duyệt không thể tự gán quyền bằng bộ nhớ cục bộ, ID Telegram hoặc tham số URL."))}</p></div></div></section></article>`;
+      const message = loading ? "loading" : context.operationsConfigurationState === "disabled" ? "disabled" : "unavailable";
+      return `<article class="portal-page portal-operations-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><div><h2>${safeText(copy(message + ".title", "Chưa xác minh được điều hành"))}</h2><p>${safeText(copy(message + ".body", "Dữ liệu điều hành chưa được xác minh. Không có tác vụ nào được thực hiện."))}</p></div></div></section></article>`;
     }
     const lastRun = summary.last_run && typeof summary.last_run === "object" ? summary.last_run : null;
     const sla = summary.sla && typeof summary.sla === "object" ? summary.sla : {};

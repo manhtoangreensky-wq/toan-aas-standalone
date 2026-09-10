@@ -727,6 +727,13 @@
     }
   }
 
+  function operationsConfigurationState(response) {
+    if (!response || response.ok !== true) return "unknown";
+    const flags = response.data && response.data.flags;
+    if (!flags || typeof flags.autopilot_enabled !== "boolean") return "unknown";
+    return flags.autopilot_enabled ? "enabled" : "disabled";
+  }
+
   function base() {
     return window.__TOAN_AAS_PORTAL__ && typeof window.__TOAN_AAS_PORTAL__ === "object" ? window.__TOAN_AAS_PORTAL__ : {};
   }
@@ -14310,6 +14317,7 @@
       workboardEnabled,
       supportDeskEnabled,
       autopilotEnabled,
+      operationsConfigurationState: operationsConfigurationState(statusResponse),
       autopilotSafeRemediationEnabled,
       reliabilityFollowupEnabled,
       operationsDeskEnabled,

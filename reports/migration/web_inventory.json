@@ -7842,7 +7842,7 @@
         "copyfast_partner_crm.py",
         "copyfast_partner_readiness.py"
       ],
-      "occurrences": 1740,
+      "occurrences": 1739,
       "provider": "Telegram"
     }
   ],
@@ -14178,7 +14178,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 176,
   "source_files_scanned": 176,
-  "source_fingerprint_sha256": "e3ab2ee843e1b482bba01c0cdeaf3b87b75c1e3fc2b82062fe14e47af4befe96",
+  "source_fingerprint_sha256": "f4680cc94c4f6e028caa788ced15fb995fbcf137785e332856638e6a047144bd",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14398,7 +14398,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30436,
+      "line": 30438,
       "path": "/features"
     },
     {
