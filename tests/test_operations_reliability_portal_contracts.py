@@ -135,7 +135,7 @@ def test_reliability_filters_use_only_server_allowlisted_metadata_and_persist_th
         "data-portal-no-transient",
         'name="state"',
         'name="severity"',
-        "không có tìm kiếm theo source, account, route, ID, nội dung hoặc log",
+        "không tìm theo nguồn, tài khoản, đường dẫn, ID, nội dung hoặc nhật ký",
     ):
         assert requirement in renderer
     filter_form = _between(renderer, "const filterMarkup", "const followupMarkup")

@@ -11244,6 +11244,79 @@
     ADMIN_OPERATIONS_MESSAGES.zh[messageKey] = zh;
   });
 
+  const ADMIN_RELIABILITY_MESSAGES = { vi: {}, en: {}, zh: {} };
+  [
+    ["source.runtime", "Tín hiệu vận hành đã tổng hợp", "Aggregated runtime signals", "汇总运行信号"],
+    ["pagination.label", "mục theo dõi", "follow-ups", "跟进项"],
+    ["page.description", "Theo dõi lỗi vận hành và yêu cầu cần tra xét trong phạm vi quyền do máy chủ xác minh.", "Monitor operational errors and requests requiring investigation within server-verified access.", "在服务器验证的权限范围内跟踪运行错误及需要调查的请求。"],
+    ["signals.occurrences", "lần", "occurrences", "次"],
+    ["signals.body", "Chỉ hiển thị nhóm chức năng, số lần và thời điểm ghi nhận. Tín hiệu hỗ trợ tra xét, không xác nhận nguyên nhân hoặc kết quả sửa lỗi.", "Only function groups, occurrence counts and timestamps are shown. Signals guide investigation; they do not confirm a cause or a repair.", "仅显示功能组、发生次数和时间。信号用于辅助调查，并不确认原因或修复结果。"],
+    ["queue.title", "Hàng chờ tra xét", "Investigation queue", "调查队列"],
+    ["queue.body", "Mỗi thao tác được xác thực, bảo vệ CSRF, xác nhận và kiểm tra phiên bản để chống ghi trùng. Không gọi nhà cung cấp, Bot, thay đổi ví hoặc triển khai hệ thống.", "Actions require authentication, CSRF protection, confirmation, revision checks and duplicate-write protection. They do not call providers or Bot, change wallets or deploy the system.", "操作需要身份验证、CSRF 防护、确认、版本检查和防重复写入保护。不会调用供应商或 Bot、更改钱包或部署系统。"],
+    ["action.refresh", "Làm mới", "Refresh", "刷新"],
+    ["boundary.title", "Giới hạn hoạt động", "Operational limits", "操作限制"],
+    ["boundary.body", "Web ghi nhận thông tin để nhân sự tra xét. Việc sửa chữa thực tế cần quy trình và quyền riêng.", "The Web app records information for staff investigation. Actual repairs require a separate workflow and authorization.", "Web 应用记录信息供工作人员调查。实际修复需要独立流程和授权。"],
+    ["boundary.privacy", "Không lưu địa chỉ truy cập, tham số truy vấn, IP, phiên đăng nhập, nội dung khách hoặc dấu vết lỗi chi tiết.", "No URLs, query parameters, IPs, sessions, customer content or detailed stack traces are stored.", "不存储访问地址、查询参数、IP、会话、客户内容或详细错误堆栈。"],
+    ["boundary.system", "Không tự sửa mã nguồn, khởi động lại dịch vụ, khóa chức năng hoặc đổi cấu hình.", "No automatic code changes, service restarts, feature freezes or configuration changes.", "不自动修改代码、重启服务、冻结功能或更改配置。"],
+    ["boundary.external", "Không gọi nhà cung cấp/Bot, chạy lại tác vụ, thay đổi ví/PayOS hoặc phản hồi khách.", "No provider/Bot calls, job retries, wallet/PayOS changes or customer replies.", "不调用供应商或 Bot、不重试任务、不更改钱包或 PayOS，也不回复客户。"],
+    ["intro.kicker", "Theo dõi độ ổn định", "Reliability monitoring", "稳定性监测"],
+    ["intro.title", "Ghi nhận vấn đề, không tự ý sửa hệ thống", "Track issues without automatic repairs", "跟踪问题，不自动修复"],
+    ["intro.body", "Tổng hợp thông tin lỗi máy chủ và yêu cầu hỗ trợ để nhân sự tra xét. Đây không phải nhật ký chi tiết, chức năng tự sửa hay xác nhận đã liên hệ khách.", "Aggregate server-error information and support requests for staff investigation. This is not a detailed log, automatic repair service or confirmation that customers have been contacted.", "汇总服务器错误信息和支持请求，供工作人员调查。这不是详细日志、自动修复功能，也不表示已联系客户。"],
+    ["role.manager", "Quản lý", "Manager", "经理"],
+    ["role.operator", "Nhân viên vận hành", "Operator", "运营人员"],
+    ["role.verified", "Vai trò do máy chủ xác minh", "Server-verified role", "服务器已验证角色"],
+    ["ready", "Sẵn sàng", "Ready", "就绪"],
+    ["metrics.aria", "Tổng quan độ ổn định", "Reliability overview", "稳定性概览"],
+    ["metrics.open", "Đang mở", "Open", "待处理"],
+    ["metrics.openNote", "Chờ nhân sự tra xét", "Awaiting staff investigation", "等待人员调查"],
+    ["metrics.acknowledgedNote", "Chưa xác nhận đã sửa lỗi", "Repair not yet confirmed", "尚未确认修复"],
+    ["metrics.groups", "Nhóm tín hiệu", "Signal groups", "信号组"],
+    ["metrics.groupsNote", "Đã loại thông tin nhạy cảm", "Sensitive information removed", "已移除敏感信息"],
+    ["metrics.latest", "Lần gặp gần nhất", "Last observed", "最近发现"],
+    ["metrics.seen", "Có", "Observed", "已发现"],
+    ["metrics.noSignal", "Chưa có tín hiệu", "No signals yet", "暂无信号"],
+    ["filter.state", "Trạng thái", "Status", "状态"],
+    ["filter.severity", "Mức độ", "Severity", "严重程度"],
+    ["filter.allStates", "Tất cả trạng thái", "All statuses", "所有状态"],
+    ["filter.allSeverities", "Tất cả mức độ", "All severities", "所有级别"],
+    ["filter.apply", "Áp dụng", "Apply", "应用"],
+    ["filter.clear", "Xóa lọc", "Clear filters", "清除筛选"],
+    ["filter.note", "Chỉ lọc theo trạng thái và mức độ đã được máy chủ cho phép; không tìm theo nguồn, tài khoản, đường dẫn, ID, nội dung hoặc nhật ký.", "Filter only by server-approved status and severity. Source, account, route, ID, content and log searches are not available.", "仅按服务器允许的状态和严重程度筛选。不支持按来源、账户、路径、ID、内容或日志搜索。"],
+    ["empty.followups.title", "Chưa có mục theo dõi", "No follow-ups yet", "暂无跟进项"],
+    ["empty.followups.body", "Chưa có tín hiệu vượt ngưỡng hoặc yêu cầu cần người phụ trách tra xét. Trạng thái này không có nghĩa hệ thống đã tự sửa lỗi.", "No signals have crossed the threshold and no requests require investigation. This does not mean the system has repaired itself.", "暂无超出阈值的信号或需要负责人调查的请求。这并不表示系统已自动修复故障。"],
+    ["empty.signals.title", "Chưa có tín hiệu vận hành", "No runtime signals yet", "暂无运行信号"],
+    ["empty.signals.body", "Chỉ tổng hợp lỗi máy chủ bất ngờ từ các chức năng Web được phép theo dõi. Không hiển thị địa chỉ truy cập, tham số truy vấn hoặc nhật ký lỗi thô.", "Only unexpected server errors from approved Web functions are aggregated. URLs, query parameters and raw error logs are not displayed.", "仅汇总允许监测的 Web 功能中的意外服务器错误。不显示访问地址、查询参数或原始错误日志。"],
+    ["action.support", "Mở yêu cầu hỗ trợ", "Open support request", "打开支持请求"],
+    ["review.manager", "Quản lý tra xét", "Manager review", "经理审核"],
+    ["review.operator", "Nhân viên vận hành tra xét", "Operator review", "运营人员审核"],
+    ["pagination.aria", "Phân trang mục theo dõi", "Follow-up pagination", "跟进项分页"],
+    ["action.acknowledge", "Tiếp nhận", "Acknowledge", "接收"],
+    ["action.resolve", "Đã xử lý", "Resolve", "标记已处理"],
+    ["action.reopen", "Mở lại", "Reopen", "重新打开"],
+    ["source.support", "Phân loại yêu cầu hỗ trợ", "Support request triage", "支持请求分类"],
+    ["source.web", "Nguồn Web đã kiểm soát", "Controlled Web source", "受控 Web 来源"],
+    ["severity.critical", "Khẩn", "Critical", "紧急"],
+    ["severity.high", "Cao", "High", "高"],
+    ["severity.medium", "Theo dõi", "Monitor", "关注"],
+    ["severity.low", "Thấp", "Low", "低"],
+    ["state.open", "Mở", "Open", "待处理"],
+    ["state.acknowledged", "Đã nhận", "Acknowledged", "已接收"],
+    ["state.resolved", "Đã xử lý nội bộ", "Resolved internally", "内部已处理"],
+    ["state.superseded", "Đã thay thế", "Superseded", "已替代"],
+    ["state.guarded", "Được bảo vệ", "Guarded", "受保护"],
+    ["confirm.resolve", "Đánh dấu mục theo dõi đã xử lý? Thao tác chỉ cập nhật hồ sơ nội bộ, không sửa hệ thống, khởi động lại dịch vụ, gọi nhà cung cấp/Bot, thay đổi tiền hay liên hệ khách.", "Mark this follow-up as resolved? This only updates the internal record. It does not repair the system, restart services, call providers/Bot, change funds or contact customers.", "将此跟进项标记为已处理？此操作仅更新内部记录，不修复系统、重启服务、调用供应商或 Bot、更改资金或联系客户。"],
+    ["confirm.reopen", "Mở lại mục theo dõi này? Chỉ thông tin hồ sơ nội bộ được cập nhật.", "Reopen this follow-up? Only the internal record is updated.", "重新打开此跟进项？仅更新内部记录。"],
+    ["confirm.acknowledge", "Xác nhận tiếp nhận để tiếp tục tra xét? Không thực hiện hành động ngoài Web.", "Acknowledge this follow-up for investigation? No action outside the Web app is performed.", "确认接收此跟进项以继续调查？不会执行 Web 应用以外的操作。"],
+    ["loading.title", "Đang xác minh dữ liệu theo dõi", "Verifying monitoring data", "正在验证监测数据"],
+    ["loading.body", "Máy chủ đang kiểm tra phiên đăng nhập và quyền truy cập dữ liệu theo dõi độ ổn định.", "The server is checking your session and access to reliability monitoring data.", "服务器正在检查登录会话及稳定性监测数据的访问权限。"],
+    ["unavailable.title", "Chưa xác minh được dữ liệu theo dõi", "Monitoring data is not verified", "监测数据尚未验证"],
+    ["unavailable.body", "Chưa có dữ liệu hợp lệ cho phiên hiện tại. Chưa thể kết luận nguyên nhân là cấu hình, quyền truy cập hay kết nối. Không có tác vụ nào được thực hiện.", "Valid data is not available for this session. The cause may involve configuration, access or connectivity and has not been confirmed. No action has been performed.", "当前会话尚无有效数据。原因可能涉及配置、访问权限或连接，尚未确认。未执行任何操作。"]
+  ].forEach(([key, vi, en, zh]) => {
+    ADMIN_RELIABILITY_MESSAGES.vi[`adminReliability.${key}`] = vi;
+    ADMIN_RELIABILITY_MESSAGES.en[`adminReliability.${key}`] = en;
+    ADMIN_RELIABILITY_MESSAGES.zh[`adminReliability.${key}`] = zh;
+  });
+
   // Admin Support owns a complete locale table because the staff list/detail
   // renderers are separate from customer Support. Records, identifiers,
   // timestamps and server-issued lifecycle values remain untranslated data.
@@ -11810,6 +11883,7 @@
     DELIVERY_CENTER_MESSAGES[locale],
     SUPPORT_TICKET_MESSAGES[locale],
     ADMIN_OPERATIONS_MESSAGES[locale],
+    ADMIN_RELIABILITY_MESSAGES[locale],
     ADMIN_SUPPORT_MESSAGES[locale],
     ADMIN_MANUAL_TOPUP_MESSAGES[locale],
     MANUAL_TOPUP_MESSAGES[locale]
