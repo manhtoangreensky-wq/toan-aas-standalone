@@ -159,6 +159,16 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 
 ## 11. Đối chiếu bổ sung A09 Auth/Admin shell
 
+### Hiệu chỉnh Operations readiness — 10/09/2026
+
+Thông báo cũ `Quyền điều hành chưa được cấp` được dùng cho mọi trạng thái không
+ready, kể cả module tắt. Điều này không chứng minh tài khoản thiếu quyền.
+Candidate hiện phân biệt chưa bật (cấu hình false được máy chủ trả thành công)
+và chưa xác minh (lỗi/thiếu dữ liệu). Quyền và backend không đổi; không được
+coi việc sửa thông báo là hoàn tất chức năng quản trị hoặc duyệt nạp.
+Bằng chứng: `tests/test_operations_readiness_truth.py` và renderer VI/EN/ZH trong
+`tests/test_a09_admin_operations_locale_purity_contracts.py`. Chưa live cho candidate.
+
 | Chức năng/tuyên bố cũ | Hiện tại trong candidate A09 | Trạng thái | Bằng chứng |
 |---|---|---|---|
 | Admin app switcher nằm ngang để mở các nhóm | Toàn bộ nhóm server cấp nằm trong sidebar dọc; rail/header switcher bị bỏ. | ⚠️ Candidate local, chưa live | `static/portal/portal.js`; `tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py` |

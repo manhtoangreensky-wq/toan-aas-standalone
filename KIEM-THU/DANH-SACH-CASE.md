@@ -51,3 +51,13 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 | WA-43 | A09-AUTH-ADMIN-SHELL-VERTICAL-RESPONSIVE-LOCALE | 🟠 nặng | local-render + live-after-deploy | `/login`, `/admin/login`, `/admin`, `/admin/support`, `/admin/operations` · Admin responsive matrix | Locale, Auth header, drawer, logo và route Admin | VI/EN fixed chrome thuần ngôn ngữ; ZH catalogue symmetry bằng executable contract; locale receipt sống qua remount; mobile target ≥44px; drawer/focus và logo contain ratio `1.00` giữ chuẩn. Operations có hierarchy/contrast/empty state thật, overflow/clip/console/mutation `0`. | VI từng hiện `VI / EN`; Admin Support/Operations từng trộn Việt-Anh; locale receipt từng bị `profile.locale` cũ kéo ngược; caption tiếng Anh từng ép logo. | Focused A09 tests; Support Browser `40` states; Operations Browser `20` states và `14/14` assertions. |
 
 Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cuối phải tách PR merge SHA, CI run, deploy run, runtime SHA và live output.
+
+## WA-44 — A09-OPERATIONS-READINESS-TRUTH
+
+- Mức: nặng; route `/admin/operations`; chỉ đọc, không bấm duyệt.
+- Local fixtures: successful Boolean false → chưa bật; true → cấu hình đã bật nhưng vẫn cần quyền/ready; missing/failed/malformed → chưa xác minh, không quy kết thiếu quyền.
+- VI/EN/ZH không trộn fixed copy; đang tải không nhảy sang disabled; disabled không có action button. Manager/operator đã xác minh giữ nguyên hành động và giới hạn cũ.
+- Live sau deploy: signed Admin khi flag vẫn false phải thấy thông báo chưa bật; ghi runtime SHA, DOM/ảnh và không phát sinh request ghi. Không đổi ENV để tạo tình huống test.
+- Canh lỗi cũ: đăng nhập thành công nhưng bị báo nhầm thiếu quyền; không chấp nhận HTTP 200/CI xanh làm bằng chứng chức năng đã hoạt động.
+- Nguồn test: `tests/test_operations_readiness_truth.py`, `tests/test_a09_admin_operations_locale_purity_contracts.py`.
+- Trạng thái: local suite 61 passed; deployment và signed live candidate chưa thực hiện.

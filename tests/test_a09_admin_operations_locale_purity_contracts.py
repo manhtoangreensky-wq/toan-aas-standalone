@@ -21,49 +21,49 @@ THEME = ROOT / "static" / "portal" / "portal-theme.css"
 
 FIXED_ASCII_TOKEN_SNAPSHOTS = {
     "vi": frozenset({
-        "an", "bot", "cao", "coi", "csrf", "cung", "do", "dung", "erp", "ghi",
+        "an", "bot", "cao", "cho", "coi", "csrf", "cung", "do", "dung", "erp", "ghi", "hay",
         "giao", "i", "id", "khai", "khi", "minh", "payos", "quan", "quy", "ranh",
-        "ro", "sau", "sla", "suy", "telegram", "tham", "thanh", "thao", "thay",
-        "theo", "thg", "thi", "tin", "tra", "trang", "trong", "url", "vai", "vi",
+        "ro", "sau", "sla", "suy", "thanh", "thao", "thay",
+        "theo", "thg", "thi", "tin", "tra", "trang", "trong", "truy", "vai", "vi",
         "web", "xem", "xu",
     }),
     "en": frozenset({
         "a", "access", "account", "accountable", "action", "actions", "admin",
-        "administration", "administrator", "administrators", "after", "am", "an", "and",
+        "administration", "administrator", "after", "am", "an", "and",
         "app", "approval", "are", "as", "audit", "authority", "automated", "automatic",
         "automatically", "automation", "autopilot", "available", "awaiting", "baseline",
-        "been", "beyond", "board", "bot", "boundary", "breach", "breached", "browser",
+        "been", "beyond", "board", "bot", "boundary", "breach", "breached", "cause",
         "but", "by", "call", "cannot", "card", "change", "checking", "cleared", "completed",
-        "configuration", "configured", "confirm", "confirmation", "contain", "controlled",
+        "configuration", "configured", "confirm", "confirmation", "confirmed", "connectivity", "contain", "controlled",
         "controls", "correct", "created", "creates", "credentials", "critical", "csrf",
         "current", "customer", "data", "decision", "decisions", "delay", "delivery",
         "deployments", "detected", "did", "disabled", "do", "does", "empty", "enough",
         "erp", "establishing", "evaluate", "evaluating", "evaluation", "evidence", "executed",
-        "executes", "executor", "exposes", "external", "financial", "follow", "for", "grant",
-        "granted", "guarded", "has", "have", "health", "heartbeat", "high", "hmac", "i",
-        "id", "idempotency", "ids", "incident", "incidents", "infer", "infrastructure",
+        "executes", "executor", "exposes", "external", "financial", "follow", "for",
+        "guarded", "has", "have", "health", "heartbeat", "high", "hmac", "i",
+        "idempotency", "ids", "incident", "incidents", "infer", "infrastructure", "involve",
         "intentional", "internal", "interpret", "interval", "investigate", "investigating",
-        "investigation", "invoke", "is", "it", "itself", "job", "jobs", "lacks", "levels",
-        "local", "logs", "manager", "managers", "may", "member", "money", "monitor", "more",
+        "investigation", "invoke", "is", "it", "job", "jobs", "lacks", "levels",
+        "logs", "manager", "managers", "may", "member", "money", "monitor", "more",
         "must", "near", "never", "next", "no", "nonce", "not", "observations", "occurs",
         "one", "only", "open", "operations", "operator", "operators", "or", "outside",
-        "oversight", "overview", "owner", "ownership", "page", "pagination", "parameters",
+        "oversight", "overview", "owner", "ownership", "page", "pagination",
         "payload", "payloads", "payments", "payos", "permission", "permissions", "personal",
         "policy", "portal", "present", "previous", "process", "processing", "proposal",
-        "proposals", "provider", "providers", "queue", "raw", "reached", "read", "ready",
+        "proposals", "provided", "provider", "providers", "queue", "raw", "reached", "read", "ready",
         "receipt", "receipts", "receive", "recent", "record", "recording", "records", "refresh",
         "refund", "reject", "rejection", "release", "reliability", "remains", "repair",
         "replaced", "replies", "request", "requests", "require", "required", "restart", "retry",
         "return", "returned", "review", "reviewing", "revision", "risk", "role", "roles", "run",
         "runs", "safe", "same", "sanitized", "schedule", "scheduler", "scope", "scoped", "secrets",
         "section", "sensitive", "sep", "server", "session", "severity", "showing", "shows", "signed",
-        "sla", "some", "source", "staff", "stale", "still", "storage", "subqueues", "suitable",
-        "summary", "support", "system", "telegram", "that", "the", "this", "through", "tick", "to",
-        "totals", "triaged", "unable", "under", "unverified", "up", "updated", "ups", "url", "use",
-        "valid", "verified", "verifies", "view", "wallet", "web", "when", "wide", "will", "window",
+        "sla", "some", "source", "staff", "stale", "still", "subqueues", "suitable",
+        "summary", "support", "system", "that", "the", "this", "tick", "to",
+        "totals", "triaged", "unable", "under", "unverified", "up", "updated", "ups", "use",
+        "valid", "verified", "verifies", "wallet", "web", "when", "wide", "will", "window",
         "with", "within", "workflow", "xu", "yet", "you", "zero",
     }),
-    "zh": frozenset({"bot", "csrf", "erp", "hmac", "i", "id", "payos", "sla", "telegram", "url", "web", "xu"}),
+    "zh": frozenset({"bot", "csrf", "erp", "hmac", "i", "id", "payos", "sla", "web", "xu"}),
 }
 
 
@@ -109,7 +109,7 @@ const closingOffset = portalSource.lastIndexOf(closing);
 if (closingOffset < 0) throw new Error("Portal closure was not found");
 portalSource = portalSource.slice(0, closingOffset)
   + `\nglobalThis.__a09AdminOperations = Object.freeze({\n`
-  + `  renderOperationsAdmin, localizedPageTitle, localizedPageDescription\n`
+  + `  renderOperationsAdmin, localizedPageTitle, localizedPageDescription, normalizeBootstrap\n`
   + `});\n`
   + portalSource.slice(closingOffset);
 
@@ -249,6 +249,10 @@ process.stdout.write(JSON.stringify({
   partial: api.renderOperationsAdmin(page, partial),
   loading: api.renderOperationsAdmin(page, loading),
   guarded: api.renderOperationsAdmin(page, guarded),
+  disabled: api.renderOperationsAdmin(page, { ...guarded, operationsConfigurationState: "disabled" }),
+  loadingDisabled: api.renderOperationsAdmin(page, { ...loading, operationsConfigurationState: "disabled" }),
+  configurationStates: [undefined, null, false, true, "false", "unknown", "disabled", "enabled"].map(
+    operationsConfigurationState => api.normalizeBootstrap({ operationsConfigurationState }).operationsConfigurationState),
   heartbeatStates,
   invalidAction,
   title: api.localizedPageTitle(page, base),
@@ -338,9 +342,14 @@ def test_admin_operations_catalogue_is_symmetric_and_covers_all_render_states() 
     assert "Điều hành có kiểm soát" in rendered["vi"]["populatedManager"]
     assert "Controlled operations" in rendered["en"]["populatedManager"]
     assert "受控运营" in rendered["zh"]["populatedManager"]
-    assert "Quyền điều hành chưa được cấp" in rendered["vi"]["guarded"]
-    assert "Operations permission has not been granted" in rendered["en"]["guarded"]
-    assert "尚未授予运营权限" in rendered["zh"]["guarded"]
+    assert "Chưa xác minh được dữ liệu điều hành" in rendered["vi"]["guarded"]
+    assert "Operations data is not verified" in rendered["en"]["guarded"]
+    assert "运营数据尚未验证" in rendered["zh"]["guarded"]
+    for locale, title in (("vi", "Điều hành tự động chưa được bật"), ("en", "Operations is not enabled"), ("zh", "自动化运营尚未启用")):
+        assert title in rendered[locale]["disabled"]
+        assert 'data-portal-action=' not in rendered[locale]["disabled"]
+        assert rendered[locale]["loadingDisabled"] == rendered[locale]["loading"]
+        assert rendered[locale]["configurationStates"] == ["unknown"] * 6 + ["disabled", "enabled"]
     assert "Chỉ người quản lý hỗ trợ" in rendered["vi"]["operator"]
     assert "Support managers only" in rendered["en"]["operator"]
     assert "仅限支持经理" in rendered["zh"]["operator"]
@@ -358,6 +367,23 @@ def test_admin_operations_catalogue_is_symmetric_and_covers_all_render_states() 
     for locale, labels in expected_heartbeat_labels.items():
         heartbeat_markup = " ".join(rendered[locale]["heartbeatStates"].values())
         assert all(label in heartbeat_markup for label in labels)
+
+
+@pytest.mark.parametrize("locale", ["vi", "en", "zh"])
+def test_admin_operations_disabled_copy_is_locale_pure(locale: str) -> None:
+    copy = _visible_copy(_render_admin_operations(locale)["disabled"])
+    expected = {
+        "vi": {"do", "erp", "minh", "theo", "trong", "vi"},
+        "en": {"account", "action", "administration", "and", "approval", "autopilot",
+               "been", "configuration", "disabled", "does", "enabled", "erp", "executed",
+               "has", "in", "incidents", "indicate", "is", "missing", "module", "monitor",
+               "no", "not", "operations", "permission", "permissions", "proposals", "runs",
+               "server", "this", "verified", "within"},
+        "zh": {"erp"},
+    }
+    assert _ascii_tokens(copy) == expected[locale]
+    if locale in ("en", "zh"):
+        assert not re.search(r"[ĂÂĐÊÔƠƯăâđêôơư\u1EA0-\u1EF9]", copy)
 
 
 def test_admin_operations_preserves_dynamic_values_and_record_only_actions() -> None:

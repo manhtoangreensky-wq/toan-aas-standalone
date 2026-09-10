@@ -325,6 +325,20 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
 
 ### A09 mở lại — Điều hành tự động, 10/09/2026
 
+#### Cập nhật readiness sau PR #425
+
+PR #425 đã merge/deploy tại `24dda30a06838480f00b60668a5f7a78d8a3b43a`.
+Quan sát signed production ngày 10/09 cho thấy thông báo thiếu quyền không phản ánh
+đúng `autopilot_enabled=false`. Đăng nhập không còn là blocker.
+Bản sửa kế tiếp `fix/a09-operations-readiness-truth` chưa triển khai:
+phản hồi thành công với Boolean false mới chứng minh chưa bật; phản hồi thiếu,
+lỗi hoặc sai kiểu là chưa xác minh; Boolean true không tự cấp quyền.
+Loading và quyền manager/operator hiện hành giữ nguyên. Không bật module,
+không thực thi quyết định, không thay ví hoặc cấu hình. Bộ kiểm thử mở rộng
+ngày 10/09 đạt `61 passed in 8.20s`, exit 0; đây không phải live PASS.
+
+Các số liệu local bên dưới mô tả batch PR #425 trước khi ship.
+
 - Nhánh local `fix/a09-admin-operations-locale-purity` bắt đầu từ exact main `cc3b468…`; chưa commit/push/deploy.
 - `/admin/operations` có catalogue riêng `adminOperations.*` với key VI/EN/ZH đối xứng. Guard/loading, Manager/Operator, partial, populated, empty, phân trang, xác nhận, sự cố và nhịp chạy đều qua catalogue; ID, mã tác vụ và mã máy vẫn giữ nguyên.
 - Bố cục route dùng semantic teal/cyan của master design system: intro rõ quyền, bốn số liệu thật, hai cột quyết định/ranh giới và hai cột lần quét/sự cố; `<=980px` hạ một cột, `<=700px` toàn bộ thẻ và hành động xếp dọc. Không thêm số liệu hoặc biểu đồ giả.
