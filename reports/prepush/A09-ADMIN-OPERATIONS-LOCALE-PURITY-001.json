@@ -1,0 +1,66 @@
+{
+  "schema_version": "a09.admin.operations.locale-ui.v1",
+  "spec_id": "A09-ADMIN-OPERATIONS-LOCALE-PURITY-001",
+  "base_sha": "cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f",
+  "route": "/admin/operations",
+  "status": "local_verified_awaiting_commit",
+  "render_contract": {
+    "states": [
+      "guarded",
+      "loading",
+      "manager_empty",
+      "manager_populated",
+      "operator",
+      "partial",
+      "heartbeat_disabled",
+      "heartbeat_baseline_pending",
+      "heartbeat_within_window",
+      "heartbeat_late",
+      "heartbeat_guarded"
+    ],
+    "locales": ["vi", "en", "zh"],
+    "dynamic_values_preserved": true,
+    "record_only_actions_preserved": true
+  },
+  "browser": {
+    "states": 20,
+    "locales": ["vi", "en"],
+    "themes": ["light", "dark"],
+    "viewports": ["1440x900", "1024x768", "768x900", "390x667", "360x640"],
+    "assertions_passed": 14,
+    "assertions_total": 14,
+    "minimum_text_contrast": 5.23,
+    "maximum_text_contrast": 15.17,
+    "page_overflow_max_px": 0,
+    "clipped_elements": 0,
+    "high_level_horizontal_scrollers": 0,
+    "touch_target_violations": 0,
+    "relevant_console_or_network_events": 0,
+    "operations_write_requests": 0
+  },
+  "verification": {
+    "focused_tests": {"passed": 151, "failed": 0, "warnings": 2},
+    "protected_base": {"passed": 68, "failed": 2},
+    "protected_candidate": {"passed": 68, "failed": 2},
+    "new_protected_failures": 0,
+    "tester_workspace": {"passed": 32, "failed": 0, "deselected_windows_posix_only": 1},
+    "node_syntax": {"files": 3, "failed": 0},
+    "git_diff_check_exit": 0
+  },
+  "security": {
+    "scan_id": "8bc4f21a-ed08-46ed-a7ba-ec0a0ae6e8ed",
+    "draft_findings": 0,
+    "reviewed_surfaces": 7,
+    "status": "partial_infrastructure_limited",
+    "limitation": "prepare_codex_security_review_items failed: destination escaped its bound context"
+  },
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "payment_mutations": 0,
+    "production_data_mutations": 0,
+    "operations_approval_submissions": 0,
+    "env_mutations": 0,
+    "deploy": 0
+  }
+}

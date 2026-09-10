@@ -226,11 +226,11 @@ def test_operations_admin_heartbeat_is_a_strict_staff_only_read_projection() -> 
     assert "scheduler_heartbeat" not in customer_renderer
     for requirement in (
         "function operationsHeartbeatPresentation",
-        "không phải xác nhận Railway, Bot, provider hay job khỏe",
-        "không có repair, restart hay retry tự động",
+        'adminOperationsText("heartbeat.withinWindow.detail"',
+        'adminOperationsText("heartbeat.guarded.detail"',
     ):
         assert requirement in PORTAL
-    for requirement in ("Scheduler heartbeat", "Mở Reliability Follow-up"):
+    for requirement in ('copy("heartbeat.title"', 'copy("heartbeat.action"'):
         assert requirement in admin_renderer
     assert 'data-portal-action="operations-admin-heartbeat' not in admin_renderer
 
@@ -392,7 +392,7 @@ def test_operations_admin_keeps_verified_summary_when_one_queue_is_guarded() -> 
         'const incidentReadable = queueStates.incidents === "ready";',
         'const approvalReadable = queueStates.approvals === "ready";',
         "const guardedQueue =",
-        "không dùng dữ liệu cũ hoặc coi đó là queue rỗng",
+        "không dùng dữ liệu cũ hoặc coi đó là hàng đợi rỗng",
         "allowed && approvalReadable",
         "allowed && runReadable",
         "allowed && incidentReadable",

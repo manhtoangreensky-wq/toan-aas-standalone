@@ -355,7 +355,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["case_count"] == 43
     assert data["p0_case_count"] == 18
     assert data["github_project"] == "TOAN AAS Web App · Tester P0"
-    assert data["local_metadata_updated_at"] == "2026-09-05"
+    assert data["local_metadata_updated_at"] == "2026-09-10"
     assert data["remote_verified_at"] == "2026-09-03"
     assert data["partial_remote_revalidated_at"] == "2026-09-04"
     assert data["remote_revalidation"] == {
@@ -364,7 +364,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
         "issue_templates": "verified_local_2_of_2",
         "github_project": "not_revalidated_missing_read_project_scope",
     }
-    assert data["push_gate"] == "A09_PR_423_CI_RETEST_PENDING"
+    assert data["push_gate"] == "A09_ADMIN_OPERATIONS_PR_PENDING"
     assert data["labels_missing"] == []
     assert data["external_mutations"] == 0
     assert all(value == 0 for value in data["safety"].values())

@@ -283,6 +283,10 @@
     return uiText(`adminSupport.${key}`, fallback, params);
   }
 
+  function adminOperationsText(key, fallback, params) {
+    return uiText(`adminOperations.${key}`, fallback, params);
+  }
+
   function supportTicketLocale() {
     const i18n = portalI18n();
     if (!i18n || typeof i18n.localeTag !== "function") return "vi-VN";
@@ -9622,6 +9626,7 @@
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.title", fallback);
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.title", fallback);
+    if (path === "/admin/operations") return adminOperationsText("page.title", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "title", fallback);
     if (path === "/features") return featureCatalogText("page.title", fallback);
     if (path === "/studio") return mediaStudioText("page.title", fallback);
@@ -9689,6 +9694,7 @@
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.description", fallback);
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.description", fallback);
+    if (path === "/admin/operations") return adminOperationsText("page.description", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "description", fallback);
     if (path === "/features") return featureCatalogText("page.description", fallback);
     if (path === "/studio") return mediaStudioText("page.description", fallback);
@@ -10958,6 +10964,7 @@
     if (adminDataViewRouteKey(page)) return adminDataViewRouteText(page, "section", fallback);
     if (route === "/admin/support") return adminSupportText("hero.list.section", fallback);
     if (route.startsWith("/admin/support/")) return adminSupportText("hero.detail.section", fallback);
+    if (route === "/admin/operations") return adminOperationsText("hero.section", fallback);
     return routeKey ? supportTicketText(`hero.${routeKey}.section`, fallback) : fallback;
   }
 
@@ -25136,6 +25143,36 @@
     return labels[key] || fallback || "Được bảo vệ";
   }
 
+  function adminOperationsLabel(value, fallback) {
+    const key = String(value || "").trim().toLowerCase();
+    const messageKeys = {
+      health_probe: "label.healthProbe",
+      support_triage_metadata: "label.supportTriage",
+      terminal_case_metadata_reconciliation: "label.terminalReconciliation",
+      within_target: "label.withinTarget",
+      at_risk: "label.atRisk",
+      breached: "label.breached",
+      terminal: "label.terminal",
+      unverified: "label.unverified",
+      investigating: "label.investigating",
+      resolved: "label.resolved",
+      closed: "label.closed",
+      awaiting_approval: "label.awaitingApproval",
+      approved: "label.approved",
+      rejected: "label.rejected",
+      superseded: "label.superseded",
+      expired: "label.expired",
+      started: "label.started",
+      completed: "label.completed",
+      failed: "label.failed",
+      guarded: "label.guarded"
+    };
+    const messageKey = messageKeys[key];
+    return messageKey
+      ? adminOperationsText(messageKey, operationsLabel(key, fallback))
+      : (fallback || adminOperationsText("label.guarded", "Được bảo vệ"));
+  }
+
   function operationsCount(value) {
     const number = Number(value || 0);
     return Number.isFinite(number) && number >= 0 ? Math.min(Math.floor(number), 1000000) : 0;
@@ -25152,24 +25189,24 @@
     const openFollowups = operationsCount(source.open_followups);
     const known = {
       disabled: {
-        label: "Chưa bật follow-up", badgeState: "guarded",
-        detail: "Heartbeat follow-up chưa được bật; Desk không suy đoán lịch chạy hoặc tình trạng hạ tầng."
+        label: adminOperationsText("heartbeat.disabled.label", "Chưa bật theo dõi tiếp"), badgeState: "guarded",
+        detail: adminOperationsText("heartbeat.disabled.detail", "Theo dõi nhịp chạy chưa được bật; bảng điều hành không suy đoán lịch chạy hoặc tình trạng hạ tầng.")
       },
       baseline_pending: {
-        label: "Đang tạo mốc", badgeState: "processing",
-        detail: "Máy chủ chưa có baseline cùng process/cấu hình để đánh giá một khoảng trễ."
+        label: adminOperationsText("heartbeat.baselinePending.label", "Đang tạo mốc"), badgeState: "processing",
+        detail: adminOperationsText("heartbeat.baselinePending.detail", "Máy chủ chưa có mốc cùng tiến trình và cấu hình để đánh giá một khoảng trễ.")
       },
       within_window: {
-        label: "Tick trong cửa sổ", badgeState: "read_only",
-        detail: "Một signed tick đã tới Web trong cửa sổ cấu hình; đây không phải xác nhận Railway, Bot, provider hay job khỏe."
+        label: adminOperationsText("heartbeat.withinWindow.label", "Nhịp chạy đúng thời hạn"), badgeState: "read_only",
+        detail: adminOperationsText("heartbeat.withinWindow.detail", "Một nhịp chạy đã ký nhận tới Web trong thời hạn cấu hình; đây không phải xác nhận Bot, nhà cung cấp hoặc công việc đang khỏe.")
       },
       late: {
-        label: "Cần tra xét", badgeState: "awaiting_confirm",
-        detail: "Máy chủ phát hiện khoảng tick vượt cửa sổ cấu hình và chỉ tạo metadata follow-up nội bộ."
+        label: adminOperationsText("heartbeat.late.label", "Cần tra xét"), badgeState: "awaiting_confirm",
+        detail: adminOperationsText("heartbeat.late.detail", "Máy chủ phát hiện nhịp chạy vượt thời hạn cấu hình và chỉ tạo dữ liệu theo dõi tiếp nội bộ.")
       },
       guarded: {
-        label: "Đang bảo vệ", badgeState: "guarded",
-        detail: "Heartbeat chưa đủ dữ kiện an toàn để diễn giải; không có repair, restart hay retry tự động."
+        label: adminOperationsText("heartbeat.guarded.label", "Đang bảo vệ"), badgeState: "guarded",
+        detail: adminOperationsText("heartbeat.guarded.detail", "Nhịp chạy chưa đủ dữ kiện an toàn để diễn giải; hệ thống không tự sửa, khởi động lại hoặc thử lại.")
       }
     };
     const presentation = known[state] || known.guarded;
@@ -25274,7 +25311,7 @@
     return `<option value="all"${current === "all" ? " selected" : ""}>${safeText(allLabel)}</option>${options.map(([value, label]) => `<option value="${safeText(value)}"${current === value ? " selected" : ""}>${safeText(label)}</option>`).join("")}`;
   }
 
-  function renderOperationsPagination(listing, enabled, label, action, route, offsetAttribute, ariaLabel) {
+  function renderOperationsPagination(listing, enabled, label, action, route, offsetAttribute, ariaLabel, messages) {
     const source = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
     const offset = Number.isInteger(source.offset) ? source.offset : 0;
     const returned = Number.isInteger(source.returned) ? source.returned : 0;
@@ -25282,9 +25319,16 @@
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
     const disabled = enabled ? "" : " disabled";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + label : "Không có " + label + " ở trang này";
-    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(previous)) + '"' + disabled + '>← Trang trước</button>';
-    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(next)) + '"' + disabled + '>Trang sau →</button>';
+    const localized = messages && messages.localized === true;
+    const range = localized
+      ? (returned
+        ? adminOperationsText("pagination.range", "Đang hiển thị {start}–{end} {label}", { start: String(offset + 1), end: String(offset + returned), label })
+        : adminOperationsText("pagination.empty", "Không có {label} ở trang này", { label }))
+      : (returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + label : "Không có " + label + " ở trang này");
+    const previousLabel = localized ? adminOperationsText("pagination.previous", "Trang trước") : "Trang trước";
+    const nextLabel = localized ? adminOperationsText("pagination.next", "Trang sau") : "Trang sau";
+    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(previous)) + '"' + disabled + '>← ' + safeText(previousLabel) + '</button>';
+    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(next)) + '"' + disabled + '>' + safeText(nextLabel) + ' →</button>';
     return '<nav class="portal-support-pagination" aria-label="' + safeText(ariaLabel) + '"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
   }
 
@@ -25293,15 +25337,15 @@
   }
 
   function renderOperationsAdminRunPagination(listing, enabled) {
-    return renderOperationsPagination(listing, enabled, "receipt Operations", "operations-admin-runs-page", "/admin/operations", "data-operations-admin-run-offset", "Phân trang receipt Operations");
+    return renderOperationsPagination(listing, enabled, adminOperationsText("pagination.runs.label", "lần quét điều hành"), "operations-admin-runs-page", "/admin/operations", "data-operations-admin-run-offset", adminOperationsText("pagination.runs.aria", "Phân trang lần quét điều hành"), { localized: true });
   }
 
   function renderOperationsAdminIncidentPagination(listing, enabled) {
-    return renderOperationsPagination(listing, enabled, "incident Operations", "operations-admin-incidents-page", "/admin/operations", "data-operations-admin-incident-offset", "Phân trang incident Operations quản trị");
+    return renderOperationsPagination(listing, enabled, adminOperationsText("pagination.incidents.label", "sự cố điều hành"), "operations-admin-incidents-page", "/admin/operations", "data-operations-admin-incident-offset", adminOperationsText("pagination.incidents.aria", "Phân trang sự cố điều hành"), { localized: true });
   }
 
   function renderOperationsApprovalPagination(listing, enabled) {
-    return renderOperationsPagination(listing, enabled, "approval Operations", "operations-approvals-page", "/admin/operations", "data-operations-approval-offset", "Phân trang approval Operations");
+    return renderOperationsPagination(listing, enabled, adminOperationsText("pagination.approvals.label", "đề xuất chờ quyết định"), "operations-approvals-page", "/admin/operations", "data-operations-approval-offset", adminOperationsText("pagination.approvals.aria", "Phân trang đề xuất chờ quyết định"), { localized: true });
   }
 
   function renderReliabilityFollowupPagination(listing, enabled) {
@@ -25310,12 +25354,21 @@
 
   function operationsIncidentCards(items, admin) {
     const incidents = Array.isArray(items) ? items : [];
-    if (!incidents.length) return renderEmpty("Chưa có incident Operations", "Máy chủ chưa trả incident liên quan tới signed Web account hiện tại.", ICONS.system);
+    if (!incidents.length) return admin
+      ? renderEmpty(adminOperationsText("incident.empty.title", "Chưa có sự cố điều hành"), adminOperationsText("incident.empty.body", "Máy chủ chưa trả sự cố liên quan tới tài khoản Web đã đăng nhập hiện tại."), ICONS.system)
+      : renderEmpty("Chưa có incident Operations", "Máy chủ chưa trả incident liên quan tới signed Web account hiện tại.", ICONS.system);
     return `<div class="portal-operations-incident-grid">${incidents.map((item) => {
       const severity = ["normal", "high", "critical"].includes(String(item.severity || "")) ? String(item.severity) : "normal";
       const supportId = admin && supportCaseId(item.support_case_id) ? supportCaseId(item.support_case_id) : "";
-      const caseLink = supportId ? `<a class="portal-button portal-button--quiet" href="/admin/support/${encodeURIComponent(supportId)}">Mở case</a>` : "";
-      return `<article class="portal-operations-incident" data-severity="${safeText(severity)}"><div class="portal-operations-incident-head"><span class="portal-operations-code">${safeText(String(item.kind || "support_case"))}</span>${badge(operationsDisplayState(item.state, "incident"))}</div><h3>${safeText(operationsLabel(item.state, "Incident Operations"))}</h3><p>${safeText(severity === "critical" ? "Cần nhân sự kiểm tra theo quy trình Support Desk; không có hành động tài chính, provider hay delivery tự động." : "Incident chỉ phản ánh metadata Operations trong Web App; không phải kết luận về tiền, provider hoặc Bot.")}</p><dl class="portal-operations-meta"><div><dt>Mức độ</dt><dd>${safeText(severity === "critical" ? "Khẩn" : severity === "high" ? "Cao" : "Bình thường")}</dd></div><div><dt>Quan sát</dt><dd>${safeText(String(operationsCount(item.observation_count)))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(item.last_observed_at))}</dd></div><div><dt>Revision</dt><dd>${safeText(String(operationsCount(item.revision)))}</dd></div></dl>${caseLink ? `<div class="portal-form-footer">${caseLink}</div>` : ""}</article>`;
+      const caseLink = supportId ? `<a class="portal-button portal-button--quiet" href="/admin/support/${encodeURIComponent(supportId)}">${safeText(admin ? adminOperationsText("action.openRequest", "Mở yêu cầu") : "Mở case")}</a>` : "";
+      const heading = admin ? adminOperationsLabel(item.state, adminOperationsText("incident.fallback", "Sự cố điều hành")) : operationsLabel(item.state, "Incident Operations");
+      const description = admin
+        ? adminOperationsText(severity === "critical" ? "incident.critical.body" : "incident.normal.body", severity === "critical" ? "Cần nhân sự kiểm tra theo quy trình hỗ trợ; hệ thống không tự thực hiện hành động tài chính, gọi nhà cung cấp hoặc đổi trạng thái bàn giao." : "Sự cố chỉ phản ánh dữ liệu điều hành trong Web App; không phải kết luận về tiền, nhà cung cấp hoặc Bot.")
+        : (severity === "critical" ? "Cần nhân sự kiểm tra theo quy trình Support Desk; không có hành động tài chính, provider hay delivery tự động." : "Incident chỉ phản ánh metadata Operations trong Web App; không phải kết luận về tiền, provider hoặc Bot.");
+      const severityLabel = admin
+        ? adminOperationsText(`severity.${severity}`, severity === "critical" ? "Khẩn" : severity === "high" ? "Cao" : "Bình thường")
+        : (severity === "critical" ? "Khẩn" : severity === "high" ? "Cao" : "Bình thường");
+      return `<article class="portal-operations-incident" data-severity="${safeText(severity)}"><div class="portal-operations-incident-head"><span class="portal-operations-code">${safeText(String(item.kind || "support_case"))}</span>${badge(operationsDisplayState(item.state, "incident"))}</div><h3>${safeText(heading)}</h3><p>${safeText(description)}</p><dl class="portal-operations-meta"><div><dt>${safeText(admin ? adminOperationsText("incident.severity", "Mức độ") : "Mức độ")}</dt><dd>${safeText(severityLabel)}</dd></div><div><dt>${safeText(admin ? adminOperationsText("incident.observations", "Quan sát") : "Quan sát")}</dt><dd>${safeText(String(operationsCount(item.observation_count)))}</dd></div><div><dt>${safeText(admin ? adminOperationsText("incident.updated", "Cập nhật") : "Cập nhật")}</dt><dd>${safeText(supportCaseTimestamp(item.last_observed_at))}</dd></div><div><dt>${safeText(admin ? adminOperationsText("incident.revision", "Phiên bản") : "Revision")}</dt><dd>${safeText(String(operationsCount(item.revision)))}</dd></div></dl>${caseLink ? `<div class="portal-form-footer">${caseLink}</div>` : ""}</article>`;
     }).join("")}</div>`;
   }
 
@@ -25640,12 +25693,13 @@
   }
 
   function renderOperationsAdmin(page, context) {
+    const copy = (key, fallback, params) => adminOperationsText(key, fallback, params);
     const summary = context.operationsAdminSummary && typeof context.operationsAdminSummary === "object" ? context.operationsAdminSummary : {};
     const role = String(summary.operator_role || "").trim();
     const allowed = context.operationsAdminReadState === "ready" && ["operator", "manager"].includes(role);
     const loading = context.operationsAdminReadState === "loading";
     if (!allowed) {
-      return `<article class="portal-page portal-operations-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh Operations" : "Quyền Operations chưa được cấp"}</h2><p>${loading ? "Máy chủ đang kiểm tra signed session, role Support Desk và Operations boundary." : "Chỉ admin, support_manager hoặc support_operator do server xác minh mới được xem Operations. Browser không thể tự gán quyền bằng localStorage, Telegram ID hoặc query string."}</p></div></div></section></article>`;
+      return `<article class="portal-page portal-operations-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${safeText(loading ? copy("loading.title", "Đang xác minh quyền điều hành") : copy("guard.title", "Quyền điều hành chưa được cấp"))}</h2><p>${safeText(loading ? copy("loading.body", "Máy chủ đang kiểm tra phiên đăng nhập, vai trò hỗ trợ và ranh giới điều hành.") : copy("guard.body", "Chỉ quản trị viên, quản lý hỗ trợ hoặc nhân viên vận hành hỗ trợ do máy chủ xác minh mới được xem dữ liệu điều hành. Trình duyệt không thể tự gán quyền bằng bộ nhớ cục bộ, ID Telegram hoặc tham số URL."))}</p></div></div></section></article>`;
     }
     const lastRun = summary.last_run && typeof summary.last_run === "object" ? summary.last_run : null;
     const sla = summary.sla && typeof summary.sla === "object" ? summary.sla : {};
@@ -25660,59 +25714,62 @@
     const incidentReadable = queueStates.incidents === "ready";
     const approvalReadable = queueStates.approvals === "ready";
     const approvalVisible = manager && approvalAccess === "full" && approvalReadable;
-    const guardedQueue = (label) => `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>Chưa thể đọc ${safeText(label)}</h3><p>Summary và role Operations đã được server xác minh, nhưng queue này chưa trả boundary hợp lệ. Portal đã xóa riêng phần chưa xác minh, không dùng dữ liệu cũ hoặc coi đó là queue rỗng.</p></div></div>`;
+    const guardedQueue = (label) => `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>${safeText(copy("queue.guarded.title", "Chưa thể đọc {label}", { label }))}</h3><p>${safeText(copy("queue.guarded.body", "Tóm tắt và vai trò điều hành đã được máy chủ xác minh, nhưng hàng đợi này chưa trả ranh giới hợp lệ. Cổng Web đã xóa riêng phần chưa xác minh, không dùng dữ liệu cũ hoặc coi đó là hàng đợi rỗng."))}</p></div></div>`;
     const partialNotice = runReadable && incidentReadable && approvalVisible
       ? ""
-      : `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">i</span><div><h2>Một phần Operations đang được bảo vệ</h2><p>Summary role vẫn hợp lệ; một hoặc nhiều queue phụ chưa trả dữ liệu owner-scoped đã xác minh. Hãy làm mới khi nguồn sẵn sàng. Không có queue nào được thay bằng số 0, dữ liệu cũ hoặc hành động tự động.</p></div></div></section>`;
+      : `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">i</span><div><h2>${safeText(copy("partial.title", "Một phần dữ liệu điều hành đang được bảo vệ"))}</h2><p>${safeText(copy("partial.body", "Tóm tắt vai trò vẫn hợp lệ; một hoặc nhiều hàng đợi phụ chưa trả dữ liệu đã xác minh trong phạm vi chủ sở hữu. Hãy làm mới khi nguồn sẵn sàng. Không hàng đợi nào được thay bằng số 0, dữ liệu cũ hoặc hành động tự động."))}</p></div></div></section>`;
     const approvalRows = !manager
-      ? `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>Approval queue chỉ dành cho Support Manager</h3><p>Operator không nhận approval record, ID, risk, incident hoặc số lượng hàng chờ. Đây là giới hạn quyền có chủ đích, không phải queue rỗng.</p></div></div>`
+      ? `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>${safeText(copy("approval.managerOnly.title", "Chỉ người quản lý hỗ trợ mới được xem hàng chờ quyết định"))}</h3><p>${safeText(copy("approval.managerOnly.body", "Nhân viên vận hành không nhận bản ghi chờ quyết định, ID, mức rủi ro, sự cố hoặc số lượng hàng chờ. Đây là giới hạn quyền có chủ đích, không phải hàng đợi rỗng."))}</p></div></div>`
       : !approvalVisible
-      ? guardedQueue("Approval queue")
+      ? guardedQueue(copy("approval.queueLabel", "hàng chờ quyết định"))
       : approvals.length ? approvals.map((item) => {
       const pending = String(item.state || "") === "awaiting_approval";
       const canDecide = pending && manager && context.capabilities && context.capabilities["operations-approval-approve"] === true && context.capabilities["operations-approval-reject"] === true;
       const caseId = supportCaseId(item.support_case_id);
-      const actionName = String(item.action_type || "review").replace(/[^a-z_]/g, "_").slice(0, 80) || "review";
-      const actionForms = canDecide ? `<div class="portal-operations-approval-actions"><form class="portal-operations-approval-form" data-portal-form data-portal-no-transient data-portal-action="operations-approval-approve" data-portal-route="/admin/operations" data-portal-confirm="Ghi nhận phê duyệt metadata này? Hành động chỉ tạo audit record; không chạy payment, provider, Bot, job, deploy hoặc phản hồi khách hàng." novalidate><input type="hidden" name="approval_id" value="${safeText(String(item.id))}"><input type="hidden" name="expected_revision" value="${safeText(String(item.revision))}"><input type="hidden" name="decision_code" value="manager_approved"><button class="portal-button portal-button--primary" type="submit">Ghi nhận duyệt</button></form><form class="portal-operations-approval-form" data-portal-form data-portal-no-transient data-portal-action="operations-approval-reject" data-portal-route="/admin/operations" data-portal-confirm="Từ chối proposal metadata này? Không có hành động ngoài Web được chạy." novalidate><input type="hidden" name="approval_id" value="${safeText(String(item.id))}"><input type="hidden" name="expected_revision" value="${safeText(String(item.revision))}"><input type="hidden" name="decision_code" value="manager_rejected"><button class="portal-button portal-button--danger" type="submit">Từ chối</button></form></div>` : "";
-      return `<article class="portal-operations-approval" data-state="${safeText(String(item.state || "guarded"))}"><div class="portal-operations-approval-copy"><strong>${safeText(actionName)}</strong><small>${safeText(operationsLabel(item.state, "Approval Operations"))} · ${safeText(String(item.risk || "normal"))} · ${safeText(supportCaseTimestamp(item.proposed_at))}${caseId ? ` · Case ${safeText(caseId.slice(0, 8))}` : ""}</small><span class="portal-operations-code">approval_record_only</span></div><div class="portal-operations-approval-meta">${badge(operationsDisplayState(item.state, "approval"))}${caseId ? `<a class="portal-button portal-button--quiet" href="/admin/support/${encodeURIComponent(caseId)}">Mở case</a>` : ""}${actionForms}</div></article>`;
-    }).join("") : renderEmpty("Chưa có approval", "Không có proposal metadata nào đang chờ người phụ trách. Approval không tự thực thi workflow ngoài Web.", "·");
+      const rawActionName = String(item.action_type || "").trim().toLowerCase();
+      const actionName = /^[a-z][a-z0-9_]{0,79}$/.test(rawActionName) ? rawActionName : "review";
+      const actionForms = canDecide ? `<div class="portal-operations-approval-actions"><form class="portal-operations-approval-form" data-portal-form data-portal-no-transient data-portal-action="operations-approval-approve" data-portal-route="/admin/operations" data-portal-confirm="${safeText(copy("approval.approve.confirm", "Ghi nhận phê duyệt dữ liệu này? Hành động chỉ tạo bản ghi kiểm toán; không chạy thanh toán, gọi nhà cung cấp, Bot, công việc, triển khai hoặc phản hồi khách hàng."))}" novalidate><input type="hidden" name="approval_id" value="${safeText(String(item.id))}"><input type="hidden" name="expected_revision" value="${safeText(String(item.revision))}"><input type="hidden" name="decision_code" value="manager_approved"><button class="portal-button portal-button--primary" type="submit">${safeText(copy("approval.approve.action", "Ghi nhận duyệt"))}</button></form><form class="portal-operations-approval-form" data-portal-form data-portal-no-transient data-portal-action="operations-approval-reject" data-portal-route="/admin/operations" data-portal-confirm="${safeText(copy("approval.reject.confirm", "Từ chối đề xuất dữ liệu này? Không có hành động ngoài Web được chạy."))}" novalidate><input type="hidden" name="approval_id" value="${safeText(String(item.id))}"><input type="hidden" name="expected_revision" value="${safeText(String(item.revision))}"><input type="hidden" name="decision_code" value="manager_rejected"><button class="portal-button portal-button--danger" type="submit">${safeText(copy("approval.reject.action", "Từ chối"))}</button></form></div>` : "";
+      const risk = ["normal", "high", "critical"].includes(String(item.risk || "")) ? String(item.risk) : "normal";
+      const requestReference = caseId ? ` · ${safeText(copy("approval.requestPrefix", "Yêu cầu"))} ${safeText(caseId.slice(0, 8))}` : "";
+      return `<article class="portal-operations-approval" data-state="${safeText(String(item.state || "guarded"))}"><div class="portal-operations-approval-copy"><strong>${safeText(actionName)}</strong><small>${safeText(adminOperationsLabel(item.state, copy("approval.stateFallback", "Chờ quyết định")))} · ${safeText(copy(`risk.${risk}`, risk === "high" ? "Cao" : risk === "critical" ? "Nghiêm trọng" : "Bình thường"))} · ${safeText(supportCaseTimestamp(item.proposed_at))}${requestReference}</small><span class="portal-operations-code">approval_record_only</span></div><div class="portal-operations-approval-meta">${badge(operationsDisplayState(item.state, "approval"))}${caseId ? `<a class="portal-button portal-button--quiet" href="/admin/support/${encodeURIComponent(caseId)}">${safeText(copy("action.openRequest", "Mở yêu cầu"))}</a>` : ""}${actionForms}</div></article>`;
+    }).join("") : renderEmpty(copy("approval.empty.title", "Chưa có đề xuất chờ quyết định"), copy("approval.empty.body", "Không có đề xuất dữ liệu nào đang chờ người phụ trách. Việc ghi quyết định không tự thực thi quy trình ngoài Web."), "·");
     const runListing = operationsAdminRunListing(context);
     const incidentListing = operationsAdminIncidentListing(context);
     const approvalListing = operationsApprovalListing(context);
     const approvalMarkup = `<div class="portal-operations-approval-list">${approvalRows}</div>${renderOperationsApprovalPagination(approvalListing, allowed && approvalReadable && manager && approvalAccess === "full")}`;
     const runRows = !runReadable
-      ? guardedQueue("receipt Operations")
+      ? guardedQueue(copy("run.queueLabel", "lần quét điều hành"))
       : runs.length
-      ? runs.map((run) => `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(operationsLabel(run.state, "Lần quét Operations"))}</strong><small>${safeText(supportCaseTimestamp(run.finished_at || run.started_at))} · ${safeText(String(operationsCount(run.triaged_case_count)))} triage · ${safeText(String(operationsCount(run.incident_count)))} incident</small></div><div class="portal-operations-run-meta">${badge(operationsDisplayState(run.state, "run"))}<span class="portal-operations-code">${safeText(operationsCode(run.error_code))}</span></div></article>`).join("")
-      : renderEmpty("Chưa có receipt", "Scheduler chưa trả run đã được server xác nhận.", "·");
+      ? runs.map((run) => `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(adminOperationsLabel(run.state, copy("run.fallback", "Lần quét điều hành")))}</strong><small>${safeText(supportCaseTimestamp(run.finished_at || run.started_at))} · ${safeText(copy("run.triageCount", "{count} yêu cầu đã phân loại", { count: String(operationsCount(run.triaged_case_count)) }))} · ${safeText(copy("run.incidentCount", "{count} sự cố", { count: String(operationsCount(run.incident_count)) }))}</small></div><div class="portal-operations-run-meta">${badge(operationsDisplayState(run.state, "run"))}<span class="portal-operations-code">${safeText(operationsCode(run.error_code))}</span></div></article>`).join("")
+      : renderEmpty(copy("run.empty.title", "Chưa có lần quét"), copy("run.empty.body", "Bộ lập lịch chưa trả lần quét đã được máy chủ xác nhận."), "·");
     let runMarkup = `<div class="portal-operations-run-list">${runRows}</div>${renderOperationsAdminRunPagination(runListing, allowed && runReadable)}`;
     const incidentMarkup = !incidentReadable
-      ? guardedQueue("incident Operations")
+      ? guardedQueue(copy("incident.queueLabel", "sự cố điều hành"))
       : operationsIncidentCards(incidents, true) + renderOperationsAdminIncidentPagination(incidentListing, allowed && incidentReadable);
     const heartbeatEvidence = heartbeat.state === "late"
-      ? `${safeText(String(heartbeat.openFollowups))} follow-up heartbeat đang mở.`
+      ? copy("heartbeat.evidence.open", "{count} mục theo dõi đang mở.", { count: String(heartbeat.openFollowups) })
       : heartbeat.previousTickSeen
-        ? "Máy chủ có receipt tick trước đó để đánh giá theo policy."
-        : "Chưa có receipt baseline phù hợp để đánh giá khoảng tick.";
+        ? copy("heartbeat.evidence.previous", "Máy chủ có biên nhận nhịp chạy trước đó để đánh giá theo quy tắc.")
+        : copy("heartbeat.evidence.missing", "Chưa có biên nhận mốc phù hợp để đánh giá khoảng nhịp chạy.");
     const heartbeatLink = heartbeat.state === "late"
-      ? '<a class="portal-button portal-button--quiet" href="/admin/reliability">Mở Reliability Follow-up</a>'
+      ? `<a class="portal-button portal-button--quiet" href="/admin/reliability">${safeText(copy("heartbeat.action", "Mở theo dõi độ tin cậy"))}</a>`
       : "";
     const heartbeatCode = heartbeat.code && heartbeat.code !== "—"
       ? `<span class="portal-operations-code">${safeText(heartbeat.code)}</span>`
       : "";
-    const heartbeatCard = `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Scheduler heartbeat</h2><p class="portal-card-subtitle">${safeText(heartbeat.detail)}</p></div>${badge(heartbeat.badgeState)}</div><div class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(heartbeat.label)}</strong><small>${safeText(heartbeatEvidence)}</small></div><div class="portal-operations-run-meta">${heartbeatCode}${heartbeatLink}</div></div></section>`;
+    const heartbeatCard = `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("heartbeat.title", "Nhịp chạy bộ lập lịch"))}</h2><p class="portal-card-subtitle">${safeText(heartbeat.detail)}</p></div>${badge(heartbeat.badgeState)}</div><div class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(heartbeat.label)}</strong><small>${safeText(heartbeatEvidence)}</small></div><div class="portal-operations-run-meta">${heartbeatCode}${heartbeatLink}</div></div></section>`;
     runMarkup += heartbeatCard;
     const approvalMetric = manager && approvalAccess === "full"
       ? String(operationsCount(summary.pending_approvals))
       : "—";
     const approvalCaption = manager && approvalAccess === "full"
-      ? "Chưa thực thi external action"
-      : "Chỉ Support Manager";
+      ? copy("metrics.approvals.full", "Chưa thực thi hành động bên ngoài")
+      : copy("metrics.approvals.managerOnly", "Chỉ người quản lý hỗ trợ");
     return `<article class="portal-page portal-operations-admin">${renderHero(page, context)}
-      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">Controlled operations</span><h2>Điều hành tự động hóa, vẫn có người chịu trách nhiệm</h2><p>Role ${safeText(role === "manager" ? "Manager" : "Operator")} được máy chủ xác minh. Bảng này chỉ hiển thị metadata đã sanitize trong phạm vi quyền; không có credential, payload, PII, wallet, PayOS hoặc provider control.</p></div><dl><div><dt>${safeText(role === "manager" ? "Manager" : "Operator")}</dt><dd>Role do server cấp</dd></div><div><dt>${safeText(String(summary.scheduler_preflight || "ready") === "ready" ? "Sẵn sàng" : "Bảo vệ")}</dt><dd>${safeText(operationsCode(summary.scheduler_preflight || "ready"))}</dd></div></dl></section>
-      <section class="portal-operations-metrics" aria-label="Tổng quan Operations Admin"><div class="portal-metric"><span>Incident mở</span><strong>${safeText(String(operationsCount(summary.open_incidents)))}</strong><em>Metadata nội bộ</em></div><div class="portal-metric"><span>Approval chờ</span><strong>${safeText(approvalMetric)}</strong><em>${safeText(approvalCaption)}</em></div><div class="portal-metric"><span>Gần quá SLA</span><strong>${safeText(String(operationsCount(sla.at_risk)))}</strong><em>Support cần review</em></div><div class="portal-metric"><span>Quá SLA</span><strong>${safeText(String(operationsCount(sla.breached)))}</strong><em>Không có auto refund/retry</em></div></section>${partialNotice}
-      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Approval queue</h2><p class="portal-card-subtitle">Manager có thể ghi quyết định audit sau confirmation. “Approve” không gọi payment, provider, Bot, job, deploy hay phản hồi khách hàng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-admin-refresh" data-portal-route="/admin/operations">Làm mới</button></div>${approvalMarkup}</section><aside class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới Manager</h2><p>${safeText(manager ? "Bạn có thể ghi approve/reject cho proposal metadata. Server vẫn kiểm tra CSRF, role, revision và idempotency." : "Operator không đọc approval queue. Quyết định approval cần Support Manager hoặc Admin Web.")}</p></div>${badge(manager ? "awaiting_confirm" : "read_only")}</div><ul class="portal-operations-boundary-list"><li>Không có executor approval trong release này.</li><li>Không tự hoàn tiền, retry provider/job hoặc thay đổi delivery.</li><li>Không được dùng bảng này để thay đổi deploy, role hoặc secret.</li></ul></aside></div>
-      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lần quét gần đây</h2><p class="portal-card-subtitle">Receipt không chứa payload, HMAC, nonce hoặc log nhạy cảm.</p></div>${badge(!runReadable ? "guarded" : (lastRun ? operationsDisplayState(lastRun.state, "run") : "read_only"))}</div>${runMarkup}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Incident toàn hệ Web</h2><p class="portal-card-subtitle">Mở case Support Desk để điều tra theo đúng ownership/role; không có thao tác money/provider từ card này.</p></div>${badge(incidentReadable ? "read_only" : "guarded")}</div>${incidentMarkup}</section></div>
+      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">${safeText(copy("intro.kicker", "Điều hành có kiểm soát"))}</span><h2>${safeText(copy("intro.title", "Tự động hóa có người chịu trách nhiệm"))}</h2><p>${safeText(copy("intro.body", "Vai trò {role} được máy chủ xác minh. Bảng chỉ hiển thị dữ liệu đã làm sạch trong phạm vi quyền; không hiển thị thông tin xác thực, nội dung thô, dữ liệu cá nhân, ví Xu, PayOS hoặc quyền điều khiển nhà cung cấp.", { role: copy(role === "manager" ? "role.manager" : "role.operator", role === "manager" ? "Quản lý" : "Nhân viên vận hành") }))}</p></div><dl><div><dt>${safeText(copy(role === "manager" ? "role.manager" : "role.operator", role === "manager" ? "Quản lý" : "Nhân viên vận hành"))}</dt><dd>${safeText(copy("role.verified", "Vai trò do máy chủ xác minh"))}</dd></div><div><dt>${safeText(String(summary.scheduler_preflight || "ready") === "ready" ? copy("preflight.ready", "Sẵn sàng") : copy("preflight.guarded", "Đang bảo vệ"))}</dt><dd>${safeText(operationsCode(summary.scheduler_preflight || "ready"))}</dd></div></dl></section>
+      <section class="portal-operations-metrics" aria-label="${safeText(copy("metrics.aria", "Tổng quan điều hành quản trị"))}"><div class="portal-metric"><span>${safeText(copy("metrics.incidents", "Sự cố đang mở"))}</span><strong>${safeText(String(operationsCount(summary.open_incidents)))}</strong><em>${safeText(copy("metrics.incidents.note", "Dữ liệu nội bộ"))}</em></div><div class="portal-metric"><span>${safeText(copy("metrics.approvals", "Chờ quyết định"))}</span><strong>${safeText(approvalMetric)}</strong><em>${safeText(approvalCaption)}</em></div><div class="portal-metric"><span>${safeText(copy("metrics.atRisk", "Gần quá SLA"))}</span><strong>${safeText(String(operationsCount(sla.at_risk)))}</strong><em>${safeText(copy("metrics.atRisk.note", "Cần hỗ trợ rà soát"))}</em></div><div class="portal-metric"><span>${safeText(copy("metrics.breached", "Quá SLA"))}</span><strong>${safeText(String(operationsCount(sla.breached)))}</strong><em>${safeText(copy("metrics.breached.note", "Không tự hoàn tiền hoặc thử lại"))}</em></div></section>${partialNotice}
+      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("approval.title", "Hàng chờ quyết định"))}</h2><p class="portal-card-subtitle">${safeText(copy("approval.description", "Người quản lý có thể ghi quyết định sau khi xác nhận. Việc ghi duyệt không gọi thanh toán, nhà cung cấp, Bot, công việc, triển khai hoặc phản hồi khách hàng."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-admin-refresh" data-portal-route="/admin/operations">${safeText(copy("action.refresh", "Làm mới"))}</button></div>${approvalMarkup}</section><aside class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>${safeText(copy("boundary.title", "Ranh giới quyền quyết định"))}</h2><p>${safeText(manager ? copy("boundary.manager", "Bạn có thể ghi chấp thuận hoặc từ chối đề xuất dữ liệu. Máy chủ vẫn kiểm tra CSRF, vai trò, phiên bản và chống xử lý trùng.") : copy("boundary.operator", "Nhân viên vận hành không đọc hàng chờ quyết định. Quyết định cần người quản lý hỗ trợ hoặc quản trị viên Web."))}</p></div>${badge(manager ? "awaiting_confirm" : "read_only")}</div><ul class="portal-operations-boundary-list"><li>${safeText(copy("boundary.noExecutor", "Phiên bản này không thực thi đề xuất đã duyệt."))}</li><li>${safeText(copy("boundary.noMoney", "Không tự hoàn tiền, gọi lại nhà cung cấp, thử lại công việc hoặc thay đổi bàn giao."))}</li><li>${safeText(copy("boundary.noSystem", "Không dùng bảng này để thay đổi triển khai, vai trò hoặc bí mật hệ thống."))}</li></ul></aside></div>
+      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("run.title", "Lần quét gần đây"))}</h2><p class="portal-card-subtitle">${safeText(copy("run.description", "Biên nhận không chứa nội dung thô, chữ ký xác thực, mã dùng một lần hoặc nhật ký nhạy cảm."))}</p></div>${badge(!runReadable ? "guarded" : (lastRun ? operationsDisplayState(lastRun.state, "run") : "read_only"))}</div>${runMarkup}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("incident.title", "Sự cố toàn hệ Web"))}</h2><p class="portal-card-subtitle">${safeText(copy("incident.description", "Mở yêu cầu hỗ trợ để điều tra đúng phạm vi sở hữu và vai trò; thẻ này không có thao tác tiền hoặc nhà cung cấp."))}</p></div>${badge(incidentReadable ? "read_only" : "guarded")}</div>${incidentMarkup}</section></div>
     </article>`;
   }
 

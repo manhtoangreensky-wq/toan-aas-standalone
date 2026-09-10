@@ -1,7 +1,7 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
-> Trạng thái production/main: `d096bac7b5d7c75b7950fb3f92e8c32c5df20e08`; manual top-up PR #420, `/admin/login` PR #421 và progressive disclosure PR #422 đã accepted live. Candidate A09 Auth/Admin shell đang local-only; production `MANUAL-1` vẫn pending và không được sửa/duyệt/cộng Xu.
+> Trạng thái production/main: `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f`; manual top-up PR #420, `/admin/login` PR #421 và progressive disclosure PR #422 đã accepted live; A09 shell PR #423 và Support PR #424 đã deploy nhưng A09 toàn Admin còn mở. Production `MANUAL-1` vẫn pending và không được sửa/duyệt/cộng Xu.
 
 ## 1. Kết luận về tài liệu giai đoạn đầu
 
@@ -127,7 +127,7 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 - Tester source có WA-01..WA-43; WA-41..43 thuộc A09 Auth/Admin shell.
 - PR #420 manual và PR #421 Admin login đã merge/deploy; signed customer create/read và Admin list/detail của `MANUAL-1 pending_admin_review` đã smoke bằng account thật, không có decision/Xu/ledger mutation.
 - Customer motion live-reopen v2 đã accepted live trên runtime `b657cea…`.
-- M03B progressive disclosure đã `ACCEPTED_LIVE` trên runtime `d096bac…`; A09 Auth/Admin shell là candidate local chưa ship.
+- M03B progressive disclosure đã `ACCEPTED_LIVE` trên runtime `d096bac…`; A09 shell và Admin Support đã ship tới `cc3b468…`, còn các route Admin khác đang làm tuần tự.
 - ENV/secret rotation: chưa làm.
 - Signed production manual route nền và M03B progressive presentation đã smoke; live approve/reject/money decision chưa test.
 - Provider/PayOS/Telegram live call: không chạy trong local acceptance.
@@ -167,11 +167,13 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 | Route shortlist là “Tác vụ cần xử lý” | Đổi thành “Truy cập nhanh”; task inbox thật vẫn source-missing và không được giả. | ⚠️ Candidate local, chưa live | `renderAdminWorkQueues`; server route intersection tests |
 | Auth/Admin fixed chrome có thể trộn endonym/VI | Public Auth, Admin-login và theme fallback dùng catalogue VI/EN/ZH; Admin header dùng `Ngôn ngữ/Language`. | ⚠️ Candidate local, chưa live | locale keyset tests; 24 Auth Browser states |
 | Logo Admin dùng kích thước/translate kế thừa | Admin override giữ ảnh chính thức contain, transform none, flex fixed; ratio đo `1.00`. | ⚠️ Candidate local, chưa live | CSS A09; 20 Admin Browser states |
+| Admin Operations trộn câu Việt/Anh và dùng nền console cũ | Candidate `/admin/operations` dùng catalogue VI/EN/ZH, hierarchy teal/cyan sáng/tối, responsive một cột và empty state có chiều sâu; không thay authority/action backend. | ⚠️ Local verified, chưa commit/deploy/live | `tests/test_a09_admin_operations_locale_purity_contracts.py`; Browser `20` states, `14/14` assertions |
+| Biên nhận đổi locale chỉ cập nhật một field bootstrap | Candidate đồng bộ `interfaceLocale` và đúng scalar `profile.locale`, giữ nguyên mọi field hồ sơ/phiên khác; remount không kéo về locale cũ. | ⚠️ Local verified, chưa deploy/live | `tests/test_portal_profile_locale_apply_contracts.py`; focused `151P` |
 
-Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả rail ngang, five-dash KPI, empty chart frames hoặc route shortlist như task inbox phải được xem là historical. Candidate A09 chưa được gọi deployed/live cho tới khi có merge SHA, deploy run và signed production evidence.
+Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả rail ngang, five-dash KPI, empty chart frames hoặc route shortlist như task inbox phải được xem là historical. Khung A09 và Admin Support đã deploy; từng route A09 tiếp theo vẫn phải có merge SHA, deploy run và signed production evidence riêng trước khi gọi live.
 
 ### Đính chính sau PR #423 và vòng locale mở lại
 
-Khung A09 đã merge trong PR #423 tại `6298057…`. Trạng thái “candidate chưa merge” phía trên là lịch sử trước PR, không phải trạng thái hiện hành của khung. Tuy nhiên, việc dịch thanh điều hướng không chứng minh nội dung từng phân hệ đã thuần ngôn ngữ: production `/admin/support` vẫn có câu Việt xen Anh.
+Khung A09 đã merge trong PR #423 tại `6298057…`; Admin Support đã merge trong PR #424 tại `cc3b468…`. Trạng thái “candidate chưa merge” phía trên là lịch sử trước các PR, không phải trạng thái hiện hành. Tuy nhiên, việc dịch thanh điều hướng hoặc một route không chứng minh toàn bộ phân hệ Admin đã thuần ngôn ngữ.
 
-Bản sửa locale đang chờ ship dùng danh mục dịch riêng cho danh sách/chi tiết hỗ trợ, phân công, chuyển cấp và thông báo cố định; giữ nguyên nội dung người dùng và dữ liệu nghiệp vụ. Kiểm thử hiện có: 78 bài đạt và 40 trạng thái Browser QA đạt kiểm tra locale/layout; chưa nghiệm thu production và chưa khẳng định mọi trang Admin đã hoàn thiện.
+Admin Support đã ship với danh mục riêng cho danh sách/chi tiết, phân công, chuyển cấp và thông báo cố định; final focused `84` bài đạt và local Browser QA `40` trạng thái. Signed production DOM của Support vẫn chưa có, và các route Admin khác tiếp tục được xử lý tuần tự; không khẳng định toàn Admin đã hoàn thiện.

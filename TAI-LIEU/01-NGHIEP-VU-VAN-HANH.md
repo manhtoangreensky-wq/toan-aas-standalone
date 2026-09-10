@@ -1,11 +1,11 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: `origin/main` và production Web đến SHA `d096bac7b5d7c75b7950fb3f92e8c32c5df20e08` ngày 05/09/2026; A09 Auth/Admin shell được đo local trên đúng BASE này. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
+> Phạm vi đo: `origin/main` và production Web đến SHA `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` ngày 10/09/2026; A09 Admin Operations được đo local trên đúng BASE này. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main: `b657cea98ecc0c2f6f962bf82f1044333dfe427e` (PR #421); Web/nginx active, tracked diff `0` tại readback.
+- Web production/main: `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` (PR #424); Web/nginx active+enabled, tracked diff `0` tại readback.
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
@@ -274,7 +274,7 @@
 - Tester workspace source có `43` case tuần tự; WA-41..43 thuộc đúng `A09-AUTH-ADMIN-SHELL-VERTICAL-RESPONSIVE-LOCALE`.
 - Auth login brand/viewport hotfix đã deploy/live tại `0dd8ffa`.
 - `MOTION-WEBAPP-SURFACES-001` đã accepted live trên runtime `b657cea…`; normal route/scroll/hydration và reduced-motion đều có matrix riêng.
-- M03B progressive disclosure đã `ACCEPTED_LIVE` qua PR #422 tại main/runtime `d096bac…`; A09 là candidate local tiếp theo và chưa được suy merged/deployed/live.
+- M03B progressive disclosure đã `ACCEPTED_LIVE` qua PR #422 tại main/runtime `d096bac…`; A09 shell PR #423 và Admin Support PR #424 đã deploy, nhưng A09 toàn Admin vẫn mở.
 - GitHub CLI đã revalidate issue #412 OPEN, required labels `12/12` và local templates `2/2` ngày 04/09. Tester Project đã được xác minh tồn tại ngày 03/09; token hiện thiếu `read:project` nên chưa đọc lại Project ngày 04/09 và không tự mở rộng OAuth scope.
 - Tester readiness `p0-05d.v2` lưu line/byte/SHA theo `utf-8-lf-portable`; cùng source CRLF trên Windows và LF trên Linux phải cho metadata giống nhau.
 - Security source fix và local tests không thay signed production verification.
@@ -314,11 +314,21 @@
 
 ### A09 mở lại — ngôn ngữ quản trị hỗ trợ, 08/09/2026
 
-PR #423 đã đưa phần khung quản trị lên main tại `6298057…`, nhưng trang `/admin/support` vẫn có câu Việt xen Anh. Bản sửa đang nằm trên nhánh `fix/a09-admin-locale-purity-reopen`, chưa triển khai.
+PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #424 đã sửa nhóm `/admin/support`, merge/deploy tại `cc3b468…`; source/runtime đạt nhưng signed production DOM chưa có nên chưa gọi `ACCEPTED_LIVE`.
 
 - Nội dung cố định của danh sách/chi tiết hỗ trợ dùng danh mục dịch VI/EN/ZH; tên riêng, ID, nội dung khách hàng và mã nghiệp vụ không bị dịch.
 - Ngày giờ dùng ngôn ngữ đang chọn; bản Việt không được rơi về tên tháng tiếng Anh.
-- Kiểm thử mới nhất: `78 passed, 2 warnings`; trình duyệt QA có 40 trạng thái list/detail × VI/EN × sáng/tối × 5 kích thước. Kiểm tra ngôn ngữ và tràn/cắt nội dung đạt trong phạm vi đó.
+- Kiểm thử Support cuối: `84 passed, 2 warnings`; trình duyệt QA có 40 trạng thái list/detail × VI/EN × sáng/tối × 5 kích thước. Kiểm tra ngôn ngữ và tràn/cắt nội dung đạt trong phạm vi đó.
 - Báo cáo trình duyệt gốc vẫn giữ `consoleHealth=false`: 13 sự kiện thông tin cài ứng dụng và 1 phản hồi 401 trước đăng nhập cần phân loại theo giai đoạn. Không dùng báo cáo này để khẳng định production hoàn tất.
 - Nguyên nhân cần tránh: dịch thanh điều hướng không đồng nghĩa dịch toàn bộ trang; mọi nhãn, mô tả, xác nhận, trạng thái rỗng và nhánh chi tiết đều phải được kiểm tra.
 - Theo chỉ thị Owner, bản Việt giữ danh từ tiếng Anh và mã kỹ thuật quen thuộc trong allowlist hữu hạn (TOAN AAS, Web, Telegram, PayOS, Odoo, Bot, Email, App, ERP, CSRF, SLA, API, ID, PDF, QR, OTP/CVV, TXID, URL, định dạng ảnh/tệp và Xu). Các động từ, tính từ và câu hướng dẫn còn lại phải là tiếng Việt; bản Anh vẫn phải toàn bộ bằng tiếng Anh.
+
+### A09 mở lại — Điều hành tự động, 10/09/2026
+
+- Nhánh local `fix/a09-admin-operations-locale-purity` bắt đầu từ exact main `cc3b468…`; chưa commit/push/deploy.
+- `/admin/operations` có catalogue riêng `adminOperations.*` với key VI/EN/ZH đối xứng. Guard/loading, Manager/Operator, partial, populated, empty, phân trang, xác nhận, sự cố và nhịp chạy đều qua catalogue; ID, mã tác vụ và mã máy vẫn giữ nguyên.
+- Bố cục route dùng semantic teal/cyan của master design system: intro rõ quyền, bốn số liệu thật, hai cột quyết định/ranh giới và hai cột lần quét/sự cố; `<=980px` hạ một cột, `<=700px` toàn bộ thẻ và hành động xếp dọc. Không thêm số liệu hoặc biểu đồ giả.
+- Root cause đổi ngôn ngữ không bền qua remount: biên nhận chỉ cập nhật `interfaceLocale`, trong khi renderer ưu tiên `profile.locale` cũ. Helper nay chỉ đồng bộ thêm scalar `profile.locale`; display name, timezone, session, role, identity và workflow giữ nguyên.
+- Fresh focused gate: `151 passed`, `2` dependency warnings, `0` failed. Protected exact-main/candidate đều `68 passed / 2` CSS-tail baseline failures; `NEW_FAILURES=0`. Node syntax `3/3`, diff-check `0`.
+- Signed local Browser: `20` trạng thái = VI/EN × sáng/tối × `1440/1024/768/390/360`; `14/14` assertions đạt, console/network sau readiness `0`, request ghi Operations `0`, page overflow/clipping/high-level horizontal scroller `0`, contrast và touch target đạt.
+- Codex Security scan `8bc4f21a-ed08-46ed-a7ba-ec0a0ae6e8ed` lưu partial draft với `0` finding trên `7` changed-file surfaces; Workbench inventory lỗi `destination escaped its bound context`, nên đây không phải plugin PASS.
