@@ -1,0 +1,54 @@
+{
+  "schema_version": "a09.admin.reliability.ux.locale.v1",
+  "spec_id": "A09-ADMIN-RELIABILITY-UX-LOCALE",
+  "base_sha": "cc68747f216755c3e4808dbe2e3bf67d94ed9a41",
+  "branch": "fix/a09-admin-reliability-locale",
+  "route": "/admin/reliability",
+  "status": "local_verified_ready_for_pr",
+  "rendered_qa": {
+    "enabled_states": 20,
+    "disabled_states": 8,
+    "locales": ["vi", "en"],
+    "themes": ["light", "dark"],
+    "viewports": ["1440x900", "1024x768", "768x900", "390x667", "360x640"],
+    "minimum_contrast": 5.8,
+    "page_overflow_max_px": 0,
+    "clipped_elements": 0,
+    "touch_target_violations": 0,
+    "relevant_console_events": 0,
+    "reliability_write_requests": 0,
+    "framework_overlays": 0,
+    "keyboard_disclosure": "open_close_enter_pass",
+    "task_first_order": "queue_before_metrics_pass",
+    "disabled_status_surface": "single_surface_no_nested_card_pass"
+    ,"enabled_report_sha256":"d40a4c375173ffb7e823362a85f21ca812af3e89005acee05e65aa677f7ec57b"
+    ,"disabled_report_sha256":"edf3e884fe8875fc2457cab886defcd77c83d5c3418575bc0175f8245297c011"
+  },
+  "tests": {
+    "reliability_backend_passed": 10,
+    "combined_passed": 93,
+    "combined_failed": 0,
+    "warnings": 1,
+    "windows_posix_permission_deselected": 1,
+    "node_syntax_files": 3,
+    "diff_check_exit": 0,
+    "protected_base_passed": 68,
+    "protected_base_failed": 2,
+    "protected_candidate_passed": 68,
+    "protected_candidate_failed": 2,
+    "protected_new_failures": 0
+  },
+  "evidence": {
+    "enabled_report": "evidence/a09-admin-reliability-ux-20260911/browser/a09-reliability-ux-browser-qa.json",
+    "disabled_report": "evidence/a09-admin-reliability-ux-20260911/browser-disabled/a09-reliability-disabled-browser-qa.json",
+    "browser_fallback": "CUA/IAB blocked localhost with ERR_BLOCKED_BY_CLIENT"
+  },
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "reliability_writes": 0
+  },
+  "next_gate": "PR_CI_THEN_SQUASH_MERGE_THEN_VPS_DEPLOY_THEN_SIGNED_READ_ONLY_DISABLED_CHECK"
+}

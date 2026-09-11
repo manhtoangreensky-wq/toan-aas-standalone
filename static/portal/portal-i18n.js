@@ -11246,13 +11246,20 @@
 
   const ADMIN_RELIABILITY_MESSAGES = { vi: {}, en: {}, zh: {} };
   [
+    ["hero.section", "Vận hành hệ thống", "System operations", "系统运营"],
+    ["disabled.title", "Theo dõi độ ổn định chưa được bật", "Reliability monitoring is not enabled", "稳定性监测尚未启用"],
+    ["disabled.body", "Tính năng đang tắt trong cấu hình máy chủ. Không có hành động nào được thực hiện.", "This feature is disabled in server configuration. No action has been performed.", "此功能在服务器配置中已关闭。未执行任何操作。"],
+    ["action.backAdmin", "Về trung tâm quản trị", "Back to Admin center", "返回管理中心"],
+    ["action.retry", "Thử lại", "Try again", "重试"],
     ["source.runtime", "Tín hiệu vận hành đã tổng hợp", "Aggregated runtime signals", "汇总运行信号"],
     ["pagination.label", "mục theo dõi", "follow-ups", "跟进项"],
-    ["page.description", "Theo dõi lỗi vận hành và yêu cầu cần tra xét trong phạm vi quyền do máy chủ xác minh.", "Monitor operational errors and requests requiring investigation within server-verified access.", "在服务器验证的权限范围内跟踪运行错误及需要调查的请求。"],
+    ["guidance.title", "Thông tin vận hành và quyền truy cập", "Operational information and access", "运行信息与访问权限"],
+    ["page.description", "Theo dõi các vấn đề cần nhân sự kiểm tra.", "Track issues that need staff review.", "跟踪需要工作人员检查的问题。"],
     ["signals.occurrences", "lần", "occurrences", "次"],
-    ["signals.body", "Chỉ hiển thị nhóm chức năng, số lần và thời điểm ghi nhận. Tín hiệu hỗ trợ tra xét, không xác nhận nguyên nhân hoặc kết quả sửa lỗi.", "Only function groups, occurrence counts and timestamps are shown. Signals guide investigation; they do not confirm a cause or a repair.", "仅显示功能组、发生次数和时间。信号用于辅助调查，并不确认原因或修复结果。"],
-    ["queue.title", "Hàng chờ tra xét", "Investigation queue", "调查队列"],
-    ["queue.body", "Mỗi thao tác được xác thực, bảo vệ CSRF, xác nhận và kiểm tra phiên bản để chống ghi trùng. Không gọi nhà cung cấp, Bot, thay đổi ví hoặc triển khai hệ thống.", "Actions require authentication, CSRF protection, confirmation, revision checks and duplicate-write protection. They do not call providers or Bot, change wallets or deploy the system.", "操作需要身份验证、CSRF 防护、确认、版本检查和防重复写入保护。不会调用供应商或 Bot、更改钱包或部署系统。"],
+    ["signals.title", "Tín hiệu gần đây", "Recent signals", "近期信号"],
+    ["signals.body", "Dùng để nhận ra vấn đề lặp lại; không thay thế kết luận của người phụ trách.", "Use these to spot recurring issues; they do not replace staff assessment.", "用于识别重复问题；不能替代工作人员的判断。"],
+    ["queue.title", "Việc cần kiểm tra", "Items to review", "待检查事项"],
+    ["queue.body", "Lọc theo trạng thái và mức độ, sau đó xử lý từng mục.", "Filter by status and severity, then handle each item.", "按状态和严重程度筛选，然后逐项处理。"],
     ["action.refresh", "Làm mới", "Refresh", "刷新"],
     ["boundary.title", "Giới hạn hoạt động", "Operational limits", "操作限制"],
     ["boundary.body", "Web ghi nhận thông tin để nhân sự tra xét. Việc sửa chữa thực tế cần quy trình và quyền riêng.", "The Web app records information for staff investigation. Actual repairs require a separate workflow and authorization.", "Web 应用记录信息供工作人员调查。实际修复需要独立流程和授权。"],
@@ -11281,7 +11288,7 @@
     ["filter.allSeverities", "Tất cả mức độ", "All severities", "所有级别"],
     ["filter.apply", "Áp dụng", "Apply", "应用"],
     ["filter.clear", "Xóa lọc", "Clear filters", "清除筛选"],
-    ["filter.note", "Chỉ lọc theo trạng thái và mức độ đã được máy chủ cho phép; không tìm theo nguồn, tài khoản, đường dẫn, ID, nội dung hoặc nhật ký.", "Filter only by server-approved status and severity. Source, account, route, ID, content and log searches are not available.", "仅按服务器允许的状态和严重程度筛选。不支持按来源、账户、路径、ID、内容或日志搜索。"],
+    ["filter.note", "Chỉ lọc theo trạng thái và mức độ đã được máy chủ cho phép.", "Only server-approved status and severity filters are used.", "仅使用服务器允许的状态和严重程度筛选条件。"],
     ["empty.followups.title", "Chưa có mục theo dõi", "No follow-ups yet", "暂无跟进项"],
     ["empty.followups.body", "Chưa có tín hiệu vượt ngưỡng hoặc yêu cầu cần người phụ trách tra xét. Trạng thái này không có nghĩa hệ thống đã tự sửa lỗi.", "No signals have crossed the threshold and no requests require investigation. This does not mean the system has repaired itself.", "暂无超出阈值的信号或需要负责人调查的请求。这并不表示系统已自动修复故障。"],
     ["empty.signals.title", "Chưa có tín hiệu vận hành", "No runtime signals yet", "暂无运行信号"],
@@ -11307,10 +11314,10 @@
     ["confirm.resolve", "Đánh dấu mục theo dõi đã xử lý? Thao tác chỉ cập nhật hồ sơ nội bộ, không sửa hệ thống, khởi động lại dịch vụ, gọi nhà cung cấp/Bot, thay đổi tiền hay liên hệ khách.", "Mark this follow-up as resolved? This only updates the internal record. It does not repair the system, restart services, call providers/Bot, change funds or contact customers.", "将此跟进项标记为已处理？此操作仅更新内部记录，不修复系统、重启服务、调用供应商或 Bot、更改资金或联系客户。"],
     ["confirm.reopen", "Mở lại mục theo dõi này? Chỉ thông tin hồ sơ nội bộ được cập nhật.", "Reopen this follow-up? Only the internal record is updated.", "重新打开此跟进项？仅更新内部记录。"],
     ["confirm.acknowledge", "Xác nhận tiếp nhận để tiếp tục tra xét? Không thực hiện hành động ngoài Web.", "Acknowledge this follow-up for investigation? No action outside the Web app is performed.", "确认接收此跟进项以继续调查？不会执行 Web 应用以外的操作。"],
-    ["loading.title", "Đang xác minh dữ liệu theo dõi", "Verifying monitoring data", "正在验证监测数据"],
-    ["loading.body", "Máy chủ đang kiểm tra phiên đăng nhập và quyền truy cập dữ liệu theo dõi độ ổn định.", "The server is checking your session and access to reliability monitoring data.", "服务器正在检查登录会话及稳定性监测数据的访问权限。"],
-    ["unavailable.title", "Chưa xác minh được dữ liệu theo dõi", "Monitoring data is not verified", "监测数据尚未验证"],
-    ["unavailable.body", "Chưa có dữ liệu hợp lệ cho phiên hiện tại. Chưa thể kết luận nguyên nhân là cấu hình, quyền truy cập hay kết nối. Không có tác vụ nào được thực hiện.", "Valid data is not available for this session. The cause may involve configuration, access or connectivity and has not been confirmed. No action has been performed.", "当前会话尚无有效数据。原因可能涉及配置、访问权限或连接，尚未确认。未执行任何操作。"]
+    ["loading.title", "Đang tải dữ liệu", "Loading data", "正在加载数据"],
+    ["loading.body", "Đang kiểm tra phiên đăng nhập và quyền truy cập.", "Checking your session and access.", "正在检查登录会话和访问权限。"],
+    ["unavailable.title", "Chưa tải được dữ liệu", "Data could not be loaded", "无法加载数据"],
+    ["unavailable.body", "Không thể xác minh dữ liệu lúc này. Vui lòng thử lại.", "The data cannot be verified right now. Please try again.", "目前无法验证数据，请重试。"]
   ].forEach(([key, vi, en, zh]) => {
     ADMIN_RELIABILITY_MESSAGES.vi[`adminReliability.${key}`] = vi;
     ADMIN_RELIABILITY_MESSAGES.en[`adminReliability.${key}`] = en;

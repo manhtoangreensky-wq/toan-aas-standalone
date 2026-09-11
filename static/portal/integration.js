@@ -734,6 +734,17 @@
     return flags.autopilot_enabled ? "enabled" : "disabled";
   }
 
+  function reliabilityConfigurationState(response) {
+    if (!response || response.ok !== true) return "unknown";
+    const flags = response.data && response.data.flags;
+    if (
+      !flags
+      || typeof flags.autopilot_enabled !== "boolean"
+      || typeof flags.reliability_followup_enabled !== "boolean"
+    ) return "unknown";
+    return flags.autopilot_enabled && flags.reliability_followup_enabled ? "enabled" : "disabled";
+  }
+
   function base() {
     return window.__TOAN_AAS_PORTAL__ && typeof window.__TOAN_AAS_PORTAL__ === "object" ? window.__TOAN_AAS_PORTAL__ : {};
   }
@@ -14320,6 +14331,7 @@
       operationsConfigurationState: operationsConfigurationState(statusResponse),
       autopilotSafeRemediationEnabled,
       reliabilityFollowupEnabled,
+      reliabilityConfigurationState: reliabilityConfigurationState(statusResponse),
       operationsDeskEnabled,
       financePlanningEnabled,
       notificationCenterEnabled,

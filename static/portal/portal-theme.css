@@ -14340,10 +14340,90 @@ body {
   }
 }
 
-/* Final light Reliability Follow-up surface */
+/* Reliability Admin: task-first, theme-aware, and intentionally compact. */
 .portal-page.portal-reliability-admin {
   color: var(--portal-ink);
-  background: var(--portal-surface-light);
+  background: transparent;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  width: min(100%, 760px);
+  padding: 20px 22px;
+  border: 1px solid var(--portal-border);
+  border-left: 4px solid var(--portal-border-strong);
+  border-radius: 12px;
+  background: var(--portal-surface);
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-status h2 {
+  margin: 0;
+  color: var(--portal-ink);
+  font-size: clamp(1.125rem, 1.4vw, 1.25rem);
+  line-height: 1.3;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-status p {
+  max-width: 60ch;
+  margin: 6px 0 0;
+  color: var(--portal-muted);
+  line-height: 1.55;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-status-actions {
+  flex: 0 0 auto;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-workspace {
+  min-width: 0;
+  width: 100%;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance {
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface);
+  color: var(--portal-text);
+  padding: 0 16px;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance > summary {
+  min-height: 48px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance > summary:focus-visible {
+  outline: 2px solid var(--portal-accent);
+  outline-offset: 4px;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance[open] {
+  padding-bottom: 16px;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance :is(p, li) {
+  max-width: 72ch;
+  line-height: 1.6;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance :is(.portal-operations-admin-intro, .portal-operations-boundary) {
+  padding: 16px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-guidance .portal-operations-boundary {
+  margin-top: 12px;
+  border-top: 1px solid var(--portal-border);
 }
 
 .portal-page.portal-reliability-admin .portal-operations-admin-intro {
@@ -14395,6 +14475,16 @@ body {
   box-shadow: none;
 }
 
+.portal-page.portal-reliability-admin .portal-support-filter .portal-form-footer {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.portal-page.portal-reliability-admin .portal-support-filter .portal-inline-actions {
+  justify-content: flex-end;
+  width: 100%;
+}
+
 .portal-page.portal-reliability-admin .portal-support-filter label {
   color: var(--portal-ink);
 }
@@ -14410,6 +14500,29 @@ body {
   border-color: var(--portal-border);
   background: var(--portal-surface-light);
   box-shadow: none;
+}
+
+.portal-page.portal-reliability-admin .portal-empty {
+  padding: 24px 18px;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-reliability-admin .portal-empty-icon {
+  background: color-mix(in srgb, var(--portal-accent) 12%, transparent);
+  color: var(--portal-accent);
+}
+
+.portal-page.portal-reliability-admin .portal-empty h3 {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-reliability-admin .portal-empty p {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-reliability-admin .portal-reliability-workspace .portal-card-header > .portal-button {
+  white-space: nowrap;
 }
 
 .portal-page.portal-reliability-admin .portal-reliability-copy strong,
@@ -14493,8 +14606,21 @@ body {
 }
 
 @media (max-width: 700px) {
+  .portal-page.portal-reliability-admin .portal-reliability-status {
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .portal-page.portal-reliability-admin .portal-reliability-status-actions,
+  .portal-page.portal-reliability-admin .portal-reliability-status-actions .portal-button,
+  .portal-page.portal-reliability-admin .portal-support-filter .portal-inline-actions,
+  .portal-page.portal-reliability-admin .portal-support-filter .portal-inline-actions .portal-button {
+    width: 100%;
+  }
+
   .portal-page.portal-reliability-admin .portal-operations-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .portal-page.portal-reliability-admin .portal-support-filter {

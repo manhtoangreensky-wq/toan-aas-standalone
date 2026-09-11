@@ -161,12 +161,21 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 
 ### Reliability candidate — 11/09/2026
 
-Renderer cũ ghép trực tiếp Việt/Anh và mô tả khởi động lại Railway; candidate
-hiện dùng catalogue VI/EN/ZH và giới hạn hoạt động trung lập với nền tảng triển
-khai. Thông báo thiếu quyền cũ được thay bằng chưa xác minh khi không có dữ liệu
-hợp lệ. Đây là sửa presentation, không mở quyền hay bật tính năng.
-Bằng chứng local: `tests/test_a09_reliability_locale.py` và
-`tests/test_operations_reliability.py`; chưa có browser/live acceptance candidate.
+Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
+kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:
+
+- dùng catalogue VI/EN/ZH cho toàn bộ fixed copy;
+- đặt việc cần xử lý trước số liệu và tín hiệu;
+- thu thông tin vận hành/quyền vào disclosure đóng ban đầu;
+- dùng một status surface gọn cho disabled/unknown, không báo thiếu quyền khi
+  core status chỉ cho biết module đang tắt;
+- giữ nguyên action ID, capability, revision, cursor và API authorization.
+
+Browser local đã đo `20` trạng thái enabled và `8` trạng thái disabled; các cổng
+locale, responsive, clipping, touch, console và write request đều đạt. Đây là
+local acceptance, chưa phải production/live. Bằng chứng:
+`tests/test_a09_reliability_locale.py`, `tests/test_operations_reliability.py`,
+`evidence/a09-admin-reliability-ux-20260911/browser*/`.
 
 ### Hiệu chỉnh Operations readiness — 10/09/2026
 

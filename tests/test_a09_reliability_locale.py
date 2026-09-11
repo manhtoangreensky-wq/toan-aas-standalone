@@ -10,6 +10,31 @@ from html.parser import HTMLParser
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_reliability_configuration_distinguishes_unknown_disabled_enabled():
+    source = (ROOT / "static/portal/integration.js").read_text(encoding="utf-8")
+    start = source.find("function reliabilityConfigurationState(")
+    assert start >= 0, "Missing explicit Reliability configuration-state projection"
+    end = source.index("\n  function ", start + 10)
+    script = source[start:end] + """
+const inputs = [
+  {},
+  {ok:false,data:{flags:{autopilot_enabled:false,reliability_followup_enabled:false}}},
+  {ok:true,data:{flags:{}}},
+  {ok:true,data:{flags:{autopilot_enabled:'true',reliability_followup_enabled:true}}},
+  {ok:true,data:{flags:{autopilot_enabled:true,reliability_followup_enabled:'false'}}},
+  {ok:true,data:{flags:{autopilot_enabled:false,reliability_followup_enabled:true}}},
+  {ok:true,data:{flags:{autopilot_enabled:true,reliability_followup_enabled:false}}},
+  {ok:true,data:{flags:{autopilot_enabled:true,reliability_followup_enabled:true}}}
+];
+process.stdout.write(JSON.stringify(inputs.map(reliabilityConfigurationState)));
+"""
+    result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, check=True)
+    assert json.loads(result.stdout) == [
+        "unknown", "unknown", "unknown", "unknown", "unknown",
+        "disabled", "disabled", "enabled",
+    ]
+
+
 def test_complete_reliability_renderer_uses_real_helpers_in_all_locales():
     # Reuse the established minimal DOM host, not mocked renderer helpers.
     host = ast.parse((ROOT / 'tests/test_a09_admin_operations_locale_purity_contracts.py').read_text(encoding='utf-8'))
@@ -58,11 +83,18 @@ process.stdout.write(JSON.stringify({html:api.renderReliabilityAdmin(page,base),
         if locale in ('en', 'zh'):
             assert not re.search(r'[ĂÂĐÊÔƠƯăâđêôơư\u1EA0-\u1EF9]', text), text
         else:
-            for foreign in ('Manager', 'Operator', 'runtime', 'follow-up', 'Railway', 'Support Desk'):
+            for foreign in ('ADMIN ERP', 'Manager', 'Operator', 'runtime', 'follow-up', 'Railway', 'Support Desk'):
                 assert foreign not in text, text
         assert 'name="expected_revision" value="2"' in rendered['html']
         assert 'data-reliability-followup-offset="20"' in rendered['html']
         assert 'qa module' in text and '7' in text
+        assert '<details class="portal-reliability-guidance">' in rendered['html']
+        assert '<summary>' in rendered['html']
+        assert '<details class="portal-reliability-guidance" open' not in rendered['html']
+        assert rendered['html'].index('data-portal-action="reliability-followup-filter"') < rendered['html'].index('<details class="portal-reliability-guidance">')
+        assert rendered['html'].index('portal-reliability-workspace') < rendered['html'].index('portal-operations-metrics')
+        assert 'metadata_followup_only' not in rendered['html']
+        assert 'portal-form-note' not in rendered['html'].split('<div class="portal-reliability-list">', 1)[0].rsplit('<form class="portal-support-filter"', 1)[-1]
         assert '<script>' not in rendered['injected']
         assert '<img src=x' not in rendered['injected']
         assert '&lt;img src=x' in rendered['injected']
@@ -144,8 +176,11 @@ const uiText=(key,fallback)=>window.TOANAASI18n.messages[locale][key] || fallbac
 """ + source[start:end] + """
 const result={};
 for (locale of ['vi','en','zh']) {
-  result[locale]=['guarded','loading'].map(reliabilityReadState =>
-    renderReliabilityAdmin({}, {reliabilityReadState, reliabilitySummary:{}}));
+  result[locale]=[
+    renderReliabilityAdmin({}, {reliabilityReadState:'guarded',reliabilityConfigurationState:'unknown',reliabilitySummary:{}}),
+    renderReliabilityAdmin({}, {reliabilityReadState:'loading',reliabilityConfigurationState:'disabled',reliabilitySummary:{}}),
+    renderReliabilityAdmin({}, {reliabilityReadState:'guarded',reliabilityConfigurationState:'disabled',reliabilitySummary:{}})
+  ];
   result[locale].push(renderReliabilityAdmin({}, {
     reliabilityReadState:'ready', reliabilitySummary:{operator_role:'manager'},
     capabilities:{'reliability-followup-resolve':true},
@@ -160,37 +195,37 @@ process.stdout.write(JSON.stringify(result));
                             capture_output=True, text=True, check=True, timeout=30)
     rendered = json.loads(result.stdout)
     for locale, titles in {
-        "vi": ("Chưa xác minh được dữ liệu theo dõi", "Đang xác minh dữ liệu theo dõi"),
-        "en": ("Monitoring data is not verified", "Verifying monitoring data"),
-        "zh": ("监测数据尚未验证", "正在验证监测数据"),
+        "vi": ("Chưa tải được dữ liệu", "Đang tải dữ liệu", "Theo dõi độ ổn định chưa được bật"),
+        "en": ("Data could not be loaded", "Loading data", "Reliability monitoring is not enabled"),
+        "zh": ("无法加载数据", "正在加载数据", "稳定性监测尚未启用"),
     }.items():
         for markup, title in zip(rendered[locale], titles):
             assert title in markup
-            assert 'data-portal-action=' not in markup
-    assert 'Đánh dấu mục theo dõi đã xử lý?' in rendered['vi'][2]
-    assert 'Mark this follow-up as resolved?' in rendered['en'][2]
-    assert '将此跟进项标记为已处理？' in rendered['zh'][2]
+            assert 'data-portal-action="reliability-followup-' not in markup
+    assert 'Đánh dấu mục theo dõi đã xử lý?' in rendered['vi'][3]
+    assert 'Mark this follow-up as resolved?' in rendered['en'][3]
+    assert '将此跟进项标记为已处理？' in rendered['zh'][3]
     for locale, label in {'vi':'Tín hiệu vận hành đã tổng hợp', 'en':'Aggregated runtime signals', 'zh':'汇总运行信号'}.items():
-        assert label in rendered[locale][2]
+        assert label in rendered[locale][3]
     for locale, label in {'vi':'Đã xử lý', 'en':'Resolve', 'zh':'标记已处理'}.items():
-        assert f'>{label}</button>' in rendered[locale][2]
-    assert '>Clear filters</button>' in rendered['en'][2]
-    assert '>清除筛选</button>' in rendered['zh'][2]
-    assert 'aria-label="Reliability overview"' in rendered['en'][2]
-    assert 'aria-label="稳定性概览"' in rendered['zh'][2]
-    assert 'Track issues without automatic repairs' in rendered['en'][2]
-    assert '跟踪问题，不自动修复' in rendered['zh'][2]
-    assert 'Investigation queue' in rendered['en'][2]
-    assert '调查队列' in rendered['zh'][2]
-    assert 'Railway' not in rendered['vi'][2]
-    assert 'Signals guide investigation; they do not confirm a cause or a repair.' in rendered['en'][2]
+        assert f'>{label}</button>' in rendered[locale][3]
+    assert '>Clear filters</button>' in rendered['en'][3]
+    assert '>清除筛选</button>' in rendered['zh'][3]
+    assert 'aria-label="Reliability overview"' in rendered['en'][3]
+    assert 'aria-label="稳定性概览"' in rendered['zh'][3]
+    assert 'Track issues without automatic repairs' in rendered['en'][3]
+    assert '跟踪问题，不自动修复' in rendered['zh'][3]
+    assert 'Items to review' in rendered['en'][3]
+    assert '待检查事项' in rendered['zh'][3]
+    assert 'Railway' not in rendered['vi'][3]
+    assert 'Use these to spot recurring issues; they do not replace staff assessment.' in rendered['en'][3]
     for locale in ('vi', 'en', 'zh'):
-        assert 'name="expected_revision" value="2"' in rendered[locale][2]
-        assert 'reliability-followup-resolve' in rendered[locale][2]
+        assert 'name="expected_revision" value="2"' in rendered[locale][3]
+        assert 'reliability-followup-resolve' in rendered[locale][3]
     for locale, labels in {
         'vi': ('Chưa có mục theo dõi', 'Chưa có tín hiệu vận hành'),
         'en': ('No follow-ups yet', 'No runtime signals yet'),
         'zh': ('暂无跟进项', '暂无运行信号'),
     }.items():
-        assert all(label in rendered[locale][3] for label in labels)
-        assert 'reliability-followup-resolve' not in rendered[locale][3]
+        assert all(label in rendered[locale][4] for label in labels)
+        assert 'reliability-followup-resolve' not in rendered[locale][4]

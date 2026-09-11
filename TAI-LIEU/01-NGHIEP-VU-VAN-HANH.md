@@ -333,10 +333,21 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
   được bật hay kết nối chưa sẵn sàng không được coi là nghiệp vụ đã hoàn thành.
 - Mã tác vụ, con trỏ trang, phiên bản, quyền và backend không đổi. Không bật ENV,
   gọi nhà cung cấp, sửa Bot hoặc thực hiện giao dịch tiền trong batch này.
-- Kiểm tra full renderer: VI/EN/ZH và 24 tổ hợp trạng thái/capability. Backend
-  Reliability chạy trên DB tạm: 10 passed, 1 cảnh báo Pydantic trong 35.08s.
-- Source commit `d43a50302f7486a653c03f7a855590860908f139`; provenance đã xác minh.
-  Browser candidate và signed production chưa kiểm chứng; chưa gọi ACCEPTED_LIVE.
+- Candidate phân biệt ba trạng thái cấu hình: `enabled`, `disabled`, `unknown`.
+  Chỉ phản hồi core status thành công với hai Boolean chính xác mới được dùng để
+  kết luận bật/tắt; lỗi hoặc dữ liệu sai kiểu không bị quy thành thiếu quyền.
+- Luồng hiển thị đã chuyển sang task-first: `Việc cần kiểm tra` đứng trước số
+  liệu, tín hiệu và phần giải thích. Thông tin kỹ thuật/quyền được gom vào một
+  disclosure đóng ban đầu; mã kỹ thuật nội bộ không xuất hiện trên mặt chính.
+- Browser local enabled đo `20` trạng thái = VI/EN × sáng/tối × 5 viewport;
+  disabled đo `8` trạng thái = VI/EN × sáng/tối × 1440/390. Cả hai report đều
+  có overflow/clipping/event/write request bằng `0`; contrast nhỏ nhất của
+  enabled là `5.8:1`; target tương tác tối thiểu `44px`.
+- Full renderer kiểm VI/EN/ZH và 24 tổ hợp trạng thái/capability. Backend
+  Reliability chạy trên DB tạm: `10 passed`, 1 cảnh báo Pydantic trong 35.08s.
+- CUA/IAB chặn localhost nên Browser QA dùng Playwright/Chrome local; đây là
+  local acceptance, chưa phải production. Production screenshot trước sửa vẫn
+  trộn Việt-Anh và báo sai thiếu quyền; chưa gọi `ACCEPTED_LIVE` cho candidate.
 
 ### Bằng chứng lịch sử Operations
 
