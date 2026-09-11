@@ -39,8 +39,23 @@ write instruction.
   a failed read, not an empty queue.
 - A fresh signed read clears the previous Operations Desk projection before
   loading.  A failure leaves no stale staff queue, browser role or Bot
-  fallback visible.  The user receives a clear manual `Thử tải lại` action;
+  fallback visible.  The user receives a clear manual retry action and a safe
+  return to the administration center;
   the Desk never self-retries or changes operational state.
+
+## Presentation contract (A09 Work Queue)
+
+- Fixed presentation copy is selected from the symmetric
+  `adminWorkQueue.*` VI/EN/ZH catalogue.  Canonical source kinds, enum states,
+  priorities, timestamps, counts and routes remain unchanged server data.
+- The visible hierarchy is task-first: short hero, work filters, filtered
+  results, source summary, then a closed-by-default data/limits disclosure.
+  Loading and failed reads use one concise recovery surface and never render a
+  stale table.
+- Desktop may use a bounded data table.  At `≤900px`, each row becomes a
+  vertical card with explicit column labels; the page itself must not gain a
+  horizontal scroll region.  Controls remain at least `44px` high and all
+  colors come from the teal/cyan Portal tokens.
 
 ## Security and delivery boundaries
 

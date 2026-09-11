@@ -1,0 +1,52 @@
+task_id: A09-ADMIN-WORK-QUEUE-UX-LOCALE
+route: /admin/work-queue
+phase: LOCAL_VERIFIED_PREPUSH
+base_sha: 20437db1344aba0e5fe8d09378fc902855a3d328
+branch: fix/a09-admin-work-queue-ux-locale
+allowed_files:
+  - static/portal/portal.js
+  - static/portal/portal-i18n.js
+  - static/portal/portal-theme.css
+  - tests/test_a09_admin_work_queue_ux_locale.py
+  - tests/test_operations_desk_portal_contracts.py
+  - tests/test_operations_desk_read_model_contracts.py
+  - tests/test_p0_05d_tester_workspace.py
+  - reports/prepush/A09-ADMIN-WORK-QUEUE-UX-LOCALE-001.md
+  - reports/prepush/A09-ADMIN-WORK-QUEUE-UX-LOCALE-001.json
+  - reports/migration/p0-05d-tester-workspace.json
+  - KIEM-THU/DANH-SACH-CASE.md
+  - KIEM-THU/HUONG-DAN-TESTER.md
+  - TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md
+  - TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md
+  - docs/migration/ADMIN_OPERATIONS_DESK_READ_MODEL_CONTRACT.md
+protected_files:
+  - copyfast_operations_desk.py
+  - app.py
+  - payment and wallet modules
+  - Bot repository and bot.py
+acceptance:
+  - fixed VI/EN/ZH work-queue copy is locale-pure
+  - work and filters precede source summary
+  - unknown source counts remain an em dash
+  - rows become vertical cards at or below 900px
+  - loading and failed reads render no stale data
+  - read-only route keeps allowlisted targets and pagination
+  - browser matrix has zero overflow, clipping, writes and relevant console events
+verification:
+  focused: 79 passed, 162 deselected, 1 warning
+  work_queue_contracts: 19 passed
+  browser_states: 20
+  browser_minimum_contrast: 7.62:1
+  protected_base: 25 passed, 2 baseline failures
+  protected_candidate: 25 passed, 2 baseline failures
+  protected_new_failures: 0
+  node_syntax_files: 4
+  python_compile_exit: 0
+  diff_check_exit: 0
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  env_mutations: 0
+  operations_desk_writes: 0
+next_gate: COMMIT_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY

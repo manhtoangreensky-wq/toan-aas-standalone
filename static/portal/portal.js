@@ -291,6 +291,10 @@
     return uiText(`adminContentHandoff.${key}`, fallback, params);
   }
 
+  function adminWorkQueueText(key, fallback, params) {
+    return uiText(`adminWorkQueue.${key}`, fallback, params);
+  }
+
   function supportTicketLocale() {
     const i18n = portalI18n();
     if (!i18n || typeof i18n.localeTag !== "function") return "vi-VN";
@@ -9635,6 +9639,7 @@
     if (path === "/admin/operations") return adminOperationsText("page.title", fallback);
     if (path === "/admin/reliability") return uiText("adminReliability.intro.kicker", fallback);
     if (path === "/admin/content-handoffs") return adminContentHandoffText("page.title", fallback);
+    if (path === "/admin/work-queue") return adminWorkQueueText("page.title", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "title", fallback);
     if (path === "/features") return featureCatalogText("page.title", fallback);
     if (path === "/studio") return mediaStudioText("page.title", fallback);
@@ -9705,6 +9710,7 @@
     if (path === "/admin/operations") return adminOperationsText("page.description", fallback);
     if (path === "/admin/reliability") return uiText("adminReliability.page.description", fallback);
     if (path === "/admin/content-handoffs") return adminContentHandoffText("page.description", fallback);
+    if (path === "/admin/work-queue") return adminWorkQueueText("page.description", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "description", fallback);
     if (path === "/features") return featureCatalogText("page.description", fallback);
     if (path === "/studio") return mediaStudioText("page.description", fallback);
@@ -10977,6 +10983,7 @@
     if (route === "/admin/operations") return adminOperationsText("hero.section", fallback);
     if (route === "/admin/reliability") return uiText("adminReliability.hero.section", fallback);
     if (route === "/admin/content-handoffs") return adminContentHandoffText("hero.section", fallback);
+    if (route === "/admin/work-queue") return adminWorkQueueText("hero.section", fallback);
     return routeKey ? supportTicketText(`hero.${routeKey}.section`, fallback) : fallback;
   }
 
@@ -25600,11 +25607,11 @@
   }
 
   const OPERATIONS_DESK_KIND_LABELS = Object.freeze({
-    support_case: "Support case",
-    operations_incident: "Operations incident",
-    operations_approval: "Operations approval",
-    reliability_followup: "Reliability follow-up",
-    content_handoff: "Content handoff"
+    support_case: "source.support_case",
+    operations_incident: "source.operations_incident",
+    operations_approval: "source.operations_approval",
+    reliability_followup: "source.reliability_followup",
+    content_handoff: "source.content_handoff"
   });
   const OPERATIONS_DESK_TARGETS = Object.freeze({
     support_case: "/admin/support",
@@ -25614,24 +25621,34 @@
     content_handoff: "/admin/content-handoffs"
   });
   const OPERATIONS_DESK_STATE_LABELS = Object.freeze({
-    new: "Mới", reviewing: "Đang review", waiting_user: "Chờ khách", waiting_provider: "Chờ nguồn", refund_pending: "Đang chờ review", resolved: "Đã xử lý", closed: "Đã đóng",
-    open: "Đang mở", investigating: "Đang tra xét", awaiting_approval: "Chờ quyết định", approved: "Đã ghi nhận", rejected: "Đã từ chối", expired: "Đã hết hạn", superseded: "Đã thay thế",
-    acknowledged: "Đã nhận", draft: "Nháp", review: "Đang review", approved_for_handoff: "Đã duyệt bàn giao", handed_off: "Đã bàn giao nội bộ", blocked: "Bị chặn", accepted: "Đã tiếp nhận", completed: "Đã hoàn tất", guarded: "Đang bảo vệ"
+    new: "state.new", reviewing: "state.reviewing", waiting_user: "state.waiting_user", waiting_provider: "state.waiting_provider", refund_pending: "state.refund_pending", resolved: "state.resolved", closed: "state.closed",
+    open: "state.open", investigating: "state.investigating", awaiting_approval: "state.awaiting_approval", approved: "state.approved", rejected: "state.rejected", expired: "state.expired", superseded: "state.superseded",
+    acknowledged: "state.acknowledged", draft: "state.draft", review: "state.review", approved_for_handoff: "state.approved_for_handoff", handed_off: "state.handed_off", blocked: "state.blocked", accepted: "state.accepted", completed: "state.completed", guarded: "state.guarded"
   });
 
   function operationsDeskAvailabilityBadge(value) {
     const availability = String(value || "").trim().toLowerCase();
-    return badge(availability === "available" ? "read_only" : "guarded");
+    const status = availability === "available" ? "available" : "guarded";
+    const fallback = status === "available" ? "Sẵn sàng" : "Chưa xác minh";
+    return `<span class="portal-operations-desk-availability" data-status="${status}"><span aria-hidden="true"></span>${safeText(adminWorkQueueText(`availability.${status}`, fallback))}</span>`;
+  }
+
+  function operationsDeskKindLabel(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    const key = OPERATIONS_DESK_KIND_LABELS[normalized];
+    return key ? adminWorkQueueText(key, "Nguồn chưa xác minh") : adminWorkQueueText("source.unknown", "Nguồn chưa xác minh");
   }
 
   function operationsDeskLabel(value, fallback) {
     const normalized = String(value || "").trim().toLowerCase();
-    return OPERATIONS_DESK_STATE_LABELS[normalized] || fallback || "Đang bảo vệ";
+    const key = OPERATIONS_DESK_STATE_LABELS[normalized];
+    return key ? adminWorkQueueText(key, fallback || "Chưa xác minh") : (fallback || adminWorkQueueText("state.guarded", "Chưa xác minh"));
   }
 
   function operationsDeskPriority(value) {
-    const labels = { low: "Thấp", normal: "Bình thường", medium: "Theo dõi", high: "Cao", urgent: "Khẩn", critical: "Nghiêm trọng", guarded: "Đang bảo vệ" };
-    return labels[String(value || "").trim().toLowerCase()] || "Đang bảo vệ";
+    const normalized = String(value || "").trim().toLowerCase();
+    const allowed = new Set(["low", "normal", "medium", "high", "urgent", "critical", "guarded"]);
+    return adminWorkQueueText(`priority.${allowed.has(normalized) ? normalized : "guarded"}`, "Chưa xác minh");
   }
 
   function operationsDeskPagination(listing, enabled) {
@@ -25639,10 +25656,11 @@
     const previous = Number.isInteger(pagination.previous_offset) ? pagination.previous_offset : null;
     const next = Number.isInteger(pagination.next_offset) ? pagination.next_offset : null;
     if (previous === null && next === null) return "";
-    return `<div class="portal-form-footer"><span class="portal-form-note">Danh sách là metadata không định danh; tổng số chỉ hiện khi mọi nguồn đều available.</span><div class="portal-inline-actions">${previous !== null ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-page" data-portal-route="/admin/work-queue" data-operations-desk-offset="${safeText(String(previous))}"${enabled ? "" : " disabled"}>Trang trước</button>` : ""}${next !== null ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-page" data-portal-route="/admin/work-queue" data-operations-desk-offset="${safeText(String(next))}"${enabled ? "" : " disabled"}>Tải thêm</button>` : ""}</div></div>`;
+    return `<nav class="portal-form-footer portal-operations-desk-pagination" aria-label="${safeText(adminWorkQueueText("pagination.aria", "Phân trang danh sách công việc"))}"><span class="portal-form-note">${safeText(adminWorkQueueText("pagination.note", "Tổng số chỉ hiển thị khi mọi nguồn đã được xác minh."))}</span><div class="portal-inline-actions">${previous !== null ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-page" data-portal-route="/admin/work-queue" data-operations-desk-offset="${safeText(String(previous))}"${enabled ? "" : " disabled"}>${safeText(adminWorkQueueText("pagination.previous", "Trang trước"))}</button>` : ""}${next !== null ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-page" data-portal-route="/admin/work-queue" data-operations-desk-offset="${safeText(String(next))}"${enabled ? "" : " disabled"}>${safeText(adminWorkQueueText("pagination.next", "Trang sau"))}</button>` : ""}</div></nav>`;
   }
 
   function renderOperationsDesk(page, context) {
+    const copy = (key, fallback, params) => adminWorkQueueText(key, fallback, params);
     const readState = String(context.operationsDeskReadState || "guarded");
     const enabled = Boolean(context.capabilities && context.capabilities["operations-desk-view"] === true);
     const loading = readState === "loading";
@@ -25654,9 +25672,9 @@
       && sources.length === Object.keys(OPERATIONS_DESK_TARGETS).length;
     if (!hasProjection) {
       const retry = !loading
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="operations-desk-refresh" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>Thử tải lại</button>`
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="operations-desk-refresh" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>${safeText(copy("action.retry", "Thử lại"))}</button>`
         : "";
-      return `<article class="portal-page portal-operations-desk">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh Operations Desk" : "Operations Desk đang được bảo vệ"}</h2><p>${loading ? "Máy chủ đang kiểm tra signed session và phạm vi staff trước khi trả metadata queue đã redaction." : "Máy chủ không thể xác minh receipt Operations Desk hiện tại. Không hiển thị queue cũ, role browser hay fallback Bot; bạn có thể yêu cầu một lần đọc mới."}</p></div></div><div class="portal-form-footer">${retry}<a class="portal-button portal-button--quiet" href="/admin">Quay lại Admin ERP</a></div></section></article>`;
+      return `<article class="portal-page portal-operations-desk">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-operations-desk-recovery"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(copy(loading ? "loading.title" : "unavailable.title", loading ? "Đang tải hàng chờ" : "Chưa tải được hàng chờ"))}</h2><p>${safeText(copy(loading ? "loading.body" : "unavailable.body", loading ? "Đang kiểm tra dữ liệu mới nhất." : "Dữ liệu chưa sẵn sàng. Hãy thử lại."))}</p></div></div><div class="portal-form-footer">${retry}<a class="portal-button portal-button--quiet" href="/admin">${safeText(copy("action.back", "Về trung tâm quản trị"))}</a></div></section></article>`;
     }
     const items = Array.isArray(context.operationsDeskItems) ? context.operationsDeskItems : [];
     const filter = context.operationsDeskFilter && typeof context.operationsDeskFilter === "object" ? context.operationsDeskFilter : { kind: "all", state: "all", severity: "all", view: "all" };
@@ -25665,42 +25683,44 @@
     const partial = summary.partial === true;
     const sourceCards = sources.length ? sources.map((source) => {
       const kind = String(source && source.kind || "");
-      const label = OPERATIONS_DESK_KIND_LABELS[kind] || "Nguồn đã bảo vệ";
+      const label = operationsDeskKindLabel(kind);
       const count = Number.isInteger(source && source.count) && source.count >= 0 ? String(source.count) : "—";
-      return `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(count)}</strong><em>${operationsDeskAvailabilityBadge(source && source.availability)} ${safeText(String(source && source.availability === "available" ? "Có thể đọc" : "Không suy đoán số liệu"))}</em></div>`;
-    }).join("") : renderEmpty("Chưa có nguồn công bố", "Máy chủ chưa trả metadata nguồn an toàn cho phiên staff này.", "·");
+      return `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(count)}</strong><em>${operationsDeskAvailabilityBadge(source && source.availability)}</em></div>`;
+    }).join("") : "";
     const attentionView = view === "attention";
-    const queueTitle = attentionView ? "Hàng cần xử lý" : "Hàng điều phối đã lọc";
-    const queueSubtitle = attentionView
-      ? "Máy chủ chỉ giữ signal cần rà soát theo policy cố định; không có tự retry, tự xử lý hay phân công từ Desk."
-      : "Mở đúng source staff để tiếp tục theo contract riêng; Desk không mang context sang route đích.";
-    const rows = renderRowsTable(["Nguồn", "Trạng thái", "Ưu tiên", "Cập nhật", "Đi tới"], items, (item) => {
+    const queueTitle = copy(attentionView ? "queue.title.attention" : "queue.title.all", attentionView ? "Đang cần xem xét" : "Kết quả đã lọc");
+    const queueSubtitle = copy(attentionView ? "queue.body.attention" : "queue.body.all", attentionView ? "Chỉ hiển thị các mục đang cần người phụ trách xem xét." : "Mở một mục để làm việc tại đúng màn hình chuyên trách.");
+    const columns = [copy("table.source", "Nhóm việc"), copy("table.state", "Trạng thái"), copy("table.priority", "Mức độ"), copy("table.updated", "Cập nhật"), copy("table.action", "Thao tác")];
+    const rows = items.map((item) => {
       const kind = String(item && item.kind || "");
       const target = OPERATIONS_DESK_TARGETS[kind] || "";
       const level = item && (item.priority || item.severity);
       const state = String(item && item.state || "guarded");
       const terminal = ["resolved", "closed", "handed_off", "completed"].includes(state);
-      return `<td><strong>${safeText(OPERATIONS_DESK_KIND_LABELS[kind] || "Nguồn đã bảo vệ")}</strong></td><td>${badge(terminal ? "completed" : "read_only")}<small class="portal-form-note">${safeText(operationsDeskLabel(state, "Đang bảo vệ"))}</small></td><td>${safeText(operationsDeskPriority(level))}</td><td>${safeText(supportCaseTimestamp(item && item.updated_at))}</td><td>${target ? `<a class="portal-button portal-button--quiet" href="${safeText(target)}">Mở nguồn</a>` : "—"}</td>`;
-    }, "Không có item phù hợp", "Không có item được suy đoán từ nguồn guarded/unavailable hoặc từ browser.");
+      const stateTone = terminal ? "completed" : state === "guarded" ? "guarded" : "active";
+      return `<tr><td data-label="${safeText(columns[0])}"><strong>${safeText(operationsDeskKindLabel(kind))}</strong></td><td data-label="${safeText(columns[1])}"><span class="portal-operations-desk-row-state" data-status="${stateTone}"><span aria-hidden="true"></span>${safeText(operationsDeskLabel(state, copy("state.guarded", "Chưa xác minh")))}</span></td><td data-label="${safeText(columns[2])}">${safeText(operationsDeskPriority(level))}</td><td data-label="${safeText(columns[3])}">${safeText(supportCaseTimestamp(item && item.updated_at))}</td><td data-label="${safeText(columns[4])}">${target ? `<a class="portal-button portal-button--quiet" href="${safeText(target)}">${safeText(copy("action.open", "Mở"))}</a>` : "—"}</td></tr>`;
+    }).join("");
+    const queueMarkup = rows
+      ? `<div class="portal-data-table-wrap portal-operations-desk-table" tabindex="0" role="region" aria-label="${safeText(copy("table.aria", "Danh sách việc cần xử lý"))}"><table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`
+      : renderEmpty(copy("empty.title", "Chưa có việc phù hợp"), copy("empty.body", "Hãy đổi bộ lọc hoặc làm mới để kiểm tra dữ liệu mới nhất."), "○");
+    const kindOptions = Object.keys(OPERATIONS_DESK_KIND_LABELS).map((key) => `<option value="${safeText(key)}"${filter.kind === key ? " selected" : ""}>${safeText(operationsDeskKindLabel(key))}</option>`).join("");
+    const stateOptions = ["new", "open", "review", "awaiting_approval", "blocked", "resolved", "guarded"].map((key) => `<option value="${key}"${filter.state === key ? " selected" : ""}>${safeText(operationsDeskLabel(key, copy("state.guarded", "Chưa xác minh")))}</option>`).join("");
+    const severityOptions = ["normal", "high", "urgent", "critical", "guarded"].map((key) => `<option value="${key}"${filter.severity === key ? " selected" : ""}>${safeText(operationsDeskPriority(key))}</option>`).join("");
     return `<article class="portal-page portal-operations-desk">
       ${renderHero(page, context)}
-      <section class="portal-operations-admin-intro">
-        <div><span class="portal-section-kicker">Read-only ERP Operations Desk</span><h2>Một hàng đợi, nhiều nguồn đã được tách authority</h2><p>Desk chỉ gộp trạng thái, mức ưu tiên và thời điểm cập nhật đã được rút gọn. Nó không trả ID, account, email, tiêu đề, nội dung, payload, audit detail hay action write.</p></div>
-        <dl><div><dt>${safeText(partial ? "Một phần" : "Chỉ đọc")}</dt><dd>${safeText(partial ? "Có nguồn đang được bảo vệ" : "Tất cả nguồn đã xác nhận")}</dd></div><div><dt>Server-side</dt><dd>Role và route được máy chủ kiểm tra</dd></div></dl>
-      </section>
-      <section class="portal-operations-metrics" aria-label="Nguồn Operations Desk">${sourceCards}</section>
-      <section class="portal-card portal-card-pad">
-        <div class="portal-card-header"><div><h2 class="portal-card-title">Lọc metadata hàng đợi</h2><p class="portal-card-subtitle">Bộ lọc chỉ nhận enum allow-list. Không tìm kiếm theo ID, nội dung hoặc dữ liệu khách hàng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-refresh" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>Làm mới</button></div>
-        <form class="portal-support-filter" data-portal-form data-portal-no-transient data-portal-action="operations-desk-filter" data-portal-route="/admin/work-queue" novalidate>
-          <label class="portal-field"><span>Hàng hiển thị</span><select class="portal-select" name="view"><option value="all"${view === "all" ? " selected" : ""}>Toàn bộ metadata</option><option value="attention"${view === "attention" ? " selected" : ""}>Cần xử lý</option></select></label>
-          <label class="portal-field"><span>Nguồn</span><select class="portal-select" name="kind"><option value="all"${filter.kind === "all" ? " selected" : ""}>Tất cả</option>${Object.entries(OPERATIONS_DESK_KIND_LABELS).map(([key, label]) => `<option value="${safeText(key)}"${filter.kind === key ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select></label>
-          <label class="portal-field"><span>Trạng thái</span><select class="portal-select" name="state"><option value="all"${filter.state === "all" ? " selected" : ""}>Tất cả</option><option value="new"${filter.state === "new" ? " selected" : ""}>Mới</option><option value="open"${filter.state === "open" ? " selected" : ""}>Đang mở</option><option value="review"${filter.state === "review" ? " selected" : ""}>Đang review</option><option value="awaiting_approval"${filter.state === "awaiting_approval" ? " selected" : ""}>Chờ quyết định</option><option value="blocked"${filter.state === "blocked" ? " selected" : ""}>Bị chặn</option><option value="resolved"${filter.state === "resolved" ? " selected" : ""}>Đã xử lý</option><option value="guarded"${filter.state === "guarded" ? " selected" : ""}>Đang bảo vệ</option></select></label>
-          <label class="portal-field"><span>Mức độ</span><select class="portal-select" name="severity"><option value="all"${filter.severity === "all" ? " selected" : ""}>Tất cả</option><option value="normal"${filter.severity === "normal" ? " selected" : ""}>Bình thường</option><option value="high"${filter.severity === "high" ? " selected" : ""}>Cao</option><option value="urgent"${filter.severity === "urgent" ? " selected" : ""}>Khẩn</option><option value="critical"${filter.severity === "critical" ? " selected" : ""}>Nghiêm trọng</option><option value="guarded"${filter.severity === "guarded" ? " selected" : ""}>Đang bảo vệ</option></select></label>
-          <div class="portal-form-footer"><span class="portal-form-note">${attentionView ? "Cần xử lý được máy chủ lọc trước khi đếm và phân trang; đây không phải tự động can thiệp." : "Nguồn unavailable không bao giờ được hiển thị như queue rỗng."}</span><button class="portal-button portal-button--quiet" type="submit"${enabled ? "" : " disabled"}>Áp dụng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-filter-clear" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>Xóa lọc</button></div>
+      <section class="portal-card portal-card-pad portal-operations-desk-work">
+        <div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("work.title", "Việc cần xử lý"))}</h2><p class="portal-card-subtitle">${safeText(copy("work.body", "Lọc danh sách rồi mở đúng màn hình để tiếp tục công việc."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-refresh" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>${safeText(copy("action.refresh", "Làm mới"))}</button></div>
+        <form class="portal-support-filter portal-operations-desk-filter" data-portal-form data-portal-no-transient data-portal-action="operations-desk-filter" data-portal-route="/admin/work-queue" novalidate>
+          <label class="portal-field"><span>${safeText(copy("filter.view.label", "Phạm vi"))}</span><select class="portal-select" name="view"><option value="all"${view === "all" ? " selected" : ""}>${safeText(copy("filter.view.all", "Tất cả công việc"))}</option><option value="attention"${view === "attention" ? " selected" : ""}>${safeText(copy("filter.view.attention", "Cần xử lý"))}</option></select></label>
+          <label class="portal-field"><span>${safeText(copy("filter.kind.label", "Nhóm việc"))}</span><select class="portal-select" name="kind"><option value="all"${filter.kind === "all" ? " selected" : ""}>${safeText(copy("filter.all", "Tất cả"))}</option>${kindOptions}</select></label>
+          <label class="portal-field"><span>${safeText(copy("filter.state.label", "Trạng thái"))}</span><select class="portal-select" name="state"><option value="all"${filter.state === "all" ? " selected" : ""}>${safeText(copy("filter.all", "Tất cả"))}</option>${stateOptions}</select></label>
+          <label class="portal-field"><span>${safeText(copy("filter.severity.label", "Mức độ"))}</span><select class="portal-select" name="severity"><option value="all"${filter.severity === "all" ? " selected" : ""}>${safeText(copy("filter.all", "Tất cả"))}</option>${severityOptions}</select></label>
+          <div class="portal-form-footer"><span class="portal-form-note">${safeText(copy(attentionView ? "filter.note.attention" : "filter.note.all", attentionView ? "Bộ lọc được áp dụng trước khi đếm và phân trang." : "Nguồn chưa xác minh không được tính là danh sách trống."))}</span><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : " disabled"}>${safeText(copy("action.apply", "Áp dụng"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="operations-desk-filter-clear" data-portal-route="/admin/work-queue"${enabled ? "" : " disabled"}>${safeText(copy("action.clear", "Xóa bộ lọc"))}</button></div>
         </form>
+        <div class="portal-operations-desk-results"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(queueTitle)}</h3><p class="portal-card-subtitle">${safeText(queueSubtitle)}</p></div></div>${queueMarkup}${operationsDeskPagination(listing, enabled)}</div>
       </section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(queueTitle)}</h2><p class="portal-card-subtitle">${safeText(queueSubtitle)}</p></div>${badge(partial ? "guarded" : "read_only")}</div>${rows}${operationsDeskPagination(listing, enabled)}</section>
-      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới cố ý</h2><p>Đây là bảng điều phối, không phải control plane.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không có write, tự retry, refund, freeze, upload, download hay thay đổi assignment từ Desk.</li><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu, job, delivery, deploy hoặc sửa code.</li><li>Không dùng số 0 thay cho nguồn guarded/unavailable; số chưa xác minh luôn hiển thị “—”.</li></ul></section>
+      <section class="portal-card portal-card-pad portal-operations-desk-sources"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sources.title", "Nguồn dữ liệu"))}</h2><p class="portal-card-subtitle">${safeText(copy("sources.body", "Số lượng được tổng hợp từ năm nhóm công việc đã kiểm tra."))}</p></div><div class="portal-operations-desk-source-status"><strong>${safeText(copy(partial ? "sources.partial.label" : "sources.ready.label", partial ? "Chưa đầy đủ" : "Đã xác minh"))}</strong><span>${safeText(copy(partial ? "sources.partial.body" : "sources.ready.body", partial ? "Có nguồn chưa xác minh" : "Tất cả nguồn đã phản hồi"))}</span></div></div><div class="portal-operations-metrics" aria-label="${safeText(copy("sources.aria", "Tình trạng nguồn dữ liệu"))}">${sourceCards}</div></section>
+      <details class="portal-operations-desk-guidance"><summary>${safeText(copy("guidance.title", "Dữ liệu và giới hạn"))}</summary><div><p>${safeText(copy("guidance.body", "Màn hình này chỉ giúp tìm và mở đúng nơi xử lý công việc."))}</p><ul class="portal-operations-boundary-list"><li>${safeText(copy("guidance.identity", "Danh sách không chứa thông tin nhận dạng hoặc nội dung chi tiết."))}</li><li>${safeText(copy("guidance.actions", "Không thực hiện tác vụ tự động từ màn hình này."))}</li><li>${safeText(copy("guidance.external", "Không gọi dịch vụ tạo nội dung, thanh toán, ví Xu hoặc triển khai hệ thống."))}</li><li>${safeText(copy("guidance.unknownCount", "Nguồn chưa xác minh luôn hiển thị “—”, không thay bằng số 0."))}</li></ul></div></details>
     </article>`;
   }
 

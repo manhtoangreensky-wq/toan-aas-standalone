@@ -54,6 +54,7 @@ def test_operations_desk_second_render_boundary_and_recovery_ui_are_strict() -> 
     assert 'requestedOperationsDeskReadState === "ready" && !operationsDeskReceiptValid' in bootstrap
     assert "sources.length === Object.keys(OPERATIONS_DESK_TARGETS).length" in view
     assert 'data-portal-action="operations-desk-refresh"' in view
-    assert "Máy chủ không thể xác minh receipt Operations Desk hiện tại" in view
+    assert "portal-operations-desk-recovery" in view
+    assert 'copy(loading ? "loading.title" : "unavailable.title"' in view
     assert "available_actions" not in view
     assert "target_route" not in view

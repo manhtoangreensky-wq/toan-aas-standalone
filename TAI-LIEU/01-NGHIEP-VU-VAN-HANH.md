@@ -368,6 +368,31 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
 - Đây là local acceptance; chưa merge/deploy/live. Customer create/detail, API,
   schema và transition values không đổi.
 
+### Candidate — Hàng việc điều hành, 12/09/2026
+
+- `/admin/work-queue` là màn hình điều phối Web-native chỉ đọc; backend, năm
+  nguồn, bộ lọc enum, quyền nhân viên và route đích không đổi.
+- Renderer chuyển sang task-first: hero ngắn → `Việc cần xử lý` + bộ lọc →
+  kết quả → `Nguồn dữ liệu` → phần `Dữ liệu và giới hạn` đóng ban đầu. Không còn
+  phơi chuỗi kỹ thuật (`metadata`, `server-side`, `redaction`, `control plane`,
+  `retry`, `provider`, `delivery`, `deploy`) trên mặt chính bản Việt.
+- Catalogue `adminWorkQueue.*` đối xứng VI/EN/ZH bao phủ title, mô tả, nguồn,
+  trạng thái, mức độ, bộ lọc, bảng, phân trang, empty/loading/guarded và recovery.
+  Dữ liệu động (trạng thái canonical, thời gian, số lượng, route) không bị dịch
+  hoặc tự suy diễn.
+- Ở màn hình `≤900px`, bảng chuyển từng dòng thành thẻ dọc có nhãn cột; override
+  mobile hủy tỷ lệ cột desktop nên không ép/cắt tên nguồn. Nút và điều khiển giữ
+  chiều cao tối thiểu `44px`; light/dark dùng token teal/cyan và tương phản đo
+  được.
+- Browser local đo `20` trạng thái = VI/EN × sáng/tối ×
+  `1440/1024/768/390/360`; toàn bộ assertion đạt, minimum contrast `7.62:1`,
+  overflow, clipping, framework overlay, relevant console và write request đều
+  `0`. Tương tác lọc `all → attention` trả đúng `3` dòng; disclosure mở/đóng
+  được và đóng mặc định.
+- Focused source/read-model/backend suite đạt `19 passed`; i18n locale bundle
+  đạt `19 passed` với `1` cảnh báo Pydantic. Đây là local acceptance; chưa merge,
+  deploy hoặc signed production LIVE.
+
 #### Cập nhật readiness sau PR #425
 
 PR #425 đã merge/deploy tại `24dda30a06838480f00b60668a5f7a78d8a3b43a`.

@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-46` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung.
+2. Chọn đúng một ID trong `WA-01..WA-47` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -168,3 +168,12 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 98. Xác minh manager thấy đúng hai decision `approved_for_handoff/blocked`, operator không được mở rộng quyền; record ID, revision và cursor không đổi.
 99. Browser QA bắt buộc overflow/clipping/framework overlay/relevant console/staff write request `0`; đo contrast cả heading, description, nhãn filter và decision.
 100. Sau deploy chỉ kiểm signed read-only; không bấm “Ghi nhận quyết định” trên production.
+
+## 15. A09: Hàng việc điều hành
+
+101. Chạy WA-47 trên projection local năm nguồn; không tạo dữ liệu production, không bấm hành động ghi và không dùng Bot/provider.
+102. Kiểm VI/EN × sáng/tối × `1440/1024/768/390/360`; ZH kiểm renderer. Fixed copy phải thuần locale; source kind/state/priority/time và route đích là dữ liệu canonical, không tự dịch.
+103. Xác nhận thứ tự `Việc cần xử lý → bộ lọc → kết quả → Nguồn dữ liệu`; phần `Dữ liệu và giới hạn` đóng ban đầu và mở/đóng được bằng Enter.
+104. Ở `390/360`, mỗi hàng hiển thị dọc với nhãn cột; không chấp nhận ép chữ, cắt nội dung, cuộn ngang cấp trang hoặc thay `—` bằng `0`.
+105. Ghi minimum contrast, target, overflow/clipping, framework overlay, console và write request. Tất cả phải lần lượt đạt `≥4.5:1`, `≥44px`, `0`, `0`, `0`, `0`.
+106. Recovery/loading không render bảng dữ liệu cũ; nút phải là `Thử lại` và `Về trung tâm quản trị` theo locale. Pagination vẫn giữ offset và liên kết allow-list.

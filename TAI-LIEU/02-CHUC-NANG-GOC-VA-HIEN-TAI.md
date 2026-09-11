@@ -124,7 +124,8 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 ## 8. Chưa triển khai hoặc chưa live
 
 - P0-05A rotate/revoke và loại credential-like tracked paths: chưa làm.
-- Tester source có WA-01..WA-43; WA-41..43 thuộc A09 Auth/Admin shell.
+- Tester source có WA-01..WA-47; WA-41..47 thuộc chuỗi A09 Auth/Admin shell và
+  các route quản trị mở rộng.
 - PR #420 manual và PR #421 Admin login đã merge/deploy; signed customer create/read và Admin list/detail của `MANUAL-1 pending_admin_review` đã smoke bằng account thật, không có decision/Xu/ledger mutation.
 - Customer motion live-reopen v2 đã accepted live trên runtime `b657cea…`.
 - M03B progressive disclosure đã `ACCEPTED_LIVE` trên runtime `d096bac…`; A09 shell và Admin Support đã ship tới `cc3b468…`, còn các route Admin khác đang làm tuần tự.
@@ -172,6 +173,21 @@ API/schema, transition IDs và server authorization không đổi.
 
 Local browser đo 20 trạng thái, contrast nhỏ nhất `7.26:1`; overflow/clipping/
 touch/event/write request bằng `0`. Đây chưa phải deployed/live evidence.
+
+### Admin Work Queue candidate — 12/09/2026
+
+Renderer cũ của `/admin/work-queue` đặt phần giới thiệu nguồn trước bộ lọc và
+việc, đồng thời trộn nhiều từ vận hành tiếng Anh vào bản Việt. Candidate giữ
+nguyên read-model và server authority, chỉ thay presentation: catalogue
+`adminWorkQueue.*` đối xứng VI/EN/ZH, task-first hierarchy, recovery gọn và
+disclosure giới hạn đóng ban đầu.
+
+Ở desktop, kết quả vẫn là bảng có route allow-list; ở `≤900px`, mỗi hàng là một
+thẻ dọc có nhãn cột để không ép chữ. Source guarded/unavailable vẫn hiện `—`;
+không thêm số liệu, tìm kiếm ID hay action ghi. Browser local đo `20` trạng thái,
+minimum contrast `7.62:1`, overflow/clipping/framework overlay/console/write
+request `0`; tương tác attention trả `3` dòng và disclosure mở/đóng đạt. Đây là
+local acceptance, chưa phải deployed/live evidence.
 
 Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
 kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:
