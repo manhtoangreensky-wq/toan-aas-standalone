@@ -33,8 +33,8 @@ Evidence files (task-root, intentionally outside public repository):
 - `evidence/a09-admin-reliability-ux-20260911/browser-disabled/a09-reliability-disabled-browser-qa.json`
 
 Latest report SHA-256 (after final source changes): enabled
-`D40A4C375173FFB7E823362A85F21CA812AF3E89005ACEE05E65AA677F7EC57B`, disabled
-`EDF3E884FE8875FC2457CAB886DEFCD77C83D5C3418575BC0175F8245297C011`.
+`A3EB70CC1BFEB50825FCB1C8BB1A11F4DDFC42B51132DED849725F5B94F41FA7`, disabled
+`77B95DAC562D71F9405A70692D912F2E66503ADC5EA683E4D8B9D0DD6D270288`.
 
 ## Code and safety review
 
@@ -43,12 +43,19 @@ Latest report SHA-256 (after final source changes): enabled
   focused contracts; no Bot, API, schema, ENV, provider or wallet changes.
 - Reliability backend contract suite: `10 passed`, one existing Pydantic warning,
   using disposable local databases.
-- Combined source/portal/test suite before push: `93 passed`, one Pydantic warning,
+- Final source/portal/test suite before push: `97 passed`, one Pydantic warning,
   one Windows-only POSIX permission test deselected; Linux CI must run that test.
 - Protected comparator exact current base/candidate: both `68 passed / 2 failed`,
   identical baseline IDs (`test_admin_css_override_is_scoped_dense_visible_and_responsive`,
   `test_admin_home_final_hierarchy_is_scoped_balanced_and_motion_stable`),
   `NEW_FAILURES=0`.
+- First PR CI `34585998814` stopped after `192 passed / 1 failed`: changing the
+  Reliability CSS section comment caused the preceding Automation Monitor parser
+  to consume the next section. Restored the canonical section marker. The same
+  gate then exposed two intentional Reliability visual decisions; the route now
+  uses semantic `--portal-app-canvas` (never literal transparent), and the mobile
+  2×2 metric expectation is backed by the measured browser matrix. Focused
+  Automation/Finance/Security/Reliability CSS contracts pass after correction.
 - Dynamic values are HTML-escaped; malformed state/capabilities expose no action.
 - Existing manager/operator capability, CSRF, confirmation, revision and
   idempotency gates are unchanged. No production action was submitted.

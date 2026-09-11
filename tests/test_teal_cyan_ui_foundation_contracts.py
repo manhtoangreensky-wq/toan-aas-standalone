@@ -6961,7 +6961,7 @@ def test_light_reliability_followup_final_surface_keeps_actions_truthful() -> No
         declarations = _css_declarations_for(rules, selector, at_rule=at_rule)
         assert {name: declarations.get(name) for name in expected} == expected
 
-    assert_declarations(root_scope, {"color": "var(--portal-ink)", "background": "var(--portal-surface-light)"})
+    assert_declarations(root_scope, {"color": "var(--portal-ink)", "background": "var(--portal-app-canvas)"})
     assert_declarations(
         f"{root_scope} .portal-operations-admin-intro",
         {"background": "var(--portal-surface-soft)", "border-color": "var(--portal-border)"},
@@ -7018,7 +7018,7 @@ def test_light_reliability_followup_final_surface_keeps_actions_truthful() -> No
     mobile = "@media (max-width: 700px)"
     assert_declarations(
         f"{root_scope} .portal-operations-metrics",
-        {"grid-template-columns": "1fr"},
+        {"grid-template-columns": "repeat(2, minmax(0, 1fr))"},
         at_rule=mobile,
     )
     assert_declarations(

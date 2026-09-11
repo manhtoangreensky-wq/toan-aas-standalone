@@ -14340,10 +14340,11 @@ body {
   }
 }
 
-/* Reliability Admin: task-first, theme-aware, and intentionally compact. */
+/* Final light Reliability Follow-up surface */
+/* Task-first, theme-aware, and intentionally compact. */
 .portal-page.portal-reliability-admin {
   color: var(--portal-ink);
-  background: transparent;
+  background: var(--portal-app-canvas);
 }
 
 .portal-page.portal-reliability-admin .portal-reliability-status {
@@ -14417,7 +14418,7 @@ body {
   padding: 16px 0 0;
   border: 0;
   border-radius: 0;
-  background: transparent;
+  background: var(--portal-surface);
   box-shadow: none;
 }
 
@@ -14509,7 +14510,7 @@ body {
 }
 
 .portal-page.portal-reliability-admin .portal-empty-icon {
-  background: color-mix(in srgb, var(--portal-accent) 12%, transparent);
+  background: var(--portal-surface-strong);
   color: var(--portal-accent);
 }
 

@@ -21,12 +21,12 @@
     "keyboard_disclosure": "open_close_enter_pass",
     "task_first_order": "queue_before_metrics_pass",
     "disabled_status_surface": "single_surface_no_nested_card_pass"
-    ,"enabled_report_sha256":"d40a4c375173ffb7e823362a85f21ca812af3e89005acee05e65aa677f7ec57b"
-    ,"disabled_report_sha256":"edf3e884fe8875fc2457cab886defcd77c83d5c3418575bc0175f8245297c011"
+    ,"enabled_report_sha256":"a3eb70cc1bfeb50825fcb1c8bb1a11f4ddfc42b51132ded849725f5b94f41fa7"
+    ,"disabled_report_sha256":"77b95dac562d71f9405a70692d912f2e66503adc5ea683e4d8b9d0dd6d270288"
   },
   "tests": {
     "reliability_backend_passed": 10,
-    "combined_passed": 93,
+    "combined_passed": 97,
     "combined_failed": 0,
     "warnings": 1,
     "windows_posix_permission_deselected": 1,
