@@ -325,6 +325,21 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
 
 ### A09 mở lại — Điều hành tự động, 10/09/2026
 
+### Candidate kế tiếp — Theo dõi độ ổn định, 11/09/2026
+
+- `/admin/reliability` chuyển nội dung cố định sang catalogue VI/EN/ZH: tiêu đề,
+  mô tả, bộ lọc, phân trang, trạng thái, nút/xác nhận, tín hiệu và giới hạn hoạt động.
+- Chưa có dữ liệu hợp lệ không được quy kết tài khoản thiếu quyền. Module chưa
+  được bật hay kết nối chưa sẵn sàng không được coi là nghiệp vụ đã hoàn thành.
+- Mã tác vụ, con trỏ trang, phiên bản, quyền và backend không đổi. Không bật ENV,
+  gọi nhà cung cấp, sửa Bot hoặc thực hiện giao dịch tiền trong batch này.
+- Kiểm tra full renderer: VI/EN/ZH và 24 tổ hợp trạng thái/capability. Backend
+  Reliability chạy trên DB tạm: 10 passed, 1 cảnh báo Pydantic trong 35.08s.
+- Source commit `d43a50302f7486a653c03f7a855590860908f139`; provenance đã xác minh.
+  Browser candidate và signed production chưa kiểm chứng; chưa gọi ACCEPTED_LIVE.
+
+### Bằng chứng lịch sử Operations
+
 #### Cập nhật readiness sau PR #425
 
 PR #425 đã merge/deploy tại `24dda30a06838480f00b60668a5f7a78d8a3b43a`.
