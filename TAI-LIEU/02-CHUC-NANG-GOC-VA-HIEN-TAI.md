@@ -159,6 +159,24 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 
 ## 11. Đối chiếu bổ sung A09 Auth/Admin shell
 
+### Reliability candidate — 11/09/2026
+
+Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
+kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:
+
+- dùng catalogue VI/EN/ZH cho toàn bộ fixed copy;
+- đặt việc cần xử lý trước số liệu và tín hiệu;
+- thu thông tin vận hành/quyền vào disclosure đóng ban đầu;
+- dùng một status surface gọn cho disabled/unknown, không báo thiếu quyền khi
+  core status chỉ cho biết module đang tắt;
+- giữ nguyên action ID, capability, revision, cursor và API authorization.
+
+Browser local đã đo `20` trạng thái enabled và `8` trạng thái disabled; các cổng
+locale, responsive, clipping, touch, console và write request đều đạt. Đây là
+local acceptance, chưa phải production/live. Bằng chứng:
+`tests/test_a09_reliability_locale.py`, `tests/test_operations_reliability.py`,
+`evidence/a09-admin-reliability-ux-20260911/browser*/`.
+
 ### Hiệu chỉnh Operations readiness — 10/09/2026
 
 Thông báo cũ `Quyền điều hành chưa được cấp` được dùng cho mọi trạng thái không

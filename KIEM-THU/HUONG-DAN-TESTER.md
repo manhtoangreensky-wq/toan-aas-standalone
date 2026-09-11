@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-44` cho mỗi lượt test; `WA-01..WA-43` giữ nguyên, WA-44 kiểm readiness chỉ đọc.
+2. Chọn đúng một ID trong `WA-01..WA-45` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 kiểm Reliability UX/locale.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -149,3 +149,13 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 85. Đổi VI→EN→VI qua header và chờ hydrate hoàn tất; DOM không được quay về locale cũ. ZH kiểm bằng renderer contract cho đến khi header Admin chính thức mở lựa chọn ZH.
 86. Không bấm duyệt/từ chối trong production. Browser receipt phải ghi request ghi Operations `0`; action forms và expected revision được chứng minh trong local contract.
 87. Bằng chứng local hiện hành nằm tại `evidence/a09-admin-operations-locale-20260910/browser/`: `20` trạng thái, `14/14` assertions, relevant event `0` và submit `0`. Sau deploy vẫn cần signed production read-only riêng.
+
+## 13. A09 mở lại: Theo dõi độ ổn định
+
+88. Chạy WA-45 local enabled với tài khoản Admin QA: kiểm `20` trạng thái VI/EN × sáng/tối × `1440/1024/768/390/360`; không dùng production để tạo dữ liệu giả.
+89. Hàng “Việc cần kiểm tra” phải đứng trước số liệu; metric mobile dùng lưới 2×2; empty state không dùng mảng xám nặng; phần thông tin kỹ thuật đóng ban đầu.
+90. Dùng bàn phím Enter mở rồi đóng “Thông tin vận hành và quyền truy cập”; focus phải nhìn thấy, nội dung không lồng nhiều card và không mất cảnh báo an toàn.
+91. Chọn bộ lọc trạng thái/mức độ trên local; request chỉ đọc. Không bấm tiếp nhận/xử lý/mở lại trên production.
+92. Chạy local disabled riêng ở `1440/390`, sáng/tối, VI/EN. Trạng thái phải nói module chưa bật, không nói tài khoản thiếu quyền, không có action ghi và có lối về trung tâm quản trị.
+93. Đối chiếu screenshot production cũ với candidate: tiêu đề/eyebrow/copy thuần ngôn ngữ, một status surface, không overflow/clipping và target ≥44px.
+94. Sau deploy, production đang disabled chỉ được kiểm read-only. Ghi PR/CI/deploy/runtime SHA và ảnh signed; không đổi ENV để tạo màn enabled.
