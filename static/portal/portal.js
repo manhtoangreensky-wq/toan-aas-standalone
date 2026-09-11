@@ -287,6 +287,10 @@
     return uiText(`adminOperations.${key}`, fallback, params);
   }
 
+  function adminContentHandoffText(key, fallback, params) {
+    return uiText(`adminContentHandoff.${key}`, fallback, params);
+  }
+
   function supportTicketLocale() {
     const i18n = portalI18n();
     if (!i18n || typeof i18n.localeTag !== "function") return "vi-VN";
@@ -9630,6 +9634,7 @@
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.title", fallback);
     if (path === "/admin/operations") return adminOperationsText("page.title", fallback);
     if (path === "/admin/reliability") return uiText("adminReliability.intro.kicker", fallback);
+    if (path === "/admin/content-handoffs") return adminContentHandoffText("page.title", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "title", fallback);
     if (path === "/features") return featureCatalogText("page.title", fallback);
     if (path === "/studio") return mediaStudioText("page.title", fallback);
@@ -9699,6 +9704,7 @@
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.description", fallback);
     if (path === "/admin/operations") return adminOperationsText("page.description", fallback);
     if (path === "/admin/reliability") return uiText("adminReliability.page.description", fallback);
+    if (path === "/admin/content-handoffs") return adminContentHandoffText("page.description", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "description", fallback);
     if (path === "/features") return featureCatalogText("page.description", fallback);
     if (path === "/studio") return mediaStudioText("page.description", fallback);
@@ -10970,6 +10976,7 @@
     if (route.startsWith("/admin/support/")) return adminSupportText("hero.detail.section", fallback);
     if (route === "/admin/operations") return adminOperationsText("hero.section", fallback);
     if (route === "/admin/reliability") return uiText("adminReliability.hero.section", fallback);
+    if (route === "/admin/content-handoffs") return adminContentHandoffText("hero.section", fallback);
     return routeKey ? supportTicketText(`hero.${routeKey}.section`, fallback) : fallback;
   }
 
@@ -31078,11 +31085,13 @@
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
     const disabled = enabled ? "" : " disabled";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " record trong hàng review" : "Không có record ở trang này";
+    const range = returned
+      ? adminContentHandoffText("pagination.range", "Đang hiển thị {start}–{end} mục", { start: String(offset + 1), end: String(offset + returned) })
+      : adminContentHandoffText("pagination.empty", "Không có mục ở trang này");
     const statusAttribute = ' data-content-handoff-staff-status="' + safeText(status) + '"';
-    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-staff-page" data-portal-route="/admin/content-handoffs" data-content-handoff-staff-offset="' + safeText(String(previous)) + '"' + statusAttribute + disabled + '>← Trang trước</button>';
-    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-staff-page" data-portal-route="/admin/content-handoffs" data-content-handoff-staff-offset="' + safeText(String(next)) + '"' + statusAttribute + disabled + '>Trang sau →</button>';
-    return '<nav class="portal-support-pagination" aria-label="Phân trang hàng Customer Care"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
+    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-staff-page" data-portal-route="/admin/content-handoffs" data-content-handoff-staff-offset="' + safeText(String(previous)) + '"' + statusAttribute + disabled + '>← ' + safeText(adminContentHandoffText("pagination.previous", "Trang trước")) + '</button>';
+    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-staff-page" data-portal-route="/admin/content-handoffs" data-content-handoff-staff-offset="' + safeText(String(next)) + '"' + statusAttribute + disabled + '>' + safeText(adminContentHandoffText("pagination.next", "Trang sau")) + ' →</button>';
+    return '<nav class="portal-support-pagination" aria-label="' + safeText(adminContentHandoffText("pagination.aria", "Phân trang hàng chờ bàn giao")) + '"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
   }
   function partnerCrmLead(value, detailed) {
     if (!value || typeof value !== "object" || !validPartnerCrmLeadId(value.id) || !validPartnerCrmRevision(value.revision)) return null;
@@ -31174,9 +31183,9 @@
     const filters = listing && listing.filters && typeof listing.filters === "object" ? listing.filters : {};
     const rawStatus = String(filters.status || "all").toLowerCase();
     const status = rawStatus === "all" || (rawStatus !== "archived" && Object.prototype.hasOwnProperty.call(CONTENT_HANDOFF_STATUS_LABELS, rawStatus)) ? rawStatus : "all";
-    const options = [["all", "Tất cả trạng thái"]].concat(Object.entries(CONTENT_HANDOFF_STATUS_LABELS).filter(([key]) => key !== "archived"));
+    const options = [["all", adminContentHandoffText("filter.all", "Tất cả trạng thái")]].concat(Object.keys(CONTENT_HANDOFF_STATUS_LABELS).filter((key) => key !== "archived").map((key) => [key, adminContentHandoffText(`status.${key}`, CONTENT_HANDOFF_STATUS_LABELS[key])]));
     const disabled = enabled ? "" : " disabled";
-    return '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="content-handoff-staff-filter" data-portal-route="/admin/content-handoffs" novalidate><div class="portal-fields"><label class="portal-field"><span>Lọc theo trạng thái</span><select class="portal-select" name="status"' + disabled + '>' + options.map(([key, label]) => '<option value="' + safeText(key) + '"' + (key === status ? " selected" : "") + '>' + safeText(label) + '</option>').join("") + '</select></label></div><div class="portal-form-footer"><span class="portal-form-note">Chỉ lọc hàng nội bộ đang active; không gửi thông báo hay tạo publish/delivery.</span><button class="portal-button portal-button--quiet" type="submit"' + disabled + '>Áp dụng</button></div></form>';
+    return '<form class="portal-form portal-content-handoff-filter" data-portal-form data-portal-no-transient data-portal-action="content-handoff-staff-filter" data-portal-route="/admin/content-handoffs" novalidate><div class="portal-fields"><label class="portal-field"><span>' + safeText(adminContentHandoffText("filter.label", "Trạng thái")) + '</span><select class="portal-select" name="status"' + disabled + '>' + options.map(([key, label]) => '<option value="' + safeText(key) + '"' + (key === status ? " selected" : "") + '>' + safeText(label) + '</option>').join("") + '</select></label></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit"' + disabled + '>' + safeText(adminContentHandoffText("action.apply", "Áp dụng")) + '</button></div></form>';
   }
 
   function renderPartnerCrmManagerFilter(listing, enabled) {
@@ -31271,21 +31280,24 @@
     return '<article class="portal-page portal-coordination-detail">' + renderHero(page, context) + '<section class="portal-coordination-summary"><div><span class="portal-section-kicker">' + safeText(CONTENT_HANDOFF_STATUS_LABELS[status]) + ' · v' + revision + '</span><h2>' + safeText(record.title) + '</h2><p>' + safeText(record.purpose) + '</p></div><dl><div><dt>Record</dt><dd>' + safeText(archived ? "Archive" : "Active") + '</dd></div><div><dt>Review</dt><dd>' + safeText(record.reviewed_at || "—") + '</dd></div></dl></section><div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Nội dung & reference</h2><p class="portal-card-subtitle">Chỉ draft hoặc blocked được chỉnh trước khi review lại.</p></div></div>' + contentHandoffForm(record, context, route, "content-handoff-update", canUpdate) + '</section>' + lifecycle + '</div>' + followup + activity + '</article>';
   }
   function renderContentHandoffAdmin(page, context) {
+    const copy = (key, fallback, params) => safeText(adminContentHandoffText(key, fallback, params));
     const records = (Array.isArray(context.contentHandoffStaffQueue) ? context.contentHandoffStaffQueue : []).map((item) => contentHandoffRecord(item, true)).filter(Boolean);
     const listing = contentHandoffStaffListing(context);
     const role = ["operator", "manager"].includes(String(context.contentHandoffStaffRole || "")) ? String(context.contentHandoffStaffRole) : "none";
     const guarded = !(context.pageStates && context.pageStates["/admin/content-handoffs"] === "read_only") || role === "none";
     const reviewCard = (record) => {
       const status = String(record.handoff_status); const revision = safeText(String(record.revision));
-      const transitions = status === "review" ? (role === "manager" ? [["approved_for_handoff", "Approve cho bàn giao"], ["blocked", "Block để bổ sung"]] : [["blocked", "Block để bổ sung"]]) : (status === "approved_for_handoff" ? (role === "manager" ? [["handed_off", "Ghi nhận bàn giao nội bộ"], ["blocked", "Block để bổ sung"]] : [["blocked", "Block để bổ sung"]]) : []);
-      const control = transitions.length ? '<form class="portal-form portal-content-handoff-review" data-portal-form data-portal-action="content-handoff-staff-review" data-portal-route="/admin/content-handoffs" data-portal-confirm="Xác nhận quyết định review nội bộ? Không có external delivery, notification hoặc publish được tạo." novalidate><input type="hidden" name="record_id" value="' + safeText(String(record.id)) + '"><input type="hidden" name="expected_revision" value="' + revision + '"><div class="portal-fields"><label class="portal-field"><span>Quyết định</span><select class="portal-select" name="decision">' + transitions.map(([key, label]) => '<option value="' + safeText(key) + '">' + safeText(label) + '</option>').join("") + '</select></label><label class="portal-field portal-field--wide"><span>Ghi chú review</span><textarea class="portal-textarea" name="review_note" maxlength="1200" placeholder="Lý do review nội bộ; không nhập secret, chứng từ thanh toán hay recipient ngoài…"></textarea></label></div>' + (transitions.some(([key]) => key === "handed_off") ? '<label class="portal-checkbox"><input name="confirm_manual_handoff" type="checkbox" value="true"><span>Tôi xác nhận đây chỉ là bàn giao nội bộ do nhân sự thực hiện, không phải delivery/publish bên ngoài.</span></label>' : "") + '<div class="portal-form-footer"><span class="portal-form-note">Server kiểm tra lại role, transition, revision, CSRF, idempotency và audit; browser không cấp quyền.</span><button class="portal-button portal-button--primary" type="submit">Ghi nhận quyết định</button></div></form>' : '<p class="portal-form-note">Không có transition review phù hợp với trạng thái hoặc role hiện tại.</p>';
-      return '<article class="portal-card portal-card-pad portal-coordination-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(CONTENT_HANDOFF_STATUS_LABELS[status]) + ' · v' + revision + '</span><h3 class="portal-card-title">' + safeText(record.title) + '</h3><p class="portal-card-subtitle">' + safeText(record.purpose || "Không có purpose hiển thị.") + '</p></div>' + badge(status === "review" ? "awaiting_confirm" : status === "blocked" ? "guarded" : "read_only") + '</div><p class="portal-form-note">Owner record · review nội bộ. Không hiển thị recipient, path, external URL hoặc payment data.</p>' + control + '</article>';
+      const transitions = status === "review" ? (role === "manager" ? ["approved_for_handoff", "blocked"] : ["blocked"]) : (status === "approved_for_handoff" ? (role === "manager" ? ["handed_off", "blocked"] : ["blocked"]) : []);
+      const control = transitions.length ? '<form class="portal-form portal-content-handoff-review" data-portal-form data-portal-action="content-handoff-staff-review" data-portal-route="/admin/content-handoffs" data-portal-confirm="' + copy("decision.confirm", "Ghi nhận quyết định nội bộ này?") + '" novalidate><input type="hidden" name="record_id" value="' + safeText(String(record.id)) + '"><input type="hidden" name="expected_revision" value="' + revision + '"><div class="portal-fields"><label class="portal-field"><span>' + copy("decision.label", "Quyết định") + '</span><select class="portal-select" name="decision">' + transitions.map((key) => '<option value="' + safeText(key) + '">' + copy(`decision.${key}`, key) + '</option>').join("") + '</select></label><label class="portal-field portal-field--wide"><span>' + copy("decision.note", "Ghi chú") + '</span><textarea class="portal-textarea" name="review_note" maxlength="1200" placeholder="' + copy("decision.notePlaceholder", "Nêu rõ nội dung cần bổ sung hoặc căn cứ duyệt.") + '"></textarea></label></div>' + (transitions.includes("handed_off") ? '<label class="portal-checkbox"><input name="confirm_manual_handoff" type="checkbox" value="true"><span>' + copy("decision.manualConfirm", "Tôi xác nhận nội dung đã được bàn giao nội bộ.") + '</span></label>' : "") + '<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="submit">' + copy("decision.submit", "Ghi nhận quyết định") + '</button></div></form>' : '<p class="portal-form-note">' + copy("decision.none", "Không có hành động phù hợp ở trạng thái hiện tại.") + '</p>';
+      return '<article class="portal-card portal-card-pad portal-coordination-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + copy(`status.${status}`, CONTENT_HANDOFF_STATUS_LABELS[status]) + ' · v' + revision + '</span><h3 class="portal-card-title">' + safeText(record.title) + '</h3><p class="portal-card-subtitle">' + safeText(record.purpose || adminContentHandoffText("record.noPurpose", "Chưa có mô tả.")) + '</p></div>' + badge(status === "review" ? "awaiting_confirm" : status === "blocked" ? "guarded" : "read_only") + '</div><span class="portal-form-note">' + copy("record.internal", "Bản ghi nội bộ") + '</span>' + control + '</article>';
     };
     const queueMarkup = guarded
-      ? renderEmpty("Hàng review đang được bảo vệ", "Chỉ server-side Customer Care role mới có thể nạp queue và control tương ứng.", ICONS.security)
-      : (records.length ? '<div class="portal-coordination-card-list">' + records.map(reviewCard).join("") + '</div>' : renderEmpty("Không có record active", "Khi owner gửi review, record sẽ xuất hiện theo queue server-side.", ICONS.support));
+      ? renderEmpty(adminContentHandoffText("unavailable.title", "Chưa tải được hàng chờ"), adminContentHandoffText("unavailable.body", "Không thể xác minh dữ liệu lúc này. Vui lòng thử lại."), ICONS.security)
+      : (records.length ? '<div class="portal-coordination-card-list">' + records.map(reviewCard).join("") + '</div>' : renderEmpty(adminContentHandoffText("empty.title", "Chưa có nội dung chờ duyệt"), adminContentHandoffText("empty.body", "Nội dung được gửi duyệt sẽ xuất hiện tại đây."), ICONS.support));
     const pagedQueueMarkup = queueMarkup + (guarded ? "" : renderContentHandoffStaffPagination(listing, !guarded));
-    return '<article class="portal-page">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Customer Care · server-authorized</span><h2 class="portal-card-title">Hàng review Content Handoff</h2><p class="portal-card-subtitle">Role hiện tại: ' + safeText(role === "manager" ? "Manager" : role === "operator" ? "Operator" : "chưa xác nhận") + '. Mọi write chỉ là decision nội bộ; không có publish/delivery/provider/payment.</p></div>' + badge(guarded ? "guarded" : "read_only") + '</div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-refresh" data-portal-route="/admin/content-handoffs">Làm mới</button>' + (guarded ? "" : renderContentHandoffStaffFilter(listing, !guarded)) + pagedQueueMarkup + '</section></article>';
+    const roleLabel = role === "manager" ? copy("role.manager", "Quản lý") : role === "operator" ? copy("role.operator", "Nhân viên vận hành") : copy("role.unknown", "Chưa xác minh");
+    const guidance = '<details class="portal-content-handoff-guidance"><summary>' + copy("guidance.title", "Quy trình và giới hạn") + '</summary><div><p>' + copy("guidance.body", "Quyết định chỉ cập nhật quy trình nội bộ và luôn được máy chủ kiểm tra lại.") + '</p><dl><div><dt>' + copy("role.label", "Vai trò hiện tại") + '</dt><dd>' + roleLabel + '</dd></div></dl><ul><li>' + copy("guidance.security", "Máy chủ xác minh vai trò, trạng thái, phiên bản, CSRF và chống xử lý trùng.") + '</li><li>' + copy("guidance.external", "Không xuất bản, gửi tệp, gọi nhà cung cấp hoặc xử lý thanh toán.") + '</li></ul></div></details>';
+    return '<article class="portal-page portal-content-handoff-admin">' + renderHero(page, context) + '<section class="portal-card portal-card-pad portal-content-handoff-queue"><div class="portal-card-header"><div><h2 class="portal-card-title">' + copy("queue.title", "Việc cần duyệt") + '</h2><p class="portal-card-subtitle">' + copy("queue.body", "Lọc theo trạng thái, kiểm tra nội dung và ghi nhận quyết định.") + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-handoff-refresh" data-portal-route="/admin/content-handoffs">' + copy("action.refresh", "Làm mới") + '</button></div>' + (guarded ? "" : renderContentHandoffStaffFilter(listing, !guarded)) + pagedQueueMarkup + '</section>' + guidance + '</article>';
   }
   function partnerCrmForm(lead, route, action, enabled) {
     const value = lead || { lead_name: "", organization: "", contact_email: "", lead_kind: "customer", opportunity_summary: "", source_kind: "manual", source_label: "", tags: [], consent_status: "unknown", consent_note: "" };

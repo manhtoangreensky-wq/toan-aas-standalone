@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-45` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 kiểm Reliability UX/locale.
+2. Chọn đúng một ID trong `WA-01..WA-46` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -159,3 +159,12 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 92. Chạy local disabled riêng ở `1440/390`, sáng/tối, VI/EN. Trạng thái phải nói module chưa bật, không nói tài khoản thiếu quyền, không có action ghi và có lối về trung tâm quản trị.
 93. Đối chiếu screenshot production cũ với candidate: tiêu đề/eyebrow/copy thuần ngôn ngữ, một status surface, không overflow/clipping và target ≥44px.
 94. Sau deploy, production đang disabled chỉ được kiểm read-only. Ghi PR/CI/deploy/runtime SHA và ảnh signed; không đổi ENV để tạo màn enabled.
+
+## 14. A09: Hàng chờ bàn giao nội dung
+
+95. Chạy WA-46 bằng một bản ghi QA local ở `review/revision=2`; không tạo hoặc thay đổi record production.
+96. Kiểm VI/EN × sáng/tối × 1440/1024/768/390/360; title/purpose do người dùng nhập giữ nguyên, fixed copy phải theo locale.
+97. Dùng Enter mở/đóng “Quy trình và giới hạn”; bộ lọc phải đứng trước card, nhãn form đủ contrast và target ≥44px.
+98. Xác minh manager thấy đúng hai decision `approved_for_handoff/blocked`, operator không được mở rộng quyền; record ID, revision và cursor không đổi.
+99. Browser QA bắt buộc overflow/clipping/framework overlay/relevant console/staff write request `0`; đo contrast cả heading, description, nhãn filter và decision.
+100. Sau deploy chỉ kiểm signed read-only; không bấm “Ghi nhận quyết định” trên production.

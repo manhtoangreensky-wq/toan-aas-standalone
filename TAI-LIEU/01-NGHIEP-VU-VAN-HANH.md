@@ -351,6 +351,23 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
 
 ### Bằng chứng lịch sử Operations
 
+### Candidate — Hàng chờ bàn giao nội dung, 11/09/2026
+
+- `/admin/content-handoffs` là hàng chờ Web-native riêng cho nhân viên; không đọc
+  Bot bridge và không tự xuất bản hoặc gửi tệp.
+- Candidate dùng catalogue VI/EN/ZH cho title, filter, status, decision, empty,
+  guarded và pagination; title/purpose do người dùng nhập giữ nguyên ngôn ngữ gốc.
+- UX task-first: filter → record → decision; thông tin quy trình/quyền thu trong
+  một disclosure đóng ban đầu. Label form dùng semantic ink, không còn chữ trắng
+  mờ trên light mode.
+- Browser local `20` trạng thái = VI/EN × sáng/tối × `1440/1024/768/390/360`:
+  mọi assertion đạt; minimum contrast `7.26:1`; overflow, clipping, framework
+  overlay, relevant event, touch violation và staff write request `0`.
+- Local fixture duy nhất là `review/revision=2`; không submit review. Focused
+  backend/customer/staff suite đạt `63 passed`, một cảnh báo Pydantic.
+- Đây là local acceptance; chưa merge/deploy/live. Customer create/detail, API,
+  schema và transition values không đổi.
+
 #### Cập nhật readiness sau PR #425
 
 PR #425 đã merge/deploy tại `24dda30a06838480f00b60668a5f7a78d8a3b43a`.

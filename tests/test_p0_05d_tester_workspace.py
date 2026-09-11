@@ -51,9 +51,9 @@ def valid_row(case_id: str = "WA-01") -> str:
     return f"| {case_id} | SPEC-1 | 🟢 nhẹ | local-temp-only | /route · role · API | Case | PASS marker | Regression | evidence/path |"
 
 
-def test_source_has_exact_sequential_45_cases():
+def test_source_has_exact_sequential_46_cases():
     cases = sync.parse_cases(SOURCE)
-    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 46)]
+    assert [row["ID"] for row in cases] == [f"WA-{number:02d}" for number in range(1, 47)]
 
 
 def test_original_case_semantics_and_risk_are_preserved():
@@ -178,6 +178,8 @@ def test_a09_cases_keep_vertical_data_truth_and_auth_accessibility_separate():
     assert cases["WA-45"]["SPEC_ID"] == "A09-ADMIN-RELIABILITY-UX-LOCALE"
     assert "enabled `20/20` và disabled `8/8`" in cases["WA-45"]["PASS bắt buộc"]
     assert "local-render + live-after-deploy" in cases["WA-45"]["Môi trường"]
+    assert cases["WA-46"]["SPEC_ID"] == "A09-ADMIN-CONTENT-HANDOFFS-UX-LOCALE"
+    assert "browser `20/20`" in cases["WA-46"]["PASS bắt buộc"]
 
 
 def test_parser_supports_escaped_pipe(tmp_path: Path):
@@ -334,7 +336,7 @@ def test_issue_forms_use_exact_labels_fields_and_safe_redaction():
 def test_guide_is_substantive_safe_and_separates_dry_run_from_write():
     guide = GUIDE.read_text(encoding="utf-8")
     assert len(guide.splitlines()) >= 45
-    for marker in ["WA-01..WA-45", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
+    for marker in ["WA-01..WA-46", "BASE", "HEAD", "runtime SHA", "local", "CI", "deployed", "live", "CSRF", "idempotency", "redaction", "PROVIDER_CALLS=0", "WALLET_MUTATIONS=0", "LIVE_MONEY_FLOW=NOT_TESTED", "#412", "--so=3", "--that", "TOAN AAS Web App · Tester P0"]:
         assert marker in guide
     assert "python scripts/tester_case_sync.py --so=3 --json" in guide
     assert "--so=3 --that" not in guide
@@ -356,7 +358,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
     assert data["metadata_encoding"] == "utf-8-lf-portable"
     assert data["repo"] == sync.DEFAULT_REPO
     assert data["tracker_issue"] == 412
-    assert data["case_count"] == 45
+    assert data["case_count"] == 46
     assert data["p0_case_count"] == 18
     assert data["github_project"] == "TOAN AAS Web App · Tester P0"
     assert data["local_metadata_updated_at"] == "2026-09-10"
@@ -368,7 +370,7 @@ def test_readiness_json_has_explicit_truth_and_file_metadata():
         "issue_templates": "verified_local_2_of_2",
         "github_project": "not_revalidated_missing_read_project_scope",
     }
-    assert data["push_gate"] == "A09_ADMIN_RELIABILITY_PR_PENDING"
+    assert data["push_gate"] == "A09_ADMIN_CONTENT_HANDOFFS_PR_PENDING"
     assert data["labels_missing"] == []
     assert data["external_mutations"] == 0
     assert all(value == 0 for value in data["safety"].values())
