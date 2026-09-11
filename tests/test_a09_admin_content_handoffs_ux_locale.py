@@ -113,4 +113,3 @@ def test_staff_handoff_guard_and_empty_never_expose_review_action() -> None:
         rendered = _render(locale)
         for state in ("guarded", "empty"):
             assert 'data-portal-action="content-handoff-staff-review"' not in str(rendered[state])
-
