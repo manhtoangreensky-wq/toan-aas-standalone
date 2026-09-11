@@ -35,7 +35,12 @@ for(const state of ['open','acknowledged','resolved','superseded']) {
     });
   }
 }
-process.stdout.write(JSON.stringify({html:api.renderReliabilityAdmin(page,base),matrix,title:api.localizedPageTitle(page,base),description:api.localizedPageDescription(page)}));
+const injected=api.renderReliabilityAdmin(page,{
+ ...base,
+ reliabilitySummary:{...base.reliabilitySummary,recent_signals:[{route_family:'<img src=x onerror=alert(1)>',count:7}]},
+ reliabilityFollowups:[{...base.reliabilityFollowups[0],id:'"><script>alert(1)</script>',required_role:'<img src=x>',state:'<script>alert(1)</script>'}]
+});
+process.stdout.write(JSON.stringify({html:api.renderReliabilityAdmin(page,base),matrix,injected,title:api.localizedPageTitle(page,base),description:api.localizedPageDescription(page)}));
 """
     class Visible(HTMLParser):
         def __init__(self):
@@ -58,6 +63,10 @@ process.stdout.write(JSON.stringify({html:api.renderReliabilityAdmin(page,base),
         assert 'name="expected_revision" value="2"' in rendered['html']
         assert 'data-reliability-followup-offset="20"' in rendered['html']
         assert 'qa module' in text and '7' in text
+        assert '<script>' not in rendered['injected']
+        assert '<img src=x' not in rendered['injected']
+        assert '&lt;img src=x' in rendered['injected']
+        assert not re.search(r'data-portal-action="reliability-followup-(resolve|acknowledge|reopen|handoff)"', rendered['injected'])
         allowed = {
             'open': {'acknowledge', 'resolve', 'handoff'},
             'acknowledged': {'resolve', 'handoff'},
