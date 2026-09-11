@@ -161,6 +161,18 @@ Không dùng sự tồn tại của `railway.json` để tuyên bố runtime đ�
 
 ### Reliability candidate — 11/09/2026
 
+### Admin Content Handoff candidate — 11/09/2026
+
+Renderer staff cũ trộn Việt/Anh (`Customer Care`, `Role`, `Manager`, `write`,
+`decision`, `publish`, `delivery`, `provider`, `payment`) và dùng màu label gần
+như trắng trên light mode. Candidate chỉ thay presentation của
+`/admin/content-handoffs`: catalogue VI/EN/ZH, task-first queue, một disclosure
+quy trình, semantic contrast và responsive controls. Customer Handoff renderer,
+API/schema, transition IDs và server authorization không đổi.
+
+Local browser đo 20 trạng thái, contrast nhỏ nhất `7.26:1`; overflow/clipping/
+touch/event/write request bằng `0`. Đây chưa phải deployed/live evidence.
+
 Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
 kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:
 

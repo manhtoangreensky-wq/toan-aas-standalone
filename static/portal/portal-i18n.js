@@ -11324,6 +11324,59 @@
     ADMIN_RELIABILITY_MESSAGES.zh[`adminReliability.${key}`] = zh;
   });
 
+  const ADMIN_CONTENT_HANDOFF_MESSAGES = { vi: {}, en: {}, zh: {} };
+  [
+    ["page.title", "Hàng chờ bàn giao nội dung", "Content handoff queue", "内容交接队列"],
+    ["page.description", "Duyệt và theo dõi các nội dung đang chờ bàn giao nội bộ.", "Review and track content awaiting internal handoff.", "审核并跟踪等待内部交接的内容。"],
+    ["hero.section", "Vận hành nội dung", "Content operations", "内容运营"],
+    ["queue.title", "Việc cần duyệt", "Items to review", "待审核事项"],
+    ["queue.body", "Lọc theo trạng thái, kiểm tra nội dung và ghi nhận quyết định.", "Filter by status, review the content, and record a decision.", "按状态筛选、审核内容并记录决定。"],
+    ["action.refresh", "Làm mới", "Refresh", "刷新"],
+    ["action.apply", "Áp dụng", "Apply", "应用"],
+    ["action.retry", "Thử lại", "Try again", "重试"],
+    ["filter.label", "Trạng thái", "Status", "状态"],
+    ["filter.all", "Tất cả trạng thái", "All statuses", "所有状态"],
+    ["status.draft", "Bản nháp", "Draft", "草稿"],
+    ["status.review", "Chờ duyệt", "Awaiting review", "待审核"],
+    ["status.approved_for_handoff", "Đã duyệt bàn giao", "Approved for handoff", "已批准交接"],
+    ["status.handed_off", "Đã bàn giao nội bộ", "Handed off internally", "已内部交接"],
+    ["status.blocked", "Cần bổ sung", "Changes required", "需要补充"],
+    ["status.archived", "Đã lưu trữ", "Archived", "已归档"],
+    ["role.manager", "Quản lý", "Manager", "经理"],
+    ["role.operator", "Nhân viên vận hành", "Operator", "运营人员"],
+    ["role.unknown", "Chưa xác minh", "Not verified", "尚未验证"],
+    ["role.label", "Vai trò hiện tại", "Current role", "当前角色"],
+    ["decision.approved_for_handoff", "Duyệt bàn giao", "Approve handoff", "批准交接"],
+    ["decision.blocked", "Yêu cầu bổ sung", "Request changes", "要求补充"],
+    ["decision.handed_off", "Xác nhận đã bàn giao", "Confirm handoff", "确认已交接"],
+    ["decision.label", "Quyết định", "Decision", "决定"],
+    ["decision.note", "Ghi chú", "Review note", "审核备注"],
+    ["decision.notePlaceholder", "Nêu rõ nội dung cần bổ sung hoặc căn cứ duyệt.", "Explain required changes or the basis for approval.", "说明需要补充的内容或批准依据。"],
+    ["decision.manualConfirm", "Tôi xác nhận nội dung đã được bàn giao nội bộ.", "I confirm that the content was handed off internally.", "我确认内容已完成内部交接。"],
+    ["decision.submit", "Ghi nhận quyết định", "Record decision", "记录决定"],
+    ["decision.none", "Không có hành động phù hợp ở trạng thái hiện tại.", "No action is available for the current status.", "当前状态下没有可用操作。"],
+    ["decision.confirm", "Ghi nhận quyết định nội bộ này? Thao tác không xuất bản hoặc gửi nội dung ra bên ngoài.", "Record this internal decision? This does not publish or deliver content externally.", "记录此内部决定？此操作不会向外部发布或发送内容。"],
+    ["record.internal", "Bản ghi nội bộ", "Internal record", "内部记录"],
+    ["record.noPurpose", "Chưa có mô tả.", "No description provided.", "暂无说明。"],
+    ["empty.title", "Chưa có nội dung chờ duyệt", "No content awaiting review", "暂无待审核内容"],
+    ["empty.body", "Nội dung được gửi duyệt sẽ xuất hiện tại đây.", "Content submitted for review will appear here.", "提交审核的内容将显示在此处。"],
+    ["unavailable.title", "Chưa tải được hàng chờ", "Queue could not be loaded", "无法加载队列"],
+    ["unavailable.body", "Không thể xác minh dữ liệu lúc này. Vui lòng thử lại.", "The queue cannot be verified right now. Please try again.", "目前无法验证队列，请重试。"],
+    ["pagination.range", "Đang hiển thị {start}–{end} mục", "Showing items {start}–{end}", "正在显示第 {start}–{end} 项"],
+    ["pagination.empty", "Không có mục ở trang này", "No items on this page", "此页没有项目"],
+    ["pagination.previous", "Trang trước", "Previous page", "上一页"],
+    ["pagination.next", "Trang sau", "Next page", "下一页"],
+    ["pagination.aria", "Phân trang hàng chờ bàn giao", "Content handoff queue pagination", "内容交接队列分页"],
+    ["guidance.title", "Quy trình và giới hạn", "Process and limits", "流程与限制"],
+    ["guidance.body", "Quyết định chỉ cập nhật quy trình nội bộ và luôn được máy chủ kiểm tra lại.", "Decisions update only the internal process and are always rechecked by the server.", "决定仅更新内部流程，并始终由服务器重新检查。"],
+    ["guidance.security", "Máy chủ xác minh vai trò, trạng thái, phiên bản, CSRF và chống xử lý trùng.", "The server verifies role, status, revision, CSRF, and duplicate protection.", "服务器验证角色、状态、版本、CSRF 和防重复处理。"],
+    ["guidance.external", "Không xuất bản, gửi tệp, gọi nhà cung cấp hoặc xử lý thanh toán.", "No publishing, file delivery, provider calls, or payment processing.", "不执行发布、文件发送、供应商调用或付款处理。"]
+  ].forEach(([key, vi, en, zh]) => {
+    ADMIN_CONTENT_HANDOFF_MESSAGES.vi[`adminContentHandoff.${key}`] = vi;
+    ADMIN_CONTENT_HANDOFF_MESSAGES.en[`adminContentHandoff.${key}`] = en;
+    ADMIN_CONTENT_HANDOFF_MESSAGES.zh[`adminContentHandoff.${key}`] = zh;
+  });
+
   // Admin Support owns a complete locale table because the staff list/detail
   // renderers are separate from customer Support. Records, identifiers,
   // timestamps and server-issued lifecycle values remain untranslated data.
@@ -11891,6 +11944,7 @@
     SUPPORT_TICKET_MESSAGES[locale],
     ADMIN_OPERATIONS_MESSAGES[locale],
     ADMIN_RELIABILITY_MESSAGES[locale],
+    ADMIN_CONTENT_HANDOFF_MESSAGES[locale],
     ADMIN_SUPPORT_MESSAGES[locale],
     ADMIN_MANUAL_TOPUP_MESSAGES[locale],
     MANUAL_TOPUP_MESSAGES[locale]

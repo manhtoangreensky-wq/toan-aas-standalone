@@ -6341,6 +6341,123 @@ body {
   border-top-color: var(--portal-border);
 }
 
+/* Staff Content Handoff: keep the queue scannable while retaining a clear,
+   keyboard-sized disclosure for process details. */
+.portal-page.portal-content-handoff-admin {
+  color: var(--portal-ink);
+  background: var(--portal-app-canvas);
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-queue,
+.portal-page.portal-content-handoff-admin .portal-coordination-card,
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: none;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-queue :is(.portal-card-title, h2, h3) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-queue :is(.portal-card-subtitle, p, .portal-form-note) {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-content-handoff-admin .portal-form :is(label, .portal-field > span, .portal-checkbox > span) {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-content-handoff-admin .portal-form .portal-field > span {
+  font-weight: 650;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-filter {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-filter .portal-form-footer {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance {
+  padding: 0 16px;
+  border-radius: 12px;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance > summary {
+  min-height: 48px;
+  padding: 12px 0;
+  cursor: pointer;
+  color: var(--portal-ink);
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance > summary:focus-visible,
+.portal-page.portal-content-handoff-admin :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--portal-focus) !important;
+  outline-offset: 2px;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance > div {
+  padding: 12px 0 16px;
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance dl {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance dt {
+  color: var(--portal-ink);
+  font-weight: 650;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance dd,
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance li {
+  color: var(--portal-muted);
+  line-height: 1.55;
+}
+
+.portal-page.portal-content-handoff-admin .portal-content-handoff-guidance ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.portal-page.portal-content-handoff-admin .portal-coordination-card:hover {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+  transform: none;
+}
+
+.portal-page.portal-content-handoff-admin .portal-coordination-card .portal-section-kicker {
+  color: var(--portal-context);
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-content-handoff-admin .portal-content-handoff-filter .portal-form-footer,
+  .portal-page.portal-content-handoff-admin .portal-content-handoff-filter .portal-button,
+  .portal-page.portal-content-handoff-admin .portal-content-handoff-queue > .portal-card-header > .portal-button {
+    width: 100%;
+  }
+
+  .portal-page.portal-content-handoff-admin .portal-coordination-card-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .portal-page .portal-crm-kanban {
   scroll-snap-type: x proximity;
   scrollbar-color: var(--portal-border-strong) transparent;
