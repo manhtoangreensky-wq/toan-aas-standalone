@@ -139,11 +139,11 @@ def test_operations_desk_filters_and_actions_are_read_only_allowlists() -> None:
     assert "OPERATIONS_DESK_TARGETS[kind]" in view
     assert "target_route" not in view
     assert "available_actions" not in view
-    assert "Không dùng số 0 thay cho nguồn guarded/unavailable" in view
+    assert 'copy("guidance.unknownCount"' in view
     assert 'name="view"' in view
     assert 'value="attention"' in view
     assert "data-portal-no-transient" in view
-    assert "Cần xử lý được máy chủ lọc trước khi đếm và phân trang" in view
+    assert '"filter.note.attention"' in view
 
 
 def test_operations_desk_attention_view_stays_a_read_only_server_filter() -> None:
