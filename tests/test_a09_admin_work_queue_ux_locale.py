@@ -147,6 +147,12 @@ def test_admin_work_queue_partial_copy_is_truthful_in_all_locales() -> None:
         assert guarded in copy
         assert false_claim not in copy
         assert "—" in copy
+    renderer = (ROOT / "static/portal/portal.js").read_text(encoding="utf-8")
+    start = renderer.index("function renderOperationsDesk(page, context)")
+    end = renderer.index("function renderOperationsAdmin(page, context)", start)
+    source = renderer[start:end]
+    assert 'copy("sources.body", "Số lượng theo từng nhóm công việc từ máy chủ.")' in source
+    assert "Số lượng được tổng hợp từ năm nhóm công việc đã kiểm tra." not in source
 
 
 def test_admin_work_queue_action_feedback_is_locale_pure() -> None:

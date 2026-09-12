@@ -46,7 +46,7 @@ và hủy tỷ lệ cột desktop; đây là sửa nguyên nhân làm tên ngu�
   Playwright với Chrome đã cài, không cài thêm dependency.
 - Receipt ngoài public repo:
   `evidence/a09-admin-work-queue-20260911/browser/a09-work-queue-browser-qa.json`;
-  SHA-256 `A68D9B88C5CD2226953DF88D7FF4BE176BE0EA9DCE6333555414C20F43AA8AF7`.
+  SHA-256 `1E5A36422BA1C78BB77BD3E1E94AF6518F14E770D22540B0AF28FB1F73BB5124`.
 
 ## Kiểm thử và comparator
 
