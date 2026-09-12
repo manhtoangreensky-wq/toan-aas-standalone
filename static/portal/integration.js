@@ -17716,6 +17716,14 @@
       : {};
     const stage = partnerCrmManagerStage(stageValue === undefined ? currentFilters.stage : stageValue);
     const offset = partnerCrmListOffset(offsetValue === undefined ? currentPagination.offset : offsetValue);
+    if (partnerCrmRequestIsCurrent(requestEpoch, partnerCrmManagerHydrationEpoch, sessionEpoch, expectedPath)) {
+      merge({
+        partnerCrmManagerDirectory: [],
+        partnerCrmManagerListing: partnerCrmManagerListingProjection(stage, offset, {}, 0),
+        partnerCrmReadState: "loading",
+        pageStates: { ...(base().pageStates || {}), "/admin/crm/leads": "processing" }
+      });
+    }
     try {
       const result = await api(partnerCrmManagerDirectoryPath(stage, offset));
       if (!partnerCrmRequestIsCurrent(requestEpoch, partnerCrmManagerHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };

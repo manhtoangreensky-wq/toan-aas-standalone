@@ -13,6 +13,7 @@
     "minimum_contrast": 5.28,
     "page_overflow_max_px": 0,
     "table_overflow_max_px": 0,
+    "mobile_cell_width_shortfall_max_px": 0,
     "clipped_elements": 0,
     "private_leaks": 0,
     "touch_target_violations": 0,
@@ -22,14 +23,17 @@
     "keyboard_disclosure": "open_close_pass",
     "task_first": "filter_before_directory_pass",
     "review_filter_rows": 1,
-    "report_sha256": "e7dcd19e0846948a22326bb8c0f5f9b5b0bca88e3f23aa293a2e51935285b73b"
+    "report_sha256": "c0966be6eee82808e5b96a5183c29429c4ea068dadede20af01fa850ee2377b8"
   },
   "tests": {
     "renderer_red_runtime_reference": "ReferenceError PARTNER_CRM_STAGES",
-    "renderer_contracts_passed": 4,
-    "crm_portal_backend_focused_passed": 42,
+    "review_red_failures": 2,
+    "renderer_contracts_passed": 5,
+    "crm_portal_backend_focused_passed": 28,
     "focused_failed": 0,
     "warnings": 1,
+    "tester_workspace_portable_passed": 32,
+    "tester_workspace_windows_posix_only_deselected": 1,
     "protected_base_passed": 25,
     "protected_base_failed": 2,
     "protected_candidate_passed": 25,
@@ -38,6 +42,18 @@
     "node_syntax_files": 3,
     "node_syntax_failed": 0,
     "diff_check_exit": 0
+  },
+  "review_corrections": {
+    "fail_closed_loading_before_network": true,
+    "mobile_table_headers_accessibility_preserved": true,
+    "mobile_first_column_sticky_constraint_removed": true
+  },
+  "independent_review": {
+    "ready_to_merge": true,
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "minor_resolution": "refresh migration provenance after the source review-fix commit"
   },
   "tester_workspace": {
     "case_id": "WA-48",

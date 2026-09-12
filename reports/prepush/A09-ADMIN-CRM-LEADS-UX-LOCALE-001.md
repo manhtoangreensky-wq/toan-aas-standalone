@@ -10,9 +10,15 @@ Base: `66a052ca76abd58af9020125c65e17fc3ba6e0df`
 Trang quản trị CRM nay tập trung vào việc cần theo dõi: hero ngắn → danh sách
 ẩn danh + bộ lọc giai đoạn → kết quả → phần dữ liệu và giới hạn đóng ban đầu.
 Loading và guarded có thông báo riêng, không hiển thị hàng cũ; nút làm mới bị khóa
-và có `aria-busy` trong lúc loading. Ở màn hình rộng
+và có `aria-busy` trong lúc loading. Mỗi lần làm mới, lọc hoặc chuyển trang đều
+xóa projection cũ, chuyển sang `processing` trước khi bắt đầu network read, rồi
+chỉ render receipt mới nếu route/session/epoch vẫn còn hợp lệ. Ở màn hình rộng
 bảng rõ ràng; ở `≤900px`, từng hàng thành thẻ dọc có nhãn cột và không còn dòng
-hướng dẫn cuộn ngang gây hiểu nhầm.
+hướng dẫn cuộn ngang gây hiểu nhầm. `<thead>/<th scope="col">` vẫn ở trong
+accessibility tree bằng kỹ thuật visually-hidden, không dùng `display:none`.
+Scoped mobile CSS cũng vô hiệu hóa riêng sticky/max-width/shadow của cột đầu
+từ bảng dùng chung, nên mọi ô dùng đủ chiều rộng hàng và không bẻ chữ theo
+từng ký tự.
 
 Fixed copy dùng catalogue `adminCrmManager.*` đối xứng VI/EN/ZH, bao phủ tiêu
 đề, bộ lọc, giai đoạn, nhóm, trạng thái đồng ý, phân trang, empty, recovery và
@@ -28,25 +34,34 @@ tên, email, nhu cầu, tag hoặc note.
   disclosure đóng, mobile vertical rows, page/table overflow, clipping, touch
   target, framework overlay, console và write request.
 - Minimum sampled contrast: `5.28:1`; page/table overflow, clipping, private leak,
-  relevant console, framework overlay và request ghi đều `0`.
+  mobile cell-width shortfall, relevant console, framework overlay và request
+  ghi đều `0`.
 - Tương tác thật: chọn giai đoạn `review` rồi `Áp dụng` trả đúng `1` dòng ẩn
   danh; disclosure mở/đóng được bằng bàn phím.
 - Browser plugin không khả dụng; theo fallback đã cho phép, QA dùng Playwright
   với Chrome cài sẵn, không cài dependency mới.
 - Receipt ngoài public repo:
   `evidence/a09-admin-crm-leads-20260912/browser/a09-crm-leads-browser-qa.json`;
-  SHA-256 `E7DCD19E0846948A22326BB8C0F5F9B5B0BCA88E3F23AA293A2E51935285B73B`.
+  SHA-256 `C0966BE6EEE82808E5B96A5183C29429C4EA068DADEDE20AF01FA850EE2377B8`.
 
 ## Kiểm thử và comparator
 
 - RED ban đầu tái hiện `ReferenceError: PARTNER_CRM_STAGES is not defined` khi
   render row; fix dùng `PARTNER_CRM_STAGE_LABELS` allow-list.
-- Renderer/CSS contract: `4 passed`.
-- CRM portal/backend/stale/auth/i18n focused: `42 passed`, `1` cảnh báo Pydantic,
-  `0 failed`.
+- Review RED tái hiện `2 failed`: request gọi API trước loading nên hàng cũ còn
+  hiện; mobile dùng `display:none` nên header cột biến mất khỏi accessibility
+  tree. Sau sửa, hai test riêng đều `1 passed`.
+- Renderer/CSS contract: `5 passed`.
+- CRM portal/backend/consultation: `25 passed`; auth/stale/navigation bổ sung:
+  `3 passed`, `1` cảnh báo Pydantic; tổng `28 passed`, `0 failed`.
+- Tester workspace portable: `32 passed, 1 deselected`; bài kiểm mode `0600`
+  POSIX-only được loại rõ ràng trên Windows, không đổi mã ngoài scope.
 - Protected exact-base/candidate comparator: cả hai `25 passed / 2 failed`,
   cùng hai baseline CSS-tail IDs; `NEW_FAILURES=0`.
 - Node syntax `3/3`, `git diff --check`: exit `0`.
+- Independent review cuối: `0 Critical / 0 Important / 1 Minor`,
+  `Ready to merge: Yes`. Minor duy nhất là timestamp provenance cũ; artifact
+  migration sẽ được tái sinh từ source commit mới và commit riêng trước PR.
 
 ## Authority và giới hạn
 

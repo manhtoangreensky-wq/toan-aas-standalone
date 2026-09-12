@@ -163,6 +163,53 @@ def test_admin_crm_action_feedback_is_locale_pure() -> None:
         assert [item["error"] for item in feedback["denied"]] == states["denied"]
 
 
+def test_admin_crm_manager_read_enters_fail_closed_loading_before_network() -> None:
+    integration = (ROOT / "static/portal/integration.js").read_text(encoding="utf-8")
+    start = integration.index("  async function hydratePartnerCrmManagerDirectory(")
+    end = integration.index("\n  function consultationCrmRequestIsCurrent", start)
+    function_source = integration[start:end]
+    script = r'''
+const PARTNER_CRM_STAGES=new Set(["draft","qualified","review","proposal","won","lost","archived"]);
+const PARTNER_CRM_MANAGER_LIST_LIMIT=50;
+let partnerCrmManagerHydrationEpoch=0;
+let partnerCrmSessionEpoch=7;
+let state={path:"/admin/crm/leads",partnerCrmEnabled:true,session:{authenticated:true},pageStates:{"/admin/crm/leads":"read_only"},partnerCrmReadState:"ready",partnerCrmManagerDirectory:[{stage:"draft",sentinel:"stale"}],partnerCrmManagerListing:{filters:{stage:"all"},pagination:{offset:0}}};
+const events=[];
+let resolveApi;
+const gate=new Promise((resolve)=>{resolveApi=resolve;});
+function base(){return state;}
+function currentPortalPath(){return state.path;}
+function partnerCrmManagerStage(value){const stage=String(value||"all");return stage==="all"||PARTNER_CRM_STAGES.has(stage)?stage:"all";}
+function partnerCrmListOffset(value){const offset=Number(value);return Number.isInteger(offset)&&offset>=0?offset:0;}
+function partnerCrmManagerDirectoryPath(stage,offset){return `/partner-crm/manager/leads?stage=${stage}&offset=${offset}`;}
+function partnerCrmManagerListingProjection(stage,offset,data,returned){return {filters:{stage},pagination:{offset,returned,has_more:data&&data.has_more===true,next_offset:data&&data.next_offset||null,previous_offset:offset>=50?offset-50:null}};}
+function partnerCrmRequestIsCurrent(requestEpoch,currentEpoch,sessionEpoch,expectedPath){return requestEpoch===currentEpoch&&sessionEpoch===partnerCrmSessionEpoch&&currentPortalPath()===expectedPath&&state.partnerCrmEnabled===true&&state.session.authenticated===true;}
+function partnerCrmBoundaryIsSafe(){return true;}
+function merge(next){state={...state,...next};events.push(`merge:${state.partnerCrmReadState}`);}
+async function api(){events.push("api");return gate;}
+''' + function_source + r'''
+(async()=>{
+  const pending=hydratePartnerCrmManagerDirectory("review",50);
+  const during=JSON.parse(JSON.stringify(state));
+  const duringEvents=[...events];
+  resolveApi({data:{items:[{stage:"review"}],has_more:false,next_offset:null,cross_account_write_available:false,contact_detail_available:false,notes_available:false}});
+  await pending;
+  process.stdout.write(JSON.stringify({during,duringEvents,after:state}));
+})().catch((error)=>{console.error(error);process.exit(1);});
+'''
+    result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    receipt = json.loads(result.stdout)
+    assert receipt["duringEvents"][:2] == ["merge:loading", "api"]
+    assert receipt["during"]["partnerCrmReadState"] == "loading"
+    assert receipt["during"]["partnerCrmManagerDirectory"] == []
+    assert receipt["during"]["pageStates"]["/admin/crm/leads"] == "processing"
+    assert receipt["during"]["partnerCrmManagerListing"]["filters"]["stage"] == "review"
+    assert receipt["during"]["partnerCrmManagerListing"]["pagination"]["offset"] == 50
+    assert receipt["after"]["partnerCrmReadState"] == "ready"
+    assert receipt["after"]["partnerCrmManagerDirectory"] == [{"stage": "review"}]
+
+
 def test_admin_crm_mobile_directory_has_a_scoped_vertical_layout() -> None:
     css = (ROOT / "static/portal/portal-theme.css").read_text(encoding="utf-8")
     marker = "/* A09 Admin CRM Leads */"
@@ -178,7 +225,9 @@ def test_admin_crm_mobile_directory_has_a_scoped_vertical_layout() -> None:
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-guidance {",
         "@media (max-width: 900px)",
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table thead {",
-        "display: none;",
+        "position: absolute;",
+        "clip: rect(0, 0, 0, 0);",
+        "clip-path: inset(50%);",
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody tr {",
         "grid-template-columns: minmax(0, 1fr);",
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table td::before {",
@@ -189,3 +238,14 @@ def test_admin_crm_mobile_directory_has_a_scoped_vertical_layout() -> None:
     clean = re.sub(r"/\*.*?\*/", "", layer, flags=re.DOTALL)
     assert "#" not in clean
     assert "rgba(" not in clean
+    header_rule = re.search(r"\.portal-page\.portal-admin-crm-manager \.portal-admin-crm-table thead\s*\{(?P<body>[^}]*)\}", layer)
+    assert header_rule is not None
+    assert "display: none" not in header_rule.group("body")
+    first_cell_rule = re.search(
+        r"\.portal-page\.portal-admin-crm-manager \.portal-admin-crm-table tbody tr > td:first-child:not\(\.portal-empty-cell\)\s*\{(?P<body>[^}]*)\}",
+        layer,
+    )
+    assert first_cell_rule is not None
+    assert "position: static" in first_cell_rule.group("body")
+    assert "max-width: none" in first_cell_rule.group("body")
+    assert "box-shadow: none" in first_cell_rule.group("body")

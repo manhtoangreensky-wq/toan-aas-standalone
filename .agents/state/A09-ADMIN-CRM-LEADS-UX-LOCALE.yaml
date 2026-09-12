@@ -31,19 +31,31 @@ acceptance:
   - manager stage allow-list and pagination remain unchanged
   - browser matrix has zero overflow, clipping, leaks, writes and relevant console events
 verification:
-  renderer_contracts: 4 passed
-  focused_crm_suite: 42 passed, 1 warning
+  renderer_contracts: 5 passed
+  focused_crm_suite: 28 passed, 1 warning
+  tester_workspace_portable: 32 passed, 1 Windows POSIX-only deselected
   browser_states: 20
   browser_minimum_contrast: 5.28:1
+  browser_mobile_cell_width_shortfall_max_px: 0
   protected_base: 25 passed, 2 baseline failures
   protected_candidate: 25 passed, 2 baseline failures
   protected_new_failures: 0
   node_syntax_files: 3
   diff_check_exit: 0
+review_corrections:
+  - manager refresh, filter and pagination clear stale rows and enter loading before the network read
+  - mobile table headers remain in the accessibility tree while the visual rows stay vertical and unclipped
+  - the generic sticky first column is reset inside the CRM mobile scope so every cell uses the full row width
+independent_review:
+  ready_to_merge: true
+  critical: 0
+  important: 0
+  minor: 1
+  pending_minor_resolution: refresh migration provenance after the source review-fix commit
 safety:
   provider_calls: 0
   wallet_mutations: 0
   production_data_mutations: 0
   env_mutations: 0
   crm_manager_writes: 0
-next_gate: COMMIT_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY
+next_gate: COMMIT_REVIEW_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY
