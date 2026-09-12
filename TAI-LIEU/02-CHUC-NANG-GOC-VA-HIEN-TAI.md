@@ -184,10 +184,12 @@ disclosure giới hạn đóng ban đầu.
 
 Ở desktop, kết quả vẫn là bảng có route allow-list; ở `≤900px`, mỗi hàng là một
 thẻ dọc có nhãn cột để không ép chữ. Source guarded/unavailable vẫn hiện `—`;
-không thêm số liệu, tìm kiếm ID hay action ghi. Browser local đo `20` trạng thái,
-minimum contrast `7.62:1`, overflow/clipping/framework overlay/console/write
-request `0`; tương tác attention trả `3` dòng và disclosure mở/đóng đạt. Đây là
-local acceptance, chưa phải deployed/live evidence.
+không thêm số liệu, tìm kiếm ID hay action ghi. Toast success/failure/permission
+của bốn thao tác đọc được localize đầy đủ; partial source summary dùng câu trung
+tính. Browser local đo `20` trạng thái, minimum contrast `7.62:1`,
+overflow/clipping/framework overlay/console/write request `0`; tương tác attention
+trả `3` dòng và disclosure mở/đóng đạt. Đây là local acceptance, chưa phải
+deployed/live evidence.
 
 Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
 kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:

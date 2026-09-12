@@ -61,14 +61,14 @@
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 85,
-      "bytes": 28249,
-      "sha256": "bc956a002e37b21dd454b2b29e2da0ab02b9a736e20e8f89a92e776cf08fc025"
+      "bytes": 28336,
+      "sha256": "88b08c0cda0a82d842ffb0ccec67a449636d59a4dc892df110a342cb19fb72a5"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
       "lines": 179,
-      "bytes": 16804,
-      "sha256": "5cc5b62411bedd4cdb8ed4fc11fd6e0e97480fb4035541eeb48c2581c1f4b07a"
+      "bytes": 16871,
+      "sha256": "77f71c58c95e81bff65c9b2f28ab15e91e59c12eb5afcf3bdcbc43ae21eca343"
     },
     {
       "path": "scripts/tester_case_sync.py",

@@ -849,6 +849,13 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  function adminWorkQueueText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const translated = i18n.t(`adminWorkQueue.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   function emptyAdminManualTopupState(readState, filterStatus) {
     return {
       readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(readState || "")) ? String(readState) : "guarded",
@@ -34332,27 +34339,27 @@
         return;
       }
       if (action === "operations-desk-refresh") {
-        if (!(base().capabilities && base().capabilities["operations-desk-view"] === true)) throw new Error("Cần signed Web session để xem Operations Desk.");
+        if (!(base().capabilities && base().capabilities["operations-desk-view"] === true)) throw new Error(adminWorkQueueText("error.viewPermission", "Bạn chưa có quyền xem hàng chờ."));
         await hydrateOperationsDesk();
-        toast(base().operationsDeskReadState === "failed" ? "Operations Desk chưa trả metadata staff đã được xác minh." : "Đã làm mới Operations Desk từ máy chủ.", base().operationsDeskReadState === "failed" ? "error" : undefined);
+        toast(adminWorkQueueText(base().operationsDeskReadState === "failed" ? "toast.refresh.error" : "toast.refresh.success", base().operationsDeskReadState === "failed" ? "Chưa thể làm mới hàng chờ." : "Đã làm mới hàng chờ."), base().operationsDeskReadState === "failed" ? "error" : undefined);
         return;
       }
       if (action === "operations-desk-filter") {
-        if (!(base().capabilities && base().capabilities["operations-desk-filter"] === true)) throw new Error("Cần signed Web session để lọc Operations Desk.");
+        if (!(base().capabilities && base().capabilities["operations-desk-filter"] === true)) throw new Error(adminWorkQueueText("error.filterPermission", "Bạn chưa có quyền lọc hàng chờ."));
         await hydrateOperationsDesk(operationsDeskFilterPayload(fields), 0);
-        toast(base().operationsDeskReadState === "failed" ? "Bộ lọc chưa được máy chủ xác nhận." : "Đã cập nhật hàng Operations Desk.", base().operationsDeskReadState === "failed" ? "error" : undefined);
+        toast(adminWorkQueueText(base().operationsDeskReadState === "failed" ? "toast.filter.error" : "toast.filter.success", base().operationsDeskReadState === "failed" ? "Chưa thể áp dụng bộ lọc." : "Đã áp dụng bộ lọc."), base().operationsDeskReadState === "failed" ? "error" : undefined);
         return;
       }
       if (action === "operations-desk-filter-clear") {
-        if (!(base().capabilities && base().capabilities["operations-desk-filter"] === true)) throw new Error("Cần signed Web session để lọc Operations Desk.");
+        if (!(base().capabilities && base().capabilities["operations-desk-filter"] === true)) throw new Error(adminWorkQueueText("error.filterPermission", "Bạn chưa có quyền lọc hàng chờ."));
         await hydrateOperationsDesk({ kind: "all", state: "all", severity: "all", view: "all" }, 0);
-        toast(base().operationsDeskReadState === "failed" ? "Operations Desk chưa trả metadata staff đã được xác minh." : "Đã xóa bộ lọc Operations Desk.", base().operationsDeskReadState === "failed" ? "error" : undefined);
+        toast(adminWorkQueueText(base().operationsDeskReadState === "failed" ? "toast.clear.error" : "toast.clear.success", base().operationsDeskReadState === "failed" ? "Chưa thể xóa bộ lọc." : "Đã xóa bộ lọc."), base().operationsDeskReadState === "failed" ? "error" : undefined);
         return;
       }
       if (action === "operations-desk-page") {
-        if (!(base().capabilities && base().capabilities["operations-desk-page"] === true)) throw new Error("Cần signed Web session để xem thêm Operations Desk.");
+        if (!(base().capabilities && base().capabilities["operations-desk-page"] === true)) throw new Error(adminWorkQueueText("error.pagePermission", "Bạn chưa có quyền chuyển trang danh sách."));
         await hydrateOperationsDesk(undefined, operationsDeskOffset(fields.__operationsDeskOffset));
-        toast(base().operationsDeskReadState === "failed" ? "Không thể tải thêm metadata Operations Desk." : "Đã tải trang Operations Desk đã redaction.", base().operationsDeskReadState === "failed" ? "error" : undefined);
+        toast(adminWorkQueueText(base().operationsDeskReadState === "failed" ? "toast.page.error" : "toast.page.success", base().operationsDeskReadState === "failed" ? "Chưa thể tải trang danh sách." : "Đã tải trang danh sách."), base().operationsDeskReadState === "failed" ? "error" : undefined);
         return;
       }
       if (action === "admin-automation-monitor-refresh") {

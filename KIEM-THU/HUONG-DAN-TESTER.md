@@ -172,7 +172,7 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 ## 15. A09: Hàng việc điều hành
 
 101. Chạy WA-47 trên projection local năm nguồn; không tạo dữ liệu production, không bấm hành động ghi và không dùng Bot/provider.
-102. Kiểm VI/EN × sáng/tối × `1440/1024/768/390/360`; ZH kiểm renderer. Fixed copy phải thuần locale; source kind/state/priority/time và route đích là dữ liệu canonical, không tự dịch.
+102. Kiểm VI/EN × sáng/tối × `1440/1024/768/390/360`; ZH kiểm renderer. Fixed copy phải thuần locale; giá trị kind/state/priority và route đích vẫn là canonical không đổi, còn nhãn hiển thị và định dạng ngày giờ được phép localize.
 103. Xác nhận thứ tự `Việc cần xử lý → bộ lọc → kết quả → Nguồn dữ liệu`; phần `Dữ liệu và giới hạn` đóng ban đầu và mở/đóng được bằng Enter.
 104. Ở `390/360`, mỗi hàng hiển thị dọc với nhãn cột; không chấp nhận ép chữ, cắt nội dung, cuộn ngang cấp trang hoặc thay `—` bằng `0`.
 105. Ghi minimum contrast, target, overflow/clipping, framework overlay, console và write request. Tất cả phải lần lượt đạt `≥4.5:1`, `≥44px`, `0`, `0`, `0`, `0`.

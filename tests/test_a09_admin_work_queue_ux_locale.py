@@ -34,9 +34,11 @@ const page={path:'/admin/work-queue',routePath:'/admin/work-queue',title:'Operat
 const sources=['support_case','operations_incident','operations_approval','reliability_followup','content_handoff'].map((kind,index)=>({kind,availability:'available',count:index+1}));
 const base={...api.normalizeBootstrap({session:{authenticated:true}}),session:{authenticated:true},capabilities:{'operations-desk-view':true},operationsDeskReadState:'ready',operationsDeskSummary:{sources,partial:false},operationsDeskFilter:{kind:'all',state:'all',severity:'all',view:'all'},operationsDeskItems:[{kind:'content_handoff',state:'review',severity:'normal',updated_at:'2026-09-11T00:00:00Z'}],operationsDeskListing:{pagination:{previous_offset:0,next_offset:30}}};
 const empty={...base,operationsDeskItems:[],operationsDeskListing:{pagination:{previous_offset:null,next_offset:null}}};
+const partialSources=sources.map((source)=>source.kind==='operations_approval'?{kind:source.kind,availability:'guarded',count:null}:source);
+const partial={...base,operationsDeskReadState:'guarded',operationsDeskSummary:{sources:partialSources,partial:true}};
 const guarded={...base,operationsDeskReadState:'failed',operationsDeskSummary:{},operationsDeskItems:[]};
 const loading={...base,operationsDeskReadState:'loading',operationsDeskSummary:{},operationsDeskItems:[]};
-process.stdout.write(JSON.stringify({ready:api.renderOperationsDesk(page,base),empty:api.renderOperationsDesk(page,empty),guarded:api.renderOperationsDesk(page,guarded),loading:api.renderOperationsDesk(page,loading),title:api.localizedPageTitle(page,base),description:api.localizedPageDescription(page)}));
+process.stdout.write(JSON.stringify({ready:api.renderOperationsDesk(page,base),empty:api.renderOperationsDesk(page,empty),partial:api.renderOperationsDesk(page,partial),guarded:api.renderOperationsDesk(page,guarded),loading:api.renderOperationsDesk(page,loading),title:api.localizedPageTitle(page,base),description:api.localizedPageDescription(page)}));
 '''
     result = subprocess.run([shutil.which("node"), "-e", script, str(ROOT / "static/portal/portal-i18n.js"), str(ROOT / "static/portal/portal.js"), locale], capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
@@ -81,6 +83,96 @@ def test_admin_work_queue_error_states_have_no_data_rows() -> None:
         rendered = _render(locale)
         for state in ("guarded", "loading"):
             assert "portal-data-table" not in rendered[state]
+
+
+def _action_feedback(locale: str) -> dict[str, object]:
+    integration = (ROOT / "static/portal/integration.js").read_text(encoding="utf-8")
+    assert "function adminWorkQueueText(key, fallback, params)" in integration
+    helper_start = integration.index("  function adminWorkQueueText(key, fallback, params)")
+    helper_end = integration.index("\n  function ", helper_start + 2)
+    helper = integration[helper_start:helper_end]
+    action_start = integration.index('      if (action === "operations-desk-refresh")')
+    action_end = integration.index('      if (action === "admin-automation-monitor-refresh")', action_start)
+    actions = integration[action_start:action_end]
+    script = r'''
+const fs=require("fs"),vm=require("vm");
+const locale=process.argv[2];
+const context={console,Intl,navigator:{language:locale},document:{documentElement:{lang:locale,dir:"ltr",setAttribute(){},getAttribute(){return "";},removeAttribute(){}}},CustomEvent:function(){},addEventListener(){},removeEventListener(){},dispatchEvent(){return true;}};
+context.window=context;context.globalThis=context;
+vm.createContext(context);vm.runInContext(fs.readFileSync(process.argv[1],"utf8"),context);
+context.TOANAASI18n.setLocale(locale,{emit:false});
+const window=context;
+let state={operationsDeskReadState:"ready",capabilities:{"operations-desk-view":true,"operations-desk-filter":true,"operations-desk-page":true}};
+let current=[];
+function base(){return state;}
+async function hydrateOperationsDesk(){return {};}
+function toast(message,tone){current.push({message,tone:tone||""});}
+function operationsDeskFilterPayload(fields){return fields;}
+function operationsDeskOffset(value){return Number(value);}
+''' + helper + r'''
+async function dispatch(action,fields){
+''' + actions + r'''
+}
+async function run(mode){
+  const results={};
+  for(const action of ["operations-desk-refresh","operations-desk-filter","operations-desk-filter-clear","operations-desk-page"]){
+    current=[];
+    state={operationsDeskReadState:mode,capabilities:mode==="denied"?{}:{"operations-desk-view":true,"operations-desk-filter":true,"operations-desk-page":true}};
+    try{await dispatch(action,{kind:"all",state:"all",severity:"all",view:"all",__operationsDeskOffset:30});results[action]=current[0]||{};}
+    catch(error){results[action]={error:String(error&&error.message||error)};}
+  }
+  return results;
+}
+(async()=>process.stdout.write(JSON.stringify({ready:await run("ready"),failed:await run("failed"),denied:await run("denied")})))().catch((error)=>{console.error(error);process.exit(1);});
+'''
+    result = subprocess.run(
+        [shutil.which("node"), "-e", script, str(ROOT / "static/portal/portal-i18n.js"), locale],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_admin_work_queue_partial_copy_is_truthful_in_all_locales() -> None:
+    expected = {
+        "vi": ("Số lượng theo từng nhóm công việc từ máy chủ.", "Có nguồn chưa xác minh", "năm nhóm công việc đã kiểm tra"),
+        "en": ("Counts by work type from the server.", "Some sources are not verified", "five verified work sources"),
+        "zh": ("服务器按事项类型提供数量。", "部分来源尚未验证", "五个已检查的工作来源"),
+    }
+    for locale, (neutral, guarded, false_claim) in expected.items():
+        copy = _text(_render(locale)["partial"])
+        assert neutral in copy
+        assert guarded in copy
+        assert false_claim not in copy
+        assert "—" in copy
+
+
+def test_admin_work_queue_action_feedback_is_locale_pure() -> None:
+    expected = {
+        "vi": {
+            "ready": ["Đã làm mới hàng chờ.", "Đã áp dụng bộ lọc.", "Đã xóa bộ lọc.", "Đã tải trang danh sách."],
+            "failed": ["Chưa thể làm mới hàng chờ.", "Chưa thể áp dụng bộ lọc.", "Chưa thể xóa bộ lọc.", "Chưa thể tải trang danh sách."],
+            "denied": ["Bạn chưa có quyền xem hàng chờ.", "Bạn chưa có quyền lọc hàng chờ.", "Bạn chưa có quyền lọc hàng chờ.", "Bạn chưa có quyền chuyển trang danh sách."],
+        },
+        "en": {
+            "ready": ["Queue refreshed.", "Filters applied.", "Filters cleared.", "Queue page loaded."],
+            "failed": ["Queue could not be refreshed.", "Filters could not be applied.", "Filters could not be cleared.", "Queue page could not be loaded."],
+            "denied": ["You do not have permission to view this queue.", "You do not have permission to filter this queue.", "You do not have permission to filter this queue.", "You do not have permission to change queue pages."],
+        },
+        "zh": {
+            "ready": ["队列已刷新。", "筛选已应用。", "筛选已清除。", "队列页面已加载。"],
+            "failed": ["无法刷新队列。", "无法应用筛选。", "无法清除筛选。", "无法加载队列页面。"],
+            "denied": ["您无权查看此队列。", "您无权筛选此队列。", "您无权筛选此队列。", "您无权切换队列页面。"],
+        },
+    }
+    actions = ["operations-desk-refresh", "operations-desk-filter", "operations-desk-filter-clear", "operations-desk-page"]
+    for locale, states in expected.items():
+        feedback = _action_feedback(locale)
+        assert [feedback["ready"][action]["message"] for action in actions] == states["ready"]
+        assert [feedback["failed"][action]["message"] for action in actions] == states["failed"]
+        assert [feedback["denied"][action]["error"] for action in actions] == states["denied"]
 
 
 def test_admin_work_queue_mobile_table_has_a_scoped_vertical_layout() -> None:

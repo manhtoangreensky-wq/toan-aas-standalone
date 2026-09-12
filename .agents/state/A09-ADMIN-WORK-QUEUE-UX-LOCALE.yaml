@@ -31,12 +31,15 @@ acceptance:
   - rows become vertical cards at or below 900px
   - loading and failed reads render no stale data
   - read-only route keeps allowlisted targets and pagination
+  - action feedback and permission errors are locale-pure in VI/EN/ZH
+  - partial source summary never claims every source is verified
   - browser matrix has zero overflow, clipping, writes and relevant console events
 verification:
-  focused: 79 passed, 162 deselected, 1 warning
-  work_queue_contracts: 19 passed
+  focused: 81 passed, 162 deselected, 1 warning
+  work_queue_contracts: 21 passed
   browser_states: 20
   browser_minimum_contrast: 7.62:1
+  action_feedback: 12 action/locale branches pass
   protected_base: 25 passed, 2 baseline failures
   protected_candidate: 25 passed, 2 baseline failures
   protected_new_failures: 0

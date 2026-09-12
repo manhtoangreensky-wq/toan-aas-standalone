@@ -380,6 +380,9 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
   trạng thái, mức độ, bộ lọc, bảng, phân trang, empty/loading/guarded và recovery.
   Dữ liệu động (trạng thái canonical, thời gian, số lượng, route) không bị dịch
   hoặc tự suy diễn.
+- Toast của bốn thao tác đọc (làm mới, áp dụng/xóa bộ lọc, chuyển trang) và lỗi
+  thiếu quyền đều dùng cùng catalogue ở cả ba locale. Câu tóm tắt nguồn trung
+  tính; khi partial vẫn hiện rõ nguồn chưa xác minh, không nói tất cả đã kiểm tra.
 - Ở màn hình `≤900px`, bảng chuyển từng dòng thành thẻ dọc có nhãn cột; override
   mobile hủy tỷ lệ cột desktop nên không ép/cắt tên nguồn. Nút và điều khiển giữ
   chiều cao tối thiểu `44px`; light/dark dùng token teal/cyan và tương phản đo

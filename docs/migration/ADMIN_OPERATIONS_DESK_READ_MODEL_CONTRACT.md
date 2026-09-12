@@ -67,6 +67,9 @@ write instruction.
   download or write action.
 - The UI derives destination links from a local allow-list after validation;
   it does not retain a server URL or action label in portal state.
+- Work Queue success, failure and permission feedback uses the same reviewed
+  VI/EN/ZH presentation catalogue as the renderer; a partial source summary
+  uses neutral wording and never claims that every source is verified.
 - Operations Desk data is private application state.  It is excluded from
   public PWA shell caching and must be refreshed through a signed request.
 - This module makes no Bot/core bridge, provider, PayOS, Xu wallet, job,

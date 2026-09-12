@@ -18,6 +18,11 @@ không còn phơi `Operations Desk`, `metadata`, `server-side`, `staff`,
 `redaction`, `control plane`, `retry`, `provider`, `delivery` hoặc `deploy`.
 Giá trị server (kind/state/priority/time/count/route) không bị đổi.
 
+Các toast sau Refresh, Áp dụng, Xóa bộ lọc và chuyển trang — gồm nhánh thành công,
+thất bại và thiếu quyền — cũng đi qua catalogue; không còn toast hard-code trộn
+ngôn ngữ. Phần tóm tắt nguồn dùng câu trung tính nên không mâu thuẫn khi một
+nguồn ở trạng thái chưa xác minh.
+
 Desktop vẫn có bảng gọn. Ở `≤900px`, từng hàng chuyển thành thẻ dọc có nhãn cột
 và hủy tỷ lệ cột desktop; đây là sửa nguyên nhân làm tên nguồn bị ép/cắt ở
 `390/360px`, không phải che overflow. Dòng hướng dẫn “cuộn ngang” dùng chung
@@ -35,6 +40,8 @@ và hủy tỷ lệ cột desktop; đây là sửa nguyên nhân làm tên ngu�
   overlay và request ghi: đều `0`.
 - Tương tác thật: chọn `Cần xử lý` rồi `Áp dụng` trả `3` hàng; disclosure mở và
   đóng lại được. Không gọi endpoint ghi.
+- Executable integration feedback: `12` tổ hợp action/locale (4 action × 3
+  locale) cho success/failure/permission đều trả đúng catalogue; test `5 passed`.
 - Browser plugin skill không có trong session; theo fallback đã cho phép, QA dùng
   Playwright với Chrome đã cài, không cài thêm dependency.
 - Receipt ngoài public repo:
@@ -45,8 +52,9 @@ và hủy tỷ lệ cột desktop; đây là sửa nguyên nhân làm tên ngu�
 
 - RED đầu: `1 passed / 1 failed`; RED mở rộng sau khi khóa mobile layout:
   `1 passed / 2 failed`, đúng do catalogue và CSS chưa có.
-- Focused work-queue/read-model/backend: `19 passed`.
-- Final focused route/i18n/Tester/UI/safety: `79 passed`, `162 deselected`,
+- Focused work-queue/read-model/backend: `21 passed` sau review fix (gồm partial
+  truth và action-feedback branches).
+- Final focused route/i18n/Tester/UI/safety: `81 passed`, `162 deselected`,
   `1` cảnh báo Pydantic cũ, `0 failed`.
 - Tester metadata: `32 passed`, `1` POSIX file-mode test deselected trên Windows;
   WA-47 nâng nguồn case thành `47` case tuần tự.

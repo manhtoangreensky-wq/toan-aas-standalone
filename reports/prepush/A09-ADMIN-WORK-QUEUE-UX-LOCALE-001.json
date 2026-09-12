@@ -22,15 +22,17 @@
     "task_first": "work_and_filter_before_sources_pass",
     "mobile_rows": "vertical_at_or_below_900px_pass",
     "attention_interaction_rows": 3,
-    "report_sha256": "a68d9b88c5cd2226953df88d7ff4be176be0ea9dce6333555414c20f43aa8af7"
+    "report_sha256": "1e5a36422ba1c78bb77bd3e1e94af6518f14e770d22540b0af28fb1f73bb5124",
+    "action_feedback": "refresh/filter/clear/page success, failure and permission branches execute with locale-pure copy in VI/EN/ZH",
+    "partial_copy": "neutral source summary plus guarded status; no false verified claim"
   },
   "tests": {
     "initial_red_passed": 1,
     "initial_red_failed": 1,
     "expanded_red_passed": 1,
     "expanded_red_failed": 2,
-    "work_queue_contracts_passed": 19,
-    "focused_passed": 79,
+    "work_queue_contracts_passed": 21,
+    "focused_passed": 81,
     "focused_failed": 0,
     "focused_deselected": 162,
     "warnings": 1,
