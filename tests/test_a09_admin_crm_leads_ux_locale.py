@@ -227,7 +227,6 @@ def test_admin_crm_mobile_directory_has_a_scoped_vertical_layout() -> None:
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table thead {",
         "position: absolute;",
         "clip: rect(0, 0, 0, 0);",
-        "clip-path: inset(50%);",
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody tr {",
         "grid-template-columns: minmax(0, 1fr);",
         ".portal-page.portal-admin-crm-manager .portal-admin-crm-table td::before {",

@@ -23,7 +23,7 @@
     "keyboard_disclosure": "open_close_pass",
     "task_first": "filter_before_directory_pass",
     "review_filter_rows": 1,
-    "report_sha256": "c0966be6eee82808e5b96a5183c29429c4ea068dadede20af01fa850ee2377b8"
+    "report_sha256": "82385ccce07393c6e7fba8e724e652a268f9285d76498816344b902978588986"
   },
   "tests": {
     "renderer_red_runtime_reference": "ReferenceError PARTNER_CRM_STAGES",
@@ -34,6 +34,8 @@
     "warnings": 1,
     "tester_workspace_portable_passed": 32,
     "tester_workspace_windows_posix_only_deselected": 1,
+    "ci_bounded_portable_passed": 286,
+    "ci_bounded_portable_deselected": 1,
     "protected_base_passed": 25,
     "protected_base_failed": 2,
     "protected_candidate_passed": 25,
@@ -54,6 +56,24 @@
     "important": 0,
     "minor": 1,
     "minor_resolution": "refresh migration provenance after the source review-fix commit"
+  },
+  "ci_corrective": {
+    "pr": 430,
+    "first_run": 34690972958,
+    "first_status": "failure",
+    "first_failure": "tests/test_portal_aura_theme_contracts.py::test_compact_headers_keep_the_brand_visible_while_secondary_controls_compact",
+    "root_cause": "CRM visually-hidden CSS used a globally forbidden clip-path token after the Auth hotfix marker",
+    "correction": "keep accessible clip rect and move the byte-identical CRM block before the Auth hotfix marker",
+    "crm_block_sha256_before_after": "5c2cb6ac6a956f44e92b88fecf6c09e9e71b03b18a75a7ad2aecbfbb31f7051b",
+    "portable_bounded_passed": 286,
+    "portable_bounded_deselected": 1,
+    "independent_review": {
+      "ready": true,
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    },
+    "rerun_status": "pending_corrective_push"
   },
   "tester_workspace": {
     "case_id": "WA-48",

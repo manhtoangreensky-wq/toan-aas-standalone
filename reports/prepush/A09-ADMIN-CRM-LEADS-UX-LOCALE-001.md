@@ -42,7 +42,7 @@ tên, email, nhu cầu, tag hoặc note.
   với Chrome cài sẵn, không cài dependency mới.
 - Receipt ngoài public repo:
   `evidence/a09-admin-crm-leads-20260912/browser/a09-crm-leads-browser-qa.json`;
-  SHA-256 `C0966BE6EEE82808E5B96A5183C29429C4EA068DADEDE20AF01FA850EE2377B8`.
+  SHA-256 `82385CCCE07393C6E7FBA8E724E652A268F9285D76498816344B902978588986`.
 
 ## Kiểm thử và comparator
 
@@ -62,6 +62,17 @@ tên, email, nhu cầu, tag hoặc note.
 - Independent review cuối: `0 Critical / 0 Important / 1 Minor`,
   `Ready to merge: Yes`. Minor duy nhất là timestamp provenance cũ; artifact
   migration sẽ được tái sinh từ source commit mới và commit riêng trước PR.
+- PR #430 CI lần đầu run `34690972958` dừng tại `1 failed / 208 passed` vì
+  contract Aura cấm toàn theme dùng `clip-path: inset(50%)`. Corrective bỏ đúng
+  token không bắt buộc, giữ `clip: rect(...)` cho header accessible. Bounded
+  suite sau đó lộ contract Auth chỉ được đọc phần từ marker Auth đến cuối file;
+  nguyên khối CRM được chuyển lên trước marker với SHA-256 nội dung trước/sau
+  cùng `5C2CB6AC…F7051B`, không đổi semantics.
+- Fresh post-corrective: hai contract CI + CRM `3 passed`; toàn bounded workflow
+  portable `286 passed, 1 deselected, 1 warning`; Browser lại đạt `20/20`
+  trạng thái và `18/18` assertion. CI rerun trên Linux chờ push corrective.
+- Independent corrective review: `0 Critical / 0 Important / 0 Minor`, Ready
+  `Yes`; working tree giữ đúng năm file trong scope và reviewer không mutation.
 
 ## Authority và giới hạn
 
