@@ -19279,6 +19279,288 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   }
 }
 
+/* A09 Admin CRM Leads */
+.portal-page.portal-admin-crm-manager {
+  display: grid;
+  gap: var(--portal-space-5);
+  min-width: 0;
+  color: var(--portal-ink);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-work {
+  min-width: 0;
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-work > .portal-card-header {
+  align-items: flex-start;
+  gap: var(--portal-space-4);
+}
+
+.portal-page.portal-admin-crm-manager :is(.portal-button, .portal-select, .portal-admin-crm-guidance > summary) {
+  min-height: 44px;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-filter {
+  margin-top: var(--portal-space-5);
+  padding: var(--portal-space-4);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-soft);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-filter .portal-fields {
+  grid-template-columns: minmax(220px, 360px);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-filter .portal-field > span {
+  color: var(--portal-ink);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-filter .portal-form-note {
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-directory-results {
+  display: grid;
+  gap: var(--portal-space-4);
+  min-width: 0;
+  margin-top: var(--portal-space-5);
+  padding-top: var(--portal-space-5);
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-table {
+  min-width: 0;
+  overflow: visible;
+  border-color: var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-light);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-table .portal-data-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-table :is(th, td) {
+  padding: var(--portal-space-3) var(--portal-space-4);
+  overflow-wrap: anywhere;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-table th {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-table td {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+  vertical-align: middle;
+}
+
+.portal-page.portal-admin-crm-manager .portal-support-pagination {
+  gap: var(--portal-space-3);
+  margin-top: 0;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-light);
+  box-shadow: var(--portal-elevation-1);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--portal-space-3);
+  padding: var(--portal-space-3) var(--portal-space-4);
+  color: var(--portal-ink);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > summary::-webkit-details-marker {
+  display: none;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > summary::after {
+  content: "+";
+  color: var(--portal-action);
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 180ms ease-out;
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > div {
+  display: grid;
+  gap: var(--portal-space-3);
+  padding: 0 var(--portal-space-4) var(--portal-space-4);
+  border-top: 1px solid var(--portal-border);
+  color: var(--portal-muted);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > div > p {
+  margin: var(--portal-space-4) 0 0;
+  color: var(--portal-muted-strong);
+}
+
+.portal-page.portal-admin-crm-manager .portal-admin-crm-guidance ul {
+  margin: 0;
+  padding-left: var(--portal-space-5);
+}
+
+@media (max-width: 900px) {
+  .portal-page.portal-admin-crm-manager .portal-data-table-scroll-hint {
+    display: none;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table {
+    border: 0;
+    background: transparent;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table .portal-data-table,
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table thead th {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody {
+    display: grid;
+    gap: var(--portal-space-3);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius);
+    background: var(--portal-surface-light);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table td {
+    display: grid;
+    grid-template-columns: minmax(128px, .42fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--portal-space-3);
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: var(--portal-space-3) var(--portal-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--portal-border);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody tr > td:first-child:not(.portal-empty-cell) {
+    position: static;
+    left: auto;
+    z-index: auto;
+    width: 100%;
+    max-width: none;
+    background: var(--portal-surface-light);
+    box-shadow: none;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table tbody tr:hover > td:first-child:not(.portal-empty-cell) {
+    background: var(--portal-surface-light);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-table td::before {
+    content: attr(data-label);
+    color: var(--portal-muted);
+    font-size: .8125rem;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-page.portal-admin-crm-manager {
+    gap: var(--portal-space-4);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-work > .portal-card-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-work > .portal-card-header > .portal-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-filter {
+    padding: var(--portal-space-3);
+  }
+
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-filter .portal-fields,
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-filter .portal-form-footer,
+  .portal-page.portal-admin-crm-manager .portal-support-pagination,
+  .portal-page.portal-admin-crm-manager .portal-support-pagination > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .portal-page.portal-admin-crm-manager :is(.portal-admin-crm-filter .portal-button, .portal-support-pagination .portal-button) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page.portal-admin-crm-manager .portal-admin-crm-guidance > summary::after {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* AUTH-LOGIN-BRAND-VIEWPORT-001 */
 .portal-shell--auth .portal-main {
   width: min(100%, 660px);

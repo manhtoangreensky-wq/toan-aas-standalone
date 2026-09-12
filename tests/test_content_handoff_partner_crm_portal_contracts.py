@@ -271,7 +271,7 @@ def test_portal_has_professional_operational_views_without_external_execution_cl
     # The directory is deliberately anonymous: once the API stopped emitting
     # identifiers, the renderer must not require or display them either.
     assert "validPartnerCrmLeadId(item.lead_id)" not in manager
-    assert 'PARTNER_CRM_STAGES.has(String(item.stage || ""))' in manager
+    assert 'Object.prototype.hasOwnProperty.call(PARTNER_CRM_STAGE_LABELS, String(item.stage || ""))' in manager
     assert "owner_account_id" not in manager
     assert "owner_display_name" not in manager
     assert "item.tags" not in manager

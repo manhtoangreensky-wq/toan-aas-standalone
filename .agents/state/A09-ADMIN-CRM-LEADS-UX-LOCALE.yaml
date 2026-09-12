@@ -1,0 +1,69 @@
+task_id: A09-ADMIN-CRM-LEADS-UX-LOCALE
+route: /admin/crm/leads
+phase: LOCAL_VERIFIED_PREPUSH
+base_sha: 66a052ca76abd58af9020125c65e17fc3ba6e0df
+branch: fix/a09-admin-crm-leads-ux-locale
+allowed_files:
+  - static/portal/portal.js
+  - static/portal/portal-i18n.js
+  - static/portal/integration.js
+  - static/portal/portal-theme.css
+  - tests/test_a09_admin_crm_leads_ux_locale.py
+  - tests/test_content_handoff_partner_crm_portal_contracts.py
+  - reports/prepush/A09-ADMIN-CRM-LEADS-UX-LOCALE-001.md
+  - reports/prepush/A09-ADMIN-CRM-LEADS-UX-LOCALE-001.json
+  - reports/migration/p0-05d-tester-workspace.json
+  - KIEM-THU/DANH-SACH-CASE.md
+  - KIEM-THU/HUONG-DAN-TESTER.md
+  - TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md
+  - TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md
+  - docs/migration/PARTNER_LEAD_CRM_CONTRACT.md
+protected_files:
+  - copyfast_partner_crm.py
+  - app.py
+  - payment and wallet modules
+  - Bot repository and bot.py
+acceptance:
+  - fixed VI/EN/ZH admin CRM copy and action feedback are locale-pure
+  - loading and guarded states are distinct and stale-free
+  - anonymous manager DTO remains free of identity/detail fields
+  - filter precedes directory and rows become vertical at or below 900px
+  - manager stage allow-list and pagination remain unchanged
+  - browser matrix has zero overflow, clipping, leaks, writes and relevant console events
+verification:
+  renderer_contracts: 5 passed
+  focused_crm_suite: 28 passed, 1 warning
+  tester_workspace_portable: 32 passed, 1 Windows POSIX-only deselected
+  browser_states: 20
+  browser_minimum_contrast: 5.28:1
+  browser_mobile_cell_width_shortfall_max_px: 0
+  ci_bounded_portable: 286 passed, 1 Windows POSIX-only deselected, 1 warning
+  protected_base: 25 passed, 2 baseline failures
+  protected_candidate: 25 passed, 2 baseline failures
+  protected_new_failures: 0
+  node_syntax_files: 3
+  diff_check_exit: 0
+review_corrections:
+  - manager refresh, filter and pagination clear stale rows and enter loading before the network read
+  - mobile table headers remain in the accessibility tree while the visual rows stay vertical and unclipped
+  - the generic sticky first column is reset inside the CRM mobile scope so every cell uses the full row width
+independent_review:
+  ready_to_merge: true
+  critical: 0
+  important: 0
+  minor: 1
+  pending_minor_resolution: refresh migration provenance after the source review-fix commit
+ci_corrective:
+  first_run: 34690972958
+  first_failure: tests/test_portal_aura_theme_contracts.py::test_compact_headers_keep_the_brand_visible_while_secondary_controls_compact
+  root_cause: CRM visually-hidden rule used a globally forbidden clip-path token after the Auth hotfix marker
+  correction: preserve accessible clip rect and move the byte-identical CRM block before the Auth hotfix marker
+  block_sha256_before_after: 5C2CB6AC6A956F44E92B88FECF6C09E9E71B03B18A75A7AD2AECBFBB31F7051B
+  independent_review: ready, 0 Critical, 0 Important, 0 Minor
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  env_mutations: 0
+  crm_manager_writes: 0
+next_gate: COMMIT_PUSH_PR_CI_RERUN_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY

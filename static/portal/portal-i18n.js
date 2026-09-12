@@ -11490,6 +11490,75 @@
     ADMIN_WORK_QUEUE_MESSAGES.zh[`adminWorkQueue.${key}`] = zh;
   });
 
+  // Admin CRM Manager translates only the anonymous directory chrome. The
+  // server-owned stage/kind/consent values and timestamps remain unchanged in
+  // state; no owner, identifier, contact or narrative enters this catalogue.
+  const ADMIN_CRM_MANAGER_MESSAGES = { vi: {}, en: {}, zh: {} };
+  [
+    ["page.title", "Theo dõi khách hàng tiềm năng", "Lead monitoring", "潜在客户跟进"],
+    ["page.description", "Theo dõi tình trạng theo nhóm và giai đoạn trong phạm vi quản trị được cấp.", "Monitor work type and stage within your granted administration scope.", "在已授予的管理范围内按类型和阶段跟进。"],
+    ["hero.section", "Quản trị quan hệ khách hàng", "Customer relationship administration", "客户关系管理"],
+    ["work.title", "Danh sách cần theo dõi", "Leads to monitor", "待跟进名单"],
+    ["work.body", "Lọc theo giai đoạn để xem tình trạng tổng hợp và thời điểm cập nhật.", "Filter by stage to review aggregate status and update time.", "按阶段筛选，查看汇总状态和更新时间。"],
+    ["action.refresh", "Làm mới", "Refresh", "刷新"],
+    ["action.apply", "Áp dụng", "Apply", "应用"],
+    ["filter.label", "Giai đoạn", "Stage", "阶段"],
+    ["filter.all", "Tất cả giai đoạn", "All stages", "所有阶段"],
+    ["filter.note", "Bộ lọc chỉ thay đổi danh sách tổng hợp đang xem.", "The filter changes only the aggregate directory currently shown.", "筛选仅更改当前显示的汇总目录。"],
+    ["stage.draft", "Mới", "New", "新建"],
+    ["stage.qualified", "Đã sàng lọc", "Qualified", "已筛选"],
+    ["stage.review", "Đang xem xét", "Under review", "审核中"],
+    ["stage.proposal", "Đang đề xuất", "Proposal", "提案中"],
+    ["stage.won", "Thành công", "Won", "已成功"],
+    ["stage.lost", "Không tiếp tục", "Not proceeding", "不再继续"],
+    ["stage.archived", "Đã lưu trữ", "Archived", "已归档"],
+    ["kind.customer", "Khách hàng", "Customer", "客户"],
+    ["kind.partner", "Đối tác", "Partner", "合作伙伴"],
+    ["kind.agency", "Đơn vị dịch vụ", "Agency", "服务机构"],
+    ["kind.creator", "Nhà sáng tạo", "Creator", "创作者"],
+    ["kind.reseller", "Đại lý phân phối", "Reseller", "经销商"],
+    ["kind.other", "Khác", "Other", "其他"],
+    ["consent.unknown", "Chưa xác định", "Not recorded", "尚未记录"],
+    ["consent.documented", "Đã ghi nhận", "Recorded", "已记录"],
+    ["consent.not_granted", "Chưa đồng ý", "Not granted", "未同意"],
+    ["consent.withdrawn", "Đã rút lại", "Withdrawn", "已撤回"],
+    ["table.kind", "Nhóm", "Type", "类型"],
+    ["table.stage", "Giai đoạn", "Stage", "阶段"],
+    ["table.consent", "Trạng thái đồng ý", "Consent status", "同意状态"],
+    ["table.updated", "Cập nhật", "Updated", "更新时间"],
+    ["table.aria", "Danh sách khách hàng tiềm năng cần theo dõi", "Lead monitoring directory", "潜在客户跟进目录"],
+    ["empty.title", "Chưa có mục phù hợp", "No matching leads", "没有符合条件的潜在客户"],
+    ["empty.body", "Hãy đổi giai đoạn hoặc làm mới để kiểm tra dữ liệu mới nhất.", "Change the stage or refresh to check the latest data.", "请更改阶段或刷新以检查最新数据。"],
+    ["loading.title", "Đang tải danh sách", "Loading lead directory", "正在加载潜在客户目录"],
+    ["loading.body", "Đang kiểm tra dữ liệu mới nhất. Chưa có danh sách cũ nào được hiển thị.", "Checking the latest data. No older directory is being shown.", "正在检查最新数据，不会显示旧目录。"],
+    ["unavailable.title", "Chưa tải được danh sách", "Lead directory could not be loaded", "无法加载潜在客户目录"],
+    ["unavailable.body", "Dữ liệu chưa sẵn sàng. Hãy thử lại; danh sách cũ sẽ không được hiển thị.", "The data is not ready. Try again; an older directory will not be shown.", "数据尚未就绪。请重试；系统不会显示旧目录。"],
+    ["pagination.range", "Đang hiển thị {start}–{end} mục", "Showing items {start}–{end}", "正在显示第 {start}–{end} 项"],
+    ["pagination.empty", "Không có mục ở trang này", "No items on this page", "此页没有项目"],
+    ["pagination.previous", "Trang trước", "Previous page", "上一页"],
+    ["pagination.next", "Trang sau", "Next page", "下一页"],
+    ["pagination.aria", "Phân trang danh sách theo dõi", "Lead directory pagination", "潜在客户目录分页"],
+    ["guidance.title", "Dữ liệu và giới hạn", "Data and limits", "数据与限制"],
+    ["guidance.body", "Màn hình này chỉ giúp theo dõi tình trạng tổng hợp giữa các giai đoạn.", "This screen only monitors aggregate status across stages.", "此页面仅用于跟进各阶段的汇总状态。"],
+    ["guidance.anonymous", "Danh sách không chứa mã, chủ sở hữu, tên, email, nhu cầu, nhãn hoặc ghi chú.", "The directory contains no ID, owner, name, email, opportunity, tag, or note.", "目录不包含编号、所有者、姓名、电子邮件、需求、标签或备注。"],
+    ["guidance.readOnly", "Không có thao tác sửa, liên hệ, phân công hoặc mở chi tiết từ danh sách này.", "This directory cannot edit, contact, assign, or open lead details.", "此目录不能编辑、联系、分配或打开潜在客户详情。"],
+    ["guidance.external", "Không gọi dịch vụ ngoài, thanh toán, ví Xu hoặc tác vụ tự động.", "No external service, payment, Xu wallet, or automated action is invoked.", "不会调用外部服务、付款、Xu 钱包或自动操作。"],
+    ["error.viewPermission", "Bạn chưa có quyền xem danh sách.", "You do not have permission to view this directory.", "您无权查看此目录。"],
+    ["error.filterPermission", "Bạn chưa có quyền lọc danh sách.", "You do not have permission to filter this directory.", "您无权筛选此目录。"],
+    ["error.pagePermission", "Bạn chưa có quyền chuyển trang danh sách.", "You do not have permission to change directory pages.", "您无权切换目录页面。"],
+    ["toast.refresh.success", "Đã làm mới danh sách.", "Lead directory refreshed.", "潜在客户目录已刷新。"],
+    ["toast.refresh.error", "Chưa thể làm mới danh sách.", "Lead directory could not be refreshed.", "无法刷新潜在客户目录。"],
+    ["toast.filter.all", "Đã hiển thị tất cả giai đoạn.", "All stages are shown.", "已显示所有阶段。"],
+    ["toast.filter.stage", "Đã lọc theo giai đoạn.", "Directory filtered by stage.", "已按阶段筛选目录。"],
+    ["toast.filter.error", "Chưa thể áp dụng bộ lọc.", "Filters could not be applied.", "无法应用筛选。"],
+    ["toast.page.success", "Đã tải trang danh sách.", "Lead directory page loaded.", "潜在客户目录页面已加载。"],
+    ["toast.page.error", "Chưa thể tải trang danh sách.", "Lead directory page could not be loaded.", "无法加载潜在客户目录页面。"]
+  ].forEach(([key, vi, en, zh]) => {
+    ADMIN_CRM_MANAGER_MESSAGES.vi[`adminCrmManager.${key}`] = vi;
+    ADMIN_CRM_MANAGER_MESSAGES.en[`adminCrmManager.${key}`] = en;
+    ADMIN_CRM_MANAGER_MESSAGES.zh[`adminCrmManager.${key}`] = zh;
+  });
+
   // Admin Support owns a complete locale table because the staff list/detail
   // renderers are separate from customer Support. Records, identifiers,
   // timestamps and server-issued lifecycle values remain untranslated data.
@@ -12059,6 +12128,7 @@
     ADMIN_RELIABILITY_MESSAGES[locale],
     ADMIN_CONTENT_HANDOFF_MESSAGES[locale],
     ADMIN_WORK_QUEUE_MESSAGES[locale],
+    ADMIN_CRM_MANAGER_MESSAGES[locale],
     ADMIN_SUPPORT_MESSAGES[locale],
     ADMIN_MANUAL_TOPUP_MESSAGES[locale],
     MANUAL_TOPUP_MESSAGES[locale]

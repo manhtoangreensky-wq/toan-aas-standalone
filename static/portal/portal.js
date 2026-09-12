@@ -295,6 +295,10 @@
     return uiText(`adminWorkQueue.${key}`, fallback, params);
   }
 
+  function adminCrmManagerText(key, fallback, params) {
+    return uiText(`adminCrmManager.${key}`, fallback, params);
+  }
+
   function supportTicketLocale() {
     const i18n = portalI18n();
     if (!i18n || typeof i18n.localeTag !== "function") return "vi-VN";
@@ -9640,6 +9644,7 @@
     if (path === "/admin/reliability") return uiText("adminReliability.intro.kicker", fallback);
     if (path === "/admin/content-handoffs") return adminContentHandoffText("page.title", fallback);
     if (path === "/admin/work-queue") return adminWorkQueueText("page.title", fallback);
+    if (path === "/admin/crm/leads") return adminCrmManagerText("page.title", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "title", fallback);
     if (path === "/features") return featureCatalogText("page.title", fallback);
     if (path === "/studio") return mediaStudioText("page.title", fallback);
@@ -9711,6 +9716,7 @@
     if (path === "/admin/reliability") return uiText("adminReliability.page.description", fallback);
     if (path === "/admin/content-handoffs") return adminContentHandoffText("page.description", fallback);
     if (path === "/admin/work-queue") return adminWorkQueueText("page.description", fallback);
+    if (path === "/admin/crm/leads") return adminCrmManagerText("page.description", fallback);
     if (ADMIN_DATA_VIEW_ROUTE_KEYS[path]) return adminDataViewRouteText(page, "description", fallback);
     if (path === "/features") return featureCatalogText("page.description", fallback);
     if (path === "/studio") return mediaStudioText("page.description", fallback);
@@ -10984,6 +10990,7 @@
     if (route === "/admin/reliability") return uiText("adminReliability.hero.section", fallback);
     if (route === "/admin/content-handoffs") return adminContentHandoffText("hero.section", fallback);
     if (route === "/admin/work-queue") return adminWorkQueueText("hero.section", fallback);
+    if (route === "/admin/crm/leads") return adminCrmManagerText("hero.section", fallback);
     return routeKey ? supportTicketText(`hero.${routeKey}.section`, fallback) : fallback;
   }
 
@@ -31167,6 +31174,27 @@
     };
   }
 
+  function partnerCrmManagerStageLabel(value) {
+    const stage = String(value || "").trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(PARTNER_CRM_STAGE_LABELS, stage)
+      ? adminCrmManagerText(`stage.${stage}`, PARTNER_CRM_STAGE_LABELS[stage])
+      : "—";
+  }
+
+  function partnerCrmManagerKindLabel(value) {
+    const kind = String(value || "").trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(PARTNER_CRM_KIND_LABELS, kind)
+      ? adminCrmManagerText(`kind.${kind}`, PARTNER_CRM_KIND_LABELS[kind])
+      : "—";
+  }
+
+  function partnerCrmManagerConsentLabel(value) {
+    const consent = String(value || "").trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(PARTNER_CRM_CONSENT_LABELS, consent)
+      ? adminCrmManagerText(`consent.${consent}`, PARTNER_CRM_CONSENT_LABELS[consent])
+      : "—";
+  }
+
   function renderPartnerCrmPagination(listing, enabled) {
     const source = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
     const offset = Number.isInteger(source.offset) ? source.offset : 0;
@@ -31192,11 +31220,13 @@
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
     const disabled = enabled ? "" : " disabled";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " lead đã redact" : "Không có lead ở trang này";
+    const range = returned
+      ? adminCrmManagerText("pagination.range", "Đang hiển thị {start}–{end} mục", { start: String(offset + 1), end: String(offset + returned) })
+      : adminCrmManagerText("pagination.empty", "Không có mục ở trang này");
     const stageAttribute = ' data-partner-crm-manager-stage="' + safeText(stage) + '"';
-    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-manager-page" data-portal-route="/admin/crm/leads" data-partner-crm-manager-offset="' + safeText(String(previous)) + '"' + stageAttribute + disabled + '>← Trang trước</button>';
-    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-manager-page" data-portal-route="/admin/crm/leads" data-partner-crm-manager-offset="' + safeText(String(next)) + '"' + stageAttribute + disabled + '>Trang sau →</button>';
-    return '<nav class="portal-support-pagination" aria-label="Phân trang CRM Manager Directory"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
+    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-manager-page" data-portal-route="/admin/crm/leads" data-partner-crm-manager-offset="' + safeText(String(previous)) + '"' + stageAttribute + disabled + '>← ' + safeText(adminCrmManagerText("pagination.previous", "Trang trước")) + '</button>';
+    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-manager-page" data-portal-route="/admin/crm/leads" data-partner-crm-manager-offset="' + safeText(String(next)) + '"' + stageAttribute + disabled + '>' + safeText(adminCrmManagerText("pagination.next", "Trang sau")) + ' →</button>';
+    return '<nav class="portal-support-pagination" aria-label="' + safeText(adminCrmManagerText("pagination.aria", "Phân trang danh sách theo dõi")) + '"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
   }
 
   function renderContentHandoffStaffFilter(listing, enabled) {
@@ -31212,9 +31242,9 @@
     const filters = listing && listing.filters && typeof listing.filters === "object" ? listing.filters : {};
     const rawStage = String(filters.stage || "all").toLowerCase();
     const stage = rawStage === "all" || Object.prototype.hasOwnProperty.call(PARTNER_CRM_STAGE_LABELS, rawStage) ? rawStage : "all";
-    const options = [["all", "Tất cả stage"]].concat(Object.entries(PARTNER_CRM_STAGE_LABELS));
+    const options = [["all", adminCrmManagerText("filter.all", "Tất cả giai đoạn")]].concat(Object.keys(PARTNER_CRM_STAGE_LABELS).map((key) => [key, partnerCrmManagerStageLabel(key)]));
     const disabled = enabled ? "" : " disabled";
-    return '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="partner-crm-manager-filter" data-portal-route="/admin/crm/leads" novalidate><div class="portal-fields"><label class="portal-field"><span>Lọc theo stage</span><select class="portal-select" name="stage"' + disabled + '>' + options.map(([key, label]) => '<option value="' + safeText(key) + '"' + (key === stage ? " selected" : "") + '>' + safeText(label) + '</option>').join("") + '</select></label></div><div class="portal-form-footer"><span class="portal-form-note">Directory vẫn chỉ hiển thị metadata pipeline đã redact, không cấp quyền cross-account.</span><button class="portal-button portal-button--quiet" type="submit"' + disabled + '>Áp dụng</button></div></form>';
+    return '<form class="portal-form portal-admin-crm-filter" data-portal-form data-portal-no-transient data-portal-action="partner-crm-manager-filter" data-portal-route="/admin/crm/leads" novalidate><div class="portal-fields"><label class="portal-field"><span>' + safeText(adminCrmManagerText("filter.label", "Giai đoạn")) + '</span><select class="portal-select" name="stage"' + disabled + '>' + options.map(([key, label]) => '<option value="' + safeText(key) + '"' + (key === stage ? " selected" : "") + '>' + safeText(label) + '</option>').join("") + '</select></label></div><div class="portal-form-footer"><span class="portal-form-note">' + safeText(adminCrmManagerText("filter.note", "Bộ lọc chỉ thay đổi danh sách tổng hợp đang xem.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + disabled + '>' + safeText(adminCrmManagerText("action.apply", "Áp dụng")) + '</button></div></form>';
   }
   function contentHandoffDraftAssetId(context, record) {
     if (record || typeof window === "undefined") return "";
@@ -31489,13 +31519,21 @@
     return '<article class="portal-page portal-crm-detail">' + renderHero(page, context) + '<section class="portal-coordination-summary"><div><span class="portal-section-kicker">' + safeText(PARTNER_CRM_KIND_LABELS[lead.lead_kind]) + ' · v' + revision + '</span><h2>' + safeText(lead.lead_name) + '</h2><p>' + safeText(lead.opportunity_summary) + '</p></div><dl><div><dt>Stage</dt><dd>' + safeText(PARTNER_CRM_STAGE_LABELS[lead.stage]) + '</dd></div><div><dt>Consent</dt><dd>' + safeText(PARTNER_CRM_CONSENT_LABELS[lead.consent_status]) + '</dd></div></dl></section><div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin lead</h2><p class="portal-card-subtitle">Mỗi lần lưu tạo revision server-side.</p></div></div>' + partnerCrmForm(lead, route, "partner-crm-update", canUpdate) + '</section>' + stageControl + '</div><div class="portal-work-grid">' + consentControl + '<section class="portal-card portal-card-pad"><h2 class="portal-card-title">Giới hạn rõ ràng</h2><p class="portal-card-subtitle">Won/lost chỉ là state vận hành. Không có khoản thanh toán, payout, promo, membership, contact hay output được tạo.</p></section></div>' + activity + '</article>';
   }
   function renderPartnerCrmManager(page, context) {
-    const rows = (Array.isArray(context.partnerCrmManagerDirectory) ? context.partnerCrmManagerDirectory : []).filter((item) => item && PARTNER_CRM_STAGES.has(String(item.stage || ""))); const guarded = !(context.pageStates && context.pageStates["/admin/crm/leads"] === "read_only");
+    const copy = (key, fallback, params) => adminCrmManagerText(key, fallback, params);
+    const rows = (Array.isArray(context.partnerCrmManagerDirectory) ? context.partnerCrmManagerDirectory : []).filter((item) => item && Object.prototype.hasOwnProperty.call(PARTNER_CRM_STAGE_LABELS, String(item.stage || "")));
+    const readState = String(context.partnerCrmReadState || "guarded");
+    const loading = readState === "loading";
+    const guarded = readState !== "ready" || !(context.pageStates && context.pageStates["/admin/crm/leads"] === "read_only");
     const listing = partnerCrmManagerListing(context);
+    const columns = [copy("table.kind", "Nhóm"), copy("table.stage", "Giai đoạn"), copy("table.consent", "Trạng thái đồng ý"), copy("table.updated", "Cập nhật")];
+    const tableRows = rows.map((item) => '<tr><td data-label="' + safeText(columns[0]) + '">' + safeText(partnerCrmManagerKindLabel(item.lead_kind)) + '</td><td data-label="' + safeText(columns[1]) + '">' + safeText(partnerCrmManagerStageLabel(item.stage)) + '</td><td data-label="' + safeText(columns[2]) + '">' + safeText(partnerCrmManagerConsentLabel(item.consent_status)) + '</td><td data-label="' + safeText(columns[3]) + '">' + safeText(supportCaseTimestamp(item.updated_at)) + '</td></tr>').join("");
     const directoryMarkup = guarded
-      ? renderEmpty("Directory đang được bảo vệ", "Server-side Web manager role cần xác nhận quyền trước khi nạp dữ liệu redact.", ICONS.security)
-      : renderRowsTable(["Nhóm", "Stage", "Consent", "Cập nhật"], rows, (item) => '<td>' + safeText(PARTNER_CRM_KIND_LABELS[item.lead_kind] || item.lead_kind || "—") + '</td><td>' + safeText(PARTNER_CRM_STAGE_LABELS[item.stage] || item.stage || "—") + '</td><td>' + safeText(PARTNER_CRM_CONSENT_LABELS[item.consent_status] || item.consent_status || "—") + '</td><td>' + safeText(String(item.updated_at || "—")) + '</td>', "Chưa có lead trong directory", "Directory chỉ chứa metadata pipeline đã redact.");
-    const pagedDirectoryMarkup = directoryMarkup + (guarded ? "" : renderPartnerCrmManagerPagination(listing, !guarded));
-    return '<article class="portal-page">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Server-redacted · read only</span><h2 class="portal-card-title">CRM Manager Directory</h2><p class="portal-card-subtitle">Chỉ hiển thị metadata pipeline đã redact; không có owner, email, opportunity detail, notes hay control ghi cross-account.</p></div>' + badge(guarded ? "guarded" : "read_only") + '</div><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-refresh" data-portal-route="/admin/crm/leads">Làm mới</button>' + (guarded ? "" : renderPartnerCrmManagerFilter(listing, !guarded)) + pagedDirectoryMarkup + '</section></article>';
+      ? renderEmpty(copy(loading ? "loading.title" : "unavailable.title", loading ? "Đang tải danh sách" : "Chưa tải được danh sách"), copy(loading ? "loading.body" : "unavailable.body", loading ? "Đang kiểm tra dữ liệu mới nhất. Chưa có danh sách cũ nào được hiển thị." : "Dữ liệu chưa sẵn sàng. Hãy thử lại; danh sách cũ sẽ không được hiển thị."), ICONS.security)
+      : tableRows
+        ? '<div class="portal-data-table-wrap portal-admin-crm-table" tabindex="0" role="region" aria-label="' + safeText(copy("table.aria", "Danh sách khách hàng tiềm năng cần theo dõi")) + '"><table class="portal-data-table"><thead><tr>' + columns.map((column) => '<th scope="col">' + safeText(column) + '</th>').join("") + '</tr></thead><tbody>' + tableRows + '</tbody></table></div>'
+        : renderEmpty(copy("empty.title", "Chưa có mục phù hợp"), copy("empty.body", "Hãy đổi giai đoạn hoặc làm mới để kiểm tra dữ liệu mới nhất."), ICONS.support);
+    const pagedDirectoryMarkup = guarded ? "" : directoryMarkup + renderPartnerCrmManagerPagination(listing, !guarded);
+    return '<article class="portal-page portal-admin-crm-manager">' + renderHero(page, context) + '<section class="portal-card portal-card-pad portal-admin-crm-work"><div class="portal-card-header"><div><h2 class="portal-card-title">' + safeText(copy("work.title", "Danh sách cần theo dõi")) + '</h2><p class="portal-card-subtitle">' + safeText(copy("work.body", "Lọc theo giai đoạn để xem tình trạng tổng hợp và thời điểm cập nhật.")) + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-refresh" data-portal-route="/admin/crm/leads"' + (loading ? ' disabled aria-busy="true"' : '') + '>' + safeText(copy("action.refresh", "Làm mới")) + '</button></div>' + (guarded ? directoryMarkup : renderPartnerCrmManagerFilter(listing, !guarded) + '<div class="portal-admin-crm-directory-results">' + pagedDirectoryMarkup + '</div>') + '</section><details class="portal-admin-crm-guidance"><summary>' + safeText(copy("guidance.title", "Dữ liệu và giới hạn")) + '</summary><div><p>' + safeText(copy("guidance.body", "Màn hình này chỉ giúp theo dõi tình trạng tổng hợp giữa các giai đoạn.")) + '</p><ul><li>' + safeText(copy("guidance.anonymous", "Danh sách không chứa mã, chủ sở hữu, tên, email, nhu cầu, nhãn hoặc ghi chú.")) + '</li><li>' + safeText(copy("guidance.readOnly", "Không có thao tác sửa, liên hệ, phân công hoặc mở chi tiết từ danh sách này.")) + '</li><li>' + safeText(copy("guidance.external", "Không gọi dịch vụ ngoài, thanh toán, ví Xu hoặc tác vụ tự động.")) + '</li></ul></div></details></article>';
   }
 
   function renderPage(page, context) {

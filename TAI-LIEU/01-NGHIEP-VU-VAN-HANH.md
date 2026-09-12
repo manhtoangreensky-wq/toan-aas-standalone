@@ -368,6 +368,25 @@ PR #423 đã đưa phần khung quản trị lên main tại `6298057…`. PR #4
 - Đây là local acceptance; chưa merge/deploy/live. Customer create/detail, API,
   schema và transition values không đổi.
 
+### Candidate — Theo dõi khách hàng tiềm năng ẩn danh, 12/09/2026
+
+- `/admin/crm/leads` dùng manager directory Web-native chỉ đọc; server vẫn là
+  nơi kiểm tra vai trò Admin, stage filter, phân trang và boundary. Không mở
+  Core Bridge/Bot, không có chi tiết cross-account hay thao tác ghi.
+- Renderer task-first đặt `Danh sách cần theo dõi` và bộ lọc trước kết quả; dữ
+  liệu và giới hạn nằm trong disclosure đóng ban đầu. Loading và guarded không
+  hiển thị hàng cũ.
+- Catalogue `adminCrmManager.*` đối xứng VI/EN/ZH bao phủ tiêu đề, nhóm, giai
+  đoạn, trạng thái đồng ý, bộ lọc, phân trang, empty, recovery và toast đọc.
+  Giá trị canonical không đổi; nhãn và ngày giờ hiển thị theo locale.
+- DTO giữ ẩn danh: không có mã lead, chủ sở hữu, tên, email, nhu cầu, nhãn,
+  ghi chú hoặc liên kết chi tiết. Ở `≤900px`, hàng chuyển thành thẻ dọc có nhãn
+  cột; màu và tương phản dùng token teal/cyan.
+- Browser local đo `20` trạng thái = VI/EN × sáng/tối ×
+  `1440/1024/768/390/360`; minimum contrast `5.28:1`; overflow, clipping,
+  private leak, framework overlay, relevant console và write request đều `0`;
+  filter `review` trả `1` hàng ẩn danh. Đây là local acceptance, chưa deploy/live.
+
 ### Candidate — Hàng việc điều hành, 12/09/2026
 
 - `/admin/work-queue` là màn hình điều phối Web-native chỉ đọc; backend, năm

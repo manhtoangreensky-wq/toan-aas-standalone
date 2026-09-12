@@ -68,6 +68,20 @@ canonical-live role. If operations later require that stronger guarantee, a
 separate explicitly approved canonical-admin integration must be designed;
 this CRM module must not be widened implicitly.
 
+### Admin presentation contract — A09
+
+The `/admin/crm/leads` surface is task-first: a short localized hero, the
+anonymous directory and stage filter, then a closed `Data and limits`
+disclosure. Fixed copy and read-action feedback use the symmetric
+`adminCrmManager.*` VI/EN/ZH catalogue. Canonical values in the manager DTO
+remain unchanged; only visible labels and locale-aware timestamps are formatted
+for the current interface language.
+
+At `≤900px`, each directory row becomes a labelled vertical card and the shared
+horizontal-scroll hint is hidden for this route. Loading and guarded reads do
+not render a stale table. The browser never receives or renders lead ID, owner,
+name, email, opportunity, tag, note or detail link.
+
 ## Explicit non-goals
 
 The CRM does not:

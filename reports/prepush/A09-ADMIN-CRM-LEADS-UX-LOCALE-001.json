@@ -1,0 +1,94 @@
+{
+  "schema_version": "a09.admin.crm-leads.ux.locale.v1",
+  "spec_id": "A09-ADMIN-CRM-LEADS-UX-LOCALE",
+  "base_sha": "66a052ca76abd58af9020125c65e17fc3ba6e0df",
+  "route": "/admin/crm/leads",
+  "status": "local_verified_ready_for_pr",
+  "browser": {
+    "runner": "Playwright with installed Chrome; Browser plugin unavailable",
+    "states": 20,
+    "locales": ["vi", "en"],
+    "themes": ["light", "dark"],
+    "viewports": ["1440x900", "1024x768", "768x900", "390x667", "360x640"],
+    "minimum_contrast": 5.28,
+    "page_overflow_max_px": 0,
+    "table_overflow_max_px": 0,
+    "mobile_cell_width_shortfall_max_px": 0,
+    "clipped_elements": 0,
+    "private_leaks": 0,
+    "touch_target_violations": 0,
+    "framework_overlays": 0,
+    "relevant_console_events": 0,
+    "write_requests": 0,
+    "keyboard_disclosure": "open_close_pass",
+    "task_first": "filter_before_directory_pass",
+    "review_filter_rows": 1,
+    "report_sha256": "82385ccce07393c6e7fba8e724e652a268f9285d76498816344b902978588986"
+  },
+  "tests": {
+    "renderer_red_runtime_reference": "ReferenceError PARTNER_CRM_STAGES",
+    "review_red_failures": 2,
+    "renderer_contracts_passed": 5,
+    "crm_portal_backend_focused_passed": 28,
+    "focused_failed": 0,
+    "warnings": 1,
+    "tester_workspace_portable_passed": 32,
+    "tester_workspace_windows_posix_only_deselected": 1,
+    "ci_bounded_portable_passed": 286,
+    "ci_bounded_portable_deselected": 1,
+    "protected_base_passed": 25,
+    "protected_base_failed": 2,
+    "protected_candidate_passed": 25,
+    "protected_candidate_failed": 2,
+    "protected_new_failures": 0,
+    "node_syntax_files": 3,
+    "node_syntax_failed": 0,
+    "diff_check_exit": 0
+  },
+  "review_corrections": {
+    "fail_closed_loading_before_network": true,
+    "mobile_table_headers_accessibility_preserved": true,
+    "mobile_first_column_sticky_constraint_removed": true
+  },
+  "independent_review": {
+    "ready_to_merge": true,
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "minor_resolution": "refresh migration provenance after the source review-fix commit"
+  },
+  "ci_corrective": {
+    "pr": 430,
+    "first_run": 34690972958,
+    "first_status": "failure",
+    "first_failure": "tests/test_portal_aura_theme_contracts.py::test_compact_headers_keep_the_brand_visible_while_secondary_controls_compact",
+    "root_cause": "CRM visually-hidden CSS used a globally forbidden clip-path token after the Auth hotfix marker",
+    "correction": "keep accessible clip rect and move the byte-identical CRM block before the Auth hotfix marker",
+    "crm_block_sha256_before_after": "5c2cb6ac6a956f44e92b88fecf6c09e9e71b03b18a75a7ad2aecbfbb31f7051b",
+    "portable_bounded_passed": 286,
+    "portable_bounded_deselected": 1,
+    "independent_review": {
+      "ready": true,
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    },
+    "rerun_status": "pending_corrective_push"
+  },
+  "tester_workspace": {
+    "case_id": "WA-48",
+    "case_count": 48,
+    "tracker_issue": 412,
+    "tracker_state": "OPEN",
+    "required_labels": "12/12",
+    "project_readback": "not_revalidated_missing_project_scope"
+  },
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "crm_manager_writes": 0
+  },
+  "next_gate": "COMMIT_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY"
+}
