@@ -1,0 +1,49 @@
+task_id: A09-ADMIN-CRM-LEADS-UX-LOCALE
+route: /admin/crm/leads
+phase: LOCAL_VERIFIED_PREPUSH
+base_sha: 66a052ca76abd58af9020125c65e17fc3ba6e0df
+branch: fix/a09-admin-crm-leads-ux-locale
+allowed_files:
+  - static/portal/portal.js
+  - static/portal/portal-i18n.js
+  - static/portal/integration.js
+  - static/portal/portal-theme.css
+  - tests/test_a09_admin_crm_leads_ux_locale.py
+  - tests/test_content_handoff_partner_crm_portal_contracts.py
+  - reports/prepush/A09-ADMIN-CRM-LEADS-UX-LOCALE-001.md
+  - reports/prepush/A09-ADMIN-CRM-LEADS-UX-LOCALE-001.json
+  - reports/migration/p0-05d-tester-workspace.json
+  - KIEM-THU/DANH-SACH-CASE.md
+  - KIEM-THU/HUONG-DAN-TESTER.md
+  - TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md
+  - TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md
+  - docs/migration/PARTNER_LEAD_CRM_CONTRACT.md
+protected_files:
+  - copyfast_partner_crm.py
+  - app.py
+  - payment and wallet modules
+  - Bot repository and bot.py
+acceptance:
+  - fixed VI/EN/ZH admin CRM copy and action feedback are locale-pure
+  - loading and guarded states are distinct and stale-free
+  - anonymous manager DTO remains free of identity/detail fields
+  - filter precedes directory and rows become vertical at or below 900px
+  - manager stage allow-list and pagination remain unchanged
+  - browser matrix has zero overflow, clipping, leaks, writes and relevant console events
+verification:
+  renderer_contracts: 4 passed
+  focused_crm_suite: 42 passed, 1 warning
+  browser_states: 20
+  browser_minimum_contrast: 5.28:1
+  protected_base: 25 passed, 2 baseline failures
+  protected_candidate: 25 passed, 2 baseline failures
+  protected_new_failures: 0
+  node_syntax_files: 3
+  diff_check_exit: 0
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  env_mutations: 0
+  crm_manager_writes: 0
+next_gate: COMMIT_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY

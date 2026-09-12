@@ -856,6 +856,13 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  function adminCrmManagerText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const translated = i18n.t(`adminCrmManager.${key}`, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   function emptyAdminManualTopupState(readState, filterStatus) {
     return {
       readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(readState || "")) ? String(readState) : "guarded",
@@ -29539,9 +29546,15 @@
       if (action === "partner-crm-refresh") {
         const leadId = partnerCrmLeadIdFromPath(route);
         if (leadId) await hydratePartnerCrmLead(leadId);
-        else if (route === "/admin/crm/leads") await hydratePartnerCrmManagerDirectory();
-        else await hydratePartnerCrm();
-        toast("Đã làm mới Partner & Lead CRM.");
+        else if (route === "/admin/crm/leads") {
+          if (!(base().capabilities && base().capabilities["partner-crm-view"] === true)) throw new Error(adminCrmManagerText("error.viewPermission", "Bạn chưa có quyền xem danh sách."));
+          await hydratePartnerCrmManagerDirectory();
+          const ready = base().partnerCrmReadState === "ready";
+          toast(adminCrmManagerText(ready ? "toast.refresh.success" : "toast.refresh.error", ready ? "Đã làm mới danh sách." : "Chưa thể làm mới danh sách."), ready ? undefined : "error");
+        } else {
+          await hydratePartnerCrm();
+          toast("Đã làm mới Partner & Lead CRM.");
+        }
         return;
       }
       if (action === "partner-crm-page") {
@@ -29551,16 +29564,18 @@
         return;
       }
       if (action === "partner-crm-manager-filter") {
-        if (!(base().capabilities && base().capabilities["partner-crm-view"] === true)) throw new Error("Cần signed Web session để xem CRM Manager Directory.");
+        if (!(base().capabilities && base().capabilities["partner-crm-view"] === true)) throw new Error(adminCrmManagerText("error.filterPermission", "Bạn chưa có quyền lọc danh sách."));
         const stage = partnerCrmManagerStage(fields.stage);
         await hydratePartnerCrmManagerDirectory(stage, 0);
-        toast(stage === "all" ? "Đã hiển thị toàn bộ CRM Manager Directory." : "Đã lọc CRM Manager Directory theo stage.");
+        const ready = base().partnerCrmReadState === "ready";
+        toast(adminCrmManagerText(ready ? (stage === "all" ? "toast.filter.all" : "toast.filter.stage") : "toast.filter.error", ready ? (stage === "all" ? "Đã hiển thị tất cả giai đoạn." : "Đã lọc theo giai đoạn.") : "Chưa thể áp dụng bộ lọc."), ready ? undefined : "error");
         return;
       }
       if (action === "partner-crm-manager-page") {
-        if (!(base().capabilities && base().capabilities["partner-crm-view"] === true)) throw new Error("Cần signed Web session để xem CRM Manager Directory.");
+        if (!(base().capabilities && base().capabilities["partner-crm-view"] === true)) throw new Error(adminCrmManagerText("error.pagePermission", "Bạn chưa có quyền chuyển trang danh sách."));
         await hydratePartnerCrmManagerDirectory(fields.__partnerCrmManagerStage, partnerCrmListOffset(fields.__partnerCrmManagerOffset));
-        toast("Đã tải thêm lead đã redact trong CRM Manager Directory.");
+        const ready = base().partnerCrmReadState === "ready";
+        toast(adminCrmManagerText(ready ? "toast.page.success" : "toast.page.error", ready ? "Đã tải trang danh sách." : "Chưa thể tải trang danh sách."), ready ? undefined : "error");
         return;
       }
       if (action === "partner-crm-create") {

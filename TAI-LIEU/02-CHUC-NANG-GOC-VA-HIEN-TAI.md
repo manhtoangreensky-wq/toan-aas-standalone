@@ -191,6 +191,21 @@ overflow/clipping/framework overlay/console/write request `0`; tương tác atte
 trả `3` dòng và disclosure mở/đóng đạt. Đây là local acceptance, chưa phải
 deployed/live evidence.
 
+### Admin CRM Leads candidate — 12/09/2026
+
+Route cũ `/admin/crm/leads` phơi chuỗi `CRM Manager Directory`, `Server-redacted`,
+`stage`, `lead`, `metadata`, `pipeline`, `owner`, `opportunity`, `notes` và
+`cross-account`, đồng thời gọi biến chưa tồn tại `PARTNER_CRM_STAGES` khi có dữ
+liệu. Candidate thay đúng presentation bằng catalogue `adminCrmManager.*`, sửa
+allow-list stage sang `PARTNER_CRM_STAGE_LABELS`, tách loading/guarded, đưa bộ
+lọc trước directory và chuyển hàng thành thẻ dọc trên màn hẹp. Manager DTO,
+quyền Admin, API, schema, pagination và không-lộ-dữ-liệu vẫn giữ nguyên.
+
+Browser local đo `20` trạng thái, minimum contrast `5.28:1`; overflow, clipping,
+private leak, framework overlay, console và write request `0`; filter `review`
+trả `1` hàng ẩn danh, disclosure mở/đóng đạt. Focused CRM/portal/backend suite
+đạt `42 passed`, `1` cảnh báo Pydantic; chưa phải deployed/live evidence.
+
 Renderer cũ ghép trực tiếp Việt/Anh, mô tả khởi động lại Railway, đặt giải thích
 kỹ thuật trước hàng chờ và dùng khối trạng thái lồng nhiều lớp. Candidate hiện:
 

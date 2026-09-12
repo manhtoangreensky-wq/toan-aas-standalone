@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-47` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành.
+2. Chọn đúng một ID trong `WA-01..WA-48` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -177,3 +177,12 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 104. Ở `390/360`, mỗi hàng hiển thị dọc với nhãn cột; không chấp nhận ép chữ, cắt nội dung, cuộn ngang cấp trang hoặc thay `—` bằng `0`.
 105. Ghi minimum contrast, target, overflow/clipping, framework overlay, console và write request. Tất cả phải lần lượt đạt `≥4.5:1`, `≥44px`, `0`, `0`, `0`, `0`.
 106. Recovery/loading không render bảng dữ liệu cũ; nút phải là `Thử lại` và `Về trung tâm quản trị` theo locale. Pagination vẫn giữ offset và liên kết allow-list.
+
+## 16. A09: Theo dõi khách hàng tiềm năng ẩn danh
+
+107. Chạy WA-48 trên database tạm hoặc fixture manager ẩn danh; không tạo dữ liệu production và không dùng tài khoản khách để tự nâng quyền.
+108. Kiểm VI/EN × sáng/tối × `1440/1024/768/390/360`; ZH kiểm renderer. Fixed copy và toast refresh/filter/page theo locale; giá trị kind/stage/consent giữ canonical trong state nhưng nhãn và ngày giờ được localize.
+109. Xác nhận thứ tự `Danh sách cần theo dõi → bộ lọc → kết quả`; `Dữ liệu và giới hạn` đóng ban đầu. Loading nói đang tải, failure nói chưa tải được và cả hai không render row cũ.
+110. DTO/DOM không được có ID, owner, tên, email, nội dung nhu cầu, tag hoặc note; route không có link detail hay action ghi cross-account.
+111. Ở `768/390/360`, mỗi hàng hiển thị dọc với nhãn cột; không cuộn ngang cấp trang hoặc ép chữ. Contrast tối thiểu `4.5:1`, target tối thiểu `44px`.
+112. Browser receipt bắt buộc overflow/table overflow/clipping/private leak/framework overlay/relevant console/write request `0`; filter `review` trả đúng tập con ẩn danh.

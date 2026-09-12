@@ -1,0 +1,58 @@
+{
+  "schema_version": "a09.admin.crm-leads.ux.locale.v1",
+  "spec_id": "A09-ADMIN-CRM-LEADS-UX-LOCALE",
+  "base_sha": "66a052ca76abd58af9020125c65e17fc3ba6e0df",
+  "route": "/admin/crm/leads",
+  "status": "local_verified_ready_for_pr",
+  "browser": {
+    "runner": "Playwright with installed Chrome; Browser plugin unavailable",
+    "states": 20,
+    "locales": ["vi", "en"],
+    "themes": ["light", "dark"],
+    "viewports": ["1440x900", "1024x768", "768x900", "390x667", "360x640"],
+    "minimum_contrast": 5.28,
+    "page_overflow_max_px": 0,
+    "table_overflow_max_px": 0,
+    "clipped_elements": 0,
+    "private_leaks": 0,
+    "touch_target_violations": 0,
+    "framework_overlays": 0,
+    "relevant_console_events": 0,
+    "write_requests": 0,
+    "keyboard_disclosure": "open_close_pass",
+    "task_first": "filter_before_directory_pass",
+    "review_filter_rows": 1,
+    "report_sha256": "e7dcd19e0846948a22326bb8c0f5f9b5b0bca88e3f23aa293a2e51935285b73b"
+  },
+  "tests": {
+    "renderer_red_runtime_reference": "ReferenceError PARTNER_CRM_STAGES",
+    "renderer_contracts_passed": 4,
+    "crm_portal_backend_focused_passed": 42,
+    "focused_failed": 0,
+    "warnings": 1,
+    "protected_base_passed": 25,
+    "protected_base_failed": 2,
+    "protected_candidate_passed": 25,
+    "protected_candidate_failed": 2,
+    "protected_new_failures": 0,
+    "node_syntax_files": 3,
+    "node_syntax_failed": 0,
+    "diff_check_exit": 0
+  },
+  "tester_workspace": {
+    "case_id": "WA-48",
+    "case_count": 48,
+    "tracker_issue": 412,
+    "tracker_state": "OPEN",
+    "required_labels": "12/12",
+    "project_readback": "not_revalidated_missing_project_scope"
+  },
+  "safety": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "env_mutations": 0,
+    "crm_manager_writes": 0
+  },
+  "next_gate": "COMMIT_PR_CI_MERGE_DEPLOY_RUNTIME_SIGNED_READ_ONLY"
+}
