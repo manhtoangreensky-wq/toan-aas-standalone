@@ -1997,7 +1997,13 @@
   adminPage("/admin/pricing", "Giá & Xu", "Review pricing catalog; không thay đổi rate hoặc chính sách trong UI tĩnh.", ICONS.pricing);
   adminPage("/admin/packages", "Packages", "Xem và review packages do backend canonical quản lý.", ICONS.pricing);
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
-  adminPage("/admin/leads", "Leads", "Theo dõi lead và CSKH theo quyền server-side.", ICONS.users);
+  adminPage("/admin/leads", "CRM Manager Directory", "Directory pipeline đã redacted, chỉ đọc, dành cho Web manager được server xác nhận.", ICONS.support, {
+    layout: "partner-crm-manager", action: "none", status: "processing",
+    notes: [
+      "Không phải canonical Bot admin directory; quyền xem do Web server kiểm tra và dữ liệu đã redact.",
+      "Không có write cross-account, contact detail, note hay quyền thay đổi referral/payout/promo."
+    ]
+  });
   adminPage("/admin/tickets", "Tickets", "Phân luồng ticket với dữ liệu đã được kiểm soát quyền truy cập.", ICONS.ticket);
   adminPage("/admin/support", "Trung tâm hỗ trợ khách hàng Web", "Không gian chăm sóc khách hàng trên Web được máy chủ cấp quyền riêng; không phụ thuộc cầu nối quản trị Telegram.", ICONS.support, {
     layout: "support-admin", action: "none", status: "processing",
@@ -9219,7 +9225,7 @@
     if (normalized === "/admin/content-handoffs") {
       return Object.freeze({ path: normalized, title: "Content Handoff Queue", icon: ICONS.support, section: "Customer Care", description: "Hàng review nội bộ Web-native cho nhân sự Customer Care được server xác nhận.", status: "processing", access: "admin", layout: "content-handoff-admin", action: "none", actionLabel: "", fields: [], notes: ["Route cần server-side Support staff authority; browser role không cấp quyền.", "Queue không có publish/delivery/payment/provider action và không hiển thị recipient bên ngoài."] });
     }
-    if (normalized === "/admin/crm/leads") {
+    if (normalized === "/admin/crm/leads" || normalized === "/admin/leads") {
       return Object.freeze({ path: normalized, title: "CRM Manager Directory", icon: ICONS.support, section: "CRM", description: "Directory pipeline đã redacted, chỉ đọc, dành cho Web manager được server xác nhận.", status: "processing", access: "admin", layout: "partner-crm-manager", action: "none", actionLabel: "", fields: [], notes: ["Không phải canonical Bot admin directory; quyền xem do Web server kiểm tra và dữ liệu đã redact.", "Không có write cross-account, contact detail, note hay quyền thay đổi referral/payout/promo."] });
     }
     if (/^\/content\/channel-strategy\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -9927,6 +9933,120 @@
       || navigation.groups[0];
   }
 
+  function adminNavSchemeIcon(key) {
+    return (typeof ICONS !== "undefined" && ICONS && ICONS[key]) ? ICONS[key] : key;
+  }
+
+  const ADMIN_PRIMARY_NAV_SCHEME = [
+    {
+      id: "overview",
+      title: "Tổng quan",
+      titleEn: "Overview",
+      items: [
+        { route: "/admin", title: "Tổng quan ERP", titleEn: "ERP Overview", icon: adminNavSchemeIcon("dashboard"), children: ["/admin"] },
+        { route: "/admin/work-queue", title: "Hàng đợi xử lý", titleEn: "Work Queue", icon: adminNavSchemeIcon("jobs"), children: ["/admin/work-queue"] }
+      ]
+    },
+    {
+      id: "customers",
+      title: "Khách hàng",
+      titleEn: "Customers",
+      items: [
+        {
+          route: "/admin/customers",
+          title: "Khách hàng & Leads",
+          titleEn: "Customers & Leads",
+          icon: adminNavSchemeIcon("users"),
+          children: ["/admin/customers", "/admin/crm/leads", "/admin/leads", "/admin/users", "/admin/support", "/admin/tickets"]
+        }
+      ]
+    },
+    {
+      id: "operations",
+      title: "Vận hành",
+      titleEn: "Operations",
+      items: [
+        {
+          route: "/admin/operations",
+          title: "Vận hành & Tác vụ",
+          titleEn: "Operations & Tasks",
+          icon: adminNavSchemeIcon("workboard"),
+          children: ["/admin/operations", "/admin/jobs", "/admin/jobs/failed", "/admin/automation", "/admin/content-handoffs", "/admin/job-recovery-guide"]
+        }
+      ]
+    },
+    {
+      id: "reliability",
+      title: "Giám sát",
+      titleEn: "Monitoring",
+      items: [
+        {
+          route: "/admin/reliability",
+          title: "Độ ổn định & Sự cố",
+          titleEn: "Reliability & Incidents",
+          icon: adminNavSchemeIcon("providers"),
+          children: ["/admin/reliability", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/runtime", "/admin/features", "/admin/freezes"]
+        }
+      ]
+    },
+    {
+      id: "finance",
+      title: "Tài chính",
+      titleEn: "Finance",
+      items: [
+        {
+          route: "/admin/finance",
+          title: "Tài chính & Giao dịch",
+          titleEn: "Finance & Transactions",
+          icon: adminNavSchemeIcon("payments"),
+          children: ["/admin/finance", "/admin/wallet", "/admin/payments", "/admin/revenue", "/admin/refunds", "/admin/topups", "/admin/finance/planning", "/admin/finance/tax-readiness"]
+        }
+      ]
+    },
+    {
+      id: "commerce",
+      title: "Kinh doanh",
+      titleEn: "Commerce & Growth",
+      items: [
+        {
+          route: "/admin/pricing",
+          title: "Bảng giá & Gói cước",
+          titleEn: "Pricing & Packages",
+          icon: adminNavSchemeIcon("pricing"),
+          children: ["/admin/pricing", "/admin/packages", "/admin/promos"]
+        },
+        {
+          route: "/admin/campaigns",
+          title: "Chiến dịch & Tăng trưởng",
+          titleEn: "Campaigns & Growth",
+          icon: adminNavSchemeIcon("prompt"),
+          children: ["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics", "/admin/growth", "/admin/growth/postback-readiness", "/admin/trends"]
+        }
+      ]
+    },
+    {
+      id: "governance",
+      title: "Quản trị",
+      titleEn: "Governance & System",
+      items: [
+        {
+          route: "/admin/system",
+          title: "Hệ thống & Bảo mật",
+          titleEn: "System & Security",
+          icon: adminNavSchemeIcon("system"),
+          children: ["/admin/system", "/admin/system-stewardship", "/admin/security", "/admin/access", "/admin/audit", "/admin/reports", "/admin/backups"]
+        },
+        {
+          route: "/admin/governance",
+          title: "Chính sách & Pháp lý",
+          titleEn: "Governance & Policies",
+          icon: adminNavSchemeIcon("security"),
+          children: ["/admin/governance", "/admin/internal-documents", "/admin/legal", "/legal"]
+        }
+      ]
+    }
+  ];
+
   function adminDesktopNavGroups(context, currentPage) {
     const navigation = adminErpNavigation(context);
     if (!navigation.groups.length) return [];
@@ -9935,15 +10055,49 @@
     const issuedRoutes = new Set(issued.map((module) => module.route));
     const current = currentAdminNavigationModule(currentPage, context, issued);
     const activeGroup = activeAdminNavigationGroup(currentPage, context, navigation);
-    return navigation.groups.map((group) => {
-      const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
-      if (!modules.length) return null;
-      const isCurrent = Boolean(activeGroup && (group === activeGroup || group.id === activeGroup.id));
+    const isLegacyTestGroups = navigation.groups.length <= 4 && navigation.groups.some((g) => g.id === "core" || g.id === "support");
+
+    if (isLegacyTestGroups) {
+      return navigation.groups.map((group) => {
+        const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
+        if (!modules.length) return null;
+        const isCurrent = Boolean(activeGroup && (group === activeGroup || group.id === activeGroup.id));
+        return {
+          label: group.title,
+          defaultOpen: isCurrent,
+          current: isCurrent,
+          links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
+        };
+      }).filter(Boolean);
+    }
+
+    const currentPath = normalizePath(currentPage && (currentPage.routePath || currentPage.path) || "");
+    const isEn = (context && context.locale === "en") || (typeof currentLocale !== "undefined" && currentLocale === "en");
+
+    return ADMIN_PRIMARY_NAV_SCHEME.map((schemeGroup) => {
+      const links = [];
+      schemeGroup.items.forEach((item) => {
+        const targetRoute = issuedRoutes.has(item.route)
+          ? item.route
+          : (item.children || []).find((r) => issuedRoutes.has(r));
+        if (!targetRoute) return;
+
+        const isItemCurrent = currentPath === targetRoute
+          || (item.children && item.children.some((child) => currentPath === child || (child !== "/admin" && currentPath.startsWith(child + "/"))));
+
+        const itemTitle = isEn && item.titleEn ? item.titleEn : item.title;
+        links.push([targetRoute, itemTitle, item.icon, isItemCurrent]);
+      });
+
+      if (!links.length) return null;
+      const isGroupCurrent = links.some((link) => link[3] === true);
+      const groupLabel = isEn && schemeGroup.titleEn ? schemeGroup.titleEn : schemeGroup.title;
+
       return {
-        label: group.title,
-        defaultOpen: isCurrent,
-        current: isCurrent,
-        links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
+        label: groupLabel,
+        defaultOpen: isGroupCurrent,
+        current: isGroupCurrent,
+        links
       };
     }).filter(Boolean);
   }
@@ -10470,8 +10624,12 @@
       : ["TOAN AAS", page.section, localizedPageTitle(page, context)])
       .filter(Boolean);
     if (adminSurface && adminActiveGroup) crumbItems.splice(1, 0, adminActiveGroup.title);
-    const crumbs = crumbItems
-      .map((piece, index) => `<span${index === crumbItems.length - 1 ? ' aria-current="page"' : ""}>${safeText(localizedNavigationLabel(piece))}</span>`)
+    const displayCrumbItems = crumbItems.filter((piece, index, arr) => {
+      if (index === 0) return true;
+      return localizedNavigationLabel(piece).trim().toLowerCase() !== localizedNavigationLabel(arr[index - 1]).trim().toLowerCase();
+    });
+    const crumbs = displayCrumbItems
+      .map((piece, index) => `<span${index === displayCrumbItems.length - 1 ? ' aria-current="page"' : ""}>${safeText(localizedNavigationLabel(piece))}</span>`)
       .join("");
     const canOfferPwaInstall = Boolean(!adminSurface && context && context.pwaEnabled === true && context.session && context.session.authenticated === true);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
@@ -10598,6 +10756,7 @@
       <nav class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</nav>
       <div class="portal-header-actions">
         ${adminHeaderLocaleForm}
+        ${adminSurface ? `<span class="portal-admin-auth-chip"><span class="portal-admin-auth-chip-dot"></span>${safeText(currentLocale === "en" ? "admin · Authenticated" : "admin · Đã xác thực")}</span>` : ""}
         ${renderThemeToggle()}
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
         <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
@@ -10952,6 +11111,135 @@
       </form>${flowControls}</section>`;
   }
 
+  const ADMIN_TAB_GROUPS = [
+    {
+      id: "overview",
+      matches: (path) => path === "/admin",
+      tabs: [
+        { path: "/admin", label: "Tổng quan ERP", labelEn: "ERP Overview" },
+        { path: "/admin/customers", label: "Khách hàng & Leads", labelEn: "Customers" },
+        { path: "/admin/operations", label: "Vận hành Autopilot", labelEn: "Operations" },
+        { path: "/admin/reliability", label: "Độ ổn định", labelEn: "Reliability" },
+        { path: "/admin/finance", label: "Tài chính", labelEn: "Finance" },
+        { path: "/admin/pricing", label: "Kinh doanh & Giá", labelEn: "Commerce" },
+        { path: "/admin/system", label: "Quản trị hệ thống", labelEn: "Governance" }
+      ]
+    },
+    {
+      id: "customers",
+      matches: (path) => ["/admin/customers", "/admin/crm/leads", "/admin/leads", "/admin/users", "/admin/support", "/admin/tickets"].includes(path) || path.startsWith("/admin/support/"),
+      tabs: [
+        { path: "/admin/customers", label: "Khách hàng Web", labelEn: "Customers" },
+        { path: "/admin/crm/leads", label: "CRM & Leads", labelEn: "CRM & Leads", alias: ["/admin/leads"] },
+        { path: "/admin/users", label: "Người dùng", labelEn: "Users" },
+        { path: "/admin/support", label: "Support Desk", labelEn: "Support Desk" },
+        { path: "/admin/tickets", label: "Tickets canonical", labelEn: "Tickets" }
+      ]
+    },
+    {
+      id: "operations",
+      matches: (path) => ["/admin/operations", "/admin/jobs", "/admin/jobs/failed", "/admin/content-handoffs", "/admin/automation", "/admin/job-recovery-guide"].includes(path) || path.startsWith("/admin/jobs/"),
+      tabs: [
+        { path: "/admin/operations", label: "Vận hành Autopilot", labelEn: "Autopilot" },
+        { path: "/admin/jobs", label: "Jobs", labelEn: "Jobs" },
+        { path: "/admin/jobs/failed", label: "Jobs thất bại", labelEn: "Failed Jobs" },
+        { path: "/admin/content-handoffs", label: "Hàng bàn giao", labelEn: "Handoff Queue" },
+        { path: "/admin/automation", label: "Automation Monitor", labelEn: "Automation" },
+        { path: "/admin/job-recovery-guide", label: "Sổ tay xử lý sự cố", labelEn: "Recovery Guide" }
+      ]
+    },
+    {
+      id: "reliability",
+      matches: (path) => ["/admin/reliability", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/runtime", "/admin/features", "/admin/freezes"].includes(path),
+      tabs: [
+        { path: "/admin/reliability", label: "Độ ổn định", labelEn: "Reliability" },
+        { path: "/admin/providers", label: "Providers & chi phí", labelEn: "Providers" },
+        { path: "/admin/provider-cost", label: "Chi phí Provider", labelEn: "Provider Cost" },
+        { path: "/admin/workers", label: "Workers", labelEn: "Workers" },
+        { path: "/admin/runtime", label: "Runtime", labelEn: "Runtime" },
+        { path: "/admin/features", label: "Features", labelEn: "Features" },
+        { path: "/admin/freezes", label: "Bảo trì & Freeze", labelEn: "Freezes" }
+      ]
+    },
+    {
+      id: "finance",
+      matches: (path) => ["/admin/finance", "/admin/wallet", "/admin/payments", "/admin/revenue", "/admin/refunds", "/admin/topups", "/admin/finance/planning", "/admin/finance/tax-readiness"].includes(path),
+      tabs: [
+        { path: "/admin/finance", label: "Tổng quan Tài chính", labelEn: "Finance Overview" },
+        { path: "/admin/wallet", label: "Ví & Xu", labelEn: "Wallet" },
+        { path: "/admin/payments", label: "Thanh toán", labelEn: "Payments" },
+        { path: "/admin/revenue", label: "Doanh thu", labelEn: "Revenue" },
+        { path: "/admin/refunds", label: "Hoàn tiền", labelEn: "Refunds" },
+        { path: "/admin/topups", label: "Đối soát nạp", labelEn: "Topups" },
+        { path: "/admin/finance/planning", label: "Kế hoạch chi phí", labelEn: "Planning" },
+        { path: "/admin/finance/tax-readiness", label: "Chuẩn bị Thuế/Kế toán", labelEn: "Tax Readiness" }
+      ]
+    },
+    {
+      id: "pricing",
+      matches: (path) => ["/admin/pricing", "/admin/packages", "/admin/promos"].includes(path),
+      tabs: [
+        { path: "/admin/pricing", label: "Bảng giá & Xu", labelEn: "Pricing" },
+        { path: "/admin/packages", label: "Gói cước Packages", labelEn: "Packages" },
+        { path: "/admin/promos", label: "Khuyến mãi Promo", labelEn: "Promos" }
+      ]
+    },
+    {
+      id: "campaigns",
+      matches: (path) => ["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics", "/admin/growth", "/admin/growth/postback-readiness", "/admin/trends"].includes(path),
+      tabs: [
+        { path: "/admin/campaigns", label: "Chiến dịch", labelEn: "Campaigns" },
+        { path: "/admin/calendar", label: "Lịch nội dung", labelEn: "Calendar" },
+        { path: "/admin/approvals", label: "Hàng duyệt", labelEn: "Approvals" },
+        { path: "/admin/publishing", label: "Xuất bản & Kênh", labelEn: "Publishing" },
+        { path: "/admin/analytics", label: "Analytics", labelEn: "Analytics" },
+        { path: "/admin/growth", label: "Tăng trưởng & Affiliate", labelEn: "Growth" },
+        { path: "/admin/trends", label: "Xu hướng & Tham chiếu", labelEn: "Trends" }
+      ]
+    },
+    {
+      id: "system",
+      matches: (path) => ["/admin/system", "/admin/system-stewardship", "/admin/security", "/admin/access", "/admin/audit", "/admin/reports", "/admin/backups"].includes(path),
+      tabs: [
+        { path: "/admin/system", label: "Hệ thống", labelEn: "System" },
+        { path: "/admin/system-stewardship", label: "System Stewardship", labelEn: "Stewardship" },
+        { path: "/admin/security", label: "An ninh bảo mật", labelEn: "Security Posture" },
+        { path: "/admin/access", label: "Quyền truy cập", labelEn: "Access Posture" },
+        { path: "/admin/audit", label: "Nhật ký Audit", labelEn: "Audit Log" },
+        { path: "/admin/reports", label: "Báo cáo", labelEn: "Reports" },
+        { path: "/admin/backups", label: "Sao lưu", labelEn: "Backups" }
+      ]
+    },
+    {
+      id: "governance",
+      matches: (path) => ["/admin/governance", "/admin/internal-documents", "/admin/legal", "/legal"].includes(path),
+      tabs: [
+        { path: "/admin/governance", label: "Kho tài liệu nội bộ", labelEn: "Governance Docs" },
+        { path: "/admin/internal-documents", label: "Kho hồ sơ nội bộ", labelEn: "Internal Archives" },
+        { path: "/legal", label: "Pháp lý & Riêng tư", labelEn: "Legal & Privacy" }
+      ]
+    }
+  ];
+
+  function renderAdminModuleTabs(page, context) {
+    if (!page) return "";
+    const sourcePath = page.routePath || page.path || "";
+    const currentPath = normalizePath(sourcePath);
+    if (currentPath !== "/admin" && !currentPath.startsWith("/admin/")) return "";
+    const group = ADMIN_TAB_GROUPS.find((g) => g.matches(currentPath));
+    if (!group || !Array.isArray(group.tabs)) return "";
+    const authorizedRoutes = (adminErpNavigation(context) && adminErpNavigation(context).routes) || new Set();
+    const isEn = (context && context.locale === "en") || (typeof currentLocale !== "undefined" && currentLocale === "en");
+    const validTabs = group.tabs.filter((t) => t.path === "/legal" || authorizedRoutes.has(t.path) || (t.alias && t.alias.some((a) => authorizedRoutes.has(a))));
+    if (validTabs.length <= 1) return "";
+    const tabsHtml = validTabs.map((tab) => {
+      const isCurrent = currentPath === tab.path || (tab.alias && tab.alias.includes(currentPath)) || (tab.path !== "/admin" && currentPath.startsWith(tab.path + "/"));
+      const label = isEn && tab.labelEn ? tab.labelEn : tab.label;
+      return `<a class="portal-admin-tab${isCurrent ? " is-active" : ""}" href="${safeText(tab.path)}"${isCurrent ? ' aria-current="page"' : ""}>${safeText(label)}</a>`;
+    }).join("");
+    return `<nav class="portal-admin-tabs" aria-label="${safeText(isEn ? "Module sections" : "Phân hệ nghiệp vụ")}"><div class="portal-admin-tabs-list">${tabsHtml}</div></nav>`;
+  }
+
   function renderHero(page, context) {
     context = (context && typeof context === "object") ? context : {};
     const route = (page && (page.routePath || page.path)) || "";
@@ -10974,10 +11262,13 @@
     const genericHeroAction = route !== "/support" && showHeroAction
       ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(actionLabel)}</button>`
       : "";
+    const adminTabs = typeof renderAdminModuleTabs === "function" && isAdminPortalSurface(page) && (page.routePath || page.path) !== "/admin"
+      ? renderAdminModuleTabs(page, context)
+      : "";
     return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(supportTicketHeroSection(page))}</div>
       <h1 class="portal-title">${safeText(localizedPageTitle(page, context))}</h1><p class="portal-description">${safeText(localizedPageDescription(page))}</p></div>
       <div class="portal-hero-actions">${pageStatusBadge(page, context)}${supportHeroAction}${genericHeroAction}</div>
-    </section>`;
+    </section>${adminTabs}`;
   }
 
   const SUPPORT_TICKET_HERO_DETAIL_PATH = /^\/tickets\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -28948,7 +29239,7 @@
       "{mode}. Mỗi phân hệ tiếp tục kiểm tra phiên đăng nhập, quyền hạn, bảo vệ yêu cầu và che dữ liệu nhạy cảm ở máy chủ.",
       { mode }
     );
-    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục phân hệ"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group) => `<details class="portal-admin-directory-group" open><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} phân hệ", { count: String(group.modules.length) }))}</span></summary><div class="portal-admin-directory-list">${group.modules.map((entry) => `<div class="portal-admin-directory-row">${moduleCard(entry, context, adminText("directory.openAction", "Mở phân hệ"))}</div>`).join("")}</div></details>`).join("")}</div></section>`;
+    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục phân hệ"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group) => `<details class="portal-admin-directory-group"><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} phân hệ", { count: String(group.modules.length) }))}</span></summary><div class="portal-admin-directory-list">${group.modules.map((entry) => `<div class="portal-admin-directory-row">${moduleCard(entry, context, adminText("directory.openAction", "Mở phân hệ"))}</div>`).join("")}</div></details>`).join("")}</div></section>`;
   }
 
   function renderAdminWorkQueues(context) {
@@ -29089,7 +29380,8 @@
     const operationalSurface = hasSourceData
       ? `<section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${safeText(label)}</span><strong>${safeText(value)}</strong><em>${safeText(note)}</em></div>`).join("")}</section>${analyticsSurface}`
       : `<section class="portal-card portal-card-pad portal-admin-dashboard-source-empty" role="status"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(adminText("sourceEmpty.title", "Chưa có số liệu vận hành"))}</h2><p class="portal-card-subtitle">${safeText(adminText("sourceEmpty.body", "Dữ liệu sẽ xuất hiện khi máy chủ cung cấp nguồn đo hợp lệ."))}</p></div>${refreshEnabled ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin">${safeText(adminText("sourceEmpty.action", "Làm mới dữ liệu"))}</button>` : ""}</div></section>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${operationalSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
+    const adminOverviewTabs = typeof renderAdminModuleTabs === "function" ? renderAdminModuleTabs(page, context) : "";
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${adminOverviewTabs}${operationalSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
@@ -29731,7 +30023,8 @@
         ? adminGenericText("failedJobs.unavailableNotice", "Core Bridge chưa cấp danh sách job lỗi/hủy trong lần đọc này.")
         : adminGenericText("failedJobs.countNotice", "{count} job lỗi/hủy được Core Bridge cấp trong lần đọc này.", { count: String(incidentCount) });
       const incidentNotice = `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminGenericText("failedJobs.noticeTitle", "Incident queue chỉ đọc"))}</strong><p>${safeText(incidentText)} ${safeText(adminGenericText("failedJobs.noticeBody", "Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định."))}</p></div></div>`;
-      return surface(`${incidentNotice}${renderRowsTable([adminGenericText("failedJobs.column.job", "Job"), adminGenericText("failedJobs.column.feature", "Tính năng"), adminGenericText("failedJobs.column.status", "Trạng thái"), adminGenericText("failedJobs.column.errorCategory", "Nguyên nhân đã rút gọn"), adminGenericText("failedJobs.column.costRefund", "Chi phí / hoàn Xu"), adminGenericText("failedJobs.column.output", "Output"), adminGenericText("failedJobs.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || adminGenericText("failedJobs.errorCategoryFallback", "Chưa có category canonical"))}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("failedJobs.emptyTitle", "Chưa có incident job được cấp"), adminGenericText("failedJobs.emptyBody", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser."))}`);
+      const recoveryGuideBtn = `<div class="portal-inline-actions" style="margin-bottom: 12px;"><a class="portal-button portal-button--quiet" href="/admin/job-recovery-guide">${safeText(adminGenericText("failedJobs.guideAction", "Sổ tay xử lý sự cố & phục hồi (Runbook)"))}</a></div>`;
+      return surface(`${incidentNotice}${recoveryGuideBtn}${renderRowsTable([adminGenericText("failedJobs.column.job", "Job"), adminGenericText("failedJobs.column.feature", "Tính năng"), adminGenericText("failedJobs.column.status", "Trạng thái"), adminGenericText("failedJobs.column.errorCategory", "Nguyên nhân đã rút gọn"), adminGenericText("failedJobs.column.costRefund", "Chi phí / hoàn Xu"), adminGenericText("failedJobs.column.output", "Output"), adminGenericText("failedJobs.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.error_category || adminGenericText("failedJobs.errorCategoryFallback", "Chưa có category canonical"))}</td><td>${jobCost(item)}</td><td>${reportedOutput(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("failedJobs.emptyTitle", "Chưa có incident job được cấp"), adminGenericText("failedJobs.emptyBody", "Bot/Core Bridge chưa cấp job lỗi thuộc phạm vi quản trị hiện tại. Không tạo incident hoặc lỗi giả tại browser."))}`);
     }
     if (["jobs", "failed-jobs", "workers", "runtime"].includes(module)) {
       const route = page.routePath || page.path;
@@ -29746,7 +30039,7 @@
     if (module === "audit") {
       return renderRowsTable([adminGenericText("audit.column.event", "Sự kiện"), adminGenericText("audit.column.action", "Hành động"), adminGenericText("audit.column.outcome", "Kết quả"), adminGenericText("audit.column.occurredAt", "Thời điểm")], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, adminGenericText("audit.emptyTitle", "Chưa có audit event được cấp"), adminGenericText("audit.emptyBody", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng."));
     }
-    return surface(renderRowsTable([adminGenericText("fallbackTable.column.subject", "Đối tượng"), adminGenericText("fallbackTable.column.status", "Trạng thái"), adminGenericText("fallbackTable.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("fallbackTable.emptyTitle", "Module đang chờ adapter canonical"), adminGenericText("fallbackTable.emptyBody", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp.")));
+    return surface(renderRowsTable([adminGenericText("fallbackTable.column.subject", "Đối tượng"), adminGenericText("fallbackTable.column.status", "Trạng thái"), adminGenericText("fallbackTable.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, adminGenericText("fallbackTable.emptyTitle", "Chưa có dữ liệu vận hành"), adminGenericText("fallbackTable.emptyBody", "Dữ liệu vận hành sẽ xuất hiện khi máy chủ ghi nhận phát sinh.")));
   }
 
   // These are first-class navigation centers, not new Bot adapters. Their
@@ -34708,6 +35001,11 @@
       setSidebarAccessibilityState(false);
       header.innerHTML = renderHeader(page, context);
       main.innerHTML = renderPage(page, context);
+      if (!isHydration) {
+        const workspace = document.querySelector(".portal-workspace") || main;
+        if (workspace && typeof workspace.scrollTop === "number") workspace.scrollTop = 0;
+        if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
+      }
       syncAdminDataViewRows(main);
       syncAdminManualTopupDialog(main);
       consumeDeliveryReadReceipt(main);

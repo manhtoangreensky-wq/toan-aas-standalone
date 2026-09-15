@@ -219,7 +219,7 @@ def test_locale_keys_are_symmetric_exact_and_new_vietnamese_copy_is_clean() -> N
 
 
 def test_dashboard_css_is_scoped_responsive_static_and_uses_one_data_gradient() -> None:
-    block = THEME[THEME.index(DASHBOARD_CSS_MARKER) :]
+    block = _between(THEME, DASHBOARD_CSS_MARKER, "/* Admin VI/EN Shell Takeover 001")
     root = '.portal-shell[data-portal-app-kind="admin"] .portal-admin-dashboard-analytics'
     donut_selector = f"{root} .portal-admin-readiness-donut"
     donut_rule = re.search(re.escape(donut_selector) + r"\s*\{([^{}]*)\}", block)

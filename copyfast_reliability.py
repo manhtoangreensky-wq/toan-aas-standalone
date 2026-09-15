@@ -644,8 +644,22 @@ class FollowupMutationRequest(BaseModel):
 
 @router.get("/api/v1/operations/admin/reliability/summary")
 async def summary(account: dict = Depends(require_account)):
-    _require_reliability()
     role = require_support_staff(account)
+    if not autopilot_enabled() or not reliability_followup_enabled():
+        return envelope(
+            True,
+            "Tổng quan Reliability Follow-up (chế độ an toàn).",
+            data=_boundary(
+                operator_role=role,
+                counts={state: 0 for state in FOLLOWUP_STATES},
+                signal_groups=0,
+                signal_occurrences=0,
+                last_signal_at=None,
+                recent_signals=[],
+                reliability_preflight=reliability_preflight_code() or "ready",
+            ),
+            status_name="read_only",
+        )
     visibility, _ = _followup_visibility_clause(role)
     ensure_copyfast_schema()
     with read_transaction() as conn:
@@ -683,7 +697,6 @@ async def summary(account: dict = Depends(require_account)):
 async def list_followups(
     state: str = "all", severity: str = "all", limit: int = 50, offset: int = 0, account: dict = Depends(require_account),
 ):
-    _require_reliability()
     staff_role = require_support_staff(account)
     bounded = max(1, min(int(limit), MAX_LIST_LIMIT))
     bounded_offset = int(offset)
@@ -693,6 +706,20 @@ async def list_followups(
     severity_filter = str(severity or "all").strip().lower()
     if state_filter not in {*FOLLOWUP_STATES, "all"} or severity_filter not in {*FOLLOWUP_SEVERITIES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc Reliability Follow-up không hợp lệ")
+    if not autopilot_enabled() or not reliability_followup_enabled():
+        return envelope(
+            True,
+            "Danh sách Reliability Follow-up (chế độ an toàn).",
+            data=_boundary(
+                operator_role=staff_role,
+                items=[],
+                total=0,
+                offset=bounded_offset,
+                limit=bounded,
+                reliability_preflight=reliability_preflight_code() or "ready",
+            ),
+            status_name="read_only",
+        )
     visibility, _ = _followup_visibility_clause(staff_role)
     clauses: list[str] = [visibility]
     params: list[Any] = []

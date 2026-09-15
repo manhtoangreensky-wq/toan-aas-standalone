@@ -83,6 +83,10 @@
   --portal-landing-divider: var(--portal-border);
   --portal-control-border: var(--portal-border);
   --portal-control-surface: var(--portal-surface-light);
+  --portal-input-bg: var(--portal-surface-light);
+  --portal-input-text: var(--portal-ink);
+  --portal-input-placeholder: var(--portal-muted);
+  --portal-input-border: var(--portal-border);
   --portal-control-hover: #f8fdfd;
   --portal-control-disabled-border: #c9e1e5;
   --portal-control-disabled-surface: #edf6f7;
@@ -243,6 +247,21 @@ body {
 
 .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
   background: var(--portal-app-canvas);
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.portal-shell[data-portal-app-kind="admin"] {
+  grid-template-columns: 248px minmax(0, 1fr);
+}
+
+@media (max-width: 1023px) {
+  .portal-shell[data-portal-app-kind="admin"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .portal-sidebar {
@@ -250,12 +269,94 @@ body {
   background: var(--portal-rail);
   color: var(--portal-rail-text);
   box-shadow: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.portal-workspace {
+  min-width: 0;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .portal-header {
   border-bottom-color: var(--portal-border);
   background: var(--portal-surface-light);
   backdrop-filter: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.portal-main {
+  flex: 1 0 auto;
+}
+
+/* ERP Secondary Tab Navigation ------------------------------------------ */
+.portal-admin-tabs {
+  display: flex;
+  align-items: center;
+  margin: -6px 0 16px;
+  padding: 4px;
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md, 10px);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.portal-admin-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: max-content;
+}
+
+.portal-admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--portal-text-muted);
+  text-decoration: none;
+  border-radius: var(--portal-radius-sm, 7px);
+  border: 1px solid transparent;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.portal-admin-tab:hover {
+  color: var(--portal-ink);
+  background: var(--portal-surface-soft);
+  text-decoration: none;
+}
+
+.portal-admin-tab.is-active,
+.portal-admin-tab[aria-current="page"] {
+  color: var(--portal-ink);
+  background: var(--portal-control-surface);
+  border-color: var(--portal-control-border);
+  font-weight: 600;
+  box-shadow: var(--portal-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+
+.portal-admin-tab-icon {
+  font-size: 14px;
+  opacity: 0.85;
 }
 
 .portal-sidebar-create,
@@ -15868,6 +15969,10 @@ body {
   --portal-rail-border: var(--portal-dark-rail-border);
   --portal-rail-text: var(--portal-dark-rail-text);
   --portal-rail-muted: var(--portal-dark-rail-muted);
+  --portal-input-bg: var(--portal-saas-obsidian-surface);
+  --portal-input-text: var(--portal-saas-obsidian-ink);
+  --portal-input-placeholder: var(--portal-saas-obsidian-muted);
+  --portal-input-border: var(--portal-saas-obsidian-border);
   --portal-bg: var(--portal-app-canvas);
   --portal-bg-deep: var(--portal-dark-bg-deep);
   --portal-chrome: var(--portal-surface-light);
@@ -19928,10 +20033,9 @@ html::view-transition-new(root) {
 }
 
 /* =========================================================================
-   SAAS 2026 XANH NGỌC (TEAL & EMERALD CYBER-JADE) THEME OVERHAUL
-   Áp dụng đồng bộ cho cả Web Khách và Web Admin (Xóa bỏ xanh dương & đen obsidian)
+   SAAS 2026 SEMANTIC THEME: NEUTRAL FIRST + TEAL ACCENT
+   Light mode: Nền sáng -> Chữ tối; Dark mode: Nền tối -> Chữ sáng; Teal là Accent
    ========================================================================= */
-.portal-shell[data-portal-app-kind="admin"],
 html[data-portal-theme="dark"] .portal-shell,
 html[data-portal-theme="dark"] body,
 html[data-portal-theme="dark"] .portal-main,
@@ -19942,21 +20046,25 @@ html[data-portal-theme="dark"] .portal-card,
 html[data-portal-theme="dark"] .portal-auth-page--access {
   --portal-radius-lg: 16px;
   --portal-radius: 12px;
-  --portal-app-canvas: var(--portal-saas-teal-canvas);
-  --portal-surface: var(--portal-saas-teal-surface);
-  --portal-surface-light: var(--portal-saas-teal-surface);
-  --portal-surface-raised: var(--portal-saas-teal-raised);
-  --portal-surface-strong: var(--portal-saas-teal-surface);
-  --portal-surface-soft: var(--portal-saas-teal-soft);
-  --portal-rail: var(--portal-saas-teal-rail);
-  --portal-rail-surface: var(--portal-saas-teal-rail-surface);
-  --portal-rail-hover: var(--portal-saas-teal-rail-hover);
-  --portal-border: var(--portal-saas-teal-border);
-  --portal-border-strong: var(--portal-saas-teal-border-strong);
-  --portal-ink: var(--portal-saas-teal-ink);
-  --portal-muted: var(--portal-saas-teal-muted);
-  --portal-action: var(--portal-saas-teal-action);
-  --portal-action-hover: var(--portal-saas-teal-action-hover);
+  --portal-app-canvas: var(--portal-saas-obsidian-canvas);
+  --portal-surface: var(--portal-saas-obsidian-surface);
+  --portal-surface-light: var(--portal-saas-obsidian-surface);
+  --portal-surface-raised: var(--portal-saas-obsidian-raised);
+  --portal-surface-strong: var(--portal-saas-obsidian-raised);
+  --portal-surface-soft: var(--portal-saas-obsidian-soft);
+  --portal-rail: var(--portal-saas-obsidian-rail);
+  --portal-rail-surface: var(--portal-saas-obsidian-surface);
+  --portal-rail-hover: var(--portal-saas-obsidian-rail-hover);
+  --portal-border: var(--portal-saas-obsidian-border);
+  --portal-border-strong: var(--portal-saas-obsidian-border);
+  --portal-ink: var(--portal-saas-obsidian-ink);
+  --portal-muted: var(--portal-saas-obsidian-muted);
+  --portal-input-bg: var(--portal-saas-obsidian-surface);
+  --portal-input-text: var(--portal-saas-obsidian-ink);
+  --portal-input-placeholder: var(--portal-saas-obsidian-muted);
+  --portal-input-border: var(--portal-saas-obsidian-border);
+  --portal-action: var(--portal-saas-teal-context);
+  --portal-action-hover: var(--portal-action-hover);
   --portal-brand: var(--portal-saas-teal);
   --portal-brand-hover: var(--portal-saas-emerald);
   --portal-context: var(--portal-saas-teal-context);
@@ -19964,7 +20072,43 @@ html[data-portal-theme="dark"] .portal-auth-page--access {
 }
 
 html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
-  background: radial-gradient(circle at 86% -12%, var(--portal-saas-teal-glow-mint), transparent 31rem), radial-gradient(circle at 12% 100%, var(--portal-saas-teal-glow-sky), transparent 32rem), var(--portal-saas-teal-canvas) !important;
+  background: var(--portal-app-canvas) !important;
+}
+
+html[data-portal-theme="dark"] :is(input, select, textarea, .portal-input, .portal-select) {
+  color-scheme: dark;
+  background: var(--portal-input-bg, var(--portal-surface-raised)) !important;
+  color: var(--portal-input-text, var(--portal-ink)) !important;
+  border-color: var(--portal-input-border, var(--portal-border)) !important;
+}
+
+html[data-portal-theme="dark"] :is(input, select, textarea, .portal-input, .portal-select)::placeholder {
+  color: var(--portal-input-placeholder, var(--portal-muted)) !important;
+}
+
+html:not([data-portal-theme="dark"]) :is(input, select, textarea, .portal-input, .portal-select) {
+  color-scheme: light;
+  background: var(--portal-input-bg, var(--portal-surface-light));
+  color: var(--portal-input-text, var(--portal-ink));
+  border-color: var(--portal-input-border, var(--portal-border));
+}
+
+html:not([data-portal-theme="dark"]) .portal-auth-page--access .portal-title {
+  color: var(--portal-ink) !important;
+}
+
+html:not([data-portal-theme="dark"]) .portal-auth-page--access .portal-description {
+  color: var(--portal-muted) !important;
+}
+
+html:not([data-portal-theme="dark"]) .portal-auth-page--access .portal-field > span {
+  color: var(--portal-ink) !important;
+  font-weight: 600;
+}
+
+html:not([data-portal-theme="dark"]) .portal-auth-page--access .portal-auth-card {
+  background: var(--portal-surface) !important;
+  border-color: var(--portal-border) !important;
 }
 
 /* Ẩn triệt để các ô disclaimer và khẩu hiệu quyền quản trị thừa thãi */
@@ -19989,8 +20133,8 @@ html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.porta
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--portal-muted);
-  opacity: 0.85;
+  color: var(--portal-rail-muted);
+  opacity: 0.95;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link {
@@ -20001,47 +20145,47 @@ html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.porta
   border-radius: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--portal-ink);
+  color: var(--portal-rail-text);
   text-decoration: none;
   transition: background 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link:hover {
-  background: var(--portal-surface-soft);
-  color: var(--portal-action);
+  background: var(--portal-rail-hover);
+  color: var(--portal-rail-text);
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link[aria-current="page"] {
-  background: var(--portal-surface-soft);
-  color: var(--portal-action);
+  background: var(--portal-rail-surface);
+  color: var(--portal-rail-text);
   font-weight: 750;
   box-shadow: inset 3px 0 0 var(--portal-action);
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-card {
-  border: 1px solid rgba(13, 148, 136, 0.16) !important;
+  border: 1px solid var(--portal-border) !important;
   border-radius: 16px !important;
-  box-shadow: 0 10px 28px -6px rgba(6, 43, 53, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: var(--portal-shadow) !important;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-card:hover {
-  border-color: rgba(13, 148, 136, 0.3) !important;
-  box-shadow: 0 14px 34px -6px rgba(6, 43, 53, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+  border-color: var(--portal-border-strong) !important;
+  box-shadow: var(--portal-elevation-2) !important;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-metric {
-  border: 1px solid rgba(13, 148, 136, 0.14) !important;
+  border: 1px solid var(--portal-border) !important;
   border-radius: 14px !important;
   padding: 18px 20px !important;
-  background: linear-gradient(145deg, var(--portal-surface-light) 0%, var(--portal-surface-soft) 100%) !important;
-  box-shadow: 0 8px 20px -4px rgba(6, 43, 53, 0.06) !important;
+  background: var(--portal-surface-light) !important;
+  box-shadow: var(--portal-shadow) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-metric:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px -4px rgba(13, 148, 136, 0.14) !important;
+  box-shadow: var(--portal-elevation-2) !important;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-metric > strong {
@@ -20068,7 +20212,7 @@ html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.porta
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue {
-  border: 1px solid rgba(13, 148, 136, 0.15) !important;
+  border: 1px solid var(--portal-border) !important;
   border-radius: 12px !important;
   padding: 14px 18px !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -20078,7 +20222,7 @@ html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.porta
   transform: translateX(4px);
   border-color: var(--portal-brand) !important;
   background: var(--portal-surface-soft) !important;
-  box-shadow: 0 6px 18px -3px rgba(13, 148, 136, 0.12) !important;
+  box-shadow: var(--portal-elevation-1) !important;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-operations-run {
@@ -20090,6 +20234,57 @@ html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.porta
 
 .portal-shell[data-portal-app-kind="admin"] .portal-operations-run:hover {
   background: var(--portal-surface-soft) !important;
+}
+
+/* ERP Module Secondary Navigation Tabs */
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs {
+  display: flex;
+  width: 100%;
+  margin: 0 0 18px 0;
+  padding: 0 0 8px 0;
+  border-bottom: 1px solid var(--portal-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--portal-muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tab:hover {
+  color: var(--portal-ink);
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tab.is-active,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-tab[aria-current="page"] {
+  color: var(--portal-brand);
+  background: var(--portal-surface-light);
+  border-color: var(--portal-border);
+  font-weight: 750;
+  box-shadow: var(--portal-shadow);
 }
 
 /* A09 Admin Vertical Shell */
