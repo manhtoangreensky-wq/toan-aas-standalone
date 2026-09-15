@@ -1571,7 +1571,13 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
     if surface == "feature":
         return _project_feature_response(value)
     if surface == "admin":
-        result = _project_record(value, ("module", "read_only", "message"))
+        result = _project_record(value, ("module", "read_only", "message", "revenue_scope"))
+        if isinstance(value.get("system_health"), dict):
+            result["system_health"] = {
+                str(k)[:60]: str(v)[:40]
+                for k, v in list(value["system_health"].items())[:20]
+                if isinstance(k, str) and isinstance(v, str)
+            }
         counts = value.get("counts") if isinstance(value.get("counts"), dict) else {}
         safe_counts = {str(key)[:80]: amount for key, amount in list(counts.items())[:40] if isinstance(amount, int) and not isinstance(amount, bool) and amount >= 0}
         if safe_counts:

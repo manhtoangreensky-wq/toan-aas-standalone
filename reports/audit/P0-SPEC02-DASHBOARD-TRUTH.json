@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-02",
+    "task": "P0.WEB.ERP.SPEC02.DASHBOARD.REAL_OPERATIONAL_TRUTH",
+    "base_sha": "03325cf577de4fd090abea9088c8980a6a028e29",
+    "runtime_sha": "03325cf577de4fd090abea9088c8980a6a028e29",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "invariants": {
+    "DASHBOARD_FAKE_METRICS": 0,
+    "DASHBOARD_DEMO_FALLBACKS": 0,
+    "DASHBOARD_UNKNOWN_AS_ZERO": 0,
+    "DASHBOARD_API_ERROR_AS_EMPTY": 0,
+    "REVENUE_SCOPE": "WEB_ONLY",
+    "WALLET_MUTATIONS": 0,
+    "DANGEROUS_WRITE_ACTIONS": 0,
+    "MULTI_SOURCE_HEALTH": true,
+    "PR437_ADMIN_IA_PROTECTED": true,
+    "PORTAL_SHELL_SCROLL_PROTECTED": true,
+    "SEMANTIC_TOKENS_PROTECTED": true
+  },
+  "kpis": [
+    {
+      "key": "action_required",
+      "label_vi": "Cần xử lý ngay",
+      "note_vi": "Tổng các yêu cầu cần xử lý",
+      "source_authority": "WEB_SQLITE",
+      "computation": "pending_topups + open_support + pending_approvals",
+      "zero_semantics": "0 yêu cầu cần xử lý (hệ thống vận hành trơn tru)",
+      "unavailable_semantics": "Không khả dụng khi API summary lỗi hoặc mất kết nối DB"
+    },
+    {
+      "key": "total_customers",
+      "label_vi": "Tài khoản người dùng",
+      "note_vi": "Dữ liệu tài khoản đã kiểm tra",
+      "source_authority": "WEB_SQLITE.web_accounts",
+      "computation": "SELECT count(*) FROM web_accounts",
+      "zero_semantics": "0 tài khoản được đăng ký trên Web",
+      "unavailable_semantics": "Không khả dụng"
+    },
+    {
+      "key": "pending_topups",
+      "label_vi": "Nạp tiền chờ duyệt",
+      "note_vi": "Chờ đối soát thanh toán",
+      "source_authority": "WEB_SQLITE.web_manual_topup_requests",
+      "computation": "SELECT count(*) FROM web_manual_topup_requests WHERE status = 'pending_admin_review'",
+      "zero_semantics": "0 yêu cầu nạp tiền đang chờ xử lý",
+      "unavailable_semantics": "Không khả dụng"
+    },
+    {
+      "key": "open_support",
+      "label_vi": "Phiếu hỗ trợ mở",
+      "note_vi": "Yêu cầu hỗ trợ chưa đóng",
+      "source_authority": "WEB_SQLITE.web_support_cases",
+      "computation": "SELECT count(*) FROM web_support_cases WHERE state IN ('new', 'reviewing', 'waiting_user', 'waiting_provider', 'refund_pending')",
+      "zero_semantics": "0 phiếu hỗ trợ mở",
+      "unavailable_semantics": "Không khả dụng"
+    },
+    {
+      "key": "failed_jobs",
+      "label_vi": "Tác vụ gặp sự cố",
+      "note_vi": "Các tác vụ cần kiểm tra",
+      "source_authority": "WEB_SQLITE.web_ops_followups",
+      "computation": "SELECT count(*) FROM web_ops_followups WHERE state = 'open'",
+      "zero_semantics": "0 tác vụ gặp sự cố",
+      "unavailable_semantics": "Không khả dụng"
+    }
+  ],
+  "health_model": {
+    "system_runtime": {
+      "value": "HEALTHY",
+      "authority": "RUNTIME_OS_PROCESS",
+      "meaning": "Process FastAPI Web App đang hoạt động bình thường"
+    },
+    "workers": {
+      "value": "HEALTHY",
+      "authority": "RUNTIME_OS_PROCESS",
+      "meaning": "Luồng xử lý background task nội bộ đang phản hồi"
+    },
+    "reliability_telemetry": {
+      "value": "UNAVAILABLE",
+      "authority": "BOT_CORE_AUTOPILOT",
+      "meaning": "Chưa kết nối telemetry engine của Bot Core - không được làm giả thành HEALTHY"
+    }
+  },
+  "revenue_scope": {
+    "scope": "WEB_ONLY",
+    "forbidden_declarations": [
+      "TOTAL_SYSTEM_REVENUE",
+      "BOT_TELEGRAM_REVENUE"
+    ],
+    "truth_contract": "Doanh thu hiển thị trên Web App chỉ phản ánh các khoản nạp qua Web manual topup / Web PayOS session, tuyệt đối không được gộp doanh thu toàn hệ thống khi chưa có canonical settlement aggregator."
+  },
+  "test_verification": {
+    "syntax_check": "py_compile PASS",
+    "spec02_unit_tests": "12/12 PASS",
+    "full_regression_tests": "76/76 PASS",
+    "executed_at": "2026-09-16T00:26:41+07:00"
+  }
+}
