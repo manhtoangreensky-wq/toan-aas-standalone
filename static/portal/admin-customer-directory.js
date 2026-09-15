@@ -278,7 +278,7 @@
     const safeHelpers = {
       safeText: (helpers && typeof helpers.safeText === "function") ? helpers.safeText : (v) => String(v || ""),
       badge: (helpers && typeof helpers.badge === "function") ? helpers.badge : (s) => `<span>${s}</span>`,
-      renderHero: (helpers && typeof helpers.renderHero === "function") ? helpers.renderHero : (p) => `<header><h1>${p.title}</h1></header>`,
+      renderHero: (helpers && typeof helpers.renderHero === "function") ? (p) => helpers.renderHero(p, context) : (p) => `<header><h1>${(p && p.title) || ""}</h1></header>`,
       renderEmpty: (helpers && typeof helpers.renderEmpty === "function") ? helpers.renderEmpty : (t, m) => `<div><h2>${t}</h2><p>${m}</p></div>`
     };
 

@@ -10423,6 +10423,12 @@
       // one uninterrupted wall of links. Native <details> is keyboard and
       // screen-reader accessible; the active family always expands, while
       // the five core Workspace destinations remain open for new customers.
+      if (adminSurface) {
+        return `<div class="portal-nav-group portal-nav-group--flat${group.current === true ? " portal-nav-group--current" : ""}">
+          <div class="portal-nav-group-header"><span class="portal-nav-label">${safeText(localizedNavigationLabel(group.label))}</span></div>
+          <div class="portal-nav-links">${links}</div>
+        </div>`;
+      }
       const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);
       return `<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>
         <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(localizedNavigationLabel(group.label))}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
@@ -10947,11 +10953,12 @@
   }
 
   function renderHero(page, context) {
-    const route = page.routePath || page.path;
-    const linkPending = page.action === "start-telegram-link" && context.linkFlow && context.linkFlow.data && context.linkFlow.data.code && !(context.linkStatus && context.linkStatus.linked === true);
+    context = (context && typeof context === "object") ? context : {};
+    const route = (page && (page.routePath || page.path)) || "";
+    const linkPending = page && page.action === "start-telegram-link" && context.linkFlow && context.linkFlow.data && context.linkFlow.data.code && !(context.linkStatus && context.linkStatus.linked === true);
     // A completed Telegram link is a terminal identity state.  The server
     // rejects relinking, so do not leave a stale hero CTA that can only fail.
-    const telegramLinkAlreadyComplete = page.action === "start-telegram-link" && telegramIdentityLinked(context);
+    const telegramLinkAlreadyComplete = page && page.action === "start-telegram-link" && telegramIdentityLinked(context);
     const hasAction = page.action && page.action !== "none" && !linkPending && !telegramLinkAlreadyComplete;
     // A feature/customer form must submit through its own validated form so
     // that field values, staged upload IDs and the current quote fingerprint
@@ -31692,7 +31699,7 @@
           return window.TOANAASAdminCustomerDirectory.render(page, context, {
             safeText,
             badge,
-            renderHero,
+            renderHero: (p, ctx) => renderHero(p, ctx || context),
             renderEmpty: (title, message) => `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="empty"><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p></div></div></section>`
           });
         }
@@ -34033,26 +34040,20 @@
       if (navSummary) {
         const navGroup = navSummary.closest(".portal-nav-group");
         const firstLink = navGroup && navGroup.querySelector(".portal-nav-link");
-        if (firstLink) {
-          const href = firstLink.getAttribute("href");
-          if (href) {
-            event.preventDefault();
-            window.location.href = href;
-            return;
-          }
+        if (firstLink && event.target === navSummary) {
+          event.preventDefault();
+          firstLink.click();
+          return;
         }
       }
       const adminGroupSummary = event.target.closest(".portal-admin-directory-group > summary");
       if (adminGroupSummary) {
         const groupEl = adminGroupSummary.closest(".portal-admin-directory-group");
         const firstModuleLink = groupEl && groupEl.querySelector(".portal-module-card, a[href^='/admin']");
-        if (firstModuleLink) {
-          const href = firstModuleLink.getAttribute("href");
-          if (href) {
-            event.preventDefault();
-            window.location.href = href;
-            return;
-          }
+        if (firstModuleLink && event.target === adminGroupSummary) {
+          event.preventDefault();
+          firstModuleLink.click();
+          return;
         }
       }
       const dataViewClear = event.target.closest("[data-admin-data-clear]");

@@ -35,6 +35,8 @@ def purge_demo_data(db_path=None):
         counts['profiles'] = cur.rowcount
         cur = conn.execute("DELETE FROM web_accounts WHERE id LIKE 'demo-%' OR id LIKE 'd0000000-%' OR email LIKE 'demo.%@toanaas.vn'")
         counts['accounts'] = cur.rowcount
+        cur = conn.execute("DELETE FROM web_notification_runs WHERE id LIKE 'demo-%' OR request_id LIKE 'demo-%'")
+        counts['notification_runs'] = cur.rowcount
         conn.commit()
     print(f"Purged demo records from {db_file}: {counts}")
     return counts
