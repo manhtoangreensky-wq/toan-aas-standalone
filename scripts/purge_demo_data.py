@@ -1,4 +1,4 @@
-﻿"""Purge demo data from TOAN AAS Web App & Admin ERP."""
+"""Purge demo data from TOAN AAS Web App & Admin ERP."""
 from __future__ import annotations
 import os, sqlite3, sys
 from pathlib import Path
@@ -8,8 +8,17 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from copyfast_db import session_database_path
 
+def resolve_target_db(db_path=None):
+    if db_path:
+        return Path(db_path)
+    if os.environ.get("WEBAPP_SESSION_DB_PATH"):
+        return Path(os.environ["WEBAPP_SESSION_DB_PATH"])
+    if Path("/data/toandaas_webapp_session.db").exists():
+        return Path("/data/toandaas_webapp_session.db")
+    return Path(session_database_path())
+
 def purge_demo_data(db_path=None):
-    db_file = Path(db_path) if db_path else session_database_path()
+    db_file = resolve_target_db(db_path)
     if not db_file.exists():
         print(f"Database not found: {db_file}")
         return {}
