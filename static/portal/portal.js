@@ -29058,6 +29058,16 @@
       ? adminText("guard.verifiedBody", "Mọi thao tác đọc và ghi vẫn cần quyền được máy chủ xác nhận.")
       : adminText("guard.pendingBody", "Máy chủ phải xác minh phiên đăng nhập và quyền quản trị trước khi hiển thị dữ liệu.");
     const counts = data.counts || {};
+    const hasExplicitCounts = Object.keys(counts).length > 0;
+    const fallbackCounts = (!hasExplicitCounts && ((context.adminCustomerDirectory && Array.isArray(context.adminCustomerDirectory.items)) || (context.adminAutomation && Array.isArray(context.adminAutomation.runs)) || (context.adminManualTopupState && Array.isArray(context.adminManualTopupState.requests))))
+      ? {
+          users: context.adminCustomerDirectory && Array.isArray(context.adminCustomerDirectory.items) ? context.adminCustomerDirectory.items.length : 0,
+          engine_jobs: context.adminAutomation && Array.isArray(context.adminAutomation.runs) ? context.adminAutomation.runs.length : 0,
+          worker_jobs: 0,
+          payments: context.adminManualTopupState && Array.isArray(context.adminManualTopupState.requests) ? context.adminManualTopupState.requests.length : 0
+        }
+      : counts;
+    const effectiveCounts = hasExplicitCounts ? counts : fallbackCounts;
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
     const metricValue = (value) => String(value);
     const metricDescriptors = [
@@ -29067,7 +29077,7 @@
       ["payments", adminText("metrics.payments", "Thanh toán"), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")]
     ];
     const readinessDescriptor = [adminText("metrics.readiness", "Mức sẵn sàng"), adminText("metrics.readinessNote", "Mức sẵn sàng công khai")];
-    const metrics = adminDashboardMetricRows(counts, Object.fromEntries(readiness), metricDescriptors, readinessDescriptor)
+    const metrics = adminDashboardMetricRows(effectiveCounts, Object.fromEntries(readiness), metricDescriptors, readinessDescriptor)
       .map(([label, value, note]) => [label, metricValue(value), note]);
     const hasSourceData = metrics.length > 0;
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;

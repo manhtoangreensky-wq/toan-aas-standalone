@@ -42,6 +42,25 @@
   --portal-saas-emerald: #059669;
   --portal-saas-teal: #0d9488;
   --portal-saas-violet: #7c3aed;
+  --portal-saas-teal-canvas: #021a1a;
+  --portal-saas-teal-surface: #042928;
+  --portal-saas-teal-raised: #063836;
+  --portal-saas-teal-soft: #084745;
+  --portal-saas-teal-border: rgba(45, 212, 191, 0.22);
+  --portal-saas-teal-border-strong: #2dd4bf;
+  --portal-saas-teal-rail: #021414;
+  --portal-saas-teal-rail-hover: #063836;
+  --portal-saas-teal-rail-surface: #042928;
+  --portal-saas-teal-ink: #f0fdfa;
+  --portal-saas-teal-muted: #5eead4;
+  --portal-saas-teal-accent: #14b8a6;
+  --portal-saas-teal-glow: rgba(20, 184, 166, 0.28);
+  --portal-saas-teal-glow-mint: rgba(45, 212, 191, 0.20);
+  --portal-saas-teal-glow-sky: rgba(20, 184, 166, 0.15);
+  --portal-saas-teal-action: #0d9488;
+  --portal-saas-teal-action-hover: #059669;
+  --portal-saas-teal-context: #0f766e;
+  --portal-saas-teal-focus: #2dd4bf;
   --portal-saas-obsidian-canvas: #09090b;
   --portal-saas-obsidian-surface: #121215;
   --portal-saas-obsidian-raised: #18181b;
@@ -19908,6 +19927,171 @@ html::view-transition-new(root) {
   }
 }
 
+/* =========================================================================
+   SAAS 2026 XANH NGỌC (TEAL & EMERALD CYBER-JADE) THEME OVERHAUL
+   Áp dụng đồng bộ cho cả Web Khách và Web Admin (Xóa bỏ xanh dương & đen obsidian)
+   ========================================================================= */
+.portal-shell[data-portal-app-kind="admin"],
+html[data-portal-theme="dark"] .portal-shell,
+html[data-portal-theme="dark"] body,
+html[data-portal-theme="dark"] .portal-main,
+html[data-portal-theme="dark"] .portal-header,
+html[data-portal-theme="dark"] .portal-sidebar,
+html[data-portal-theme="dark"] .portal-landing,
+html[data-portal-theme="dark"] .portal-card,
+html[data-portal-theme="dark"] .portal-auth-page--access {
+  --portal-radius-lg: 16px;
+  --portal-radius: 12px;
+  --portal-app-canvas: var(--portal-saas-teal-canvas);
+  --portal-surface: var(--portal-saas-teal-surface);
+  --portal-surface-light: var(--portal-saas-teal-surface);
+  --portal-surface-raised: var(--portal-saas-teal-raised);
+  --portal-surface-strong: var(--portal-saas-teal-surface);
+  --portal-surface-soft: var(--portal-saas-teal-soft);
+  --portal-rail: var(--portal-saas-teal-rail);
+  --portal-rail-surface: var(--portal-saas-teal-rail-surface);
+  --portal-rail-hover: var(--portal-saas-teal-rail-hover);
+  --portal-border: var(--portal-saas-teal-border);
+  --portal-border-strong: var(--portal-saas-teal-border-strong);
+  --portal-ink: var(--portal-saas-teal-ink);
+  --portal-muted: var(--portal-saas-teal-muted);
+  --portal-action: var(--portal-saas-teal-action);
+  --portal-action-hover: var(--portal-saas-teal-action-hover);
+  --portal-brand: var(--portal-saas-teal);
+  --portal-brand-hover: var(--portal-saas-emerald);
+  --portal-context: var(--portal-saas-teal-context);
+  --portal-focus: var(--portal-saas-teal-focus);
+}
+
+html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
+  background: radial-gradient(circle at 86% -12%, var(--portal-saas-teal-glow-mint), transparent 31rem), radial-gradient(circle at 12% 100%, var(--portal-saas-teal-glow-sky), transparent 32rem), var(--portal-saas-teal-canvas) !important;
+}
+
+/* Ẩn triệt để các ô disclaimer và khẩu hiệu quyền quản trị thừa thãi */
+.portal-admin-session-status,
+.portal-auth-context--admin,
+.portal-auth-admin-gate {
+  display: none !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header {
+  padding: 8px 12px 4px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header .portal-nav-label {
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--portal-muted);
+  opacity: 0.85;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--portal-ink);
+  text-decoration: none;
+  transition: background 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link:hover {
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link[aria-current="page"] {
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  font-weight: 750;
+  box-shadow: inset 3px 0 0 var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-card {
+  border: 1px solid rgba(13, 148, 136, 0.16) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 28px -6px rgba(6, 43, 53, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-card:hover {
+  border-color: rgba(13, 148, 136, 0.3) !important;
+  box-shadow: 0 14px 34px -6px rgba(6, 43, 53, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-metric {
+  border: 1px solid rgba(13, 148, 136, 0.14) !important;
+  border-radius: 14px !important;
+  padding: 18px 20px !important;
+  background: linear-gradient(145deg, var(--portal-surface-light) 0%, var(--portal-surface-soft) 100%) !important;
+  box-shadow: 0 8px 20px -4px rgba(6, 43, 53, 0.06) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-metric:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(13, 148, 136, 0.14) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-metric > strong {
+  font-size: clamp(28px, 2.2vw, 36px) !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.04em !important;
+  color: var(--portal-ink) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-metric > span {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--portal-brand) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-badge {
+  border-radius: 9999px !important;
+  padding: 3px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue {
+  border: 1px solid rgba(13, 148, 136, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 14px 18px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue:hover {
+  transform: translateX(4px);
+  border-color: var(--portal-brand) !important;
+  background: var(--portal-surface-soft) !important;
+  box-shadow: 0 6px 18px -3px rgba(13, 148, 136, 0.12) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-operations-run {
+  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  margin-block: 4px !important;
+  transition: background 0.15s ease;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-operations-run:hover {
+  background: var(--portal-surface-soft) !important;
+}
+
 /* A09 Admin Vertical Shell */
 .portal-shell[data-portal-app-kind="admin"]:not(.portal-shell--auth):not(.portal-shell--landing) .portal-header {
   min-height: 64px;
@@ -20499,7 +20683,7 @@ html::view-transition-new(root) {
     width: 100% !important;
     max-width: 480px !important;
     margin: 0 auto !important;
-    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15), 0 0 0 1px var(--portal-border) !important;
+    box-shadow: var(--portal-elevation-2), 0 0 0 1px var(--portal-border) !important;
     border-radius: var(--portal-radius-lg) !important;
     padding: 28px !important;
   }
@@ -20541,155 +20725,4 @@ html::view-transition-new(root) {
     margin: 0 auto !important;
     padding: 20px !important;
   }
-}
-
-/* =========================================================================
-   ADMIN ERP SAAS 2026 MODERN THEME & ELEVATION OVERHAUL
-   Elevated glass cards, vibrant pill badges, modern stat metrics & typography
-   ========================================================================= */
-.portal-shell[data-portal-app-kind="admin"] {
-  --portal-radius-lg: 16px;
-  --portal-radius: 12px;
-  --portal-app-canvas: var(--portal-saas-obsidian-canvas);
-  --portal-surface: var(--portal-saas-obsidian-surface);
-  --portal-surface-light: var(--portal-saas-obsidian-surface);
-  --portal-surface-raised: var(--portal-saas-obsidian-raised);
-  --portal-surface-soft: var(--portal-saas-obsidian-soft);
-  --portal-rail: var(--portal-saas-obsidian-rail);
-  --portal-rail-surface: var(--portal-saas-obsidian-surface);
-  --portal-rail-hover: var(--portal-saas-obsidian-rail-hover);
-  --portal-border: var(--portal-saas-obsidian-border);
-  --portal-ink: var(--portal-saas-obsidian-ink);
-  --portal-muted: var(--portal-saas-obsidian-muted);
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat {
-  display: grid;
-  gap: 2px;
-  margin-bottom: 12px;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header {
-  padding: 8px 12px 4px;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header .portal-nav-label {
-  font-size: 11px;
-  font-weight: 750;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--portal-muted);
-  opacity: 0.85;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--portal-ink);
-  text-decoration: none;
-  transition: background 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link:hover {
-  background: var(--portal-surface-soft);
-  color: var(--portal-action);
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link[aria-current="page"] {
-  background: var(--portal-surface-soft);
-  color: var(--portal-action);
-  font-weight: 750;
-  box-shadow: inset 3px 0 0 var(--portal-action);
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-card {
-  border: 1px solid rgba(13, 148, 136, 0.16) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 10px 28px -6px rgba(6, 43, 53, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-card:hover {
-  border-color: rgba(13, 148, 136, 0.3) !important;
-  box-shadow: 0 14px 34px -6px rgba(6, 43, 53, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-metric {
-  border: 1px solid rgba(13, 148, 136, 0.14) !important;
-  border-radius: 14px !important;
-  padding: 18px 20px !important;
-  background: linear-gradient(145deg, var(--portal-surface-light) 0%, var(--portal-surface-soft) 100%) !important;
-  box-shadow: 0 8px 20px -4px rgba(6, 43, 53, 0.06) !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-metric:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -4px rgba(13, 148, 136, 0.14) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-metric > strong {
-  font-size: clamp(28px, 2.2vw, 36px) !important;
-  font-weight: 850 !important;
-  letter-spacing: -0.04em !important;
-  color: var(--portal-ink) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-metric > span {
-  font-size: 12.5px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  color: var(--portal-brand) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-badge {
-  border-radius: 9999px !important;
-  padding: 3px 12px !important;
-  font-size: 11.5px !important;
-  font-weight: 750 !important;
-  letter-spacing: 0.02em !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue {
-  border: 1px solid rgba(13, 148, 136, 0.15) !important;
-  border-radius: 12px !important;
-  padding: 14px 18px !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue:hover {
-  transform: translateX(4px);
-  border-color: var(--portal-brand) !important;
-  background: var(--portal-surface-soft) !important;
-  box-shadow: 0 6px 18px -3px rgba(13, 148, 136, 0.12) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-operations-run {
-  border-radius: 10px !important;
-  padding: 12px 16px !important;
-  margin-block: 4px !important;
-  transition: background 0.15s ease;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-operations-run:hover {
-  background: var(--portal-surface-soft) !important;
-}
-
-.portal-shell[data-portal-app-kind="admin"] .portal-demo-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 750;
-  padding: 2px 9px;
-  border-radius: 9999px;
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--portal-saas-violet);
-  border: 1px solid rgba(139, 92, 246, 0.28);
 }

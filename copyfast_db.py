@@ -6738,9 +6738,9 @@ def get_admin_overview_metrics() -> dict[str, int]:
             break
 
     return {
-        "users": max(users_count, 3),
-        "engine_jobs": max(engine_jobs_count, 1),
-        "worker_jobs": max(worker_jobs_count, 3),
-        "payments": max(payments_count, 3),
+        "users": int(users_count),
+        "engine_jobs": int(engine_jobs_count),
+        "worker_jobs": int(worker_jobs_count),
+        "payments": int(payments_count),
     }
 
