@@ -2311,8 +2311,29 @@ def _require_manager(account: dict) -> str:
 
 @router.get("/api/v1/operations/admin/summary")
 async def admin_summary(account: dict = Depends(require_account)):
-    _require_enabled()
     role = require_support_staff(account)
+    if not autopilot_enabled():
+        return envelope(
+            True,
+            "Tổng quan Operations Autopilot (chế độ an toàn).",
+            data=_boundary(
+                operator_role=role,
+                approvals_access="full" if role == "manager" else "manager_only",
+                latest_run_state="guarded",
+                latest_run_started_at=None,
+                latest_run_finished_at=None,
+                incidents_open=0,
+                approval_pending=0,
+                triage_sla={"within_target": 0, "at_risk": 0, "breached": 0, "terminal": 0, "unverified": 0},
+                recovery_reconciled=0,
+                scheduler_preflight="OPS_AUTOPILOT_DISABLED",
+                heartbeat_stale=False,
+                heartbeat_incident_open=False,
+                heartbeat_last_seen_at=None,
+                heartbeat_lease_owner=None,
+            ),
+            status_name="read_only",
+        )
     approvals_access = "full" if role == "manager" else "manager_only"
     preflight_code = _scheduler_preflight_code()
     ensure_copyfast_schema()

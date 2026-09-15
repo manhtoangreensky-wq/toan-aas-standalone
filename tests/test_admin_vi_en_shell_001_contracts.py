@@ -167,8 +167,8 @@ def test_admin_breadcrumb_inserts_active_app_between_brand_and_page() -> None:
 
 
 def test_admin_shell_css_is_scoped_tokenized_and_mobile_safe() -> None:
-    shell = THEME[THEME.index(THEME_MARKER) :]
-    a09 = THEME[THEME.index("/* A09 Admin Vertical Shell */") :]
+    shell = _between(THEME, THEME_MARKER, "/* AUTH-LOGIN-BRAND-VIEWPORT-001") + _between(THEME, "/* A09 Admin Vertical Shell */", "/* =========================================================================\n   CUSTOMER-LOGIN-VIEWPORT-PERFECTION-002")
+    a09 = _between(THEME, "/* A09 Admin Vertical Shell */", "/* =========================================================================\n   CUSTOMER-LOGIN-VIEWPORT-PERFECTION-002")
 
     for contract in (
         "min-height: 64px;",

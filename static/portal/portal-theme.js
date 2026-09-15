@@ -54,7 +54,11 @@
 
   function readPreference() {
     try {
-      return valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
+      let queryTheme = "";
+      try {
+        queryTheme = new URLSearchParams(global.location && global.location.search || "").get("theme") || "";
+      } catch (_) { queryTheme = ""; }
+      return valid(queryTheme) || valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
     } catch (_) {
       return null;
     }
