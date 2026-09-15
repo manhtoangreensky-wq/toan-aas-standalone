@@ -1,0 +1,119 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-03",
+    "task": "P0.WEB.ERP.SPEC03.MONITORING.RELIABILITY_TRUTH",
+    "base_sha": "e53f8fdaf9ff0a17e3390d9d757b70c03f1b3266",
+    "branch": "feat/p0-spec03-monitoring-reliability-truth",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "invariants": {
+    "HTTP200_AS_HEALTHY_FALSE_POSITIVES": 0,
+    "CONFIGURED_AS_HEALTHY_FALSE_POSITIVES": 0,
+    "ZERO_AS_UNAVAILABLE_ERRORS": 0,
+    "UNAVAILABLE_AS_ZERO_ERRORS": 0,
+    "REQUIRED_SOURCE_ERRORS_TRUTHFUL": true,
+    "OPTIONAL_SOURCE_UNAVAILABLE_TRUTHFUL": true,
+    "MONITORING_DANGEROUS_WRITE_ACTIONS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "PRODUCTION_DB_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "SECRET_MUTATIONS": 0,
+    "AUTOPILOT_ACTIVATED": false,
+    "AUTOPILOT_STATUS": "UNAVAILABLE",
+    "PR437_ADMIN_IA_PROTECTED": true,
+    "PORTAL_SHELL_SCROLL_PROTECTED": true,
+    "SEMANTIC_TOKENS_PROTECTED": true
+  },
+  "monitoring_source_matrix": [
+    {
+      "source_id": "RUNTIME_OS",
+      "domain": "SYSTEM_RUNTIME",
+      "authority": "RUNTIME_OS_PROCESS",
+      "read_path": "/health",
+      "freshness": "realtime",
+      "expected_update_interval": "10s",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "SYSTEMD_SERVICE",
+      "domain": "SYSTEM_RUNTIME",
+      "authority": "RUNTIME_OS_PROCESS",
+      "read_path": "systemctl status toanaas-web.service",
+      "freshness": "realtime",
+      "expected_update_interval": "on-demand",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "WORKER_REGISTRY",
+      "domain": "WORKER_STATUS",
+      "authority": "RUNTIME_OS_PROCESS",
+      "read_path": "in-process background worker queue",
+      "freshness": "realtime",
+      "expected_update_interval": "continuous",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "BOT_CORE_RUNTIME",
+      "domain": "SYSTEM_RUNTIME",
+      "authority": "RUNTIME_OS_PROCESS",
+      "read_path": "systemctl status toanaas-bot.service",
+      "freshness": "realtime",
+      "expected_update_interval": "on-demand",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "AUTOPILOT_RELIABILITY",
+      "domain": "RELIABILITY_TELEMETRY",
+      "authority": "BOT_CORE_AUTOPILOT",
+      "read_path": "/api/v1/operations/admin/reliability/summary",
+      "freshness": "on-demand",
+      "expected_update_interval": "on-demand",
+      "can_be_unavailable": true,
+      "current_state": "UNAVAILABLE"
+    },
+    {
+      "source_id": "FEATURE_CONFIG",
+      "domain": "FEATURE_STATUS",
+      "authority": "WEB_LOCAL_REGISTRY",
+      "read_path": "copyfast_api._flags()",
+      "freshness": "realtime",
+      "expected_update_interval": "continuous",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "FREEZE_STATE",
+      "domain": "FREEZE_STATE",
+      "authority": "BOT_CORE_POLICY",
+      "read_path": "copyfast_api._flags()",
+      "freshness": "realtime",
+      "expected_update_interval": "continuous",
+      "can_be_unavailable": false,
+      "current_state": "HEALTHY"
+    },
+    {
+      "source_id": "PROVIDER_HEALTH",
+      "domain": "PROVIDER_HEALTH",
+      "authority": "EXTERNAL_PROVIDERS",
+      "read_path": "unconfigured (safety gate PROVIDER_CALLS=0)",
+      "freshness": "none",
+      "expected_update_interval": "disabled",
+      "can_be_unavailable": true,
+      "current_state": "UNAVAILABLE"
+    }
+  ],
+  "tests": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0,
+    "suite": "tests/test_p0_spec03_monitoring_reliability_truth.py"
+  }
+}

@@ -128,6 +128,8 @@ def _capture_allowed(*, route_family: str, bucket: str) -> bool:
 
 def reliability_preflight_code() -> str | None:
     """Return a stable guard code without exposing configuration contents."""
+    if not autopilot_enabled():
+        return "OPS_RELIABILITY_AUTOPILOT_DISABLED"
     if not reliability_followup_enabled():
         return "OPS_RELIABILITY_FOLLOWUP_DISABLED"
     if not _incident_secret():
