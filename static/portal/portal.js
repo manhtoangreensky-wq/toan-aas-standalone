@@ -28941,7 +28941,7 @@
       "{mode}. Mỗi phân hệ tiếp tục kiểm tra phiên đăng nhập, quyền hạn, bảo vệ yêu cầu và che dữ liệu nhạy cảm ở máy chủ.",
       { mode }
     );
-    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục phân hệ"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group, index) => `<details class="portal-admin-directory-group"${index === 0 ? " open" : ""}><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} phân hệ", { count: String(group.modules.length) }))}</span></summary><div class="portal-admin-directory-list">${group.modules.map((entry) => `<div class="portal-admin-directory-row">${moduleCard(entry, context, adminText("directory.openAction", "Mở phân hệ"))}</div>`).join("")}</div></details>`).join("")}</div></section>`;
+    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(adminText("directory.kicker", "Tất cả ứng dụng"))}</span><h2 class="portal-card-title">${safeText(adminText("directory.title", "Danh mục phân hệ"))}</h2><p class="portal-card-subtitle">${safeText(description)}</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group) => `<details class="portal-admin-directory-group" open><summary><span><strong id="admin-directory-${safeText(group.id)}">${safeText(group.title)}</strong><small>${safeText(group.description)}</small></span><span class="portal-feature-count">${safeText(adminText("directory.moduleCount", "{count} phân hệ", { count: String(group.modules.length) }))}</span></summary><div class="portal-admin-directory-list">${group.modules.map((entry) => `<div class="portal-admin-directory-row">${moduleCard(entry, context, adminText("directory.openAction", "Mở phân hệ"))}</div>`).join("")}</div></details>`).join("")}</div></section>`;
   }
 
   function renderAdminWorkQueues(context) {
@@ -34029,6 +34029,32 @@
     if (interactionsBound) return;
     interactionsBound = true;
     document.addEventListener("click", (event) => {
+      const navSummary = event.target.closest(".portal-nav-summary");
+      if (navSummary) {
+        const navGroup = navSummary.closest(".portal-nav-group");
+        const firstLink = navGroup && navGroup.querySelector(".portal-nav-link");
+        if (firstLink) {
+          const href = firstLink.getAttribute("href");
+          if (href) {
+            event.preventDefault();
+            window.location.href = href;
+            return;
+          }
+        }
+      }
+      const adminGroupSummary = event.target.closest(".portal-admin-directory-group > summary");
+      if (adminGroupSummary) {
+        const groupEl = adminGroupSummary.closest(".portal-admin-directory-group");
+        const firstModuleLink = groupEl && groupEl.querySelector(".portal-module-card, a[href^='/admin']");
+        if (firstModuleLink) {
+          const href = firstModuleLink.getAttribute("href");
+          if (href) {
+            event.preventDefault();
+            window.location.href = href;
+            return;
+          }
+        }
+      }
       const dataViewClear = event.target.closest("[data-admin-data-clear]");
       if (dataViewClear) {
         const surface = dataViewClear.closest("[data-portal-admin-data-surface]");

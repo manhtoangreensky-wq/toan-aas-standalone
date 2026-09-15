@@ -217,7 +217,7 @@ def test_admin_i18n_catalogue_has_direct_reviewed_nonempty_copy_for_all_locales(
 
 def test_admin_css_override_is_scoped_dense_visible_and_responsive() -> None:
     assert CSS_MARKER in THEME
-    css = THEME[THEME.index(CSS_MARKER):]
+    css = _between(THEME, CSS_MARKER, "/* Admin Detail Dashboard 002")
     selectors = re.findall(r"(?:^|\})\s*([^@{}][^{}]*)\{", re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL))
     for group in selectors:
         for selector in group.split(","):

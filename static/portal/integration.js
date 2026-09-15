@@ -14773,7 +14773,7 @@
       workboardEvents: [],
       workboardPolicy: {},
       workboardListing: workboardListingProjection({ q: "", state: "all", priority: "" }, 0, {}, 0),
-      workboardReadState: account && workboardEnabled ? "loading" : "guarded",
+      workboardReadState: account && workboardEnabled ? "ready" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.

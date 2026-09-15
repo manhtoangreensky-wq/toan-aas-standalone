@@ -25,13 +25,15 @@ def purge_demo_data(db_path=None):
     counts = {}
     with sqlite3.connect(db_file) as conn:
         conn.execute("PRAGMA foreign_keys = OFF;")
-        cur = conn.execute("DELETE FROM web_ops_followups WHERE id LIKE 'demo-%'")
+        cur = conn.execute("DELETE FROM web_ops_followups WHERE id LIKE 'demo-%' OR id LIKE 'd0000000-%'")
         counts['followups'] = cur.rowcount
-        cur = conn.execute("DELETE FROM web_manual_topup_requests WHERE reference LIKE 'DEMO-%' OR account_id LIKE 'demo-%'")
+        cur = conn.execute("DELETE FROM web_manual_topup_requests WHERE reference LIKE 'DEMO-%' OR account_id LIKE 'demo-%' OR account_id LIKE 'd0000000-%'")
         counts['manual_topups'] = cur.rowcount
-        cur = conn.execute("DELETE FROM web_account_topup_codes WHERE account_id LIKE 'demo-%'")
+        cur = conn.execute("DELETE FROM web_account_topup_codes WHERE account_id LIKE 'demo-%' OR account_id LIKE 'd0000000-%'")
         counts['topup_codes'] = cur.rowcount
-        cur = conn.execute("DELETE FROM web_accounts WHERE id LIKE 'demo-%' OR email LIKE 'demo.%@toanaas.vn'")
+        cur = conn.execute("DELETE FROM web_account_profiles WHERE account_id LIKE 'demo-%' OR account_id LIKE 'd0000000-%'")
+        counts['profiles'] = cur.rowcount
+        cur = conn.execute("DELETE FROM web_accounts WHERE id LIKE 'demo-%' OR id LIKE 'd0000000-%' OR email LIKE 'demo.%@toanaas.vn'")
         counts['accounts'] = cur.rowcount
         conn.commit()
     print(f"Purged demo records from {db_file}: {counts}")
