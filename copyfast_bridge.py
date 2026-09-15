@@ -180,6 +180,12 @@ class CoreBridgeClient:
                         "web_portal": {"public_ready": True, "adapter": "fastapi"},
                         "payment_gateway": {"public_ready": True, "adapter": "payos_vietqr"}
                     },
+                    "system_health": {
+                        "system_runtime": "HEALTHY",
+                        "workers": "HEALTHY",
+                        "reliability_telemetry": "UNAVAILABLE",
+                    },
+                    "revenue_scope": "WEB_ONLY",
                     "module": "overview",
                     "read_only": True
                 }

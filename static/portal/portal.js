@@ -29307,7 +29307,7 @@
   function adminDashboardMetricRows(counts, readiness, descriptors, readinessDescriptor) {
     const source = counts && typeof counts === "object" && !Array.isArray(counts) ? counts : {};
     const rows = (Array.isArray(descriptors) ? descriptors : [])
-      .filter(([key]) => Object.prototype.hasOwnProperty.call(source, key) && isSourcePresentCount(source[key]))
+      .filter(([key]) => Object.prototype.hasOwnProperty.call(source, key) && (isSourcePresentCount(source[key]) || source[key] === "unavailable" || source[key] === null))
       .map(([key, label, note]) => [label, source[key], note]);
     const readinessSnapshot = adminDashboardReadinessSnapshot(readiness);
     if (readinessSnapshot.total && Array.isArray(readinessDescriptor)) {
@@ -29360,13 +29360,31 @@
       : counts;
     const effectiveCounts = hasExplicitCounts ? counts : fallbackCounts;
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
-    const metricValue = (value) => String(value);
-    const metricDescriptors = [
-      ["users", adminText("metrics.users", "Người dùng"), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
-      ["engine_jobs", adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
-      ["worker_jobs", adminText("metrics.workerJobs", "Tác vụ xử lý"), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
-      ["payments", adminText("metrics.payments", "Thanh toán"), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")]
-    ];
+    const metricValue = (value) => {
+      if (value === null || value === "unavailable") return adminText("metrics.unavailable", "Không khả dụng");
+      if (value === undefined || value === "unknown") return adminText("metrics.unknown", "Chưa xác định");
+      return String(value);
+    };
+    const hasErpCounts = Boolean(
+      effectiveCounts && (
+        Object.prototype.hasOwnProperty.call(effectiveCounts, "action_required") ||
+        Object.prototype.hasOwnProperty.call(effectiveCounts, "total_customers")
+      )
+    );
+    const metricDescriptors = hasErpCounts
+      ? [
+          ["action_required", adminText("metrics.actionRequired", "Cần xử lý ngay"), adminText("metrics.actionRequiredNote", "Tổng các yêu cầu cần xử lý")],
+          ["total_customers", adminText("metrics.customers", "Tài khoản người dùng"), adminText("metrics.customersNote", "Dữ liệu tài khoản đã kiểm tra")],
+          ["pending_topups", adminText("metrics.pendingTopups", "Nạp tiền chờ duyệt"), adminText("metrics.pendingTopupsNote", "Chờ đối soát thanh toán")],
+          ["open_support", adminText("metrics.openSupport", "Phiếu hỗ trợ mở"), adminText("metrics.openSupportNote", "Yêu cầu hỗ trợ chưa đóng")],
+          ["failed_jobs", adminText("metrics.failedJobs", "Tác vụ gặp sự cố"), adminText("metrics.failedJobsNote", "Các tác vụ cần kiểm tra")]
+        ]
+      : [
+          ["users", adminText("metrics.users", "Người dùng"), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
+          ["engine_jobs", adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
+          ["worker_jobs", adminText("metrics.workerJobs", "Tác vụ xử lý"), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
+          ["payments", adminText("metrics.payments", "Thanh toán"), adminText("metrics.paymentsNote", "Không lưu sổ giao dịch trên trình duyệt")]
+        ];
     const readinessDescriptor = [adminText("metrics.readiness", "Mức sẵn sàng"), adminText("metrics.readinessNote", "Mức sẵn sàng công khai")];
     const metrics = adminDashboardMetricRows(effectiveCounts, Object.fromEntries(readiness), metricDescriptors, readinessDescriptor)
       .map(([label, value, note]) => [label, metricValue(value), note]);

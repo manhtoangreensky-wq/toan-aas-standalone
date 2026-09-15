@@ -6695,52 +6695,62 @@ def _web_manual_audit_request_id(value: str) -> str:
 
 
 def get_admin_overview_metrics() -> dict[str, int]:
-    """Calculate truthful operational metric counts for Admin ERP dashboard."""
+    """Calculate truthful operational metric counts for Admin ERP dashboard.
+
+    Adheres strictly to canonical data authorities established in SPEC-01:
+    - WEB_ACCOUNT_AUTHORITY=WEB_SQLITE (web_accounts)
+    - TOPUP_DRAFT_AUTHORITY=WEB_SQLITE (web_manual_topup_requests pending_admin_review)
+    - SUPPORT_AUTHORITY=WEB_SQLITE (web_support_cases open/active states)
+    - APPROVAL_AUTHORITY=WEB_SQLITE (web_ops_approvals awaiting_approval)
+    - Zero direct Bot Core SQLite reads; no synthetic heuristic; zero fake demo values.
+    """
     users_count = 0
-    payments_count = 0
+    pending_topups_count = 0
+    open_support_count = 0
+    pending_approvals_count = 0
     worker_jobs_count = 0
     engine_jobs_count = 0
     db_file = session_database_path()
 
     try:
         with sqlite3.connect(db_file) as conn:
-            row = conn.execute("SELECT count(*) FROM web_accounts").fetchone()
-            if row:
-                users_count += int(row[0])
-            row = conn.execute("SELECT count(*) FROM web_manual_topup_requests").fetchone()
-            if row:
-                payments_count += int(row[0])
-            row = conn.execute("SELECT count(*) FROM web_ops_followups").fetchone()
-            if row:
-                worker_jobs_count += int(row[0])
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "web_accounts" in tables:
+                row = conn.execute("SELECT count(*) FROM web_accounts").fetchone()
+                if row:
+                    users_count = int(row[0])
+            if "web_manual_topup_requests" in tables:
+                row = conn.execute("SELECT count(*) FROM web_manual_topup_requests WHERE status = 'pending_admin_review'").fetchone()
+                if row:
+                    pending_topups_count = int(row[0])
+            if "web_support_cases" in tables:
+                row = conn.execute(
+                    "SELECT count(*) FROM web_support_cases WHERE state IN ('new', 'reviewing', 'waiting_user', 'waiting_provider', 'refund_pending')"
+                ).fetchone()
+                if row:
+                    open_support_count = int(row[0])
+            if "web_ops_approvals" in tables:
+                row = conn.execute("SELECT count(*) FROM web_ops_approvals WHERE state = 'awaiting_approval'").fetchone()
+                if row:
+                    pending_approvals_count = int(row[0])
+            if "web_ops_followups" in tables:
+                row = conn.execute("SELECT count(*) FROM web_ops_followups WHERE state = 'open'").fetchone()
+                if row:
+                    worker_jobs_count = int(row[0])
     except Exception:
         pass
 
-    for candidate in [Path("/data/toandaas_system.db"), Path("toandaas_system.db")]:
-        if candidate.exists():
-            try:
-                with sqlite3.connect(candidate) as conn:
-                    tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
-                    if "users" in tables:
-                        row = conn.execute("SELECT count(*) FROM users").fetchone()
-                        if row:
-                            users_count = max(users_count, int(row[0]))
-                    if "video_jobs" in tables:
-                        row = conn.execute("SELECT count(*) FROM video_jobs").fetchone()
-                        if row:
-                            engine_jobs_count += int(row[0])
-                    if "payments" in tables:
-                        row = conn.execute("SELECT count(*) FROM payments").fetchone()
-                        if row:
-                            payments_count = max(payments_count, int(row[0]))
-            except Exception:
-                pass
-            break
+    action_required_count = pending_topups_count + open_support_count + pending_approvals_count
 
     return {
         "users": int(users_count),
-        "engine_jobs": int(engine_jobs_count),
+        "total_customers": int(users_count),
+        "payments": int(pending_topups_count),
+        "pending_topups": int(pending_topups_count),
+        "open_support": int(open_support_count),
+        "pending_approvals": int(pending_approvals_count),
+        "action_required": int(action_required_count),
         "worker_jobs": int(worker_jobs_count),
-        "payments": int(payments_count),
+        "engine_jobs": int(engine_jobs_count),
     }
 
