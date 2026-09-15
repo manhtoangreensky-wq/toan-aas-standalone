@@ -188,3 +188,60 @@ def valid_followup_required_role(value: Any) -> bool:
 
 def valid_followup_event_action(value: Any) -> bool:
     return _valid_enum(value, FOLLOWUP_EVENT_ACTIONS)
+
+
+# Canonical operational status values (P0.WEB.ERP.SPEC03)
+CANONICAL_OPERATIONAL_STATUSES = frozenset({"HEALTHY", "DEGRADED", "UNAVAILABLE", "UNKNOWN", "ERROR", "STALE"})
+
+
+def evaluate_semantic_status(
+    *,
+    configured: bool = True,
+    available: bool = True,
+    healthy_criteria_met: bool | None = True,
+    exception_occurred: bool = False,
+    is_stale: bool = False,
+) -> str:
+    """Evaluate canonical operational status according to SPEC-03 contract.
+
+    Never: HTTP 200 => HEALTHY.
+    - exception_occurred -> ERROR
+    - not configured or not available -> UNAVAILABLE
+    - healthy_criteria_met is None -> UNKNOWN
+    - is_stale -> STALE
+    - healthy_criteria_met is True -> HEALTHY
+    - healthy_criteria_met is False -> DEGRADED
+    """
+    if exception_occurred:
+        return "ERROR"
+    if not configured or not available:
+        return "UNAVAILABLE"
+    if healthy_criteria_met is None:
+        return "UNKNOWN"
+    if is_stale:
+        return "STALE"
+    return "HEALTHY" if healthy_criteria_met else "DEGRADED"
+
+
+def evaluate_multi_source_status(
+    source_statuses: dict[str, str],
+    required_sources: frozenset[str] | set[str],
+) -> str:
+    """Evaluate overall operational status from a multi-source matrix.
+
+    - Required source in ERROR -> ERROR
+    - Required source in DEGRADED, UNAVAILABLE, or UNKNOWN -> DEGRADED
+    - Optional source UNAVAILABLE does NOT fake global failure when required sources are HEALTHY.
+    """
+    for source in required_sources:
+        status = source_statuses.get(source, "UNKNOWN")
+        if status == "ERROR":
+            return "ERROR"
+        if status in {"DEGRADED", "UNAVAILABLE", "UNKNOWN"}:
+            return "DEGRADED"
+
+    for source, status in source_statuses.items():
+        if source not in required_sources and status == "ERROR":
+            return "DEGRADED"
+
+    return "HEALTHY"
