@@ -39,6 +39,18 @@
   --portal-warning: #a16207;
   --portal-danger: #b91c1c;
   --portal-success: #15803d;
+  --portal-saas-emerald: #059669;
+  --portal-saas-teal: #0d9488;
+  --portal-saas-violet: #7c3aed;
+  --portal-saas-obsidian-canvas: #09090b;
+  --portal-saas-obsidian-surface: #121215;
+  --portal-saas-obsidian-raised: #18181b;
+  --portal-saas-obsidian-soft: #1c1c21;
+  --portal-saas-obsidian-border: rgba(255, 255, 255, 0.09);
+  --portal-saas-obsidian-rail: #0c0c0e;
+  --portal-saas-obsidian-rail-hover: #18181b;
+  --portal-saas-obsidian-ink: #f4f4f5;
+  --portal-saas-obsidian-muted: #a1a1aa;
   --portal-light-canvas: var(--portal-app-canvas);
   --portal-light-surface: var(--portal-surface-light);
   --portal-light-soft: #e8f6f7;
@@ -18438,7 +18450,7 @@ html::view-transition-new(root) {
 /* Tactile primary CTA buttons */
 .portal-button--primary,
 .portal-shell .portal-button--primary {
-  background: linear-gradient(135deg, #0d9488 0%, #059669 100%) !important;
+  background: linear-gradient(135deg, var(--portal-saas-teal) 0%, var(--portal-saas-emerald) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 0 4px 14px -2px rgba(13, 148, 136, 0.45) !important;
   font-weight: 750 !important;
@@ -20538,6 +20550,61 @@ html::view-transition-new(root) {
 .portal-shell[data-portal-app-kind="admin"] {
   --portal-radius-lg: 16px;
   --portal-radius: 12px;
+  --portal-app-canvas: var(--portal-saas-obsidian-canvas);
+  --portal-surface: var(--portal-saas-obsidian-surface);
+  --portal-surface-light: var(--portal-saas-obsidian-surface);
+  --portal-surface-raised: var(--portal-saas-obsidian-raised);
+  --portal-surface-soft: var(--portal-saas-obsidian-soft);
+  --portal-rail: var(--portal-saas-obsidian-rail);
+  --portal-rail-surface: var(--portal-saas-obsidian-surface);
+  --portal-rail-hover: var(--portal-saas-obsidian-rail-hover);
+  --portal-border: var(--portal-saas-obsidian-border);
+  --portal-ink: var(--portal-saas-obsidian-ink);
+  --portal-muted: var(--portal-saas-obsidian-muted);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header {
+  padding: 8px 12px 4px;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header .portal-nav-label {
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--portal-muted);
+  opacity: 0.85;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--portal-ink);
+  text-decoration: none;
+  transition: background 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link:hover {
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link[aria-current="page"] {
+  background: var(--portal-surface-soft);
+  color: var(--portal-action);
+  font-weight: 750;
+  box-shadow: inset 3px 0 0 var(--portal-action);
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-card {
@@ -20623,6 +20690,6 @@ html::view-transition-new(root) {
   padding: 2px 9px;
   border-radius: 9999px;
   background: rgba(139, 92, 246, 0.12);
-  color: #7c3aed;
+  color: var(--portal-saas-violet);
   border: 1px solid rgba(139, 92, 246, 0.28);
 }

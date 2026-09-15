@@ -21,7 +21,7 @@ def seed_demo_data(db_path=None):
     db_file = resolve_target_db(db_path)
     os.environ["WEBAPP_SESSION_DB_PATH"] = str(db_file)
     ensure_copyfast_schema()
-    counts = {'accounts': 0, 'profiles': 0, 'topup_codes': 0, 'manual_topups': 0, 'followups': 0}
+    counts = {'accounts': 0, 'profiles': 0, 'topup_codes': 0, 'manual_topups': 0, 'followups': 0, 'notification_runs': 0}
     now = utc_now()
     demo_pwd = 'sha256$demo$e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
     demo_clients = [
@@ -61,6 +61,103 @@ def seed_demo_data(db_path=None):
             if not conn.execute('SELECT id FROM web_ops_followups WHERE id = ?', (fid,)).fetchone():
                 conn.execute('INSERT INTO web_ops_followups (id, fingerprint, source_kind, source_id, account_id, required_role, severity, state, source_revision, revision, opened_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)', (fid, fp, sk, sid, aid, role, sev, st, now, now))
                 counts['followups'] += 1
+        demo_notification_runs = [
+            (
+                'demo-run-001',
+                'demo-req-001',
+                'cron_inbox_sweep',
+                'slot-20260915-1300',
+                'completed',
+                101,
+                1,
+                'hash-demo-001',
+                3,
+                3,
+                '2026-09-15T06:00:00+00:00',
+                '2026-09-15T06:00:00+00:00',
+                '2026-09-15T06:00:02+00:00',
+                None,
+                '{"status": "ok", "delivered": 3}',
+            ),
+            (
+                'demo-run-002',
+                'demo-req-002',
+                'cron_inbox_sweep',
+                'slot-20260915-1230',
+                'completed',
+                102,
+                1,
+                'hash-demo-002',
+                5,
+                5,
+                '2026-09-15T05:30:00+00:00',
+                '2026-09-15T05:30:00+00:00',
+                '2026-09-15T05:30:04+00:00',
+                None,
+                '{"status": "ok", "delivered": 5}',
+            ),
+            (
+                'demo-run-003',
+                'demo-req-003',
+                'event_topup_notify',
+                'slot-20260915-1325',
+                'completed',
+                103,
+                1,
+                'hash-demo-003',
+                1,
+                1,
+                '2026-09-15T06:25:00+00:00',
+                '2026-09-15T06:25:00+00:00',
+                '2026-09-15T06:25:01+00:00',
+                None,
+                '{"status": "ok", "delivered": 1}',
+            ),
+            (
+                'demo-run-004',
+                'demo-req-004',
+                'cron_inbox_sweep',
+                'slot-20260915-1200',
+                'guarded',
+                104,
+                1,
+                'hash-demo-004',
+                0,
+                2,
+                '2026-09-15T05:00:00+00:00',
+                '2026-09-15T05:00:00+00:00',
+                '2026-09-15T05:00:01+00:00',
+                'REPLICA_TOPOLOGY_GUARD',
+                '{"status": "guarded", "reason": "topology_unverified"}',
+            ),
+            (
+                'demo-run-005',
+                'demo-req-005',
+                'manual_maintenance',
+                'slot-20260915-1330',
+                'started',
+                105,
+                1,
+                'hash-demo-005',
+                2,
+                4,
+                '2026-09-15T06:30:00+00:00',
+                '2026-09-15T06:30:00+00:00',
+                None,
+                None,
+                '{"status": "processing"}',
+            ),
+        ]
+        for run_id, req_id, trig, slot, state, fence, pol, ih, actions, cands, dl, started, fin, err, rjson in demo_notification_runs:
+            if not conn.execute('SELECT id FROM web_notification_runs WHERE id = ?', (run_id,)).fetchone():
+                conn.execute(
+                    '''INSERT INTO web_notification_runs
+                       (id, request_id, trigger, schedule_slot, state, fence_token, policy_version, input_hash,
+                        action_count, candidate_count, deadline_at, started_at, finished_at, error_code, receipt_json)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (run_id, req_id, trig, slot, state, fence, pol, ih, actions, cands, dl, started, fin, err, rjson),
+                )
+                counts['notification_runs'] += 1
         conn.commit()
     print(f'Done seeding: {counts}')
     return counts

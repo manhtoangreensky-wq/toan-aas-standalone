@@ -2767,11 +2767,12 @@ async def page(page_path: str, request: Request):
         or normalized == "/admin/work-queue"
     ):
         copyfast_support.require_support_staff(current_session(request)["account"])
+    elif normalized == "/admin/automation":
+        copyfast_auth.require_admin(request)
     elif normalized in {
         "/admin/customers",
         "/admin/crm/leads",
         "/admin/finance/planning",
-        "/admin/automation",
         "/admin/system-stewardship",
         "/admin/security",
         "/admin/access",
