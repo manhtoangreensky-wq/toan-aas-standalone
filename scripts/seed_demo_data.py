@@ -8,8 +8,17 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from copyfast_db import ensure_copyfast_schema, session_database_path, utc_now
 
+def resolve_target_db(db_path=None):
+    if db_path:
+        return Path(db_path)
+    if os.environ.get("WEBAPP_SESSION_DB_PATH"):
+        return Path(os.environ["WEBAPP_SESSION_DB_PATH"])
+    if Path("/data/toandaas_webapp_session.db").exists():
+        return Path("/data/toandaas_webapp_session.db")
+    return Path(session_database_path())
+
 def seed_demo_data(db_path=None):
-    db_file = Path(db_path) if db_path else session_database_path()
+    db_file = resolve_target_db(db_path)
     ensure_copyfast_schema()
     counts = {'accounts': 0, 'topup_codes': 0, 'manual_topups': 0, 'followups': 0}
     now = utc_now()
