@@ -100,6 +100,7 @@
     "/admin/content-handoffs": "adminErpNavigation.route.contentHandoffs",
     "/admin/crm/leads": "adminErpNavigation.route.crmLeads",
     "/admin/customers": "adminErpNavigation.route.customers",
+    "/admin/export": "adminErpNavigation.route.export",
     "/admin/features": "adminErpNavigation.route.features",
     "/admin/finance": "adminErpNavigation.route.finance",
     "/admin/finance/planning": "adminErpNavigation.route.financePlanning",
@@ -9670,6 +9671,7 @@
     if (path === "/admin/security") return adminSecurityAccessText("route.securityTitle", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessTitle", fallback);
     if (path === "/admin") return uiText("adminHome.title", fallback);
+    if (ADMIN_ERP_ROUTE_I18N[path]) return uiText(ADMIN_ERP_ROUTE_I18N[path], fallback);
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/activity") return uiText("page.accountActivity.title", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.title", fallback);
@@ -9741,6 +9743,8 @@
     if (path === "/admin/runtime") return adminDeliveryRuntimeNavigationText(path, "description", fallback);
     if (path === "/admin/security") return adminSecurityAccessText("route.securityDescription", fallback);
     if (path === "/admin/access") return adminSecurityAccessText("route.accessDescription", fallback);
+    if (path === "/admin") return uiText("adminHome.description", fallback);
+    if (ADMIN_ERP_ROUTE_I18N[path]) return uiText(`${ADMIN_ERP_ROUTE_I18N[path]}.description`, fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/activity") return uiText("page.accountActivity.description", fallback);
     if (path === "/account/security") return uiText("page.accountSecurity.description", fallback);
@@ -21740,47 +21744,47 @@
     const plan = wallet && wallet.plan ? wallet.plan : {};
     const planName = plan.plan_name || plan.current_plan || "Gói Tiêu Chuẩn (Standard)";
     const planStatus = plan.plan_status || "Đang hoạt động";
-    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status">🔄 Làm mới số dư</button>`;
+    const refreshControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="wallet-refresh" data-portal-route="${safeText(page.path)}" aria-controls="wallet-canonical-read-status">🔄 ${safeText(uiText("customerWallet.action.refresh", "Làm mới số dư"))}</button>`;
 
     const overviewCard = walletReady ? `
       <section class="portal-card portal-card-pad portal-wallet-overview" style="border-top: 3px solid #00f2fe;">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">💼 Ví & Tài Khoản</span>
-            <h2 class="portal-card-title">Số dư & Quyền lợi thành viên</h2>
-            <p class="portal-card-subtitle">Sử dụng Xu để chạy các tác vụ AI Studio, Video, Voice, Subtitle, Script và tải tài sản độ nét cao.</p>
+            <span class="portal-section-kicker">${safeText(uiText("customerWallet.kicker", "💼 Ví & Tài Khoản"))}</span>
+            <h2 class="portal-card-title">${safeText(uiText("customerWallet.title", "Số dư & Quyền lợi thành viên"))}</h2>
+            <p class="portal-card-subtitle">${safeText(uiText("customerWallet.subtitle", "Sử dụng Xu để chạy các tác vụ AI Studio, Video, Voice, Subtitle, Script và tải tài sản độ nét cao."))}</p>
           </div>
         </div>
         <div class="portal-admin-grid">
           <div class="portal-metric">
-            <span>Số dư khả dụng</span>
+            <span>${safeText(uiText("customerWallet.metric.balance", "Số dư khả dụng"))}</span>
             <strong style="color:#00f2fe; font-size:26px;">${safeText(String(wallet.balance_xu))} Xu</strong>
-            <em>100 VNĐ = 1 Xu</em>
+            <em>${safeText(uiText("customerWallet.metric.rate", "100 VNĐ = 1 Xu"))}</em>
           </div>
           <div class="portal-metric">
-            <span>Tổng Xu đã dùng</span>
+            <span>${safeText(uiText("customerWallet.metric.spent", "Tổng Xu đã dùng"))}</span>
             <strong>${safeText(String(wallet.total_spent_xu))} Xu</strong>
-            <em>Tự động ghi nhận</em>
+            <em>${safeText(uiText("customerWallet.metric.spentNote", "Tự động ghi nhận"))}</em>
           </div>
           <div class="portal-metric">
-            <span>Gói dịch vụ</span>
+            <span>${safeText(uiText("customerWallet.metric.plan", "Gói dịch vụ"))}</span>
             <strong style="color:#00d26a;">${safeText(planName)}</strong>
             <em>${safeText(planStatus)}</em>
           </div>
         </div>
-        <dl class="portal-wallet-facts"><div><dt>Số dư</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>Gói</dt><dd>${safeText(planName)}</dd></div></dl>
-        <p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">Ví Xu canonical đã sẵn sàng</p>
+        <dl class="portal-wallet-facts"><div><dt>${safeText(uiText("customerWallet.facts.balance", "Số dư"))}</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>${safeText(uiText("customerWallet.facts.plan", "Gói"))}</dt><dd>${safeText(planName)}</dd></div></dl>
+        <p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(uiText("customerWallet.status.ready", "Ví Xu canonical đã sẵn sàng"))}</p>
         <div class="portal-form-footer">
-          <span class="portal-form-note">Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp.</span>
+          <span class="portal-form-note">${safeText(uiText("customerWallet.footerNote", "Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp."))}</span>
           <div class="portal-inline-actions">
             ${refreshControl}
-            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu ngay</a>
-            <a class="portal-button portal-button--quiet" href="/packages">Xem các gói</a>
-            <a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a>
+            <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ ${safeText(uiText("customerWallet.action.topupNow", "Nạp Xu ngay"))}</a>
+            <a class="portal-button portal-button--quiet" href="/packages">${safeText(uiText("customerWallet.action.viewPackages", "Xem các gói"))}</a>
+            <a class="portal-button portal-button--quiet" href="/pricing">${safeText(uiText("customerWallet.action.pricing", "Bảng giá"))}</a>
           </div>
         </div>
       </section>
-    ` : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">Ví Xu canonical</span><h2 class="portal-card-title">Dữ liệu Ví đang được xác minh</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`;
+    ` : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`;
 
     const topupFlow = topup
       ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
@@ -21790,17 +21794,17 @@
       <section class="portal-card portal-card-pad" style="margin-top:20px;">
         <div class="portal-card-header">
           <div>
-            <h2 class="portal-card-title">📜 Lịch sử biến động Xu</h2>
-            <p class="portal-card-subtitle">Chi tiết các giao dịch nạp Xu và sử dụng dịch vụ.</p>
+            <h2 class="portal-card-title">📜 ${safeText(uiText("customerWallet.history.title", "Lịch sử biến động Xu"))}</h2>
+            <p class="portal-card-subtitle">${safeText(uiText("customerWallet.history.subtitle", "Chi tiết các giao dịch nạp Xu và sử dụng dịch vụ."))}</p>
           </div>
         </div>
         ${history.length > 0
-          ? renderRowsTable(["Thời gian", "Loại giao dịch", "Biến động Xu", "Số dư sau GD"], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td style="color:${Number(item.delta_xu) >= 0 ? '#00d26a' : '#ff4d4f'}; font-weight:700;">${Number(item.delta_xu) >= 0 ? '+' : ''}${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, "Chưa có giao dịch nào", "Lịch sử giao dịch sẽ hiển thị tại đây sau khi nạp hoặc dùng Xu.")
-          : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>Chưa có giao dịch phát sinh. Bấm <strong>"Nạp Xu ngay"</strong> để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!</p></div>`
+          ? renderRowsTable([uiText("customerWallet.history.colTime", "Thời gian"), uiText("customerWallet.history.colType", "Loại giao dịch"), uiText("customerWallet.history.colDelta", "Biến động Xu"), uiText("customerWallet.history.colBalance", "Số dư sau GD")], history, (item) => `<td>${safeText(item.created_at)}</td><td>${safeText(item.event_type)}</td><td style="color:${Number(item.delta_xu) >= 0 ? '#00d26a' : '#ff4d4f'}; font-weight:700;">${Number(item.delta_xu) >= 0 ? '+' : ''}${safeText(String(item.delta_xu))} Xu</td><td>${safeText(String(item.balance_after_xu))} Xu</td>`, uiText("customerWallet.history.emptyTitle", "Chưa có giao dịch nào"), uiText("customerWallet.history.emptyBody", "Lịch sử giao dịch sẽ hiển thị tại đây sau khi nạp hoặc dùng Xu."))
+          : `<div style="text-align:center; padding:32px; color:var(--portal-text-secondary, #8fa3b7);"><p>${safeText(uiText("customerWallet.history.emptyTip", 'Chưa có giao dịch phát sinh. Bấm "Nạp Xu ngay" để bắt đầu sử dụng đầy đủ các tính năng sáng tạo!'))}</p></div>`
         }
       </section>
     ` : `<section class="portal-card portal-card-pad" style="margin-top:20px"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("customerTopup.history.unavailable", "Lịch sử biến động Xu chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(walletUnavailableCopy)}</p></div></div></section>`;
-    const assurance = `<details class="portal-wallet-assurance"><summary>Quy tắc nạp Xu & bảo mật giao dịch</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
+    const assurance = `<details class="portal-wallet-assurance"><summary>${safeText(uiText("customerWallet.assurance.title", "Quy tắc nạp Xu & bảo mật giao dịch"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-wallet-assurance-notes">${renderNotes(page)}</div></details>`;
 
     return `<article class="portal-page portal-wallet-page" style="grid-template-columns:minmax(0,1fr)">${renderHero(page, context)}${billingNav}<div class="portal-wallet-layout" style="width:100%; display:flex; flex-direction:column; gap:20px;">${topupFlow}</div>${assurance}${historyCard}</article>`;
   }

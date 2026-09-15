@@ -1,0 +1,1172 @@
+{
+  "spec_id": "A09-ADMIN-EXHAUSTIVE-LOCALE-AUDIT-001",
+  "base_sha": "d929d0e16387278e6ca894430b0978d735f87e92",
+  "total_routes": 50,
+  "registry_routes": 49,
+  "page_routes": 48,
+  "union_routes": 50,
+  "routes": [
+    {
+      "route": "/admin",
+      "authority": "local_web_admin",
+      "layout": "admin-overview",
+      "renderer_family": "admin-overview",
+      "aliases": [
+        "/admin/"
+      ],
+      "title_owned": true,
+      "description_owned": false,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_case",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_dashboard_all_source_missing_renders_consolidated_empty_and_zero_metrics",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_dashboard_partial_zero_unknown_and_readiness_only_are_source_truthful",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_dashboard_real_data_preserves_workload_and_readiness",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_dashboard_source_present_zero_renders_metrics",
+        "tests/test_admin_automation_monitor_portal_contracts.py::test_monitor_has_only_read_refresh_actions_and_keeps_pwa_paths_private",
+        "tests/test_admin_domain_centers_contracts.py::test_domain_centers_only_render_routes_granted_by_the_signed_server_manifest",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_routes",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_admin_navigation_does_not_create_direct_provider_or_payment_authority",
+        "tests/test_admin_erp_professional_vi_003_contracts.py::test_admin_header_reuses_signed_locale_action_and_excludes_customer_chrome",
+        "tests/test_admin_login_responsive_001_contracts.py::test_admin_login_route_marker_reaches_the_main_ancestor",
+        "tests/test_admin_portal_login_authority.py::test_admin_login_frontend_sends_authority_intent_and_routes_mfa",
+        "tests/test_admin_portal_login_authority.py::test_admin_login_requires_admin_role_before_session",
+        "tests/test_admin_security_access_portal_contracts.py::test_renderer_has_no_controls_or_unredacted_fallback_and_private_pwa_scope",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_admin_locale_form_is_direct_header_action_and_only_offers_vi_en",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_case",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_sidebar_renders_all_authorized_groups_with_active_group_open",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_copyfast_auth_api.py::test_catalog_and_portal_routes_are_available",
+        "tests/test_customer_pwa_navigation_motion_contracts.py::test_customer_dock_uses_fixed_presentation_groups_without_authority_inputs",
+        "tests/test_feature_catalog_bundle_split_001_contracts.py::test_dashboard_and_admin_keep_full_workspace_while_auth_stays_split",
+        "tests/test_finance_planning_portal_contracts.py::test_finance_planning_is_discoverable_only_as_a_signed_web_local_admin_surface",
+        "tests/test_finance_planning_portal_contracts.py::test_portal_renders_a_private_finance_planning_workspace_not_a_bridge_page",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_guide_uses_the_generic_canonical_admin_route_gate",
+        "tests/test_partner_readiness_portal_contracts.py::test_partner_readiness_renderer_keeps_the_local_interest_boundary_visible",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_portal_safety_contracts.py::test_nav_highlights_route_families_instead_of_only_each_launch_route",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_is_fenced_off_from_bridge_hydration_refresh_and_private_cache",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_uses_the_generic_canonical_admin_route_gate",
+        "tests/test_product_harmony_ui_contracts.py::test_admin_home_visible_hero_uses_the_reviewed_localized_title",
+        "tests/test_pwa_rollout_versioning.py::test_worker_retains_the_private_cache_boundary",
+        "tests/test_pwa_scope_offline_contracts.py::test_offline_policy_has_only_fixed_public_shell_and_a_public_navigation_fallback",
+        "tests/test_tax_readiness_portal_contracts.py::test_tax_readiness_is_a_canonical_admin_directory_route_not_a_local_or_public_feature",
+        "tests/test_web_local_admin_home_access.py::test_customer_remains_forbidden_from_admin_home",
+        "tests/test_web_local_admin_home_access.py::test_web_local_admin_opens_admin_home_without_canonical_bridge"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA"
+      ]
+    },
+    {
+      "route": "/admin/access",
+      "authority": "local_web_admin",
+      "layout": "admin-security-access-posture",
+      "renderer_family": "admin-security-access-posture",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_erp_navigation.py::test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_portal_hydrates_a_server_authorized_admin_manifest_and_fails_closed",
+        "tests/test_admin_security_access_locale_contracts.py::test_security_access_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_admin_security_access_portal_contracts.py::test_renderer_has_no_controls_or_unredacted_fallback_and_private_pwa_scope",
+        "tests/test_admin_security_access_portal_contracts.py::test_security_and_access_are_native_admin_routes_not_bridge_modules",
+        "tests/test_copyfast_auth_api.py::test_web_local_admin_security_access_pages_and_retired_bridge_paths_never_query_bot",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/analytics",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [
+        "/admin/campaign_stats",
+        "/admin/campaign_report",
+        "/admin/creative_report"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/approvals",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [
+        "/admin/approve_ready",
+        "/admin/approve_job",
+        "/admin/approve_publish"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/audit",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_postback_readiness_locale_contracts.py::test_postback_readiness_locale_renderer_preserves_read_only_boundary_and_vietnamese_fallbacks",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_renderer_is_static_guidance_without_a_configuration_or_event_surface"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/automation",
+      "authority": "local_web_admin",
+      "layout": "admin-automation-monitor",
+      "renderer_family": "admin-automation-monitor",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_automation_monitor_locale_contracts.py::test_automation_monitor_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_admin_automation_monitor_portal_contracts.py::test_admin_automation_monitor_is_a_separate_local_admin_native_route",
+        "tests/test_admin_automation_monitor_portal_contracts.py::test_monitor_has_only_read_refresh_actions_and_keeps_pwa_paths_private",
+        "tests/test_admin_automation_monitor_portal_contracts.py::test_portal_uses_dedicated_redacted_read_state_and_stale_response_fence",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/backups",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [
+        "/admin/backup"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_erp_navigation.py::test_canonical_groups_require_flag_and_live_authority",
+        "tests/test_admin_erp_navigation.py::test_fully_authorized_admin_manifest_keeps_all_authority_domains",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_portal_safety_contracts.py::test_admin_route_aliases_use_existing_read_only_bridge_modules",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/calendar",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [
+        "/admin/calendar_plan"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/campaigns",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [
+        "/admin/campaign",
+        "/admin/campaign_new",
+        "/admin/campaign_preset"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_operations_autopilot_portal_contracts.py::test_operations_customer_and_staff_routes_are_native_portal_surfaces",
+        "tests/test_operations_desk_portal_contracts.py::test_operations_desk_is_a_server_authorized_read_only_admin_route",
+        "tests/test_operations_reliability_portal_contracts.py::test_reliability_is_a_native_staff_portal_not_a_bridge_admin_projection",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/content-handoffs",
+      "authority": "support_staff",
+      "layout": "content-handoff-admin",
+      "renderer_family": "content-handoff-admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_admin_exhaustive_locale_audit.py::test_case",
+        "tests/test_a09_admin_work_queue_ux_locale.py::test_admin_work_queue_is_task_first_and_locale_pure",
+        "tests/test_admin_erp_navigation.py::test_support_operator_receives_only_web_native_staff_modules",
+        "tests/test_content_handoff_partner_crm_portal_contracts.py::test_admin_coordination_filters_are_allowlisted_reset_pagination_and_preserve_route_guards",
+        "tests/test_copyfast_auth_api.py::test_web_support_content_handoff_queue_uses_its_own_server_role_not_bot_admin",
+        "tests/test_operations_desk.py::test_operations_desk_redacts_rows_and_uses_only_allowlisted_targets",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_private_coordination_stale_response_contracts.py::test_content_handoff_owner_detail_and_staff_reads_are_session_route_fenced"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/crm/leads",
+      "authority": "local_web_admin",
+      "layout": "partner-crm-manager",
+      "renderer_family": "partner-crm-manager",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_admin_crm_leads_ux_locale.py::test_admin_crm_guarded_and_empty_never_render_stale_rows",
+        "tests/test_a09_admin_crm_leads_ux_locale.py::test_admin_crm_manager_read_enters_fail_closed_loading_before_network",
+        "tests/test_a09_admin_exhaustive_locale_audit.py::test_case",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_content_handoff_partner_crm_portal_contracts.py::test_admin_coordination_filters_are_allowlisted_reset_pagination_and_preserve_route_guards",
+        "tests/test_copyfast_auth_api.py::test_web_local_admin_crm_page_is_signed_role_only_and_never_queries_bot_bridge",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_private_coordination_stale_response_contracts.py::test_partner_crm_owner_detail_and_manager_reads_are_session_route_fenced"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/customers",
+      "authority": "local_web_admin",
+      "layout": "admin-customer-directory",
+      "renderer_family": "admin-customer-directory",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_customer_directory_portal_contracts.py::test_app_local_admin_route_guards",
+        "tests/test_admin_customer_directory_portal_contracts.py::test_navigation_metadata_web_private_crm",
+        "tests/test_admin_customer_directory_portal_contracts.py::test_portal_registration_and_no_motion_conditions",
+        "tests/test_admin_customer_directory_portal_contracts.py::test_pure_ui_module_node_contracts",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/export",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_admin_exhaustive_locale_audit.py::test_audit_report_covers_exact_page_server_route_universe"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/features",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/finance",
+      "authority": "canonical_admin",
+      "layout": "admin-domain",
+      "renderer_family": "admin-domain",
+      "aliases": [
+        "/admin/financials",
+        "/admin/accounting"
+      ],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_domain_centers_contracts.py::test_admin_registry_and_portal_expose_the_first_class_domain_centers",
+        "tests/test_admin_finance_workspace_locale_contracts.py::test_admin_finance_workspace_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_tax_readiness_portal_contracts.py::test_tax_readiness_renderer_is_static_guidance_and_finance_directory_card_is_manifest_gated"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/finance/planning",
+      "authority": "local_web_admin",
+      "layout": "admin-finance-planning",
+      "renderer_family": "admin-finance-planning",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_erp_navigation.py::test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin",
+        "tests/test_finance_planning_portal_contracts.py::test_finance_planning_backend_is_a_separate_web_owned_admin_contract",
+        "tests/test_finance_planning_portal_contracts.py::test_finance_planning_is_discoverable_only_as_a_signed_web_local_admin_surface",
+        "tests/test_finance_planning_portal_contracts.py::test_portal_renders_a_private_finance_planning_workspace_not_a_bridge_page",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/finance/tax-readiness",
+      "authority": "canonical_admin",
+      "layout": "admin-tax-readiness",
+      "renderer_family": "admin-tax-readiness",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_erp_navigation.py::test_canonical_groups_require_flag_and_live_authority",
+        "tests/test_admin_finance_workspace_locale_contracts.py::test_admin_finance_workspace_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_finance_compliance_readiness_portal_contracts.py::test_finance_compliance_is_one_exact_readiness_handoff_and_not_a_finance_adapter",
+        "tests/test_finance_compliance_readiness_portal_contracts.py::test_finance_compliance_variants_and_update_never_inherit_the_guidance_route",
+        "tests/test_finance_compliance_readiness_portal_contracts.py::test_static_audit_generates_the_finite_finance_compliance_contract",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_tax_readiness_portal_contracts.py::test_tax_readiness_is_a_canonical_admin_directory_route_not_a_local_or_public_feature",
+        "tests/test_tax_readiness_portal_contracts.py::test_tax_readiness_is_isolated_from_generic_finance_bridge_hydration_and_refresh",
+        "tests/test_tax_readiness_portal_contracts.py::test_tax_readiness_renderer_is_static_guidance_and_finance_directory_card_is_manifest_gated"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/freezes",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_admin_route_aliases_use_existing_read_only_bridge_modules"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/governance",
+      "authority": "local_web_admin",
+      "layout": "governance-documents",
+      "renderer_family": "governance-documents",
+      "aliases": [
+        "/admin/governance/documents"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_governance_portal_contracts.py::test_governance_private_navigation_router_and_worker_boundaries_are_explicit",
+        "tests/test_governance_portal_contracts.py::test_governance_routes_render_server_scoped_list_and_detail_workspaces",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/growth",
+      "authority": "canonical_admin",
+      "layout": "admin-domain",
+      "renderer_family": "admin-domain",
+      "aliases": [
+        "/admin/affiliates",
+        "/admin/affiliate",
+        "/admin/referral"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_domain_centers_contracts.py::test_admin_registry_and_portal_expose_the_first_class_domain_centers",
+        "tests/test_admin_postback_readiness_locale_contracts.py::test_postback_readiness_locale_renderer_preserves_read_only_boundary_and_vietnamese_fallbacks",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_renderer_is_static_guidance_without_a_configuration_or_event_surface"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/growth/postback-readiness",
+      "authority": "canonical_admin",
+      "layout": "admin-postback-readiness",
+      "renderer_family": "admin-postback-readiness",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_postback_readiness_locale_contracts.py::test_postback_readiness_fixed_copy_uses_reviewed_locale_catalogue_and_route_chrome",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_is_fenced_off_from_bridge_hydration_refresh_and_private_cache",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_renderer_is_static_guidance_without_a_configuration_or_event_surface",
+        "tests/test_postback_readiness_portal_contracts.py::test_postback_readiness_uses_the_generic_canonical_admin_route_gate"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/internal-documents",
+      "authority": "local_web_admin",
+      "layout": "admin-document-archive",
+      "renderer_family": "admin-document-archive",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_document_archive_portal_contracts.py::test_admin_document_archive_download_is_private_and_browser_fail_closed",
+        "tests/test_admin_document_archive_portal_contracts.py::test_admin_document_archive_routes_render_private_list_and_detail_workspaces",
+        "tests/test_copyfast_admin_document_archive.py::test_archive_is_opt_in_owner_scoped_and_has_no_external_runtime",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/job-recovery-guide",
+      "authority": "canonical_admin",
+      "layout": "admin-job-recovery-guide",
+      "renderer_family": "admin-job-recovery-guide",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_admin_erp_navigation.py::test_canonical_groups_require_flag_and_live_authority",
+        "tests/test_admin_job_recovery_guide_locale_contracts.py::test_job_recovery_guide_fixed_copy_uses_reviewed_locale_catalogue_and_route_chrome",
+        "tests/test_admin_job_recovery_guide_locale_contracts.py::test_job_recovery_guide_locale_renderer_preserves_read_only_boundary_and_vietnamese_fallbacks",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_guide_uses_the_generic_canonical_admin_route_gate",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_is_fenced_off_from_admin_bridge_hydration_and_refresh",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_renderer_is_static_guidance_without_a_job_or_finance_control_plane",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/jobs",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_render_admin_work_queues_uses_quick_access_locale_keys",
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_routes",
+        "tests/test_admin_job_recovery_guide_locale_contracts.py::test_job_recovery_guide_locale_renderer_preserves_read_only_boundary_and_vietnamese_fallbacks",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_case",
+        "tests/test_customer_pwa_navigation_motion_contracts.py::test_case",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_renderer_is_static_guidance_without_a_job_or_finance_control_plane",
+        "tests/test_motion_webapp_dashboard_stability_001_contracts.py::test_other_routes_do_not_receive_marker",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_teal_cyan_ui_foundation_contracts.py::test_light_job_recovery_guide_keeps_admin_safety_guidance_readable"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/jobs/failed",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_admin_route_aliases_use_existing_read_only_bridge_modules"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/leads",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/operations",
+      "authority": "support_staff",
+      "layout": "operations-admin",
+      "renderer_family": "operations-admin",
+      "aliases": [
+        "/admin/autopilot"
+      ],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_admin_operations_locale_purity_contracts.py::test_admin_operations_preserves_dynamic_values_and_record_only_actions",
+        "tests/test_a09_admin_operations_locale_purity_contracts.py::test_case",
+        "tests/test_admin_domain_centers_contracts.py::test_domain_centers_only_render_routes_granted_by_the_signed_server_manifest",
+        "tests/test_copyfast_autopilot.py::test_operations_portal_routes_require_signed_session_and_server_side_staff_role",
+        "tests/test_operations_autopilot_portal_contracts.py::test_operations_customer_and_staff_routes_are_native_portal_surfaces",
+        "tests/test_operations_autopilot_portal_contracts.py::test_operations_hydration_rejects_stale_session_route_and_newer_list_responses",
+        "tests/test_operations_autopilot_portal_contracts.py::test_operations_is_excluded_from_generic_bridge_hydration",
+        "tests/test_operations_autopilot_portal_contracts.py::test_service_worker_never_caches_operations_records_or_admin_routes",
+        "tests/test_operations_desk.py::test_operations_desk_redacts_rows_and_uses_only_allowlisted_targets",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_pwa_scope_offline_contracts.py::test_offline_policy_has_only_fixed_public_shell_and_a_public_navigation_fallback"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/packages",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/payments",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_render_admin_work_queues_uses_quick_access_locale_keys",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_case",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/pricing",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/promos",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_payos_customer_promo_clean_001_contracts.py::test_canonical_admin_promo_route_and_feature_remain_available",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/provider-cost",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_admin_route_aliases_use_existing_read_only_bridge_modules"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/providers",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_portal_hydrates_a_server_authorized_admin_manifest_and_fails_closed",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_job_lock_recovery_guide_portal_contracts.py::test_job_recovery_renderer_is_static_guidance_without_a_job_or_finance_control_plane",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_portal_safety_contracts.py::test_admin_route_aliases_use_existing_read_only_bridge_modules"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/publishing",
+      "authority": "canonical_admin",
+      "layout": "admin-domain",
+      "renderer_family": "admin-domain",
+      "aliases": [
+        "/admin/publish_cockpit",
+        "/admin/publish_queue",
+        "/admin/publish_pack",
+        "/admin/publish_done",
+        "/admin/publisher_status",
+        "/admin/publisher_run",
+        "/admin/publisher_auto"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_safety_contracts.py::test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/refunds",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/reliability",
+      "authority": "support_staff",
+      "layout": "reliability-admin",
+      "renderer_family": "reliability-admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_reliability_locale.py::test_reliability_pagination_translates_and_preserves_disabled_cursor",
+        "tests/test_admin_security_access_portal_contracts.py::test_security_and_access_are_native_admin_routes_not_bridge_modules",
+        "tests/test_operations_desk.py::test_operations_desk_redacts_rows_and_uses_only_allowlisted_targets",
+        "tests/test_operations_reliability_portal_contracts.py::test_reliability_hydration_rejects_stale_staff_session_route_and_page_responses",
+        "tests/test_operations_reliability_portal_contracts.py::test_reliability_is_a_native_staff_portal_not_a_bridge_admin_projection",
+        "tests/test_operations_reliability_portal_contracts.py::test_service_worker_never_caches_reliability_staff_metadata",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/reports",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/revenue",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/runtime",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_admin_erp_navigation.py::test_canonical_groups_require_flag_and_live_authority",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/security",
+      "authority": "local_web_admin",
+      "layout": "admin-security-access-posture",
+      "renderer_family": "admin-security-access-posture",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_erp_navigation.py::test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_portal_hydrates_a_server_authorized_admin_manifest_and_fails_closed",
+        "tests/test_admin_security_access_locale_contracts.py::test_security_access_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_admin_security_access_portal_contracts.py::test_renderer_has_no_controls_or_unredacted_fallback_and_private_pwa_scope",
+        "tests/test_admin_security_access_portal_contracts.py::test_security_and_access_are_native_admin_routes_not_bridge_modules",
+        "tests/test_copyfast_auth_api.py::test_web_local_admin_security_access_pages_and_retired_bridge_paths_never_query_bot",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/support",
+      "authority": "support_staff",
+      "layout": "support-admin",
+      "renderer_family": "support-admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_a09_admin_support_locale_purity_reopen_contracts.py::test_case",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_render_admin_work_queues_uses_quick_access_locale_keys",
+        "tests/test_admin_erp_navigation_portal_contracts.py::test_admin_mobile_dock_is_server_granted_compact_and_never_reuses_customer_routes",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_case",
+        "tests/test_admin_vi_en_shell_001_contracts.py::test_sidebar_renders_all_authorized_groups_with_active_group_open",
+        "tests/test_copyfast_support.py::test_support_staff_uses_server_side_role_csrf_confirm_and_private_notes",
+        "tests/test_operations_desk.py::test_operations_desk_redacts_rows_and_uses_only_allowlisted_targets",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_support_advisor_portal_contracts.py::test_support_advisor_uses_existing_private_pwa_boundary_and_mobile_controls",
+        "tests/test_support_consultation_brief_portal_contracts.py::test_consultation_brief_uses_portal_mobile_and_private_pwa_boundaries",
+        "tests/test_support_portal_contracts.py::test_support_ui_has_responsive_native_primitives_and_no_private_pwa_cache",
+        "tests/test_support_stale_response_contracts.py::test_customer_and_staff_support_hydrators_ignore_late_responses_before_merge"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/system",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_erp_navigation.py::test_canonical_groups_require_flag_and_live_authority",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/system-stewardship",
+      "authority": "local_web_admin",
+      "layout": "admin-system-stewardship",
+      "renderer_family": "admin-system-stewardship",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_erp_navigation.py::test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin",
+        "tests/test_admin_system_data_stewardship_locale_contracts.py::test_system_stewardship_fixed_copy_uses_reviewed_locale_catalogue",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_portal_hubs_are_navigation_only_and_preserve_authority_boundaries",
+        "tests/test_system_data_stewardship_portal_contracts.py::test_stewardship_routes_are_explicitly_server_guarded_and_not_public_catalog_actions"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/tickets",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/topups",
+      "authority": "local_web_admin",
+      "layout": "admin-manual-topups",
+      "renderer_family": "admin-manual-topups",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_p0_manual_topup_admin_queue.py::test_admin_portal_contract_is_web_local_reject_only_localized_and_responsive",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_web_manual_topup_unlinked_g2.py::test_web_local_admin_navigation_publishes_one_reject_only_topup_module",
+        "tests/test_web_manual_topup_unlinked_g2.py::test_web_local_admin_routes_page_list_detail_and_zero_bridge"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/trends",
+      "authority": "canonical_admin",
+      "layout": "admin-domain",
+      "renderer_family": "admin-domain",
+      "aliases": [
+        "/admin/references",
+        "/admin/research",
+        "/admin/trend"
+      ],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_admin_domain_centers_contracts.py::test_admin_registry_and_portal_expose_the_first_class_domain_centers",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/users",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_admin_desktop_nav_groups_returns_all_thirteen_groups_in_server_order",
+        "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py::test_render_admin_work_queues_uses_quick_access_locale_keys",
+        "tests/test_admin_customer_directory_portal_contracts.py::test_portal_registration_and_no_motion_conditions",
+        "tests/test_admin_customer_directory_portal_contracts.py::test_pure_ui_module_node_contracts",
+        "tests/test_copyfast_admin_customer_directory.py::test_router_mounts_once_and_bot_admin_users_route_is_unchanged",
+        "tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear",
+        "tests/test_portal_navigation_ux_contracts.py::test_admin_mobile_dock_keeps_current_server_issued_destination_within_five_items",
+        "tests/test_portal_navigation_ux_contracts.py::test_case",
+        "tests/test_web_local_admin_home_access.py::test_canonical_admin_child_route_keeps_live_bot_guard"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/wallet",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": false,
+      "description_owned": false,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "MISSING_DIRECT_I18N_METADATA",
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    },
+    {
+      "route": "/admin/work-queue",
+      "authority": "support_staff",
+      "layout": "operations-desk",
+      "renderer_family": "operations-desk",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "FULL",
+      "tests": [
+        "tests/test_admin_erp_navigation.py::test_support_operator_receives_only_web_native_staff_modules",
+        "tests/test_operations_desk_portal_contracts.py::test_operations_desk_is_a_server_authorized_read_only_admin_route",
+        "tests/test_operations_desk_portal_contracts.py::test_operations_desk_reads_are_fenced_and_allow_only_guarded_partial_envelopes",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": []
+    },
+    {
+      "route": "/admin/workers",
+      "authority": "canonical_admin",
+      "layout": "admin",
+      "renderer_family": "admin",
+      "aliases": [],
+      "title_owned": true,
+      "description_owned": true,
+      "coverage": "PARTIAL",
+      "tests": [
+        "tests/test_admin_delivery_runtime_navigation_locale_contracts.py::test_case",
+        "tests/test_portal_i18n_bundle_contracts.py::test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear"
+      ],
+      "findings": [
+        "UNCOVERED_BY_DEDICATED_A09_SUITE"
+      ]
+    }
+  ],
+  "summary": {
+    "authority_counts": {
+      "support_staff": 5,
+      "local_web_admin": 11,
+      "canonical_admin": 34
+    },
+    "metadata_ownership": {
+      "both_owned": 26,
+      "gap_count": 24
+    },
+    "coverage_counts": {
+      "FULL": 8,
+      "PARTIAL": 42,
+      "NONE": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "FINDING-01",
+      "severity": "HIGH",
+      "title": "24/50 route Admin thiếu direct I18N metadata",
+      "description": "24 route Admin chưa có nhánh mapping riêng trong localizedPageTitle / localizedPageDescription nên rơi về chuỗi tiếng Việt cố định.",
+      "affected_routes_count": 24
+    },
+    {
+      "id": "FINDING-02",
+      "severity": "HIGH",
+      "title": "Route /admin/export thiếu trong navigation registry",
+      "description": "Route /admin/export tồn tại trong adminPage nhưng vắng mặt trong ADMIN_ERP_ROUTE_I18N.",
+      "affected_routes_count": 1
+    },
+    {
+      "id": "FINDING-03",
+      "severity": "MEDIUM",
+      "title": "42 route Admin thiếu suite kiểm thử giao diện chuyên sâu",
+      "description": "42 route chỉ có kiểm thử gián tiếp qua navigation shell, chưa có bài test kiểm tra độc lập từng component/route.",
+      "affected_routes_count": 42
+    }
+  ],
+  "next_spec": {
+    "spec_id": "A09-ADMIN-LOCALE-GAP-24-COMPLETION-001",
+    "title": "Hoàn thiện sở hữu ngôn ngữ trực tiếp cho 24 route Admin còn thiếu",
+    "dependency": "A09-ADMIN-EXHAUSTIVE-LOCALE-AUDIT-001",
+    "severity": "HIGH",
+    "target_files": [
+      "static/portal/portal.js"
+    ],
+    "protected_files": [
+      "app.py",
+      "copyfast_*.py",
+      "static/portal/integration.js"
+    ],
+    "gap_route_count": 24,
+    "red_command": "python -m pytest tests/test_a09_admin_locale_gap_24.py -q -p no:cacheprovider"
+  }
+}
