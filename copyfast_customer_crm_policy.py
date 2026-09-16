@@ -22,13 +22,20 @@ from __future__ import annotations
 from typing import Any
 
 
+from copyfast_finance_policy import (
+    PAYMENT_GATEWAY_AUTHORITY as FINANCE_PAYMENT_GATEWAY_AUTHORITY,
+    TOPUP_REQUEST_AUTHORITY,
+    WALLET_AUTHORITY as FINANCE_WALLET_AUTHORITY,
+)
+
 # Canonical Authorities
 CUSTOMER_MASTER = "WEB_SQLITE"
 SUPPORT_CASE_AUTHORITY = "WEB_SQLITE"
 TELEGRAM_IDENTITY = "FEDERATED_IDENTITY_LINK"
-WALLET_AUTHORITY = "BOT_CORE"
+WALLET_AUTHORITY = FINANCE_WALLET_AUTHORITY
 JOB_AUTHORITY = "BOT_CORE / CORE_BRIDGE_READ_MODEL"
-PAYMENT_GATEWAY_AUTHORITY = "PAYOS"
+PAYMENT_GATEWAY_AUTHORITY = FINANCE_PAYMENT_GATEWAY_AUTHORITY
+TOPUP_AUTHORITY = TOPUP_REQUEST_AUTHORITY
 
 # Safety Invariants
 WEB_DIRECT_WALLET_MUTATION = False
@@ -170,11 +177,12 @@ def synthesize_customer_crm_context(
     # 5. PAYMENTS / TOPUPS SUMMARY
     pending_topups = [t for t in topups if str(t.get("status") or "") == "pending_admin_review"]
     payments_topups = {
-        "authority": CUSTOMER_MASTER,
+        "authority": TOPUP_REQUEST_AUTHORITY,
         "total_topup_requests": len(topups),
         "pending_review_count": len(pending_topups),
         "manual_settlement_actions": MANUAL_PAYMENT_SETTLEMENT_ACTIONS,
         "recent_requests": topups[:5],
+        "share_canonical_authority": True,
     }
 
     # 6. WALLET SUMMARY (Read-through, never fake zero)
@@ -184,6 +192,7 @@ def synthesize_customer_crm_context(
         "balance_xu": None,
         "freshness": None,
         "direct_mutation_available": WEB_DIRECT_WALLET_MUTATION,
+        "fake_zero_wallet_balance": 0,
     }
 
     # 7. JOBS SUMMARY (Read-through)

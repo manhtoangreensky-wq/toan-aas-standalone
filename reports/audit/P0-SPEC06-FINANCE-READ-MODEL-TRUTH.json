@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-06",
+    "task": "P0.WEB.ERP.SPEC06.FINANCE.READ_MODEL.TRUTH",
+    "base_sha": "34e45087fd839b118a27f7203fd6d38e7c12dce8",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "authority_matrix": {
+    "CUSTOMER_AUTHORITY": "WEB_SQLITE",
+    "WALLET_AUTHORITY": "BOT_CORE",
+    "PAYMENT_GATEWAY_AUTHORITY": "PAYOS",
+    "PAYMENT_SETTLEMENT_AUTHORITY": "BOT_CORE",
+    "TOPUP_REQUEST_AUTHORITY": "WEB_SQLITE",
+    "JOB_AUTHORITY": "BOT_CORE",
+    "REVENUE_AUTHORITY": "BOT_CORE",
+    "WEB_ROLE": "READ_THROUGH_OR_PROJECTION",
+    "WEB_DIRECT_BOT_DB_WRITE": false,
+    "CUSTOMER_FINANCE_AND_FINANCE_PAGE_SHARE_AUTHORITY": true,
+    "JOB_BILLING_AND_FINANCE_PAGE_SHARE_SEMANTICS": true
+  },
+  "invariants": {
+    "REQUEST_STATE_NOT_EQUAL_GATEWAY_EVENT_NOT_EQUAL_SETTLEMENT": true,
+    "PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED": true,
+    "FAKE_ZERO_WALLET_BALANCE": 0,
+    "UNKNOWN_REVENUE_AS_ZERO": false,
+    "UNAVAILABLE_FINANCE_VALUE_AS_ZERO": false,
+    "MANUAL_CREDIT_ACTIONS": 0,
+    "MANUAL_DEBIT_ACTIONS": 0,
+    "SETTLEMENT_ACTIONS": 0,
+    "REFUND_ACTIONS": 0,
+    "PAYOS_ACTIONS": 0,
+    "WALLET_ACTIONS": 0,
+    "PROVIDER_CALLS": 0,
+    "BOT_DB_MUTATIONS": 0,
+    "WEB_WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "SETTLEMENT_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "PRODUCTION_DB_SCHEMA_MUTATIONS": 0
+  },
+  "first_red": {
+    "identified_issue": "Admin client test fixture received 403 Forbidden because acc-admin-01 was seeded without canonical_user_id, causing copyfast_auth._require_current_canonical_admin to deny access before bridge check.",
+    "resolution": "Seeded canonical_user_id=7126457028 for acc-admin-01 in test setup to satisfy internal canonical admin check, allowing all finance read model endpoints to execute successfully."
+  },
+  "tests": {
+    "spec06_tests": 16,
+    "total_p0_spec_tests": 90,
+    "new_failures": 0,
+    "spec06_pass": true
+  }
+}
