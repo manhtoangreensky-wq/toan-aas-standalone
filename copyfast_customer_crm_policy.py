@@ -111,6 +111,7 @@ def synthesize_customer_crm_context(
     topup_requests: list[dict[str, Any]] | None = None,
     link_evidence: dict[str, Any] | None = None,
     identity_conflict: bool = False,
+    jobs_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Synthesizes the bounded, truthful Customer CRM context answering the 7 canonical sections."""
     cases = support_cases or []
@@ -186,14 +187,17 @@ def synthesize_customer_crm_context(
     }
 
     # 7. JOBS SUMMARY (Read-through)
-    jobs = {
-        "data_source": JOB_AUTHORITY,
-        "status_authority": WALLET_AUTHORITY,
-        "status": STATUS_UNAVAILABLE,
-        "recent_jobs": [],
-        "freshness": None,
-        "mutation_available": False,
-    }
+    if jobs_summary is not None:
+        jobs = jobs_summary
+    else:
+        jobs = {
+            "data_source": JOB_AUTHORITY,
+            "status_authority": WALLET_AUTHORITY,
+            "status": STATUS_UNAVAILABLE,
+            "recent_jobs": [],
+            "freshness": None,
+            "mutation_available": False,
+        }
 
     # 8. AUDIT / ACTION REQUIRED (Derived from concrete facts only)
     action_reasons: list[str] = []
@@ -203,6 +207,11 @@ def synthesize_customer_crm_context(
         action_reasons.append(f"{len(open_cases)} yêu cầu hỗ trợ đang mở")
     if len(pending_topups) > 0:
         action_reasons.append(f"{len(pending_topups)} yêu cầu nạp tiền chờ đối soát")
+    if isinstance(jobs, dict):
+        jobs_counts = jobs.get("counts") if isinstance(jobs.get("counts"), dict) else {}
+        jobs_attention = jobs_counts.get("attention")
+        if isinstance(jobs_attention, int) and jobs_attention > 0:
+            action_reasons.append(f"{jobs_attention} tác vụ cần người vận hành xử lý")
 
     action_required = {
         "has_action": len(action_reasons) > 0,

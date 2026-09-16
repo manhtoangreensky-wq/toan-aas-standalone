@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-05",
+    "task": "P0.WEB.ERP.SPEC05.OPERATIONS.JOBS.TRUTH",
+    "base_sha": "060c9a40a76729382b89b1c3386da53d7b646364",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "authority_contract": {
+    "JOB_AUTHORITY": "BOT_CORE",
+    "WEB_ROLE": "READ_THROUGH_OR_PROJECTION",
+    "WEB_DIRECT_BOT_DB_WRITE": false,
+    "JOB_MUTATION_AVAILABLE": false,
+    "RETRY_ACTIONS": 0,
+    "CANCEL_ACTIONS": 0,
+    "REQUEUE_ACTIONS": 0,
+    "FORCE_COMPLETE_ACTIONS": 0,
+    "PROVIDER_ACTIONS": 0,
+    "FAKE_ZERO_JOB_COUNT": 0,
+    "UNKNOWN_NOT_EQUAL_ZERO": true,
+    "UNAVAILABLE_NOT_EQUAL_HEALTHY": true,
+    "EMPTY_NOT_EQUAL_UNKNOWN": true
+  },
+  "source_inventory": {
+    "SOURCE": "Core Bridge (/internal/v1/admin/jobs)",
+    "AUTHORITY": "BOT_CORE",
+    "TRANSPORT": "HTTPS HMAC bearer-signed request via CoreBridgeClient",
+    "FRESHNESS": "Real-time query to Bot core via bridge; None/UNAVAILABLE when bridge unconfigured",
+    "FAILURE_MODE": "Fail-closed (CORE_BRIDGE_NOT_CONFIGURED / guarded)",
+    "AVAILABLE_NOW": false
+  },
+  "state_taxonomy": {
+    "QUEUED": [
+      "queued",
+      "pending",
+      "submitted",
+      "wait",
+      "waiting"
+    ],
+    "RUNNING": [
+      "processing",
+      "running",
+      "in_progress",
+      "rendering",
+      "generating"
+    ],
+    "SUCCEEDED": [
+      "completed",
+      "succeeded",
+      "success",
+      "done",
+      "delivered"
+    ],
+    "FAILED": [
+      "failed",
+      "failed_no_charge",
+      "error",
+      "timeout"
+    ],
+    "BLOCKED": [
+      "cancelled",
+      "canceled",
+      "refunded",
+      "guarded",
+      "awaiting_confirm",
+      "draft",
+      "blocked",
+      "hold"
+    ],
+    "UNKNOWN": [
+      "unrecognized / null / empty"
+    ]
+  },
+  "first_red": {
+    "identified_issue": "Previously /admin/jobs returned an unpopulated empty data payload on bridge failure without operations jobs summary envelope; lacked standard 6-state taxonomy mapping; no /api/v1/operations/jobs, /api/v1/operations/jobs/failed, or /api/v1/operations/jobs/{id} read endpoints; and Customer CRM context jobs section lacked integration with Operations attention reasons.",
+    "resolution": "Implemented copyfast_operations_jobs_policy.py with pure business state taxonomy, concrete attention rules, and truthful zero-prevention summary synthesis (counts=None when UNAVAILABLE); enhanced /admin/jobs and added /api/v1/operations/jobs, /api/v1/operations/jobs/failed, /api/v1/operations/jobs/{id}; ensured all retry/refund actions fail-closed with WEBAPP_ADMIN_WRITES_DISABLED; and integrated with Customer CRM context."
+  },
+  "invariants": {
+    "PROVIDER_CALLS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "BOT_DB_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "PRODUCTION_DB_SCHEMA_MUTATIONS": 0,
+    "A11Y_STATUS": "PASS",
+    "RBAC": "PASS",
+    "SPEC05_PASS": true,
+    "BLOCKERS": "NONE"
+  },
+  "tests": {
+    "spec05_tests": 10,
+    "total_p0_spec_tests": 67,
+    "new_failures": 0
+  }
+}

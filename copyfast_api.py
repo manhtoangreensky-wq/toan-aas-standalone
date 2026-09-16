@@ -85,6 +85,13 @@ from copyfast_native_read_models import (
     parse_native_asset_id,
     parse_native_job_id,
 )
+from copyfast_operations_jobs_policy import (
+    JOB_AUTHORITY,
+    JOB_MUTATION_AVAILABLE,
+    STATUS_UNAVAILABLE,
+    synthesize_operations_job_record,
+    synthesize_operations_jobs_summary,
+)
 from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
 from copyfast_route_engine import unconfigured_catalog
@@ -5654,7 +5661,122 @@ async def admin_users(request: Request, account: dict = Depends(require_canonica
 
 @router.get("/admin/jobs")
 async def admin_jobs(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
+    response = await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
+    if not response.get("ok"):
+        summary = synthesize_operations_jobs_summary(
+            bridge_available=False,
+            bridge_error=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+        )
+        return envelope(
+            False,
+            response.get("message") or "Hàng đợi Bot Core chưa sẵn sàng.",
+            data=summary,
+            status_name=response.get("status") or "guarded",
+            error_code=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+        )
+    summary = synthesize_operations_jobs_summary(
+        response.get("data"),
+        bridge_available=True,
+    )
+    return envelope(
+        True,
+        "Đã nạp danh sách tác vụ từ Bot Core.",
+        data=summary,
+        status_name="read_only",
+    )
+
+
+@router.get("/admin/jobs/{job_id}")
+async def admin_job_detail(job_id: str, request: Request, account: dict = Depends(require_canonical_admin)):
+    job_id = _canonical_route_identifier(job_id, "Mã job")
+    response = await _bridge("GET", f"/internal/v1/admin/jobs/{job_id}", account=account, request=request, admin_read=True)
+    if not response.get("ok"):
+        return envelope(
+            False,
+            response.get("message") or "Không thể nạp chi tiết tác vụ từ Bot Core.",
+            data={
+                "job_id": job_id,
+                "data_source_authority": JOB_AUTHORITY,
+                "status": STATUS_UNAVAILABLE,
+                "mutation_available": False,
+            },
+            status_name=response.get("status") or "guarded",
+            error_code=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+        )
+    record = synthesize_operations_job_record(response.get("data") or {})
+    return envelope(
+        True,
+        "Đã nạp chi tiết tác vụ từ Bot Core.",
+        data=record,
+        status_name="read_only",
+    )
+
+
+@router.get("/operations/jobs")
+async def operations_jobs(
+    request: Request,
+    state: str | None = None,
+    limit: int = 50,
+    account: dict = Depends(require_canonical_admin),
+):
+    response = await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
+    if not response.get("ok"):
+        summary = synthesize_operations_jobs_summary(
+            bridge_available=False,
+            bridge_error=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+            filter_state=state,
+        )
+        return envelope(
+            False,
+            response.get("message") or "Hàng đợi Bot Core chưa sẵn sàng.",
+            data=summary,
+            status_name=response.get("status") or "guarded",
+            error_code=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+        )
+    summary = synthesize_operations_jobs_summary(
+        response.get("data"),
+        bridge_available=True,
+        filter_state=state,
+    )
+    if limit and limit > 0:
+        summary["items"] = summary["items"][:limit]
+    return envelope(
+        True,
+        "Đã nạp danh sách tác vụ Operations.",
+        data=summary,
+        status_name="read_only",
+    )
+
+
+@router.get("/operations/jobs/failed")
+async def operations_jobs_failed(
+    request: Request,
+    limit: int = 50,
+    account: dict = Depends(require_canonical_admin),
+):
+    return await operations_jobs(request=request, state="FAILED", limit=limit, account=account)
+
+
+@router.get("/operations/jobs/{job_id}")
+async def operations_job_detail(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    return await admin_job_detail(job_id=job_id, request=request, account=account)
+
+
+@router.post("/operations/jobs/retry")
+async def operations_job_retry_action(
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    return envelope(
+        False,
+        "Thao tác ghi bị khóa theo hợp đồng SPEC-05 (Read-Model Only).",
+        status_name="guarded",
+        error_code="WEBAPP_ADMIN_WRITES_DISABLED",
+    )
 
 
 @router.get("/admin/payments")
