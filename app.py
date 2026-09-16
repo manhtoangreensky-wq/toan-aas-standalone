@@ -2590,29 +2590,34 @@ app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
 app.include_router(copyfast_mfa.router)
 app.include_router(copyfast_api.router)
 
-
-@app.post("/api/v1/admin/payments/manual/{request_id}/approve/draft")
-async def manual_admin_approve_draft(
-    request_id: str,
-    payload: copyfast_api.ManualAdminDraftRequest | None = None,
-    request: Request = None,
-    account: dict = Depends(copyfast_api.require_admin_csrf),
-):
-    actual_payload = payload or copyfast_api.ManualAdminDraftRequest(action="approve", reason="Xác nhận đã nhận tiền qua chuyển khoản ngân hàng")
-    if actual_payload.action != "approve":
-        actual_payload = copyfast_api.ManualAdminDraftRequest(action="approve", reason=actual_payload.reason or "Xác nhận đã nhận tiền")
-    return await copyfast_api.manual_admin_draft(request_id, actual_payload, request, account)
-
-
-@app.post("/api/v1/admin/payments/manual/{request_id}/approve/confirm")
-async def manual_admin_approve_confirm(
-    request_id: str,
-    payload: copyfast_api.ManualAdminConfirmRequest,
-    request: Request = None,
-    account: dict = Depends(copyfast_api.require_admin_csrf),
-):
-    return await copyfast_api.manual_admin_confirm(request_id, payload, request, account)
-
+@app.middleware("http")
+async def _approve_compat_middleware(request: Request, call_next):
+    path = request.url.path
+    if request.method == "POST" and "/api/v1/admin/payments/manual/" in path and "/approve/" in path:
+        import re
+        from fastapi.responses import JSONResponse, Response
+        m = re.match(r"^/api/v1/admin/payments/manual/([^/]+)/approve/(draft|confirm)$", path)
+        if m:
+            req_id, action = m.groups()
+            try:
+                account = copyfast_auth.require_admin_csrf(request)
+            except Exception:
+                return JSONResponse(status_code=401, content={"ok": False, "status": "guarded", "message": "Phiên quản trị không hợp lệ.", "error_code": "UNAUTHORIZED"})
+            if action == "draft":
+                try:
+                    body = await request.json()
+                except Exception:
+                    body = {}
+                reason = (body.get("reason") if isinstance(body, dict) else None) or "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"
+                payload = copyfast_api.ManualAdminDraftRequest(action="approve", reason=reason)
+                res = await copyfast_api.manual_admin_draft(req_id, payload, request, account)
+                return res if isinstance(res, Response) else JSONResponse(status_code=200, content=res)
+            elif action == "confirm":
+                body = await request.json()
+                payload = copyfast_api.ManualAdminConfirmRequest(**body)
+                res = await copyfast_api.manual_admin_confirm(req_id, payload, request, account)
+                return res if isinstance(res, Response) else JSONResponse(status_code=200, content=res)
+    return await call_next(request)
 app.include_router(copyfast_admin_erp_navigation.router)
 app.include_router(copyfast_admin_audit.router)
 app.include_router(copyfast_admin_automation.router)

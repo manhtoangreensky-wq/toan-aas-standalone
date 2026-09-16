@@ -9617,12 +9617,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-manual-payment-method img {
   display: block;
   width: 100%;
-  max-width: 180px;
+  max-width: 320px;
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
   border-radius: 12px;
   background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* Form structure */
@@ -9817,7 +9818,8 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   }
 
   .portal-manual-payment-method img {
-    width: min(100%, 220px);
+    width: min(100%, 320px);
+    max-width: 320px;
     justify-self: center;
   }
 }
