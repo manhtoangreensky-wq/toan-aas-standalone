@@ -6709,6 +6709,9 @@ def approve_web_manual_topup(
     now: str | None = None,
 ) -> dict:
     """Approve a pending manual top-up request and record wallet credit event."""
+    cleaned_ledger_event_id = str(ledger_event_id or "").strip()
+    if not cleaned_ledger_event_id or cleaned_ledger_event_id.startswith("local-credit-"):
+        raise WebManualTopupAdminGuard("WALLET_CREDIT_RECEIPT_REQUIRED")
     current_time = str(now or utc_now())
     with transaction() as conn:
         record = conn.execute(

@@ -159,10 +159,45 @@ def test_manual_topup_approve_lifecycle(admin_client, env_setup):
     assert draft_data["data"]["action"] == "approve"
     assert draft_data["data"]["approved_xu"] == 500  # 50,000 / 100 = 500 Xu
 
-    # 3. Call approve confirm
-    confirm_res = admin_client.post(
+    # 3. Call approve confirm when bridge is UNCONFIGURED -> Must fail-closed with 503
+    confirm_fail = admin_client.post(
         f"/api/v1/admin/payments/manual/{request_id}/approve/confirm",
         json={"confirmation_receipt": receipt, "idempotency_key": "idemp-approve-test-99"},
+    )
+    assert confirm_fail.status_code == 503
+    fail_data = confirm_fail.json()
+    assert fail_data["ok"] is False
+    assert fail_data["error_code"] == "WALLET_CREDIT_BRIDGE_UNAVAILABLE"
+    assert "chưa khả dụng" in fail_data["message"]
+    assert "thành công" not in fail_data["message"].lower()
+
+    # Verify still pending
+    pending_detail = admin_client.get(f"/api/v1/admin/payments/manual/{request_id}")
+    assert pending_detail.status_code == 200
+    assert pending_detail.json()["data"]["status"] == "pending_admin_review"
+    assert pending_detail.json()["data"].get("ledger_event_id") in (None, "")
+
+    # 4. Now simulate configured bridge with valid Bot Core ledger receipt
+    import copyfast_api
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
+
+    async def mock_bridge_request(method, path, **kwargs):
+        if path == "/internal/v1/admin/wallet/credit":
+            return {
+                "ok": True,
+                "status": "completed",
+                "message": "Credited in Bot Core Ledger",
+                "data": {"tx_id": "core-ledger-tx-real-998877"},
+            }
+        return {"ok": False, "error_code": "NOT_FOUND"}
+
+    monkeypatch.setattr(copyfast_api, "bridge_request", mock_bridge_request)
+
+    # Call confirm with bridge available
+    confirm_res = admin_client.post(
+        f"/api/v1/admin/payments/manual/{request_id}/approve/confirm",
+        json={"confirmation_receipt": receipt, "idempotency_key": "idemp-approve-test-99-retry"},
     )
     assert confirm_res.status_code == 200
     confirm_data = confirm_res.json()
@@ -170,14 +205,15 @@ def test_manual_topup_approve_lifecycle(admin_client, env_setup):
     assert confirm_data["status"] == "approved"
     assert confirm_data["data"]["status"] == "approved"
     assert confirm_data["data"]["approved_xu"] == 500
-    assert confirm_data["data"]["ledger_event_id"].startswith("local-credit-")
+    assert confirm_data["data"]["ledger_event_id"] == "core-ledger-tx-real-998877"
 
-    # 4. Final detail shows approved
+    # 5. Final detail shows approved with real ledger ID
     final_detail = admin_client.get(f"/api/v1/admin/payments/manual/{request_id}")
     assert final_detail.status_code == 200
     assert final_detail.json()["data"]["status"] == "approved"
+    assert final_detail.json()["data"]["ledger_event_id"] == "core-ledger-tx-real-998877"
 
-    # 5. Check audit log in DB
+    # 6. Check audit log in DB
     with sqlite3.connect(env_setup) as conn:
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -186,3 +222,4 @@ def test_manual_topup_approve_lifecycle(admin_client, env_setup):
         assert audit is not None
         assert audit["target"] == request_id
         assert audit["outcome"] == "approved"
+    monkeypatch.undo()

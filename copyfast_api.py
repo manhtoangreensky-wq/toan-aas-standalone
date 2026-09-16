@@ -4889,11 +4889,12 @@ def _web_manual_admin_guard(error: WebManualTopupAdminGuard):
         "MANUAL_ADMIN_IDEMPOTENCY_CONFLICT": "Mã gửi lại đã được dùng cho quyết định khác.",
         "MANUAL_ADMIN_REASON_INVALID": "Lý do từ chối không hợp lệ.",
         "MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE": "Chưa thể tạo biên nhận xác nhận an toàn.",
+        "WALLET_CREDIT_RECEIPT_REQUIRED": "Yêu cầu phải có biên nhận đối soát hợp lệ từ Bot Core Ledger.",
     }
     status_code = 404 if error.code in {
         "MANUAL_ADMIN_NOT_FOUND",
         "MANUAL_ADMIN_CONFIRMATION_REQUIRED",
-    } else 422 if error.code == "MANUAL_ADMIN_REASON_INVALID" else 503 if error.code == "MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE" else 409
+    } else 422 if error.code == "MANUAL_ADMIN_REASON_INVALID" else 502 if error.code == "WALLET_CREDIT_RECEIPT_REQUIRED" else 503 if error.code == "MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE" else 409
     return _manual_admin_guard(
         error.code,
         messages.get(error.code, "Chưa thể xử lý quyết định nạp thủ công."),
@@ -5108,35 +5109,59 @@ async def manual_admin_confirm(
             vault_entry.in_flight = False
             return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
 
-        ledger_event_id = ""
+        if not bridge_configured():
+            vault_entry.in_flight = False
+            return _manual_admin_guard(
+                "WALLET_CREDIT_BRIDGE_UNAVAILABLE",
+                "Hệ thống kết nối Bot Core Ledger chưa khả dụng; chưa cộng Xu và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt để thử lại sau.",
+                status_code=503,
+            )
+
         canonical_user_id = record.get("canonical_user_id") or record.get("telegram_user_id")
-        if bridge_configured():
-            bridge_res = await bridge_request(
-                "POST",
-                "/internal/v1/admin/wallet/credit",
-                payload={
-                    "canonical_user_id": canonical_user_id,
-                    "amount_xu": vault_entry.approved_xu,
-                    "reason": f"Manual topup {canonical_id}",
-                    "idempotency_key": f"admin:{account['id']}:credit:{canonical_id}:{payload.idempotency_key}",
-                },
-                actor_id=str(account.get("id") or ""),
+        if not canonical_user_id:
+            vault_entry.in_flight = False
+            return _manual_admin_guard(
+                "WALLET_CREDIT_USER_UNLINKED",
+                "Tài khoản chưa liên kết danh tính Bot Core để cộng Xu; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                status_code=422,
             )
-            if not bridge_res.get("ok"):
-                vault_entry.in_flight = False
-                return envelope(
-                    False,
-                    bridge_res.get("message") or "Không thể cộng Xu qua Bot Core Ledger.",
-                    status_name="guarded",
-                    error_code=bridge_res.get("error_code") or "WALLET_CREDIT_FAILED",
-                )
-            ledger_event_id = str(
-                (bridge_res.get("data") or {}).get("tx_id")
-                or (bridge_res.get("data") or {}).get("ledger_event_id")
-                or uuid.uuid4().hex
+
+        bridge_res = await bridge_request(
+            "POST",
+            "/internal/v1/admin/wallet/credit",
+            payload={
+                "canonical_user_id": canonical_user_id,
+                "amount_xu": vault_entry.approved_xu,
+                "reason": f"Manual topup {canonical_id}",
+                "idempotency_key": f"admin:{account['id']}:credit:{canonical_id}:{payload.idempotency_key}",
+            },
+            actor_id=str(account.get("id") or ""),
+        )
+        if not bridge_res.get("ok"):
+            vault_entry.in_flight = False
+            error_code = str(bridge_res.get("error_code") or "WALLET_CREDIT_FAILED")
+            status_code = (
+                504
+                if error_code in {"CORE_BRIDGE_TIMEOUT", "CORE_BRIDGE_GATEWAY_TIMEOUT"}
+                else 503
+                if error_code in {"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_NOT_CONFIGURED"}
+                else 502
             )
-        else:
-            ledger_event_id = f"local-credit-{uuid.uuid4().hex[:12]}"
+            return _manual_admin_guard(
+                error_code,
+                bridge_res.get("message") or "Không thể cộng Xu qua Bot Core Ledger; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                status_code=status_code,
+            )
+
+        raw_receipt = (bridge_res.get("data") or {}).get("tx_id") or (bridge_res.get("data") or {}).get("ledger_event_id")
+        ledger_event_id = str(raw_receipt or "").strip()
+        if not ledger_event_id or ledger_event_id.startswith("local-credit-"):
+            vault_entry.in_flight = False
+            return _manual_admin_guard(
+                "WALLET_CREDIT_RECEIPT_MISSING",
+                "Bot Core Ledger không trả về mã biên nhận hợp lệ; chưa ghi nhận hoàn tất và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                status_code=502,
+            )
 
         try:
             approved_record = approve_web_manual_topup(
