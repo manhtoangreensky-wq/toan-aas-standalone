@@ -1,9 +1,10 @@
 """Contract tests for Admin UI Visual Reset to Light Modern Teal/Emerald ERP.
 
-TASK: P0.WEB.ADMIN.UI.VISUAL.RESET.LIGHT.TEAL.LIVE.ACCEPTANCE
+TASK: P0.WEB.ADMIN.UI.PR454.VISUAL.EVIDENCE.CORRECTION.GATE
 PROGRAM: P0.WEB.ERP.PRODUCTION_COMPLETION
 """
 
+import json
 from pathlib import Path
 import re
 import pytest
@@ -14,6 +15,8 @@ PORTAL_THEME_CSS = (ROOT / "static" / "portal" / "portal-theme.css").read_text(e
 PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 PORTAL_JS = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 SERVICE_WORKER_JS = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
+AFTER_MANIFEST_PATH = ROOT / "reports" / "visual_reset" / "after" / "capture_manifest.json"
+COMPUTED_COLORS_PATH = ROOT / "reports" / "visual_reset" / "after" / "computed_colors.json"
 
 
 def test_admin_ui_theme_storage_key_isolation() -> None:
@@ -88,3 +91,52 @@ def test_service_worker_skip_waiting_and_clients_claim() -> None:
     """Service worker must skip waiting and claim clients to avoid stale caches."""
     assert "self.skipWaiting()" in SERVICE_WORKER_JS
     assert "self.clients.claim()" in SERVICE_WORKER_JS
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER_JS
+    assert "const PRIVATE_PATH_PREFIXES" in SERVICE_WORKER_JS
+
+
+def test_admin_ui_mobile_drawer_off_canvas_rules() -> None:
+    """Admin mobile sidebar must be fixed off-canvas (-105%) and only slide in when open."""
+    assert "@media (max-width: 980px)" in PORTAL_THEME_CSS
+    assert '.portal-shell[data-portal-app-kind="admin"] .portal-sidebar' in PORTAL_THEME_CSS
+    assert "transform: translateX(-105%) !important;" in PORTAL_THEME_CSS
+    assert '.portal-shell[data-portal-app-kind="admin"] .portal-sidebar.is-open' in PORTAL_THEME_CSS
+    assert "transform: translateX(0) !important;" in PORTAL_THEME_CSS
+
+
+def test_admin_ui_mobile_screenshots_have_zero_cross_route_duplicates() -> None:
+    """All 5 mobile screenshots must have unique SHA256 hashes proving distinct route identity."""
+    if not AFTER_MANIFEST_PATH.exists():
+        pytest.skip("Manifest not generated yet")
+    manifest = json.loads(AFTER_MANIFEST_PATH.read_text(encoding="utf-8"))
+    mobile_items = [item for item in manifest if "390" in item["viewport"]]
+    assert len(mobile_items) == 5
+    hashes = [item["screenshotSha256"] for item in mobile_items]
+    assert len(set(hashes)) == 5, f"Cross-route duplicate detected in mobile screenshots: {hashes}"
+
+
+def test_admin_ui_desktop_screenshots_have_zero_cross_route_duplicates() -> None:
+    """All 5 desktop screenshots must have unique SHA256 hashes proving distinct route identity."""
+    if not AFTER_MANIFEST_PATH.exists():
+        pytest.skip("Manifest not generated yet")
+    manifest = json.loads(AFTER_MANIFEST_PATH.read_text(encoding="utf-8"))
+    desktop_items = [item for item in manifest if "1440" in item["viewport"]]
+    assert len(desktop_items) == 5
+    hashes = [item["screenshotSha256"] for item in desktop_items]
+    assert len(set(hashes)) == 5, f"Cross-route duplicate detected in desktop screenshots: {hashes}"
+
+
+def test_admin_ui_computed_colors_measured_values() -> None:
+    """Computed colors must show light teal canvas and not-applicable for routes without CTA."""
+    if not COMPUTED_COLORS_PATH.exists():
+        pytest.skip("Computed colors not generated yet")
+    colors = json.loads(COMPUTED_COLORS_PATH.read_text(encoding="utf-8"))
+    for route in ("admin_home", "admin_customers", "admin_finance", "admin_jobs"):
+        assert colors[route]["themeAttr"] == "light"
+        assert colors[route]["bodyBg"] == "rgb(243, 251, 252)"
+        assert colors[route]["sidebarBg"] == "rgb(255, 255, 255)"
+    # Finance and Jobs have no primary CTA
+    assert colors["admin_finance"]["primaryActionBg"] == "NOT_APPLICABLE"
+    assert colors["admin_jobs"]["primaryActionBg"] == "NOT_APPLICABLE"
+    # Admin login has emerald-teal primary CTA
+    assert colors["admin_login"]["primaryActionBg"] in ("rgb(13, 148, 136)", "rgb(15, 118, 110)")

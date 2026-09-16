@@ -1,0 +1,167 @@
+[
+  {
+    "route": "admin_home",
+    "url": "http://127.0.0.1:8001/admin",
+    "documentPathname": "/admin",
+    "pageHeading": "Trung tâm điều hành",
+    "viewport": "1440x900 (desktop_1440)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:16.119Z",
+    "screenshotFilename": "admin_home_desktop_1440.png",
+    "screenshotSha256": "02ba38ccdf366be12f6aad660628bb6655563176003eb96590f83828d0dfd042"
+  },
+  {
+    "route": "admin_home",
+    "url": "http://127.0.0.1:8001/admin",
+    "documentPathname": "/admin",
+    "pageHeading": "Trung tâm điều hành",
+    "viewport": "1024x768 (tablet_1024)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:17.100Z",
+    "screenshotFilename": "admin_home_tablet_1024.png",
+    "screenshotSha256": "ce5fb056669adcb36c65661da14f1be416b878232e3695ce983c37485b05a63d"
+  },
+  {
+    "route": "admin_home",
+    "url": "http://127.0.0.1:8001/admin",
+    "documentPathname": "/admin",
+    "pageHeading": "Trung tâm điều hành",
+    "viewport": "390x844 (mobile_390)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:18.068Z",
+    "screenshotFilename": "admin_home_mobile_390.png",
+    "screenshotSha256": "a0aff59dd845d4d8a48adc19e0369a300f45d4b67be7aaa53286c48312f14dcc"
+  },
+  {
+    "route": "admin_customers",
+    "url": "http://127.0.0.1:8001/admin/customers",
+    "documentPathname": "/admin/customers",
+    "pageHeading": "Khách hàng trực tuyến",
+    "viewport": "1440x900 (desktop_1440)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:19.057Z",
+    "screenshotFilename": "admin_customers_desktop_1440.png",
+    "screenshotSha256": "dcc27d9b05cfe07d125ebea93d6ac09b3dfc8b870498491c04c1bc5e9cfa6c81"
+  },
+  {
+    "route": "admin_customers",
+    "url": "http://127.0.0.1:8001/admin/customers",
+    "documentPathname": "/admin/customers",
+    "pageHeading": "Khách hàng trực tuyến",
+    "viewport": "1024x768 (tablet_1024)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:19.846Z",
+    "screenshotFilename": "admin_customers_tablet_1024.png",
+    "screenshotSha256": "1d39b3f1c5a4a25efb52c8b6d447de7ce065b23a391ea9010e067ee359007c61"
+  },
+  {
+    "route": "admin_customers",
+    "url": "http://127.0.0.1:8001/admin/customers",
+    "documentPathname": "/admin/customers",
+    "pageHeading": "Khách hàng trực tuyến",
+    "viewport": "390x844 (mobile_390)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:20.664Z",
+    "screenshotFilename": "admin_customers_mobile_390.png",
+    "screenshotSha256": "0dc9d9ebe38c9dc985ff49bde715816b28758d2f076997a4cd378b9d0e58a2f7"
+  },
+  {
+    "route": "admin_finance",
+    "url": "http://127.0.0.1:8001/admin/finance",
+    "documentPathname": "/admin/finance",
+    "pageHeading": "Finance & Revenue",
+    "viewport": "1440x900 (desktop_1440)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:21.572Z",
+    "screenshotFilename": "admin_finance_desktop_1440.png",
+    "screenshotSha256": "3e9b2889513eaf90b5b9a19fd994f99ae5ff32069e15afcdf17ac71690976f21"
+  },
+  {
+    "route": "admin_finance",
+    "url": "http://127.0.0.1:8001/admin/finance",
+    "documentPathname": "/admin/finance",
+    "pageHeading": "Finance & Revenue",
+    "viewport": "1024x768 (tablet_1024)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:22.371Z",
+    "screenshotFilename": "admin_finance_tablet_1024.png",
+    "screenshotSha256": "db533c881ff2ba0fbaa6025e71abe2baa5f1b1353f32a490327f18aab73a291f"
+  },
+  {
+    "route": "admin_finance",
+    "url": "http://127.0.0.1:8001/admin/finance",
+    "documentPathname": "/admin/finance",
+    "pageHeading": "Finance & Revenue",
+    "viewport": "390x844 (mobile_390)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:23.226Z",
+    "screenshotFilename": "admin_finance_mobile_390.png",
+    "screenshotSha256": "3665e3fed9f7788192fd92c0786eac01a32260903a949f47f9bb7ce3a1f43055"
+  },
+  {
+    "route": "admin_jobs",
+    "url": "http://127.0.0.1:8001/admin/jobs",
+    "documentPathname": "/admin/jobs",
+    "pageHeading": "Công việc",
+    "viewport": "1440x900 (desktop_1440)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:24.242Z",
+    "screenshotFilename": "admin_jobs_desktop_1440.png",
+    "screenshotSha256": "5d5d67b283ef1e50fb9bf8eec758bc5586cd2f642f1598fac0ce306217220832"
+  },
+  {
+    "route": "admin_jobs",
+    "url": "http://127.0.0.1:8001/admin/jobs",
+    "documentPathname": "/admin/jobs",
+    "pageHeading": "Công việc",
+    "viewport": "1024x768 (tablet_1024)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:25.154Z",
+    "screenshotFilename": "admin_jobs_tablet_1024.png",
+    "screenshotSha256": "49bd6ee784e33ecabf21a4058736c3d925d66fa180ecef89e6ad9a78f351d161"
+  },
+  {
+    "route": "admin_jobs",
+    "url": "http://127.0.0.1:8001/admin/jobs",
+    "documentPathname": "/admin/jobs",
+    "pageHeading": "Công việc",
+    "viewport": "390x844 (mobile_390)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:26.043Z",
+    "screenshotFilename": "admin_jobs_mobile_390.png",
+    "screenshotSha256": "abe94650cbd8a077c0de476a85911b4dd95b29586cfa3433153689a0b906a942"
+  },
+  {
+    "route": "admin_login",
+    "url": "http://127.0.0.1:8001/admin/login",
+    "documentPathname": "/admin/login",
+    "pageHeading": "Đăng nhập quản trị",
+    "viewport": "1440x900 (desktop_1440)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:26.958Z",
+    "screenshotFilename": "admin_login_desktop_1440.png",
+    "screenshotSha256": "31d3311cd95307a1bfa98d568baaa8e327f7fa3afa0f5dd3e7dff4482cd3140b"
+  },
+  {
+    "route": "admin_login",
+    "url": "http://127.0.0.1:8001/admin/login",
+    "documentPathname": "/admin/login",
+    "pageHeading": "Đăng nhập quản trị",
+    "viewport": "1024x768 (tablet_1024)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:27.764Z",
+    "screenshotFilename": "admin_login_tablet_1024.png",
+    "screenshotSha256": "2fc4df94940107450b9bbd71b22cbef296515f82f372ac87f85803fea296abf0"
+  },
+  {
+    "route": "admin_login",
+    "url": "http://127.0.0.1:8001/admin/login",
+    "documentPathname": "/admin/login",
+    "pageHeading": "Đăng nhập quản trị",
+    "viewport": "390x844 (mobile_390)",
+    "theme": "light",
+    "timestamp": "2026-09-16T14:12:28.529Z",
+    "screenshotFilename": "admin_login_mobile_390.png",
+    "screenshotSha256": "21c583afed13bdbd890a6189b57f7e8e9a5225b49b7ffa4b10b003a22fc768f4"
+  }
+]

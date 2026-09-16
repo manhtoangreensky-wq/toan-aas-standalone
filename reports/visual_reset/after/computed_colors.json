@@ -8,7 +8,7 @@
     "cardBg": "rgb(255, 255, 255)",
     "primaryText": "rgb(7, 58, 69)",
     "mutedText": "rgb(69, 107, 119)",
-    "primaryActionBg": "rgba(0, 0, 0, 0)"
+    "primaryActionBg": "rgb(13, 148, 136)"
   },
   "admin_customers": {
     "themeAttr": "light",
@@ -19,7 +19,7 @@
     "cardBg": "rgb(255, 255, 255)",
     "primaryText": "rgb(7, 58, 69)",
     "mutedText": "N/A",
-    "primaryActionBg": "rgba(0, 0, 0, 0)"
+    "primaryActionBg": "rgb(13, 148, 136)"
   },
   "admin_finance": {
     "themeAttr": "light",
@@ -30,7 +30,7 @@
     "cardBg": "rgb(255, 255, 255)",
     "primaryText": "rgb(7, 58, 69)",
     "mutedText": "rgb(69, 107, 119)",
-    "primaryActionBg": "N/A"
+    "primaryActionBg": "NOT_APPLICABLE"
   },
   "admin_jobs": {
     "themeAttr": "light",
@@ -41,7 +41,7 @@
     "cardBg": "rgb(255, 255, 255)",
     "primaryText": "rgb(7, 58, 69)",
     "mutedText": "rgb(69, 107, 119)",
-    "primaryActionBg": "N/A"
+    "primaryActionBg": "NOT_APPLICABLE"
   },
   "admin_login": {
     "themeAttr": "light",

@@ -20271,6 +20271,51 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
   background: #0f766e !important;
 }
 
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-button--primary {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  border: 1px solid #0d9488 !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-button--primary:hover {
+  background: #0f766e !important;
+  border-color: #0f766e !important;
+}
+
+@media (max-width: 980px) {
+  .portal-shell[data-portal-app-kind="admin"] {
+    display: block !important;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-sidebar {
+    position: fixed !important;
+    z-index: 100 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: min(290px, calc(100vw - 46px)) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    padding-top: calc(20px + var(--portal-safe-top)) !important;
+    padding-bottom: calc(16px + var(--portal-safe-bottom)) !important;
+    transform: translateX(-105%) !important;
+    transition: transform .2s ease !important;
+    box-shadow: 18px 0 40px rgba(0, 0, 0, .15) !important;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-sidebar.is-open {
+    transform: translateX(0) !important;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-workspace {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-header {
+    width: 100% !important;
+  }
+}
+
 .portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat {
   display: grid;
   gap: 2px;
