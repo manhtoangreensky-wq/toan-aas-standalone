@@ -10056,49 +10056,15 @@
     const issuedRoutes = new Set(issued.map((module) => module.route));
     const current = currentAdminNavigationModule(currentPage, context, issued);
     const activeGroup = activeAdminNavigationGroup(currentPage, context, navigation);
-    const isLegacyTestGroups = navigation.groups.length <= 4 && navigation.groups.some((g) => g.id === "core" || g.id === "support");
-
-    if (isLegacyTestGroups) {
-      return navigation.groups.map((group) => {
-        const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
-        if (!modules.length) return null;
-        const isCurrent = Boolean(activeGroup && (group === activeGroup || group.id === activeGroup.id));
-        return {
-          label: group.title,
-          defaultOpen: isCurrent,
-          current: isCurrent,
-          links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
-        };
-      }).filter(Boolean);
-    }
-
-    const currentPath = normalizePath(currentPage && (currentPage.routePath || currentPage.path) || "");
-    const isEn = (context && context.locale === "en") || (typeof currentLocale !== "undefined" && currentLocale === "en");
-
-    return ADMIN_PRIMARY_NAV_SCHEME.map((schemeGroup) => {
-      const links = [];
-      schemeGroup.items.forEach((item) => {
-        const targetRoute = issuedRoutes.has(item.route)
-          ? item.route
-          : (item.children || []).find((r) => issuedRoutes.has(r));
-        if (!targetRoute) return;
-
-        const isItemCurrent = currentPath === targetRoute
-          || (item.children && item.children.some((child) => currentPath === child || (child !== "/admin" && currentPath.startsWith(child + "/"))));
-
-        const itemTitle = isEn && item.titleEn ? item.titleEn : item.title;
-        links.push([targetRoute, itemTitle, item.icon, isItemCurrent]);
-      });
-
-      if (!links.length) return null;
-      const isGroupCurrent = links.some((link) => link[3] === true);
-      const groupLabel = isEn && schemeGroup.titleEn ? schemeGroup.titleEn : schemeGroup.title;
-
+    return navigation.groups.map((group) => {
+      const modules = (Array.isArray(group.modules) ? group.modules : []).filter((module) => module && issuedRoutes.has(module.route));
+      if (!modules.length) return null;
+      const isCurrent = Boolean(activeGroup && (group === activeGroup || group.id === activeGroup.id));
       return {
-        label: groupLabel,
-        defaultOpen: isGroupCurrent,
-        current: isGroupCurrent,
-        links
+        label: group.title,
+        defaultOpen: isCurrent,
+        current: isCurrent,
+        links: modules.map((module) => [module.route, module.title, module.icon, Boolean(current && module.route === current.route)])
       };
     }).filter(Boolean);
   }
