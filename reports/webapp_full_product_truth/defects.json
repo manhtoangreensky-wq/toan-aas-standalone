@@ -1,0 +1,44 @@
+[
+  {
+    "DEFECT_ID": "DEFECT-SPEC00-001",
+    "SPEC": "SPEC-00",
+    "ROLE": "admin",
+    "ROUTE": "/admin/modules/{module}",
+    "CONTROL": "Admin ERP Data Loaders",
+    "REPRO_STEPS": "Navigate to any standard admin module (/admin/users, /admin/jobs, /admin/providers, /admin/revenue).",
+    "EXPECTED": "Display real data fetched from Bot canonical storage or local DB.",
+    "ACTUAL": "Bot service on port 8080 does not have /internal/v1/admin/modules/{module} endpoints (only /internal/v1/admin/wallet/credit and compensate exist). Returns 404/guarded.",
+    "DATA_SOURCE": "UNAVAILABLE_BOT_MODULE_MISSING",
+    "FIRST_RED": "Bot API openapi.json only registers 10 internal paths, missing all admin module paths.",
+    "ROOT_CAUSE": "Bot backend was never updated with /internal/v1/admin/modules endpoints; Web App assumed they exist and created a generic bridge caller.",
+    "STATUS": "OPEN"
+  },
+  {
+    "DEFECT_ID": "DEFECT-SPEC00-002",
+    "SPEC": "SPEC-00",
+    "ROLE": "customer",
+    "ROUTE": "/wallet",
+    "CONTROL": "Wallet Balance Display",
+    "REPRO_STEPS": "Customer logs in and opens /wallet.",
+    "EXPECTED": "Display real canonical Xu balance from SQLite or Bot ledger.",
+    "ACTUAL": "Web calls /api/v1/wallet which calls /internal/v1/wallet on Bot 8080, which returns 404/guarded. User balance cannot be retrieved from Bot.",
+    "DATA_SOURCE": "CORE_BRIDGE_NOT_CONFIGURED_OR_MISSING_ROUTE",
+    "FIRST_RED": "/internal/v1/wallet does not exist on 8080 Bot service.",
+    "ROOT_CAUSE": "No route /internal/v1/wallet on Bot service; Web App has no local wallet ledger fallback.",
+    "STATUS": "OPEN"
+  },
+  {
+    "DEFECT_ID": "DEFECT-SPEC00-003",
+    "SPEC": "SPEC-00",
+    "ROLE": "admin",
+    "ROUTE": "/admin/providers",
+    "CONTROL": "Provider Health & Cost Cards",
+    "REPRO_STEPS": "Open /admin/providers.",
+    "EXPECTED": "Display real status and balance of Key4U / ShopAIKey.",
+    "ACTUAL": "No API query to Key4U or ShopAIKey exists; UI shows compatibility guarded or empty metrics.",
+    "DATA_SOURCE": "NONE",
+    "FIRST_RED": "No provider balance check implementation exists in copyfast_api.py.",
+    "ROOT_CAUSE": "Provider balance aggregation not implemented.",
+    "STATUS": "OPEN"
+  }
+]

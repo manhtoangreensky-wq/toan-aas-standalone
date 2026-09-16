@@ -1,0 +1,197 @@
+{
+  "spec": "SPEC-01 — AUTH / SESSION / RBAC",
+  "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+  "base_sha": "4186c03a25092a3408411b171bdf5a1c401634d6",
+  "status": "PASS",
+  "acceptance": {
+    "CUSTOMER_AUTH_PASS": "YES",
+    "ADMIN_AUTH_PASS": "YES",
+    "RBAC_PASS": "YES",
+    "DIRECT_URL_BYPASS": 0,
+    "FAKE_SOCIAL_LOGIN_BUTTONS": 0
+  },
+  "customer_verification": {
+    "registration": {
+      "endpoint": "POST /api/v1/auth/register",
+      "storage": "SQLite web_accounts + web_account_profiles",
+      "hashing_algorithm": "scrypt (N=16384, r=8, p=1)",
+      "duplicate_behavior": "non-enumerating, identical public handoff",
+      "email_validation": "regex pattern match, oauth alias reservation check",
+      "status": "PASS"
+    },
+    "login": {
+      "endpoint": "POST /api/v1/auth/login",
+      "cookie": "toan_aas_session (HttpOnly, SameSite=Lax, Secure in production)",
+      "verification": "constant-time password comparison, audit log denied on mismatch",
+      "status": "PASS"
+    },
+    "logout": {
+      "endpoint": "POST /api/v1/auth/logout",
+      "csrf_required": true,
+      "revocation": "web_sessions.revoked_at timestamp set, cookie cleared",
+      "post_logout_me_status": 401,
+      "status": "PASS"
+    },
+    "session_expiration": {
+      "check": "web_sessions.expires_at < utc_now()",
+      "behavior": "fails closed with 401 Unauthorized",
+      "status": "PASS"
+    },
+    "refresh_me": {
+      "endpoint": "GET /api/v1/auth/me",
+      "behavior": "updates web_sessions.last_seen_at, returns full account data",
+      "status": "PASS"
+    },
+    "direct_url": {
+      "admin_access_attempt": "403 Forbidden fail-closed",
+      "admin_api_attempt": "403 Forbidden fail-closed",
+      "status": "PASS"
+    },
+    "account_disabled": {
+      "flag": "web_accounts.is_active = 0",
+      "login_attempt": "denied with LOGIN_DENIED",
+      "active_session_attempt": "401 Unauthorized fail-closed",
+      "status": "PASS"
+    }
+  },
+  "admin_verification": {
+    "admin_login_page": {
+      "route": "GET /admin/login",
+      "status_code": 200,
+      "content_type": "text/html",
+      "status": "PASS"
+    },
+    "admin_portal_login": {
+      "admin_flag": "admin_portal: true",
+      "customer_attempt": "denied with ADMIN_LOGIN_REQUIRED",
+      "admin_attempt": "succeeds with role=admin",
+      "status": "PASS"
+    },
+    "role_authority": {
+      "source": "SQLite role_cache=admin + Bot Core canonical role check via /internal/v1/me",
+      "roles_accepted": [
+        "admin",
+        "owner"
+      ],
+      "status": "PASS"
+    },
+    "customer_direct_url": {
+      "attempt": "customer session accessing /admin or /admin/*",
+      "response": "403 Forbidden fail-closed",
+      "bypass_count": 0,
+      "status": "PASS"
+    },
+    "admin_downgrade_protection": {
+      "check": "require_canonical_admin re-checks live role from Bot Core",
+      "demoted_role_behavior": "403 Forbidden fail-closed",
+      "status": "PASS"
+    },
+    "expired_session": {
+      "admin_route": "401 Unauthorized fail-closed",
+      "admin_api": "401 Unauthorized fail-closed",
+      "status": "PASS"
+    },
+    "unauthenticated_redirect": {
+      "customer_pages": "307 redirect to /login?next=...",
+      "admin_pages": "401 Unauthorized fail-closed",
+      "status": "PASS"
+    },
+    "api_admin_action_fail_closed": {
+      "unauthenticated": "401 Unauthorized",
+      "customer_role": "403 Forbidden",
+      "status": "PASS"
+    }
+  },
+  "social_login_honesty": {
+    "providers_endpoint": "GET /api/v1/auth/providers",
+    "google": {
+      "configured": false,
+      "button_rendered": false
+    },
+    "apple": {
+      "configured": false,
+      "button_rendered": false
+    },
+    "github": {
+      "configured": false,
+      "button_rendered": false
+    },
+    "telegram": {
+      "configured": true,
+      "connection_status_endpoint": "GET /api/v1/auth/telegram/connection/status",
+      "ready": true,
+      "bot_username": "toanaasbot",
+      "button_rendered": true,
+      "backend_functional": true
+    },
+    "fake_buttons_count": 0,
+    "status": "PASS"
+  },
+  "live_vps_empirical_evidence": {
+    "host": "app.toanaas.vn",
+    "checks": [
+      {
+        "path": "/admin/login",
+        "expected": 200,
+        "actual": 200,
+        "type": "text/html"
+      },
+      {
+        "path": "/admin",
+        "expected": 401,
+        "actual": 401
+      },
+      {
+        "path": "/dashboard",
+        "expected": 307,
+        "actual": 307,
+        "location": "/login?next=/dashboard"
+      },
+      {
+        "path": "/api/v1/admin/summary",
+        "expected": 401,
+        "actual": 401
+      },
+      {
+        "path": "/api/v1/auth/providers",
+        "actual": {
+          "apple": false,
+          "github": false,
+          "google": false,
+          "telegram": false
+        }
+      },
+      {
+        "path": "/api/v1/auth/telegram/connection/status",
+        "actual": {
+          "ready": true,
+          "bot_username": "toanaasbot"
+        }
+      }
+    ]
+  },
+  "tests_summary": {
+    "test_p0_webapp_spec01_auth_rbac_truth.py": {
+      "passed": 7,
+      "failed": 0
+    },
+    "test_admin_portal_login_authority.py": {
+      "passed": 2,
+      "failed": 0
+    },
+    "test_canonical_admin_owner_authority.py": {
+      "passed": 6,
+      "failed": 0
+    },
+    "test_auth_provider_surface_contracts.py": {
+      "passed": 3,
+      "failed": 0
+    },
+    "test_copyfast_auth_api.py": {
+      "passed": 81,
+      "failed": 0
+    },
+    "total_passed": 99,
+    "total_failed": 0
+  }
+}
