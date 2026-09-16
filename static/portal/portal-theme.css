@@ -107,11 +107,19 @@
   --portal-landing-footer-brand-text: #f3ffff;
   --portal-landing-footer-muted: #b9dee3;
   /* Admin UI Light Modern Teal/Emerald ERP tokens */
+  --portal-admin-light-app-canvas: #f3fbfc;
+  --portal-admin-light-surface: #ffffff;
   --portal-admin-light-surface-soft: #f0fdfa;
   --portal-admin-light-rail-border: #e2edf0;
   --portal-admin-light-rail-text: #0f2937;
   --portal-admin-light-rail-muted: #527984;
+  --portal-admin-light-border: #d5e9ed;
   --portal-admin-light-border-strong: #99d5d8;
+  --portal-admin-light-ink: #073a45;
+  --portal-admin-light-muted: #456b77;
+  --portal-admin-light-action: #0d9488;
+  --portal-admin-light-action-hover: #0f766e;
+  --portal-admin-light-brand: #0d9488;
   --portal-admin-light-brand-hover: #10b981;
   --portal-admin-light-context: #0284c7;
   --portal-admin-light-emerald-border: #a7f3d0;
@@ -20056,28 +20064,28 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--access .portal-auth-card
    ========================================================================= */
 .portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]),
 html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"] {
-  --portal-app-canvas: var(--portal-app-canvas);
-  --portal-surface: var(--portal-surface-light);
-  --portal-surface-light: var(--portal-surface-light);
-  --portal-surface-raised: var(--portal-surface-light);
-  --portal-surface-strong: var(--portal-surface-light);
+  --portal-app-canvas: var(--portal-admin-light-app-canvas);
+  --portal-surface: var(--portal-admin-light-surface);
+  --portal-surface-light: var(--portal-admin-light-surface);
+  --portal-surface-raised: var(--portal-admin-light-surface);
+  --portal-surface-strong: var(--portal-admin-light-surface);
   --portal-surface-soft: var(--portal-admin-light-surface-soft);
-  --portal-rail: var(--portal-surface-light);
+  --portal-rail: var(--portal-admin-light-surface);
   --portal-rail-surface: var(--portal-admin-light-surface-soft);
   --portal-rail-hover: var(--portal-admin-light-surface-soft);
   --portal-rail-border: var(--portal-admin-light-rail-border);
   --portal-rail-text: var(--portal-admin-light-rail-text);
   --portal-rail-muted: var(--portal-admin-light-rail-muted);
-  --portal-border: var(--portal-border);
+  --portal-border: var(--portal-admin-light-border);
   --portal-border-strong: var(--portal-admin-light-border-strong);
-  --portal-ink: var(--portal-ink);
-  --portal-muted: var(--portal-muted);
-  --portal-action: var(--portal-brand);
-  --portal-action-hover: var(--portal-action);
-  --portal-brand: var(--portal-brand);
+  --portal-ink: var(--portal-admin-light-ink);
+  --portal-muted: var(--portal-admin-light-muted);
+  --portal-action: var(--portal-admin-light-action);
+  --portal-action-hover: var(--portal-admin-light-action-hover);
+  --portal-brand: var(--portal-admin-light-brand);
   --portal-brand-hover: var(--portal-admin-light-brand-hover);
   --portal-context: var(--portal-admin-light-context);
-  --portal-focus: var(--portal-brand);
+  --portal-focus: var(--portal-admin-light-brand);
   background: var(--portal-app-canvas) !important;
   color: var(--portal-ink);
 }

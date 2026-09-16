@@ -140,3 +140,19 @@ def test_admin_ui_computed_colors_measured_values() -> None:
     assert colors["admin_jobs"]["primaryActionBg"] == "NOT_APPLICABLE"
     # Admin login has emerald-teal primary CTA
     assert colors["admin_login"]["primaryActionBg"] in ("rgb(13, 148, 136)", "rgb(15, 118, 110)")
+
+
+def test_admin_ui_semantic_tokens_have_no_self_referential_cycles() -> None:
+    """Admin light semantic alias block must not contain self-referential cycles like --X: var(--X)."""
+    match = re.search(
+        r'\.portal-shell\[data-portal-app-kind=["\']admin["\']\]:not\(\[data-portal-theme=["\']dark["\']\]\)[^{]*\{(?P<rules>[^}]+)\}',
+        PORTAL_THEME_CSS,
+    )
+    assert match is not None, "Admin light theme selector block not found in portal-theme.css"
+    rules = match.group("rules")
+    cycles = [
+        prop
+        for prop, val in re.findall(r"(--[a-zA-Z0-9_-]+)\s*:\s*var\(\s*(--[a-zA-Z0-9_-]+)\s*\)", rules)
+        if prop == val
+    ]
+    assert not cycles, f"Self-referential custom property cycles detected in Admin light theme: {cycles}"

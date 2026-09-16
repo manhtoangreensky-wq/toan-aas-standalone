@@ -6,9 +6,9 @@
     "pageHeading": "Trung tâm điều hành",
     "viewport": "1440x900 (desktop_1440)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:16.119Z",
+    "timestamp": "2026-09-16T16:20:20.648Z",
     "screenshotFilename": "admin_home_desktop_1440.png",
-    "screenshotSha256": "02ba38ccdf366be12f6aad660628bb6655563176003eb96590f83828d0dfd042"
+    "screenshotSha256": "324b25d2fa21d724c62cc0a51a8912629211af26efc44c5310e24e2515214c57"
   },
   {
     "route": "admin_home",
@@ -17,9 +17,9 @@
     "pageHeading": "Trung tâm điều hành",
     "viewport": "1024x768 (tablet_1024)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:17.100Z",
+    "timestamp": "2026-09-16T16:20:21.608Z",
     "screenshotFilename": "admin_home_tablet_1024.png",
-    "screenshotSha256": "ce5fb056669adcb36c65661da14f1be416b878232e3695ce983c37485b05a63d"
+    "screenshotSha256": "e09a2cce0a359c08d6d4ea68f361158b032214b4697e9d90343c4731114420c6"
   },
   {
     "route": "admin_home",
@@ -28,9 +28,9 @@
     "pageHeading": "Trung tâm điều hành",
     "viewport": "390x844 (mobile_390)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:18.068Z",
+    "timestamp": "2026-09-16T16:20:22.652Z",
     "screenshotFilename": "admin_home_mobile_390.png",
-    "screenshotSha256": "a0aff59dd845d4d8a48adc19e0369a300f45d4b67be7aaa53286c48312f14dcc"
+    "screenshotSha256": "1fa29c6ad298e68e819b5204093a645862dc6072882e0ae27777176741cab702"
   },
   {
     "route": "admin_customers",
@@ -39,9 +39,9 @@
     "pageHeading": "Khách hàng trực tuyến",
     "viewport": "1440x900 (desktop_1440)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:19.057Z",
+    "timestamp": "2026-09-16T16:20:23.562Z",
     "screenshotFilename": "admin_customers_desktop_1440.png",
-    "screenshotSha256": "dcc27d9b05cfe07d125ebea93d6ac09b3dfc8b870498491c04c1bc5e9cfa6c81"
+    "screenshotSha256": "4b310ce294bad5508f9aa40c78934aa1c018d22dc444cc99e57533db5d5fdd17"
   },
   {
     "route": "admin_customers",
@@ -50,9 +50,9 @@
     "pageHeading": "Khách hàng trực tuyến",
     "viewport": "1024x768 (tablet_1024)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:19.846Z",
+    "timestamp": "2026-09-16T16:20:24.368Z",
     "screenshotFilename": "admin_customers_tablet_1024.png",
-    "screenshotSha256": "1d39b3f1c5a4a25efb52c8b6d447de7ce065b23a391ea9010e067ee359007c61"
+    "screenshotSha256": "64a75c41b9f726ce893af31f1128ed6301e653781c17cf3c4f79885746b7eef6"
   },
   {
     "route": "admin_customers",
@@ -61,9 +61,9 @@
     "pageHeading": "Khách hàng trực tuyến",
     "viewport": "390x844 (mobile_390)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:20.664Z",
+    "timestamp": "2026-09-16T16:20:25.179Z",
     "screenshotFilename": "admin_customers_mobile_390.png",
-    "screenshotSha256": "0dc9d9ebe38c9dc985ff49bde715816b28758d2f076997a4cd378b9d0e58a2f7"
+    "screenshotSha256": "b0d7f07ec144a4018b4ccd25d0c8499367101c5e163094a8abe1828be6a3e5cf"
   },
   {
     "route": "admin_finance",
@@ -72,9 +72,9 @@
     "pageHeading": "Finance & Revenue",
     "viewport": "1440x900 (desktop_1440)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:21.572Z",
+    "timestamp": "2026-09-16T16:20:26.072Z",
     "screenshotFilename": "admin_finance_desktop_1440.png",
-    "screenshotSha256": "3e9b2889513eaf90b5b9a19fd994f99ae5ff32069e15afcdf17ac71690976f21"
+    "screenshotSha256": "6ba751788d9581b63a7ef65867aa6a4dd0fa90c6bdff8ced46fbce3a5cd47ce0"
   },
   {
     "route": "admin_finance",
@@ -83,9 +83,9 @@
     "pageHeading": "Finance & Revenue",
     "viewport": "1024x768 (tablet_1024)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:22.371Z",
+    "timestamp": "2026-09-16T16:20:26.917Z",
     "screenshotFilename": "admin_finance_tablet_1024.png",
-    "screenshotSha256": "db533c881ff2ba0fbaa6025e71abe2baa5f1b1353f32a490327f18aab73a291f"
+    "screenshotSha256": "757644fbc18df97c3fd6a9bb5c9a3451d99374b517a3b6566be4ed4ce6d47c34"
   },
   {
     "route": "admin_finance",
@@ -94,9 +94,9 @@
     "pageHeading": "Finance & Revenue",
     "viewport": "390x844 (mobile_390)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:23.226Z",
+    "timestamp": "2026-09-16T16:20:27.746Z",
     "screenshotFilename": "admin_finance_mobile_390.png",
-    "screenshotSha256": "3665e3fed9f7788192fd92c0786eac01a32260903a949f47f9bb7ce3a1f43055"
+    "screenshotSha256": "86b6dec7a7adac6ab535d15e768a32eb6d61aa804a5e1b3cad74d81654528d7b"
   },
   {
     "route": "admin_jobs",
@@ -105,9 +105,9 @@
     "pageHeading": "Công việc",
     "viewport": "1440x900 (desktop_1440)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:24.242Z",
+    "timestamp": "2026-09-16T16:20:28.614Z",
     "screenshotFilename": "admin_jobs_desktop_1440.png",
-    "screenshotSha256": "5d5d67b283ef1e50fb9bf8eec758bc5586cd2f642f1598fac0ce306217220832"
+    "screenshotSha256": "e7f5d171e2fad248029c25d8ee3ea123eab335af4fcadfe94622243dbf226373"
   },
   {
     "route": "admin_jobs",
@@ -116,9 +116,9 @@
     "pageHeading": "Công việc",
     "viewport": "1024x768 (tablet_1024)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:25.154Z",
+    "timestamp": "2026-09-16T16:20:29.410Z",
     "screenshotFilename": "admin_jobs_tablet_1024.png",
-    "screenshotSha256": "49bd6ee784e33ecabf21a4058736c3d925d66fa180ecef89e6ad9a78f351d161"
+    "screenshotSha256": "bdefaba2b90a6c5a2919b45b2c6a4db836c7784ca1803c6eed7779bcda1ffc65"
   },
   {
     "route": "admin_jobs",
@@ -127,9 +127,9 @@
     "pageHeading": "Công việc",
     "viewport": "390x844 (mobile_390)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:26.043Z",
+    "timestamp": "2026-09-16T16:20:30.229Z",
     "screenshotFilename": "admin_jobs_mobile_390.png",
-    "screenshotSha256": "abe94650cbd8a077c0de476a85911b4dd95b29586cfa3433153689a0b906a942"
+    "screenshotSha256": "7241efeacee10451c33c4171f1a2cf255d94bd4cb9eaf3f7addacd705db973f3"
   },
   {
     "route": "admin_login",
@@ -138,7 +138,7 @@
     "pageHeading": "Đăng nhập quản trị",
     "viewport": "1440x900 (desktop_1440)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:26.958Z",
+    "timestamp": "2026-09-16T16:20:31.081Z",
     "screenshotFilename": "admin_login_desktop_1440.png",
     "screenshotSha256": "31d3311cd95307a1bfa98d568baaa8e327f7fa3afa0f5dd3e7dff4482cd3140b"
   },
@@ -149,7 +149,7 @@
     "pageHeading": "Đăng nhập quản trị",
     "viewport": "1024x768 (tablet_1024)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:27.764Z",
+    "timestamp": "2026-09-16T16:20:31.854Z",
     "screenshotFilename": "admin_login_tablet_1024.png",
     "screenshotSha256": "2fc4df94940107450b9bbd71b22cbef296515f82f372ac87f85803fea296abf0"
   },
@@ -160,7 +160,7 @@
     "pageHeading": "Đăng nhập quản trị",
     "viewport": "390x844 (mobile_390)",
     "theme": "light",
-    "timestamp": "2026-09-16T14:12:28.529Z",
+    "timestamp": "2026-09-16T16:20:32.606Z",
     "screenshotFilename": "admin_login_mobile_390.png",
     "screenshotSha256": "21c583afed13bdbd890a6189b57f7e8e9a5225b49b7ffa4b10b003a22fc768f4"
   }
