@@ -625,7 +625,8 @@
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
     "/admin/jobs/failed": "/admin/modules/failed-jobs", "/admin/payments": "/admin/payments",
-    "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets"
+    "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets",
+    "/admin/pricing": "/admin/pricing", "/admin/packages": "/admin/pricing"
   });
   // The frozen bot exposes these two read-only adapters under plural/report
   // module names.  This preserves the friendly Web routes without inventing
@@ -27208,10 +27209,14 @@
         if (!(base().capabilities && base().capabilities["admin-manual-topup-write"] === true)) throw new Error(adminManualTopupText("error.writePermission", "Quyền quyết định nạp thủ công chưa được bật."));
         if (action === "admin-manual-topup-draft") {
           const requestId = String(fields.request_id || "");
-          const draftAction = String(fields.decision || "");
-          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || draftAction !== "reject") throw new Error(adminManualTopupText("error.decision", "Chỉ cho phép tạo xác nhận từ chối."));
-          const body = { action: "reject", reason: String(fields.reason || "").trim() };
-          if (body.reason.length < 3 || body.reason.length > 300 || /[\u0000-\u001f]/.test(body.reason)) throw new Error(adminManualTopupText("error.reason", "Lý do cần từ 3 đến 300 ký tự hợp lệ."));
+          const draftAction = String(fields.decision || "reject");
+          if (!/^MANUAL-[1-9][0-9]{0,18}$/.test(requestId) || (draftAction !== "reject" && draftAction !== "approve")) throw new Error(adminManualTopupText("error.decision", "Quyết định không hợp lệ."));
+          const reason = String(fields.reason || "").trim();
+          if (draftAction === "reject" && (reason.length < 3 || reason.length > 300 || /[\u0000-\u001f]/.test(reason))) throw new Error(adminManualTopupText("error.reason", "Lý do cần từ 3 đến 300 ký tự hợp lệ."));
+          let body = { action: "reject", reason: reason };
+          if (draftAction === "approve") {
+            body = { action: "approve", reason: reason || "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng" };
+          }
           const expectedPath = currentPortalPath();
           const sessionEpoch = canonicalSessionEpoch;
           const writeEpoch = ++adminManualTopupWriteEpoch;
@@ -27247,12 +27252,12 @@
               body: JSON.stringify({ confirmation_receipt: receipt, idempotency_key: submission.key })
             });
             if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, receipt)) return;
-            terminal = String(result.status || "") === "rejected";
+            terminal = String(result.status || "") === "rejected" || String(result.status || "") === "approved";
             if (terminal) {
               adminManualTopupState = { ...adminManualTopupState, readState: "loading", draft: null, selected: adminManualTopupRecord(result.data), error: "" };
               merge({ adminManualTopupState });
               await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
-              toast(result.message || adminManualTopupText("success.confirm", "Đã ghi nhận từ chối trên Web."));
+              toast(result.message || (String(result.status) === "approved" ? "Đã xác nhận nạp tiền và cộng Xu thành công." : adminManualTopupText("success.confirm", "Đã ghi nhận từ chối trên Web.")));
             }
           } finally {
             releaseSubmission(submission);
@@ -37707,6 +37712,47 @@
         } finally {
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "admin-customer-create") {
+        if (!(base().session && base().session.authenticated === true)) throw new Error("Cần signed Web session để tạo khách hàng.");
+        const email = String(fields.email || "").trim().toLowerCase();
+        if (!email || !email.includes("@")) throw new Error("Vui lòng nhập địa chỉ email hợp lệ.");
+        const displayName = String(fields.display_name || "").trim();
+        const role = String(fields.role || "user").trim();
+        const password = String(fields.password || "").trim();
+        const canonicalUserId = String(fields.canonical_user_id || "").trim();
+        const payload = {
+          email,
+          display_name: displayName,
+          role,
+          is_active: true
+        };
+        if (password) payload.password = password;
+        if (canonicalUserId) payload.canonical_user_id = canonicalUserId;
+        setActionBusy(action, route, true);
+        try {
+          const res = await api("/api/v1/admin/customers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!res || !res.ok) throw new Error((res && res.message) || "Không thể tạo khách hàng mới.");
+          toast("Đã thêm khách hàng mới thành công.");
+          merge({ adminCustomerCreateOpen: false });
+          const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : {};
+          await hydrateAdminCustomerDirectory(route || "/admin/customers", current.filters, 0);
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "admin-customer-create-open") {
+        merge({ adminCustomerCreateOpen: true });
+        return;
+      }
+      if (action === "admin-customer-create-close") {
+        merge({ adminCustomerCreateOpen: false });
         return;
       }
       if (action === "refresh-admin") {

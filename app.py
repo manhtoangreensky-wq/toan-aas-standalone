@@ -2589,6 +2589,30 @@ async def durable_password_change(
 app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
 app.include_router(copyfast_mfa.router)
 app.include_router(copyfast_api.router)
+
+
+@app.post("/api/v1/admin/payments/manual/{request_id}/approve/draft")
+async def manual_admin_approve_draft(
+    request_id: str,
+    payload: copyfast_api.ManualAdminDraftRequest | None = None,
+    request: Request = None,
+    account: dict = Depends(copyfast_api.require_admin_csrf),
+):
+    actual_payload = payload or copyfast_api.ManualAdminDraftRequest(action="approve", reason="Xác nhận đã nhận tiền qua chuyển khoản ngân hàng")
+    if actual_payload.action != "approve":
+        actual_payload = copyfast_api.ManualAdminDraftRequest(action="approve", reason=actual_payload.reason or "Xác nhận đã nhận tiền")
+    return await copyfast_api.manual_admin_draft(request_id, actual_payload, request, account)
+
+
+@app.post("/api/v1/admin/payments/manual/{request_id}/approve/confirm")
+async def manual_admin_approve_confirm(
+    request_id: str,
+    payload: copyfast_api.ManualAdminConfirmRequest,
+    request: Request = None,
+    account: dict = Depends(copyfast_api.require_admin_csrf),
+):
+    return await copyfast_api.manual_admin_confirm(request_id, payload, request, account)
+
 app.include_router(copyfast_admin_erp_navigation.router)
 app.include_router(copyfast_admin_audit.router)
 app.include_router(copyfast_admin_automation.router)

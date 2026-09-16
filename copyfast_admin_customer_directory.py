@@ -3,19 +3,28 @@
 from __future__ import annotations
 
 from typing import Any
+import secrets
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import (
     OAUTH_ONLY_EMAIL_DOMAIN,
     TELEGRAM_ONLY_EMAIL_DOMAIN,
+    _password_hash,
     envelope,
     normalize_interface_locale,
     require_admin,
 )
 from copyfast_customer_crm_policy import synthesize_customer_crm_context
-from copyfast_db import read_transaction
+from copyfast_db import (
+    _allocate_web_topup_code,
+    get_or_create_web_topup_code,
+    read_transaction,
+    transaction,
+    utc_now,
+)
 
 
 router = APIRouter(prefix="/api/v1/admin/customers", tags=["COPYFAST Admin Customers"])
@@ -165,6 +174,204 @@ async def list_customers(
             "source": "web_accounts_redacted",
         },
         status_name="read_only",
+    )
+
+
+class CustomerCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=5, max_length=254)
+    display_name: str = Field(default="", max_length=120)
+    password: str | None = Field(default=None, min_length=8, max_length=128)
+    role: str = Field(default="user")
+    is_active: bool = True
+    canonical_user_id: str | None = Field(default=None, max_length=64)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_address(cls, value: str) -> str:
+        cleaned = str(value or "").strip().lower()
+        if "@" not in cleaned or "." not in cleaned.split("@")[-1]:
+            raise ValueError("Email không đúng định dạng")
+        if _is_internal_email(cleaned):
+            raise ValueError("Không được dùng domain email nội bộ của hệ thống")
+        return cleaned
+
+    @field_validator("role")
+    @classmethod
+    def validate_role_name(cls, value: str) -> str:
+        cleaned = str(value or "user").strip().lower()
+        if cleaned not in ROLE_LABELS:
+            raise ValueError(f"Vai trò không hợp lệ. Cho phép: {', '.join(ROLE_LABELS.keys())}")
+        return cleaned
+
+
+class CustomerUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    display_name: str | None = Field(default=None, max_length=120)
+    role: str | None = None
+    is_active: bool | None = None
+    password_login_enabled: bool | None = None
+    canonical_user_id: str | None = Field(default=None, max_length=64)
+
+    @field_validator("role")
+    @classmethod
+    def validate_role_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = str(value).strip().lower()
+        if cleaned not in ROLE_LABELS:
+            raise ValueError(f"Vai trò không hợp lệ. Cho phép: {', '.join(ROLE_LABELS.keys())}")
+        return cleaned
+
+
+@router.post("", status_code=201)
+async def create_customer(
+    payload: CustomerCreateRequest,
+    _account: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    email = payload.email.strip().lower()
+    raw_password = payload.password or secrets.token_urlsafe(16)
+    password_hash = _password_hash(raw_password)
+    now = utc_now()
+    account_id = str(uuid.uuid4())
+    display_name = payload.display_name.strip() or email.split("@")[0]
+    canonical_user_id = str(payload.canonical_user_id).strip() if payload.canonical_user_id else None
+
+    with transaction() as conn:
+        existing = conn.execute(
+            "SELECT id FROM web_accounts WHERE LOWER(email)=?",
+            (email,),
+        ).fetchone()
+        if existing is not None:
+            raise HTTPException(status_code=409, detail="Email này đã được sử dụng")
+
+        conn.execute(
+            """INSERT INTO web_accounts
+               (id, email, password_hash, display_name, canonical_user_id,
+                role_cache, is_active, password_login_enabled, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
+            (
+                account_id,
+                email,
+                password_hash,
+                display_name,
+                canonical_user_id,
+                payload.role,
+                1 if payload.is_active else 0,
+                now,
+                now,
+            ),
+        )
+        conn.execute(
+            """INSERT INTO web_account_profiles
+               (account_id, locale, timezone, avatar_style, created_at, updated_at)
+               VALUES (?, 'vi', 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)""",
+            (account_id, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_audit_events
+               (id, account_id, canonical_user_id, action, request_id,
+                target, outcome, detail, created_at)
+               VALUES (?, ?, NULL, 'admin.customer.create', ?, ?, 'completed', ?, ?)""",
+            (
+                str(uuid.uuid4()),
+                str(_account.get("id") or ""),
+                str(uuid.uuid4()),
+                account_id,
+                f"email={email};role={payload.role}",
+                now,
+            ),
+        )
+        topup_code = _allocate_web_topup_code(conn, account_id)
+
+        row = conn.execute(
+            f"{SELECT_CUSTOMER} WHERE a.id=? LIMIT 1",
+            (account_id,),
+        ).fetchone()
+
+    assert row is not None
+    created = _customer_projection(tuple(row[:12]))
+    created["topup_code"] = topup_code
+    return envelope(
+        True,
+        "Đã tạo tài khoản khách hàng thành công.",
+        data={**created, "customer": created, "topup_code": topup_code, "temporary_password": raw_password if not payload.password else None},
+        status_name="created",
+    )
+
+
+@router.patch("/{account_id}")
+async def update_customer(
+    account_id: str,
+    payload: CustomerUpdateRequest,
+    _account: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_id = _account_id(account_id)
+    now = utc_now()
+    updates: list[str] = []
+    params: list[Any] = []
+
+    if payload.display_name is not None:
+        updates.append("display_name=?")
+        params.append(payload.display_name.strip())
+    if payload.role is not None:
+        updates.append("role_cache=?")
+        params.append(payload.role)
+    if payload.is_active is not None:
+        updates.append("is_active=?")
+        params.append(1 if payload.is_active else 0)
+    if payload.password_login_enabled is not None:
+        updates.append("password_login_enabled=?")
+        params.append(1 if payload.password_login_enabled else 0)
+    if payload.canonical_user_id is not None:
+        val = payload.canonical_user_id.strip() or None
+        updates.append("canonical_user_id=?")
+        params.append(val)
+
+    if not updates:
+        raise HTTPException(status_code=422, detail="Không có thông tin thay đổi")
+
+    updates.append("updated_at=?")
+    params.append(now)
+    params.append(normalized_id)
+
+    with transaction() as conn:
+        existing = conn.execute("SELECT id FROM web_accounts WHERE id=?", (normalized_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+
+        conn.execute(
+            f"UPDATE web_accounts SET {', '.join(updates)} WHERE id=?",
+            params,
+        )
+        conn.execute(
+            """INSERT INTO web_audit_events
+               (id, account_id, canonical_user_id, action, request_id,
+                target, outcome, detail, created_at)
+               VALUES (?, ?, NULL, 'admin.customer.update', ?, ?, 'completed', ?, ?)""",
+            (
+                str(uuid.uuid4()),
+                str(_account.get("id") or ""),
+                str(uuid.uuid4()),
+                normalized_id,
+                f"updates={','.join(updates)}",
+                now,
+            ),
+        )
+        row = conn.execute(
+            f"{SELECT_CUSTOMER} WHERE a.id=? LIMIT 1",
+            (normalized_id,),
+        ).fetchone()
+
+    assert row is not None
+    updated = _customer_projection(tuple(row[:12]))
+    return envelope(
+        True,
+        "Đã cập nhật tài khoản khách hàng thành công.",
+        data={**updated, "customer": updated},
+        status_name="updated",
     )
 
 

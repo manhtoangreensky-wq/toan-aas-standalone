@@ -65,6 +65,7 @@ from copyfast_db import (
     WebManualTopupIdempotencyConflict,
     WebManualTopupMethodUnavailable,
     WebManualTopupPendingLimit,
+    approve_web_manual_topup,
     confirm_web_manual_topup_reject,
     create_web_manual_topup_reject_receipt,
     create_web_manual_topup_request,
@@ -2079,18 +2080,31 @@ class ManualTopupCreateRequest(BaseModel):
 class ManualAdminDraftRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    action: Literal["reject"]
-    reason: str = Field(min_length=3, max_length=300)
+    action: Literal["reject", "approve"] = "reject"
+    reason: str = Field(default="", max_length=300)
 
-    @field_validator("reason", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def normalize_reason(cls, value: Any) -> str:
-        if type(value) is not str:
-            raise ValueError("Lý do quyết định không hợp lệ")
-        cleaned = value.strip()
-        if not 3 <= len(cleaned) <= 300 or any(ord(character) < 32 for character in cleaned):
-            raise ValueError("Lý do quyết định cần từ 3 đến 300 ký tự")
-        return cleaned
+    def normalize_action_and_reason(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        action = str(data.get("action") or "reject").strip().lower()
+        if action not in ("reject", "approve"):
+            raise ValueError("Hành động không hợp lệ")
+        raw_reason = data.get("reason")
+        if action == "reject":
+            if not isinstance(raw_reason, str):
+                raise ValueError("Lý do quyết định không hợp lệ")
+            cleaned = raw_reason.strip()
+            if not 3 <= len(cleaned) <= 300 or any(ord(c) < 32 for c in cleaned):
+                raise ValueError("Lý do quyết định cần từ 3 đến 300 ký tự")
+            data["reason"] = cleaned
+        elif action == "approve":
+            cleaned = str(raw_reason or "").strip() if raw_reason is not None else ""
+            if any(ord(c) < 32 for c in cleaned):
+                raise ValueError("Ghi chú quyết định không hợp lệ")
+            data["reason"] = cleaned or "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"
+        return data
 
 
 class ManualAdminConfirmRequest(BaseModel):
@@ -2098,6 +2112,7 @@ class ManualAdminConfirmRequest(BaseModel):
 
     confirmation_receipt: str = Field(min_length=32, max_length=160)
     idempotency_key: str = Field(min_length=12, max_length=160)
+    action: Literal["reject", "approve"] | None = None
 
     @field_validator("confirmation_receipt")
     @classmethod
@@ -4977,12 +4992,48 @@ async def manual_admin_draft(
     if not _flags()["admin_erp_enabled"]:
         return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_DISABLED", "Hàng đợi nạp thủ công đang bảo trì.")
     if not _flags()["admin_writes_enabled"]:
-        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Từ chối nạp thủ công trên Web chưa được bật.")
+        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Quyết định nạp thủ công trên Web chưa được bật.")
     session_id = _manual_admin_session_id(request, account)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     expires_at = (datetime.now(timezone.utc) + timedelta(seconds=MANUAL_ADMIN_RECEIPT_TTL_SECONDS)).isoformat(timespec="seconds")
     confirmation_receipt = secrets.token_urlsafe(32)
     receipt_hash = hashlib.sha256(confirmation_receipt.encode("utf-8")).hexdigest()
+
+    if payload.action == "approve":
+        record = get_web_manual_topup_for_admin(int(canonical_id.split("-", 1)[1]))
+        if record is None:
+            return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
+        if str(record["status"]) != "pending_admin_review":
+            return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
+        expected_xu = record.get("expected_xu") or (int(record.get("amount_vnd", 0)) // 100)
+        with _manual_admin_receipt_lock:
+            _manual_admin_clean_receipts(time.time())
+            _manual_admin_receipt_vault[receipt_hash] = ManualAdminReceiptEntry(
+                account_id=str(record.get("account_id") or ""),
+                session_id=session_id,
+                admin_id=str(account.get("id") or ""),
+                request_id=canonical_id,
+                action="approve",
+                approved_xu=expected_xu,
+                reason=payload.reason,
+                expires_at=time.time() + MANUAL_ADMIN_RECEIPT_TTL_SECONDS,
+                private_token=confirmation_receipt,
+            )
+        data = {
+            **record,
+            "action": "approve",
+            "reason": payload.reason,
+            "approved_xu": expected_xu,
+            "expires_at": expires_at,
+            "confirmation_receipt": confirmation_receipt,
+        }
+        return envelope(
+            True,
+            "Hãy kiểm tra và xác nhận nạp tiền và cộng Xu.",
+            data=data,
+            status_name="awaiting_confirm",
+        )
+
     try:
         record = create_web_manual_topup_reject_receipt(
             request_number=int(canonical_id.split("-", 1)[1]),
@@ -5023,10 +5074,100 @@ async def manual_admin_confirm(
     if not _flags()["admin_erp_enabled"]:
         return _manual_admin_guard("WEBAPP_MANUAL_ADMIN_DISABLED", "Hàng đợi nạp thủ công đang bảo trì.")
     if not _flags()["admin_writes_enabled"]:
-        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Từ chối nạp thủ công trên Web chưa được bật.")
+        return _manual_admin_guard("WEBAPP_ADMIN_WRITES_DISABLED", "Quyết định nạp thủ công trên Web chưa được bật.")
     session_id = _manual_admin_session_id(request, account)
     receipt_hash = hashlib.sha256(payload.confirmation_receipt.encode("utf-8")).hexdigest()
     key_hash = hashlib.sha256(payload.idempotency_key.encode("utf-8")).hexdigest()
+
+    vault_entry = None
+    with _manual_admin_receipt_lock:
+        vault_entry = _manual_admin_receipt_vault.get(receipt_hash)
+
+    if vault_entry is not None and vault_entry.action == "approve":
+        if vault_entry.expires_at <= time.time():
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_EXPIRED", "Biên nhận xác nhận đã hết hạn.", status_code=409)
+        if vault_entry.session_id != session_id or vault_entry.admin_id != str(account.get("id") or ""):
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Biên nhận không thuộc phiên quản trị này.", status_code=401)
+        if vault_entry.in_flight:
+            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS", "Quyết định đang được xử lý.", status_code=409)
+
+        vault_entry.in_flight = True
+        record = get_web_manual_topup_for_admin(int(canonical_id.split("-", 1)[1]))
+        if record is None:
+            vault_entry.in_flight = False
+            return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
+        if str(record["status"]) == "approved":
+            vault_entry.in_flight = False
+            return envelope(
+                True,
+                "Yêu cầu nạp thủ công đã được duyệt trước đó.",
+                data={**record, "idempotent_replay": True},
+                status_name="approved",
+            )
+        if str(record["status"]) != "pending_admin_review":
+            vault_entry.in_flight = False
+            return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
+
+        ledger_event_id = ""
+        canonical_user_id = record.get("canonical_user_id") or record.get("telegram_user_id")
+        if bridge_configured():
+            bridge_res = await bridge_request(
+                "POST",
+                "/internal/v1/admin/wallet/credit",
+                payload={
+                    "canonical_user_id": canonical_user_id,
+                    "amount_xu": vault_entry.approved_xu,
+                    "reason": f"Manual topup {canonical_id}",
+                    "idempotency_key": f"admin:{account['id']}:credit:{canonical_id}:{payload.idempotency_key}",
+                },
+                actor_id=str(account.get("id") or ""),
+            )
+            if not bridge_res.get("ok"):
+                vault_entry.in_flight = False
+                return envelope(
+                    False,
+                    bridge_res.get("message") or "Không thể cộng Xu qua Bot Core Ledger.",
+                    status_name="guarded",
+                    error_code=bridge_res.get("error_code") or "WALLET_CREDIT_FAILED",
+                )
+            ledger_event_id = str(
+                (bridge_res.get("data") or {}).get("tx_id")
+                or (bridge_res.get("data") or {}).get("ledger_event_id")
+                or uuid.uuid4().hex
+            )
+        else:
+            ledger_event_id = f"local-credit-{uuid.uuid4().hex[:12]}"
+
+        try:
+            approved_record = approve_web_manual_topup(
+                request_number=int(canonical_id.split("-", 1)[1]),
+                admin_account_id=str(account.get("id") or ""),
+                approved_xu=vault_entry.approved_xu,
+                ledger_event_id=ledger_event_id,
+                reason=vault_entry.reason,
+                audit_request_id=_manual_admin_audit_request_id(request),
+            )
+        except WebManualTopupAdminGuard as error:
+            vault_entry.in_flight = False
+            return _web_manual_admin_guard(error)
+        except sqlite3.DatabaseError:
+            vault_entry.in_flight = False
+            return _manual_admin_guard(
+                "MANUAL_ADMIN_STORAGE_FAILURE",
+                "Chưa thể ghi quyết định an toàn; dữ liệu đã được hoàn tác.",
+                status_code=503,
+            )
+
+        with _manual_admin_receipt_lock:
+            _manual_admin_receipt_vault.pop(receipt_hash, None)
+
+        return envelope(
+            True,
+            f"Đã duyệt yêu cầu nạp tiền và cộng {vault_entry.approved_xu} Xu thành công.",
+            data=approved_record,
+            status_name="approved",
+        )
+
     try:
         record = confirm_web_manual_topup_reject(
             request_number=int(canonical_id.split("-", 1)[1]),
@@ -5050,6 +5191,7 @@ async def manual_admin_confirm(
         data=record,
         status_name="rejected",
     )
+
 
 
 @router.post("/payments/manual")
@@ -5969,6 +6111,58 @@ async def retired_generic_admin_security_module() -> None:
     """
 
     raise HTTPException(status_code=404, detail="Module Admin chưa được công bố")
+
+
+@router.get("/admin/modules/pricing")
+@router.get("/admin/modules/packages")
+@router.get("/admin/pricing")
+@router.get("/admin/packages")
+async def admin_pricing_module(request: Request, account: dict = Depends(require_admin)):
+    """Real pricing packages and service catalog for Admin operations."""
+    items = []
+    for pkg in DEFAULT_TOPUP_PACKAGES:
+        items.append({
+            "code": pkg["code"],
+            "name": f"Gói Nạp {pkg['label']}",
+            "family": "Nạp Xu",
+            "price_xu": pkg["xu"],
+            "price_vnd": pkg["amount_vnd"],
+            "limits": f"+{pkg['xu']:,} Xu vào ví chính",
+            "status": "active" if pkg.get("available", True) else "disabled",
+            "updated_at": "2026-03-01T00:00:00Z",
+            "write_locked": True,
+            "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
+        })
+    core_services = [
+        {"code": "svc_video_single", "name": "Video AI Single Scene", "family": "Video AI", "price_xu": 100, "price_vnd": 10000, "limits": "1 cảnh 1080p, audio mix", "status": "active"},
+        {"code": "svc_video_multi", "name": "Video AI Multi-Scene", "family": "Video AI", "price_xu": 350, "price_vnd": 35000, "limits": "Đa cảnh, lồng tiếng, phụ đề", "status": "active"},
+        {"code": "svc_image_flux", "name": "Ảnh AI Chân thật FLUX", "family": "Image AI", "price_xu": 10, "price_vnd": 1000, "limits": "Độ phân giải 2K, photorealistic", "status": "active"},
+        {"code": "svc_voice_clone", "name": "Voice Clone & TTS Pro", "family": "Voice AI", "price_xu": 20, "price_vnd": 2000, "limits": "500 ký tự/lần, giọng chuẩn", "status": "active"},
+        {"code": "svc_music_generate", "name": "Nhạc nền AI bản quyền", "family": "Music AI", "price_xu": 50, "price_vnd": 5000, "limits": "Full track 2 phút WAV/MP3", "status": "active"},
+        {"code": "svc_pdf_ocr", "name": "Tài liệu & OCR Tiếng Việt", "family": "Document AI", "price_xu": 15, "price_vnd": 1500, "limits": "Tối đa 50 trang / file", "status": "active"},
+    ]
+    for svc in core_services:
+        items.append({
+            **svc,
+            "updated_at": "2026-03-01T00:00:00Z",
+            "write_locked": True,
+            "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
+        })
+
+    return envelope(
+        True,
+        "Đã nạp bảng giá và gói cước canonical.",
+        data={
+            "items": items,
+            "packages": items,
+            "topup_packages": list(DEFAULT_TOPUP_PACKAGES),
+            "service_catalog": core_services,
+            "count": len(items),
+            "write_locked": True,
+            "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
+        },
+        status_name="read_only",
+    )
 
 
 @router.get("/admin/modules/{module}")

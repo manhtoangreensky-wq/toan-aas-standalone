@@ -165,6 +165,7 @@
       + `<div class="portal-form-actions">`
       + `<button class="portal-button portal-button--primary" type="submit"${dis}>Áp dụng</button>`
       + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-clear"${dis}>Đặt lại</button>`
+      + `<button class="portal-button portal-button--accent" type="button" data-portal-action="admin-customer-create-open"${dis} style="margin-left:auto;">+ Thêm khách hàng</button>`
       + `</div></form></section>`;
   }
 
