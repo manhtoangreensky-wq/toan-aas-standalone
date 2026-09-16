@@ -442,6 +442,8 @@ a { color: inherit; text-decoration: none; }
 .portal-shell--landing .portal-main { max-width: none; margin: 0; padding: 0; }
 .portal-body--auth { background: #08111a; }
 .portal-shell--auth { display: block; min-height: 100vh; min-height: 100dvh; background: radial-gradient(circle at 82% 8%, rgba(62, 193, 183, .12), transparent 30rem), radial-gradient(circle at 10% 92%, rgba(70, 132, 203, .11), transparent 31rem), #08111a; }
+.portal-body--auth[data-portal-app-kind="admin"] { background: #f3fbfc; }
+.portal-shell--auth[data-portal-app-kind="admin"] { background: #f3fbfc; }
 .portal-shell--auth .portal-workspace { min-height: 100vh; min-height: 100dvh; }
 .portal-shell--auth .portal-main { width: min(1200px, calc(100% - 48px - var(--portal-safe-left) - var(--portal-safe-right))); max-width: none; margin: 0 auto; padding: max(26px, calc(26px + var(--portal-safe-top))) 0 max(42px, calc(42px + var(--portal-safe-bottom))); }
 .portal-landing { overflow: hidden; min-height: 100vh; min-height: 100dvh; background: radial-gradient(circle at 86% 4%, rgba(49, 167, 205, .17), transparent 31rem), radial-gradient(circle at 10% 40%, rgba(73, 209, 180, .12), transparent 32rem), #071018; }

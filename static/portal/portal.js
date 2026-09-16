@@ -29380,7 +29380,8 @@
       </div>
     </section>`;
     const adminOverviewTabs = typeof renderAdminModuleTabs === "function" ? renderAdminModuleTabs(page, context) : "";
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${adminOverviewTabs}${topupBanner}${operationalSurface}${renderAdminWorkQueues(context)}<div class="portal-work-grid">${readinessSurface}${authority}</div>${renderAdminDirectory(context)}</article>`;
+    const diagnosticsDisclosure = `<details class="portal-admin-diagnostics-disclosure" style="margin-top: 1.5rem;"><summary style="padding: 10px 14px; font-weight: 650; font-size: 13px; color: var(--portal-muted); cursor: pointer; border-radius: 10px; border: 1px solid var(--portal-border); background: var(--portal-surface);">⚙️ ${safeText(adminText("diagnostics.summary", "Chẩn đoán hệ thống & Kết nối kỹ thuật"))}</summary><div style="margin-top: 12px;"><div class="portal-work-grid">${readinessSurface}${authority}</div></div></details>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${adminOverviewTabs}${topupBanner}${operationalSurface}${renderAdminWorkQueues(context)}${renderAdminDirectory(context)}${diagnosticsDisclosure}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {

@@ -8,6 +8,7 @@
   "use strict";
 
   const STORAGE_KEY = "toan-aas-portal-theme";
+  const ADMIN_THEME_STORAGE_KEY = "toan-aas-admin-theme-v2";
   const THEMES = Object.freeze(["system", "light", "dark"]);
   const EXPLICIT_THEMES = Object.freeze(["light", "dark"]);
   const INITIAL_SURFACES = Object.freeze({
@@ -26,6 +27,19 @@
     en: Object.freeze({ label: "Theme", light: "Light", dark: "Dark", system: "System", toLight: "Switch to light theme", toDark: "Switch to dark theme", toSystem: "Use system theme" }),
     zh: Object.freeze({ label: "主题", light: "浅色", dark: "深色", system: "跟随系统", toLight: "切换到浅色主题", toDark: "切换到深色主题", toSystem: "使用系统主题" })
   });
+
+  function isAdminRoute() {
+    try {
+      const pathname = (global.location && global.location.pathname) || "";
+      return pathname === "/admin" || pathname.startsWith("/admin/");
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function currentStorageKey() {
+    return isAdminRoute() ? ADMIN_THEME_STORAGE_KEY : STORAGE_KEY;
+  }
 
   function normalizedInterfaceLocale(value) {
     const source = typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -58,13 +72,24 @@
       try {
         queryTheme = new URLSearchParams(global.location && global.location.search || "").get("theme") || "";
       } catch (_) { queryTheme = ""; }
-      return valid(queryTheme) || valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
+      if (valid(queryTheme)) return queryTheme;
+
+      if (isAdminRoute()) {
+        const adminStored = global.localStorage && global.localStorage.getItem(ADMIN_THEME_STORAGE_KEY);
+        if (adminStored === "light" || adminStored === "dark") {
+          return adminStored;
+        }
+        return "light";
+      }
+
+      return valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
     } catch (_) {
       return null;
     }
   }
 
   function fallbackPreference() {
+    if (isAdminRoute()) return "light";
     return typeof window !== "undefined" && window.location && window.location.pathname === "/welcome" ? "light" : "system";
   }
 
@@ -77,7 +102,11 @@
   }
 
   function resolve(preference) {
-    const selected = valid(preference) || "system";
+    if (isAdminRoute()) {
+      if (preference === "dark") return "dark";
+      return "light";
+    }
+    const selected = valid(preference) || fallbackPreference();
     return selected === "system" ? systemTheme() : selected;
   }
 
@@ -109,8 +138,16 @@
 
   function persist(value) {
     try {
-      if (value === "system") global.localStorage && global.localStorage.removeItem(STORAGE_KEY);
-      else if (global.localStorage) global.localStorage.setItem(STORAGE_KEY, value);
+      if (isAdminRoute()) {
+        if (value === "system" || value === "light") {
+          if (global.localStorage) global.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, "light");
+        } else if (value === "dark") {
+          if (global.localStorage) global.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, "dark");
+        }
+      } else {
+        if (value === "system") global.localStorage && global.localStorage.removeItem(STORAGE_KEY);
+        else if (global.localStorage) global.localStorage.setItem(STORAGE_KEY, value);
+      }
     } catch (_) {
       // Private browsing or a blocked storage policy should not break the UI.
     }
@@ -139,6 +176,9 @@
   }
 
   function nextPreference() {
+    if (isAdminRoute()) {
+      return preference === "dark" ? "light" : "dark";
+    }
     const index = THEMES.indexOf(preference);
     return THEMES[(index + 1) % THEMES.length];
   }
@@ -195,7 +235,7 @@
   }
 
   function onSystemChange() {
-    if (preference === "system") apply();
+    if (!isAdminRoute() && preference === "system") apply();
   }
 
   function bind() {
@@ -248,9 +288,11 @@
   }
 
   global.TOANAASPortalTheme = Object.freeze({
-    version: "1.0.0",
+    version: "2.0.0",
     storageKey: STORAGE_KEY,
+    adminStorageKey: ADMIN_THEME_STORAGE_KEY,
     themes: THEMES,
+    isAdminRoute,
     getPreference: () => preference,
     getResolvedTheme: () => resolved,
     setPreference,

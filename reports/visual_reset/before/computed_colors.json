@@ -1,0 +1,57 @@
+{
+  "admin_home": {
+    "themeAttr": "dark",
+    "themePref": "system",
+    "bodyBg": "rgb(9, 9, 11)",
+    "workspaceBg": "rgb(9, 9, 11)",
+    "sidebarBg": "rgb(12, 12, 14)",
+    "cardBg": "rgb(24, 24, 27)",
+    "primaryText": "rgb(244, 244, 245)",
+    "mutedText": "rgb(212, 228, 235)",
+    "primaryActionBg": "rgba(0, 0, 0, 0)"
+  },
+  "admin_customers": {
+    "themeAttr": "dark",
+    "themePref": "system",
+    "bodyBg": "rgb(9, 9, 11)",
+    "workspaceBg": "rgb(9, 9, 11)",
+    "sidebarBg": "rgb(12, 12, 14)",
+    "cardBg": "rgb(18, 18, 21)",
+    "primaryText": "rgb(244, 244, 245)",
+    "mutedText": "N/A",
+    "primaryActionBg": "rgba(0, 0, 0, 0)"
+  },
+  "admin_finance": {
+    "themeAttr": "dark",
+    "themePref": "system",
+    "bodyBg": "rgb(9, 9, 11)",
+    "workspaceBg": "rgb(9, 9, 11)",
+    "sidebarBg": "rgb(12, 12, 14)",
+    "cardBg": "rgb(24, 24, 27)",
+    "primaryText": "rgb(244, 244, 245)",
+    "mutedText": "rgb(161, 161, 170)",
+    "primaryActionBg": "N/A"
+  },
+  "admin_jobs": {
+    "themeAttr": "dark",
+    "themePref": "system",
+    "bodyBg": "rgb(9, 9, 11)",
+    "workspaceBg": "rgb(9, 9, 11)",
+    "sidebarBg": "rgb(12, 12, 14)",
+    "cardBg": "rgb(18, 18, 21)",
+    "primaryText": "rgb(244, 244, 245)",
+    "mutedText": "rgb(161, 161, 170)",
+    "primaryActionBg": "N/A"
+  },
+  "admin_login": {
+    "themeAttr": "dark",
+    "themePref": "system",
+    "bodyBg": "rgb(9, 9, 11)",
+    "workspaceBg": "rgb(9, 9, 11)",
+    "sidebarBg": "rgb(12, 12, 14)",
+    "cardBg": "rgb(18, 18, 21)",
+    "primaryText": "rgb(244, 244, 245)",
+    "mutedText": "N/A",
+    "primaryActionBg": "rgba(0, 0, 0, 0)"
+  }
+}
