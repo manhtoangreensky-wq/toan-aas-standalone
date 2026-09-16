@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-04",
+    "task": "P0.WEB.ERP.SPEC04.CUSTOMER.CRM_SUPPORT",
+    "base_sha": "2cb8d1431361feb4fef44e272f82b69551332cda",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "authority_contract": {
+    "CUSTOMER_MASTER": "WEB_SQLITE",
+    "SUPPORT_CASE_AUTHORITY": "WEB_SQLITE",
+    "TELEGRAM_IDENTITY": "FEDERATED_IDENTITY_LINK",
+    "WALLET_AUTHORITY": "BOT_CORE",
+    "JOB_AUTHORITY": "BOT_CORE / CORE_BRIDGE_READ_MODEL",
+    "PAYMENT_GATEWAY_AUTHORITY": "PAYOS",
+    "WEB_DIRECT_WALLET_MUTATION": false,
+    "WEB_DIRECT_BOT_DB_WRITE": false,
+    "WEB_DIRECT_PAYOS_SETTLEMENT": false,
+    "IDENTITY_RELINK_WRITE_ACTIONS": 0,
+    "MANUAL_PAYMENT_SETTLEMENT_ACTIONS": 0
+  },
+  "schema_audit": {
+    "CUSTOMER_TABLE": "web_accounts",
+    "CUSTOMER_PRIMARY_KEY": "id",
+    "SUPPORT_CASE_TABLE": "web_support_cases",
+    "SUPPORT_CASE_PRIMARY_KEY": "id",
+    "TELEGRAM_LINK_FIELD_OR_TABLE": "web_accounts.canonical_user_id, telegram_link_codes",
+    "SCHEMA_CHANGE_REQUIRED": false
+  },
+  "first_red": {
+    "identified_issue": "Customer search in copyfast_admin_customer_directory.py:_filters did not search Web customer ID (a.id) or Telegram user ID (a.canonical_user_id); lack of canonical federated identity evaluation and unified CRM context synthesis answering the 7 SPEC-04 sections.",
+    "resolution": "Extended _filters with bounded search across a.id, a.canonical_user_id, a.display_name, and public email; implemented copyfast_customer_crm_policy.py and endpoint /api/v1/admin/customers/{account_id}/crm with 7 canonical sections."
+  },
+  "invariants": {
+    "PROVIDER_CALLS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "BOT_DB_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "PRODUCTION_DB_SCHEMA_MUTATIONS": 0,
+    "A11Y_STATUS": "PASS",
+    "RBAC": "PASS",
+    "SPEC04_PASS": true,
+    "BLOCKERS": "NONE"
+  },
+  "tests": {
+    "spec04_tests": 8,
+    "total_regression_tests": 91,
+    "new_failures": 0
+  }
+}
