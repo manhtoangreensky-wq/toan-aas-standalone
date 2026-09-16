@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-03B",
+    "task": "P0.WEB.ERP.SPEC03B.MONITORING.BROWSER.ACCEPTANCE.CLOSURE",
+    "base_sha": "3f43fdc3599404080ab5b2a66b63691aa99c76c7",
+    "head_sha": "3f43fdc3599404080ab5b2a66b63691aa99c76c7",
+    "origin_main_sha": "3f43fdc3599404080ab5b2a66b63691aa99c76c7",
+    "runtime_sha": "3f43fdc3599404080ab5b2a66b63691aa99c76c7",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "invariants": {
+    "SOURCE_FILES_CHANGED": 0,
+    "HTTP200_FALSE_GREEN": false,
+    "AUTOPILOT_DISABLED_RENDERED_UNAVAILABLE": true,
+    "PROVIDER_CONFIGURED_FALSE_HEALTHY": false,
+    "TECHNICAL_COPY_BLOCKS": 0,
+    "LIGHT_BROWSER": "PASS",
+    "DARK_BROWSER": "PASS",
+    "RESPONSIVE_STATUS": "PASS",
+    "A11Y_STATUS": "PASS",
+    "JS_ERRORS": 0,
+    "UNEXPECTED_NETWORK_ERRORS": 0,
+    "DOCUMENT_SCROLL": false,
+    "MAIN_SCROLL_OWNER": "portal-workspace",
+    "SIDEBAR_SCROLL_OWNER": "portal-sidebar",
+    "SCROLL_DESYNC": false,
+    "DOUBLE_SCROLLBAR": false,
+    "DANGEROUS_WRITE_ACTIONS": 0,
+    "DASHBOARD_COMPATIBILITY": "PASS",
+    "PRODUCTION_DB_MUTATIONS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "PROVIDER_CALLS": 0,
+    "AUTOPILOT_ACTIVATED": false,
+    "SPEC03B_PASS": true,
+    "SPEC03_FULL_CLOSE": true,
+    "BLOCKERS": "NONE"
+  },
+  "routes_tested": {
+    "/admin/reliability": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/operations/admin/reliability/summary",
+      "semantic_status": "UNAVAILABLE",
+      "preflight_code": "OPS_RELIABILITY_AUTOPILOT_DISABLED",
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/workers": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/admin/modules/workers",
+      "semantic_status": "UNCONFIGURED_GUARDED",
+      "preflight_code": "CORE_BRIDGE_NOT_CONFIGURED",
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/runtime": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/admin/modules/runtime",
+      "semantic_status": "UNCONFIGURED_GUARDED",
+      "preflight_code": "CORE_BRIDGE_NOT_CONFIGURED",
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/features": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/admin/modules/features",
+      "semantic_status": "HEALTHY_LOCAL",
+      "preflight_code": null,
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/freezes": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/admin/modules/freezes",
+      "semantic_status": "HEALTHY_NO_FREEZES",
+      "preflight_code": null,
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/automation": {
+      "http_status": 200,
+      "anonymous_status": 401,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/inbox/summary",
+      "semantic_status": "READ_ONLY_OBSERVER",
+      "preflight_code": null,
+      "js_errors": 0,
+      "layout_errors": 0
+    }
+  },
+  "tests": {
+    "spec03b_tests": 8,
+    "regression_tests": 59,
+    "new_failures": 0
+  }
+}
