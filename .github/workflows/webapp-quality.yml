@@ -121,7 +121,8 @@ jobs:
             tests/test_migration_audit.py::test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs \
             tests/test_auth_login_brand_viewport_001_contracts.py \
             tests/test_motion_webapp_surfaces_live_reopen_contracts.py \
-            tests/test_p0_05d_tester_workspace.py
+            tests/test_p0_05d_tester_workspace.py \
+            tests/test_copyfast_bridge_loopback_base_url.py
 
       - name: Check diff whitespace
         run: git diff --check HEAD^ HEAD
