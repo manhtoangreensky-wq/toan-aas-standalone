@@ -6477,7 +6477,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 164,
+      "line": 171,
       "name": "ADMIN_ID"
     },
     {
@@ -6672,7 +6672,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 322,
+      "line": 329,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -6702,7 +6702,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 164,
+      "line": 171,
       "name": "OWNER_IDS"
     },
     {
@@ -7577,7 +7577,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 99,
+      "line": 106,
       "name": "WEBAPP_REQUIRE_CORE_BRIDGE"
     },
     {
@@ -14662,7 +14662,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 218,
   "source_files_scanned": 218,
-  "source_fingerprint_sha256": "e33a3526d2f5d3d63d8d92014ef31ec860206e3993390c1ddfff02138afe0d3b",
+  "source_fingerprint_sha256": "9ec30699bfebe41c72ee7162260becaf07c15776123435881a638e054c025beb",
   "source_root": "repository-root",
   "ui_path_references": [
     {

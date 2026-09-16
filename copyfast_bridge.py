@@ -56,12 +56,13 @@ def _hmac_secret() -> str:
 
 
 def _valid_base_url(value: str) -> bool:
-    """Accept only a root HTTPS origin for the server-to-server bridge.
+    """Accept a root HTTPS origin or an explicit loopback HTTP origin.
 
     The bridge signs requests with its bearer credential, so accepting a
     loosely shaped URL here could send that credential to an unintended
-    location.  Keep the contract deliberately small: the canonical bridge is
-    a secure origin and the request path is supplied separately below.
+    location.  HTTPS remains valid for existing deployments; plaintext HTTP
+    is accepted only for exact loopback hosts used by the same-machine bridge.
+    The request path is supplied separately below.
     """
     if not value or any(character.isspace() for character in value):
         return False
@@ -71,9 +72,15 @@ def _valid_base_url(value: str) -> bool:
         _ = parsed.port
     except ValueError:
         return False
+
+    scheme = parsed.scheme.lower()
+    hostname = (parsed.hostname or "").lower()
+    scheme_ok = scheme == "https" or (
+        scheme == "http" and hostname in {"127.0.0.1", "localhost", "::1"}
+    )
     return bool(
-        parsed.scheme.lower() == "https"
-        and parsed.hostname
+        scheme_ok
+        and hostname
         and not parsed.username
         and not parsed.password
         and parsed.path in {"", "/"}
