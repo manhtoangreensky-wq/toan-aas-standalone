@@ -64,6 +64,16 @@ REFUND_ACTIONS = 0
 PAYOS_ACTIONS = 0
 WALLET_ACTIONS = 0
 
+# Semantic separation invariants (SPEC-06B)
+REQUEST_APPROVED_IMPLIES_PAYMENT_CONFIRMED = False
+PAYMENT_CONFIRMED_IMPLIES_SETTLED = False
+SETTLED_IMPLIES_REQUEST_APPROVED = False
+CUSTOMER_FINANCE_STATE_MAPPING_SHARED = True
+
+# PayOS sources (SPEC-06B)
+PAYMENT_READ_MODEL_SOURCE = "BOT_CORE_PAYMENT_PROJECTION_OR_WEBHOOK_CACHE"
+PAYMENT_EVENT_SOURCE = "PAYOS_GATEWAY_WEBHOOK"
+
 # Fake zero prevention invariants
 FAKE_ZERO_WALLET_BALANCE = 0
 UNAVAILABLE_FINANCE_VALUE_AS_ZERO = False
@@ -85,13 +95,22 @@ STATUS_GUARDED = "guarded"
 # 2. TOPUP REQUEST STATE TAXONOMY (Authority: WEB_SQLITE)
 # ==============================================================================
 TOPUP_STATE_PENDING = "PENDING"
-TOPUP_STATE_CONFIRMED = "CONFIRMED"
+TOPUP_STATE_APPROVED = "APPROVED"
 TOPUP_STATE_REJECTED = "REJECTED"
 TOPUP_STATE_UNKNOWN = "UNKNOWN"
 
+# Namespaced aliases (SPEC-06B)
+REQUEST_STATE_PENDING = TOPUP_STATE_PENDING
+REQUEST_STATE_APPROVED = TOPUP_STATE_APPROVED
+REQUEST_STATE_REJECTED = TOPUP_STATE_REJECTED
+REQUEST_STATE_UNKNOWN = TOPUP_STATE_UNKNOWN
+
+# Deprecated alias for backwards compatibility
+TOPUP_STATE_CONFIRMED = TOPUP_STATE_APPROVED
+
 VALID_TOPUP_BUSINESS_STATES = frozenset({
     TOPUP_STATE_PENDING,
-    TOPUP_STATE_CONFIRMED,
+    TOPUP_STATE_APPROVED,
     TOPUP_STATE_REJECTED,
     TOPUP_STATE_UNKNOWN,
 })
@@ -102,10 +121,10 @@ RAW_TOPUP_TO_BUSINESS_STATE: dict[str, str] = {
     "pending": TOPUP_STATE_PENDING,
     "reviewing": TOPUP_STATE_PENDING,
     "submitted": TOPUP_STATE_PENDING,
-    # Confirmed / Approved
-    "approved": TOPUP_STATE_CONFIRMED,
-    "confirmed": TOPUP_STATE_CONFIRMED,
-    "success": TOPUP_STATE_CONFIRMED,
+    # Approved
+    "approved": TOPUP_STATE_APPROVED,
+    "confirmed": TOPUP_STATE_APPROVED,
+    "success": TOPUP_STATE_APPROVED,
     # Rejected / Declined
     "rejected": TOPUP_STATE_REJECTED,
     "declined": TOPUP_STATE_REJECTED,
@@ -200,8 +219,10 @@ def map_settlement_state(
 ) -> str:
     """Standardize settlement state with strict separation from gateway state.
     
-    Invariant: PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED = True.
-    A confirmed payment without verified ledger credit remains PENDING or UNKNOWN.
+    Invariants:
+    - PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED = True.
+    - PAYMENT_CONFIRMED_IMPLIES_SETTLED = False.
+    A confirmed payment without verified ledger credit remains UNKNOWN (or UNAVAILABLE).
     """
     if not bridge_available:
         return SETTLEMENT_STATE_UNAVAILABLE
@@ -209,8 +230,6 @@ def map_settlement_state(
         normalized = str(raw_state).strip().lower()
         if normalized in RAW_SETTLEMENT_TO_BUSINESS_STATE:
             return RAW_SETTLEMENT_TO_BUSINESS_STATE[normalized]
-    if payment_state == PAYMENT_STATE_CONFIRMED:
-        return SETTLEMENT_STATE_PENDING
     return SETTLEMENT_STATE_UNKNOWN
 
 
@@ -263,7 +282,7 @@ def evaluate_finance_action_required(
         pay_state = str(item.get("gateway_state") or item.get("payment_state") or item.get("status") or "").upper()
         settle_state = str(item.get("settlement_state") or "").upper()
 
-        if pay_state == PAYMENT_STATE_CONFIRMED and settle_state in (SETTLEMENT_STATE_PENDING, "PENDING"):
+        if pay_state == PAYMENT_STATE_CONFIRMED and settle_state in (SETTLEMENT_STATE_PENDING, "PENDING", SETTLEMENT_STATE_UNKNOWN, "UNKNOWN"):
             reasons.append("Thanh toán PayOS đã xác nhận nhưng chờ Bot Core ghi nhận Xu")
         elif pay_state == PAYMENT_STATE_FAILED:
             reasons.append("Giao dịch thanh toán thất bại cần kiểm tra")
@@ -284,24 +303,49 @@ def evaluate_finance_action_required(
 # ==============================================================================
 # 7. RECORD SYNTHESIZERS
 # ==============================================================================
-def synthesize_topup_record(row: dict[str, Any]) -> dict[str, Any]:
-    """Synthesize a truthful, safe Topup record from SQLite row."""
+def synthesize_topup_record(
+    row: dict[str, Any],
+    *,
+    payment_event: dict[str, Any] | None = None,
+    settlement_event: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Synthesize a truthful, safe Topup record from SQLite row.
+
+    Strict Three-Layer Semantics (SPEC-06B):
+    1. REQUEST_STATE (Authority: WEB_SQLITE): PENDING, APPROVED, REJECTED, UNKNOWN
+    2. PAYMENT_STATE (Authority: PAYOS): PENDING, CONFIRMED, FAILED, EXPIRED, UNAVAILABLE, UNKNOWN
+    3. SETTLEMENT_STATE (Authority: BOT_CORE): PENDING, CREDITED, REJECTED, UNAVAILABLE, UNKNOWN
+
+    Invariants:
+    - REQUEST_STATE != PAYMENT_STATE != SETTLEMENT_STATE
+    - REQUEST_APPROVED_IMPLIES_PAYMENT_CONFIRMED = False
+    - PAYMENT_CONFIRMED_IMPLIES_SETTLED = False
+    An approved topup request DOES NOT imply payment confirmed or wallet credited.
+    Unless verified payment/settlement facts are provided, they remain UNKNOWN.
+    """
     raw = row if isinstance(row, dict) else {}
     raw_status = str(raw.get("status") or "").strip()
     business_state = map_topup_raw_state(raw_status)
 
-    # In topup requests from web:
-    # Payment state is PENDING until approved, then CONFIRMED
-    # Settlement state is PENDING until approved and credited
-    if business_state == TOPUP_STATE_CONFIRMED:
-        pay_state = PAYMENT_STATE_CONFIRMED
-        settle_state = SETTLEMENT_STATE_CREDITED
-    elif business_state == TOPUP_STATE_REJECTED:
-        pay_state = PAYMENT_STATE_FAILED
-        settle_state = SETTLEMENT_STATE_UNKNOWN
+    # Payment state is resolved ONLY from verified payment linkage/event
+    raw_pay = payment_event or raw.get("payment_event") or raw.get("payment")
+    if isinstance(raw_pay, dict) and raw_pay.get("status"):
+        pay_state = map_payment_state(raw_pay.get("status"))
+    elif raw.get("payment_state"):
+        pay_state = map_payment_state(raw.get("payment_state"))
     else:
-        pay_state = PAYMENT_STATE_PENDING
-        settle_state = SETTLEMENT_STATE_PENDING
+        # Crucial: Request approval NEVER synthesizes payment confirmation
+        pay_state = PAYMENT_STATE_UNKNOWN
+
+    # Settlement state is resolved ONLY from verified settlement linkage/event
+    raw_settle = settlement_event or raw.get("settlement_event") or raw.get("settlement")
+    if isinstance(raw_settle, dict) and raw_settle.get("status"):
+        settle_state = map_settlement_state(raw_settle.get("status"))
+    elif raw.get("settlement_state"):
+        settle_state = map_settlement_state(raw.get("settlement_state"))
+    else:
+        # Crucial: Request approval or payment confirmation NEVER synthesizes wallet credit
+        settle_state = SETTLEMENT_STATE_UNKNOWN
 
     req_id = str(raw.get("request_id") or (f"MANUAL-{raw['id']}" if raw.get("id") else "")).strip()
     amount_vnd = raw.get("amount_vnd") if isinstance(raw.get("amount_vnd"), int) else 0
@@ -411,6 +455,7 @@ def synthesize_finance_summary(
     topup_requests_metric = {
         "value": topup_pending,
         "total": topup_total,
+        "approved": topup_confirmed,
         "confirmed": topup_confirmed,
         "rejected": topup_rejected,
         "status": STATUS_EMPTY if topup_total == 0 else STATUS_HEALTHY,
