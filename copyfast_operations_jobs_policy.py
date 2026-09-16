@@ -39,6 +39,7 @@ REQUEUE_ACTIONS = 0
 FORCE_COMPLETE_ACTIONS = 0
 PROVIDER_ACTIONS = 0
 FAKE_ZERO_JOB_COUNT = 0
+JOB_BILLING_AND_FINANCE_PAGE_SHARE_SEMANTICS = True
 
 # Operational Status Semantics
 STATUS_EMPTY = "EMPTY"
@@ -213,6 +214,7 @@ def synthesize_operations_job_record(
         "data_source_authority": source_system,
         "charged_xu": raw.get("charged_xu") if isinstance(raw.get("charged_xu"), int) else None,
         "estimated_xu": raw.get("estimated_xu") if isinstance(raw.get("estimated_xu"), int) else None,
+        "provider_spend_xu": raw.get("provider_spend_xu") if isinstance(raw.get("provider_spend_xu"), (int, float)) else None,
         "output_available": bool(raw.get("output_available", False)),
         "download_ready": bool(raw.get("download_ready", False)),
         "error_category": str(raw.get("error_category") or "") or None,

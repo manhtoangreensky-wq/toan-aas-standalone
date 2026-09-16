@@ -31,6 +31,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from PIL import Image, ImageFile, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+import copyfast_db
 from copyfast_auth import (
     _record_audit,
     _request_id,
@@ -91,6 +92,15 @@ from copyfast_operations_jobs_policy import (
     STATUS_UNAVAILABLE,
     synthesize_operations_job_record,
     synthesize_operations_jobs_summary,
+)
+from copyfast_finance_policy import (
+    PAYMENT_GATEWAY_AUTHORITY,
+    PAYMENT_SETTLEMENT_AUTHORITY,
+    STATUS_UNAVAILABLE as FINANCE_STATUS_UNAVAILABLE,
+    TOPUP_REQUEST_AUTHORITY,
+    synthesize_finance_summary,
+    synthesize_payment_record,
+    synthesize_topup_record,
 )
 from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
@@ -5774,6 +5784,159 @@ async def operations_job_retry_action(
     return envelope(
         False,
         "Thao tác ghi bị khóa theo hợp đồng SPEC-05 (Read-Model Only).",
+        status_name="guarded",
+        error_code="WEBAPP_ADMIN_WRITES_DISABLED",
+    )
+
+
+@router.get("/admin/finance/summary")
+@router.get("/admin/finance")
+async def admin_finance_summary(
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    topup_counts = copyfast_db.query_finance_topups_summary()
+
+    wallet_resp = await _bridge("GET", "/internal/v1/admin/modules/wallet", account=account, request=request, admin_read=True)
+    wallet_bridge_avail = bool(wallet_resp.get("ok"))
+    wallet_payload = wallet_resp.get("data") if wallet_bridge_avail else None
+
+    payments_resp = await _bridge("GET", "/internal/v1/admin/payments", account=account, request=request, admin_read=True)
+    payments_bridge_avail = bool(payments_resp.get("ok"))
+    payments_payload = payments_resp.get("data") if payments_bridge_avail else None
+
+    refunds_resp = await _bridge("GET", "/internal/v1/admin/refunds", account=account, request=request, admin_read=True)
+    refunds_bridge_avail = bool(refunds_resp.get("ok"))
+    refunds_payload = refunds_resp.get("data") if refunds_bridge_avail else None
+
+    summary = synthesize_finance_summary(
+        topup_counts=topup_counts,
+        wallet_payload=wallet_payload,
+        wallet_bridge_available=wallet_bridge_avail,
+        payments_payload=payments_payload,
+        payments_bridge_available=payments_bridge_avail,
+        refunds_payload=refunds_payload,
+        refunds_bridge_available=refunds_bridge_avail,
+    )
+    return envelope(
+        True,
+        "Đã nạp tổng quan tài chính ERP.",
+        data=summary,
+        status_name="read_only",
+    )
+
+
+@router.get("/admin/finance/topups")
+@router.get("/admin/topups")
+async def admin_finance_topups(
+    request: Request,
+    status: str | None = None,
+    customer_id: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    account: dict = Depends(require_canonical_admin),
+):
+    raw_items, total = copyfast_db.query_finance_topups_list(
+        status=status,
+        customer_id=customer_id,
+        limit=limit,
+        offset=offset,
+    )
+    synthesized_items = [synthesize_topup_record(item) for item in raw_items]
+    bounded_limit = min(100, max(1, int(limit)))
+    bounded_offset = max(0, int(offset))
+
+    return envelope(
+        True,
+        "Đã nạp danh sách yêu cầu nạp tiền.",
+        data={
+            "items": synthesized_items,
+            "total": total,
+            "limit": bounded_limit,
+            "offset": bounded_offset,
+            "page_size": bounded_limit,
+            "ordering": "submitted_at DESC, id DESC",
+            "authority": TOPUP_REQUEST_AUTHORITY,
+            "mutation_available": False,
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/admin/finance/payments")
+async def admin_finance_payments(
+    request: Request,
+    status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    account: dict = Depends(require_canonical_admin),
+):
+    bounded_limit = min(100, max(1, int(limit)))
+    bounded_offset = max(0, int(offset))
+
+    response = await _bridge("GET", "/internal/v1/admin/payments", account=account, request=request, admin_read=True)
+    if not response.get("ok"):
+        return envelope(
+            False,
+            response.get("message") or "Cầu nối thanh toán PayOS chưa sẵn sàng.",
+            data={
+                "items": [],
+                "total": 0,
+                "limit": bounded_limit,
+                "offset": bounded_offset,
+                "status": FINANCE_STATUS_UNAVAILABLE,
+                "gateway_authority": PAYMENT_GATEWAY_AUTHORITY,
+                "settlement_authority": PAYMENT_SETTLEMENT_AUTHORITY,
+                "mutation_available": False,
+                "error_code": response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+            },
+            status_name=response.get("status") or "guarded",
+            error_code=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
+        )
+
+    raw_items = response.get("data")
+    if isinstance(raw_items, dict):
+        raw_items = raw_items.get("items") or []
+    elif not isinstance(raw_items, list):
+        raw_items = []
+
+    synthesized = [synthesize_payment_record(item, bridge_available=True) for item in raw_items if isinstance(item, dict)]
+
+    if status and status.upper() != "ALL":
+        target = status.upper()
+        synthesized = [p for p in synthesized if p["gateway_state"] == target or p["settlement_state"] == target]
+
+    total = len(synthesized)
+    paged = synthesized[bounded_offset : bounded_offset + bounded_limit]
+
+    return envelope(
+        True,
+        "Đã nạp danh sách giao dịch thanh toán PayOS.",
+        data={
+            "items": paged,
+            "total": total,
+            "limit": bounded_limit,
+            "offset": bounded_offset,
+            "page_size": bounded_limit,
+            "gateway_authority": PAYMENT_GATEWAY_AUTHORITY,
+            "settlement_authority": PAYMENT_SETTLEMENT_AUTHORITY,
+            "mutation_available": False,
+        },
+        status_name="read_only",
+    )
+
+
+@router.post("/admin/finance/credit")
+@router.post("/admin/finance/debit")
+@router.post("/admin/finance/settle")
+@router.post("/admin/finance/refund")
+async def locked_finance_write_action(
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    return envelope(
+        False,
+        "Thao tác ghi bị khóa theo hợp đồng SPEC-06 (Read-Model Only).",
         status_name="guarded",
         error_code="WEBAPP_ADMIN_WRITES_DISABLED",
     )

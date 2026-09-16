@@ -106,6 +106,11 @@ _PORTAL_SHELL_COPY = {
 }
 _PORTAL_SHELL_TITLES = {
     "/admin/customers": {"vi": "Khách hàng Web · TOAN AAS", "en": "Web Customers · TOAN AAS", "zh": "Web 客户 · TOAN AAS"},
+    "/admin/finance": {"vi": "Tài chính & Giao dịch · TOAN AAS", "en": "Finance & Transactions · TOAN AAS", "zh": "财务与交易 · TOAN AAS"},
+    "/admin/finance/topups": {"vi": "Yêu cầu nạp tiền · TOAN AAS", "en": "Topup Requests · TOAN AAS", "zh": "充值申请 · TOAN AAS"},
+    "/admin/finance/payments": {"vi": "Thanh toán · TOAN AAS", "en": "Payments · TOAN AAS", "zh": "支付记录 · TOAN AAS"},
+    "/admin/topups": {"vi": "Đối soát nạp tiền · TOAN AAS", "en": "Topup Verification · TOAN AAS", "zh": "充值核对 · TOAN AAS"},
+    "/admin/payments": {"vi": "Thanh toán PayOS · TOAN AAS", "en": "PayOS Payments · TOAN AAS", "zh": "PayOS 支付 · TOAN AAS"},
     "/admin/growth/postback-readiness": {"vi": "Postback Readiness · TOAN AAS", "en": "Postback Readiness · TOAN AAS", "zh": "回传准备 · TOAN AAS"},
     "/admin/jobs": {"vi": "Công việc · TOAN AAS", "en": "Jobs · TOAN AAS", "zh": "任务 · TOAN AAS"},
     "/admin/jobs/failed": {"vi": "Công việc thất bại · TOAN AAS", "en": "Failed jobs · TOAN AAS", "zh": "失败任务 · TOAN AAS"},

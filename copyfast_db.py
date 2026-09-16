@@ -6754,3 +6754,113 @@ def get_admin_overview_metrics() -> dict[str, int]:
         "engine_jobs": int(engine_jobs_count),
     }
 
+
+def query_finance_topups_summary() -> dict[str, int]:
+    """Return topup request counts and confirmed revenue from SQLite for SPEC-06."""
+    db_file = session_database_path()
+    res = {
+        "total": 0,
+        "pending_count": 0,
+        "approved_count": 0,
+        "rejected_count": 0,
+        "confirmed_revenue_vnd": 0,
+    }
+    try:
+        with sqlite3.connect(db_file) as conn:
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "web_manual_topup_requests" in tables:
+                row = conn.execute(
+                    """SELECT
+                        COUNT(*),
+                        COALESCE(SUM(CASE WHEN status = 'pending_admin_review' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN status = 'approved' THEN amount_vnd ELSE 0 END), 0)
+                    FROM web_manual_topup_requests"""
+                ).fetchone()
+                if row:
+                    res["total"] = int(row[0] or 0)
+                    res["pending_count"] = int(row[1] or 0)
+                    res["approved_count"] = int(row[2] or 0)
+                    res["rejected_count"] = int(row[3] or 0)
+                    res["confirmed_revenue_vnd"] = int(row[4] or 0)
+    except Exception:
+        pass
+    return res
+
+
+def query_finance_topups_list(
+    *,
+    status: str | None = None,
+    customer_id: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    """Query topup requests with bounded pagination and safe filters for SPEC-06."""
+    bounded_limit = min(100, max(1, int(limit)))
+    bounded_offset = max(0, int(offset))
+    db_file = session_database_path()
+
+    clauses: list[str] = []
+    params: list[Any] = []
+
+    if status:
+        norm = str(status).strip().lower()
+        status_map = {
+            "pending": "pending_admin_review",
+            "pending_admin_review": "pending_admin_review",
+            "approved": "approved",
+            "confirmed": "approved",
+            "rejected": "rejected",
+        }
+        mapped = status_map.get(norm)
+        if mapped:
+            clauses.append("r.status = ?")
+            params.append(mapped)
+
+    if customer_id:
+        clauses.append("r.account_id = ?")
+        params.append(str(customer_id).strip())
+
+    where_sql = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+
+    items: list[dict] = []
+    total = 0
+
+    try:
+        with sqlite3.connect(db_file) as conn:
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "web_manual_topup_requests" in tables:
+                count_row = conn.execute(
+                    f"SELECT COUNT(*) FROM web_manual_topup_requests AS r{where_sql}",
+                    tuple(params),
+                ).fetchone()
+                total = int(count_row[0] or 0) if count_row else 0
+
+                query_params = list(params) + [bounded_limit, bounded_offset]
+                rows = conn.execute(
+                    f"""SELECT r.id, a.display_name, a.email, r.amount_vnd, r.currency,
+                               r.method, r.reference, c.payment_code, r.status,
+                               r.submitted_at, r.updated_at, r.decision_at, r.decision_reason,
+                               r.account_id
+                        FROM web_manual_topup_requests AS r
+                        LEFT JOIN web_accounts AS a ON a.id = r.account_id
+                        LEFT JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
+                        {where_sql}
+                        ORDER BY r.submitted_at DESC, r.id DESC
+                        LIMIT ? OFFSET ?""",
+                    tuple(query_params),
+                ).fetchall()
+
+                for row in rows:
+                    item = _web_manual_admin_public_row(row[:13])
+                    if item:
+                        if len(row) > 13 and row[13]:
+                            item["account_id"] = str(row[13])
+                        items.append(item)
+    except Exception:
+        pass
+
+    return items, total
+
+
