@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-05B",
+    "task": "P0.WEB.ERP.SPEC05B.OPERATIONS.JOBS.BROWSER.ACCEPTANCE.CLOSURE",
+    "base_sha": "6611a5ee65aa3147e1b2795d92c0012377ec65d7",
+    "head_sha": "6611a5ee65aa3147e1b2795d92c0012377ec65d7",
+    "origin_main_sha": "6611a5ee65aa3147e1b2795d92c0012377ec65d7",
+    "runtime_sha": "6611a5ee65aa3147e1b2795d92c0012377ec65d7",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "invariants": {
+    "SOURCE_FILES_CHANGED": 0,
+    "HTTP200_FALSE_GREEN": false,
+    "JOB_AUTHORITY": "BOT_CORE",
+    "WEB_ROLE": "READ_THROUGH_OR_PROJECTION",
+    "WEB_DIRECT_BOT_DB_WRITE": false,
+    "JOB_MUTATION_CONTROLS": 0,
+    "FAKE_ZERO_JOB_COUNT": 0,
+    "RETRY_ACTIONS": 0,
+    "CANCEL_ACTIONS": 0,
+    "REQUEUE_ACTIONS": 0,
+    "FORCE_COMPLETE_ACTIONS": 0,
+    "PROVIDER_ACTIONS": 0,
+    "PROVIDER_CALLS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "BOT_DB_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "LIGHT_BROWSER": "PASS",
+    "DARK_BROWSER": "PASS",
+    "RESPONSIVE_STATUS": "PASS",
+    "A11Y_STATUS": "PASS",
+    "JS_ERRORS": 0,
+    "UNEXPECTED_NETWORK_ERRORS": 0,
+    "DOCUMENT_SCROLL": false,
+    "MAIN_SCROLL_OWNER": "portal-workspace",
+    "SIDEBAR_SCROLL_OWNER": "portal-sidebar",
+    "SCROLL_DESYNC": false,
+    "DOUBLE_SCROLLBAR": false,
+    "SPEC05B_PASS": true,
+    "SPEC05_FULL_CLOSE": true,
+    "BLOCKERS": "NONE"
+  },
+  "routes_tested": {
+    "/admin/jobs": {
+      "http_status": 200,
+      "anonymous_status": 403,
+      "non_admin_status": 403,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/operations/jobs",
+      "semantic_status": "UNAVAILABLE",
+      "preflight_code": "CORE_BRIDGE_NOT_CONFIGURED",
+      "fake_zero_job_count": 0,
+      "counts_total": null,
+      "mutation_controls": 0,
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/jobs/failed": {
+      "http_status": 200,
+      "anonymous_status": 403,
+      "non_admin_status": 403,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/operations/jobs/failed",
+      "semantic_status": "UNAVAILABLE",
+      "preflight_code": "CORE_BRIDGE_NOT_CONFIGURED",
+      "fake_zero_job_count": 0,
+      "counts_total": null,
+      "mutation_controls": 0,
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/jobs/job-test-001": {
+      "http_status": 200,
+      "anonymous_status": 403,
+      "non_admin_status": 403,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/operations/jobs/job-test-001",
+      "semantic_status": "UNAVAILABLE",
+      "preflight_code": "CORE_BRIDGE_NOT_CONFIGURED",
+      "authority": "BOT_CORE",
+      "mutation_controls": 0,
+      "js_errors": 0,
+      "layout_errors": 0
+    },
+    "/admin/customers/ec8398a0-2069-4379-a54d-d9300f0a8672": {
+      "http_status": 200,
+      "anonymous_status": 403,
+      "non_admin_status": 403,
+      "rendered": "YES",
+      "data_fetch": "/api/v1/admin/customers/ec8398a0-2069-4379-a54d-d9300f0a8672/crm",
+      "jobs_summary_status": "UNAVAILABLE",
+      "action_required": "PRESENT",
+      "mutation_controls": 0,
+      "js_errors": 0,
+      "layout_errors": 0
+    }
+  },
+  "browser_matrix": {
+    "desktop_1440x900": {
+      "layout": "PASS",
+      "scroll": "PASS",
+      "nav": "PASS"
+    },
+    "laptop_1280x800": {
+      "layout": "PASS",
+      "scroll": "PASS",
+      "nav": "PASS"
+    },
+    "mobile_390x844": {
+      "layout": "PASS",
+      "scroll": "PASS",
+      "nav": "PASS"
+    }
+  },
+  "theming_matrix": {
+    "light": {
+      "canvas": "#f3fbfc",
+      "surface": "#ffffff",
+      "ink": "#073a45",
+      "contrast_wcag_aa": "PASS"
+    },
+    "dark_obsidian": {
+      "canvas": "#09090b",
+      "surface": "#121215",
+      "ink": "#f4f4f5",
+      "contrast_wcag_aa": "PASS"
+    }
+  }
+}
