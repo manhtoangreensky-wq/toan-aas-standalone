@@ -1,0 +1,237 @@
+{
+  "meta": {
+    "task": "P0.WEB.ERP.SPEC07.FINANCIAL.WRITES.AUTHORITY.IDEMPOTENCY.AUDIT",
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "mode": "OWNER-GOVERNED | AUDIT-FIRST | READ-ONLY | FIRST-RED-ONLY",
+    "target_host": "tg.toanaas.vn",
+    "status": "AUDIT_VERIFIED",
+    "base_sha": "a7d837a8b25720687859d1d7e6637d77529d0743",
+    "previous_spec": "SPEC06_FULL_CLOSE=YES"
+  },
+  "canonical_authorities": {
+    "WALLET_AUTHORITY": "BOT_CORE",
+    "PAYMENT_GATEWAY_AUTHORITY": "PAYOS",
+    "PAYMENT_SETTLEMENT_AUTHORITY": "BOT_CORE",
+    "TOPUP_REQUEST_AUTHORITY": "WEB_SQLITE",
+    "REVENUE_AUTHORITY": "BOT_CORE",
+    "WEB_ROLE": "READ_THROUGH_OR_PROJECTION"
+  },
+  "safety_invariants": {
+    "WEB_DIRECT_WALLET_MUTATION": false,
+    "WEB_DIRECT_BOT_DB_WRITE": false,
+    "MANUAL_CREDIT_ACTIONS": 0,
+    "MANUAL_DEBIT_ACTIONS": 0,
+    "SETTLEMENT_ACTIONS": 0,
+    "REFUND_ACTIONS": 0,
+    "PAYOS_ACTIONS": 0,
+    "WALLET_ACTIONS": 0,
+    "ZERO_WALLET_MUTATIONS_ON_READ_OR_REJECT": true,
+    "REQUEST_APPROVED_IMPLIES_PAYMENT_CONFIRMED": false,
+    "PAYMENT_CONFIRMED_IMPLIES_SETTLED": false,
+    "SETTLED_IMPLIES_REQUEST_APPROVED": false
+  },
+  "write_actions": [
+    {
+      "action": "MANUAL_CREDIT",
+      "authority": "BOT_CORE",
+      "write_owner": "BOT_CORE (Core Ledger & Wallet Engine via /internal/v1/admin/wallet/credit)",
+      "web_direct_mutation_allowed": false,
+      "required_identity": "CANONICAL_ADMIN (2-layer verified: signed Web session + live Bot Core role re-check)",
+      "required_prestate": "Target account linked to canonical_user_id, target wallet exists, credit amount > 0, reason specified (min 5 chars), no active freeze",
+      "idempotency_key_source": "Client HTTP Idempotency-Key header scoped as admin:{admin_id}:credit:{user_id}:{key}",
+      "audit_receipt_source": "Bot Core Ledger transaction receipt (tx_id) + Web web_audit_events record (action='admin.finance.credit')",
+      "recovery_contract": "On bridge timeout: Web idempotent retry with same key; Core deduplicates and returns cached ledger tx. Zero duplicate credits.",
+      "fail_closed_guard": "WEBAPP_ADMIN_WRITES_DISABLED returned immediately if writes disabled; HTTP 403 if canonical role invalid."
+    },
+    {
+      "action": "MANUAL_DEBIT",
+      "authority": "BOT_CORE",
+      "write_owner": "BOT_CORE (Core Ledger & Wallet Engine via /internal/v1/admin/wallet/debit)",
+      "web_direct_mutation_allowed": false,
+      "required_identity": "CANONICAL_ADMIN (2-layer verified)",
+      "required_prestate": "Target account linked to canonical_user_id, balance_xu >= debit_amount_xu (no negative balance allowed), reason specified (min 5 chars)",
+      "idempotency_key_source": "Client HTTP Idempotency-Key header scoped as admin:{admin_id}:debit:{user_id}:{key}",
+      "audit_receipt_source": "Bot Core Ledger transaction receipt (tx_id) + Web web_audit_events record (action='admin.finance.debit')",
+      "recovery_contract": "On bridge timeout: Web idempotent retry with same key; Core ledger deduplicates. Invariant: balance never drops below 0.",
+      "fail_closed_guard": "WEBAPP_ADMIN_WRITES_DISABLED; HTTP 400/422 if balance insufficient; HTTP 403 if unauthorized."
+    },
+    {
+      "action": "PAYMENT_SETTLEMENT",
+      "authority": "BOT_CORE",
+      "write_owner": "BOT_CORE (Billing Settlement Engine via PayOS Webhook or /internal/v1/admin/payments/settle)",
+      "web_direct_mutation_allowed": false,
+      "required_identity": "PAYOS_WEBHOOK_SIGNATURE (HMAC SHA256 verified) or CANONICAL_ADMIN for manual reconciliation",
+      "required_prestate": "PayOS payment confirmed (gateway_state == CONFIRMED), settlement pending (settlement_state == PENDING), order_code exists in payos_orders, settlement not already executed",
+      "idempotency_key_source": "PayOS orderCode / paymentLinkId stored in payos_processed table. Manual: admin:{admin_id}:settle:{order_code}:{key}",
+      "audit_receipt_source": "Bot Core payos_processed entry with timestamp + ledger credit entry + Web web_audit_events",
+      "recovery_contract": "Duplicate webhook replay returns HTTP 200 without second wallet credit. Core ledger ensures 1 payment = 1 credit.",
+      "fail_closed_guard": "Invalid HMAC signature rejected with 401; Web route locked with WEBAPP_ADMIN_WRITES_DISABLED."
+    },
+    {
+      "action": "REFUND",
+      "authority": "BOT_CORE",
+      "write_owner": "BOT_CORE (Job & Ledger Engine via /internal/v1/admin/jobs/{job_id}/refund)",
+      "web_direct_mutation_allowed": false,
+      "required_identity": "CANONICAL_ADMIN (2-layer verified)",
+      "required_prestate": "Job or transaction in terminal failed/cancelled state, original charge confirmed, refund not previously processed (refund_status != COMPLETED)",
+      "idempotency_key_source": "Target entity ID + action nonce scoped as admin:{admin_id}:refund:{job_id}:{key}",
+      "audit_receipt_source": "Bot Core refund transaction receipt + Web web_audit_events record (action='admin.job.refund')",
+      "recovery_contract": "On transient network failure: Web re-invokes with same idempotency key; Core verifies job refund state and returns cached outcome.",
+      "fail_closed_guard": "WEBAPP_ADMIN_WRITES_DISABLED when flag off; HTTP 409 if refund already issued."
+    },
+    {
+      "action": "TOPUP_REQUEST_APPROVE",
+      "authority": "WEB_SQLITE",
+      "write_owner": "WEB_SQLITE (web_manual_topup_requests for request status) & BOT_CORE (for separate wallet credit call)",
+      "web_direct_mutation_allowed": false,
+      "wallet_mutation_direct": false,
+      "synthesizes_payment_confirmation": false,
+      "required_identity": "CANONICAL_ADMIN / LOCAL_ADMIN with signed session and valid CSRF token",
+      "required_prestate": "web_manual_topup_requests.status == 'pending_admin_review', payment proof verified by operator",
+      "idempotency_key_source": "Manual topup request number (MANUAL-{id}) + admin confirmation receipt hash",
+      "audit_receipt_source": "Web web_audit_events (action='admin.manual_topup.approve') + decision receipt",
+      "recovery_contract": "Approving request updates status to APPROVED (REQUEST_APPROVED). Does NOT synthesize payment confirmation or credit wallet. Explicit ledger call required.",
+      "fail_closed_guard": "WEBAPP_ADMIN_WRITES_DISABLED when writes disabled; HTTP 409 if status is not pending_admin_review."
+    },
+    {
+      "action": "TOPUP_REQUEST_REJECT",
+      "authority": "WEB_SQLITE",
+      "write_owner": "WEB_SQLITE (web_manual_topup_requests & web_manual_topup_decision_receipts)",
+      "web_direct_mutation_allowed": false,
+      "wallet_mutation_direct": false,
+      "idempotency_replay_supported": true,
+      "required_identity": "LOCAL_ADMIN / CANONICAL_ADMIN with signed session and CSRF",
+      "required_prestate": "web_manual_topup_requests.status == 'pending_admin_review', valid reason (3-300 chars)",
+      "idempotency_key_source": "Client idempotency key hash + server two-phase decision receipt hash",
+      "audit_receipt_source": "Web web_audit_events (action='admin.manual_topup.reject', outcome='rejected')",
+      "recovery_contract": "If re-submitted with identical idempotency hash, returns idempotent_replay=True with cached rejection row.",
+      "fail_closed_guard": "MANUAL_ADMIN_IDEMPOTENCY_CONFLICT on key reuse with different payload; MANUAL_ADMIN_CONFIRMATION_EXPIRED on TTL expiry."
+    },
+    {
+      "action": "PAYOS_CHECKOUT_CREATE",
+      "authority": "PAYOS",
+      "write_owner": "PAYOS Merchant Gateway & BOT_CORE payos_orders",
+      "web_direct_mutation_allowed": false,
+      "required_identity": "AUTHENTICATED_USER with valid CSRF token",
+      "required_prestate": "Target account linked to canonical_user_id, package in canonical catalog, payment enabled",
+      "idempotency_key_source": "SHA256(owner_id + client_idempotency_key) checked against payos_orders.metadata_json",
+      "audit_receipt_source": "payos_orders row (order_code, payment_link_id) + transient single-flight reservation",
+      "recovery_contract": "Duplicate request returns stored order_code and safe checkout_url without creating duplicate merchant payment links.",
+      "fail_closed_guard": "WEBAPP_PAYMENT_DISABLED when payment disabled; single-flight marker released on bridge response."
+    }
+  ],
+  "write_surface_inventory": [
+    {
+      "endpoint": "/api/v1/admin/finance/credit",
+      "method": "POST",
+      "function": "locked_finance_write_action",
+      "file": "copyfast_api.py",
+      "lines": "5929-5942",
+      "guard": "require_canonical_admin",
+      "current_state": "LOCKED_FAIL_CLOSED",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Fail-closed stub preventing direct wallet credit from Web"
+    },
+    {
+      "endpoint": "/api/v1/admin/finance/debit",
+      "method": "POST",
+      "function": "locked_finance_write_action",
+      "file": "copyfast_api.py",
+      "lines": "5930-5942",
+      "guard": "require_canonical_admin",
+      "current_state": "LOCKED_FAIL_CLOSED",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Fail-closed stub preventing direct wallet debit from Web"
+    },
+    {
+      "endpoint": "/api/v1/admin/finance/settle",
+      "method": "POST",
+      "function": "locked_finance_write_action",
+      "file": "copyfast_api.py",
+      "lines": "5931-5942",
+      "guard": "require_canonical_admin",
+      "current_state": "LOCKED_FAIL_CLOSED",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Fail-closed stub preventing direct payment settlement from Web"
+    },
+    {
+      "endpoint": "/api/v1/admin/finance/refund",
+      "method": "POST",
+      "function": "locked_finance_write_action",
+      "file": "copyfast_api.py",
+      "lines": "5932-5942",
+      "guard": "require_canonical_admin",
+      "current_state": "LOCKED_FAIL_CLOSED",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Fail-closed stub preventing direct refund execution from Web"
+    },
+    {
+      "endpoint": "/api/v1/admin/jobs/{job_id}/refund",
+      "method": "POST",
+      "function": "admin_refund_job",
+      "file": "copyfast_api.py",
+      "lines": "6017-6037",
+      "guard": "require_canonical_admin_csrf + admin_writes_enabled flag",
+      "current_state": "GUARDED_CANONICAL_BRIDGE",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Guarded proxy to Bot Core /internal/v1/admin/jobs/{id}/refund using _run_idempotent"
+    },
+    {
+      "endpoint": "/api/v1/admin/payments/manual/{request_id}/draft",
+      "method": "POST",
+      "function": "manual_admin_draft",
+      "file": "copyfast_api.py",
+      "lines": "4967-5010",
+      "guard": "require_admin_csrf + admin_writes_enabled flag",
+      "current_state": "GUARDED_LOCAL_REJECT_RECEIPT",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Creates two-phase cryptographic decision receipt for manual rejection"
+    },
+    {
+      "endpoint": "/api/v1/admin/payments/manual/{request_id}/confirm",
+      "method": "POST",
+      "function": "manual_admin_confirm",
+      "file": "copyfast_api.py",
+      "lines": "5013-5050",
+      "guard": "require_admin_csrf + admin_writes_enabled flag",
+      "current_state": "GUARDED_LOCAL_REJECT_CONFIRM",
+      "error_code": "WEBAPP_ADMIN_WRITES_DISABLED",
+      "description": "Executes status update to rejected with cryptographic receipt check and idempotency"
+    },
+    {
+      "endpoint": "/api/v1/payments/manual",
+      "method": "POST",
+      "function": "manual_topup_create",
+      "file": "copyfast_api.py",
+      "lines": "5055-5120",
+      "guard": "require_csrf",
+      "current_state": "ACTIVE_CUSTOMER_REQUEST_INTAKE",
+      "error_code": "NONE",
+      "description": "Creates pending topup request row in Web SQLite with idempotency key hash"
+    },
+    {
+      "endpoint": "/api/v1/payments/create",
+      "method": "POST",
+      "function": "create_payment",
+      "file": "copyfast_api.py",
+      "lines": "5219-5350",
+      "guard": "require_csrf",
+      "current_state": "ACTIVE_PAYOS_CHECKOUT_DISPATCH",
+      "error_code": "NONE",
+      "description": "Dispatches PayOS checkout request via single-flight transient idempotency"
+    }
+  ],
+  "idempotency_contracts": {
+    "key_scope_format": "{domain}:{actor_id}:{action}:{target_id}",
+    "duplicate_payload_policy": "IDEMPOTENT_REPLAY_CACHED_RESULT",
+    "conflicting_payload_policy": "REJECT_WITH_409_CONFLICT",
+    "in_progress_policy": "GUARD_WITH_409_OR_425",
+    "two_phase_confirmation_receipt_ttl_seconds": 300,
+    "persistence_storage": "web_idempotency (SQLite) & payos_processed (Bot Core SQLite)"
+  },
+  "recovery_contracts": {
+    "transient_bridge_timeout": "Web releases transient lock; client retries with identical Idempotency-Key. Core deduplicates.",
+    "non_retryable_failure": "Web records failure in web_idempotency; immediate client retry returns cached failure without re-hitting upstream.",
+    "network_partition_split_brain_protection": "Web NEVER performs optimistic local credit. Web holds read-only/projection posture until Bot Core confirms ledger commitment."
+  }
+}
