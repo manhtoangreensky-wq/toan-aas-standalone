@@ -23,6 +23,7 @@ from typing import Any
 
 
 from copyfast_finance_policy import (
+    CUSTOMER_FINANCE_STATE_MAPPING_SHARED,
     PAYMENT_GATEWAY_AUTHORITY as FINANCE_PAYMENT_GATEWAY_AUTHORITY,
     TOPUP_REQUEST_AUTHORITY,
     WALLET_AUTHORITY as FINANCE_WALLET_AUTHORITY,
@@ -183,6 +184,7 @@ def synthesize_customer_crm_context(
         "manual_settlement_actions": MANUAL_PAYMENT_SETTLEMENT_ACTIONS,
         "recent_requests": topups[:5],
         "share_canonical_authority": True,
+        "customer_finance_state_mapping_shared": True,
     }
 
     # 6. WALLET SUMMARY (Read-through, never fake zero)

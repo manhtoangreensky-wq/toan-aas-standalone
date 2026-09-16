@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "program": "P0.WEB.ERP.PRODUCTION_COMPLETION",
+    "spec": "SPEC-06B",
+    "task": "P0.WEB.ERP.SPEC06B.FINANCE.STATE.SEMANTICS.CLOSURE",
+    "base_sha": "0e71bd7e3d5d50a42e00229dbe2061b7f7ce3c33",
+    "target_host": "tg.toanaas.vn",
+    "governing_standard": "owner-governed-codex",
+    "status": "PASS"
+  },
+  "contract_trace": {
+    "TOPUP_STATE_MAPPING_SOURCE": "copyfast_finance_policy.py (map_topup_raw_state, RAW_TOPUP_TO_BUSINESS_STATE), copyfast_db.py",
+    "TOPUP_API_SERIALIZER": "copyfast_finance_policy.py (synthesize_topup_record, synthesize_finance_summary), copyfast_api.py",
+    "TOPUP_UI_RENDERER": "static/portal/portal.js (renderAdminTopups, adminManualTopupText)",
+    "CONFIRMED_EXPOSURE_RESOLVED": "Replaced topup request CONFIRMED with APPROVED in policy, serializers, API outputs, tests, and audit reports"
+  },
+  "three_layer_model": {
+    "REQUEST_STATE_VALUES": [
+      "PENDING",
+      "APPROVED",
+      "REJECTED",
+      "UNKNOWN"
+    ],
+    "PAYMENT_STATE_VALUES": [
+      "PENDING",
+      "CONFIRMED",
+      "FAILED",
+      "EXPIRED",
+      "UNAVAILABLE",
+      "UNKNOWN"
+    ],
+    "SETTLEMENT_STATE_VALUES": [
+      "PENDING",
+      "CREDITED",
+      "REJECTED",
+      "UNAVAILABLE",
+      "UNKNOWN"
+    ],
+    "REQUEST_PAYMENT_SETTLEMENT_NAMESPACED": true,
+    "REQUEST_APPROVED_IMPLIES_PAYMENT_CONFIRMED": false,
+    "PAYMENT_CONFIRMED_IMPLIES_SETTLED": false,
+    "SETTLED_IMPLIES_REQUEST_APPROVED": false
+  },
+  "payos_sources": {
+    "PAYMENT_GATEWAY_AUTHORITY": "PAYOS",
+    "PAYMENT_READ_MODEL_SOURCE": "BOT_CORE_PAYMENT_PROJECTION_OR_WEBHOOK_CACHE",
+    "PAYMENT_EVENT_SOURCE": "PAYOS_GATEWAY_WEBHOOK"
+  },
+  "customer_finance": {
+    "CUSTOMER_FINANCE_STATE_MAPPING_SHARED": true
+  },
+  "first_red": {
+    "identified_issue": "Topup request approval was using CONFIRMED, colliding with payment confirmation state, and synthesize_topup_record was inferring payment and settlement states without real linkage.",
+    "resolution": "Remapped topup approval to APPROVED, prohibited synthetic payment/settlement states on topup approval, ensured payment confirmation does not synthesize wallet credit, and verified CRM customer finance shares same namespaced semantics."
+  },
+  "invariants": {
+    "PROVIDER_CALLS": 0,
+    "WALLET_MUTATIONS": 0,
+    "PAYMENT_MUTATIONS": 0,
+    "SETTLEMENT_MUTATIONS": 0,
+    "BOT_DB_MUTATIONS": 0,
+    "WEB_WALLET_MUTATIONS": 0,
+    "ENV_MUTATIONS": 0,
+    "PRODUCTION_DB_SCHEMA_MUTATIONS": 0
+  },
+  "tests": {
+    "spec06b_tests": 8,
+    "spec06_tests": 16,
+    "total_p0_spec_tests": 101,
+    "new_failures": 0,
+    "spec06b_pass": true,
+    "spec06_full_close": true
+  }
+}

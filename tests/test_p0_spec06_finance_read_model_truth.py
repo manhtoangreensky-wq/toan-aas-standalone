@@ -190,12 +190,12 @@ def test_01_canonical_finance_authority_contract():
 
 
 def test_02_topup_request_state_mapping_truth():
-    """Verify Section 4: Topup request state mapping. Never call pending 'paid'."""
+    """Verify Section 4: Topup request state mapping. Never call pending 'paid' or approved 'CONFIRMED'."""
     assert finance_policy.map_topup_raw_state("pending_admin_review") == "PENDING"
     assert finance_policy.map_topup_raw_state("pending") == "PENDING"
     assert finance_policy.map_topup_raw_state("reviewing") == "PENDING"
-    assert finance_policy.map_topup_raw_state("approved") == "CONFIRMED"
-    assert finance_policy.map_topup_raw_state("confirmed") == "CONFIRMED"
+    assert finance_policy.map_topup_raw_state("approved") == "APPROVED"
+    assert finance_policy.map_topup_raw_state("confirmed") == "APPROVED"
     assert finance_policy.map_topup_raw_state("rejected") == "REJECTED"
     assert finance_policy.map_topup_raw_state("declined") == "REJECTED"
     assert finance_policy.map_topup_raw_state(None) == "UNKNOWN"
@@ -209,15 +209,30 @@ def test_02_topup_request_state_mapping_truth():
     }
     rec = finance_policy.synthesize_topup_record(pending_row)
     assert rec["request_state"] == "PENDING"
-    assert rec["payment_state"] == "PENDING"
-    assert rec["settlement_state"] == "PENDING"
+    assert rec["payment_state"] == "UNKNOWN"
+    assert rec["settlement_state"] == "UNKNOWN"
+    assert rec["request_state"] != "APPROVED"
     assert rec["request_state"] != "CONFIRMED"
     assert rec["authority"] == "WEB_SQLITE"
+
+    # Approved request must have REQUEST_STATE=APPROVED, and payment/settlement remain UNKNOWN without linkage
+    approved_row = {
+        "id": 2,
+        "amount_vnd": 500000,
+        "status": "approved",
+    }
+    rec_app = finance_policy.synthesize_topup_record(approved_row)
+    assert rec_app["request_state"] == "APPROVED"
+    assert rec_app["payment_state"] == "UNKNOWN"
+    assert rec_app["settlement_state"] == "UNKNOWN"
+    assert rec_app["request_state"] != "CONFIRMED"
 
 
 def test_03_payment_and_settlement_distinction():
     """Verify Section 5 & 7: Payment confirmed does NOT equal wallet credited."""
     assert finance_policy.PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED is True
+    assert finance_policy.PAYMENT_CONFIRMED_IMPLIES_SETTLED is False
+    assert finance_policy.REQUEST_APPROVED_IMPLIES_PAYMENT_CONFIRMED is False
 
     # Payment confirmed but settlement state is not yet credited
     pay_record = finance_policy.synthesize_payment_record(
@@ -225,11 +240,11 @@ def test_03_payment_and_settlement_distinction():
         bridge_available=True,
     )
     assert pay_record["gateway_state"] == "CONFIRMED"
-    assert pay_record["settlement_state"] == "PENDING"  # Must NOT infer CREDITED without Bot Core proof
+    assert pay_record["settlement_state"] == "UNKNOWN"  # Must NOT infer CREDITED without Bot Core proof
     assert pay_record["gateway_authority"] == "PAYOS"
     assert pay_record["settlement_authority"] == "BOT_CORE"
 
-    # Attention required because payment is confirmed but settlement is pending
+    # Attention required because payment is confirmed but settlement is pending/unknown
     assert pay_record["attention_required"] is True
     assert any("chờ Bot Core ghi nhận Xu" in r for r in pay_record["attention_reasons"])
 
@@ -372,6 +387,14 @@ def test_09_admin_finance_topups_api_endpoint(admin_client):
     assert r_pending.status_code == 200
     items_pending = r_pending.json()["data"]["items"]
     assert all(i["request_state"] == "PENDING" for i in items_pending)
+
+    # Filter by status: approved (must return request_state == APPROVED, never CONFIRMED)
+    r_approved = admin_client.get("/api/v1/admin/finance/topups?status=approved")
+    assert r_approved.status_code == 200
+    items_approved = r_approved.json()["data"]["items"]
+    assert len(items_approved) >= 1
+    assert all(i["request_state"] == "APPROVED" for i in items_approved)
+    assert all(i["request_state"] != "CONFIRMED" for i in items_approved)
 
     # 3. GET /api/v1/admin/topups alias
     r_alias = admin_client.get("/api/v1/admin/topups")
