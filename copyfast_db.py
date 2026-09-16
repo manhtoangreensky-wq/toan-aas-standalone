@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hashlib
 import hmac
 import os
 from pathlib import Path
@@ -1732,6 +1733,78 @@ def ensure_copyfast_schema() -> None:
                 FOREIGN KEY(session_id) REFERENCES web_sessions(id)
             )
             """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_manual_topup_approve_receipts (
+                receipt_hash TEXT PRIMARY KEY
+                    CHECK(
+                        length(receipt_hash) = 64
+                        AND receipt_hash NOT GLOB '*[^0-9a-f]*'
+                    ),
+                manual_topup_id INTEGER NOT NULL,
+                admin_account_id TEXT NOT NULL,
+                session_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK(action = 'approve'),
+                approved_xu INTEGER NOT NULL CHECK(approved_xu > 0),
+                reason TEXT NOT NULL
+                    CHECK(
+                        reason = trim(reason)
+                        AND length(reason) BETWEEN 3 AND 300
+                        AND instr(reason, char(0)) = 0
+                        AND reason NOT GLOB ('*[' || char(1) || '-' || char(31) || ']*')
+                    ),
+                expires_at TEXT NOT NULL,
+                claimed_idempotency_hash TEXT
+                    CHECK(
+                        claimed_idempotency_hash IS NULL
+                        OR (
+                            length(claimed_idempotency_hash) = 64
+                            AND claimed_idempotency_hash NOT GLOB '*[^0-9a-f]*'
+                        )
+                    ),
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                UNIQUE(manual_topup_id, admin_account_id, session_id, action),
+                FOREIGN KEY(manual_topup_id) REFERENCES web_manual_topup_requests(id),
+                FOREIGN KEY(admin_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(session_id) REFERENCES web_sessions(id)
+            )
+            """
+        )
+        conn.execute(
+            """CREATE INDEX IF NOT EXISTS idx_web_manual_topup_approve_receipts_lookup
+               ON web_manual_topup_approve_receipts(manual_topup_id, admin_account_id, session_id)"""
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_manual_topup_credit_operations (
+                id TEXT PRIMARY KEY,
+                manual_topup_id INTEGER NOT NULL UNIQUE,
+                admin_account_id TEXT NOT NULL,
+                canonical_user_id TEXT NOT NULL,
+                amount_xu INTEGER NOT NULL CHECK(amount_xu > 0),
+                idempotency_key TEXT NOT NULL UNIQUE,
+                request_fingerprint TEXT NOT NULL
+                    CHECK(
+                        length(request_fingerprint) = 64
+                        AND request_fingerprint NOT GLOB '*[^0-9a-f]*'
+                    ),
+                status TEXT NOT NULL CHECK(
+                    status IN ('not_sent', 'dispatched', 'reconcile_required', 'credit_confirmed', 'local_approval_persisted')
+                ),
+                ledger_event_id TEXT,
+                error_detail TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(manual_topup_id) REFERENCES web_manual_topup_requests(id),
+                FOREIGN KEY(admin_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """CREATE INDEX IF NOT EXISTS idx_web_manual_topup_credit_ops_status
+               ON web_manual_topup_credit_operations(status)"""
         )
         # Minimal Web-owned profile defaults. This is presentation/session
         # metadata only; it never mirrors Telegram identity, Xu, PayOS, jobs
@@ -6693,6 +6766,513 @@ def confirm_web_manual_topup_reject(
             _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
             (int(request_number),),
         ).fetchone()
+    projected = _web_manual_admin_public_row(updated)
+    assert projected is not None
+    return projected
+
+
+def create_web_manual_topup_approve_receipt(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    session_id: str,
+    receipt_hash: str,
+    approved_xu: int,
+    reason: str,
+    now: str,
+    expires_at: str,
+) -> dict:
+    cleaned_reason = str(reason).strip()
+    if not 3 <= len(cleaned_reason) <= 300 or any(ord(char) < 32 for char in cleaned_reason):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_REASON_INVALID")
+    if (
+        len(receipt_hash) != 64
+        or any(char not in "0123456789abcdef" for char in receipt_hash)
+        or _web_timestamp(expires_at) <= _web_timestamp(now)
+        or int(approved_xu) <= 0
+    ):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_UNAVAILABLE")
+    with transaction() as conn:
+        _require_web_admin_session(
+            conn,
+            admin_account_id=admin_account_id,
+            session_id=session_id,
+            now=now,
+        )
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+        if str(record[8]) != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+        existing = conn.execute(
+            """SELECT receipt_hash, expires_at, consumed_at
+               FROM web_manual_topup_approve_receipts
+               WHERE manual_topup_id=? AND admin_account_id=?
+                 AND session_id=? AND action='approve'""",
+            (int(request_number), admin_account_id, session_id),
+        ).fetchone()
+        if existing is not None:
+            if existing[2] is not None:
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+            conn.execute(
+                "DELETE FROM web_manual_topup_approve_receipts WHERE receipt_hash=?",
+                (str(existing[0]),),
+            )
+        conn.execute(
+            """INSERT INTO web_manual_topup_approve_receipts
+               (receipt_hash, manual_topup_id, admin_account_id, session_id,
+                action, approved_xu, reason, expires_at, claimed_idempotency_hash,
+                consumed_at, created_at)
+               VALUES (?, ?, ?, ?, 'approve', ?, ?, ?, NULL, NULL, ?)""",
+            (
+                receipt_hash,
+                int(request_number),
+                admin_account_id,
+                session_id,
+                int(approved_xu),
+                cleaned_reason,
+                expires_at,
+                now,
+            ),
+        )
+    projected = _web_manual_admin_public_row(record)
+    assert projected is not None
+    return projected
+
+
+def claim_web_manual_topup_approve_decision(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    session_id: str,
+    receipt_hash: str,
+    idempotency_key_hash: str,
+    now: str | None = None,
+) -> tuple[dict, dict, bool]:
+    current_time = str(now or utc_now())
+    if len(idempotency_key_hash) != 64 or any(
+        char not in "0123456789abcdef" for char in idempotency_key_hash
+    ):
+        raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+    with transaction() as conn:
+        _require_web_admin_session(
+            conn,
+            admin_account_id=admin_account_id,
+            session_id=session_id,
+            now=current_time,
+        )
+        receipt = conn.execute(
+            """SELECT expires_at, claimed_idempotency_hash, consumed_at, approved_xu, reason
+               FROM web_manual_topup_approve_receipts
+               WHERE receipt_hash=? AND manual_topup_id=?
+                 AND admin_account_id=? AND session_id=? AND action='approve'""",
+            (receipt_hash, int(request_number), admin_account_id, session_id),
+        ).fetchone()
+        if receipt is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_REQUIRED")
+
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+
+        projected = _web_manual_admin_public_row(record)
+        assert projected is not None
+
+        receipt_data = {
+            "approved_xu": int(receipt[3]),
+            "reason": str(receipt[4]),
+            "consumed_at": str(receipt[2] or ""),
+        }
+
+        if receipt[2] is not None:
+            if not hmac.compare_digest(str(receipt[1] or ""), idempotency_key_hash):
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+            return projected, receipt_data, True
+
+        if _web_timestamp(str(receipt[0])) <= _web_timestamp(current_time):
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_EXPIRED")
+
+        if str(record[8]) == "approved":
+            return projected, receipt_data, True
+
+        if str(record[8]) != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+
+        return projected, receipt_data, False
+
+
+def get_web_manual_topup_receipt_action(receipt_hash: str) -> str | None:
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT action FROM web_manual_topup_approve_receipts WHERE receipt_hash=?",
+            (receipt_hash,),
+        ).fetchone()
+        if row is not None:
+            return "approve"
+        row = conn.execute(
+            "SELECT action FROM web_manual_topup_decision_receipts WHERE receipt_hash=?",
+            (receipt_hash,),
+        ).fetchone()
+        if row is not None:
+            return "reject"
+    return None
+
+
+def compute_web_manual_topup_credit_fingerprint(
+    canonical_user_id: str,
+    amount_xu: int,
+    reference: str,
+) -> str:
+    norm = f"{str(canonical_user_id).strip()}|{int(amount_xu)}|{str(reference).strip()}"
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()
+
+
+def claim_web_credit_operation_for_dispatch(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    canonical_user_id: str,
+    amount_xu: int,
+    reference: str = "",
+    now: str | None = None,
+) -> tuple[dict, str]:
+    """Atomically claims or creates the durable credit operation for Bot Core dispatch.
+
+    Returns:
+        (operation_dict, claim_status)
+        where claim_status in ('dispatch', 'ready_to_finalize', 'already_completed')
+    Raises:
+        WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT") on fingerprint mismatch
+        WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS") if another worker is dispatching
+    """
+    current_time = str(now or utc_now())
+    clean_user = str(canonical_user_id).strip()
+    clean_xu = int(amount_xu)
+    clean_ref = str(reference or f"MANUAL-{request_number}").strip()
+    fp = compute_web_manual_topup_credit_fingerprint(clean_user, clean_xu, clean_ref)
+    stable_key = f"web:admin:manual_topup:MANUAL-{request_number}"
+    op_id = f"op_credit_manual_{request_number}"
+
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT id, manual_topup_id, admin_account_id, canonical_user_id,
+                      amount_xu, idempotency_key, request_fingerprint, status,
+                      ledger_event_id, error_detail, created_at, updated_at
+               FROM web_manual_topup_credit_operations
+               WHERE manual_topup_id = ?""",
+            (int(request_number),),
+        ).fetchone()
+
+        if row is not None:
+            existing_fp = str(row[6])
+            if existing_fp != fp:
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+
+            op_status = str(row[7])
+            op_dict = {
+                "id": str(row[0]),
+                "manual_topup_id": int(row[1]),
+                "admin_account_id": str(row[2]),
+                "canonical_user_id": str(row[3]),
+                "amount_xu": int(row[4]),
+                "idempotency_key": str(row[5]),
+                "request_fingerprint": existing_fp,
+                "status": op_status,
+                "ledger_event_id": str(row[8] or ""),
+                "error_detail": str(row[9] or ""),
+                "created_at": str(row[10]),
+                "updated_at": str(row[11]),
+            }
+
+            if op_status == "local_approval_persisted":
+                return op_dict, "already_completed"
+
+            if op_status == "credit_confirmed":
+                return op_dict, "ready_to_finalize"
+
+            if op_status == "dispatched":
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS")
+
+            conn.execute(
+                """UPDATE web_manual_topup_credit_operations
+                   SET status = 'dispatched', updated_at = ?
+                   WHERE manual_topup_id = ?""",
+                (current_time, int(request_number)),
+            )
+            op_dict["status"] = "dispatched"
+            op_dict["updated_at"] = current_time
+            return op_dict, "dispatch"
+
+        conn.execute(
+            """INSERT INTO web_manual_topup_credit_operations
+               (id, manual_topup_id, admin_account_id, canonical_user_id,
+                amount_xu, idempotency_key, request_fingerprint, status,
+                ledger_event_id, error_detail, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'dispatched', NULL, NULL, ?, ?)""",
+            (
+                op_id,
+                int(request_number),
+                admin_account_id,
+                clean_user,
+                clean_xu,
+                stable_key,
+                fp,
+                current_time,
+                current_time,
+            ),
+        )
+        op_dict = {
+            "id": op_id,
+            "manual_topup_id": int(request_number),
+            "admin_account_id": admin_account_id,
+            "canonical_user_id": clean_user,
+            "amount_xu": clean_xu,
+            "idempotency_key": stable_key,
+            "request_fingerprint": fp,
+            "status": "dispatched",
+            "ledger_event_id": "",
+            "error_detail": "",
+            "created_at": current_time,
+            "updated_at": current_time,
+        }
+        return op_dict, "dispatch"
+
+
+def get_or_create_web_manual_topup_credit_operation(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    canonical_user_id: str,
+    amount_xu: int,
+    reference: str = "",
+    now: str | None = None,
+) -> tuple[dict, bool]:
+    current_time = str(now or utc_now())
+    clean_user = str(canonical_user_id).strip()
+    clean_xu = int(amount_xu)
+    clean_ref = str(reference or f"MANUAL-{request_number}").strip()
+    fp = compute_web_manual_topup_credit_fingerprint(clean_user, clean_xu, clean_ref)
+    stable_key = f"web:admin:manual_topup:MANUAL-{request_number}"
+    op_id = f"op_credit_manual_{request_number}"
+
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT id, manual_topup_id, admin_account_id, canonical_user_id,
+                      amount_xu, idempotency_key, request_fingerprint, status,
+                      ledger_event_id, error_detail, created_at, updated_at
+               FROM web_manual_topup_credit_operations
+               WHERE manual_topup_id = ?""",
+            (int(request_number),),
+        ).fetchone()
+
+        if row is not None:
+            existing_fp = str(row[6])
+            if existing_fp != fp:
+                raise WebManualTopupAdminGuard("MANUAL_ADMIN_IDEMPOTENCY_CONFLICT")
+
+            op_dict = {
+                "id": str(row[0]),
+                "manual_topup_id": int(row[1]),
+                "admin_account_id": str(row[2]),
+                "canonical_user_id": str(row[3]),
+                "amount_xu": int(row[4]),
+                "idempotency_key": str(row[5]),
+                "request_fingerprint": existing_fp,
+                "status": str(row[7]),
+                "ledger_event_id": str(row[8] or ""),
+                "error_detail": str(row[9] or ""),
+                "created_at": str(row[10]),
+                "updated_at": str(row[11]),
+            }
+            return op_dict, False
+
+        conn.execute(
+            """INSERT INTO web_manual_topup_credit_operations
+               (id, manual_topup_id, admin_account_id, canonical_user_id,
+                amount_xu, idempotency_key, request_fingerprint, status,
+                ledger_event_id, error_detail, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'not_sent', NULL, NULL, ?, ?)""",
+            (
+                op_id,
+                int(request_number),
+                admin_account_id,
+                clean_user,
+                clean_xu,
+                stable_key,
+                fp,
+                current_time,
+                current_time,
+            ),
+        )
+        op_dict = {
+            "id": op_id,
+            "manual_topup_id": int(request_number),
+            "admin_account_id": admin_account_id,
+            "canonical_user_id": clean_user,
+            "amount_xu": clean_xu,
+            "idempotency_key": stable_key,
+            "request_fingerprint": fp,
+            "status": "not_sent",
+            "ledger_event_id": "",
+            "error_detail": "",
+            "created_at": current_time,
+            "updated_at": current_time,
+        }
+        return op_dict, True
+
+
+def update_web_manual_topup_credit_operation_status(
+    *,
+    request_number: int,
+    status: str,
+    ledger_event_id: str | None = None,
+    error_detail: str | None = None,
+    now: str | None = None,
+) -> None:
+    current_time = str(now or utc_now())
+    with transaction() as conn:
+        conn.execute(
+            """UPDATE web_manual_topup_credit_operations
+               SET status = ?,
+                   ledger_event_id = COALESCE(?, ledger_event_id),
+                   error_detail = ?,
+                   updated_at = ?
+               WHERE manual_topup_id = ?""",
+            (
+                status,
+                ledger_event_id,
+                str(error_detail or "") if error_detail is not None else None,
+                current_time,
+                int(request_number),
+            ),
+        )
+
+
+def get_web_manual_topup_credit_operation(request_number: int) -> dict | None:
+    with read_transaction() as conn:
+        row = conn.execute(
+            """SELECT id, manual_topup_id, admin_account_id, canonical_user_id,
+                      amount_xu, idempotency_key, request_fingerprint, status,
+                      ledger_event_id, error_detail, created_at, updated_at
+               FROM web_manual_topup_credit_operations
+               WHERE manual_topup_id = ?""",
+            (int(request_number),),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "id": str(row[0]),
+        "manual_topup_id": int(row[1]),
+        "admin_account_id": str(row[2]),
+        "canonical_user_id": str(row[3]),
+        "amount_xu": int(row[4]),
+        "idempotency_key": str(row[5]),
+        "request_fingerprint": str(row[6]),
+        "status": str(row[7]),
+        "ledger_event_id": str(row[8] or ""),
+        "error_detail": str(row[9] or ""),
+        "created_at": str(row[10]),
+        "updated_at": str(row[11]),
+    }
+
+
+def finalize_web_manual_topup_approval_with_operation(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    approved_xu: int,
+    ledger_event_id: str,
+    reason: str = "",
+    session_id: str = "",
+    idempotency_key_hash: str = "",
+    audit_request_id: str = "",
+    now: str | None = None,
+) -> dict:
+    cleaned_receipt = str(ledger_event_id or "").strip()
+    if not cleaned_receipt or cleaned_receipt.startswith("local-credit-"):
+        raise WebManualTopupAdminGuard("WALLET_CREDIT_RECEIPT_REQUIRED")
+
+    current_time = str(now or utc_now())
+    with transaction() as conn:
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+
+        current_status = str(record[8])
+        if current_status == "approved":
+            replay = _web_manual_admin_public_row(record)
+            assert replay is not None
+            replay["idempotent_replay"] = True
+            return replay
+
+        if current_status != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+
+        conn.execute(
+            """UPDATE web_manual_topup_credit_operations
+               SET status = 'local_approval_persisted',
+                   ledger_event_id = ?,
+                   updated_at = ?
+               WHERE manual_topup_id = ?""",
+            (cleaned_receipt, current_time, int(request_number)),
+        )
+
+        request_update = conn.execute(
+            """UPDATE web_manual_topup_requests
+               SET status='approved', decided_by_account_id=?, decision_at=?,
+                   decision_reason=?, approved_xu=?, ledger_event_id=?, updated_at=?
+               WHERE id=? AND status='pending_admin_review'""",
+            (
+                admin_account_id,
+                current_time,
+                str(reason or "Đã xác nhận tiền vào & cộng Xu"),
+                int(approved_xu),
+                cleaned_receipt,
+                current_time,
+                int(request_number),
+            ),
+        )
+        if request_update.rowcount != 1:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS")
+
+        if session_id and idempotency_key_hash:
+            conn.execute(
+                """UPDATE web_manual_topup_approve_receipts
+                   SET claimed_idempotency_hash = ?, consumed_at = ?
+                   WHERE manual_topup_id = ? AND admin_account_id = ? AND session_id = ? AND action = 'approve'""",
+                (idempotency_key_hash, current_time, int(request_number), admin_account_id, session_id),
+            )
+
+        conn.execute(
+            """INSERT INTO web_audit_events
+               (id, account_id, canonical_user_id, action, request_id,
+                target, outcome, detail, created_at)
+               VALUES (?, ?, NULL, 'admin.manual_topup.approve', ?, ?,
+                       'approved', ?, ?)""",
+            (
+                str(uuid.uuid4()),
+                admin_account_id,
+                _web_manual_audit_request_id(audit_request_id),
+                f"MANUAL-{int(request_number)}",
+                f"approved_xu={int(approved_xu)};ledger_event_id={cleaned_receipt}",
+                current_time,
+            ),
+        )
+
+        updated = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+
     projected = _web_manual_admin_public_row(updated)
     assert projected is not None
     return projected
