@@ -48,7 +48,7 @@ def test_admin_ui_canvas_and_surfaces_forbid_obsidian() -> None:
     assert '.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"])' in PORTAL_THEME_CSS
     assert '--portal-app-canvas: #f3fbfc;' in PORTAL_THEME_CSS
     assert 'background: var(--portal-app-canvas) !important;' in PORTAL_THEME_CSS
-    
+
     admin_auth_block = re.search(
         r'\.portal-body--auth\[data-portal-app-kind="admin"\]\s*\{(?P<rules>[^}]+)\}',
         PORTAL_CSS
