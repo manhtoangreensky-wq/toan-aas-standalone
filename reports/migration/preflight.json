@@ -35,9 +35,9 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "19eec25e89e9e9cc382ff3c9bb8a76f883a4614b",
+      "checkout_sha": "86bc9234d986955b0601c308e90ca7e6aea174b3",
       "requested_relation": "exact",
-      "requested_sha": "19eec25e89e9e9cc382ff3c9bb8a76f883a4614b",
+      "requested_sha": "86bc9234d986955b0601c308e90ca7e6aea174b3",
       "source_fingerprint_sha256": "a8c996f69ed91e129714a0443d5c374f5916072d7e3a4d8402fc870584f4ca36",
       "working_tree_state": "clean"
     },
