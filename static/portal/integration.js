@@ -15687,6 +15687,9 @@
     if (account && account.role === "admin" && currentPath === "/admin/topups") {
       await hydrateAdminManualTopups("pending", "");
     }
+    if (account && account.role === "admin" && currentPath === "/admin") {
+      await hydrateAdminManualTopups("pending", "");
+    }
     // Native Support Desk routes have their own narrow API boundary.  Even if
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
@@ -26450,6 +26453,9 @@
         if (!isCurrent()) return null;
       } else if (path.startsWith("/admin")) {
         await hydrateCanonicalAdminData(path);
+        if (path === "/admin") {
+          await hydrateAdminManualTopups("pending", "");
+        }
         if (!isCurrent()) return null;
       } else {
         const readiness = await api("/features/status");

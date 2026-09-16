@@ -6519,14 +6519,11 @@ _WEB_MANUAL_ADMIN_SELECT = """
 def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
     if row is None:
         return None
-    amount_vnd = int(row[3])
-    expected_xu = amount_vnd // 100
-    canonical_user_id = str(row[14]) if len(row) > 14 and row[14] else None
     result = {
         "request_id": f"MANUAL-{int(row[0])}",
         "display_name": str(row[1] or ""),
         "email": str(row[2] or ""),
-        "amount_vnd": amount_vnd,
+        "amount_vnd": int(row[3]),
         "currency": str(row[4]),
         "method": str(row[5]),
         "reference": str(row[6] or ""),
@@ -6534,19 +6531,16 @@ def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
         "status": str(row[8]),
         "submitted_at": str(row[9]),
         "updated_at": str(row[10]),
-        "account_id": str(row[13]) if len(row) > 13 and row[13] else "",
-        "canonical_user_id": canonical_user_id,
-        "telegram_user_id": canonical_user_id,
-        "expected_xu": expected_xu,
-        "approved_xu": int(row[15]) if len(row) > 15 and row[15] is not None else None,
-        "ledger_event_id": str(row[16]) if len(row) > 16 and row[16] else None,
-        "decided_by_admin_id": str(row[17]) if len(row) > 17 and row[17] else None,
     }
     if row[11]:
         result["decision_at"] = str(row[11])
     if row[12]:
         result["decision_reason"] = str(row[12])
-        result["admin_note"] = str(row[12])
+    if str(row[8]) == "approved":
+        if len(row) > 15 and row[15] is not None:
+            result["approved_xu"] = int(row[15])
+        if len(row) > 16 and row[16]:
+            result["ledger_event_id"] = str(row[16])
     return result
 
 
@@ -6606,6 +6600,14 @@ def get_web_manual_topup_for_admin(request_number: int) -> dict | None:
             (int(request_number),),
         ).fetchone()
     return _web_manual_admin_public_row(row)
+
+
+def count_pending_web_manual_topups() -> int:
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM web_manual_topup_requests WHERE status='pending_admin_review'"
+        ).fetchone()
+    return int(row[0]) if row and row[0] is not None else 0
 
 
 def create_web_manual_topup_reject_receipt(
@@ -6888,6 +6890,7 @@ def claim_web_manual_topup_approve_decision(
             "approved_xu": int(receipt[3]),
             "reason": str(receipt[4]),
             "consumed_at": str(receipt[2] or ""),
+            "canonical_user_id": str(record[14]) if len(record) > 14 and record[14] else None,
         }
 
         if receipt[2] is not None:
@@ -7275,6 +7278,9 @@ def finalize_web_manual_topup_approval_with_operation(
 
     projected = _web_manual_admin_public_row(updated)
     assert projected is not None
+    projected["approved_xu"] = int(approved_xu)
+    if cleaned_receipt:
+        projected["ledger_event_id"] = cleaned_receipt
     return projected
 
 
@@ -7304,6 +7310,7 @@ def approve_web_manual_topup(
         if current_status == "approved":
             replay = _web_manual_admin_public_row(record)
             assert replay is not None
+            replay["approved_xu"] = int(approved_xu)
             replay["idempotent_replay"] = True
             return replay
         if current_status != "pending_admin_review":
@@ -7346,6 +7353,9 @@ def approve_web_manual_topup(
         ).fetchone()
     projected = _web_manual_admin_public_row(updated)
     assert projected is not None
+    projected["approved_xu"] = int(approved_xu)
+    if cleaned_ledger_event_id:
+        projected["ledger_event_id"] = cleaned_ledger_event_id
     return projected
 
 

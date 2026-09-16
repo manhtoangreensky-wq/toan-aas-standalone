@@ -69,6 +69,7 @@ from copyfast_db import (
     claim_web_credit_operation_for_dispatch,
     claim_web_manual_topup_approve_decision,
     confirm_web_manual_topup_reject,
+    count_pending_web_manual_topups,
     create_web_manual_topup_approve_receipt,
     create_web_manual_topup_reject_receipt,
     create_web_manual_topup_request,
@@ -5112,7 +5113,7 @@ async def manual_admin_confirm(
         if str(record.get("status")) != "pending_admin_review":
             return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
 
-        canonical_user_id = record.get("canonical_user_id") or record.get("telegram_user_id")
+        canonical_user_id = receipt_dict.get("canonical_user_id") or record.get("canonical_user_id") or record.get("telegram_user_id")
         if not canonical_user_id:
             return _manual_admin_guard(
                 "WALLET_CREDIT_USER_UNLINKED",
@@ -5277,7 +5278,7 @@ async def manual_admin_confirm(
             status_name="rejected",
         )
     else:
-        return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Biên nhận không thuộc phiên quản trị này.", status_code=401)
+        return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy biên nhận xác nhận hợp lệ.", status_code=404)
 
 
 
@@ -5890,7 +5891,15 @@ async def feature_confirm(feature: str, payload: FeatureRequest, request: Reques
 
 @router.get("/admin/summary")
 async def admin_summary(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request, admin_read=True)
+    response = await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request, admin_read=True)
+    pending_count = count_pending_web_manual_topups()
+    if isinstance(response, dict):
+        data = response.get("data")
+        if isinstance(data, dict):
+            counts = data.setdefault("counts", {})
+            if isinstance(counts, dict):
+                counts["pending_topups"] = pending_count
+    return response
 
 
 @router.get("/admin/users")
